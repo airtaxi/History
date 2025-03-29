@@ -1,0 +1,300 @@
+﻿using Google.Apis.Auth;
+using History.ApiService.Services;
+using History.ApiService.Services.Interfaces;
+using History.Commons.DataTypes;
+using History.Commons.DataTypes.Dto;
+using History.Commons.Enums;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+
+namespace History.ApiService.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class UserController(IUserService userService, IFriendshipService friendshipService) : ControllerBase
+{
+    /// <summary>
+    /// Register with OAuth
+    /// </summary>
+    /// <param name="request">The JWT token from OAuth provider</param>
+    /// <returns>An action result indicating success or failure</returns>
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] OAuthLoginRequestDto request)
+    {
+        var payload = await VerifyIdTokenAsync(request);
+        if (payload == null) return Unauthorized("ID 토큰이 유효하지 않습니다.");
+
+        var existingUser = await userService.GetUserByIdAsync(payload.Subject);
+        if (existingUser != null)
+        {
+            return Conflict("이미 등록된 사용자입니다.");
+        }
+
+        var newUser = new User
+        {
+            Id = payload.Subject,
+            Nickname = payload.Name ?? GenerateDeafultUserName(),
+            SocialService = request.Provider,
+            Handle = Guid.NewGuid().ToString("N")[..8]
+            // Rank will be set in the service based on the number of users
+            // (Admin for the first user, User for others)
+        };
+
+        await userService.CreateUserAsync(newUser);
+
+        var token = GenerateJwt(newUser);
+        return Ok(token);
+    }
+
+    /// <summary>
+    /// Login with OAuth
+    /// </summary>
+    /// <param name="request">The JWT token from OAuth provider</param>
+    /// <returns>An action result indicating success or failure</returns>
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] OAuthLoginRequestDto request)
+    {
+        var payload = await VerifyIdTokenAsync(request);
+        if (payload == null) return Unauthorized("ID 토큰이 유효하지 않습니다.");
+
+        var user = await userService.GetUserByIdAsync(payload.Subject);
+        if (user == null) return NotFound("사용자가 존재하지 않습니다.");
+
+        var token = GenerateJwt(user);
+        return Ok(token);
+    }
+    /// <summary>
+    /// Get user profile
+    /// </summary>
+    /// <param name="userId">The ID of user to get</param>
+    /// <returns>A task that represents the asynchronous operation. with result of user profile</returns>
+    [HttpGet("{userId}")]
+    public async Task<IActionResult> GetUser(string userId)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var user = await userService.GetUserByIdAsync(userId);
+        if (user == null) return null;
+
+        var requester = requesterId != null ? await userService.GetUserByIdAsync(requesterId) : null;
+
+        var userBlockedFriendIds = await friendshipService.GetBlockedUserIdsAsync(userId);
+        if (userBlockedFriendIds.Contains(requesterId)) return Unauthorized("이 사용자의 프로필을 볼 수 없습니다.");
+
+        var profile = new UserResponseDto
+        {
+            UserId = user.Id,
+            Nickname = user.Nickname,
+            Rank = user.Rank,
+            Description = user.Description,
+        };
+
+        return Ok(profile);
+    }
+
+    /// <summary>
+    /// Updates the description of a user
+    /// </summary>
+    /// <param name="request">Request containing the description to update</param>
+    /// <returns>An action result indicating success or failure</returns>
+    [HttpPut("description")]
+    [Authorize]
+    public async Task<IActionResult> UpdateDescription([FromBody] UpdateUserDescriptionRequestDto request)
+    {
+        // Get the user ID from the authenticated user claim
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        // Call the service to update the description
+        var result = await userService.UpdateDescriptionAsync(userId, request.Description);
+
+        if (result) return Ok();
+        else return NotFound("사용자를 찾을 수 없습니다.");
+    }
+
+    /// <summary>
+    /// Updates the birthday of a user
+    /// </summary>
+    /// <param name="request">Request containing the birthday to update</param>
+    /// <returns>An action result indicating success or failure</returns>
+    [HttpPut("birthday")]
+    [Authorize]
+    public async Task<IActionResult> UpdateBirthday([FromBody] UpdateUserBirthdayRequestDto request)
+    {
+        // Get the user ID from the authenticated user claim
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        // Call the service to update the birthday
+        var result = await userService.UpdateBirthdayAsync(userId, request.Birthday);
+
+        if (result) return Ok();
+        else return NotFound("사용자를 찾을 수 없습니다.");
+    }
+
+    /// <summary>
+    /// Updates the nickname of a user
+    /// </summary>
+    /// <param name="request">Request containing the nickname to update</param>
+    /// <returns>An action result indicating success or failure</returns>
+    [HttpPut("nickname")]
+    [Authorize]
+    public async Task<IActionResult> UpdateNickname([FromBody] UpdateUserNicknameRequestDto request)
+    {
+        // Get the user ID from the authenticated user claim
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        // Call the service to update the nickname
+        var result = await userService.UpdateNicknameAsync(userId, request.Nickname);
+
+        if (result) return Ok();
+        else return NotFound("사용자를 찾을 수 없습니다.");
+    }
+
+    /// <summary>
+    /// Updates the profile image of a user
+    /// </summary>
+    /// <param name="file">The image file to upload</param>
+    /// <returns>An action result indicating success or failure</returns>
+    [HttpPut("profile-media")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProfileMedia(IFormFile file)
+    {
+        // Get the user ID from the authenticated user claim
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        // Handle the case of removing the profile image
+        if (file == null)
+        {
+            var deleteResult = await userService.UpdateProfileMediaAsync(userId, null);
+
+            if (deleteResult) return Ok();
+            else return NotFound("사용자를 찾을 수 없습니다.");
+        }
+
+        // Validate file type
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+        if (!allowedTypes.Contains(file.ContentType.ToLower())) return BadRequest("올바르지 않은 파일 형식입니다. 이미지 파일을 업로드해주세요.");
+
+        // Validate file size (e.g., 20MB max)
+        var maxSize = 20 * 1024 * 1024; // 20MB
+        if (file.Length > maxSize) return BadRequest("파일 크기가 너무 큽니다. 20MB 이하의 이미지 파일을 업로드해주세요.");
+
+        // Read the file into a byte array
+        byte[] imageData;
+        using (var memoryStream = new MemoryStream())
+        {
+            await file.CopyToAsync(memoryStream);
+            imageData = memoryStream.ToArray();
+        }
+
+        // Call the service to update the profile media
+        var result = await userService.UpdateProfileMediaAsync(userId, imageData);
+
+        if (result) return Ok();
+        else return NotFound("사용자를 찾을 수 없습니다.");
+    }
+
+    /// <summary>
+    /// Updates the background image of a user
+    /// </summary>
+    /// <param name="file">The image file to upload</param>
+    /// <returns>An action result indicating success or failure</returns>
+    [HttpPut("background-media")]
+    [Authorize]
+    public async Task<IActionResult> UpdateBackgroundMedia(IFormFile file)
+    {
+        // Get the user ID from the authenticated user claim
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        // Handle the case of removing the background image
+        if (file == null)
+        {
+            var deleteResult = await userService.UpdateBackgroundMediaAsync(userId, null);
+
+            if (deleteResult) return Ok();
+            else return NotFound("사용자를 찾을 수 없습니다.");
+        }
+
+        // Validate file type
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+        if (!allowedTypes.Contains(file.ContentType.ToLower())) return BadRequest("올바르지 않은 파일 형식입니다. 이미지 파일을 업로드해주세요.");
+
+        // Validate file size (e.g., 20MB max)
+        var maxSize = 20 * 1024 * 1024; // 20MB
+        if (file.Length > maxSize) return BadRequest("파일 크기가 너무 큽니다. 20MB 이하의 이미지 파일을 업로드해주세요.");
+
+        // Read the file into a byte array
+        byte[] imageData;
+        using (var memoryStream = new MemoryStream())
+        {
+            await file.CopyToAsync(memoryStream);
+            imageData = memoryStream.ToArray();
+        }
+
+        // Call the service to update the background media
+        var result = await userService.UpdateBackgroundMediaAsync(userId, imageData);
+
+        if (result) return Ok();
+        else return NotFound("사용자를 찾을 수 없습니다.");
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    private static async Task<GoogleJsonWebSignature.Payload> VerifyIdTokenAsync(OAuthLoginRequestDto request)
+    {
+        // Verify the ID token based on the provider
+        if (request.Provider == SocialService.Google)
+        {
+            // Verify the Google ID token
+            try { return await GoogleJsonWebSignature.ValidateAsync(request.IdToken); }
+            catch { return null; }
+        }
+
+        // TODO: Apple ID Token needs to be verified here
+        return null;
+    }
+
+    /// <summary>
+    /// Generate a JWT token for the user
+    /// </summary>
+    /// <param name="user">The user to generate the token for</param>
+    /// <returns>A JWT token</returns>
+    private static string GenerateJwt(User user)
+    {
+        // Create the claims for the JWT token
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim("nickname", user.Nickname),
+            new Claim("provider", user.SocialService.ToString())
+        };
+
+        // Create the key and credentials for the JWT token
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Constants.JwtKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        // Create the JWT token
+        var token = new JwtSecurityToken(
+            issuer: Constants.JwtIssuer,
+            audience: Constants.JwtAudience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddDays(7),
+            signingCredentials: creds
+        );
+
+        // Return the token as a string
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    /// <summary>
+    /// Generate a default username
+    /// </summary>
+    /// <returns>A default username starting with "사용자-" and followed by a random 8-character string</returns>
+    private static string GenerateDeafultUserName() => $"사용자-{Guid.NewGuid().ToString("N")[..8]}";
+}
