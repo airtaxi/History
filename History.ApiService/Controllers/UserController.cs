@@ -107,6 +107,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("사용자 정보를 찾을 수 없습니다.");
 
         // Call the service to update the description
         var result = await userService.UpdateDescriptionAsync(userId, request.Description);
@@ -126,6 +127,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("사용자 정보를 찾을 수 없습니다.");
 
         // Call the service to update the birthday
         var result = await userService.UpdateBirthdayAsync(userId, request.Birthday);
@@ -145,6 +147,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("사용자 정보를 찾을 수 없습니다.");
 
         // Call the service to update the nickname
         var result = await userService.UpdateNicknameAsync(userId, request.Nickname);
@@ -164,6 +167,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("사용자 정보를 찾을 수 없습니다.");
 
         // Handle the case of removing the profile image
         if (file == null)
@@ -208,6 +212,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("사용자 정보를 찾을 수 없습니다.");
 
         // Handle the case of removing the background image
         if (file == null)
