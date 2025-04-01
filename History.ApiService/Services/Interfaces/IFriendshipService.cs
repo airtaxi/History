@@ -98,14 +98,14 @@ public interface IFriendshipService
     /// </summary>
     /// <param name="userId">The ID of the user whose blocked list is to be retrieved.</param>
     /// <returns>A task representing the asynchronous operation, with a collection of blocked user IDs.</returns>
-    public Task<HashSet<string>> GetBlockedUserIdsAsync(string userId);
+    public Task<List<string>> GetBlockedUserIdsAsync(string userId);
 
     /// <summary>
     /// Get all ignored user's IDs for a user.
     /// </summary>
     /// <param name="userId">The ID of the user whose ignored list is to be retrieved.</param>
     /// <returns>A task representing the asynchronous operation, with a collection of ignored user IDs.</returns>
-    public Task<HashSet<string>> GetIgnoredUserIdsAsync(string userId);
+    public Task<List<string>> GetIgnoredUserIdsAsync(string userId);
 
     /// <summary>
     /// Checks if two users are friends.
