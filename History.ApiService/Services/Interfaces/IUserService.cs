@@ -1,4 +1,6 @@
-﻿using History.Commons.DataTypes;
+﻿using History.Commons;
+using History.Commons.DataTypes;
+using History.Commons.DataTypes.Dto;
 
 namespace History.ApiService.Services.Interfaces;
 
@@ -9,14 +11,21 @@ public interface IUserService
     /// </summary>
     /// <param name="user">The user to create</param>
     /// <returns>A task that represents the asynchronous operation</returns>
-    public Task CreateUserAsync(User user);
+    public Task<Result> CreateUserAsync(User user);
 
     /// <summary>
     /// Get user by ID
     /// </summary>
     /// <param name="userId">The ID of user to get</param>
     /// <returns>A task that represents the asynchronous operation. with result of user</returns>
-    public Task<User> GetUserByIdAsync(string userId);
+    public Task<Result<User>> GetUserByIdAsync(string userId);
+
+    /// <summary>
+    /// Get users by IDs
+    /// </summary>
+    /// <param name="userIds">The IDs of users to get</param>
+    /// <returns>A task that represents the asynchronous operation. with result of users</returns>
+    public Task<Result<List<User>>> GetUsersByIdsAsync(IEnumerable<string> userIds);
 
     /// <summary>
     /// Update user's description
@@ -24,7 +33,7 @@ public interface IUserService
     /// <param name="userId">The ID of user to update</param>
     /// <param name="description">The description to update</param>
     /// <returns>A task that represents the asynchronous operation. with result of update success</returns>
-    public Task<bool> UpdateDescriptionAsync(string userId, string description);
+    public Task<Result<bool>> UpdateDescriptionAsync(string userId, string description);
 
     /// <summary>
     /// Update user's birthday 
@@ -32,7 +41,7 @@ public interface IUserService
     /// <param name="userId">The ID of user to update</param>
     /// <param name="birthday">The birthday to update. Null if user did not set or don't want to</param>
     /// <returns>A task that represents the asynchronous operation. with result of update success</returns>
-    public Task<bool> UpdateBirthdayAsync(string userId, DateTime? birthday);
+    public Task<Result<bool>> UpdateBirthdayAsync(string userId, DateTime? birthday);
 
     /// <summary>
     /// Update user's nickname
@@ -40,7 +49,7 @@ public interface IUserService
     /// <param name="userId">The ID of user to update</param>
     /// <param name="nickname">The nickname to update</param>
     /// <returns>A task that represents the asynchronous operation. with result of update success</returns>
-    public Task<bool> UpdateNicknameAsync(string userId, string nickname);
+    public Task<Result<bool>> UpdateNicknameAsync(string userId, string nickname);
 
     /// <summary>
     /// Update user's profile media
@@ -48,7 +57,7 @@ public interface IUserService
     /// <param name="userId">The ID of user to update</param>
     /// <param name="image">The image to update. Null if user want to delete profile media</param>
     /// <returns>A task that represents the asynchronous operation. with result of update success</returns>
-    public Task<bool> UpdateProfileMediaAsync(string userId, byte[] image);
+    public Task<Result<bool>> UpdateProfileMediaAsync(string userId, byte[] image);
 
     /// <summary>
     /// Update user's background media
@@ -56,5 +65,36 @@ public interface IUserService
     /// <param name="userId">The ID of user to update</param>
     /// <param name="image">The image to update. Null if user want to delete background media</param>
     /// <returns>A task that represents the asynchronous operation. with result of update success</returns>
-    public Task<bool> UpdateBackgroundMediaAsync(string userId, byte[] image);
+    public Task<Result<bool>> UpdateBackgroundMediaAsync(string userId, byte[] image);
+
+    /// <summary>
+    /// Generates a UserResponseDto for a user.
+    /// </summary>
+    /// <param name="user">The user to generate the DTO for.</param>
+    /// <param name="requesterId">The ID of the user requesting the DTO.</param>
+    /// <returns>A task representing the asynchronous operation, with the UserResponseDto.</returns>
+    public Task<Result<UserResponseDto>> GenerateUserResponseDtoAsync(User user, string requesterId = null);
+
+    /// <summary>
+    /// Generates a UserResponseDto for a user.
+    /// </summary>
+    /// <param name="userId">The ID of the user to generate the DTO for.</param>
+    /// <param name="requesterId">The ID of the user requesting the DTO.</param>
+    /// <returns>A task representing the asynchronous operation, with the UserResponseDto.</returns>
+    public Task<Result<UserResponseDto>> GenerateUserResponseDtoAsync(string userId, string requesterId = null);
+    /// <summary>
+    /// Generates a UserResponseDto for a user.
+    /// </summary>
+    /// <param name="user">The user to generate the DTO for.</param>
+    /// <param name="requesterId">The ID of the user requesting the DTO.</param>
+    /// <returns>A task representing the asynchronous operation, with the UserResponseDto.</returns>
+    public Task<Result<List<UserResponseDto>>> GenerateUserResponseDtosAsync(IEnumerable<User> user, string requesterId = null);
+
+    /// <summary>
+    /// Generates a UserResponseDto for a user.
+    /// </summary>
+    /// <param name="userId">The ID of the user to generate the DTO for.</param>
+    /// <param name="requesterId">The ID of the user requesting the DTO.</param>
+    /// <returns>A task representing the asynchronous operation, with the UserResponseDto.</returns>
+    public Task<Result<List<UserResponseDto>>> GenerateUserResponseDtosAsync(IEnumerable<string> userId, string requesterId = null);
 }

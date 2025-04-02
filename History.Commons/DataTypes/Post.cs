@@ -1,0 +1,53 @@
+﻿using History.Commons.DataTypes.Content;
+using History.Commons.Enums;
+using MongoDB.Bson.Serialization.Attributes;
+
+namespace History.Commons.DataTypes;
+
+[BsonIgnoreExtraElements]
+public class Post
+{
+    [BsonId]
+    public string Id { get; set; }
+
+    /// <summary>
+    /// Discovery option for post.
+    /// </summary>
+    public DiscoveryOption DiscoveryOption { get; set; }
+
+    /// <summary>
+    /// A user id who created this post.
+    /// </summary>
+    public string AuthorUserId { get; set; }
+
+    /// <summary>
+    /// If this true, this post is repost. Means just share other post without contents.
+    /// Only takes effect for user interface.
+    /// </summary>
+    public bool IsRepost { get; set; }
+
+    /// <summary>
+    /// Contents of post.
+    /// </summary>
+    public List<BaseContent> Contents { get; set; } = [];
+
+    /// <summary>
+    /// Parent post id. Not null means this post shares other post.
+    /// </summary>
+    public string ParentPostId { get; set; }
+
+    /// <summary>
+    /// Selected user ids if discovery option is selected users.
+    /// </summary>
+    public List<string> DiscoveryOptionSelectedUserIds { get; set; } = [];
+
+    /// <summary>
+    /// Created at time of post.
+    /// </summary>
+    public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Modified at time of post.
+    /// </summary>
+    public DateTime? ModifiedAt { get; set; }
+}

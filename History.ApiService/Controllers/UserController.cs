@@ -1,6 +1,6 @@
 ﻿using Google.Apis.Auth;
-using History.ApiService.Services;
 using History.ApiService.Services.Interfaces;
+using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Dto;
 using History.Commons.Enums;
@@ -28,8 +28,8 @@ public class UserController(IUserService userService, IFriendshipService friends
         var payload = await VerifyIdTokenAsync(request);
         if (payload == null) return Unauthorized("ID 토큰이 유효하지 않습니다.");
 
-        var existingUser = await userService.GetUserByIdAsync(payload.Subject);
-        if (existingUser != null)
+        var existingUserResult = await userService.GetUserByIdAsync(payload.Subject);
+        if (existingUserResult != null)
         {
             return Conflict("이미 등록된 사용자입니다.");
         }
@@ -61,10 +61,10 @@ public class UserController(IUserService userService, IFriendshipService friends
         var payload = await VerifyIdTokenAsync(request);
         if (payload == null) return Unauthorized("ID 토큰이 유효하지 않습니다.");
 
-        var user = await userService.GetUserByIdAsync(payload.Subject);
-        if (user == null) return NotFound("사용자가 존재하지 않습니다.");
+        var userResult = await userService.GetUserByIdAsync(payload.Subject);
+        if (userResult == null) return NotFound("사용자가 존재하지 않습니다.");
 
-        var token = GenerateJwt(user);
+        var token = GenerateJwt(userResult);
         return Ok(token);
     }
     /// <summary>
@@ -77,23 +77,16 @@ public class UserController(IUserService userService, IFriendshipService friends
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var user = await userService.GetUserByIdAsync(userId);
-        if (user == null) return null;
+        var userResult = await userService.GetUserByIdAsync(userId);
+        if (userResult == null) return null;
 
-        var requester = requesterId != null ? await userService.GetUserByIdAsync(requesterId) : null;
+        var userBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(userId);
+        if (userBlockedFriendIdsResult.Value.Contains(requesterId)) return Unauthorized("이 사용자의 프로필을 볼 수 없습니다.");
 
-        var userBlockedFriendIds = await friendshipService.GetBlockedUserIdsAsync(userId);
-        if (userBlockedFriendIds.Contains(requesterId)) return Unauthorized("이 사용자의 프로필을 볼 수 없습니다.");
-
-        var profile = new UserResponseDto
-        {
-            UserId = user.Id,
-            Nickname = user.Nickname,
-            Rank = user.Rank,
-            Description = user.Description,
-        };
-
-        return Ok(profile);
+        var profileResult = await userService.GenerateUserResponseDtoAsync(userResult, requesterId);
+        if (profileResult.IsSuccess) return Ok(profileResult.Value);
+        if (profileResult.Error == ErrorType.NotFound) return NotFound(profileResult.ErrorMessage);
+        else return StatusCode(500, profileResult.FullErrorMessage);
     }
 
     /// <summary>
@@ -107,13 +100,14 @@ public class UserController(IUserService userService, IFriendshipService friends
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userId == null) return Unauthorized("사용자 정보를 찾을 수 없습니다.");
+        if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
 
         // Call the service to update the description
         var result = await userService.UpdateDescriptionAsync(userId, request.Description);
 
-        if (result) return Ok();
-        else return NotFound("사용자를 찾을 수 없습니다.");
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else return StatusCode(500, result.FullErrorMessage);
     }
 
     /// <summary>
@@ -127,13 +121,14 @@ public class UserController(IUserService userService, IFriendshipService friends
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userId == null) return Unauthorized("사용자 정보를 찾을 수 없습니다.");
+        if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
 
         // Call the service to update the birthday
         var result = await userService.UpdateBirthdayAsync(userId, request.Birthday);
 
-        if (result) return Ok();
-        else return NotFound("사용자를 찾을 수 없습니다.");
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else return StatusCode(500, result.FullErrorMessage);
     }
 
     /// <summary>
@@ -147,13 +142,14 @@ public class UserController(IUserService userService, IFriendshipService friends
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userId == null) return Unauthorized("사용자 정보를 찾을 수 없습니다.");
+        if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
 
         // Call the service to update the nickname
         var result = await userService.UpdateNicknameAsync(userId, request.Nickname);
 
-        if (result) return Ok();
-        else return NotFound("사용자를 찾을 수 없습니다.");
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else return StatusCode(500, result.FullErrorMessage);
     }
 
     /// <summary>
@@ -167,15 +163,16 @@ public class UserController(IUserService userService, IFriendshipService friends
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userId == null) return Unauthorized("사용자 정보를 찾을 수 없습니다.");
+        if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
 
         // Handle the case of removing the profile image
         if (file == null)
         {
             var deleteResult = await userService.UpdateProfileMediaAsync(userId, null);
 
-            if (deleteResult) return Ok();
-            else return NotFound("사용자를 찾을 수 없습니다.");
+            if (deleteResult.IsSuccess) return Ok();
+            else if (deleteResult.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+            else return StatusCode(500, deleteResult.FullErrorMessage);
         }
 
         // Validate file type
@@ -197,8 +194,9 @@ public class UserController(IUserService userService, IFriendshipService friends
         // Call the service to update the profile media
         var result = await userService.UpdateProfileMediaAsync(userId, imageData);
 
-        if (result) return Ok();
-        else return NotFound("사용자를 찾을 수 없습니다.");
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else return StatusCode(500, result.FullErrorMessage);
     }
 
     /// <summary>
@@ -212,15 +210,16 @@ public class UserController(IUserService userService, IFriendshipService friends
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userId == null) return Unauthorized("사용자 정보를 찾을 수 없습니다.");
+        if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
 
         // Handle the case of removing the background image
         if (file == null)
         {
             var deleteResult = await userService.UpdateBackgroundMediaAsync(userId, null);
 
-            if (deleteResult) return Ok();
-            else return NotFound("사용자를 찾을 수 없습니다.");
+            if (deleteResult.IsSuccess) return Ok();
+            else if (deleteResult.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+            else return StatusCode(500, deleteResult.FullErrorMessage);
         }
 
         // Validate file type
@@ -242,15 +241,16 @@ public class UserController(IUserService userService, IFriendshipService friends
         // Call the service to update the background media
         var result = await userService.UpdateBackgroundMediaAsync(userId, imageData);
 
-        if (result) return Ok();
-        else return NotFound("사용자를 찾을 수 없습니다.");
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else return StatusCode(500, result.FullErrorMessage);
     }
 
     /// <summary>
-    /// 
+    /// Verify the ID token from the OAuth provider
     /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
+    /// <param name="request">The request containing the ID token</param>
+    /// <returns>A task that represents the asynchronous operation. with the payload of the ID token</returns>
     private static async Task<GoogleJsonWebSignature.Payload> VerifyIdTokenAsync(OAuthLoginRequestDto request)
     {
         // Verify the ID token based on the provider

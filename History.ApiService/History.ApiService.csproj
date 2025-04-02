@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\History.Commons\History.Commons.csproj" />
     <ProjectReference Include="..\History.ServiceDefaults\History.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\HistoryCommons\History.Commons.csproj" />
   </ItemGroup>
 
   <ItemGroup>
