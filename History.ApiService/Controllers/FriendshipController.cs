@@ -60,7 +60,9 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var result = await friendshipService.BlockUserAsync(userId, userToBlockId);
-        return result.IsSuccess ? Ok() : StatusCode(500, result.FullErrorMessage);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound("해당 사용자의 친구 요청을 찾을 수 없습니다.");
+        else return StatusCode(500, result.FullErrorMessage);
     }
 
     [HttpPost("request/{requesterId}/ignore")]
