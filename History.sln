@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "History.ServiceDefaults", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "History.ApiService", "History.ApiService\History.ApiService.csproj", "{D1377EA8-67AD-D483-7709-3D4BF06F37AA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "History.Commons", "HistoryCommons\History.Commons.csproj", "{94A61417-23B5-4805-A433-F4E80868480D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "History.Commons", "History.Commons\History.Commons.csproj", "{94A61417-23B5-4805-A433-F4E80868480D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

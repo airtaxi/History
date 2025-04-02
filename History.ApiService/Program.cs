@@ -9,12 +9,14 @@ using History.ApiService.Services.Interfaces;
 using History.ApiService.Services;
 using History.Commons.Enums;
 using History.ServiceDefaults;
+using History.Commons;
 
 BsonSerializer.RegisterSerializer(new EnumSerializer<DiscoveryOption>(BsonType.String));
-BsonSerializer.RegisterSerializer(new EnumSerializer<FeedReactionType>(BsonType.String));
+BsonSerializer.RegisterSerializer(new EnumSerializer<PostReactionType>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<FriendshipStatus>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<MediaBucket>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<Rank>(BsonType.String));
+BsonSerializer.RegisterSerializer(new EnumSerializer<ErrorType>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<SocialService>(BsonType.String));
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,7 +33,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
 // Services
-builder.Services.AddScoped<IFeedService, FeedService>();
+builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddScoped<IUserService, UserService>();
