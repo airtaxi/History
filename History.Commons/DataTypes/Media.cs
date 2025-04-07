@@ -10,5 +10,7 @@ public class Media
     public string Id { get; set; }
 
     public string FileName { get; set; }
+    public string UserId { get; set; }
+    public long MediaSize { get; set; }
     public MediaBucket BucketType { get; set; }
 }
