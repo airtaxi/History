@@ -50,4 +50,9 @@ public class User
     /// Discovery option for friend list.
     /// </summary>
     public DiscoveryOption FriendListDiscoveryOption { get; set; }
+
+    /// <summary>
+    /// Represents the date and time when the user was created.
+    /// </summary>
+    public DateTime CreatedAt { get; set; }
 }
