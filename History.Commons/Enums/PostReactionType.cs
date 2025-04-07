@@ -6,7 +6,7 @@ namespace History.Commons.Enums;
 public enum PostReactionType
 {
     Like,
-    Love,
+    Awesome,
     Happy,
     Sad,
     Support
