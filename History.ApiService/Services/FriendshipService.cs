@@ -75,11 +75,10 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
 
         if (request == null) return ErrorType.NotFound;
 
-        var updateDefinition = Builders<Friendship>.Update.Set(f => f.Status, FriendshipStatus.Declined);
+        var filter = Builders<Friendship>.Filter.Eq(f => f.Id, request.Id);
+        var result = await _friendshipCollection.DeleteOneAsync(filter);
 
-        var result = await _friendshipCollection.UpdateOneAsync(f => f.Id == request.Id, updateDefinition);
-
-        return result.ModifiedCount > 0 ? ErrorType.NotFound : null;
+        return result.DeletedCount > 0 ? ErrorType.NotFound : null;
     }
 
     /// <inheritdoc/>

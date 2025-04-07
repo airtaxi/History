@@ -17,22 +17,17 @@ public enum FriendshipStatus
     Requested,
 
     /// <summary>
-    /// Friend request is declined.
-    /// </summary>
-    Declined,
-
-    /// <summary>
     /// Friend request is accepted.
     /// </summary>
     Accepted,
 
     /// <summary>
-    /// User is blocked.
-    /// </summary>
-    Blocked,
-
-    /// <summary>
     /// User is ignored.
     /// </summary>
-    Ignored
+    Ignored,
+
+    /// <summary>
+    /// User is blocked.
+    /// </summary>
+    Blocked
 }
