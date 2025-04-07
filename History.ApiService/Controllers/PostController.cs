@@ -60,6 +60,6 @@ public class PostController(IPostService postService, IFriendshipService friends
         var count = await postService.GetUserPostsCountAsync(userId);
         if (count.IsFailure) return StatusCode(500, count.FullErrorMessage);
 
-        return Ok(count.Value);
+        return Ok(new GetUserPostsCountResponseDto(count.Value));
     }
 }

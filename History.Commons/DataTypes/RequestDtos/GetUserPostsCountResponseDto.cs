@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace History.Commons.DataTypes.RequestDtos
+namespace History.Commons.DataTypes.RequestDtos;
+
+public class GetUserPostsCountResponseDto()
 {
-    internal class GetUserPostsCountResponseDto
-    {
-    }
+    public long Count { get; }
+
+    public GetUserPostsCountResponseDto(long count) : this() => Count = count;
 }
