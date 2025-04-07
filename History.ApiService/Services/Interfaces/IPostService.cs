@@ -55,4 +55,13 @@ public interface IPostService
     /// <param name="bannedUserIds">A list of user IDs that are prohibited from interacting with the post.</param>
     /// <returns>Returns a task that resolves to a result containing the post response data transfer object.</returns>
     public Task<Result<PostResponseDto>> GeneratePostResponseDtoAsync(Post post, List<string> bannedUserIds);
+
+    /// <summary>
+    /// Asynchronously ignores a specified post for a user. This operation updates the user's preferences regarding the
+    /// visibility of the post.
+    /// </summary>
+    /// <param name="userId">Identifies the user who wants to ignore the post.</param>
+    /// <param name="postId">Specifies the post that the user wishes to ignore.</param>
+    /// <returns>Returns a task that represents the asynchronous operation, containing the result of the ignore action.</returns>
+    public Task<Result> IgnorePostAsync(string userId, string postId);
 }

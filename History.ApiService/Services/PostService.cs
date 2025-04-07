@@ -11,6 +11,7 @@ namespace History.ApiService.Services;
 public class PostService(IMongoDatabase database, IFriendshipService friendshipService) : IPostService
 {
     private readonly IMongoCollection<Post> _postCollection = database.GetCollection<Post>("Posts");
+    private readonly IMongoCollection<IgnoredPost> _ignoredPostCollection = database.GetCollection<IgnoredPost>("IgnoredPosts");
 
     /// <inheritdoc />
     public async Task<Result<Post>> GetPostByIdAsync(string postId) => await _postCollection.Find(p => p.Id == postId).FirstOrDefaultAsync();
@@ -24,6 +25,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         bool areFriendsOfFriends = false;
 
         var bannedUserIds = new List<string>();
+        var ignoredPostIds = new List<string>();
 
         // Only check relationships and apply ban filter if requesterId is provided (logged in user)
         if (!string.IsNullOrEmpty(requesterId) && !isSelf)
@@ -46,6 +48,11 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
 
             var blockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
             if (blockerFriendIdsResult.IsSuccess) bannedUserIds.AddRange(blockerFriendIdsResult.Value);
+
+            ignoredPostIds.AddRange(await _ignoredPostCollection
+                .Find(i => i.UserId == requesterId)
+                .Project(i => i.PostId)
+                .ToListAsync());
         }
 
         // Base filter: posts from the target user
@@ -80,7 +87,8 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
                     : Builders<Post>.Filter.Empty
             );
 
-            filter &= Builders<Post>.Filter.Nin(p => p.UserId, bannedUserIds);
+            if (bannedUserIds.Count > 0) filter &= Builders<Post>.Filter.Nin(p => p.UserId, bannedUserIds);
+            if (ignoredPostIds.Count > 0) filter &= Builders<Post>.Filter.Nin(p => p.Id, ignoredPostIds);
         }
 
         // Add pagination filter
@@ -108,6 +116,11 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         var friendIdsResult = await friendshipService.GetFriendIdsAsync(userId);
         var relevantUserIds = friendIdsResult.Value;
 
+        var ignoredPostIds = await _ignoredPostCollection
+                .Find(i => i.UserId == userId)
+                .Project(i => i.PostId)
+                .ToListAsync();
+
         // Build the filter to get timeline posts
         var filter = Builders<Post>.Filter.Or(
             // Include all posts created by the user (regardless of privacy settings)
@@ -134,12 +147,15 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         if (!string.IsNullOrEmpty(fromPostId))
         {
             var fromPost = await _postCollection.Find(p => p.Id == fromPostId).FirstOrDefaultAsync();
-
             if (fromPost != null)
             {
-                var timeFilter = Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
-                filter = Builders<Post>.Filter.And(filter, timeFilter);
+                filter &= Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
             }
+        }
+
+        if(ignoredPostIds.Count > 0)
+        {
+            filter &= Builders<Post>.Filter.Nin(p => p.Id, ignoredPostIds);
         }
 
         // Retrieve and return posts sorted by creation time (newest first)
@@ -257,5 +273,16 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         }
 
         return postResponse;
+    }
+
+    public async Task<Result> IgnorePostAsync(string userId, string postId)
+    {
+        var ignoredPost = new IgnoredPost
+        {
+            UserId = userId,
+            PostId = postId
+        };
+        await _ignoredPostCollection.InsertOneAsync(ignoredPost);
+        return Result.Success();
     }
 }
