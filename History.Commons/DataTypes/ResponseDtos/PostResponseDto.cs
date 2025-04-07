@@ -1,4 +1,4 @@
-﻿using History.Commons.DataTypes.Content;
+﻿using History.Commons.DataTypes.Contents;
 using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace History.Commons.DataTypes.Dto;
+namespace History.Commons.DataTypes.ResponseDtos;
 
 public class PostResponseDto
 {

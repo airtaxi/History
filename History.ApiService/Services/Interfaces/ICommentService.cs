@@ -1,6 +1,6 @@
 ﻿using History.Commons;
 using History.Commons.DataTypes;
-using History.Commons.DataTypes.Content;
+using History.Commons.DataTypes.Contents;
 using Microsoft.Extensions.Primitives;
 
 namespace History.ApiService.Services.Interfaces;

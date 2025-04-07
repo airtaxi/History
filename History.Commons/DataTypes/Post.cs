@@ -1,4 +1,4 @@
-﻿using History.Commons.DataTypes.Content;
+﻿using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using MongoDB.Bson.Serialization.Attributes;
 

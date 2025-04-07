@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace History.Commons.DataTypes.Content;
+namespace History.Commons.DataTypes.Contents;
 
 [BsonDiscriminator("text")]
 public class TextContent : BaseContent

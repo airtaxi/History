@@ -1,6 +1,6 @@
 ﻿using History.Commons.Enums;
 
-namespace History.Commons.DataTypes.Dto;
+namespace History.Commons.DataTypes.ResponseDtos;
 
 public class UserResponseDto()
 {

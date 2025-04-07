@@ -1,4 +1,4 @@
-﻿using History.Commons.DataTypes.Content;
+﻿using History.Commons.DataTypes.Contents;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace History.Commons.DataTypes;

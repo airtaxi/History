@@ -2,7 +2,8 @@
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
-using History.Commons.DataTypes.Dto;
+using History.Commons.DataTypes.RequestDtos;
+using History.Commons.DataTypes.RequestDtos;
 using History.Commons.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,10 +30,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         if (payload == null) return Unauthorized("ID 토큰이 유효하지 않습니다.");
 
         var existingUserResult = await userService.GetUserByIdAsync(payload.Subject);
-        if (existingUserResult != null)
-        {
-            return Conflict("이미 등록된 사용자입니다.");
-        }
+        if (existingUserResult.IsSuccess) return Conflict("이미 등록된 사용자입니다.");
 
         var newUser = new User
         {
@@ -86,10 +84,84 @@ public class UserController(IUserService userService, IFriendshipService friends
         var userBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(userId);
         if (userBlockedFriendIdsResult.Value.Contains(requesterId)) return Unauthorized("이 사용자의 프로필을 볼 수 없습니다.");
 
-        var profileResult = await userService.GenerateUserResponseDtoAsync(userResult, requesterId);
-        if (profileResult.IsSuccess) return Ok(profileResult.Value);
-        if (profileResult.Error == ErrorType.NotFound) return NotFound(profileResult.ErrorMessage);
-        else return StatusCode(500, profileResult.FullErrorMessage);
+        var dto = await userService.GenerateUserResponseDtoAsync(userResult, requesterId);
+        if (dto.IsSuccess) return Ok(dto.Value);
+        if (dto.Error == ErrorType.NotFound) return NotFound(dto.ErrorMessage);
+        else return StatusCode(500, dto.FullErrorMessage);
+    }
+
+    [HttpPost("approve")]
+    public async Task<IActionResult> ApproveUnauthorizedUser([FromBody] ApproveUnauthorizedUserRequestDto request)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var requester = await userService.GetUserByIdAsync(requesterId);
+        if (requester?.Value.Rank < Rank.Moderator) return Unauthorized("권한이 없습니다.");
+
+        var result = await userService.ApproveUnauthorizedUserAsync(request.UserId);
+        if (result.IsSuccess) return Ok();
+
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpPost("unapprove")]
+    public async Task<IActionResult> UnapproveUnauthorizedUser([FromBody] UnapproveUnauthorizedUserRequestDto request)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var requester = await userService.GetUserByIdAsync(requesterId);
+        if (requester?.Value.Rank < Rank.Moderator) return Unauthorized("권한이 없습니다.");
+
+        var result = await userService.UnapproveUnauthorizedUserAsync(request.UserId);
+        if (result.IsSuccess) return Ok();
+
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpPost("make-moderator")]
+    public async Task<IActionResult> MakeUserModerator([FromBody] MakeUserModeratorRequestDto request)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var requester = await userService.GetUserByIdAsync(requesterId);
+        if (requester?.Value.Rank != Rank.Admin) return Unauthorized("권한이 없습니다.");
+
+        var result = await userService.MakeUserModeratorAsync(request.UserId);
+        if (result.IsSuccess) return Ok();
+
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpGet("unauthorized-users")]
+    public async Task<IActionResult> GetUnauthorizedUsers()
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var requester = await userService.GetUserByIdAsync(requesterId);
+        if (requester?.Value.Rank < Rank.Moderator) return Unauthorized("권한이 없습니다.");
+
+        var result = await userService.GetUnauthorizedUsersAsync();
+        if (result.IsFailure) return StatusCode(500, result.FullErrorMessage);
+
+        var dtosResult = await userService.GenerateUserResponseDtosAsync(result.Value);
+        if (dtosResult.IsFailure) return StatusCode(500, dtosResult.FullErrorMessage);
+
+        return Ok(dtosResult.Value);
+    }
+
+    [HttpGet("moderators")]
+    public async Task<IActionResult> GetModerators()
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var requester = await userService.GetUserByIdAsync(requesterId);
+        if (requester?.Value.Rank != Rank.Admin) return Unauthorized("권한이 없습니다.");
+
+        var result = await userService.GetModeratorsAsync();
+        if (result.IsFailure) return StatusCode(500, result.FullErrorMessage);
+
+        var dtosResult = await userService.GenerateUserResponseDtosAsync(result.Value);
+        if (dtosResult.IsFailure) return StatusCode(500, dtosResult.FullErrorMessage);
+
+        return Ok(dtosResult.Value);
     }
 
     /// <summary>
@@ -279,6 +351,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
+            new Claim(ClaimTypes.Role, user.Rank.ToString()),
             new Claim("nickname", user.Nickname),
             new Claim("provider", user.SocialService.ToString())
         };

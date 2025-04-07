@@ -1,7 +1,7 @@
 ﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
-using History.Commons.DataTypes.Content;
+using History.Commons.DataTypes.Contents;
 using MongoDB.Driver;
 
 namespace History.ApiService.Services;

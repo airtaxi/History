@@ -1,6 +1,7 @@
 ﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
+using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using MongoDB.Driver;
 using System.Collections.Generic;
@@ -11,8 +12,10 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
 {
     private readonly IMongoCollection<Post> _postCollection = database.GetCollection<Post>("Posts");
 
+    /// <inheritdoc />
     public async Task<Result<Post>> GetPostByIdAsync(string postId) => await _postCollection.Find(p => p.Id == postId).FirstOrDefaultAsync();
 
+    /// <inheritdoc />
     public async Task<Result<List<Post>>> GetUserPostsAsync(string requesterId, string userId, string fromPostId = null, int limit = 10)
     {
         // Check relationship between requester and target user
@@ -20,7 +23,9 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         bool areFriends = false;
         bool areFriendsOfFriends = false;
 
-        // Only check relationships if requesterId is provided (logged in user)
+        var bannedUserIds = new List<string>();
+
+        // Only check relationships and apply ban filter if requesterId is provided (logged in user)
         if (!string.IsNullOrEmpty(requesterId) && !isSelf)
         {
             // Check if they are friends
@@ -31,6 +36,16 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
             {
                 areFriendsOfFriends = await friendshipService.AreFriendsOfFriendsAsync(requesterId, userId);
             }
+
+            // Get ignored friend ids
+            var ignoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
+            if (ignoredFriendIdsResult.IsSuccess) bannedUserIds.AddRange(ignoredFriendIdsResult.Value);
+
+            var blockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
+            if (blockedFriendIdsResult.IsSuccess) bannedUserIds.AddRange(blockedFriendIdsResult.Value);
+
+            var blockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
+            if (blockerFriendIdsResult.IsSuccess) bannedUserIds.AddRange(blockerFriendIdsResult.Value);
         }
 
         // Base filter: posts from the target user
@@ -39,7 +54,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         // Add visibility filters based on privacy settings
         if (!isSelf)
         {
-            var visibilityFilter = Builders<Post>.Filter.Or(
+            filter &= Builders<Post>.Filter.Or(
                 // Public posts are always visible (even to non-logged in users)
                 Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone),
 
@@ -65,7 +80,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
                     : Builders<Post>.Filter.Empty
             );
 
-            filter = Builders<Post>.Filter.And(filter, visibilityFilter);
+            filter &= Builders<Post>.Filter.Nin(p => p.UserId, bannedUserIds);
         }
 
         // Add pagination filter
@@ -74,8 +89,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
             var fromPost = await _postCollection.Find(p => p.Id == fromPostId).FirstOrDefaultAsync();
             if (fromPost != null)
             {
-                var timeFilter = Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
-                filter = Builders<Post>.Filter.And(filter, timeFilter);
+                filter &= Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
             }
         }
 
@@ -87,6 +101,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
             .ToListAsync();
     }
 
+    /// <inheritdoc />
     public async Task<Result<List<Post>>> GetTimelinePostsAsync(string userId, string fromPostId = null, int limit = 10)
     {
         // Get IDs of user's friends and add the user's own ID
@@ -136,7 +151,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
     }
 
     /// <inheritdoc/>
-    public async Task<Result<long>> GetUserPostCountAsync(string userId, string requesterId = null)
+    public async Task<Result<long>> GetUserPostsCountAsync(string userId, string requesterId = null)
     {
         // Check relationship between requester and target user
         bool isSelf = requesterId == userId;
@@ -187,5 +202,60 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
 
         // Count the number of posts that match the filter
         return await _postCollection.CountDocumentsAsync(filter);
+    }
+
+    public async Task<Result<List<PostResponseDto>>> GeneratePostResponsesDtosAsync(List<Post> posts, string requesterId)
+    {
+        var bannedUserIds = new List<string>();
+        if (requesterId != null)
+        {
+            var blockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
+            if (blockedFriendIdsResult != null) bannedUserIds.AddRange(blockedFriendIdsResult.Value);
+
+            var ignoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
+            if (ignoredFriendIdsResult != null) bannedUserIds.AddRange(ignoredFriendIdsResult.Value);
+
+            var blockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
+            if (blockerFriendIdsResult != null) bannedUserIds.AddRange(blockerFriendIdsResult.Value);
+        }
+
+        var tasks = posts.Select(x => GeneratePostResponseDtoAsync(x, bannedUserIds)).ToList();
+        await Task.WhenAll(tasks);
+
+        return tasks.Where(x => x.Result.IsSuccess).Select(x => x.Result.Value).ToList();
+    }
+
+    public async Task<Result<PostResponseDto>> GeneratePostResponseDtoAsync(Post post, List<string> bannedUserIds)
+    {
+        if (bannedUserIds.Contains(post.UserId)) return null;
+
+        var postResponse = new PostResponseDto
+        {
+            Id = post.Id,
+            UserId = post.UserId,
+            Contents = post.Contents,
+            CreatedAt = post.CreatedAt,
+            IsRepost = post.IsRepost,
+            ModifiedAt = post.ModifiedAt
+        };
+
+        if (post.ParentPostId != null)
+        {
+            var parentPostResult = await GetPostByIdAsync(post.ParentPostId);
+            if (parentPostResult.Error != null && !bannedUserIds.Contains(parentPostResult.Value.UserId))
+            {
+                postResponse.ParentPost = new PostResponseDto
+                {
+                    Id = parentPostResult.Value.Id,
+                    UserId = parentPostResult.Value.UserId,
+                    Contents = parentPostResult.Value.Contents,
+                    CreatedAt = parentPostResult.Value.CreatedAt,
+                    IsRepost = parentPostResult.Value.IsRepost,
+                    ModifiedAt = parentPostResult.Value.ModifiedAt
+                };
+            }
+        }
+
+        return postResponse;
     }
 }

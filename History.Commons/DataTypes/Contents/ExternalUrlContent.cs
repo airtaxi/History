@@ -1,4 +1,4 @@
-﻿namespace History.Commons.DataTypes.Content;
+﻿namespace History.Commons.DataTypes.Contents;
 
 public class ExternalUrlContent : BaseContent
 {
