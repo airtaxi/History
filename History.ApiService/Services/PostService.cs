@@ -11,7 +11,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
 {
     private readonly IMongoCollection<Post> _postCollection = database.GetCollection<Post>("Posts");
 
-    public async Task<Result<Post>> GetPostByIdAsync(string postId) => await _postCollection.Find(f => f.Id == postId).FirstOrDefaultAsync();
+    public async Task<Result<Post>> GetPostByIdAsync(string postId) => await _postCollection.Find(p => p.Id == postId).FirstOrDefaultAsync();
 
     public async Task<Result<List<Post>>> GetUserPostsAsync(string requesterId, string userId, string fromPostId = null, int limit = 10)
     {
@@ -34,33 +34,33 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         }
 
         // Base filter: posts from the target user
-        var filter = Builders<Post>.Filter.Eq(f => f.UserId, userId);
+        var filter = Builders<Post>.Filter.Eq(p => p.UserId, userId);
 
         // Add visibility filters based on privacy settings
         if (!isSelf)
         {
             var visibilityFilter = Builders<Post>.Filter.Or(
                 // Public posts are always visible (even to non-logged in users)
-                Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.Everyone),
+                Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone),
 
                 // For logged in users who are friends, include posts with Friends or higher visibility
                 !string.IsNullOrEmpty(requesterId) && areFriends
                     ? Builders<Post>.Filter.Or(
-                        Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.Friends),
-                        Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
+                        Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Friends),
+                        Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
                       )
                     : Builders<Post>.Filter.Empty,
 
                 // For logged in users who are friends of friends, include posts with FriendsOfFriends visibility
                 !string.IsNullOrEmpty(requesterId) && areFriendsOfFriends
-                    ? Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
+                    ? Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
                     : Builders<Post>.Filter.Empty,
 
                 // For logged in users included in SelectedUsers
                 !string.IsNullOrEmpty(requesterId)
                     ? Builders<Post>.Filter.And(
-                        Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.SelectedUsers),
-                        Builders<Post>.Filter.AnyEq(f => f.DiscoveryOptionSelectedUserIds, requesterId)
+                        Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.SelectedUsers),
+                        Builders<Post>.Filter.AnyEq(p => p.DiscoveryOptionSelectedUserIds, requesterId)
                       )
                     : Builders<Post>.Filter.Empty
             );
@@ -71,10 +71,10 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         // Add pagination filter
         if (!string.IsNullOrEmpty(fromPostId))
         {
-            var fromPost = await _postCollection.Find(f => f.Id == fromPostId).FirstOrDefaultAsync();
+            var fromPost = await _postCollection.Find(p => p.Id == fromPostId).FirstOrDefaultAsync();
             if (fromPost != null)
             {
-                var timeFilter = Builders<Post>.Filter.Lt(f => f.CreatedAt, fromPost.CreatedAt);
+                var timeFilter = Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
                 filter = Builders<Post>.Filter.And(filter, timeFilter);
             }
         }
@@ -82,7 +82,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         // Retrieve and return posts sorted by creation time (newest first)
         return await _postCollection
             .Find(filter)
-            .Sort(Builders<Post>.Sort.Descending(f => f.CreatedAt))
+            .Sort(Builders<Post>.Sort.Descending(p => p.CreatedAt))
             .Limit(limit)
             .ToListAsync();
     }
@@ -96,33 +96,33 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         // Build the filter to get timeline posts
         var filter = Builders<Post>.Filter.Or(
             // Include all posts created by the user (regardless of privacy settings)
-            Builders<Post>.Filter.Eq(f => f.UserId, userId),
+            Builders<Post>.Filter.Eq(p => p.UserId, userId),
 
             // Include posts from friends with appropriate privacy settings
             Builders<Post>.Filter.And(
-                Builders<Post>.Filter.In(f => f.UserId, relevantUserIds),
+                Builders<Post>.Filter.In(p => p.UserId, relevantUserIds),
                 Builders<Post>.Filter.Or(
-                    Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.Friends),
-                    Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.FriendsOfFriends),
-                    Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.Everyone)
+                    Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Friends),
+                    Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends),
+                    Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone)
                 )
             ),
 
             // Include posts where the user is specifically selected as a recipient
             Builders<Post>.Filter.And(
-                Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.SelectedUsers),
-                Builders<Post>.Filter.AnyEq(f => f.DiscoveryOptionSelectedUserIds, userId)
+                Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.SelectedUsers),
+                Builders<Post>.Filter.AnyEq(p => p.DiscoveryOptionSelectedUserIds, userId)
             )
         );
 
         // Add pagination filter if a reference post ID is provided
         if (!string.IsNullOrEmpty(fromPostId))
         {
-            var fromPost = await _postCollection.Find(f => f.Id == fromPostId).FirstOrDefaultAsync();
+            var fromPost = await _postCollection.Find(p => p.Id == fromPostId).FirstOrDefaultAsync();
 
             if (fromPost != null)
             {
-                var timeFilter = Builders<Post>.Filter.Lt(f => f.CreatedAt, fromPost.CreatedAt);
+                var timeFilter = Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
                 filter = Builders<Post>.Filter.And(filter, timeFilter);
             }
         }
@@ -130,7 +130,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         // Retrieve and return posts sorted by creation time (newest first)
         return await _postCollection
             .Find(filter)
-            .Sort(Builders<Post>.Sort.Descending(f => f.CreatedAt))
+            .Sort(Builders<Post>.Sort.Descending(p => p.CreatedAt))
             .Limit(limit)
             .ToListAsync();
     }
@@ -156,29 +156,29 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         }
 
         // Base filter: posts from the target user
-        var filter = Builders<Post>.Filter.Eq(f => f.UserId, userId);
+        var filter = Builders<Post>.Filter.Eq(p => p.UserId, userId);
         // Add visibility filters based on privacy settings
         if (!isSelf)
         {
             var visibilityFilter = Builders<Post>.Filter.Or(
                 // Public posts are always visible (even to non-logged in users)
-                Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.Everyone),
+                Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone),
                 // For logged in users who are friends, include posts with Friends or higher visibility
                 !string.IsNullOrEmpty(requesterId) && areFriends
                     ? Builders<Post>.Filter.Or(
-                        Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.Friends),
-                        Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
+                        Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Friends),
+                        Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
                       )
                     : Builders<Post>.Filter.Empty,
                 // For logged in users who are friends of friends, include posts with FriendsOfFriends visibility
                 !string.IsNullOrEmpty(requesterId) && areFriendsOfFriends
-                    ? Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
+                    ? Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
                     : Builders<Post>.Filter.Empty,
                 // For logged in users included in SelectedUsers
                 !string.IsNullOrEmpty(requesterId)
                     ? Builders<Post>.Filter.And(
-                        Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.SelectedUsers),
-                        Builders<Post>.Filter.AnyEq(f => f.DiscoveryOptionSelectedUserIds, requesterId)
+                        Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.SelectedUsers),
+                        Builders<Post>.Filter.AnyEq(p => p.DiscoveryOptionSelectedUserIds, requesterId)
                       )
                     : Builders<Post>.Filter.Empty
             );
