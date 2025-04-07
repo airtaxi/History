@@ -21,10 +21,17 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var result = await commentService.GetCommentsByPostIdAsync(postId, requesterId, fromCommentId, limit);
-        if (result.IsSuccess) return Ok(result.Value);
-        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
-        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
-        else return StatusCode(500, result.FullErrorMessage);
+        if (result.IsFailure)
+        {
+            if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+            else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+            else return StatusCode(500, result.FullErrorMessage);
+        }
+
+        var dtosResult = await commentService.GenerateCommentResponseDtosAsync(result.Value, requesterId);
+        if (dtosResult.IsFailure) return StatusCode(500, dtosResult.FullErrorMessage);
+
+        return Ok(dtosResult.Value);
     }
 
     [HttpPost("{postId}")]
@@ -70,4 +77,17 @@ public class CommentController(ICommentService commentService) : ControllerBase
         else return StatusCode(500, result.FullErrorMessage);
     }
 
+    [HttpPost("{commentId}/like")]
+    [Authorize]
+    public async Task<IActionResult> HandleLikeComment(string commentId)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var result = await commentService.HandleLikeCommentAsync(commentId, requesterId);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
 }

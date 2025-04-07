@@ -4,6 +4,7 @@ using History.Commons.DataTypes;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using MongoDB.Driver;
+using System.Runtime.InteropServices;
 
 namespace History.ApiService.Services;
 
@@ -134,7 +135,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
         if (userResult.Error != null) return userResult.CastFailure();
         else if (userResult == null) return (ErrorType.NotFound, "사용자를 찾을 수 없습니다.");
 
-        if (userResult.Value.ProfileMediaId != null) await mediaService.DeleteMediaByMediaIdAsync(userResult.Value.ProfileMediaId);
+        if (userResult.Value.ProfileMediaId != null) await mediaService.DeleteMediaByIdAsync(userResult.Value.ProfileMediaId);
 
         if (image == null)
         {
@@ -160,7 +161,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
         if (userResult.Error != null) return userResult.CastFailure<bool>();
         else if (userResult == null) return (ErrorType.NotFound, "사용자를 찾을 수 없습니다.");
 
-        if (userResult.Value.BackgroundMediaId != null) await mediaService.DeleteMediaByMediaIdAsync(userResult.Value.BackgroundMediaId);
+        if (userResult.Value.BackgroundMediaId != null) await mediaService.DeleteMediaByIdAsync(userResult.Value.BackgroundMediaId);
 
         if (image == null)
         {
@@ -183,6 +184,21 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
     {
         var result = new UserResponseDto(user);
 
+        if(requesterId != null)
+        {
+            var blockedUserIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
+            if (blockedUserIdsResult.IsFailure) return blockedUserIdsResult.CastFailure<UserResponseDto>();
+            else if (blockedUserIdsResult.Value.Contains(user.Id)) return Result<UserResponseDto>.Failure(ErrorType.Forbidden, "차단한 사용자 접근 오류");
+
+            var ignoredUserIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
+            if (ignoredUserIdsResult.IsFailure) return ignoredUserIdsResult.CastFailure<UserResponseDto>();
+            else if (ignoredUserIdsResult.Value.Contains(user.Id)) return Result<UserResponseDto>.Failure(ErrorType.Forbidden, "무시한 사용자 접근 오류");
+
+            var blockerUserIdsResult = await friendshipService.GetBlockerUserIdsAsync(user.Id);
+            if (blockerUserIdsResult.IsFailure) return blockerUserIdsResult.CastFailure<UserResponseDto>();
+            else if (blockerUserIdsResult.Value.Contains(requesterId)) return Result<UserResponseDto>.Failure(ErrorType.Forbidden, "차단당한 사용자 접근 오류");
+        }
+
         var friendshipResult = await friendshipService.GetFriendshipAsync(user.Id, requesterId);
         if (friendshipResult.IsFailure) return friendshipResult.CastFailure<UserResponseDto>();
 
@@ -204,6 +220,11 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
     public async Task<Result<List<UserResponseDto>>> GenerateUserResponseDtosAsync(IEnumerable<User> users, string requesterId = null)
     {
         var results = users.Select(x => new UserResponseDto(x)).ToList();
+
+        var bannedUserIds = new List<string>();
+        if (requesterId != null) bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
+
+        results.RemoveAll(x => bannedUserIds.Contains(x.UserId));
 
         var friendshipsResult = await friendshipService.GetAllFriendshipsAsync(requesterId);
         if (friendshipsResult.IsFailure) return friendshipsResult.CastFailure<List<UserResponseDto>>();

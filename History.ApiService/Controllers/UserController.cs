@@ -3,7 +3,6 @@ using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.RequestDtos;
-using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -82,8 +81,15 @@ public class UserController(IUserService userService, IFriendshipService friends
         var userResult = await userService.GetUserByIdAsync(userId);
         if (userResult == null) return null;
 
-        var userBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(userId);
-        if (userBlockedFriendIdsResult.Value.Contains(requesterId)) return Unauthorized("이 사용자의 프로필을 볼 수 없습니다.");
+        if (requesterId != null)
+        {
+            var requesterBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
+            var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
+            var requesterBlockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
+
+            if (requesterBlockedFriendIdsResult.Value.Contains(userId) || requesterIgnoredFriendIdsResult.Value.Contains(userId)) return Unauthorized("차단 또는 무시한 사용자의 피드를 볼 수 없습니다.");
+            else if (requesterBlockerFriendIdsResult.Value.Contains(userId)) return Unauthorized("이 사용자의 피드를 볼 수 없습니다.");
+        }
 
         var dto = await userService.GenerateUserResponseDtoAsync(userResult, requesterId);
         if (dto.IsSuccess) return Ok(dto.Value);

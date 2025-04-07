@@ -196,6 +196,30 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
         return friendships;
     }
 
+    /// <summary>
+    /// Retrieves a list of user IDs that are blocked, blocked by, or ignored by the specified user.
+    /// </summary>
+    /// <param name="userId">Identifies the user for whom the banned or ignored user IDs are being retrieved.</param>
+    /// <returns>A list of strings representing the IDs of banned or ignored users.</returns>
+    public async Task<Result<List<string>>> GetBannedUserIdsAsync(string userId)
+    {
+        // Get all blocked users
+        var filter = Builders<Friendship>.Filter.Eq(f => f.UserId, userId) &
+                     Builders<Friendship>.Filter.Eq(f => f.Status, FriendshipStatus.Blocked);
+
+        // Add blocker users
+        filter |= Builders<Friendship>.Filter.Eq(f => f.FriendId, userId) &
+                     Builders<Friendship>.Filter.Eq(f => f.Status, FriendshipStatus.Blocked);
+
+        // Add ignored users
+        filter |= Builders<Friendship>.Filter.Eq(f => f.UserId, userId) &
+                     Builders<Friendship>.Filter.Eq(f => f.Status, FriendshipStatus.Ignored);
+
+        return await _friendshipCollection.Find(filter)
+            .Project(f => f.UserId)
+            .ToListAsync();
+    }
+
     /// <inheritdoc/>
     public async Task<Result<List<string>>> GetBlockedUserIdsAsync(string userId)
     {
