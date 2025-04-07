@@ -2,6 +2,7 @@
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
+using History.Commons.Enums;
 using MongoDB.Driver;
 
 namespace History.ApiService.Services;
@@ -49,12 +50,17 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
     }
 
     /// <inheritdoc />
-    public async Task<Result<Comment>> CreateCommentAsync(string postId, List<BaseContent> contents, string requesterId)
+    public async Task<Result<Comment>> CreateCommentAsync(string postId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files)
     {
         if (requesterId == null) Result<Comment>.Failure(ErrorType.Unauthorized, "로그인이 필요합니다.");
 
+        // Check access
         var accessResult = await CheckAccessAsync(postId, requesterId);
         if (accessResult.IsFailure) return Result<Comment>.Failure(accessResult);
+
+        // Upload medias
+        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, postId, requesterId, contents, files);
+        if (uploadResult.IsFailure) return Result<Comment>.Failure(uploadResult);
 
         // Create comment
         var comment = new Comment
@@ -82,7 +88,7 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
     }
 
     /// <inheritdoc />
-    public async Task<Result> ModifyCommentByIdAsync(string commentId, List<BaseContent> contents, string requesterId)
+    public async Task<Result> ModifyCommentAsync(string commentId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files)
     {
         var permissionResult = await CheckPermissionAsync(commentId, requesterId);
 
@@ -90,6 +96,10 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
         {
             // Fetch original comment before update
             var originalComment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
+
+            // Upload medias
+            var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, originalComment.PostId, requesterId, contents, files);
+            if (uploadResult.IsFailure) return Result<Comment>.Failure(uploadResult);
 
             // Update Comment
             var filter = Builders<Comment>.Filter.Eq(f => f.Id, commentId);
@@ -110,22 +120,20 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
     }
 
     /// <inheritdoc />
-    public async Task<Result> DeleteCommentByIdAsync(string commentId, string requesterId)
+    public async Task<Result> DeleteCommentAsync(string commentId, string requesterId)
     {
         var permissionResult = await CheckPermissionAsync(commentId, requesterId);
 
         if (permissionResult.IsSuccess)
         {
-            var comment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
-
             // Delete Comment
             var result = await _commentCollection.DeleteOneAsync(f => f.Id == commentId);
+            if (result.DeletedCount == 0) return Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
 
-            // Delete Media
-            var mediaIds = comment.Contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
-            foreach (var mediaId in mediaIds) await mediaService.DeleteMediaByMediaIdAsync(mediaId);
+            var deleteResult = await mediaService.DeleteByAssociatedIdAsync(commentId);
+            if (deleteResult.IsFailure) return deleteResult;
 
-            return result.DeletedCount > 0 ? Result.Success() : Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
+            return Result.Success();
         }
         else return permissionResult;
     }
@@ -139,13 +147,13 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
 
         // Apply discovery option / privacy settings
         var postDiscoveryOption = postResult.Value.DiscoveryOption;
-        if (postDiscoveryOption < Commons.Enums.DiscoveryOption.Everyone)
+        if (postDiscoveryOption < DiscoveryOption.Everyone)
         {
             bool hasAccess;
-            if (postDiscoveryOption == Commons.Enums.DiscoveryOption.FriendsOfFriends) hasAccess = await friendshipService.AreFriendsOfFriendsAsync(postAuthorId, requesterId);
-            else if (postDiscoveryOption == Commons.Enums.DiscoveryOption.Friends) hasAccess = await friendshipService.AreFriendsAsync(postAuthorId, requesterId);
-            else if (postDiscoveryOption == Commons.Enums.DiscoveryOption.SelectedUsers) hasAccess = postResult.Value.DiscoveryOptionSelectedUserIds.Contains(requesterId);
-            else if (postDiscoveryOption == Commons.Enums.DiscoveryOption.OnlyMe) hasAccess = postAuthorId == requesterId;
+            if (postDiscoveryOption == DiscoveryOption.FriendsOfFriends) hasAccess = await friendshipService.AreFriendsOfFriendsAsync(postAuthorId, requesterId);
+            else if (postDiscoveryOption == DiscoveryOption.Friends) hasAccess = await friendshipService.AreFriendsAsync(postAuthorId, requesterId);
+            else if (postDiscoveryOption == DiscoveryOption.SelectedUsers) hasAccess = postResult.Value.DiscoveryOptionSelectedUserIds.Contains(requesterId);
+            else if (postDiscoveryOption == DiscoveryOption.OnlyMe) hasAccess = postAuthorId == requesterId;
             else
             {
                 var requesterBlockerIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);

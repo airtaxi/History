@@ -144,7 +144,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
         }
         else
         {
-            var media = await mediaService.CreateMediaAsync(MediaBucket.ProfileMedia, userId, image);
+            var media = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, image);
             if (media.Error != null) return media.CastFailure<bool>();
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
@@ -170,7 +170,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
         }
         else
         {
-            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.BackgroundMedia, userId, image);
+            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, image);
             if (mediaResult.Error != null) return mediaResult.CastFailure<bool>();
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
