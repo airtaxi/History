@@ -87,7 +87,8 @@ public class UserController(IUserService userService, IFriendshipService friends
             var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
             var requesterBlockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
 
-            if (requesterBlockedFriendIdsResult.Value.Contains(userId) || requesterIgnoredFriendIdsResult.Value.Contains(userId)) return Unauthorized("차단 또는 무시한 사용자의 피드를 볼 수 없습니다.");
+            if (requesterBlockedFriendIdsResult.Value.Contains(userId)) return Unauthorized("차단한 사용자의 피드를 볼 수 없습니다.");
+            else if (requesterIgnoredFriendIdsResult.Value.Contains(userId)) return Unauthorized("무시한 사용자의 피드를 볼 수 없습니다.");
             else if (requesterBlockerFriendIdsResult.Value.Contains(userId)) return Unauthorized("이 사용자의 피드를 볼 수 없습니다.");
         }
 
