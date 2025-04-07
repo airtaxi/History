@@ -17,9 +17,10 @@ public interface IMediaService
     /// Create media.
     /// </summary>
     /// <param name="bucketType">The bucket type of media</param>
+    /// <param name="userId">The id of user who uploaded the media</param>
     /// <param name="content">The content of media</param>
     /// <returns>A task that represents the asynchronous operation. with result of created media</returns>
-    public Task<Result<Media>> CreateMediaAsync(MediaBucket bucketType, byte[] content);
+    public Task<Result<Media>> CreateMediaAsync(MediaBucket bucketType, string userId, byte[] content);
 
     /// <summary>
     /// Fetch media file content.

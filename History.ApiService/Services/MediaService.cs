@@ -30,7 +30,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
     }
 
     /// <inheritdoc />
-    public async Task<Result<Media>> CreateMediaAsync(MediaBucket bucketType, byte[] content)
+    public async Task<Result<Media>> CreateMediaAsync(MediaBucket bucketType, string userId, byte[] content)
     {
         // Upload media file to GridFS
         var bucket = new GridFSBucket(database, new GridFSBucketOptions
@@ -41,6 +41,8 @@ public class MediaService(IMongoDatabase database) : IMediaService
         var media = new Media
         {
             FileName = Guid.NewGuid().ToString("N"),
+            UserId = userId,
+            MediaSize = content.Length,
             BucketType = bucketType
         };
 
