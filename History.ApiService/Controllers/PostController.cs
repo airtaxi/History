@@ -62,4 +62,17 @@ public class PostController(IPostService postService, IFriendshipService friends
 
         return Ok(new GetUserPostsCountResponseDto(count.Value));
     }
+    
+    [HttpPost("ignore")]
+    [Authorize]
+    public async Task<IActionResult> IgnorePost([FromBody] IgnorePostRequestDto request)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var result = await postService.IgnorePostAsync(requesterId, request.PostId);
+        if (result.IsFailure) return StatusCode(500, result.FullErrorMessage);
+
+        return Ok();
+    }
 }
