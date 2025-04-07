@@ -57,13 +57,13 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
             f.UserId == requesterId && f.FriendId == userId &&
             f.Status == FriendshipStatus.Requested).FirstOrDefaultAsync();
 
-        if (request == null) return ErrorType.NotFound;
+        if (request == null) return (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.");
 
         var updateDefinition = Builders<Friendship>.Update.Set(f => f.Status, FriendshipStatus.Ignored);
 
         var result = await _friendshipCollection.UpdateOneAsync(f => f.Id == request.Id, updateDefinition);
 
-        return result.ModifiedCount > 0 ? ErrorType.NotFound : null;
+        return result.ModifiedCount > 0 ? (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.") : null;
     }
 
     /// <inheritdoc/>
@@ -73,12 +73,12 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
             f.UserId == requesterId && f.FriendId == userId &&
             f.Status == FriendshipStatus.Requested).FirstOrDefaultAsync();
 
-        if (request == null) return ErrorType.NotFound;
+        if (request == null) return (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.");
 
         var filter = Builders<Friendship>.Filter.Eq(f => f.Id, request.Id);
         var result = await _friendshipCollection.DeleteOneAsync(filter);
 
-        return result.DeletedCount > 0 ? ErrorType.NotFound : null;
+        return result.DeletedCount > 0 ? (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.") : null;
     }
 
     /// <inheritdoc/>
@@ -132,7 +132,7 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
             (f.UserId == userId && f.FriendId == friendId && f.Status == FriendshipStatus.Accepted) ||
             (f.UserId == friendId && f.FriendId == userId && f.Status == FriendshipStatus.Accepted));
 
-        return result.DeletedCount > 0 ? ErrorType.NotFound : null;
+        return result.DeletedCount > 0 ? (ErrorType.NotFound, "친구 관계를 찾을 수 없습니다.") : null;
     }
 
     /// <inheritdoc/>
@@ -142,7 +142,7 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
             f.UserId == userId && f.FriendId == blockedUserId &&
             f.Status == FriendshipStatus.Blocked);
 
-        return result.DeletedCount > 0 ? ErrorType.NotFound : null;
+        return result.DeletedCount > 0 ? (ErrorType.NotFound, "차단한 사용자를 찾을 수 없습니다.") : null;
     }
 
     /// <inheritdoc/>
@@ -152,7 +152,7 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
             f.UserId == userId && f.FriendId == ignoredUserId &&
             f.Status == FriendshipStatus.Ignored);
 
-        return result.DeletedCount > 0 ? ErrorType.NotFound : null;
+        return result.DeletedCount > 0 ? (ErrorType.NotFound, "무시한 사용자를 찾을 수 없습니다.") : null;
     }
 
     /// <inheritdoc/>
@@ -245,7 +245,7 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
         var friendship = await _friendshipCollection.Find(f =>
             f.UserId == userId && f.FriendId == friendId).FirstOrDefaultAsync();
 
-        if (friendship == null) return ErrorType.NotFound;
+        if (friendship == null) return (ErrorType.NotFound, "친구 관계를 찾을 수 없습니다.");
         else return friendship;
     }
 

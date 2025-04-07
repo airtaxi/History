@@ -34,7 +34,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         }
 
         // Base filter: posts from the target user
-        var filter = Builders<Post>.Filter.Eq(f => f.AuthorUserId, userId);
+        var filter = Builders<Post>.Filter.Eq(f => f.UserId, userId);
 
         // Add visibility filters based on privacy settings
         if (!isSelf)
@@ -96,11 +96,11 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         // Build the filter to get timeline posts
         var filter = Builders<Post>.Filter.Or(
             // Include all posts created by the user (regardless of privacy settings)
-            Builders<Post>.Filter.Eq(f => f.AuthorUserId, userId),
+            Builders<Post>.Filter.Eq(f => f.UserId, userId),
 
             // Include posts from friends with appropriate privacy settings
             Builders<Post>.Filter.And(
-                Builders<Post>.Filter.In(f => f.AuthorUserId, relevantUserIds),
+                Builders<Post>.Filter.In(f => f.UserId, relevantUserIds),
                 Builders<Post>.Filter.Or(
                     Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.Friends),
                     Builders<Post>.Filter.Eq(f => f.DiscoveryOption, DiscoveryOption.FriendsOfFriends),
@@ -156,7 +156,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         }
 
         // Base filter: posts from the target user
-        var filter = Builders<Post>.Filter.Eq(f => f.AuthorUserId, userId);
+        var filter = Builders<Post>.Filter.Eq(f => f.UserId, userId);
         // Add visibility filters based on privacy settings
         if (!isSelf)
         {

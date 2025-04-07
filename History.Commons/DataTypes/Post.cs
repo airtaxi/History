@@ -18,7 +18,7 @@ public class Post
     /// <summary>
     /// A user id who created this post.
     /// </summary>
-    public string AuthorUserId { get; set; }
+    public string UserId { get; set; }
 
     /// <summary>
     /// If this true, this post is repost. Means just share other post without contents.

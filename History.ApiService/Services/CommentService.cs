@@ -34,9 +34,9 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
             var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
             var requesterBlockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
 
-            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.AuthorUserId, requseterBlockedFriendIdsResult.Value));
-            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.AuthorUserId, requesterIgnoredFriendIdsResult.Value));
-            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.AuthorUserId, requesterBlockerFriendIdsResult.Value));
+            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.UserId, requseterBlockedFriendIdsResult.Value));
+            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.UserId, requesterIgnoredFriendIdsResult.Value));
+            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.UserId, requesterBlockerFriendIdsResult.Value));
         }
 
         var comments = await _commentCollection
@@ -60,7 +60,7 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
         var comment = new Comment
         {
             PostId = postId,
-            AuthorUserId = requesterId,
+            UserId = requesterId,
             Contents = contents,
             CreatedAt = DateTime.UtcNow,
         };
@@ -135,7 +135,7 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
         var postResult = await postService.GetPostByIdAsync(postId);
         if (postResult.IsFailure) return Result<Comment>.Failure(ErrorType.NotFound, "게시글을 찾을 수 없습니다.");
 
-        var postAuthorId = postResult.Value.AuthorUserId;
+        var postAuthorId = postResult.Value.UserId;
 
         // Apply discovery option / privacy settings
         var postDiscoveryOption = postResult.Value.DiscoveryOption;
@@ -166,16 +166,16 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
 
         var postResult = await postService.GetPostByIdAsync(comment.PostId);
         if (postResult.Error == ErrorType.NotFound) return Result.Failure(ErrorType.NotFound, "게시글을 찾을 수 없습니다.");
-        else if (postResult.IsFailure) return postResult.Error;
+        else if (postResult.IsFailure) return postResult.CastFailure();
 
         var requesterResult = await userService.GetUserByIdAsync(requesterId);
         if (requesterResult.Error == ErrorType.NotFound) return Result.Failure(ErrorType.NotFound, "사용자를 찾을 수 없습니다.");
-        else if (requesterResult.IsFailure) return requesterResult.Error;
+        else if (requesterResult.IsFailure) return requesterResult.CastFailure();
 
         var hasAccess = false;
 
-        if (requesterId == comment.AuthorUserId) hasAccess = true;
-        else if (requesterId == postResult.Value.AuthorUserId) hasAccess = true;
+        if (requesterId == comment.UserId) hasAccess = true;
+        else if (requesterId == postResult.Value.UserId) hasAccess = true;
         else if (requesterResult.Value.Rank > Commons.Enums.Rank.User) hasAccess = true;
 
         return hasAccess ? Result.Success() : Result.Failure(ErrorType.Forbidden, "권한이 없습니다.");

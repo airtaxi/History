@@ -20,14 +20,14 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
 
         await _userCollection.InsertOneAsync(user);
 
-        return null;
+        return Result.Success();
     }
 
     /// <inheritdoc />
     public async Task<Result<User>> GetUserByIdAsync(string id)
     {
         var user = await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
-        if (user == null) return ErrorType.NotFound;
+        if (user == null) return (ErrorType.NotFound, "사용자를 찾을 수 없습니다.");
 
         return user;
     }
@@ -36,35 +36,35 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
     public async Task<Result<List<User>>> GetUsersByIdsAsync(IEnumerable<string> userIds) => await _userCollection.Find(u => userIds.Contains(u.Id)).ToListAsync();
 
     /// <inheritdoc />
-    public async Task<Result<bool>> UpdateDescriptionAsync(string userId, string description)
+    public async Task<Result> UpdateDescriptionAsync(string userId, string description)
     {
         var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
         var update = Builders<User>.Update.Set(u => u.Description, description);
-        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? true : ErrorType.NotFound;
+        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "소개글을 변경하는 중 오류가 발생했습니다.");
     }
 
     /// <inheritdoc />
-    public async Task<Result<bool>> UpdateBirthdayAsync(string userId, DateTime? birthday)
+    public async Task<Result> UpdateBirthdayAsync(string userId, DateTime? birthday)
     {
         var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
         var update = Builders<User>.Update.Set(u => u.Birthday, birthday);
-        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? true : ErrorType.NotFound;
+        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "생일을 변경하는 중 오류가 발생했습니다.");
     }
 
     /// <inheritdoc />
-    public async Task<Result<bool>> UpdateNicknameAsync(string userId, string nickname)
+    public async Task<Result> UpdateNicknameAsync(string userId, string nickname)
     {
         var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
         var update = Builders<User>.Update.Set(u => u.Nickname, nickname);
-        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? true : ErrorType.NotFound;
+        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "닉네임을 변경하는 중 오류가 발생했습니다.");
     }
 
     /// <inheritdoc />
-    public async Task<Result<bool>> UpdateProfileMediaAsync(string userId, byte[] image)
+    public async Task<Result> UpdateProfileMediaAsync(string userId, byte[] image)
     {
         var userResult = await GetUserByIdAsync(userId);
-        if (userResult.Error != null) return userResult.Error;
-        else if (userResult == null) return ErrorType.NotFound;
+        if (userResult.Error != null) return userResult.CastFailure();
+        else if (userResult == null) return (ErrorType.NotFound, "사용자를 찾을 수 없습니다.");
 
         if (userResult.Value.ProfileMediaId != null) await mediaService.DeleteMediaByMediaIdAsync(userResult.Value.ProfileMediaId);
 
@@ -72,25 +72,25 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
         {
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update.Unset(u => u.ProfileMediaId);
-            return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? true : ErrorType.NotFound;
+            return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "프로필 이미지를 삭제하는 중 오류가 발생했습니다.");
         }
         else
         {
             var media = await mediaService.CreateMediaAsync(MediaBucket.ProfileMedia, userId, image);
-            if (media.Error != null) return media.Error;
+            if (media.Error != null) return media.CastFailure<bool>();
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update.Set(u => u.ProfileMediaId, media.Value.Id);
-            return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? true : ErrorType.NotFound;
+            return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "프로필 이미지를 변경하는 중 오류가 발생했습니다.");
         }
     }
 
     /// <inheritdoc />
-    public async Task<Result<bool>> UpdateBackgroundMediaAsync(string userId, byte[] image)
+    public async Task<Result> UpdateBackgroundMediaAsync(string userId, byte[] image)
     {
         var userResult = await GetUserByIdAsync(userId);
-        if (userResult.Error != null) return userResult.Error;
-        else if (userResult == null) return ErrorType.NotFound;
+        if (userResult.Error != null) return userResult.CastFailure<bool>();
+        else if (userResult == null) return (ErrorType.NotFound, "사용자를 찾을 수 없습니다.");
 
         if (userResult.Value.BackgroundMediaId != null) await mediaService.DeleteMediaByMediaIdAsync(userResult.Value.BackgroundMediaId);
 
@@ -98,16 +98,16 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
         {
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update.Unset(u => u.BackgroundMediaId);
-            return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? true : ErrorType.NotFound;
+            return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "배경 이미지를 삭제하는 중 오류가 발생했습니다.");
         }
         else
         {
             var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.BackgroundMedia, userId, image);
-            if (mediaResult.Error != null) return mediaResult.Error;
+            if (mediaResult.Error != null) return mediaResult.CastFailure<bool>();
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update.Set(u => u.BackgroundMediaId, mediaResult.Value.Id);
-            return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? true : ErrorType.NotFound;
+            return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "배경 이미지를 변경하는 중 오류가 발생했습니다.");
         }
     }
     /// <inheritdoc/>
@@ -116,7 +116,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
         var result = new UserResponseDto(user);
 
         var friendshipResult = await friendshipService.GetFriendshipAsync(user.Id, requesterId);
-        if (friendshipResult.IsFailure) return friendshipResult.Error;
+        if (friendshipResult.IsFailure) return friendshipResult.CastFailure<UserResponseDto>();
 
         result.Friendship = friendshipResult.Value;
 
@@ -127,18 +127,18 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
     public async Task<Result<UserResponseDto>> GenerateUserResponseDtoAsync(string userId, string requesterId = null)
     {
         var userResult = await GetUserByIdAsync(userId);
-        if (userResult.IsFailure) return userResult.Error;
+        if (userResult.IsFailure) return userResult.CastFailure<UserResponseDto>();
 
         return await GenerateUserResponseDtoAsync(userResult, requesterId);
     }
 
     /// <inheritdoc/>
-    public async Task<Result<List<UserResponseDto>>> GenerateUserResponseDtosAsync(IEnumerable<User> users, string requesterId = null)
+    public async Task<Result<List<UserResponseDto>>> GenerateUserResponseDtoAsync(IEnumerable<User> users, string requesterId = null)
     {
         var results = users.Select(x => new UserResponseDto(x)).ToList();
 
         var friendshipsResult = await friendshipService.GetAllFriendshipsAsync(requesterId);
-        if (friendshipsResult.IsFailure) return friendshipsResult.Error;
+        if (friendshipsResult.IsFailure) return friendshipsResult.CastFailure<List<UserResponseDto>>();
 
         foreach (var result in results) result.Friendship = friendshipsResult.Value.FirstOrDefault(x => x.FriendId == requesterId);
 
@@ -146,11 +146,11 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
     }
 
     /// <inheritdoc/>
-    public async Task<Result<List<UserResponseDto>>> GenerateUserResponseDtosAsync(IEnumerable<string> userIds, string requesterId = null)
+    public async Task<Result<List<UserResponseDto>>> GenerateUserResponseDtoAsync(IEnumerable<string> userIds, string requesterId = null)
     {
         var usersResult = await GetUsersByIdsAsync(userIds);
-        if (usersResult.IsFailure) return usersResult.Error;
+        if (usersResult.IsFailure) return usersResult.CastFailure<List<UserResponseDto>>();
 
-        return await GenerateUserResponseDtosAsync(usersResult.Value, requesterId);
+        return await GenerateUserResponseDtoAsync(usersResult.Value, requesterId);
     }
 }
