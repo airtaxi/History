@@ -44,11 +44,11 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
     [HttpPut("{commentId}")]
     [Authorize]
-    public async Task<IActionResult> ModifyComment(string commentId, [FromBody] List<BaseContent> contents)
+    public async Task<IActionResult> ModifyComment(string commentId, [FromBody] List<BaseContent> contents, IEnumerable<IFormFile> files)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var result = await commentService.ModifyCommentAsync(commentId, contents, requesterId);
+        var result = await commentService.ModifyCommentAsync(commentId, contents, requesterId, files);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
