@@ -14,7 +14,14 @@ public class Friendship
     [BsonId]
     public string Id { get; set; }
 
+    /// <summary>
+    /// Represents the unique identifier of a source user in the friendship.
+    /// </summary>
     public string UserId { get; set; }
+
+    /// <summary>
+    /// Represents the unique identifier of a target user in the friendship.
+    /// </summary>
     public string FriendId { get; set; }
 
     /// <summary>

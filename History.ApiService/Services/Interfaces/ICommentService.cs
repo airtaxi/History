@@ -23,8 +23,9 @@ public interface ICommentService
     /// <param name="postId">The post id to create comment</param>
     /// <param name="contents">The contents of comment</param>
     /// <param name="requesterId">The id of user who requests create</param>
+    /// <param name="files">The files to upload</param>
     /// <returns>A task that represents the asynchronous operation. with result of created comment</returns>
-    public Task<Result<Comment>> CreateCommentAsync(string postId, List<BaseContent> contents, string requesterId);
+    public Task<Result<Comment>> CreateCommentAsync(string postId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files);
 
     /// <summary>
     /// Modify comment by id
@@ -33,7 +34,7 @@ public interface ICommentService
     /// <param name="contents">The contents to apply</param>
     /// <param name="requesterId">The id of user who requests modify</param>
     /// <returns>A task that represents the asynchronous operation</returns>
-    public Task<Result> ModifyCommentByIdAsync(string commentId, List<BaseContent> contents, string requesterId);
+    public Task<Result> ModifyCommentAsync(string commentId, List<BaseContent> contents, string requesterId);
 
     /// <summary>
     /// Delete comment by id 
@@ -41,5 +42,5 @@ public interface ICommentService
     /// <param name="commentId">The comment id to delete</param>
     /// <param name="requesterId">The id of user who requests delete</param>
     /// <returns>A task that represents the asynchronous operation</returns>
-    public Task<Result> DeleteCommentByIdAsync(string commentId, string requesterId);
+    public Task<Result> DeleteCommentAsync(string commentId, string requesterId);
 }

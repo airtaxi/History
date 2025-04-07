@@ -29,16 +29,44 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
     [HttpPost("{postId}")]
     [Authorize]
-    public async Task<IActionResult> CreateComment(string postId, [FromBody] List<BaseContent> contents)
+    public async Task<IActionResult> CreateComment(string postId, [FromBody] List<BaseContent> contents, IEnumerable<IFormFile> files)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var result = await commentService.CreateCommentAsync(postId, contents, requesterId);
+
+        var result = await commentService.CreateCommentAsync(postId, contents, requesterId, files);
         if (result.IsSuccess) return Ok(result.Value);
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
         else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
 
+    [HttpPut("{commentId}")]
+    [Authorize]
+    public async Task<IActionResult> ModifyComment(string commentId, [FromBody] List<BaseContent> contents)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var result = await commentService.ModifyCommentAsync(commentId, contents, requesterId);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpDelete("{commentId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteComment(string commentId)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var result = await commentService.DeleteCommentAsync(commentId, requesterId);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
