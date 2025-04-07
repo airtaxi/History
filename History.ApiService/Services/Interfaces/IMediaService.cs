@@ -41,14 +41,14 @@ public interface IMediaService
     /// </summary>
     /// <param name="associatedId"></param>
     /// <returns></returns>
-    public Task<Result> DeleteByAssociatedIdAsync(string associatedId);
+    public Task<Result> DeleteMediaByAssociatedIdAsync(string associatedId);
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="associatedIds"></param>
     /// <returns></returns>
-    public Task<Result> DeleteByAssociatedIdsAsync(IEnumerable<string> associatedIds);
+    public Task<Result> DeleteMediaByAssociatedIdsAsync(IEnumerable<string> associatedIds);
 
     /// <summary>
     /// Fetch media file content.
@@ -63,5 +63,5 @@ public interface IMediaService
     /// </summary>
     /// <param name="mediaId">The id of media to delete</param>
     /// <returns>A task that represents the asynchronous operation</returns>
-    public Task<Result> DeleteMediaByMediaIdAsync(string mediaId);
+    public Task<Result> DeleteMediaByIdAsync(string mediaId);
 }

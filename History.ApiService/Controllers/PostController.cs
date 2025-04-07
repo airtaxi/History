@@ -50,14 +50,17 @@ public class PostController(IPostService postService, IFriendshipService friends
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var requesterBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
-        var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
-        var userBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(userId);
+        if (requesterId != null)
+        {
+            var requesterBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
+            var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
+            var requesterBlockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
 
-        if (requesterBlockedFriendIdsResult.Value.Contains(userId) || requesterIgnoredFriendIdsResult.Value.Contains(userId)) return Unauthorized("차단 또는 무시한 사용자의 피드를 볼 수 없습니다.");
-        else if (userBlockedFriendIdsResult.Value.Contains(requesterId)) return Unauthorized("이 사용자의 피드를 볼 수 없습니다.");
+            if (requesterBlockedFriendIdsResult.Value.Contains(userId) || requesterIgnoredFriendIdsResult.Value.Contains(userId)) return Unauthorized("차단 또는 무시한 사용자의 피드를 볼 수 없습니다.");
+            else if (requesterBlockerFriendIdsResult.Value.Contains(userId)) return Unauthorized("이 사용자의 피드를 볼 수 없습니다.");
+        }
 
-        var count = await postService.GetUserPostsCountAsync(userId);
+        var count = await postService.GetUserPostsCountAsync(userId, requesterId);
         if (count.IsFailure) return StatusCode(500, count.FullErrorMessage);
 
         return Ok(new GetUserPostsCountResponseDto(count.Value));

@@ -106,34 +106,34 @@ public interface IUserService
     public Task<Result> UpdateBackgroundMediaAsync(string userId, byte[] image);
 
     /// <summary>
-    /// Generates a UserResponseDto for a user.
+    /// Generates a UserResponseDto asynchronously based on the provided user information.
     /// </summary>
-    /// <param name="user">The user to generate the DTO for.</param>
-    /// <param name="requesterId">The ID of the user requesting the DTO.</param>
-    /// <returns>A task representing the asynchronous operation, with the UserResponseDto.</returns>
+    /// <param name="user">Contains the details of the user for whom the response DTO is being generated.</param>
+    /// <param name="requesterId">Identifies the entity making the request, which can be optional.</param>
+    /// <returns>Returns a task that resolves to a Result containing the UserResponseDto.</returns>
     public Task<Result<UserResponseDto>> GenerateUserResponseDtoAsync(User user, string requesterId = null);
 
     /// <summary>
-    /// Generates a UserResponseDto for a user.
+    /// Generates a user response data transfer object asynchronously.
     /// </summary>
-    /// <param name="userId">The ID of the user to generate the DTO for.</param>
-    /// <param name="requesterId">The ID of the user requesting the DTO.</param>
-    /// <returns>A task representing the asynchronous operation, with the UserResponseDto.</returns>
+    /// <param name="userId">Identifies the user for whom the response data is generated.</param>
+    /// <param name="requesterId">Optionally identifies the requester of the user response data.</param>
+    /// <returns>Returns a task that resolves to a result containing the user response data.</returns>
     public Task<Result<UserResponseDto>> GenerateUserResponseDtoAsync(string userId, string requesterId = null);
 
     /// <summary>
-    /// Generates a UserResponseDto for a user.
+    /// Generates a list of user response data transfer objects asynchronously.
     /// </summary>
-    /// <param name="user">The user to generate the DTO for.</param>
-    /// <param name="requesterId">The ID of the user requesting the DTO.</param>
-    /// <returns>A task representing the asynchronous operation, with the UserResponseDto.</returns>
-    public Task<Result<List<UserResponseDto>>> GenerateUserResponseDtosAsync(IEnumerable<User> user, string requesterId = null);
+    /// <param name="users">A collection of user entities to be converted into response DTOs.</param>
+    /// <param name="requesterId">An optional identifier for the entity making the request.</param>
+    /// <returns>A task that resolves to a result containing a list of user response DTOs.</returns>
+    public Task<Result<List<UserResponseDto>>> GenerateUserResponseDtosAsync(IEnumerable<User> users, string requesterId = null);
 
     /// <summary>
-    /// Generates a UserResponseDto for a user.
+    /// Generates a list of user response data transfer objects asynchronously based on provided user identifiers.
     /// </summary>
-    /// <param name="userId">The ID of the user to generate the DTO for.</param>
-    /// <param name="requesterId">The ID of the user requesting the DTO.</param>
-    /// <returns>A task representing the asynchronous operation, with the UserResponseDto.</returns>
-    public Task<Result<List<UserResponseDto>>> GenerateUserResponseDtosAsync(IEnumerable<string> userId, string requesterId = null);
+    /// <param name="userIds">A collection of identifiers for users whose response data is to be generated.</param>
+    /// <param name="requesterId">An optional identifier for the entity requesting the user response data.</param>
+    /// <returns>A task that resolves to a result containing a list of user response data transfer objects.</returns>
+    public Task<Result<List<UserResponseDto>>> GenerateUserResponseDtosAsync(IEnumerable<string> userIds, string requesterId = null);
 }

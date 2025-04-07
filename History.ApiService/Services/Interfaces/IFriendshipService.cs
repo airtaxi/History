@@ -102,6 +102,13 @@ public interface IFriendshipService
     public Task<Result<List<Friendship>>> GetAllFriendshipsAsync(string userId);
 
     /// <summary>
+    /// Retrieves a list of user IDs that are blocked, blocked by, or ignored by the specified user.
+    /// </summary>
+    /// <param name="userId">Identifies the user for whom the banned or ignored user IDs are being retrieved.</param>
+    /// <returns>A list of strings representing the IDs of banned or ignored users.</returns>
+    public Task<Result<List<string>>> GetBannedUserIdsAsync(string userId);
+
+    /// <summary>
     /// Gets all blocked user's IDs for a user.
     /// </summary>
     /// <param name="userId">The ID of the user whose blocked list is to be retrieved.</param>

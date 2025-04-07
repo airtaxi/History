@@ -201,11 +201,9 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         // Remove blocked, ignored friends, and friends who blocked the requester
         if (requesterId != null)
         {
-            var blockedUserIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
-            var ignoredUserIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
-            var blockerUserIdsResult = await friendshipService.GetBlockedUserIdsAsync(userId);
+            var bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
 
-            friendUsersResult.Value.RemoveAll(x => blockedUserIdsResult.Value.Contains(x.Id) || ignoredUserIdsResult.Value.Contains(x.Id) || blockerUserIdsResult.Value.Contains(x.Id));
+            friendUsersResult.Value.RemoveAll(x => bannedUserIds.Value.Contains(x.Id));
         }
 
         var dtosResult = await userService.GenerateUserResponseDtosAsync(friendUsersResult.Value, requesterId);

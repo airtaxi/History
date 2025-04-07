@@ -1,6 +1,7 @@
 ﻿using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
+using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.Extensions.Primitives;
 
 namespace History.ApiService.Services.Interfaces;
@@ -33,8 +34,9 @@ public interface ICommentService
     /// <param name="commentId">The comment id to modify</param>
     /// <param name="contents">The contents to apply</param>
     /// <param name="requesterId">The id of user who requests modify</param>
+    /// <param name="files">The files to upload</param>
     /// <returns>A task that represents the asynchronous operation</returns>
-    public Task<Result> ModifyCommentAsync(string commentId, List<BaseContent> contents, string requesterId);
+    public Task<Result> ModifyCommentAsync(string commentId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files);
 
     /// <summary>
     /// Delete comment by id 
@@ -43,4 +45,28 @@ public interface ICommentService
     /// <param name="requesterId">The id of user who requests delete</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     public Task<Result> DeleteCommentAsync(string commentId, string requesterId);
+
+    /// <summary>
+    /// Likes or unlikes a comment based on the user's permission and existing like status.
+    /// </summary>
+    /// <param name="commentId">Identifies the specific comment to be liked or unliked.</param>
+    /// <param name="requesterId">Identifies the user attempting to like or unlike the comment.</param>
+    /// <returns>Returns a result indicating the success or failure of the like operation.</returns>
+    public Task<Result> HandleLikeCommentAsync(string commentId, string requesterId);
+
+    /// <summary>
+    /// Generates a list of comment response data transfer objects asynchronously based on provided comments.
+    /// </summary>
+    /// <param name="comment">A collection of comments used to create response data transfer objects.</param>
+    /// <param name="requesterId">Identifies the user making the request for comment responses.</param>
+    /// <returns>A list of successful comment response data transfer objects.</returns>
+    public Task<Result<List<CommentResponseDto>>> GenerateCommentResponseDtosAsync(IEnumerable<Comment> comment, string requesterId);
+
+    /// <summary>
+    /// Generates a CommentResponseDto from a given Comment object, including details about likes and user information.
+    /// </summary>
+    /// <param name="comment">Provides the comment data needed to create the response DTO.</param>
+    /// <param name="requesterId">Identifies the user making the request to tailor the response accordingly.</param>
+    /// <returns>Returns a Task containing the generated CommentResponseDto with relevant details.</returns>
+    public Task<Result<CommentResponseDto>> GenerateCommentResponseDtoAsync(Comment comment, string requesterId);
 }

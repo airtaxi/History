@@ -2,7 +2,9 @@
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
+using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using Microsoft.VisualBasic;
 using MongoDB.Driver;
 
 namespace History.ApiService.Services;
@@ -11,6 +13,7 @@ namespace History.ApiService.Services;
 public class CommentService(IMongoDatabase database, IUserService userService, IPostService postService, IMediaService mediaService, IFriendshipService friendshipService) : ICommentService
 {
     private readonly IMongoCollection<Comment> _commentCollection = database.GetCollection<Comment>("Comments");
+    private readonly IMongoCollection<CommentLike> _commentLikeCollection = database.GetCollection<CommentLike>("CommentLikes");
 
     /// <inheritdoc />
     public async Task<Result<List<Comment>>> GetCommentsByPostIdAsync(string postId, string requesterId, string fromCommentId = null, int limit = 10)
@@ -31,13 +34,9 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
 
         if (requesterId != null)
         {
-            var requseterBlockedFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
-            var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
-            var requesterBlockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
+            var requseterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
 
-            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.UserId, requseterBlockedFriendIdsResult.Value));
-            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.UserId, requesterIgnoredFriendIdsResult.Value));
-            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.UserId, requesterBlockerFriendIdsResult.Value));
+            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.UserId, requseterBannedFriendIdsResult.Value));
         }
 
         var comments = await _commentCollection
@@ -112,7 +111,7 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
             var mediaIds = contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
 
             var deletedMediaIds = originalCommentMediaIds.Except(mediaIds).ToList();
-            foreach (var mediaId in deletedMediaIds) await mediaService.DeleteMediaByMediaIdAsync(mediaId);
+            foreach (var mediaId in deletedMediaIds) await mediaService.DeleteMediaByIdAsync(mediaId);
 
             return result.ModifiedCount > 0 ? Result.Success() : Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
         }
@@ -130,12 +129,82 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
             var result = await _commentCollection.DeleteOneAsync(f => f.Id == commentId);
             if (result.DeletedCount == 0) return Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
 
-            var deleteResult = await mediaService.DeleteByAssociatedIdAsync(commentId);
+            var deleteResult = await mediaService.DeleteMediaByAssociatedIdAsync(commentId);
             if (deleteResult.IsFailure) return deleteResult;
 
             return Result.Success();
         }
         else return permissionResult;
+    }
+
+    public async Task<Result> HandleLikeCommentAsync(string commentId, string requesterId)
+    {
+        var permissionResult = await CheckPermissionAsync(commentId, requesterId);
+        if (permissionResult.IsFailure) return permissionResult;
+
+        var existingLike = await _commentLikeCollection.Find(f => f.CommentId == commentId && f.UserId == requesterId).FirstOrDefaultAsync();
+        if (existingLike != null)
+        {
+            // Unlike
+            var result = await _commentLikeCollection.DeleteOneAsync(f => f.CommentId == commentId && f.UserId == requesterId);
+            return result.DeletedCount > 0 ? Result.Success() : Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
+        }
+
+        // Like
+        var commentLike = new CommentLike
+        {
+            CommentId = commentId,
+            UserId = requesterId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        while (true)
+        {
+            commentLike.Id = Guid.NewGuid().ToString("N");
+
+            var existingCommentLike = await _commentLikeCollection.Find(f => f.Id == commentLike.Id).FirstOrDefaultAsync();
+            if (existingCommentLike == null) break;
+        }
+
+        await _commentLikeCollection.InsertOneAsync(commentLike);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<List<CommentResponseDto>>> GenerateCommentResponseDtosAsync(IEnumerable<Comment> comment, string requesterId)
+    {
+        var tasks = comment.Select(c => GenerateCommentResponseDtoAsync(c, requesterId)).ToList();
+        await Task.WhenAll(tasks);
+
+        return tasks.Where(x => x.Result.IsSuccess).Select(t => t.Result.Value).ToList();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<CommentResponseDto>> GenerateCommentResponseDtoAsync(Comment comment, string requesterId)
+    {
+        var responseDto = new CommentResponseDto
+        {
+            Id = comment.Id,
+
+            PostId = comment.PostId,
+            UserId = comment.UserId,
+
+            Contents = comment.Contents,
+
+            CreatedAt = comment.CreatedAt,
+            ModifiedAt = comment.ModifiedAt,
+        };
+
+        var likedUserIds = await _commentLikeCollection
+            .Find(f => f.CommentId == comment.Id)
+            .Project(f => f.UserId)
+            .ToListAsync();
+
+        var likedUsersDtoResult = await userService.GenerateUserResponseDtosAsync(likedUserIds, requesterId);
+
+        responseDto.LikedUsers = likedUsersDtoResult.Value;
+        return responseDto;
     }
 
     private async Task<Result> CheckAccessAsync(string postId, string requesterId)
@@ -184,7 +253,7 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
 
         if (requesterId == comment.UserId) hasAccess = true;
         else if (requesterId == postResult.Value.UserId) hasAccess = true;
-        else if (requesterResult.Value.Rank > Commons.Enums.Rank.User) hasAccess = true;
+        else if (requesterResult.Value.Rank > Rank.User) hasAccess = true;
 
         return hasAccess ? Result.Success() : Result.Failure(ErrorType.Forbidden, "권한이 없습니다.");
     }

@@ -97,7 +97,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
     }
 
     /// <inheritdoc />
-    public async Task<Result> DeleteByAssociatedIdAsync(string associatedId)
+    public async Task<Result> DeleteMediaByAssociatedIdAsync(string associatedId)
     {
         var media = await _mediaCollection.Find(m => m.AssociatedId == associatedId).FirstOrDefaultAsync();
         if (media == null) return Result.Failure(ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
@@ -115,7 +115,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
     }
 
     /// <inheritdoc />
-    public async Task<Result> DeleteByAssociatedIdsAsync(IEnumerable<string> associatedIds)
+    public async Task<Result> DeleteMediaByAssociatedIdsAsync(IEnumerable<string> associatedIds)
     {
         var media = await _mediaCollection.Find(m => associatedIds.Contains(m.AssociatedId)).ToListAsync();
         if (media == null || media.Count == 0) return Result.Failure(ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
@@ -148,7 +148,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
     }
 
     /// <inheritdoc />
-    public async Task<Result> DeleteMediaByMediaIdAsync(string mediaId)
+    public async Task<Result> DeleteMediaByIdAsync(string mediaId)
     {
         var mediaResult = await GetMediaByIdAsync(mediaId);
         if (mediaResult.IsFailure) return mediaResult;
