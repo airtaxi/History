@@ -80,6 +80,6 @@ public class MediaService(IMongoDatabase database) : IMediaService
         await bucket.DeleteAsync(mediaId);
         await _mediaCollection.DeleteOneAsync(m => m.Id == mediaId);
 
-        return null;
+        return Result.Success();
     }
 }

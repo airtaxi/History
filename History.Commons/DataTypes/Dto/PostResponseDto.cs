@@ -12,7 +12,7 @@ public class PostResponseDto
 {
     public string Id { get; set; }
 
-    public string AuthorUserId { get; set; }
+    public string UserId { get; set; }
     public bool IsRepost { get; set; }
     public List<BaseContent> Contents { get; set; } = [];
     public PostResponseDto ParentPost { get; set; }

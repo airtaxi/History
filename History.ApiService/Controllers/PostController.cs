@@ -72,13 +72,13 @@ public class PostController(IPostService postService, IFriendshipService friends
                 var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
                 var requesterBlockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
 
-                if (requesterBlockedFriendIdsResult.Value.Contains(post.AuthorUserId) || requesterIgnoredFriendIdsResult.Value.Contains(post.AuthorUserId) || requesterBlockerFriendIdsResult.Value.Contains(post.AuthorUserId)) continue;
+                if (requesterBlockedFriendIdsResult.Value.Contains(post.UserId) || requesterIgnoredFriendIdsResult.Value.Contains(post.UserId) || requesterBlockerFriendIdsResult.Value.Contains(post.UserId)) continue;
             }
 
             var postResponse = new PostResponseDto
             {
                 Id = post.Id,
-                AuthorUserId = post.AuthorUserId,
+                UserId = post.UserId,
                 Contents = post.Contents,
                 CreatedAt = post.CreatedAt,
                 IsRepost = post.IsRepost,
@@ -105,13 +105,13 @@ public class PostController(IPostService postService, IFriendshipService friends
                 var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
                 var requesterBlockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
 
-                if (requesterBlockedFriendIdsResult.Value.Contains(parentPostResult.Value.AuthorUserId) || requesterIgnoredFriendIdsResult.Value.Contains(parentPostResult.Value.AuthorUserId) || requesterBlockerFriendIdsResult.Value.Contains(parentPostResult.Value.AuthorUserId)) return;
+                if (requesterBlockedFriendIdsResult.Value.Contains(parentPostResult.Value.UserId) || requesterIgnoredFriendIdsResult.Value.Contains(parentPostResult.Value.UserId) || requesterBlockerFriendIdsResult.Value.Contains(parentPostResult.Value.UserId)) return;
             }
 
             postResponse.ParentPost = new PostResponseDto
             {
                 Id = parentPostResult.Value.Id,
-                AuthorUserId = parentPostResult.Value.AuthorUserId,
+                UserId = parentPostResult.Value.UserId,
                 Contents = parentPostResult.Value.Contents,
                 CreatedAt = parentPostResult.Value.CreatedAt,
                 IsRepost = parentPostResult.Value.IsRepost,

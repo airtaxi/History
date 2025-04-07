@@ -69,6 +69,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         var token = GenerateJwt(userResult);
         return Ok(token);
     }
+
     /// <summary>
     /// Get user profile
     /// </summary>
@@ -108,7 +109,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         var result = await userService.UpdateDescriptionAsync(userId, request.Description);
 
         if (result.IsSuccess) return Ok();
-        else if (result.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -129,7 +130,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         var result = await userService.UpdateBirthdayAsync(userId, request.Birthday);
 
         if (result.IsSuccess) return Ok();
-        else if (result.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -150,7 +151,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         var result = await userService.UpdateNicknameAsync(userId, request.Nickname);
 
         if (result.IsSuccess) return Ok();
-        else if (result.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -173,7 +174,7 @@ public class UserController(IUserService userService, IFriendshipService friends
             var deleteResult = await userService.UpdateProfileMediaAsync(userId, null);
 
             if (deleteResult.IsSuccess) return Ok();
-            else if (deleteResult.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+            else if (deleteResult.Error == ErrorType.NotFound) return NotFound(deleteResult.ErrorMessage);
             else return StatusCode(500, deleteResult.FullErrorMessage);
         }
 
@@ -197,7 +198,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         var result = await userService.UpdateProfileMediaAsync(userId, imageData);
 
         if (result.IsSuccess) return Ok();
-        else if (result.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -220,7 +221,7 @@ public class UserController(IUserService userService, IFriendshipService friends
             var deleteResult = await userService.UpdateBackgroundMediaAsync(userId, null);
 
             if (deleteResult.IsSuccess) return Ok();
-            else if (deleteResult.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+            else if (deleteResult.Error == ErrorType.NotFound) return NotFound(deleteResult.ErrorMessage);
             else return StatusCode(500, deleteResult.FullErrorMessage);
         }
 
@@ -244,7 +245,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         var result = await userService.UpdateBackgroundMediaAsync(userId, imageData);
 
         if (result.IsSuccess) return Ok();
-        else if (result.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
