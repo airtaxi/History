@@ -16,7 +16,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
     {
         var isUserCollectionEmpty = await _userCollection.CountDocumentsAsync(FilterDefinition<User>.Empty) == 0;
         if (isUserCollectionEmpty) user.Rank = Rank.Admin;
-        else user.Rank = Rank.User;
+        else user.Rank = Rank.Unauthorized;
 
         await _userCollection.InsertOneAsync(user);
 

@@ -5,6 +5,7 @@ namespace History.Commons.Enums;
 [JsonConverter(typeof(JsonStringEnumConverter<Rank>))]
 public enum Rank
 {
+    Unauthorized,
     User,
     Manager,
     Admin
