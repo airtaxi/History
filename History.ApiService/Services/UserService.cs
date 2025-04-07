@@ -18,6 +18,8 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
         if (isUserCollectionEmpty) user.Rank = Rank.Admin;
         else user.Rank = Rank.Unauthorized;
 
+        user.CreatedAt = DateTime.UtcNow;
+
         await _userCollection.InsertOneAsync(user);
 
         return Result.Success();
