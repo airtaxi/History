@@ -35,9 +35,19 @@ public interface IMediaService
     /// <param name="files">Holds the collection of files to be uploaded, which must match the content items.</param>
     /// <returns>Indicates the success or failure of the upload operation.</returns>
     public Task<Result> HandleUploadContentsAsync(MediaBucket bucketType, string associatedId, string userId, IList<BaseContent> contents, IEnumerable<IFormFile> files);
-
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="associatedId"></param>
+    /// <returns></returns>
     public Task<Result> DeleteByAssociatedIdAsync(string associatedId);
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="associatedIds"></param>
+    /// <returns></returns>
     public Task<Result> DeleteByAssociatedIdsAsync(IEnumerable<string> associatedIds);
 
     /// <summary>
