@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using System.Text.Json.Serialization;
 
-namespace History.Commons.DataTypes.Content;
+namespace History.Commons.DataTypes.Contents;
 
 [BsonKnownTypes(typeof(ProfileContent), typeof(MediaContent), typeof(TextContent), typeof(StickerContent))]
 [JsonDerivedType(typeof(ProfileContent), "profile")]

@@ -1,7 +1,7 @@
 ﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
-using History.Commons.DataTypes.Dto;
+using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using MongoDB.Driver;
 
@@ -36,6 +36,72 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
 
     /// <inheritdoc />
     public async Task<Result<List<User>>> GetUsersByIdsAsync(IEnumerable<string> userIds) => await _userCollection.Find(u => userIds.Contains(u.Id)).ToListAsync();
+
+    /// <inheritdoc />
+    public async Task<Result> ApproveUnauthorizedUserAsync(string userId)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Id, userId) & Builders<User>.Filter.Eq(u => u.Rank, Rank.Unauthorized);
+        var update = Builders<User>.Update.Set(u => u.Rank, Rank.Unauthorized);
+
+        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "승인할 사용자를 찾을 수 없습니다.");
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> UnapproveUnauthorizedUserAsync(string userId)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Id, userId) & Builders<User>.Filter.Eq(u => u.Rank, Rank.Unauthorized);
+
+        return (await _userCollection.DeleteOneAsync(filter)).DeletedCount > 0 ? Result.Success() : (ErrorType.NotFound, "승인 취소할 사용자를 찾을 수 없습니다.");
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> MakeUserModeratorAsync(string userId)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Id, userId) & Builders<User>.Filter.Eq(u => u.Rank, Rank.User);
+        var update = Builders<User>.Update.Set(u => u.Rank, Rank.Moderator);
+
+        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "관리자로 만들 일반 사용자를 찾을 수 없습니다.");
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<List<User>>> GetUnauthorizedUsersAsync(int limit = 50, string fromUserId = null)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Rank, Rank.Unauthorized);
+
+        if (!string.IsNullOrEmpty(fromUserId))
+        {
+            var fromUser = _userCollection.Find(u => u.Id == fromUserId).FirstOrDefault();
+            if (fromUser != null)
+            {
+                filter &= Builders<User>.Filter.Gt(u => u.CreatedAt, fromUser.CreatedAt);
+            }
+        }
+
+        return await _userCollection.Find(filter)
+            .SortByDescending(u => u.CreatedAt)
+            .Limit(limit)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<List<User>>> GetModeratorsAsync(int limit = 10, string fromUserId = null)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Rank, Rank.Moderator);
+
+        if (!string.IsNullOrEmpty(fromUserId))
+        {
+            var fromUser = _userCollection.Find(u => u.Id == fromUserId).FirstOrDefault();
+            if (fromUser != null)
+            {
+                filter &= Builders<User>.Filter.Gt(u => u.CreatedAt, fromUser.CreatedAt);
+            }
+        }
+
+        return await _userCollection.Find(filter)
+            .SortByDescending(u => u.CreatedAt)
+            .Limit(limit)
+            .ToListAsync();
+    }
 
     /// <inheritdoc />
     public async Task<Result> UpdateDescriptionAsync(string userId, string description)
@@ -135,7 +201,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
     }
 
     /// <inheritdoc/>
-    public async Task<Result<List<UserResponseDto>>> GenerateUserResponseDtoAsync(IEnumerable<User> users, string requesterId = null)
+    public async Task<Result<List<UserResponseDto>>> GenerateUserResponseDtosAsync(IEnumerable<User> users, string requesterId = null)
     {
         var results = users.Select(x => new UserResponseDto(x)).ToList();
 
@@ -148,11 +214,11 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
     }
 
     /// <inheritdoc/>
-    public async Task<Result<List<UserResponseDto>>> GenerateUserResponseDtoAsync(IEnumerable<string> userIds, string requesterId = null)
+    public async Task<Result<List<UserResponseDto>>> GenerateUserResponseDtosAsync(IEnumerable<string> userIds, string requesterId = null)
     {
         var usersResult = await GetUsersByIdsAsync(userIds);
         if (usersResult.IsFailure) return usersResult.CastFailure<List<UserResponseDto>>();
 
-        return await GenerateUserResponseDtoAsync(usersResult.Value, requesterId);
+        return await GenerateUserResponseDtosAsync(usersResult.Value, requesterId);
     }
 }

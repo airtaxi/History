@@ -1,7 +1,7 @@
 ﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
-using History.Commons.DataTypes.Dto;
+using History.Commons.DataTypes.RequestDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -21,21 +21,10 @@ public class PostController(IPostService postService, IFriendshipService friends
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var requesterBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
-        var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
-        var userBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(userId);
-        if (requesterBlockedFriendIdsResult.Value.Contains(userId) || requesterIgnoredFriendIdsResult.Value.Contains(userId)) return Unauthorized("차단 또는 무시한 사용자의 피드를 볼 수 없습니다.");
-        else if (userBlockedFriendIdsResult.Value.Contains(requesterId)) return Unauthorized("이 사용자의 피드를 볼 수 없습니다.");
+        var postsResult = await postService.GetUserPostsAsync(requesterId, userId, fromPostId, limit);
+        if (postsResult.IsFailure) return StatusCode(500, postsResult.FullErrorMessage);
 
-        var postResponses = new List<PostResponseDto>();
-        while (postResponses.Count == 0) // All of the posts might not be added to postResponses because of the filtering
-        {
-            var postsResult = await postService.GetUserPostsAsync(requesterId, userId, fromPostId, limit);
-            if (postsResult.Value.Count == 0) break; // No more posts to load. break the loop
-
-            await AppendPostResponsesAsync(postResponses, postsResult, requesterId);
-            fromPostId = postsResult.Value.LastOrDefault()?.Id;
-        }
+        var postResponses = await postService.GeneratePostResponsesDtosAsync(postsResult.Value, requesterId);
         return Ok(postResponses);
     }
 
@@ -49,74 +38,28 @@ public class PostController(IPostService postService, IFriendshipService friends
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var postResponses = new List<PostResponseDto>();
-        while (postResponses.Count == 0) // All of the posts might not be added to postResponses because of the filtering
-        {
-            var posts = await postService.GetTimelinePostsAsync(requesterId, fromPostId, limit);
-            if (posts.Value.Count == 0) break; // No more posts to load. break the loop
+        var postsResult = await postService.GetTimelinePostsAsync(requesterId, fromPostId, limit);
+        if (postsResult.IsFailure) return StatusCode(500, postsResult.FullErrorMessage);
 
-            await AppendPostResponsesAsync(postResponses, posts, requesterId);
-            fromPostId = posts.Value.LastOrDefault()?.Id;
-        }
+        var postResponses = await postService.GeneratePostResponsesDtosAsync(postsResult.Value, requesterId);
         return Ok(postResponses);
     }
 
-    private async Task AppendPostResponsesAsync(List<PostResponseDto> postResponses, List<Post> posts, string requesterId)
+    [HttpGet("user/{userId}/count")]
+    public async Task<IActionResult> GetUserPostsCount(string userId)
     {
-        foreach (var post in posts)
-        {
-            // Remove blocked, ignored, and friends who blocked the requester
-            if (requesterId != null)
-            {
-                var requesterBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
-                var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
-                var requesterBlockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-                if (requesterBlockedFriendIdsResult.Value.Contains(post.UserId) || requesterIgnoredFriendIdsResult.Value.Contains(post.UserId) || requesterBlockerFriendIdsResult.Value.Contains(post.UserId)) continue;
-            }
+        var requesterBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
+        var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
+        var userBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(userId);
 
-            var postResponse = new PostResponseDto
-            {
-                Id = post.Id,
-                UserId = post.UserId,
-                Contents = post.Contents,
-                CreatedAt = post.CreatedAt,
-                IsRepost = post.IsRepost,
-                ModifiedAt = post.ModifiedAt
-            };
+        if (requesterBlockedFriendIdsResult.Value.Contains(userId) || requesterIgnoredFriendIdsResult.Value.Contains(userId)) return Unauthorized("차단 또는 무시한 사용자의 피드를 볼 수 없습니다.");
+        else if (userBlockedFriendIdsResult.Value.Contains(requesterId)) return Unauthorized("이 사용자의 피드를 볼 수 없습니다.");
 
-            await SetParentPostAsync(postResponse, post.ParentPostId, requesterId);
+        var count = await postService.GetUserPostsCountAsync(userId);
+        if (count.IsFailure) return StatusCode(500, count.FullErrorMessage);
 
-            postResponses.Add(postResponse);
-        }
-    }
-
-    private async Task SetParentPostAsync(PostResponseDto postResponse, string parentPostId, string requesterId)
-    {
-        if (parentPostId == null) return;
-
-        var parentPostResult = await postService.GetPostByIdAsync(parentPostId);
-        if (parentPostResult != null)
-        {
-            // If the requester is blocked, ignored, or blocked by the parent post author, do not add the parent post
-            if (requesterId != null)
-            {
-                var requesterBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
-                var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
-                var requesterBlockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
-
-                if (requesterBlockedFriendIdsResult.Value.Contains(parentPostResult.Value.UserId) || requesterIgnoredFriendIdsResult.Value.Contains(parentPostResult.Value.UserId) || requesterBlockerFriendIdsResult.Value.Contains(parentPostResult.Value.UserId)) return;
-            }
-
-            postResponse.ParentPost = new PostResponseDto
-            {
-                Id = parentPostResult.Value.Id,
-                UserId = parentPostResult.Value.UserId,
-                Contents = parentPostResult.Value.Contents,
-                CreatedAt = parentPostResult.Value.CreatedAt,
-                IsRepost = parentPostResult.Value.IsRepost,
-                ModifiedAt = parentPostResult.Value.ModifiedAt
-            };
-        }
+        return Ok(count.Value);
     }
 }

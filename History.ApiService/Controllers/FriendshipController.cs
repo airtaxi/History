@@ -1,6 +1,6 @@
 ﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
-using History.Commons.DataTypes.Dto;
+using History.Commons.DataTypes.RequestDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -147,8 +147,8 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var blockedUserIdsResult = await friendshipService.GetBlockedUserIdsAsync(userId);
         var blockedUsersResult = await userService.GetUsersByIdsAsync(blockedUserIdsResult.Value);
 
-        var dto = await userService.GenerateUserResponseDtoAsync(blockedUsersResult.Value, userId);
-        return Ok(dto.Value);
+        var dtosResult = await userService.GenerateUserResponseDtosAsync(blockedUsersResult.Value, userId);
+        return Ok(dtosResult.Value);
     }
 
     [HttpGet("ignored")]
@@ -161,8 +161,8 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var ignoredUserIdsResult = await friendshipService.GetIgnoredUserIdsAsync(userId);
         var ignoredUsersResult = await userService.GetUsersByIdsAsync(ignoredUserIdsResult.Value);
 
-        var dto = await userService.GenerateUserResponseDtoAsync(ignoredUsersResult.Value, userId);
-        return Ok(dto.Value);
+        var dtosResult = await userService.GenerateUserResponseDtosAsync(ignoredUsersResult.Value, userId);
+        return Ok(dtosResult.Value);
     }
 
     [HttpGet("{userId}")]
@@ -208,7 +208,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
             friendUsersResult.Value.RemoveAll(x => blockedUserIdsResult.Value.Contains(x.Id) || ignoredUserIdsResult.Value.Contains(x.Id) || blockerUserIdsResult.Value.Contains(x.Id));
         }
 
-        var dto = await userService.GenerateUserResponseDtoAsync(friendUsersResult.Value, requesterId);
-        return Ok(dto.Value);
+        var dtosResult = await userService.GenerateUserResponseDtosAsync(friendUsersResult.Value, requesterId);
+        return Ok(dtosResult.Value);
     }
 }
