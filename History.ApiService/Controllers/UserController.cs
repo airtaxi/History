@@ -4,6 +4,7 @@ using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.RequestDtos;
+using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -45,7 +46,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         await userService.CreateUserAsync(newUser);
 
         var token = GenerateJwt(newUser);
-        return Ok(token);
+        return Ok(new OAuthLoginResponseDto(token));
     }
 
     /// <summary>
@@ -65,7 +66,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         if (userResult.Value.Rank == Rank.Unauthorized) return Unauthorized("가입 승인 대기 중입니다.");
 
         var token = GenerateJwt(userResult);
-        return Ok(token);
+        return Ok(new OAuthLoginResponseDto(token));
     }
 
     /// <summary>
