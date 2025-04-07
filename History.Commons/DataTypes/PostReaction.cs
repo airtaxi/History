@@ -12,12 +12,18 @@ public class PostReaction
     [BsonId]
     public string Id { get; set; }
 
+    /// <summary>
+    /// Represents the unique identifier for a post that the reaction is associated with.
+    /// </summary>
     public string PostId { get; set; }
+
+    /// <summary>
+    /// Represents the unique identifier for a user who reacted to the post.
+    /// </summary>
     public string UserId { get; set; }
 
     /// <summary>
-    /// Represents the type of reaction associated with a post. It can indicate various user responses such as like,
-    /// love, or dislike.
+    /// Represents the type of reaction associated with a post.
     /// </summary>
     public PostReactionType ReactionType { get; set; }
 
