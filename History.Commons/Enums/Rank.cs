@@ -7,6 +7,6 @@ public enum Rank
 {
     Unauthorized,
     User,
-    Manager,
+    Moderator,
     Admin
 }
