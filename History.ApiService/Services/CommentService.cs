@@ -236,6 +236,7 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
 
         return Result.Success();
     }
+
     private async Task<Result> CheckPermissionAsync(string commentId, string requesterId)
     {
         var comment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
