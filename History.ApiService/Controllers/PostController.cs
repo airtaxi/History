@@ -19,6 +19,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         var rawLimit = HttpContext.Request.Query["limit"];
         var fromPostId = HttpContext.Request.Query["from"];
         var limit = int.TryParse(rawLimit, out var parsedLimit) ? parsedLimit : 10;
+        if (limit > 100) limit = 100;
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
@@ -35,6 +36,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         var rawLimit = HttpContext.Request.Query["limit"];
         var fromPostId = HttpContext.Request.Query["from"];
         var limit = int.TryParse(rawLimit, out var parsedLimit) ? parsedLimit : 10;
+        if (limit > 100) limit = 100;
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
@@ -184,6 +186,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         var rawLimit = HttpContext.Request.Query["limit"];
         var fromPostId = HttpContext.Request.Query["from"];
         var limit = int.TryParse(rawLimit, out var parsedLimit) ? parsedLimit : 10;
+        if (limit > 100) limit = 100;
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
