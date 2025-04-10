@@ -50,4 +50,9 @@ public class Post
     /// Modified at time of post.
     /// </summary>
     public DateTime? ModifiedAt { get; set; }
+
+    /// <summary>
+    /// The data used when searching for this post.
+    /// </summary>
+    public string SearchIndex { get; set; } = string.Empty;
 }

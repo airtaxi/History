@@ -97,12 +97,30 @@ public interface IPostService
     public Task<Result> HandlePostReactionPostAsync(string userId, string postId, PostReactionType type);
 
     /// <summary>
+    /// Searches for posts based on a specified query and returns a list of matching posts.
+    /// </summary>
+    /// <param name="query">The search term used to find relevant posts.</param>
+    /// <param name="requesterId">Identifies the user making the search request.</param>
+    /// <param name="fromPostId">Specifies the starting point for the search, allowing for pagination.</param>
+    /// <param name="limit">Determines the maximum number of posts to return in the search results.</param>
+    /// <returns>A task that resolves to a result containing a list of posts that match the search criteria.</returns>
+    public Task<Result<List<Post>>> SearchPostsAsync(string query, string requesterId, string fromPostId = null, int limit = 10);
+
+    /// <summary>
     /// Checks if a user has access to a specific post asynchronously.
     /// </summary>
     /// <param name="postId">Identifies the post for which access is being verified.</param>
     /// <param name="requesterId">Identifies the user requesting access to the post.</param>
     /// <returns>Returns a task that resolves to a result indicating access permissions.</returns>
     public Task<Result> CheckAccessAsync(string postId, string requesterId);
+
+    /// <summary>
+    /// Generates a response data transfer object for a given post asynchronously.
+    /// </summary>
+    /// <param name="post">The post object containing the details for which the response is generated.</param>
+    /// <param name="requesterId">Identifies the user making the request for the post response.</param>
+    /// <returns>Returns a task that resolves to a result containing the post response data transfer object.</returns>
+    public Task<Result<PostResponseDto>> GeneratePostResponseDtoAsync(Post post, string requesterId);
 
     /// <summary>
     /// Generates a response data transfer object for a given post asynchronously.
@@ -118,5 +136,5 @@ public interface IPostService
     /// <param name="posts">A collection of posts for which response data transfer objects will be created.</param>
     /// <param name="requesterId">Identifies the user making the request for the post responses.</param>
     /// <returns>A task that resolves to a result containing a list of post response data transfer objects.</returns>
-    public Task<Result<List<PostResponseDto>>> GeneratePostResponsesDtosAsync(List<Post> posts, string requesterId);
+    public Task<Result<List<PostResponseDto>>> GeneratePostResponseDtosAsync(List<Post> posts, string requesterId);
 }
