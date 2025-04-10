@@ -60,6 +60,16 @@ public interface IPostService
     public Task<Result> WritePostAsync(string userId, WritePostRequestDto requestDto, IEnumerable<IFormFile> files);
 
     /// <summary>
+    /// Asynchronously modifies a post based on the provided details and files.
+    /// </summary>
+    /// <param name="userId">Identifies the user making the modification request.</param>
+    /// <param name="postId">Specifies the unique identifier of the post to be modified.</param>
+    /// <param name="requestDto">Contains the new data and settings for the post modification.</param>
+    /// <param name="files">Holds any files that need to be associated with the post during the modification.</param>
+    /// <returns>Provides the result of the modification operation.</returns>
+    public Task<Result> ModifyPostAsync(string userId, string postId, ModifyPostRequestDto requestDto, IEnumerable<IFormFile> files);
+
+    /// <summary>
     /// Checks if a user has access to a specific post asynchronously.
     /// </summary>
     /// <param name="postId">Identifies the post for which access is being verified.</param>
