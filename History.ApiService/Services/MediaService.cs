@@ -97,25 +97,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
     }
 
     /// <inheritdoc />
-    public async Task<Result> DeleteMediaByAssociatedIdAsync(string associatedId)
-    {
-        var media = await _mediaCollection.Find(m => m.AssociatedId == associatedId).FirstOrDefaultAsync();
-        if (media == null) return Result.Failure(ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
-
-        var bucket = new GridFSBucket(database, new GridFSBucketOptions
-        {
-            BucketName = media.BucketType.ToString()
-        });
-
-        await bucket.DeleteAsync(media.Id);
-
-        await _mediaCollection.DeleteOneAsync(m => m.Id == media.Id);
-
-        return Result.Success();
-    }
-
-    /// <inheritdoc />
-    public async Task<Result> DeleteMediaByAssociatedIdsAsync(IEnumerable<string> associatedIds)
+    public async Task<Result> DeleteMediasByAssociatedIdsAsync(IEnumerable<string> associatedIds)
     {
         var media = await _mediaCollection.Find(m => associatedIds.Contains(m.AssociatedId)).ToListAsync();
         if (media == null || media.Count == 0) return Result.Failure(ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
@@ -145,6 +127,26 @@ public class MediaService(IMongoDatabase database) : IMediaService
         if (file == null) return Result<byte[]>.Failure(ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
 
         return await bucket.DownloadAsBytesAsync(file.Id);
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> DeleteMediasByUserIdAsync(string userId)
+    {
+        var medias = await _mediaCollection.Find(m => m.UserId == userId).ToListAsync();
+        if (medias == null || medias.Count == 0) return Result.Failure(ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
+
+        foreach (var m in medias)
+        {
+            var bucket = new GridFSBucket(database, new GridFSBucketOptions
+            {
+                BucketName = m.BucketType.ToString()
+            });
+            await bucket.DeleteAsync(m.Id);
+        }
+
+        await _mediaCollection.DeleteManyAsync(m => m.UserId == userId);
+
+        return Result.Success();
     }
 
     /// <inheritdoc />
