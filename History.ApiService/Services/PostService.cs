@@ -13,8 +13,12 @@ namespace History.ApiService.Services;
 
 public class PostService(IMongoDatabase database, IFriendshipService friendshipService, IUserService userService, IMediaService mediaService) : IPostService
 {
+    private readonly IMongoCollection<Comment> _commentCollection = database.GetCollection<Comment>("Comments");
+    private readonly IMongoCollection<CommentLike> _commentLikeCollection = database.GetCollection<CommentLike>("CommentLikes");
+
     private readonly IMongoCollection<Post> _postCollection = database.GetCollection<Post>("Posts");
     private readonly IMongoCollection<IgnoredPost> _ignoredPostCollection = database.GetCollection<IgnoredPost>("IgnoredPosts");
+    private readonly IMongoCollection<PostReaction> _postReactionCollection = database.GetCollection<PostReaction>("PostReactions");
 
     /// <inheritdoc />
     public async Task<Result<Post>> GetPostByIdAsync(string postId)
@@ -319,11 +323,116 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         return Result.Success();
     }
 
+    /// <inheritdoc/>
+    public async Task<Result> DeletePostAsync(string userId, string postId)
+    {
+        var postResult = await GetPostByIdAsync(postId);
+        if (postResult.IsFailure) return postResult.CastFailure();
+        var post = postResult.Value;
+
+        // Check if the user is the author of the post
+        if (post.UserId != userId) return Result.Failure(ErrorType.Forbidden, "게시글을 삭제할 수 있는 권한이 없습니다.");
+
+        // Delete comments and comment likes associated with the post
+        var commentIds = await _commentCollection
+            .Find(c => c.PostId == postId)
+            .Project(c => c.Id)
+            .ToListAsync();
+
+        var commentLikeIds = await _commentLikeCollection
+            .Find(c => commentIds.Contains(c.CommentId))
+            .Project(c => c.Id)
+            .ToListAsync();
+
+        await _commentCollection.DeleteManyAsync(c => c.PostId == postId);
+        await _commentLikeCollection.DeleteManyAsync(c => commentIds.Contains(c.CommentId));
+
+        // Delete ignored posts associated with the post
+        await _ignoredPostCollection.DeleteManyAsync(i => i.PostId == postId);
+
+        // Delete post reactions associated with the post
+        await _postReactionCollection.DeleteManyAsync(r => r.PostId == postId);
+
+        // Delete the post from the database
+        await _postCollection.DeleteOneAsync(p => p.Id == postId);
+
+        // Delete media files associated with the post
+        var deleteResult = await mediaService.DeleteMediaByAssociatedIdAsync(postId);
+        if (deleteResult.IsFailure) return deleteResult;
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> RepostPostAsync(string userId, string postId)
+    {
+        var accessResult = await CheckAccessAsync(postId, userId);
+        if (accessResult.IsFailure) return accessResult;
+
+        var post = new Post
+        {
+            UserId = userId,
+            DiscoveryOption = DiscoveryOption.Friends,
+            ParentPostId = postId,
+            IsRepost = true,
+        };
+
+        while (true)
+        {
+            post.Id = Guid.NewGuid().ToString("N");
+
+            var existingPost = await GetPostByIdAsync(post.Id);
+            if (existingPost.IsFailure) break;
+        }
+
+        _postCollection.InsertOne(post);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc/>
+    public async Task<Result> HandlePostReactionPostAsync(string userId, string postId, PostReactionType type)
+    {
+        var accessResult = await CheckAccessAsync(postId, userId);
+        if (accessResult.IsFailure) return accessResult;
+
+        // Check if the reaction already exists
+        var existingReaction = await _postReactionCollection
+            .Find(r => r.UserId == userId && r.PostId == postId)
+            .FirstOrDefaultAsync();
+
+        if (existingReaction != null) await _postReactionCollection.DeleteOneAsync(r => r.UserId == userId && r.PostId == postId);
+        else
+        {
+            // Add a new reaction
+            var newReaction = new PostReaction
+            {
+                UserId = userId,
+                PostId = postId,
+                Type = type,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            while (true)
+            {
+                newReaction.Id = Guid.NewGuid().ToString("N");
+                existingReaction = await _postReactionCollection
+                    .Find(r => r.Id == newReaction.Id)
+                    .FirstOrDefaultAsync();
+                if (existingReaction == null) break;
+            }
+
+            await _postReactionCollection.InsertOneAsync(newReaction);
+        }
+
+        return Result.Success();
+    }
+
     /// <inheritdoc />
     public async Task<Result> CheckAccessAsync(string postId, string requesterId)
     {
         var postResult = await GetPostByIdAsync(postId);
-        if (postResult.IsFailure) return Result<Comment>.Failure(ErrorType.NotFound, "게시글을 찾을 수 없습니다.");
+        if (postResult.IsFailure) postResult.CastFailure();
 
         var postAuthorId = postResult.Value.UserId;
 

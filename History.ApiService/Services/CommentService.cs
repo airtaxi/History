@@ -118,20 +118,20 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
     /// <inheritdoc />
     public async Task<Result> DeleteCommentAsync(string commentId, string requesterId)
     {
-        var permissionResult = await CheckPermissionAsync(commentId, requesterId);
+        var comment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
+        if (comment == null) return Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
 
-        if (permissionResult.IsSuccess)
-        {
-            // Delete Comment
-            var result = await _commentCollection.DeleteOneAsync(f => f.Id == commentId);
-            if (result.DeletedCount == 0) return Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
+        if (requesterId != comment.UserId) return Result.Failure(ErrorType.Forbidden, "권한이 없습니다.");
 
-            var deleteResult = await mediaService.DeleteMediaByAssociatedIdAsync(commentId);
-            if (deleteResult.IsFailure) return deleteResult;
+        // Delete Comment
+        var result = await _commentCollection.DeleteOneAsync(f => f.Id == commentId);
+        if (result.DeletedCount == 0) return Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
 
-            return Result.Success();
-        }
-        else return permissionResult;
+        // Delete Media
+        var deleteResult = await mediaService.DeleteMediaByAssociatedIdAsync(commentId);
+        if (deleteResult.IsFailure) return deleteResult;
+
+        return Result.Success();
     }
 
     /// <inheritdoc />
