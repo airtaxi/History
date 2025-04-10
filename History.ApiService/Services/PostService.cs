@@ -213,6 +213,18 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         return await _postCollection.CountDocumentsAsync(filter);
     }
 
+    /// <inheritdoc/>
+    public async Task<Result> IgnorePostAsync(string userId, string postId)
+    {
+        var ignoredPost = new IgnoredPost
+        {
+            UserId = userId,
+            PostId = postId
+        };
+        await _ignoredPostCollection.InsertOneAsync(ignoredPost);
+        return Result.Success();
+    }
+
     public async Task<Result<PostResponseDto>> GeneratePostResponseDtoAsync(Post post, IEnumerable<string> bannedUserIds)
     {
         if (bannedUserIds.Contains(post.UserId)) return null;
@@ -256,16 +268,5 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         await Task.WhenAll(tasks);
 
         return tasks.Where(x => x.Result.IsSuccess).Select(x => x.Result.Value).ToList();
-    }
-
-    public async Task<Result> IgnorePostAsync(string userId, string postId)
-    {
-        var ignoredPost = new IgnoredPost
-        {
-            UserId = userId,
-            PostId = postId
-        };
-        await _ignoredPostCollection.InsertOneAsync(ignoredPost);
-        return Result.Success();
     }
 }
