@@ -48,7 +48,14 @@ public interface IMediaService
     /// </summary>
     /// <param name="associatedIds"></param>
     /// <returns></returns>
-    public Task<Result> DeleteMediaByAssociatedIdsAsync(IEnumerable<string> associatedIds);
+    public Task<Result> DeleteMediasByAssociatedIdsAsync(IEnumerable<string> associatedIds);
+
+    /// <summary>
+    /// Asynchronously deletes media associated with a specific user.
+    /// </summary>
+    /// <param name="userId">Identifies the user whose media is to be deleted.</param>
+    /// <returns>Returns a task that represents the asynchronous operation, containing the result of the deletion.</returns>
+    public Task<Result> DeleteMediasByUserIdAsync(string userId);
 
     /// <summary>
     /// Fetch media file content.
