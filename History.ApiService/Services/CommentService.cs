@@ -18,7 +18,7 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
     /// <inheritdoc />
     public async Task<Result<List<Comment>>> GetCommentsByPostIdAsync(string postId, string requesterId, string fromCommentId = null, int limit = 10)
     {
-        var accessResult = await CheckAccessAsync(postId, requesterId);
+        var accessResult = await postService.CheckAccessAsync(postId, requesterId);
         if (accessResult.IsFailure) return Result<List<Comment>>.Failure(accessResult);
 
         var filter = Builders<Comment>.Filter.Eq(f => f.PostId, postId);
@@ -54,7 +54,7 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
         if (requesterId == null) Result<Comment>.Failure(ErrorType.Unauthorized, "로그인이 필요합니다.");
 
         // Check access
-        var accessResult = await CheckAccessAsync(postId, requesterId);
+        var accessResult = await postService.CheckAccessAsync(postId, requesterId);
         if (accessResult.IsFailure) return Result<Comment>.Failure(accessResult);
 
         // Upload medias
@@ -206,36 +206,6 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
 
         responseDto.LikedUsers = likedUsersDtoResult.Value;
         return responseDto;
-    }
-
-    private async Task<Result> CheckAccessAsync(string postId, string requesterId)
-    {
-        var postResult = await postService.GetPostByIdAsync(postId);
-        if (postResult.IsFailure) return Result<Comment>.Failure(ErrorType.NotFound, "게시글을 찾을 수 없습니다.");
-
-        var postAuthorId = postResult.Value.UserId;
-
-        // Apply discovery option / privacy settings
-        var postDiscoveryOption = postResult.Value.DiscoveryOption;
-        if (postDiscoveryOption < DiscoveryOption.Everyone)
-        {
-            bool hasAccess;
-            if (postDiscoveryOption == DiscoveryOption.FriendsOfFriends) hasAccess = await friendshipService.AreFriendsOfFriendsAsync(postAuthorId, requesterId);
-            else if (postDiscoveryOption == DiscoveryOption.Friends) hasAccess = await friendshipService.AreFriendsAsync(postAuthorId, requesterId);
-            else if (postDiscoveryOption == DiscoveryOption.SelectedUsers) hasAccess = postResult.Value.DiscoveryOptionSelectedUserIds.Contains(requesterId);
-            else if (postDiscoveryOption == DiscoveryOption.OnlyMe) hasAccess = postAuthorId == requesterId;
-            else
-            {
-                var requesterBlockerIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
-                if (requesterBlockerIdsResult.IsFailure) return requesterBlockerIdsResult;
-                else if (requesterBlockerIdsResult.Value.Contains(postAuthorId)) hasAccess = false;
-                else hasAccess = true;
-            }
-
-            if (!hasAccess) return Result<Comment>.Failure(ErrorType.Forbidden, "이 게시물에 댓글을 달 수 있는 권한이 없습니다.");
-        }
-
-        return Result.Success();
     }
 
     private async Task<Result> CheckPermissionAsync(string commentId, string requesterId)

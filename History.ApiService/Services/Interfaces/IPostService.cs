@@ -1,5 +1,6 @@
 ﻿using History.Commons;
 using History.Commons.DataTypes;
+using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.ResponseDtos;
 
 namespace History.ApiService.Services.Interfaces;
@@ -48,6 +49,23 @@ public interface IPostService
     /// <param name="postId">Specifies the post that the user wishes to ignore.</param>
     /// <returns>Returns a task that represents the asynchronous operation, containing the result of the ignore action.</returns>
     public Task<Result> IgnorePostAsync(string userId, string postId);
+
+    /// <summary>
+    /// Asynchronously writes a post using the provided user information, request details, and associated files.
+    /// </summary>
+    /// <param name="userId">Identifies the user who is creating the post.</param>
+    /// <param name="requestDto">Contains the details and content of the post being created.</param>
+    /// <param name="files">Represents the files that are to be uploaded along with the post.</param>
+    /// <returns>Returns a task that represents the asynchronous operation, yielding a result indicating success or failure.</returns>
+    public Task<Result> WritePostAsync(string userId, WritePostRequestDto requestDto, IEnumerable<IFormFile> files);
+
+    /// <summary>
+    /// Checks if a user has access to a specific post asynchronously.
+    /// </summary>
+    /// <param name="postId">Identifies the post for which access is being verified.</param>
+    /// <param name="requesterId">Identifies the user requesting access to the post.</param>
+    /// <returns>Returns a task that resolves to a result indicating access permissions.</returns>
+    public Task<Result> CheckAccessAsync(string postId, string requesterId);
 
     /// <summary>
     /// Generates a response data transfer object for a given post asynchronously.
