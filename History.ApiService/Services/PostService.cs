@@ -233,6 +233,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         return Result.Success();
     }
 
+    /// <inheritdoc/>
     public async Task<Result> WritePostAsync(string userId, WritePostRequestDto requestDto, IEnumerable<IFormFile> files)
     {
         var user = await userService.GetUserByIdAsync(userId);
