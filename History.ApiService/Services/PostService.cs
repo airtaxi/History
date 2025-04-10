@@ -1,20 +1,28 @@
 ﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
+using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using Microsoft.VisualBasic;
 using MongoDB.Driver;
 using System.Collections.Generic;
 
 namespace History.ApiService.Services;
 
-public class PostService(IMongoDatabase database, IFriendshipService friendshipService) : IPostService
+public class PostService(IMongoDatabase database, IFriendshipService friendshipService, IUserService userService, IMediaService mediaService) : IPostService
 {
     private readonly IMongoCollection<Post> _postCollection = database.GetCollection<Post>("Posts");
     private readonly IMongoCollection<IgnoredPost> _ignoredPostCollection = database.GetCollection<IgnoredPost>("IgnoredPosts");
 
     /// <inheritdoc />
-    public async Task<Result<Post>> GetPostByIdAsync(string postId) => await _postCollection.Find(p => p.Id == postId).FirstOrDefaultAsync();
+    public async Task<Result<Post>> GetPostByIdAsync(string postId)
+    {
+        var post = await _postCollection.Find(p => p.Id == postId).FirstOrDefaultAsync();
+
+        if (post == null) return Result<Post>.Failure(ErrorType.NotFound, "게시글을 찾을 수 없습니다.");
+        else return post;
+    }
 
     /// <inheritdoc />
     public async Task<Result<List<Post>>> GetUserPostsAsync(string requesterId, string userId, string fromPostId = null, int limit = 10)
@@ -222,6 +230,88 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
             PostId = postId
         };
         await _ignoredPostCollection.InsertOneAsync(ignoredPost);
+        return Result.Success();
+    }
+
+    public async Task<Result> WritePostAsync(string userId, WritePostRequestDto requestDto, IEnumerable<IFormFile> files)
+    {
+        var user = await userService.GetUserByIdAsync(userId);
+        if (user.IsFailure) return user.CastFailure();
+
+        if (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers
+            && (requestDto.DiscoveryOptionSelectedUserIds == null
+            || requestDto.DiscoveryOptionSelectedUserIds.Count == 0))
+        {
+            return Result.Failure(ErrorType.BadRequest, "편한 친구 공개 설정을 선택한 경우, 친구를 선택해야 합니다.");
+        }
+
+        if (requestDto.ParentPostId != null)
+        {
+            var parentPost = await GetPostByIdAsync(requestDto.ParentPostId);
+            if (parentPost.IsFailure) return parentPost.CastFailure();
+
+            var accessResult = await CheckAccessAsync(requestDto.ParentPostId, userId);
+            if (accessResult.IsFailure) return accessResult;
+        }
+
+        string postId;
+        while (true)
+        {
+            postId = Guid.NewGuid().ToString("N");
+
+            var existingPost = await GetPostByIdAsync(postId);
+            if (existingPost.IsFailure) break;
+        }
+
+        // Upload medias
+        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, postId, userId, requestDto.Contents, files);
+        if (uploadResult.IsFailure) return uploadResult;
+
+        var post = new Post
+        {
+            Id = postId,
+            UserId = userId,
+            Contents = requestDto.Contents,
+            CreatedAt = DateTime.UtcNow,
+            DiscoveryOption = requestDto.DiscoveryOption,
+            DiscoveryOptionSelectedUserIds = requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers ? requestDto.DiscoveryOptionSelectedUserIds : null,
+            ParentPostId = requestDto.ParentPostId,
+            IsRepost = false
+        };
+
+        await _postCollection.InsertOneAsync(post);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> CheckAccessAsync(string postId, string requesterId)
+    {
+        var postResult = await GetPostByIdAsync(postId);
+        if (postResult.IsFailure) return Result<Comment>.Failure(ErrorType.NotFound, "게시글을 찾을 수 없습니다.");
+
+        var postAuthorId = postResult.Value.UserId;
+
+        // Apply discovery option / privacy settings
+        var postDiscoveryOption = postResult.Value.DiscoveryOption;
+        if (postDiscoveryOption < DiscoveryOption.Everyone)
+        {
+            bool hasAccess;
+            if (postDiscoveryOption == DiscoveryOption.FriendsOfFriends) hasAccess = await friendshipService.AreFriendsOfFriendsAsync(postAuthorId, requesterId);
+            else if (postDiscoveryOption == DiscoveryOption.Friends) hasAccess = await friendshipService.AreFriendsAsync(postAuthorId, requesterId);
+            else if (postDiscoveryOption == DiscoveryOption.SelectedUsers) hasAccess = postResult.Value.DiscoveryOptionSelectedUserIds.Contains(requesterId);
+            else if (postDiscoveryOption == DiscoveryOption.OnlyMe) hasAccess = postAuthorId == requesterId;
+            else
+            {
+                var requesterBlockerIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
+                if (requesterBlockerIdsResult.IsFailure) return requesterBlockerIdsResult;
+                else if (requesterBlockerIdsResult.Value.Contains(postAuthorId)) hasAccess = false;
+                else hasAccess = true;
+            }
+
+            if (!hasAccess) return Result<Comment>.Failure(ErrorType.Forbidden, "이 게시물에 대한 접근 권한이 없습니다.");
+        }
+
         return Result.Success();
     }
 
