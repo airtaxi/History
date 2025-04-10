@@ -2,6 +2,7 @@
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.RequestDtos;
+using History.Commons.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -20,11 +21,10 @@ public class PostController(IPostService postService, IFriendshipService friends
         var limit = int.TryParse(rawLimit, out var parsedLimit) ? parsedLimit : 10;
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
         var postsResult = await postService.GetUserPostsAsync(requesterId, userId, fromPostId, limit);
-        if (postsResult.IsFailure) return StatusCode(500, postsResult.FullErrorMessage);
-
-        var postResponses = await postService.GeneratePostResponsesDtosAsync(postsResult.Value, requesterId);
+        var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
         return Ok(postResponses);
     }
 
@@ -37,11 +37,10 @@ public class PostController(IPostService postService, IFriendshipService friends
         var limit = int.TryParse(rawLimit, out var parsedLimit) ? parsedLimit : 10;
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
         var postsResult = await postService.GetTimelinePostsAsync(requesterId, fromPostId, limit);
-        if (postsResult.IsFailure) return StatusCode(500, postsResult.FullErrorMessage);
-
-        var postResponses = await postService.GeneratePostResponsesDtosAsync(postsResult.Value, requesterId);
+        var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
         return Ok(postResponses);
     }
 
@@ -61,10 +60,13 @@ public class PostController(IPostService postService, IFriendshipService friends
             else if (requesterBlockerFriendIdsResult.Value.Contains(userId)) return Unauthorized("이 사용자의 피드를 볼 수 없습니다.");
         }
 
-        var count = await postService.GetUserPostsCountAsync(userId, requesterId);
-        if (count.IsFailure) return StatusCode(500, count.FullErrorMessage);
-
-        return Ok(new GetUserPostsCountResponseDto(count.Value));
+        var result = await postService.GetUserPostsCountAsync(userId, requesterId);
+        if (result.IsSuccess) return Ok(new GetUserPostsCountResponseDto(result.Value));
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
     }
     
     [HttpPost("ignore")]
@@ -75,8 +77,122 @@ public class PostController(IPostService postService, IFriendshipService friends
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
         var result = await postService.IgnorePostAsync(requesterId, request.PostId);
-        if (result.IsFailure) return StatusCode(500, result.FullErrorMessage);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
 
         return Ok();
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> WritePost([FromBody] WritePostRequestDto request, IEnumerable<IFormFile> files)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var result = await postService.WritePostAsync(requesterId, request, files);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpGet("{postId}")]
+    public async Task<IActionResult> GetPostById(string postId)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var accessResult = await postService.CheckAccessAsync(postId, requesterId);
+        if (accessResult.IsFailure)
+        {
+            if (accessResult.Error == ErrorType.Forbidden) return Forbid(accessResult.ErrorMessage);
+            else if (accessResult.Error == ErrorType.NotFound) return NotFound(accessResult.ErrorMessage);
+            else return StatusCode(500, accessResult.FullErrorMessage);
+        }
+
+        var result = await postService.GetPostByIdAsync(postId);
+        if (result.IsSuccess)
+        {
+            var postResponse = await postService.GeneratePostResponseDtoAsync(result.Value, requesterId);
+            return Ok(postResponse);
+        }
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpPut("{postId}")]
+    [Authorize]
+    public async Task<IActionResult> ModifyPost(string postId, [FromBody] ModifyPostRequestDto request, IEnumerable<IFormFile> files)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var result = await postService.ModifyPostAsync(postId, requesterId, request, files);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpDelete("{postId}")]
+    [Authorize]
+    public async Task<IActionResult> DeletePost(string postId)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var result = await postService.DeletePostAsync(postId, requesterId);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpPost("{postId}/reaction/{type}")]
+    [Authorize]
+    public async Task<IActionResult> HandlePostReactionPost(string postId, PostReactionType type)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var result = await postService.HandlePostReactionPostAsync(requesterId, postId, type);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchPosts()
+    {
+        var rawLimit = HttpContext.Request.Query["limit"];
+        var fromPostId = HttpContext.Request.Query["from"];
+        var limit = int.TryParse(rawLimit, out var parsedLimit) ? parsedLimit : 10;
+
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var keyword = HttpContext.Request.Query["keyword"].ToString();
+        if (string.IsNullOrEmpty(keyword)) return BadRequest("검색어를 입력해주세요.");
+
+        var postsResult = await postService.SearchPostsAsync(requesterId, keyword, fromPostId, limit);
+        var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
+        return Ok(postResponses);
     }
 }
