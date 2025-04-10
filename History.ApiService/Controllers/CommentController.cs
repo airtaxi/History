@@ -18,6 +18,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
         var rawLimit = HttpContext.Request.Query["limit"];
         var fromCommentId = HttpContext.Request.Query["from"];
         var limit = int.TryParse(rawLimit, out var parsedLimit) ? parsedLimit : 10;
+        if (limit > 100) limit = 100;
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var result = await commentService.GetCommentsByPostIdAsync(postId, requesterId, fromCommentId, limit);
