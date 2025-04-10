@@ -6,6 +6,7 @@ using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using Microsoft.VisualBasic;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Collections.Generic;
 
@@ -253,9 +254,6 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
 
         if (requestDto.ParentPostId != null)
         {
-            var parentPost = await GetPostByIdAsync(requestDto.ParentPostId);
-            if (parentPost.IsFailure) return parentPost.CastFailure();
-
             var accessResult = await CheckAccessAsync(requestDto.ParentPostId, userId);
             if (accessResult.IsFailure) return accessResult;
         }
@@ -282,6 +280,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
             DiscoveryOption = requestDto.DiscoveryOption,
             DiscoveryOptionSelectedUserIds = requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers ? requestDto.DiscoveryOptionSelectedUserIds : null,
             ParentPostId = requestDto.ParentPostId,
+            SearchIndex = GenerateSearchIndexFromContents(requestDto.Contents),
             IsRepost = false
         };
 
@@ -317,6 +316,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
 
         // Update the post contents
         post.Contents = requestDto.Contents;
+        post.SearchIndex = GenerateSearchIndexFromContents(requestDto.Contents);
 
         // Update the post in the database
         await _postCollection.ReplaceOneAsync(p => p.Id == postId, post);
@@ -429,12 +429,38 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
     }
 
     /// <inheritdoc />
+    public async Task<Result<List<Post>>> SearchPostsAsync(string query, string requesterId, string fromPostId = null, int limit = 10)
+    {
+        var filter = Builders<Post>.Filter.Regex(p => p.SearchIndex, new BsonRegularExpression(query, "i"));
+        if (!string.IsNullOrEmpty(fromPostId))
+        {
+            var fromPost = await _postCollection.Find(p => p.Id == fromPostId).FirstOrDefaultAsync();
+            if (fromPost != null)
+            {
+                filter &= Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
+            }
+        }
+        if (requesterId != null)
+        {
+            var requseterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
+            filter &= Builders<Post>.Filter.Nin(p => p.UserId, requseterBannedFriendIdsResult.Value);
+        }
+
+        return await _postCollection
+            .Find(filter)
+            .Sort(Builders<Post>.Sort.Descending(p => p.CreatedAt))
+            .Limit(limit)
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
     public async Task<Result> CheckAccessAsync(string postId, string requesterId)
     {
         var postResult = await GetPostByIdAsync(postId);
         if (postResult.IsFailure) postResult.CastFailure();
 
         var postAuthorId = postResult.Value.UserId;
+        if (postAuthorId == requesterId) return Result.Success();
 
         // Apply discovery option / privacy settings
         var postDiscoveryOption = postResult.Value.DiscoveryOption;
@@ -459,6 +485,14 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         return Result.Success();
     }
 
+    /// <inheritdoc />
+    public async Task<Result<PostResponseDto>> GeneratePostResponseDtoAsync(Post post, string requesterId)
+    {
+        var bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
+        return await GeneratePostResponseDtoAsync(post, bannedUserIds.Value);
+    }
+
+    /// <inheritdoc />
     public async Task<Result<PostResponseDto>> GeneratePostResponseDtoAsync(Post post, IEnumerable<string> bannedUserIds)
     {
         if (bannedUserIds.Contains(post.UserId)) return null;
@@ -493,7 +527,8 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         return postResponse;
     }
 
-    public async Task<Result<List<PostResponseDto>>> GeneratePostResponsesDtosAsync(List<Post> posts, string requesterId)
+    /// <inheritdoc />
+    public async Task<Result<List<PostResponseDto>>> GeneratePostResponseDtosAsync(List<Post> posts, string requesterId)
     {
         var bannedUserIds = new List<string>();
         if (requesterId != null) bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
@@ -503,4 +538,10 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
 
         return tasks.Where(x => x.Result.IsSuccess).Select(x => x.Result.Value).ToList();
     }
+
+    private static string GenerateSearchIndexFromContents(IEnumerable<BaseContent> contents) =>
+        string.Join(" ", contents.OfType<TextContent>().Select(s => s.Text))
+        .ReplaceLineEndings()
+        .ToLower()
+        .Replace(Environment.NewLine, " ");
 }
