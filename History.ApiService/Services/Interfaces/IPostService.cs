@@ -2,6 +2,7 @@
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Enums;
 
 namespace History.ApiService.Services.Interfaces;
 
@@ -68,6 +69,32 @@ public interface IPostService
     /// <param name="files">Holds any files that need to be associated with the post during the modification.</param>
     /// <returns>Provides the result of the modification operation.</returns>
     public Task<Result> ModifyPostAsync(string userId, string postId, ModifyPostRequestDto requestDto, IEnumerable<IFormFile> files);
+
+    /// <summary>
+    /// Asynchronously deletes a post associated with a specific user.
+    /// </summary>
+    /// <param name="userId">Identifies the user who owns the post to be deleted.</param>
+    /// <param name="postId">Specifies the unique identifier of the post to be removed.</param>
+    /// <returns>Returns a task that represents the asynchronous operation, containing the result of the deletion.</returns>
+    public Task<Result> DeletePostAsync(string userId, string postId);
+
+    /// <summary>
+    /// Asynchronously reposts a specified post for a user.
+    /// </summary>
+    /// <param name="userId">Identifies the user who is reposting the content.</param>
+    /// <param name="postId">Specifies the post that is being reposted.</param>
+    /// <returns>Returns a task that represents the result of the repost operation.</returns>
+    public Task<Result> RepostPostAsync(string userId, string postId);
+
+    /// <summary>
+    /// Handles the reaction to a post by a user asynchronously.
+    /// Adds reaction if not already present, or removes it if it exists.
+    /// </summary>
+    /// <param name="userId">Identifies the user who is reacting to the post.</param>
+    /// <param name="postId">Specifies the post that is being reacted to.</param>
+    /// <param name="type">Indicates the type of reaction being made to the post.</param>
+    /// <returns>Returns a task that represents the asynchronous operation, yielding a result of the reaction handling.</returns>
+    public Task<Result> HandlePostReactionPostAsync(string userId, string postId, PostReactionType type);
 
     /// <summary>
     /// Checks if a user has access to a specific post asynchronously.
