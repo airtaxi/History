@@ -90,32 +90,29 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
     public async Task<Result> ModifyCommentAsync(string commentId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files)
     {
         var permissionResult = await CheckPermissionAsync(commentId, requesterId);
+        if (permissionResult.IsFailure) return permissionResult;
 
-        if (permissionResult.IsSuccess)
-        {
-            // Fetch original comment before update
-            var originalComment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
+        // Fetch original comment before update
+        var originalComment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
 
-            // Upload medias
-            var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, originalComment.PostId, requesterId, contents, files);
-            if (uploadResult.IsFailure) return Result<Comment>.Failure(uploadResult);
+        // Upload medias
+        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, originalComment.PostId, requesterId, contents, files);
+        if (uploadResult.IsFailure) return Result<Comment>.Failure(uploadResult);
 
-            // Update Comment
-            var filter = Builders<Comment>.Filter.Eq(f => f.Id, commentId);
-            var update = Builders<Comment>.Update.Set(f => f.Contents, contents).Set(f => f.ModifiedAt, DateTime.UtcNow);
+        // Update Comment
+        var filter = Builders<Comment>.Filter.Eq(f => f.Id, commentId);
+        var update = Builders<Comment>.Update.Set(f => f.Contents, contents).Set(f => f.ModifiedAt, DateTime.UtcNow);
 
-            var result = await _commentCollection.UpdateOneAsync(filter, update);
+        var result = await _commentCollection.UpdateOneAsync(filter, update);
 
-            // Delete Media
-            var originalCommentMediaIds = originalComment.Contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
-            var mediaIds = contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
+        // Delete Media
+        var originalCommentMediaIds = originalComment.Contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
+        var mediaIds = contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
 
-            var deletedMediaIds = originalCommentMediaIds.Except(mediaIds).ToList();
-            foreach (var mediaId in deletedMediaIds) await mediaService.DeleteMediaByIdAsync(mediaId);
+        var deletedMediaIds = originalCommentMediaIds.Except(mediaIds).ToList();
+        foreach (var mediaId in deletedMediaIds) await mediaService.DeleteMediaByIdAsync(mediaId);
 
-            return result.ModifiedCount > 0 ? Result.Success() : Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
-        }
-        else return permissionResult;
+        return result.ModifiedCount > 0 ? Result.Success() : Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
     }
 
     /// <inheritdoc />
