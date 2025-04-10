@@ -26,7 +26,7 @@ public interface ICommentService
     /// <param name="requesterId">The id of user who requests create</param>
     /// <param name="files">The files to upload</param>
     /// <returns>A task that represents the asynchronous operation. with result of created comment</returns>
-    public Task<Result<Comment>> CreateCommentAsync(string postId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files);
+    public Task<Result<Comment>> WriteCommentAsync(string postId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files);
 
     /// <summary>
     /// Modify comment by id

@@ -49,7 +49,7 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
     }
 
     /// <inheritdoc />
-    public async Task<Result<Comment>> CreateCommentAsync(string postId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files)
+    public async Task<Result<Comment>> WriteCommentAsync(string postId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files)
     {
         if (requesterId == null) Result<Comment>.Failure(ErrorType.Unauthorized, "로그인이 필요합니다.");
 

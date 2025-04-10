@@ -40,7 +40,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var result = await commentService.CreateCommentAsync(postId, contents, requesterId, files);
+        var result = await commentService.WriteCommentAsync(postId, contents, requesterId, files);
         if (result.IsSuccess) return Ok(result.Value);
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
