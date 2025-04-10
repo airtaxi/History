@@ -1,6 +1,7 @@
 ﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
+using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
@@ -282,6 +283,39 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
 
         await _postCollection.InsertOneAsync(post);
 
+        return Result.Success();
+    }
+
+    /// <inheritdoc/>
+    public async Task<Result> ModifyPostAsync(string userId, string postId, ModifyPostRequestDto requestDto, IEnumerable<IFormFile> files)
+    {
+        var postResult = await GetPostByIdAsync(postId);
+        if (postResult.IsFailure) return postResult.CastFailure();
+
+        var post = postResult.Value;
+        // Check if the user is the author of the post
+        if (post.UserId != userId) return Result.Failure(ErrorType.Forbidden, "게시글을 수정할 수 있는 권한이 없습니다.");
+
+        // Delete Media
+        var originalPostMediaIds = post.Contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
+        var mediaIds = requestDto.Contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
+
+        var deletedMediaIds = originalPostMediaIds.Except(mediaIds).ToList();
+        foreach (var mediaId in deletedMediaIds) await mediaService.DeleteMediaByIdAsync(mediaId);
+
+        // Update discovery option (and selected user IDs if applicable)
+        post.DiscoveryOption = requestDto.DiscoveryOption;
+        post.DiscoveryOptionSelectedUserIds = requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers ? requestDto.DiscoveryOptionSelectedUserIds : null;
+
+        // Upload medias
+        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, postId, userId, requestDto.Contents, files);
+        if (uploadResult.IsFailure) return Result<Comment>.Failure(uploadResult);
+
+        // Update the post contents
+        post.Contents = requestDto.Contents;
+
+        // Update the post in the database
+        await _postCollection.ReplaceOneAsync(p => p.Id == postId, post);
         return Result.Success();
     }
 
