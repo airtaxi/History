@@ -137,6 +137,7 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
         else return permissionResult;
     }
 
+    /// <inheritdoc />
     public async Task<Result> HandleLikeCommentAsync(string commentId, string requesterId)
     {
         var permissionResult = await CheckPermissionAsync(commentId, requesterId);
