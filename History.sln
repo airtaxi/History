@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "History.ApiService", "Histo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "History.Commons", "History.Commons\History.Commons.csproj", "{94A61417-23B5-4805-A433-F4E80868480D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "History.MobileClient", "History.MobileClient\History.MobileClient.csproj", "{9ADAF0E0-D54D-4D85-A2B8-D3D5ADE57C2B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{94A61417-23B5-4805-A433-F4E80868480D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94A61417-23B5-4805-A433-F4E80868480D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94A61417-23B5-4805-A433-F4E80868480D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9ADAF0E0-D54D-4D85-A2B8-D3D5ADE57C2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9ADAF0E0-D54D-4D85-A2B8-D3D5ADE57C2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9ADAF0E0-D54D-4D85-A2B8-D3D5ADE57C2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9ADAF0E0-D54D-4D85-A2B8-D3D5ADE57C2B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
