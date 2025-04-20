@@ -5,7 +5,7 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": false,
-      "applicationUrl": "http://localhost:31227"
+      "applicationUrl": "http://0.0.0.0:31227"
     }
   }
 }
