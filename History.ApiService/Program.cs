@@ -33,6 +33,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
 // Services
+builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMediaService, MediaService>();
