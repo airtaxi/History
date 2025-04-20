@@ -1,4 +1,6 @@
 ﻿using Google.Apis.Auth;
+using Google.Apis.Auth.OAuth2.Requests;
+using History.ApiService.Services;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
@@ -16,7 +18,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UserController(IUserService userService, IFriendshipService friendshipService) : ControllerBase
+public class UserController(IUserService userService, IFriendshipService friendshipService, IRefreshTokenService refreshTokenService) : ControllerBase
 {
     /// <summary>
     /// Register with OAuth
@@ -35,7 +37,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         var newUser = new User
         {
             Id = payload.Subject,
-            Nickname = payload.Name ?? GenerateDeafultUserName(),
+            Nickname = payload.Name ?? GenerateDefaultUserName(),
             SocialService = request.Provider,
             Handle = Guid.NewGuid().ToString("N")[..8]
             // Rank will be set in the service based on the number of users
@@ -44,14 +46,15 @@ public class UserController(IUserService userService, IFriendshipService friends
 
         await userService.CreateUserAsync(newUser);
 
-        var token = GenerateJwt(newUser);
-        return Ok(new OAuthLoginResponseDto(token));
+        var accessToken = GenerateJwt(newUser, false);
+        var refreshToken = GenerateJwt(newUser, true);
+        return Ok(new OAuthLoginResponseDto(accessToken, refreshToken));
     }
 
     /// <summary>
     /// Login with OAuth
     /// </summary>
-    /// <param name="request">The JWT token from OAuth provider</param>
+    /// <param name="request">The DTO containing the JWT token from OAuth provider</param>
     /// <returns>An action result indicating success or failure</returns>
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] OAuthLoginRequestDto request)
@@ -64,9 +67,34 @@ public class UserController(IUserService userService, IFriendshipService friends
 
         if (userResult.Value.Rank == Rank.Unauthorized) return Unauthorized("가입 승인 대기 중입니다.");
 
-        var token = GenerateJwt(userResult);
-        return Ok(new OAuthLoginResponseDto(token));
+        var accessToken = GenerateJwt(userResult, false);
+        var refreshToken = GenerateJwt(userResult, true);
+        return Ok(new OAuthLoginResponseDto(accessToken, refreshToken));
     }
+
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest model)
+    {
+        var validationResult = await refreshTokenService.ValidateRefreshTokenAsync(model.RefreshToken);
+        if (!validationResult.IsSuccess) return Unauthorized(validationResult.ErrorMessage);
+
+        // Revoke the old refresh token
+        await refreshTokenService.RevokeRefreshTokenAsync(model.RefreshToken);
+
+        var jwtHandler = new JwtSecurityTokenHandler();
+        var jwtToken = jwtHandler.ReadJwtToken(model.RefreshToken);
+
+        var userId = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("사용자 ID를 찾을 수 없습니다.");
+
+        var userResult = await userService.GetUserByIdAsync(userId);
+        if (userResult.IsFailure) return NotFound("사용자가 존재하지 않습니다.");
+
+        var newAccessToken = GenerateJwt(userResult.Value, false);
+        var newRefreshToken = GenerateJwt(userResult.Value, true);
+        return Ok(new OAuthLoginResponseDto(newAccessToken, newRefreshToken));
+    }
+
 
     /// <summary>
     /// Get user profile
@@ -351,9 +379,11 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <summary>
     /// Generate a JWT token for the user
     /// </summary>
+    /// <remarks>When isRefreshToken is true, the token will be a refresh token and automatically added to the refresh token service</remarks>
     /// <param name="user">The user to generate the token for</param>
-    /// <returns>A JWT token</returns>
-    private static string GenerateJwt(User user)
+    /// <param name="isRefreshToken">Indicates whether the token is a refresh token</param>
+    /// <returns>A JWT token string</returns>
+    private string GenerateJwt(User user, bool isRefreshToken)
     {
         // Create the claims for the JWT token
         var claims = new[]
@@ -361,7 +391,9 @@ public class UserController(IUserService userService, IFriendshipService friends
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Role, user.Rank.ToString()),
             new Claim("nickname", user.Nickname),
-            new Claim("provider", user.SocialService.ToString())
+            new Claim("provider", user.SocialService.ToString()),
+            new Claim("token_type", isRefreshToken ? "refresh" : "access"),
+            new Claim("refresh_token", isRefreshToken ? "true" : "false"),
         };
 
         // Create the key and credentials for the JWT token
@@ -373,17 +405,19 @@ public class UserController(IUserService userService, IFriendshipService friends
             issuer: Constants.JwtIssuer,
             audience: Constants.JwtAudience,
             claims: claims,
-            expires: DateTime.UtcNow.AddYears(7),
+            expires: isRefreshToken ? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddHours(1),
             signingCredentials: creds
         );
 
         // Return the token as a string
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+        if (isRefreshToken) refreshTokenService.AddRefreshToken(tokenString);
+        return tokenString;
     }
 
     /// <summary>
     /// Generate a default username
     /// </summary>
     /// <returns>A default username starting with "사용자-" and followed by a random 8-character string</returns>
-    private static string GenerateDeafultUserName() => $"사용자-{Guid.NewGuid().ToString("N")[..8]}";
+    private static string GenerateDefaultUserName() => $"사용자-{Guid.NewGuid().ToString("N")[..8]}";
 }

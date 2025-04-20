@@ -8,6 +8,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Aspire.MongoDB.Driver" Version="9.1.0" />
+		<PackageReference Include="RestSharp" Version="112.1.0" />
 	</ItemGroup>
-
 </Project>
