@@ -80,7 +80,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
     [HttpPost("{commentId}/like")]
     [Authorize]
-    public async Task<IActionResult> HandleLikeComment(string commentId)
+    public async Task<IActionResult> HandleCommentLike(string commentId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 

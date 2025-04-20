@@ -21,93 +21,93 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 
         var result = await friendshipService.SendFriendRequestAsync(senderId, receiverId);
         if (result.IsSuccess) return Ok();
-        else if (result.Error == ErrorType.SenderEqualsReceiver) return BadRequest("자기 자신에게 친구 요청을 보낼 수 없습니다.");
-        else if (result.Error == ErrorType.Conflict) return BadRequest("차단한 또는 무시한 사용자거나 이미 친구 요청을 보낸 사용자입니다.");
+        else if (result.Error == ErrorType.SenderEqualsReceiver) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Conflict) return BadRequest(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpPost("request/{requesterId}/accept")]
+    [HttpPost("request/{userIdToAccept}/accept")]
     [Authorize]
-    public async Task<IActionResult> AcceptFriendRequest(string requesterId)
+    public async Task<IActionResult> AcceptFriendRequest(string userIdToAccept)
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var result = await friendshipService.AcceptFriendRequestAsync(userId, requesterId);
+        var result = await friendshipService.AcceptFriendRequestAsync(userId, userIdToAccept);
         if (result.IsSuccess) return Ok();
-        else if (result.Error == ErrorType.NotFound) return NotFound("해당 사용자의 친구 요청을 찾을 수 없습니다.");
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpPost("request/{requesterId}/decline")]
+    [HttpPost("request/{userIdToDecline}/decline")]
     [Authorize]
-    public async Task<IActionResult> DeclineFriendRequest(string requesterId)
+    public async Task<IActionResult> DeclineFriendRequest(string userIdToDecline)
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var result = await friendshipService.DeclineFriendRequestAsync(userId, requesterId);
+        var result = await friendshipService.DeclineFriendRequestAsync(userId, userIdToDecline);
         if (result.IsSuccess) return Ok();
-        else if (result.Error == ErrorType.NotFound) return NotFound("해당 사용자의 친구 요청을 찾을 수 없습니다.");
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpPost("block/{userToBlockId}")]
+    [HttpPost("block/{userIdToBlock}")]
     [Authorize]
-    public async Task<IActionResult> BlockUser(string userToBlockId)
+    public async Task<IActionResult> BlockUser(string userIdToBlock)
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var result = await friendshipService.BlockUserAsync(userId, userToBlockId);
+        var result = await friendshipService.BlockUserAsync(userId, userIdToBlock);
         if (result.IsSuccess) return Ok();
-        else if (result.Error == ErrorType.NotFound) return NotFound("해당 사용자의 친구 요청을 찾을 수 없습니다.");
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpPost("request/{requesterId}/ignore")]
+    [HttpPost("ignore/{userIdToIgnore}")]
     [Authorize]
-    public async Task<IActionResult> IgnoreRequest(string requesterId)
+    public async Task<IActionResult> IgnoreUser(string userIdToIgnore)
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var result = await friendshipService.IgnoreUserAsync(userId, requesterId);
+        var result = await friendshipService.IgnoreUserAsync(userId, userIdToIgnore);
         if (result.IsSuccess) return Ok();
-        else if (result.Error == ErrorType.NotFound) return NotFound("해당 사용자의 친구 요청을 찾을 수 없습니다.");
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpPost("remove/{friendId}")]
+    [HttpPost("remove/{userIdToRemove}")]
     [Authorize]
-    public async Task<IActionResult> RemoveFriend(string friendId)
+    public async Task<IActionResult> RemoveFriend(string userIdToRemove)
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var result = await friendshipService.RemoveFriendAsync(userId, friendId);
+        var result = await friendshipService.RemoveFriendAsync(userId, userIdToRemove);
         return result.IsSuccess ? Ok() : StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpDelete("block/{userToUnblockId}")]
+    [HttpDelete("block/{blockedUserId}")]
     [Authorize]
-    public async Task<IActionResult> UnblockUser(string userToUnblockId)
+    public async Task<IActionResult> UnblockUser(string blockedUserId)
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var result = await friendshipService.UnblockUserAsync(userId, userToUnblockId);
+        var result = await friendshipService.UnblockUserAsync(userId, blockedUserId);
         return result.IsSuccess ? Ok() : StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpDelete("ignore/{requesterId}")]
+    [HttpDelete("ignore/{ignoredUserId}")]
     [Authorize]
-    public async Task<IActionResult> UnignoreUser(string requesterId)
+    public async Task<IActionResult> UnignoreUser(string ignoredUserId)
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var result = await friendshipService.UnignoreUserAsync(userId, requesterId);
+        var result = await friendshipService.UnignoreUserAsync(userId, ignoredUserId);
         return result.IsSuccess ? Ok() : StatusCode(500, result.FullErrorMessage);
     }
 
@@ -145,9 +145,8 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var blockedUserIdsResult = await friendshipService.GetBlockedUserIdsAsync(userId);
-        var blockedUsersResult = await userService.GetUsersByIdsAsync(blockedUserIdsResult.Value);
 
-        var dtosResult = await userService.GenerateUserResponseDtosAsync(blockedUsersResult.Value, userId);
+        var dtosResult = await userService.GenerateUserResponseDtosAsync(blockedUserIdsResult.Value, userId);
         return Ok(dtosResult.Value);
     }
 
@@ -159,9 +158,8 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var ignoredUserIdsResult = await friendshipService.GetIgnoredUserIdsAsync(userId);
-        var ignoredUsersResult = await userService.GetUsersByIdsAsync(ignoredUserIdsResult.Value);
 
-        var dtosResult = await userService.GenerateUserResponseDtosAsync(ignoredUsersResult.Value, userId);
+        var dtosResult = await userService.GenerateUserResponseDtosAsync(ignoredUserIdsResult.Value, userId);
         return Ok(dtosResult.Value);
     }
 
@@ -171,42 +169,14 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var userResult = await userService.GetUserByIdAsync(userId);
-        if (userResult.Error == ErrorType.NotFound) return NotFound("해당 사용자를 찾을 수 없습니다.");
-
-        var hasAccess = false;
-
-        if (userResult.Value.FriendListDiscoveryOption == Commons.Enums.DiscoveryOption.Everyone) hasAccess = true;
-        else if (requesterId == null) hasAccess = false;
-        else if (userResult.Value.FriendListDiscoveryOption == Commons.Enums.DiscoveryOption.FriendsOfFriends)
+        var friendIdsResult = await friendshipService.GetUserFriendIdsAsync(userId, requesterId);
+        if (friendIdsResult.IsSuccess)
         {
-            var friendsOfFriendsResult = await friendshipService.GetFriendsOfFriendIdsAsync(requesterId);
-            hasAccess = friendsOfFriendsResult.Value.Contains(requesterId);
+            var dtosResult = await userService.GenerateUserResponseDtosAsync(friendIdsResult.Value, requesterId);
+            return Ok(dtosResult.Value);
         }
-        else if (userResult.Value.FriendListDiscoveryOption == Commons.Enums.DiscoveryOption.Friends)
-        {
-            var areFriendsResult = await friendshipService.AreFriendsAsync(requesterId, userId);
-            hasAccess = areFriendsResult.Value;
-        }
-        else if (userResult.Value.FriendListDiscoveryOption == Commons.Enums.DiscoveryOption.OnlyMe)
-        {
-            hasAccess = requesterId == userId;
-        }
-
-        if (!hasAccess) return Unauthorized("해당 사용자의 친구 목록을 볼 수 없습니다.");
-
-        var friendsResult = await friendshipService.GetFriendIdsAsync(userId);
-        var friendUsersResult = await userService.GetUsersByIdsAsync(friendsResult.Value);
-
-        // Remove blocked, ignored friends, and friends who blocked the requester
-        if (requesterId != null)
-        {
-            var bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
-
-            friendUsersResult.Value.RemoveAll(x => bannedUserIds.Value.Contains(x.Id));
-        }
-
-        var dtosResult = await userService.GenerateUserResponseDtosAsync(friendUsersResult.Value, requesterId);
-        return Ok(dtosResult.Value);
+        else if (friendIdsResult.Error == ErrorType.NotFound) return NotFound(friendIdsResult.ErrorMessage);
+        else if (friendIdsResult.Error == ErrorType.Forbidden) return Forbid(friendIdsResult.ErrorMessage);
+        else return StatusCode(500, friendIdsResult.FullErrorMessage);
     }
 }

@@ -52,6 +52,15 @@ public class RefreshTokenService(IMongoDatabase database) : IRefreshTokenService
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = expiresAt,
         };
+
+        while (true)
+        {
+            newRefreshToken.Id = Guid.NewGuid().ToString("N");
+
+            var existingToken = _refreshTokenCollection.Find(f => f.Id == newRefreshToken.Id).FirstOrDefault();
+            if (existingToken == null) break;
+        }
+
         _refreshTokenCollection.InsertOne(newRefreshToken);
 
         // Delete expired refresh tokens

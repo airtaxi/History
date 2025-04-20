@@ -19,21 +19,21 @@ namespace History.ApiService.Services;
 /// Initializes a new instance of the FriendshipService class.
 /// </remarks>
 /// <param name="database">The MongoDB database instance.</param>
-public class FriendshipService(IMongoDatabase database) : IFriendshipService
+public class FriendshipService(IMongoDatabase database, IUserService userService) : IFriendshipService
 {
     private readonly IMongoCollection<Friendship> _friendshipCollection = database.GetCollection<Friendship>("Friendships");
 
     /// <inheritdoc/>
     public async Task<Result> SendFriendRequestAsync(string senderId, string receiverId)
     {
-        if (senderId == receiverId) return Result.Failure(ErrorType.SenderEqualsReceiver);
+        if (senderId == receiverId) return Result.Failure(ErrorType.SenderEqualsReceiver, "자기 자신에게 친구 요청을 보낼 수 없습니다.");
 
         // Check if friendship already exists
         var existingFriendship = await _friendshipCollection.Find(f =>
             (f.UserId == senderId && f.FriendId == receiverId) ||
             (f.UserId == receiverId && f.FriendId == senderId)).FirstOrDefaultAsync();
 
-        if (existingFriendship != null) return Result.Failure(ErrorType.Conflict);
+        if (existingFriendship != null) return Result.Failure(ErrorType.Conflict, "차단한 또는 무시한 사용자거나 이미 친구 요청을 보낸 사용자입니다.");
 
         // Create new friendship request
         var friendship = new Friendship
@@ -50,27 +50,44 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
     }
 
     /// <inheritdoc/>
-    public async Task<Result> AcceptFriendRequestAsync(string userId, string requesterId)
+    public async Task<Result> AcceptFriendRequestAsync(string userId, string userToAcceptId)
     {
         // Find the request
         var request = await _friendshipCollection.Find(f =>
-            f.UserId == requesterId && f.FriendId == userId &&
+            f.UserId == userToAcceptId && f.FriendId == userId &&
             f.Status == FriendshipStatus.Requested).FirstOrDefaultAsync();
 
         if (request == null) return (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.");
 
-        var updateDefinition = Builders<Friendship>.Update.Set(f => f.Status, FriendshipStatus.Ignored);
-
+        var updateDefinition = Builders<Friendship>.Update.Set(f => f.Status, FriendshipStatus.Accepted);
         var result = await _friendshipCollection.UpdateOneAsync(f => f.Id == request.Id, updateDefinition);
 
-        return result.ModifiedCount > 0 ? (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.") : null;
+        var reverseFriendship = new Friendship
+        {
+            UserId = userId,
+            FriendId = userToAcceptId,
+            Status = FriendshipStatus.Accepted,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        while (true)
+        {
+            reverseFriendship.Id = Guid.NewGuid().ToString("N");
+
+            var existingFriendship = await _friendshipCollection.Find(f => f.Id == reverseFriendship.Id).FirstOrDefaultAsync();
+            if (existingFriendship == null) break;
+        }
+
+        await _friendshipCollection.InsertOneAsync(reverseFriendship);
+
+        return result.ModifiedCount > 0 ? Result.Success() : Result.Failure(ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.");
     }
 
     /// <inheritdoc/>
-    public async Task<Result> DeclineFriendRequestAsync(string userId, string requesterId)
+    public async Task<Result> DeclineFriendRequestAsync(string userId, string userToDeclineId)
     {
         var request = await _friendshipCollection.Find(f =>
-            f.UserId == requesterId && f.FriendId == userId &&
+            f.UserId == userToDeclineId && f.FriendId == userId &&
             f.Status == FriendshipStatus.Requested).FirstOrDefaultAsync();
 
         if (request == null) return (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.");
@@ -92,12 +109,19 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
         // Create blocked relationship
         var blockFriendship = new Friendship
         {
-            Id = Guid.NewGuid().ToString("N"),
             UserId = userId,
             FriendId = userToBlockId,
             Status = FriendshipStatus.Blocked,
             CreatedAt = DateTime.UtcNow
         };
+
+        while (true)
+        {
+            blockFriendship.Id = Guid.NewGuid().ToString("N");
+
+            var existingFriendship = await _friendshipCollection.Find(f => f.Id == blockFriendship.Id).FirstOrDefaultAsync();
+            if (existingFriendship == null) break;
+        }
 
         await _friendshipCollection.InsertOneAsync(blockFriendship);
         return null;
@@ -114,12 +138,19 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
         // Create blocked relationship
         var blockFriendship = new Friendship
         {
-            Id = Guid.NewGuid().ToString("N"),
             UserId = userId,
             FriendId = userToIgnoreId,
             Status = FriendshipStatus.Ignored,
             CreatedAt = DateTime.UtcNow
         };
+
+        while (true)
+        {
+            blockFriendship.Id = Guid.NewGuid().ToString("N");
+
+            var existingFriendship = await _friendshipCollection.Find(f => f.Id == blockFriendship.Id).FirstOrDefaultAsync();
+            if (existingFriendship == null) break;
+        }
 
         await _friendshipCollection.InsertOneAsync(blockFriendship);
         return null;
@@ -245,12 +276,12 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
     /// <inheritdoc/>
     public async Task<Result<List<string>>> GetIgnoredUserIdsAsync(string userId)
     {
-        var ignoredFrienIds = await _friendshipCollection.Find(f =>
+        var ignoredFriendIds = await _friendshipCollection.Find(f =>
             f.UserId == userId && f.Status == FriendshipStatus.Ignored)
             .Project(f => f.FriendId)
             .ToListAsync();
 
-        return ignoredFrienIds;
+        return ignoredFriendIds;
     }
 
     /// <inheritdoc/>
@@ -304,4 +335,43 @@ public class FriendshipService(IMongoDatabase database) : IFriendshipService
 
     /// <inheritdoc/>
     public async Task<Result<long>> GetUserFriendCountAsync(string userId) => await _friendshipCollection.CountDocumentsAsync(f => f.UserId == userId && f.Status == FriendshipStatus.Accepted);
+
+    /// <inheritdoc/>
+    public async Task<Result<List<string>>> GetUserFriendIdsAsync(string userId, string requesterId)
+    {
+        var userResult = await userService.GetUserByIdAsync(userId);
+        if (userResult.IsFailure) return Result<List<string>>.Failure(ErrorType.NotFound, userResult.ErrorMessage);
+
+        var hasAccess = false;
+        if (userResult.Value.FriendListDiscoveryOption == DiscoveryOption.Everyone) hasAccess = true;
+        else if (requesterId == null) hasAccess = false;
+        else if (userResult.Value.FriendListDiscoveryOption == DiscoveryOption.FriendsOfFriends)
+        {
+            var friendsOfFriendsResult = await GetFriendsOfFriendIdsAsync(requesterId);
+            hasAccess = friendsOfFriendsResult.Value.Contains(requesterId);
+        }
+        else if (userResult.Value.FriendListDiscoveryOption == DiscoveryOption.Friends)
+        {
+            var areFriendsResult = await AreFriendsAsync(requesterId, userId);
+            hasAccess = areFriendsResult.Value;
+        }
+        else if (userResult.Value.FriendListDiscoveryOption == DiscoveryOption.OnlyMe)
+        {
+            hasAccess = requesterId == userId;
+        }
+
+        if (!hasAccess) return Result<List<string>>.Failure(ErrorType.Forbidden, "해당 사용자의 친구 목록을 볼 수 없습니다.");
+
+        var friendIdsResult = await GetFriendIdsAsync(userId);
+
+        // Remove blocked, ignored friends, and friends who blocked the requester
+        if (requesterId != null)
+        {
+            var bannedUserIds = await GetBannedUserIdsAsync(requesterId);
+
+            friendIdsResult.Value.RemoveAll(bannedUserIds.Value.Contains);
+        }
+
+        return friendIdsResult;
+    }
 }
