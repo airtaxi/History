@@ -49,7 +49,7 @@ public class User
     /// <summary>
     /// Discovery option for friend list.
     /// </summary>
-    public DiscoveryOption FriendListDiscoveryOption { get; set; }
+    public DiscoveryOption FriendListDiscoveryOption { get; set; } = DiscoveryOption.Everyone;
 
     /// <summary>
     /// Represents the date and time when the user was created.

@@ -21,41 +21,41 @@ public interface IFriendshipService
     /// Accepts a friend request.
     /// </summary>
     /// <param name="userId">The ID of the user accepting the request.</param>
-    /// <param name="requesterId">The ID of the user who sent the request.</param>
+    /// <param name="userIdToAccept">The ID of the user to be accepted.</param>
     /// <returns>A task representing the asynchronous operation, with a boolean indicating success.</returns>
-    public Task<Result> AcceptFriendRequestAsync(string userId, string requesterId);
+    public Task<Result> AcceptFriendRequestAsync(string userId, string userIdToAccept);
 
     /// <summary>
     /// Declines a friend request.
     /// </summary>
     /// <param name="userId">The ID of the user declining the request.</param>
-    /// <param name="requesterId">The ID of the user who sent the request.</param>
+    /// <param name="userIdToDecline">The ID of the user to be declined.</param>
     /// <returns>A task representing the asynchronous operation, with a boolean indicating success.</returns>
-    public Task<Result> DeclineFriendRequestAsync(string userId, string requesterId);
+    public Task<Result> DeclineFriendRequestAsync(string userId, string userIdToDecline);
 
     /// <summary>
     /// Blocks a user.
     /// </summary>
     /// <param name="userId">The ID of the user performing the block.</param>
-    /// <param name="userToBlockId">The ID of the user to be blocked.</param>
+    /// <param name="userIdToBlock">The ID of the user to be blocked.</param>
     /// <returns>A task representing the asynchronous operation, with a boolean indicating success.</returns>
-    public Task<Result> BlockUserAsync(string userId, string userToBlockId);
+    public Task<Result> BlockUserAsync(string userId, string userIdToBlock);
 
     /// <summary>
     /// Ignores a friend request.
     /// </summary>
     /// <param name="userId">The ID of the user ignoring the request.</param>
-    /// <param name="requesterId">The ID of the user who sent the request.</param>
+    /// <param name="friendId">The ID of the user to be ignored.</param>
     /// <returns>A task representing the asynchronous operation, with a boolean indicating success.</returns>
-    public Task<Result> IgnoreUserAsync(string userId, string requesterId);
+    public Task<Result> IgnoreUserAsync(string userId, string friendId);
 
     /// <summary>
     /// Removes a friend from the user's friend list.
     /// </summary>
     /// <param name="userId">The ID of the user removing the friend.</param>
-    /// <param name="friendId">The ID of the friend to be removed.</param>
+    /// <param name="userIdToRemove">The ID of the user to be removed from the friend list.</param>
     /// <returns>A task representing the asynchronous operation, with a boolean indicating success.</returns>
-    public Task<Result> RemoveFriendAsync(string userId, string friendId);
+    public Task<Result> RemoveFriendAsync(string userId, string userIdToRemove);
 
     /// <summary>
     /// Unblocks a previously blocked user.
@@ -166,4 +166,12 @@ public interface IFriendshipService
     /// <param name="userId">The ID of the user whose friend count is to be retrieved.</param>
     /// <returns>A task representing the asynchronous operation, with the count of friends.</returns>
     public Task<Result<long>> GetUserFriendCountAsync(string userId);
+
+    /// <summary>
+    /// Retrieves a list of user IDs that are friends with the specified user.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose friends are being retrieved.</param>
+    /// <param name="requesterId">The ID of the user making the request.</param>
+    /// <returns>A task that represents the asynchronous operation, containing a result of a list of friend IDs.</returns>
+    public Task<Result<List<string>>> GetUserFriendIdsAsync(string userId, string requesterId);
 }
