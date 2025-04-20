@@ -54,7 +54,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <summary>
     /// Login with OAuth
     /// </summary>
-    /// <param name="request">The JWT token from OAuth provider</param>
+    /// <param name="request">The DTO containing the JWT token from OAuth provider</param>
     /// <returns>An action result indicating success or failure</returns>
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] OAuthLoginRequestDto request)
