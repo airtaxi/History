@@ -85,8 +85,6 @@ public class PostController(IPostService postService, IFriendshipService friends
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
         else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
-
-        return Ok();
     }
 
     [HttpPost]
