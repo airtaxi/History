@@ -1,7 +1,7 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var username = builder.AddParameter("admin");
-var password = builder.AddParameter("REDACTED", secret: true);
+var password = builder.AddParameter("***REMOVED***", secret: true);
 
 var mongodb = builder.AddMongoDB("MongoDB", 27017, username, password)
     .WithLifetime(ContainerLifetime.Persistent)
@@ -10,7 +10,6 @@ var mongodb = builder.AddMongoDB("MongoDB", 27017, username, password)
 
 builder.AddProject<Projects.History_ApiService>("ApiService")
     .WithReference(mongodb)
-    .WithHttpEndpoint()
     .WaitFor(mongodb);
 
 builder.Build().Run();
