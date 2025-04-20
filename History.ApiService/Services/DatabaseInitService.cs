@@ -15,6 +15,7 @@ namespace History.ApiService.Services
             var friendshipCollection = database.GetCollection<Friendship>("Friendships");
             var commentCollection = database.GetCollection<Comment>("Comments");
             var mediaCollection = database.GetCollection<Media>("Medias");
+            var refreshTokenCollection = database.GetCollection<RefreshToken>("RefreshTokens");
 
             // Create indexes
             logger.LogInformation("Creating indexes...");
@@ -45,6 +46,11 @@ namespace History.ApiService.Services
             await mediaCollection.Indexes.CreateOneAsync(new CreateIndexModel<Media>(Builders<Media>.IndexKeys.Ascending(x => x.AssociatedId)), cancellationToken: cancellationToken);
             await mediaCollection.Indexes.CreateOneAsync(new CreateIndexModel<Media>(Builders<Media>.IndexKeys.Ascending(x => x.BucketType)), cancellationToken: cancellationToken);
             await mediaCollection.Indexes.CreateOneAsync(new CreateIndexModel<Media>(Builders<Media>.IndexKeys.Ascending(x => x.CreatedAt)), cancellationToken: cancellationToken);
+
+            logger.LogInformation("Creating indexes for RefreshTokens collection...");
+            await refreshTokenCollection.Indexes.CreateOneAsync(new CreateIndexModel<RefreshToken>(Builders<RefreshToken>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
+            await refreshTokenCollection.Indexes.CreateOneAsync(new CreateIndexModel<RefreshToken>(Builders<RefreshToken>.IndexKeys.Ascending(x => x.Token)), cancellationToken: cancellationToken);
+            await refreshTokenCollection.Indexes.CreateOneAsync(new CreateIndexModel<RefreshToken>(Builders<RefreshToken>.IndexKeys.Ascending(x => x.CreatedAt)), cancellationToken: cancellationToken);
 
             logger.LogInformation("Indexes created successfully.");
         }

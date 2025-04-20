@@ -1,15 +1,17 @@
-using MongoDB.Bson.Serialization.Serializers;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using History.ApiService;
-using History.ApiService.Services.Interfaces;
 using History.ApiService.Services;
+using History.ApiService.Services.Interfaces;
+using History.Commons;
 using History.Commons.Enums;
 using History.ServiceDefaults;
-using History.Commons;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+using System.IdentityModel.Tokens.Jwt;
+using System.Runtime.InteropServices;
+using System.Text;
 
 BsonSerializer.RegisterSerializer(new EnumSerializer<DiscoveryOption>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<PostReactionType>(BsonType.String));
@@ -53,6 +55,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = Constants.JwtIssuer,
             ValidAudience = Constants.JwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Constants.JwtKey))
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
+            {
+                var token = context.SecurityToken as JwtSecurityToken;
+                var tokenType = token?.Claims.FirstOrDefault(c => c.Type == "token_type")?.Value;
+
+                if (tokenType != "access")
+                {
+                    context.Fail("Invalid token type");
+                }
+
+                return Task.CompletedTask;
+            }
         };
     });
 
