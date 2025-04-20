@@ -104,7 +104,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     }
 
     [HttpGet("{postId}")]
-    public async Task<IActionResult> GetPostById(string postId)
+    public async Task<IActionResult> GetPost(string postId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
