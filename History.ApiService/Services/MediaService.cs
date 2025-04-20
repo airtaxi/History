@@ -97,6 +97,22 @@ public class MediaService(IMongoDatabase database) : IMediaService
     }
 
     /// <inheritdoc />
+    public async Task<Result> DeleteMediaByAssociatedIdAsync(string associatedId)
+    {
+        var media = await _mediaCollection.Find(m => m.AssociatedId == associatedId).FirstOrDefaultAsync();
+        if (media == null) return Result.Failure(ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
+
+        var bucket = new GridFSBucket(database, new GridFSBucketOptions
+        {
+            BucketName = media.BucketType.ToString()
+        });
+        await bucket.DeleteAsync(media.Id);
+
+        await _mediaCollection.DeleteOneAsync(m => m.AssociatedId == associatedId);
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
     public async Task<Result> DeleteMediasByAssociatedIdsAsync(IEnumerable<string> associatedIds)
     {
         var media = await _mediaCollection.Find(m => associatedIds.Contains(m.AssociatedId)).ToListAsync();
