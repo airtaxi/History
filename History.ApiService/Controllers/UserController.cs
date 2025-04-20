@@ -120,55 +120,56 @@ public class UserController(IUserService userService, IFriendshipService friends
             else if (requesterBlockerFriendIdsResult.Value.Contains(userId)) return Unauthorized("이 사용자의 피드를 볼 수 없습니다.");
         }
 
-        var dto = await userService.GenerateUserResponseDtoAsync(userResult, requesterId);
-        if (dto.IsSuccess) return Ok(dto.Value);
-        if (dto.Error == ErrorType.NotFound) return NotFound(dto.ErrorMessage);
-        else return StatusCode(500, dto.FullErrorMessage);
+        var result = await userService.GenerateUserResponseDtoAsync(userResult, requesterId);
+        if (result.IsSuccess) return Ok(result.Value);
+        if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpPost("approve")]
-    public async Task<IActionResult> ApproveUnauthorizedUser([FromBody] ApproveUnauthorizedUserRequestDto request)
+    [HttpPost("approve/{userId}")]
+    [Authorize]
+    public async Task<IActionResult> ApproveUnauthorizedUser(string userId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var requester = await userService.GetUserByIdAsync(requesterId);
         if (requester?.Value.Rank < Rank.Moderator) return Unauthorized("권한이 없습니다.");
 
-        var result = await userService.ApproveUnauthorizedUserAsync(request.UserId);
+        var result = await userService.ApproveUnauthorizedUserAsync(userId);
         if (result.IsSuccess) return Ok();
-
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpPost("unapprove")]
-    public async Task<IActionResult> UnapproveUnauthorizedUser([FromBody] UnapproveUnauthorizedUserRequestDto request)
+    [HttpPost("unapprove/{userId}")]
+    [Authorize]
+    public async Task<IActionResult> UnapproveUnauthorizedUser(string userId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var requester = await userService.GetUserByIdAsync(requesterId);
         if (requester?.Value.Rank < Rank.Moderator) return Unauthorized("권한이 없습니다.");
 
-        var result = await userService.UnapproveUnauthorizedUserAsync(request.UserId);
+        var result = await userService.UnapproveUnauthorizedUserAsync(userId);
         if (result.IsSuccess) return Ok();
-
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpPost("make-moderator")]
-    public async Task<IActionResult> MakeUserModerator([FromBody] MakeUserModeratorRequestDto request)
+    [HttpPost("make-moderator/{userId}")]
+    [Authorize]
+    public async Task<IActionResult> MakeUserModerator(string userId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var requester = await userService.GetUserByIdAsync(requesterId);
         if (requester?.Value.Rank != Rank.Admin) return Unauthorized("권한이 없습니다.");
 
-        var result = await userService.MakeUserModeratorAsync(request.UserId);
+        var result = await userService.MakeUserModeratorAsync(userId);
         if (result.IsSuccess) return Ok();
-
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
     [HttpGet("unauthorized-users")]
+    [Authorize]
     public async Task<IActionResult> GetUnauthorizedUsers()
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -185,6 +186,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     }
 
     [HttpGet("moderators")]
+    [Authorize]
     public async Task<IActionResult> GetModerators()
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
