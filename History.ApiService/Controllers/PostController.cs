@@ -187,7 +187,6 @@ public class PostController(IPostService postService, IFriendshipService friends
         if (limit > 100) limit = 100;
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
         var keyword = HttpContext.Request.Query["keyword"].ToString();
         if (string.IsNullOrEmpty(keyword)) return BadRequest("검색어를 입력해주세요.");
