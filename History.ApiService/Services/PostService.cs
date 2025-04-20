@@ -391,7 +391,7 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
     }
 
     /// <inheritdoc/>
-    public async Task<Result> HandlePostReactionPostAsync(string userId, string postId, PostReactionType type)
+    public async Task<Result> HandlePostReactionAsync(string userId, string postId, PostReactionType type)
     {
         var accessResult = await CheckAccessAsync(postId, userId);
         if (accessResult.IsFailure) return accessResult;

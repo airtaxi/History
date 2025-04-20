@@ -164,12 +164,12 @@ public class PostController(IPostService postService, IFriendshipService friends
 
     [HttpPost("{postId}/reaction/{type}")]
     [Authorize]
-    public async Task<IActionResult> HandlePostReactionPost(string postId, PostReactionType type)
+    public async Task<IActionResult> HandlePostReaction(string postId, PostReactionType type)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
-        var result = await postService.HandlePostReactionPostAsync(requesterId, postId, type);
+        var result = await postService.HandlePostReactionAsync(requesterId, postId, type);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
