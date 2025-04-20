@@ -34,9 +34,9 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
 
         if (requesterId != null)
         {
-            var requseterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
+            var requesterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
 
-            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.UserId, requseterBannedFriendIdsResult.Value));
+            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.UserId, requesterBannedFriendIdsResult.Value));
         }
 
         var comments = await _commentCollection

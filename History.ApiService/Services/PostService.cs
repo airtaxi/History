@@ -442,8 +442,8 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
         }
         if (requesterId != null)
         {
-            var requseterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
-            filter &= Builders<Post>.Filter.Nin(p => p.UserId, requseterBannedFriendIdsResult.Value);
+            var requesterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
+            filter &= Builders<Post>.Filter.Nin(p => p.UserId, requesterBannedFriendIdsResult.Value);
         }
 
         return await _postCollection
