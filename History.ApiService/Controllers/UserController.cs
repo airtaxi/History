@@ -102,7 +102,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <param name="userId">The ID of user to get</param>
     /// <returns>A task that represents the asynchronous operation. with result of user profile</returns>
     [HttpGet("{userId}")]
-    public async Task<IActionResult> GetUser(string userId)
+    public async Task<IActionResult> GetUserById(string userId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
