@@ -7,4 +7,5 @@ public class MediaContent : BaseContent
 {
     public string MediaId { get; set; }
     public string Description { get; set; }
+    public string MimeType { get; set; }
 }
