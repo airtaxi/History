@@ -22,7 +22,7 @@ public interface IMediaService
     /// <param name="userId">The id of user who uploaded the media</param>
     /// <param name="content">The content of media</param>
     /// <returns>A task that represents the asynchronous operation. with result of created media</returns>
-    public Task<Result<Media>> CreateMediaAsync(MediaBucket bucketType, string associatedId, string userId, byte[] content);
+    public Task<Result<Media>> CreateMediaAsync(MediaBucket bucketType, string associatedId, string userId, byte[] content, string mimeType);
 
 
     /// <summary>
