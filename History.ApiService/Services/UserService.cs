@@ -1,10 +1,10 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using History.ApiService.Helpers;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using MongoDB.Driver;
-using System.Runtime.InteropServices;
 
 namespace History.ApiService.Services;
 
@@ -145,11 +145,15 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
         }
         else
         {
-            var media = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, image);
-            if (media.Error != null) return media.CastFailure<bool>();
+            var convertResult = ImageMagickHelper.ConvertAndSave(image);
+            var bytes = convertResult.Data;
+            var contentType = convertResult.MimeType;
+
+            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, bytes, contentType);
+            if (mediaResult.Error != null) return mediaResult.CastFailure<bool>();
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
-            var update = Builders<User>.Update.Set(u => u.ProfileMediaId, media.Value.Id);
+            var update = Builders<User>.Update.Set(u => u.ProfileMediaId, mediaResult.Value.Id);
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "프로필 이미지를 변경하는 중 오류가 발생했습니다.");
         }
     }
@@ -171,7 +175,11 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
         }
         else
         {
-            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, image);
+            var convertResult = ImageMagickHelper.ConvertAndSave(image);
+            var bytes = convertResult.Data;
+            var contentType = convertResult.MimeType;
+
+            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, bytes, contentType);
             if (mediaResult.Error != null) return mediaResult.CastFailure<bool>();
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
