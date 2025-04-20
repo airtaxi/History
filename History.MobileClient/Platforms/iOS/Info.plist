@@ -28,5 +28,18 @@
 	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
+	<key>GIDClientID</key>
+	<string>401981104412-fp8jll2dd4brb14skupcpsqa2g6blmqv.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.401981104412-fp8jll2dd4brb14skupcpsqa2g6blmqv</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDServerClientID</key>
+	<string>401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com</string>
 </dict>
 </plist>

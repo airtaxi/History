@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Mopups.Hosting;
+using System.ComponentModel.Design;
 using UraniumUI;
 
 namespace History.MobileClient
