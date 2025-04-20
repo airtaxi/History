@@ -1,4 +1,5 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using History.ApiService.Helpers;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
@@ -31,7 +32,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
     }
 
     /// <inheritdoc />
-    public async Task<Result<Media>> CreateMediaAsync(MediaBucket bucketType, string associatedId, string userId, byte[] content)
+    public async Task<Result<Media>> CreateMediaAsync(MediaBucket bucketType, string associatedId, string userId, byte[] content, string mimeType)
     {
         // Upload media file to GridFS
         var bucket = new GridFSBucket(database, new GridFSBucketOptions
@@ -46,6 +47,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             AssociatedId = associatedId,
             MediaSize = content.Length,
             BucketType = bucketType,
+            MimeType = mimeType,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -77,15 +79,28 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 using var writeStream = new MemoryStream();
                 await file.CopyToAsync(writeStream);
                 var bytes = writeStream.ToArray();
+                var contentType = file.ContentType;
 
-                var mediaResult = await CreateMediaAsync(bucketType, associatedId, userId, bytes);
+                var isImage = file.ContentType.StartsWith("image/");
+                if (isImage)
+                {
+                    var convertResult = ImageMagickHelper.ConvertAndSave(bytes);
+                    bytes = convertResult.Data;
+                    contentType = convertResult.MimeType;
+                }
+
+                var isOverSize = bytes.Length > 15 * 1024 * 1024; // 15MB
+                if (isOverSize) return Result.Failure(ErrorType.BadRequest, "파일 크기가 너무 큽니다.");
+
+                var mediaResult = await CreateMediaAsync(bucketType, associatedId, userId, bytes, contentType);
                 if (mediaResult.IsFailure) return mediaResult.CastFailure();
 
                 // Replace UploadContent with MediaContent By remove after insert
                 var mediaContent = new MediaContent
                 {
                     MediaId = mediaResult.Value.Id,
-                    Description = uploadContent.Description
+                    Description = uploadContent.Description,
+                    MimeType = file.ContentType
                 };
 
                 contents.Insert(contents.IndexOf(uploadContent), mediaContent);

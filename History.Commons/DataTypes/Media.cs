@@ -32,6 +32,11 @@ public class Media
     public long MediaSize { get; set; }
 
     /// <summary>
+    /// Gets or sets the MIME type associated with the content.
+    /// </summary>
+    public string MimeType { get; set; }
+
+    /// <summary>
     /// Represents the type of media bucket. It can be one of the following:
     /// ProfileMedia
     /// BackgroundMedia
