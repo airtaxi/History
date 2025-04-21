@@ -16,7 +16,7 @@ public class SearchPosts : IBaseRequest<List<PostResponseDto>>, IOptionalAuthReq
     public Method Method => Method.Get;
     public Dictionary<string, string> QueryParameters { get; set; } = [];
 
-    public SearchPosts(string keyword, int limit = 10, string fromPostId)
+    public SearchPosts(string keyword, int limit = 10, string fromPostId = null)
     {
         QueryParameters["keyword"] = keyword;
         QueryParameters["limit"] = limit.ToString();
