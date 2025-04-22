@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace History.Commons.Api.User;
 
-public class GetUser : IBaseRequest<UserResponseDto>, IAuthRequiredRequest, IRequestWithUrlParameters
+public class GetUser : IBaseRequest<UserResponseDto>, IOptionalAuthRequest, IRequestWithUrlParameters
 {
     public string Path => "/api/user/{userId}";
     public Method Method => Method.Get;
