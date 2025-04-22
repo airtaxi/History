@@ -126,6 +126,22 @@ public class UserController(IUserService userService, IFriendshipService friends
         else return StatusCode(500, result.FullErrorMessage);
     }
 
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> GetMyProfile()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var result = await userService.GetUserByIdAsync(userId);
+        if (result.IsFailure) return NotFound(result.ErrorMessage);
+
+        var dtosResult = await userService.GenerateUserResponseDtoAsync(result, userId);
+        if (dtosResult.IsFailure) return StatusCode(500, dtosResult.FullErrorMessage);
+
+        return Ok(dtosResult.Value);
+    }
+
     [HttpPost("approve/{userId}")]
     [Authorize]
     public async Task<IActionResult> ApproveUnauthorizedUser(string userId)
