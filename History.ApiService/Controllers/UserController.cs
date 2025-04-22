@@ -65,7 +65,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         var userResult = await userService.GetUserByIdAsync(payload.Subject);
         if (userResult.IsFailure) return NotFound("사용자가 존재하지 않습니다.");
 
-        if (userResult.Value.Rank == Rank.Unauthorized) return Forbid("가입 승인 대기 중입니다.");
+        if (userResult.Value.Rank == Rank.Unauthorized) return StatusCode(403, "가입 승인 대기 중입니다.");
 
         var accessToken = GenerateJwt(userResult, false);
         var refreshToken = GenerateJwt(userResult, true);

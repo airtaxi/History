@@ -24,7 +24,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
         var result = await commentService.GetCommentsByPostIdAsync(postId, requesterId, fromCommentId, limit);
         if (result.IsFailure)
         {
-            if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+            if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
             else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
             else return StatusCode(500, result.FullErrorMessage);
         }
@@ -46,7 +46,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
-        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -60,7 +60,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
-        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -74,7 +74,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
-        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -88,7 +88,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
-        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 }
