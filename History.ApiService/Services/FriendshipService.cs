@@ -3,12 +3,6 @@ using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.Enums;
 using MongoDB.Driver;
-using MongoDB.Driver.Core.Events;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 namespace History.ApiService.Services;
 
@@ -19,7 +13,7 @@ namespace History.ApiService.Services;
 /// Initializes a new instance of the FriendshipService class.
 /// </remarks>
 /// <param name="database">The MongoDB database instance.</param>
-public class FriendshipService(IMongoDatabase database, IUserService userService) : IFriendshipService
+public class FriendshipService(IMongoDatabase database, IServiceProvider serviceProvider) : IFriendshipService
 {
     private readonly IMongoCollection<Friendship> _friendshipCollection = database.GetCollection<Friendship>("Friendships");
 
@@ -339,6 +333,8 @@ public class FriendshipService(IMongoDatabase database, IUserService userService
     /// <inheritdoc/>
     public async Task<Result<List<string>>> GetUserFriendIdsAsync(string userId, string requesterId)
     {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+
         var userResult = await userService.GetUserByIdAsync(userId);
         if (userResult.IsFailure) return Result<List<string>>.Failure(ErrorType.NotFound, userResult.ErrorMessage);
 

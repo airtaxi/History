@@ -8,7 +8,7 @@ using MongoDB.Driver;
 
 namespace History.ApiService.Services;
 
-public class UserService(IMongoDatabase database, IMediaService mediaService, IFriendshipService friendshipService) : IUserService
+public class UserService(IMongoDatabase database, IMediaService mediaService, IServiceProvider serviceProvider) : IUserService
 {
     private readonly IMongoCollection<User> _userCollection = database.GetCollection<User>("Users");
 
@@ -190,10 +190,13 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
     /// <inheritdoc/>
     public async Task<Result<UserResponseDto>> GenerateUserResponseDtoAsync(User user, string requesterId = null)
     {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
         var result = new UserResponseDto(user);
 
         if(requesterId != null)
         {
+
             var blockedUserIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
             if (blockedUserIdsResult.IsFailure) return blockedUserIdsResult.CastFailure<UserResponseDto>();
             else if (blockedUserIdsResult.Value.Contains(user.Id)) return Result<UserResponseDto>.Failure(ErrorType.Forbidden, "차단한 사용자 접근 오류");
@@ -227,10 +230,14 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IF
     /// <inheritdoc/>
     public async Task<Result<List<UserResponseDto>>> GenerateUserResponseDtosAsync(IEnumerable<User> users, string requesterId = null)
     {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
         var results = users.Select(x => new UserResponseDto(x)).ToList();
 
         var bannedUserIds = new List<string>();
-        if (requesterId != null) bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
+        if (requesterId != null) {
+            bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
+        }
 
         results.RemoveAll(x => bannedUserIds.Contains(x.UserId));
 

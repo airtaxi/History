@@ -4,13 +4,12 @@ using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using Microsoft.VisualBasic;
 using MongoDB.Driver;
 
 namespace History.ApiService.Services;
 
 
-public class CommentService(IMongoDatabase database, IUserService userService, IPostService postService, IMediaService mediaService, IFriendshipService friendshipService) : ICommentService
+public class CommentService(IMongoDatabase database, IMediaService mediaService, IServiceProvider serviceProvider) : ICommentService
 {
     private readonly IMongoCollection<Comment> _commentCollection = database.GetCollection<Comment>("Comments");
     private readonly IMongoCollection<CommentLike> _commentLikeCollection = database.GetCollection<CommentLike>("CommentLikes");
@@ -18,6 +17,9 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
     /// <inheritdoc />
     public async Task<Result<List<Comment>>> GetCommentsByPostIdAsync(string postId, string requesterId, string fromCommentId = null, int limit = 10)
     {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+        var postService = serviceProvider.GetRequiredService<IPostService>();
+
         var accessResult = await postService.CheckAccessAsync(postId, requesterId);
         if (accessResult.IsFailure) return Result<List<Comment>>.Failure(accessResult);
 
@@ -51,6 +53,8 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
     /// <inheritdoc />
     public async Task<Result<Comment>> WriteCommentAsync(string postId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files)
     {
+        var postService = serviceProvider.GetRequiredService<IPostService>();
+
         if (requesterId == null) Result<Comment>.Failure(ErrorType.Unauthorized, "로그인이 필요합니다.");
 
         // Check access
@@ -181,6 +185,8 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
     /// <inheritdoc />
     public async Task<Result<CommentResponseDto>> GenerateCommentResponseDtoAsync(Comment comment, string requesterId)
     {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+
         var responseDto = new CommentResponseDto
         {
             Id = comment.Id,
@@ -207,6 +213,9 @@ public class CommentService(IMongoDatabase database, IUserService userService, I
 
     private async Task<Result> CheckPermissionAsync(string commentId, string requesterId)
     {
+        var postService = serviceProvider.GetRequiredService<IPostService>();
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+
         var comment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
         if (comment == null) return Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
 
