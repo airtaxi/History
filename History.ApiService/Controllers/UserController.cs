@@ -63,7 +63,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         if (payload == null) return Unauthorized("ID 토큰이 유효하지 않습니다.");
 
         var userResult = await userService.GetUserByIdAsync(payload.Subject);
-        if (userResult == null) return NotFound("사용자가 존재하지 않습니다.");
+        if (userResult.IsFailure) return NotFound("사용자가 존재하지 않습니다.");
 
         if (userResult.Value.Rank == Rank.Unauthorized) return Forbid("가입 승인 대기 중입니다.");
 
