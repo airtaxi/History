@@ -5,14 +5,12 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using Microsoft.VisualBasic;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using System.Collections.Generic;
 
 namespace History.ApiService.Services;
 
-public class PostService(IMongoDatabase database, IFriendshipService friendshipService, IUserService userService, IMediaService mediaService) : IPostService
+public class PostService(IMongoDatabase database, IMediaService mediaService, IServiceProvider serviceProvider) : IPostService
 {
     private readonly IMongoCollection<Comment> _commentCollection = database.GetCollection<Comment>("Comments");
     private readonly IMongoCollection<CommentLike> _commentLikeCollection = database.GetCollection<CommentLike>("CommentLikes");
@@ -33,6 +31,8 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
     /// <inheritdoc />
     public async Task<Result<List<Post>>> GetUserPostsAsync(string requesterId, string userId, string fromPostId = null, int limit = 10)
     {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
         // Check relationship between requester and target user
         bool isSelf = requesterId == userId;
         bool areFriends = false;
@@ -119,6 +119,8 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
     /// <inheritdoc />
     public async Task<Result<List<Post>>> GetTimelinePostsAsync(string userId, string fromPostId = null, int limit = 10)
     {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
         // Get IDs of user's friends and add the user's own ID
         var friendIdsResult = await friendshipService.GetFriendIdsAsync(userId);
         var relevantUserIds = friendIdsResult.Value;
@@ -176,6 +178,8 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
     /// <inheritdoc/>
     public async Task<Result<long>> GetUserPostsCountAsync(string userId, string requesterId = null)
     {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
         // Check relationship between requester and target user
         bool isSelf = requesterId == userId;
         bool areFriends = false;
@@ -242,6 +246,8 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
     /// <inheritdoc/>
     public async Task<Result> WritePostAsync(string userId, WritePostRequestDto requestDto, IEnumerable<IFormFile> files)
     {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+
         var user = await userService.GetUserByIdAsync(userId);
         if (user.IsFailure) return user.CastFailure();
 
@@ -431,6 +437,8 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
     /// <inheritdoc />
     public async Task<Result<List<Post>>> SearchPostsAsync(string query, string requesterId, string fromPostId = null, int limit = 10)
     {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
         var filter = Builders<Post>.Filter.Regex(p => p.SearchIndex, new BsonRegularExpression(query, "i"));
         if (!string.IsNullOrEmpty(fromPostId))
         {
@@ -456,6 +464,8 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
     /// <inheritdoc />
     public async Task<Result> CheckAccessAsync(string postId, string requesterId)
     {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
         var postResult = await GetPostByIdAsync(postId);
         if (postResult.IsFailure) postResult.CastFailure();
 
@@ -488,6 +498,8 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
     /// <inheritdoc />
     public async Task<Result<PostResponseDto>> GeneratePostResponseDtoAsync(Post post, string requesterId)
     {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
         var bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
         return await GeneratePostResponseDtoAsync(post, bannedUserIds.Value);
     }
@@ -530,6 +542,8 @@ public class PostService(IMongoDatabase database, IFriendshipService friendshipS
     /// <inheritdoc />
     public async Task<Result<List<PostResponseDto>>> GeneratePostResponseDtosAsync(List<Post> posts, string requesterId)
     {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
         var bannedUserIds = new List<string>();
         if (requesterId != null) bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
 
