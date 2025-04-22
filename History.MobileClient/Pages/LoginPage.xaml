@@ -6,9 +6,11 @@
     Title="LoginPage">
     <Grid BackgroundColor="#fff112">
         <Image
+            HeightRequest="256"
             HorizontalOptions="Center"
             Source="icon_nobg.png"
-            VerticalOptions="Center" />
+            VerticalOptions="Center"
+            WidthRequest="256" />
         <VerticalStackLayout
             Padding="20"
             HorizontalOptions="Center"
