@@ -1,4 +1,4 @@
-using History.ApiService;
+﻿using History.ApiService;
 using History.ApiService.Services;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
@@ -40,6 +40,7 @@ builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddHostedService<DatabaseInitService>();
 
 // Add controllers to the container.
