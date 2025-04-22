@@ -1,4 +1,6 @@
-﻿namespace History.MobileClient;
+﻿using History.MobileClient.Pages;
+
+namespace History.MobileClient;
 
 public partial class App : Application
 {

@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UIKit;
 
-namespace History.MobileClient.Login;
+namespace History.MobileClient.Auth;
 
 public class GoogleAuthService : IGoogleAuthService
 {

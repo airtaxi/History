@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.LoginPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="LoginPage">
+    <Grid BackgroundColor="#fff112">
+        <Image
+            HorizontalOptions="Center"
+            Source="icon_nobg.png"
+            VerticalOptions="Center" />
+        <VerticalStackLayout
+            Padding="20"
+            HorizontalOptions="Center"
+            Spacing="12"
+            VerticalOptions="End">
+            <Label
+                FontSize="18"
+                HorizontalOptions="Center"
+                Text="SNS 계정으로 계속하기"
+                TextColor="Black" />
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
+                <ImageButton
+                    Clicked="OnGoogleLoginButtonClicked"
+                    HeightRequest="52"
+                    Source="google_light.png"
+                    WidthRequest="52" />
+                <ImageButton
+                    Clicked="OnAppleLoginButtonClicked"
+                    HeightRequest="52"
+                    Source="sign_in/apple_light.png"
+                    WidthRequest="52" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>
