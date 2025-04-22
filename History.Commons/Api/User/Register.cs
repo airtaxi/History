@@ -13,7 +13,7 @@ namespace History.Commons.Api.User;
 
 public class Register : IBaseRequest<OAuthLoginResponseDto>, IRequestWithBody
 {
-    public string Path => "/api/user/login";
+    public string Path => "/api/user/register";
     public Method Method => Method.Post;
     public object Body { get; set; }
 

@@ -1,4 +1,4 @@
-﻿namespace History.MobileClient;
+﻿namespace History.MobileClient.Pages;
 
 public partial class MainPage : ContentPage
 {

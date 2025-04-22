@@ -59,7 +59,7 @@
 		<MauiSplashScreen Include="Resources\Splash\foreground.svg" Color="#fff112" BaseSize="1024,1024" TintColor="#594431" />
 
 		<!-- Images -->
-		<MauiImage Include="Resources\Images\*" />
+		<MauiImage Include="Resources\Images\**" />
 
 		<!-- Custom Fonts -->
 		<MauiFont Include="Resources\Fonts\*" />
@@ -88,7 +88,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<MauiXaml Update="LoginPage.xaml">
+	  <ProjectReference Include="..\History.Commons\History.Commons.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<MauiXaml Update="Pages\LoginPage.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 	</ItemGroup>

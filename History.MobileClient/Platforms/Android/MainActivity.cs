@@ -19,7 +19,7 @@ public class MainActivity : MauiAppCompatActivity
 
         if (requestCode == Constants.GoogleAuthRequestCode)
         {
-            var result = Auth.GoogleSignInApi.GetSignInResultFromIntent(data);
+            var result = Android.Gms.Auth.Api.Auth.GoogleSignInApi.GetSignInResultFromIntent(data);
             if (result.IsSuccess)
             {
                 var token = result.SignInAccount?.IdToken;
