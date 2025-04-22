@@ -67,7 +67,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
-        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
     
@@ -83,7 +83,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
-        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -99,7 +99,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
-        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -112,7 +112,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         var accessResult = await postService.CheckAccessAsync(postId, requesterId);
         if (accessResult.IsFailure)
         {
-            if (accessResult.Error == ErrorType.Forbidden) return Forbid(accessResult.ErrorMessage);
+            if (accessResult.Error == ErrorType.Forbidden) return StatusCode(403, accessResult.ErrorMessage);
             else if (accessResult.Error == ErrorType.NotFound) return NotFound(accessResult.ErrorMessage);
             else return StatusCode(500, accessResult.FullErrorMessage);
         }
@@ -126,7 +126,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
-        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -142,7 +142,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
-        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -158,7 +158,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
-        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -174,7 +174,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
-        else if (result.Error == ErrorType.Forbidden) return Forbid(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 

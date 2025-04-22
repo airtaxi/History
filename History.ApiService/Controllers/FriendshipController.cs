@@ -176,7 +176,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
             return Ok(dtosResult.Value);
         }
         else if (friendIdsResult.Error == ErrorType.NotFound) return NotFound(friendIdsResult.ErrorMessage);
-        else if (friendIdsResult.Error == ErrorType.Forbidden) return Forbid(friendIdsResult.ErrorMessage);
+        else if (friendIdsResult.Error == ErrorType.Forbidden) return StatusCode(403, friendIdsResult.ErrorMessage);
         else return StatusCode(500, friendIdsResult.FullErrorMessage);
     }
 }
