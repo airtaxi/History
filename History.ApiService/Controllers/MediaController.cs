@@ -18,10 +18,12 @@ public class MediaController(IMediaService mediaService) : ControllerBase
     {
         var mediaResult = await mediaService.GetMediaByIdAsync(mediaId);
         if (mediaResult.Error == ErrorType.NotFound) return NotFound(mediaResult.ErrorMessage);
+        else if (mediaResult.IsFailure) return StatusCode(500, mediaResult.FullErrorMessage);
 
         var mediaContent = await mediaService.FetchMediaFileContentAsync(mediaResult.Value.BucketType, mediaResult.Value.FileName);
         if (mediaContent.Error == ErrorType.NotFound) return NotFound(mediaContent.ErrorMessage);
+        else if (mediaContent.IsFailure) return StatusCode(500, mediaContent.FullErrorMessage);
 
-        return File(mediaContent, "application/octet-stream");
+        return File(mediaContent, mediaResult.Value.MimeType);
     }
 }
