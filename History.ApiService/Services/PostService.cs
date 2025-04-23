@@ -92,6 +92,13 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
                         Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.SelectedUsers),
                         Builders<Post>.Filter.AnyEq(p => p.DiscoveryOptionSelectedUserIds, requesterId)
                       )
+                    : Builders<Post>.Filter.Empty,
+
+                !string.IsNullOrEmpty(requesterId)
+                ? Builders<Post>.Filter.And(
+                        Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.UnselectedUsers),
+                        Builders<Post>.Filter.AnyNe(p => p.DiscoveryOptionSelectedUserIds, requesterId)
+                      )
                     : Builders<Post>.Filter.Empty
             );
 
@@ -150,6 +157,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             Builders<Post>.Filter.And(
                 Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.SelectedUsers),
                 Builders<Post>.Filter.AnyEq(p => p.DiscoveryOptionSelectedUserIds, userId)
+            ),
+
+            Builders<Post>.Filter.And(
+                Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.UnselectedUsers),
+                Builders<Post>.Filter.AnyNe(p => p.DiscoveryOptionSelectedUserIds, userId)
             )
         );
 
@@ -223,6 +235,12 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
                         Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.SelectedUsers),
                         Builders<Post>.Filter.AnyEq(p => p.DiscoveryOptionSelectedUserIds, requesterId)
                       )
+                    : Builders<Post>.Filter.Empty,
+                !string.IsNullOrEmpty(requesterId)
+                    ? Builders<Post>.Filter.And(
+                        Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.UnselectedUsers),
+                        Builders<Post>.Filter.AnyNe(p => p.DiscoveryOptionSelectedUserIds, requesterId)
+                      )
                     : Builders<Post>.Filter.Empty
             );
             filter = Builders<Post>.Filter.And(filter, visibilityFilter);
@@ -252,11 +270,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         var user = await userService.GetUserByIdAsync(userId);
         if (user.IsFailure) return user.CastFailure();
 
-        if (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers
+        if ((requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers)
             && (requestDto.DiscoveryOptionSelectedUserIds == null
             || requestDto.DiscoveryOptionSelectedUserIds.Count == 0))
         {
-            return Result.Failure(ErrorType.BadRequest, "편한 친구 공개 설정을 선택한 경우, 친구를 선택해야 합니다.");
+            return Result.Failure(ErrorType.BadRequest, "특정 친구 (비)공개 설정을 선택한 경우, 친구를 선택해야 합니다.");
         }
 
         if (requestDto.ParentPostId != null)
@@ -285,7 +303,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             Contents = requestDto.Contents,
             CreatedAt = DateTime.UtcNow,
             DiscoveryOption = requestDto.DiscoveryOption,
-            DiscoveryOptionSelectedUserIds = requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers ? requestDto.DiscoveryOptionSelectedUserIds : null,
+            DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? requestDto.DiscoveryOptionSelectedUserIds : null,
             ParentPostId = requestDto.ParentPostId,
             SearchIndex = GenerateSearchIndexFromContents(requestDto.Contents),
             IsRepost = false
@@ -319,7 +337,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
 
         // Update discovery option (and selected user IDs if applicable)
         post.DiscoveryOption = requestDto.DiscoveryOption;
-        post.DiscoveryOptionSelectedUserIds = requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers ? requestDto.DiscoveryOptionSelectedUserIds : null;
+        post.DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? requestDto.DiscoveryOptionSelectedUserIds : null;
 
         // Upload medias
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, postId, userId, requestDto.Contents, files);
@@ -469,22 +487,28 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     /// <inheritdoc />
     public async Task<Result> CheckAccessAsync(string postId, string requesterId)
     {
-        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
-
         var postResult = await GetPostByIdAsync(postId);
         if (postResult.IsFailure) postResult.CastFailure();
 
-        var postAuthorId = postResult.Value.UserId;
+        return await CheckAccessAsync(postResult, requesterId);
+    }
+
+    public async Task<Result> CheckAccessAsync(Post post, string requesterId)
+    {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
+        var postAuthorId = post.UserId;
         if (postAuthorId == requesterId) return Result.Success();
 
         // Apply discovery option / privacy settings
-        var postDiscoveryOption = postResult.Value.DiscoveryOption;
+        var postDiscoveryOption = post.DiscoveryOption;
         if (postDiscoveryOption < DiscoveryOption.Everyone)
         {
             bool hasAccess;
             if (postDiscoveryOption == DiscoveryOption.FriendsOfFriends) hasAccess = await friendshipService.AreFriendsOfFriendsAsync(postAuthorId, requesterId);
             else if (postDiscoveryOption == DiscoveryOption.Friends) hasAccess = await friendshipService.AreFriendsAsync(postAuthorId, requesterId);
-            else if (postDiscoveryOption == DiscoveryOption.SelectedUsers) hasAccess = postResult.Value.DiscoveryOptionSelectedUserIds.Contains(requesterId);
+            else if (postDiscoveryOption == DiscoveryOption.SelectedUsers) hasAccess = post.DiscoveryOptionSelectedUserIds.Contains(requesterId);
+            else if (postDiscoveryOption == DiscoveryOption.UnselectedUsers) hasAccess = !post.DiscoveryOptionSelectedUserIds.Contains(requesterId);
             else if (postDiscoveryOption == DiscoveryOption.OnlyMe) hasAccess = postAuthorId == requesterId;
             else
             {
@@ -503,17 +527,6 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     /// <inheritdoc />
     public async Task<Result<PostResponseDto>> GeneratePostResponseDtoAsync(Post post, string requesterId)
     {
-        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
-
-        var bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
-        return await GeneratePostResponseDtoAsync(post, bannedUserIds.Value);
-    }
-
-    /// <inheritdoc />
-    public async Task<Result<PostResponseDto>> GeneratePostResponseDtoAsync(Post post, IEnumerable<string> bannedUserIds)
-    {
-        if (bannedUserIds.Contains(post.UserId)) return null;
-
         var postResponse = new PostResponseDto
         {
             Id = post.Id,
@@ -527,7 +540,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         if (post.ParentPostId != null)
         {
             var parentPostResult = await GetPostByIdAsync(post.ParentPostId);
-            if (parentPostResult.Error != null && !bannedUserIds.Contains(parentPostResult.Value.UserId))
+            var hasAccessResult = await CheckAccessAsync(parentPostResult.Value, requesterId);
+            if (parentPostResult.IsSuccess && hasAccessResult.IsSuccess)
             {
                 postResponse.ParentPost = new PostResponseDto
                 {
@@ -552,7 +566,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         var bannedUserIds = new List<string>();
         if (requesterId != null) bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
 
-        var tasks = posts.Select(x => GeneratePostResponseDtoAsync(x, bannedUserIds)).ToList();
+        var tasks = posts.Select(x => GeneratePostResponseDtoAsync(x, requesterId)).ToList();
         await Task.WhenAll(tasks);
 
         return tasks.Where(x => x.Result.IsSuccess).Select(x => x.Result.Value).ToList();

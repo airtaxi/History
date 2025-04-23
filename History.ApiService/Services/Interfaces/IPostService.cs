@@ -115,20 +115,20 @@ public interface IPostService
     public Task<Result> CheckAccessAsync(string postId, string requesterId);
 
     /// <summary>
+    /// Checks if a user has access to a specific post asynchronously.
+    /// </summary>
+    /// <param name="post">The post object containing the details for which access is being verified.</param>
+    /// <param name="requesterId">Identifies the user requesting access to the post.</param>
+    /// <returns>Returns a task that resolves to a result indicating access permissions.</returns>
+    public Task<Result> CheckAccessAsync(Post post, string requesterId);
+
+    /// <summary>
     /// Generates a response data transfer object for a given post asynchronously.
     /// </summary>
     /// <param name="post">The post object containing the details for which the response is generated.</param>
     /// <param name="requesterId">Identifies the user making the request for the post response.</param>
     /// <returns>Returns a task that resolves to a result containing the post response data transfer object.</returns>
     public Task<Result<PostResponseDto>> GeneratePostResponseDtoAsync(Post post, string requesterId);
-
-    /// <summary>
-    /// Generates a response data transfer object for a given post asynchronously.
-    /// </summary>
-    /// <param name="post">The post object contains the details of the post for which the response is being generated.</param>
-    /// <param name="bannedUserIds">A list of user IDs that are prohibited from interacting with the post.</param>
-    /// <returns>Returns a task that resolves to a result containing the post response data transfer object.</returns>
-    public Task<Result<PostResponseDto>> GeneratePostResponseDtoAsync(Post post, IEnumerable<string> bannedUserIds);
 
     /// <summary>
     /// Generates a list of response data transfer objects for the provided posts asynchronously.
