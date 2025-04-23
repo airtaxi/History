@@ -140,7 +140,10 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         if (image == null)
         {
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
-            var update = Builders<User>.Update.Unset(u => u.ProfileMediaId);
+            var update = Builders<User>.Update
+                .Unset(u => u.ProfileMediaId)
+                .Set(u => u.UsesAnimatedProfileMedia, false);
+
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "프로필 이미지를 삭제하는 중 오류가 발생했습니다.");
         }
         else
@@ -148,12 +151,15 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             var convertResult = ImageMagickHelper.ConvertAndSave(image);
             var bytes = convertResult.Data;
             var contentType = convertResult.MimeType;
+            var usesAnimatedProfileMedia = convertResult.IsMp4;
 
             var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, bytes, contentType);
             if (mediaResult.Error != null) return mediaResult.CastFailure<bool>();
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
-            var update = Builders<User>.Update.Set(u => u.ProfileMediaId, mediaResult.Value.Id);
+            var update = Builders<User>.Update
+                .Set(u => u.ProfileMediaId, mediaResult.Value.Id)
+                .Set(u => u.UsesAnimatedProfileMedia, usesAnimatedProfileMedia);
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "프로필 이미지를 변경하는 중 오류가 발생했습니다.");
         }
     }
@@ -170,7 +176,10 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         if (image == null)
         {
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
-            var update = Builders<User>.Update.Unset(u => u.BackgroundMediaId);
+            var update = Builders<User>.Update
+                .Unset(u => u.BackgroundMediaId)
+                .Set(u => u.UsesAnimatedBackgroundMedia, false);
+
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "배경 이미지를 삭제하는 중 오류가 발생했습니다.");
         }
         else
@@ -178,12 +187,15 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             var convertResult = ImageMagickHelper.ConvertAndSave(image);
             var bytes = convertResult.Data;
             var contentType = convertResult.MimeType;
+            var usesAnimatedBackgroundMedia = convertResult.IsMp4;
 
             var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, bytes, contentType);
             if (mediaResult.Error != null) return mediaResult.CastFailure<bool>();
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
-            var update = Builders<User>.Update.Set(u => u.BackgroundMediaId, mediaResult.Value.Id);
+            var update = Builders<User>.Update
+                .Set(u => u.BackgroundMediaId, mediaResult.Value.Id)
+                .Set(u => u.UsesAnimatedBackgroundMedia, usesAnimatedBackgroundMedia);
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "배경 이미지를 변경하는 중 오류가 발생했습니다.");
         }
     }
