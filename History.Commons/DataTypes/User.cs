@@ -42,9 +42,19 @@ public class User
     public string ProfileMediaId { get; set; }
 
     /// <summary>
+    /// Determines whether the user has set a video as their profile media.
+    /// </summary>
+    public bool UsesAnimatedProfileMedia { get; set; }
+
+    /// <summary>
     /// Background media id.
     /// </summary>
     public string BackgroundMediaId { get; set; }
+
+    /// <summary>
+    /// Determines whether the user has set a video as their background.
+    /// </summary>
+    public bool UsesAnimatedBackgroundMedia { get; set; }
 
     /// <summary>
     /// Discovery option for friend list.
