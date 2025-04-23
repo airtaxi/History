@@ -63,13 +63,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnTokenValidated = context =>
             {
-                var token = context.SecurityToken as JwtSecurityToken;
-                var tokenType = token?.Claims.FirstOrDefault(c => c.Type == "token_type")?.Value;
-
-                if (tokenType != "access")
-                {
-                    context.Fail("Invalid token type");
-                }
+                var tokenType = context.Principal.Claims.FirstOrDefault(c => c.Type == "token_type")?.Value;
+                if (tokenType != "access") context.Fail("Invalid token type");
 
                 return Task.CompletedTask;
             }
