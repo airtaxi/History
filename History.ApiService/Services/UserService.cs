@@ -222,7 +222,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             else if (blockerUserIdsResult.Value.Contains(requesterId)) return Result<UserResponseDto>.Failure(ErrorType.Forbidden, "차단당한 사용자 접근 오류");
         }
 
-        var friendshipResult = await friendshipService.GetFriendshipAsync(user.Id, requesterId)
+        var friendshipResult = await friendshipService.GetFriendshipAsync(user.Id, requesterId);
         result.Friendship = friendshipResult.Value;
 
         return result;
