@@ -12,6 +12,7 @@ namespace History.ApiService.Services;
 
 public class PostService(IMongoDatabase database, IMediaService mediaService, IServiceProvider serviceProvider) : IPostService
 {
+    private readonly IMongoCollection<User> _userCollection = database.GetCollection<User>("Users");
     private readonly IMongoCollection<Comment> _commentCollection = database.GetCollection<Comment>("Comments");
     private readonly IMongoCollection<CommentLike> _commentLikeCollection = database.GetCollection<CommentLike>("CommentLikes");
 
@@ -291,6 +292,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         };
 
         await _postCollection.InsertOneAsync(post);
+
+        var userFilter = Builders<User>.Filter.Eq(u => u.Id, userId);
+        var userUpdate = Builders<User>.Update.Set(u => u.LastUsedPostDiscoveryOption, post.DiscoveryOption);
+        await _userCollection.UpdateOneAsync(userFilter, userUpdate);
 
         return Result.Success();
     }

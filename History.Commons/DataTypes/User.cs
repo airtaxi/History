@@ -62,6 +62,11 @@ public class User
     public DiscoveryOption FriendListDiscoveryOption { get; set; } = DiscoveryOption.Everyone;
 
     /// <summary>
+    /// Discovery option for post.
+    /// </summary>
+    public DiscoveryOption LastUsedPostDiscoveryOption { get; set; } = DiscoveryOption.FriendsOfFriends;
+
+    /// <summary>
     /// Represents the date and time when the user was created.
     /// </summary>
     public DateTime CreatedAt { get; set; }
