@@ -3,9 +3,18 @@
     x:Class="History.MobileClient.MainPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:android="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;assembly=Microsoft.Maui.Controls"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:pages="clr-namespace:History.MobileClient.Pages"
-    Title="MainShell">
-    <pages:TimelinePage />
-    <pages:UserPage />
-</TabbedPage>
+    android:TabbedPage.ToolbarPlacement="Bottom">
+    <pages:TimelinePage Title="타임라인">
+        <pages:TimelinePage.IconImageSource>
+            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.View_timeline}" />
+        </pages:TimelinePage.IconImageSource>
+    </pages:TimelinePage>
+    <pages:UserPage Title="프로필">
+        <pages:UserPage.IconImageSource>
+            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Person}" />
+        </pages:UserPage.IconImageSource>
+    </pages:UserPage>
+</TabbedPage> 

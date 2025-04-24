@@ -1,8 +1,8 @@
 namespace History.MobileClient.Resources.Styles;
 
-public partial class Timeline : ResourceDictionary
+public partial class Media : ResourceDictionary
 {
-	public Timeline()
+	public Media()
 	{
 		InitializeComponent();
 	}

@@ -16,7 +16,7 @@ public class GetUserPosts : IBaseRequest<List<PostResponseDto>>, IOptionalAuthRe
     public Dictionary<string, string> UrlParameters { get; set; } = [];
     public Dictionary<string, string> QueryParameters { get; set; } = [];
 
-    public GetUserPosts(string userId, int limit = 10, string fromPostId = null)
+    public GetUserPosts(string userId, string fromPostId = null, int limit = 10)
     {
         UrlParameters["userId"] = userId;
         QueryParameters["limit"] = limit.ToString();

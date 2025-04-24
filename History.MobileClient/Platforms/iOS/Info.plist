@@ -41,5 +41,9 @@
 	</array>
 	<key>GIDServerClientID</key>
 	<string>401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 </dict>
 </plist>

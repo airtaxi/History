@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    x:Class="History.MobileClient.Resources.Styles.Profile"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:views="clr-namespace:History.MobileClient.ContentViews"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
+    <DataTemplate x:Key="ProfileTemplate" x:DataType="vm:ProfileViewModel">
+        <Border Margin="8" HeightRequest="300">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8" />
+            </Border.StrokeShape>
+            <Grid>
+                <views:DataTemplatePresenter BindingContext="{x:Binding BackgroundMedia}" ContentSelector="{StaticResource MediaTemplateSelector}" />
+                <Rectangle
+                    Fill="Black"
+                    HorizontalOptions="Fill"
+                    Opacity="0.4"
+                    VerticalOptions="Fill" />
+                <HorizontalStackLayout
+                    Margin="20"
+                    HorizontalOptions="Start"
+                    VerticalOptions="Start">
+                    <Grid>
+                        <Border HeightRequest="72" WidthRequest="72">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="36" />
+                            </Border.StrokeShape>
+                            <views:DataTemplatePresenter BindingContext="{x:Binding ProfileMedia}" ContentSelector="{StaticResource MediaTemplateSelector}" />
+                        </Border>
+                        <Border
+                            HeightRequest="25"
+                            HorizontalOptions="End"
+                            IsVisible="{x:Binding IsNotMe}"
+                            Opacity="1"
+                            VerticalOptions="End"
+                            WidthRequest="25">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12.5" />
+                            </Border.StrokeShape>
+                            <Grid>
+                                <Rectangle
+                                    Fill="#808080"
+                                    HorizontalOptions="Fill"
+                                    StrokeThickness="2"
+                                    VerticalOptions="Fill" />
+                                <Image>
+                                    <Image.Source>
+                                        <FontImageSource
+                                            FontFamily="MaterialSharp"
+                                            Glyph="{x:Static m:MaterialSharp.Star}"
+                                            Size="15"
+                                            Color="#303030" />
+                                    </Image.Source>
+                                </Image>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <VerticalStackLayout Margin="10" VerticalOptions="Center">
+                        <HorizontalStackLayout Spacing="2">
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="20"
+                                LineBreakMode="TailTruncation"
+                                Text="{x:Binding Nickname}"
+                                TextColor="White" />
+                            <Image
+                                HeightRequest="20"
+                                IsVisible="{x:Binding IsMe}"
+                                VerticalOptions="End"
+                                WidthRequest="20">
+                                <Image.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnEditNicknameImageTapped" />
+                                </Image.GestureRecognizers>
+                                <Image.Source>
+                                    <FontImageSource
+                                        FontFamily="MaterialSharp"
+                                        Glyph="{x:Static m:MaterialSharp.Edit}"
+                                        Color="White" />
+                                </Image.Source>
+                            </Image>
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="2">
+                            <Label
+                                FontSize="15"
+                                LineBreakMode="TailTruncation"
+                                MaxLines="2"
+                                Text="{x:Binding Description}"
+                                TextColor="White" />
+                            <Image
+                                HeightRequest="20"
+                                IsVisible="{x:Binding IsMe}"
+                                VerticalOptions="End"
+                                WidthRequest="20">
+                                <Image.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnEditDescriptionImageTapped" />
+                                </Image.GestureRecognizers>
+                                <Image.Source>
+                                    <FontImageSource
+                                        FontFamily="MaterialSharp"
+                                        Glyph="{x:Static m:MaterialSharp.Edit}"
+                                        Size="15"
+                                        Color="White" />
+                                </Image.Source>
+                            </Image>
+                        </HorizontalStackLayout>
+                        <Label
+                            FontSize="12"
+                            LineBreakMode="TailTruncation"
+                            Text="{x:Binding FriendshipDescription}"
+                            TextColor="White" />
+                    </VerticalStackLayout>
+                </HorizontalStackLayout>
+                <HorizontalStackLayout
+                    Margin="20"
+                    HorizontalOptions="End"
+                    Spacing="4"
+                    VerticalOptions="End">
+                    <Button
+                        IsVisible="{x:Binding IsMe}"
+                        Text="배경 이미지 변경"
+                        TextColor="White" />
+                    <Button
+                        IsVisible="{x:Binding IsNotMe}"
+                        Text="{x:Binding FriendButtonText}"
+                        TextColor="White" />
+                </HorizontalStackLayout>
+            </Grid>
+        </Border>
+    </DataTemplate>
+
+</ResourceDictionary>
