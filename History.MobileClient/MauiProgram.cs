@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CommunityToolkit.Maui;
+using History.MobileClient.StaggeredLayout;
+using Microsoft.Extensions.Logging;
 using Mopups.Hosting;
 using System.ComponentModel.Design;
 using UraniumUI;
@@ -14,12 +16,17 @@ public static class MauiProgram
             .UseMauiApp<App>()
             .ConfigureMopups()
             .UseUraniumUI()
+            .UseMauiCommunityToolkitMediaElement()
             .UseUraniumUIMaterial()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 fonts.AddMaterialSymbolsFonts();
+            })
+            .ConfigureMauiHandlers(c =>
+            {
+                c.AddHandler<CollectionView, StaggeredStructuredItemsViewHandler>();
             });
 
         builder.Services.AddMopupsDialogs();

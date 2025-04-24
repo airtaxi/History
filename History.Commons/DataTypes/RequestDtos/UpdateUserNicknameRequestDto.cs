@@ -11,6 +11,6 @@ public class UpdateUserNicknameRequestDto
     /// The new nickname for the user profile
     /// </summary>
     [Required]
-    [MaxLength(20)]
+    [MaxLength(CommonsConstants.MaxNicknameLength)]
     public string Nickname { get; set; }
 }

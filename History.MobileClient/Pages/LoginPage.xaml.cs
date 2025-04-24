@@ -15,20 +15,6 @@ public partial class LoginPage : ContentPage
 		InitializeComponent();
 	}
 
-    protected override async void OnNavigatedTo(NavigatedToEventArgs args)
-    {
-        base.OnNavigatedTo(args);
-
-        var accessToken = Configuration.GetValue<string>("AccessToken");
-        var refreshToken = Configuration.GetValue<string>("RefreshToken");
-
-        if(accessToken != null && refreshToken != null)
-        {
-            Shared.ApiHandler = new(accessToken, refreshToken);
-            await AfterLogin();
-        }
-    }
-
     private async Task AfterLogin()
     {
         if (Shared.ApiHandler == null) return;
@@ -39,6 +25,7 @@ public partial class LoginPage : ContentPage
             IsBusy = true;
             var me = await Shared.ApiHandler.ExecuteRequestAsync(new GetMyProfile());
             Shared.UserId = me.UserId;
+            Shared.LastUsedPostDiscoveryOption = me.LastUsedPostDiscoveryOption;
             App.MainWindow.Page = new MainPage();
         }
         catch (HttpRequestException exception)
@@ -116,4 +103,18 @@ public partial class LoginPage : ContentPage
     }
 
     private async void OnAppleLoginButtonClicked(object sender, EventArgs e) => await DisplayAlert("안내", "애플 로그인은 개발 중입니다.", "확인");
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        var accessToken = Configuration.GetValue<string>("AccessToken");
+        var refreshToken = Configuration.GetValue<string>("RefreshToken");
+
+        if (accessToken != null && refreshToken != null)
+        {
+            Shared.ApiHandler = new(accessToken, refreshToken);
+            await AfterLogin();
+        }
+    }
 }
