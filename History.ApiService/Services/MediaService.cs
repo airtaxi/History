@@ -52,16 +52,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             CreatedAt = DateTime.UtcNow
         };
 
-        string id;
-        while (true)
-        {
-            id = Guid.NewGuid().ToString("N");
-            var existingMedia = await _mediaCollection.Find(m => m.Id == id).FirstOrDefaultAsync();
-
-            if (existingMedia == null) break;
-        }
-
-        var result = await bucket.UploadFromBytesAsync(media.FileName, content);
+        var id = await bucket.UploadFromBytesAsync(media.FileName, content);
         media.Id = id.ToString();
 
         await _mediaCollection.InsertOneAsync(media);
@@ -201,7 +192,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             BucketName = mediaResult.Value.BucketType.ToString()
         });
 
-        await bucket.DeleteAsync(ObjectId.Parse(mediaId));
+        await bucket.DeleteAsync(ObjectId.(mediaId));
         await _mediaCollection.DeleteOneAsync(m => m.Id == mediaId);
 
         return Result.Success();
