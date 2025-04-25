@@ -1,8 +1,10 @@
 ﻿using Android.App;
 using Android.Runtime;
 
-namespace History.MobileClient;
+// Needed for Picking photo/video
+[assembly: UsesPermission(Android.Manifest.Permission.WriteExternalStorage)]
 
+namespace History.MobileClient;
 [Application]
 public class MainApplication : MauiApplication
 {

@@ -1,8 +1,8 @@
 ﻿using Android.App;
 using Android.Content;
 using Android.Content.PM;
-using Android.Gms.Auth.Api.SignIn;
 using Android.Gms.Auth.Api;
+using Android.Gms.Auth.Api.SignIn;
 using Android.OS;
 
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -13,8 +13,17 @@ public class MainActivity : MauiAppCompatActivity
 {
     public static event EventHandler<string> LoginCompleted;
 
+    protected override void OnCreate(Bundle savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+        NativeMedia.Platform.Init(this, savedInstanceState);
+    }
+
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)
     {
+        if (NativeMedia.Platform.CheckCanProcessResult(requestCode, resultCode, data))
+            NativeMedia.Platform.OnActivityResult(requestCode, resultCode, data);
+
         base.OnActivityResult(requestCode, resultCode, data);
 
         if (requestCode == Constants.GoogleAuthRequestCode)
