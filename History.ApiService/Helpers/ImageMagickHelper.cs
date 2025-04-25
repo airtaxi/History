@@ -31,12 +31,6 @@ public static class ImageMagickHelper
             image.Format = MagickFormat.WebP;
             image.Quality = 50;
 
-            var defines = new WebPWriteDefines
-            {
-                Lossless = false,
-                Method = 6
-            };
-
             using var ms = new MemoryStream();
             image.Write(ms);
             return new ImageConvertResult(false, ms.ToArray());
