@@ -148,7 +148,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         }
         else
         {
-            var convertResult = ImageMagickHelper.ConvertAndSave(image);
+            var convertResult = ImageMagickHelper.ConvertAndSave(image, true);
             var bytes = convertResult.Data;
             var contentType = convertResult.MimeType;
             var usesAnimatedProfileMedia = convertResult.IsMp4;
@@ -184,7 +184,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         }
         else
         {
-            var convertResult = ImageMagickHelper.ConvertAndSave(image);
+            var convertResult = ImageMagickHelper.ConvertAndSave(image, false);
             var bytes = convertResult.Data;
             var contentType = convertResult.MimeType;
             var usesAnimatedBackgroundMedia = convertResult.IsMp4;

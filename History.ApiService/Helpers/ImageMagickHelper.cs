@@ -7,14 +7,14 @@ namespace History.ApiService.Helpers;
 
 public static class ImageMagickHelper
 {
-    public static ImageConvertResult ConvertAndSave(byte[] imageBytes)
+    public static ImageConvertResult ConvertAndSave(byte[] imageBytes, bool convertAnimatedImageToMp4)
     {
         using var images = new MagickImageCollection();
         images.Read(imageBytes);
 
         var isAnimated = images.Count > 1;
 
-        if (isAnimated)
+        if (isAnimated && convertAnimatedImageToMp4)
         {
             var tempDir = Path.Combine(Path.GetTempPath(), "anim2vid_" + Guid.NewGuid());
             Directory.CreateDirectory(tempDir);
