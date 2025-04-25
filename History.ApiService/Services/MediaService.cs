@@ -131,7 +131,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
         {
             BucketName = media.BucketType.ToString()
         });
-        await bucket.DeleteAsync(new ObjectId(media.Id));
+        await bucket.DeleteAsync(ObjectId.Parse(media.Id));
 
         await _mediaCollection.DeleteOneAsync(m => m.AssociatedId == associatedId);
         return Result.Success();
@@ -150,7 +150,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 BucketName = m.BucketType.ToString()
             });
 
-            await bucket.DeleteAsync(new ObjectId(m.Id));
+            await bucket.DeleteAsync(ObjectId.Parse(m.Id));
         }
 
         await _mediaCollection.DeleteManyAsync(m => associatedIds.Contains(m.AssociatedId));
@@ -182,7 +182,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             {
                 BucketName = m.BucketType.ToString()
             });
-            await bucket.DeleteAsync(new ObjectId(m.Id));
+            await bucket.DeleteAsync(ObjectId.Parse(m.Id));
         }
 
         await _mediaCollection.DeleteManyAsync(m => m.UserId == userId);
@@ -201,7 +201,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             BucketName = mediaResult.Value.BucketType.ToString()
         });
 
-        await bucket.DeleteAsync(new ObjectId(mediaId));
+        await bucket.DeleteAsync(ObjectId.Parse(mediaId));
         await _mediaCollection.DeleteOneAsync(m => m.Id == mediaId);
 
         return Result.Success();
