@@ -192,7 +192,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             BucketName = mediaResult.Value.BucketType.ToString()
         });
 
-        await bucket.DeleteAsync(ObjectId.(mediaId));
+        await bucket.DeleteAsync(ObjectId.Parse(mediaId));
         await _mediaCollection.DeleteOneAsync(m => m.Id == mediaId);
 
         return Result.Success();
