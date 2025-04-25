@@ -1,5 +1,6 @@
 ﻿using History.ApiService.DataTypes;
 using ImageMagick;
+using ImageMagick.Formats;
 
 namespace History.ApiService.Helpers;
 
@@ -28,6 +29,13 @@ public static class ImageMagickHelper
         {
             using var image = (MagickImage)images.FirstOrDefault();
             image.Format = MagickFormat.WebP;
+            image.Quality = 75;
+
+            var defines = new WebPWriteDefines
+            {
+                Lossless = false,
+                Method = 6
+            };
 
             using var ms = new MemoryStream();
             image.Write(ms);
