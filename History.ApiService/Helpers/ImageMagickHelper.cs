@@ -1,6 +1,7 @@
 ﻿using History.ApiService.DataTypes;
 using ImageMagick;
 using ImageMagick.Formats;
+using System.Diagnostics;
 
 namespace History.ApiService.Helpers;
 
@@ -10,25 +11,37 @@ public static class ImageMagickHelper
     {
         using var images = new MagickImageCollection();
         images.Read(imageBytes);
-        MagickFormat format = GetFormatFromBytes(imageBytes);
 
         var isAnimated = images.Count > 1;
 
         if (isAnimated)
         {
-            images.Coalesce();
-
-            using var video = new MagickImageCollection();
-            foreach (var frame in images)
+            var tempDir = Path.Combine(Path.GetTempPath(), "anim2vid_" + Guid.NewGuid());
+            Directory.CreateDirectory(tempDir);
+            try
             {
-                var videoFrame = frame.Clone();
-                if (videoFrame.Height % 2 == 1) videoFrame.Resize(videoFrame.Width, videoFrame.Height + 1);
-                video.Add(videoFrame);
-            }
+                var format = images[0].Format.ToString().ToLower(); // e.g., "gif" or "webp"
+                string inputPath = Path.Combine(tempDir, $"input.{format}");
+                string outputPath = Path.Combine(tempDir, "output.mp4");
 
-            using var ms = new MemoryStream();
-            video.Write(ms, MagickFormat.Mp4);
-            return new ImageConvertResult(true, ms.ToArray());
+                // Save imageBytes to temp file
+                File.WriteAllBytes(inputPath, imageBytes);
+
+                // Let ffmpeg handle the conversion, ensuring even dimensions
+                var ffmpegArgs = $"-y -i \"{inputPath}\" -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -movflags faststart -pix_fmt yuv420p -c:v libx264 \"{outputPath}\"";
+                RunFFmpeg(ffmpegArgs);
+
+                byte[] mp4Bytes = File.ReadAllBytes(outputPath);
+
+                return new ImageConvertResult(true, mp4Bytes);
+            }
+            finally
+            {
+                if (Directory.Exists(tempDir))
+                {
+                    Directory.Delete(tempDir, true);
+                }
+            }
         }
         else
         {
@@ -47,5 +60,30 @@ public static class ImageMagickHelper
         using var ms = new MemoryStream(data);
         var info = new MagickImageInfo(ms);
         return info.Format;
+    }
+
+    private static void RunFFmpeg(string arguments)
+    {
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "ffmpeg",
+                Arguments = arguments,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            }
+        };
+
+        process.Start();
+        string stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        if (process.ExitCode != 0)
+        {
+            throw new Exception($"FFmpeg failed:\n{stderr}");
+        }
     }
 }
