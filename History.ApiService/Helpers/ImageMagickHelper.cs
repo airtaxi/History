@@ -29,7 +29,7 @@ public static class ImageMagickHelper
         {
             using var image = (MagickImage)images.FirstOrDefault();
             image.Format = MagickFormat.WebP;
-            image.Quality = 75;
+            image.Quality = 50;
 
             var defines = new WebPWriteDefines
             {
