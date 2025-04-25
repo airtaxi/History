@@ -4,6 +4,7 @@ using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
 
@@ -51,7 +52,16 @@ public class MediaService(IMongoDatabase database) : IMediaService
             CreatedAt = DateTime.UtcNow
         };
 
-        var id = await bucket.UploadFromBytesAsync(media.FileName, content);
+        string id;
+        while (true)
+        {
+            id = Guid.NewGuid().ToString("N");
+            var existingMedia = await _mediaCollection.Find(m => m.Id == id).FirstOrDefaultAsync();
+
+            if (existingMedia == null) break;
+        }
+
+        var result = await bucket.UploadFromBytesAsync(media.FileName, content);
         media.Id = id.ToString();
 
         await _mediaCollection.InsertOneAsync(media);
@@ -121,7 +131,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
         {
             BucketName = media.BucketType.ToString()
         });
-        await bucket.DeleteAsync(media.Id);
+        await bucket.DeleteAsync(new ObjectId(media.Id));
 
         await _mediaCollection.DeleteOneAsync(m => m.AssociatedId == associatedId);
         return Result.Success();
@@ -140,7 +150,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 BucketName = m.BucketType.ToString()
             });
 
-            await bucket.DeleteAsync(m.Id);
+            await bucket.DeleteAsync(new ObjectId(m.Id));
         }
 
         await _mediaCollection.DeleteManyAsync(m => associatedIds.Contains(m.AssociatedId));
@@ -172,7 +182,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             {
                 BucketName = m.BucketType.ToString()
             });
-            await bucket.DeleteAsync(m.Id);
+            await bucket.DeleteAsync(new ObjectId(m.Id));
         }
 
         await _mediaCollection.DeleteManyAsync(m => m.UserId == userId);
@@ -191,7 +201,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             BucketName = mediaResult.Value.BucketType.ToString()
         });
 
-        await bucket.DeleteAsync(mediaId);
+        await bucket.DeleteAsync(new ObjectId(mediaId));
         await _mediaCollection.DeleteOneAsync(m => m.Id == mediaId);
 
         return Result.Success();
