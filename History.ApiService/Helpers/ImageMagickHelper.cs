@@ -7,7 +7,7 @@ namespace History.ApiService.Helpers;
 
 public static class ImageMagickHelper
 {
-    public static ImageConvertResult ConvertAndSave(byte[] imageBytes, bool convertAnimatedImageToMp4)
+    public static ImageConvertResult ConvertAndSave(byte[] imageBytes, bool convertAnimatedImageToMp4, uint? maxHeight = null)
     {
         using var images = new MagickImageCollection();
         images.Read(imageBytes);
@@ -27,8 +27,14 @@ public static class ImageMagickHelper
                 // Save imageBytes to temp file
                 File.WriteAllBytes(inputPath, imageBytes);
 
-                // Let ffmpeg handle the conversion, ensuring even dimensions
-                var ffmpegArgs = $"-y -i \"{inputPath}\" -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2\" -movflags faststart -pix_fmt yuv420p -c:v libx264 \"{outputPath}\"";
+                string scaleFilter = "scale=trunc(iw/2)*2:trunc(ih/2)*2";
+                if (maxHeight.HasValue)
+                {
+                    // Maintain aspect ratio, even width, and clamp height
+                    scaleFilter = $"scale='trunc((iw*min(1\\, {maxHeight.Value}/ih))/2)*2':'min({maxHeight.Value}\\,ih)'";
+                }
+
+                var ffmpegArgs = $"-y -i \"{inputPath}\" -vf \"{scaleFilter}\" -movflags faststart -pix_fmt yuv420p -c:v libx264 \"{outputPath}\"";
                 RunFFmpeg(ffmpegArgs);
 
                 byte[] mp4Bytes = File.ReadAllBytes(outputPath);
@@ -46,6 +52,13 @@ public static class ImageMagickHelper
         else
         {
             using var image = (MagickImage)images.FirstOrDefault();
+
+            if (maxHeight.HasValue && image.Height > maxHeight.Value)
+            {
+                var newWidth = (uint)Math.Round((double)image.Width * maxHeight.Value / image.Height);
+                image.Resize(newWidth, maxHeight.Value);
+            }
+
             image.Format = MagickFormat.WebP;
             image.Quality = 50;
 
