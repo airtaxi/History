@@ -19,7 +19,12 @@ public static class ImageMagickHelper
             images.Coalesce();
 
             using var video = new MagickImageCollection();
-            foreach (var frame in images) video.Add(frame.Clone());
+            foreach (var frame in images)
+            {
+                var videoFrame = frame.Clone();
+                if (videoFrame.Height % 2 == 1) videoFrame.Resize(videoFrame.Width, videoFrame.Height + 1);
+                video.Add(videoFrame);
+            }
 
             using var ms = new MemoryStream();
             video.Write(ms, MagickFormat.Mp4);
