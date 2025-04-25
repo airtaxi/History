@@ -281,6 +281,21 @@ public class UserController(IUserService userService, IFriendshipService friends
         else return StatusCode(500, result.FullErrorMessage);
     }
 
+    [HttpDelete("profile-media")]
+    [Authorize]
+    public async Task<IActionResult> DeleteProfileMedia()
+    {
+        // Get the user ID from the authenticated user claim
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var deleteResult = await userService.UpdateProfileMediaAsync(userId, null);
+
+        if (deleteResult.IsSuccess) return Ok();
+        else if (deleteResult.Error == ErrorType.NotFound) return NotFound(deleteResult.ErrorMessage);
+        else return StatusCode(500, deleteResult.FullErrorMessage);
+    }
+
     /// <summary>
     /// Updates the profile image of a user
     /// </summary>
@@ -293,16 +308,6 @@ public class UserController(IUserService userService, IFriendshipService friends
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
-
-        // Handle the case of removing the profile image
-        if (file == null)
-        {
-            var deleteResult = await userService.UpdateProfileMediaAsync(userId, null);
-
-            if (deleteResult.IsSuccess) return Ok();
-            else if (deleteResult.Error == ErrorType.NotFound) return NotFound(deleteResult.ErrorMessage);
-            else return StatusCode(500, deleteResult.FullErrorMessage);
-        }
 
         // Validate file type
         var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
@@ -328,6 +333,21 @@ public class UserController(IUserService userService, IFriendshipService friends
         else return StatusCode(500, result.FullErrorMessage);
     }
 
+    [HttpDelete("background-media")]
+    [Authorize]
+    public async Task<IActionResult> DeleteBackgroundMedia()
+    {
+        // Get the user ID from the authenticated user claim
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var deleteResult = await userService.UpdateBackgroundMediaAsync(userId, null);
+
+        if (deleteResult.IsSuccess) return Ok();
+        else if (deleteResult.Error == ErrorType.NotFound) return NotFound(deleteResult.ErrorMessage);
+        else return StatusCode(500, deleteResult.FullErrorMessage);
+    }
+
     /// <summary>
     /// Updates the background image of a user
     /// </summary>
@@ -340,16 +360,6 @@ public class UserController(IUserService userService, IFriendshipService friends
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
-
-        // Handle the case of removing the background image
-        if (file == null)
-        {
-            var deleteResult = await userService.UpdateBackgroundMediaAsync(userId, null);
-
-            if (deleteResult.IsSuccess) return Ok();
-            else if (deleteResult.Error == ErrorType.NotFound) return NotFound(deleteResult.ErrorMessage);
-            else return StatusCode(500, deleteResult.FullErrorMessage);
-        }
 
         // Validate file type
         var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
