@@ -18,7 +18,9 @@
             Aspect="{x:Binding Aspect}"
             HorizontalOptions="{x:Binding HorizontalContentOptions}"
             ShouldAutoPlay="{x:Binding VideoShouldAutoPlay}"
+            ShouldKeepScreenOn="False"
             ShouldLoopPlayback="{x:Binding VideoShouldLoopPlayback}"
+            ShouldMute="True"
             ShouldShowPlaybackControls="False"
             Source="{x:Binding Uri}"
             VerticalOptions="{x:Binding VerticalContentOptions}" />

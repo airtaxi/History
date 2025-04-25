@@ -23,17 +23,56 @@
                     HorizontalOptions="Start"
                     VerticalOptions="Start">
                     <Grid>
-                        <Border HeightRequest="72" WidthRequest="72">
+                        <views:DataTemplatePresenter
+                            BindingContext="{x:Binding ProfileMedia}"
+                            ContentSelector="{StaticResource MediaTemplateSelector}"
+                            HeightRequest="72"
+                            IsClippedToBounds="True"
+                            WidthRequest="72">
+                            <views:DataTemplatePresenter.Clip>
+                                <EllipseGeometry
+                                    Center="36,36"
+                                    RadiusX="36"
+                                    RadiusY="36" />
+                            </views:DataTemplatePresenter.Clip>
+                        </views:DataTemplatePresenter>
+                        <Border
+                            HeightRequest="25"
+                            HorizontalOptions="End"
+                            IsVisible="{x:Binding IsMe}"
+                            Stroke="#808080"
+                            StrokeThickness="2"
+                            VerticalOptions="End"
+                            WidthRequest="25"
+                            ZIndex="10">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnChangeProfileImageBorderTapped" />
+                            </Border.GestureRecognizers>
                             <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="36" />
+                                <RoundRectangle CornerRadius="12.5" />
                             </Border.StrokeShape>
-                            <views:DataTemplatePresenter BindingContext="{x:Binding ProfileMedia}" ContentSelector="{StaticResource MediaTemplateSelector}" />
+                            <Grid>
+                                <Rectangle
+                                    Fill="{StaticResource Primary}"
+                                    HorizontalOptions="Fill"
+                                    VerticalOptions="Fill" />
+                                <Image>
+                                    <Image.Source>
+                                        <FontImageSource
+                                            FontFamily="MaterialSharp"
+                                            Glyph="{x:Static m:MaterialSharp.Edit}"
+                                            Size="15"
+                                            Color="White" />
+                                    </Image.Source>
+                                </Image>
+                            </Grid>
                         </Border>
                         <Border
                             HeightRequest="25"
                             HorizontalOptions="End"
                             IsVisible="{x:Binding IsNotMe}"
-                            Opacity="1"
+                            Stroke="#404040"
+                            StrokeThickness="2"
                             VerticalOptions="End"
                             WidthRequest="25">
                             <Border.StrokeShape>
@@ -43,7 +82,6 @@
                                 <Rectangle
                                     Fill="#808080"
                                     HorizontalOptions="Fill"
-                                    StrokeThickness="2"
                                     VerticalOptions="Fill" />
                                 <Image>
                                     <Image.Source>
@@ -118,6 +156,7 @@
                     Spacing="4"
                     VerticalOptions="End">
                     <Button
+                        Clicked="OnChangeBackgroundImageButtonClicked"
                         IsVisible="{x:Binding IsMe}"
                         Text="배경 이미지 변경"
                         TextColor="White" />

@@ -3,11 +3,7 @@ using History.Commons;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NativeMedia;
 
 namespace History.MobileClient.ViewModels;
 
@@ -72,7 +68,7 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
     }
 
     public IMediaViewModel BackgroundMedia => User.UsesAnimatedBackgroundMedia ? new VideoViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId)) : new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId) ?? "icon.png");
-    public IMediaViewModel ProfileMedia => User.UsesAnimatedBackgroundMedia ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId)) : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? "default_profile_image.jpg");
+    public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId)) : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? "default_profile_image.jpg");
 
     private async Task RefreshAsync() => User = await Shared.ApiHandler.ExecuteRequestAsync(new GetUser(User.UserId));
 
@@ -96,6 +92,143 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
 
             await Shared.ApiHandler.ExecuteRequestAsync(new UpdateNickname(result));
             await RefreshAsync();
+        }
+    }
+
+    public async Task HandleChangeBackgroundMediaAsync()
+    {
+        bool shouldUpload = true;
+        if (User.BackgroundMediaId != null)
+        {
+            var result = await App.MainWindow.Page.DisplayActionSheet("배경 이미지", "취소", null, ["배경 이미지 변경", "배경 이미지 삭제"]);
+            if (result == "취소") return;
+            else if (result == "배경 이미지 변경") shouldUpload = true;
+            else if (result == "배경 이미지 삭제")
+            {
+                try
+                {
+                    App.MainWindow.Page.IsEnabled = false;
+                    App.MainWindow.Page.IsBusy = true;
+
+                    await Shared.ApiHandler.ExecuteRequestAsync(new DeleteBackgroundMedia());
+                    await RefreshAsync();
+                    return;
+                }
+                finally
+                {
+                    App.MainWindow.Page.IsEnabled = true;
+                    App.MainWindow.Page.IsBusy = false;
+                }
+            }
+        }
+
+        if (shouldUpload)
+        {
+            var request = new MediaPickRequest(1, MediaFileType.Image, MediaFileType.Video)
+            {
+                Title = "배경 이미지 선택"
+            };
+
+            var results = await MediaGallery.PickAsync(request);
+            var files = results?.Files?.ToArray();
+            if (files == null || files.Length == 0) return;
+
+            try
+            {
+                App.MainWindow.Page.IsEnabled = false;
+                App.MainWindow.Page.IsBusy = true;
+
+                using var file = files[0];
+                using var stream = await file.OpenReadAsync();
+                using var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+
+                var fileName = file.GenerateFileName();
+                var bytes = memoryStream.ToArray();
+                try
+                {
+                    await Shared.ApiHandler.ExecuteRequestAsync(new UpdateBackgroundMedia(fileName, bytes));
+                    await RefreshAsync();
+                }
+                catch (HttpRequestException exception)
+                {
+                    await App.MainWindow.Page.DisplayAlert("배경 이미지 변경 실패", $"알 수 없는 오류가 발생했습니다\n코드: {exception.Message}", "확인");
+                }
+            }
+            finally
+            {
+                App.MainWindow.Page.IsEnabled = true;
+                App.MainWindow.Page.IsBusy = false;
+            }
+
+        }
+    }
+
+    public async Task HandleChangeProfileMediaAsync()
+    {
+        bool shouldUpload = true;
+        if (User.ProfileMediaId != null)
+        {
+            var result = await App.MainWindow.Page.DisplayActionSheet("프로필 이미지", "취소", null, ["프로필 이미지 변경", "프로필 이미지 삭제"]);
+            if (result == "취소") return;
+            else if (result == "프로필 이미지 변경") shouldUpload = true;
+            else if (result == "프로필 이미지 삭제")
+            {
+                try
+                {
+                    App.MainWindow.Page.IsEnabled = false;
+                    App.MainWindow.Page.IsBusy = true;
+
+                    await Shared.ApiHandler.ExecuteRequestAsync(new DeleteProfileMedia());
+                    await RefreshAsync();
+                    return;
+                }
+                finally
+                {
+                    App.MainWindow.Page.IsEnabled = true;
+                    App.MainWindow.Page.IsBusy = false;
+                }
+            }
+        }
+
+        if (shouldUpload)
+        {
+            var request = new MediaPickRequest(1, MediaFileType.Image, MediaFileType.Video)
+            {
+                Title = "프로필 이미지 선택"
+            };
+
+            var results = await MediaGallery.PickAsync(request);
+            var files = results?.Files?.ToArray();
+            if (files == null || files.Length == 0) return;
+
+            try
+            {
+                App.MainWindow.Page.IsEnabled = false;
+                App.MainWindow.Page.IsBusy = true;
+
+                using var file = files[0];
+                using var stream = await file.OpenReadAsync();
+                using var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+
+                var fileName = file.GenerateFileName();
+                var bytes = memoryStream.ToArray();
+                try
+                {
+                    await Shared.ApiHandler.ExecuteRequestAsync(new UpdateProfileMedia(fileName, bytes));
+                    await RefreshAsync();
+                }
+                catch (HttpRequestException exception)
+                {
+                    await App.MainWindow.Page.DisplayAlert("프로필 이미지 변경 실패", $"알 수 없는 오류가 발생했습니다\n코드: {exception.Message}", "확인");
+                }
+            }
+            finally
+            {
+                App.MainWindow.Page.IsEnabled = true;
+                App.MainWindow.Page.IsBusy = false;
+            }
         }
     }
 
