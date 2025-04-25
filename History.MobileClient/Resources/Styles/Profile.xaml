@@ -41,7 +41,7 @@
                             HorizontalOptions="End"
                             IsVisible="{x:Binding IsMe}"
                             Stroke="#808080"
-                            StrokeThickness="2"
+                            StrokeThickness="1"
                             VerticalOptions="End"
                             WidthRequest="25"
                             ZIndex="10">
@@ -72,7 +72,7 @@
                             HorizontalOptions="End"
                             IsVisible="{x:Binding IsNotMe}"
                             Stroke="#404040"
-                            StrokeThickness="2"
+                            StrokeThickness="1"
                             VerticalOptions="End"
                             WidthRequest="25">
                             <Border.StrokeShape>
