@@ -52,6 +52,19 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         else return StatusCode(500, result.FullErrorMessage);
     }
 
+    [HttpPost("request/{userIdToCancel}/cancel")]
+    [Authorize]
+    public async Task<IActionResult> CancelFriendRequest(string userIdToCancel)
+    {
+        // Get the user ID from the authenticated user claim
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var result = await friendshipService.CancelFriendRequestAsync(userId, userIdToCancel);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
     [HttpPost("block/{userIdToBlock}")]
     [Authorize]
     public async Task<IActionResult> BlockUser(string userIdToBlock)
