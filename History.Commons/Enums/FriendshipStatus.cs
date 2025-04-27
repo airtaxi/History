@@ -17,6 +17,11 @@ public enum FriendshipStatus
     Requested,
 
     /// <summary>
+    /// Received but not yet accepted.
+    /// </summary>
+    Waiting,
+
+    /// <summary>
     /// Friend request is accepted.
     /// </summary>
     Accepted,
