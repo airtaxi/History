@@ -51,11 +51,12 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
-    public async Task<Result<List<User>>> FindUsersByNicknameAsync(string query, bool applyPermission)
+    public async Task<Result<List<User>>> FindUsersByNicknameAsync(string query, bool applyPermission, int limit = 0)
     {
         var filter = Builders<User>.Filter.Regex(u => u.Nickname, new BsonRegularExpression(query, "i"));
         if (applyPermission) filter &= Builders<User>.Filter.Eq(u => u.AllowSearch, true);
-        return await _userCollection.Find(filter).ToListAsync();
+        if (limit > 0) return await _userCollection.Find(filter).Limit(limit).ToListAsync();
+        else return await _userCollection.Find(filter).ToListAsync();
     }
 
     /// <inheritdoc />
