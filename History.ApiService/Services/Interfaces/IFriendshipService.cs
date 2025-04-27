@@ -34,6 +34,14 @@ public interface IFriendshipService
     public Task<Result> DeclineFriendRequestAsync(string userId, string userIdToDecline);
 
     /// <summary>
+    /// Cancels a friend request.
+    /// </summary>
+    /// <param name="userId">The ID of the user canceling the request.</param>
+    /// <param name="userIdToCancel">The ID of the user to be canceled.</param>
+    /// <returns>A task representing the asynchronous operation, with a boolean indicating success.</returns>
+    public Task<Result> CancelFriendRequestAsync(string userId, string userIdToCancel);
+
+    /// <summary>
     /// Blocks a user.
     /// </summary>
     /// <param name="userId">The ID of the user performing the block.</param>

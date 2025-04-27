@@ -118,6 +118,30 @@ public class FriendshipService(IMongoDatabase database, IServiceProvider service
     }
 
     /// <inheritdoc/>
+    public async Task<Result> CancelFriendRequestAsync(string userId, string userToCancelId)
+    {
+        var requestFriendship = await _friendshipCollection.Find(f =>
+            f.UserId == userId && f.FriendId == userToCancelId &&
+            f.Status == FriendshipStatus.Requested).FirstOrDefaultAsync();
+
+        var waitingFriendship = await _friendshipCollection.Find(f =>
+            f.UserId == userToCancelId && f.FriendId == userId &&
+            f.Status == FriendshipStatus.Waiting).FirstOrDefaultAsync();
+
+        if (requestFriendship == null || waitingFriendship == null) return (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.");
+
+        DeleteResult result;
+
+        result = await _friendshipCollection.DeleteOneAsync(f => f.Id == requestFriendship.Id);
+        if (result.DeletedCount == 0) return (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.");
+
+        result = await _friendshipCollection.DeleteOneAsync(f => f.Id == waitingFriendship.Id);
+        if (result.DeletedCount == 0) return (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.");
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc/>
     public async Task<Result> BlockUserAsync(string userId, string userToBlockId)
     {
         // First, remove any existing friendship
