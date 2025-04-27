@@ -38,11 +38,17 @@ public class UserController(IUserService userService, IFriendshipService friends
         {
             Id = payload.Subject,
             Nickname = payload.Name ?? GenerateDefaultUserName(),
-            SocialService = request.Provider,
-            Handle = Guid.NewGuid().ToString("N")[..8]
+            SocialService = request.Provider
             // Rank will be set in the service based on the number of users
             // (Admin for the first user, User for others)
         };
+
+        while (true)
+        {
+            newUser.Handle = Guid.NewGuid().ToString("N")[..8];
+            var existingHandleUserResult = await userService.GetUserByHandleAsync(newUser.Handle);
+            if (existingHandleUserResult.IsFailure) break;
+        }
 
         await userService.CreateUserAsync(newUser);
 
@@ -104,11 +110,10 @@ public class UserController(IUserService userService, IFriendshipService friends
     [HttpGet("{userId}")]
     public async Task<IActionResult> GetUser(string userId)
     {
-        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
         var userResult = await userService.GetUserByIdAsync(userId);
         if (userResult == null) return null;
 
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId != null)
         {
             var requesterBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
@@ -123,6 +128,41 @@ public class UserController(IUserService userService, IFriendshipService friends
         var result = await userService.GenerateUserResponseDtoAsync(userResult, requesterId);
         if (result.IsSuccess) return Ok(result.Value);
         if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpGet("handle/{handle}")]
+    public async Task<IActionResult> GetUserByHandle(string handle)
+    {
+        var userResult = await userService.GetUserByHandleAsync(handle, true);
+        if (userResult.IsFailure) return NotFound(userResult.ErrorMessage);
+
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId != null)
+        {
+            var requesterBlockedFriendIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
+            var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
+            var requesterBlockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
+
+            if (requesterBlockedFriendIdsResult.Value.Contains(userResult.Value.Id)) return Unauthorized("차단한 사용자의 피드를 볼 수 없습니다.");
+            else if (requesterIgnoredFriendIdsResult.Value.Contains(userResult.Value.Id)) return Unauthorized("무시한 사용자의 피드를 볼 수 없습니다.");
+            else if (requesterBlockerFriendIdsResult.Value.Contains(userResult.Value.Id)) return Unauthorized("이 사용자의 피드를 볼 수 없습니다.");
+        }
+
+        var result = await userService.GenerateUserResponseDtoAsync(userResult, requesterId);
+        if (result.IsSuccess) return Ok(result.Value);
+        if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpGet("nickname-search/{query}")]
+    public async Task<IActionResult> FindUsersByNickname(string query)
+    {
+        var usersResult = await userService.FindUsersByNicknameAsync(query, true);
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var result = await userService.GenerateUserResponseDtosAsync(usersResult.Value, requesterId);
+        if (result.IsSuccess) return Ok(result.Value);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -281,25 +321,25 @@ public class UserController(IUserService userService, IFriendshipService friends
         else return StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpDelete("profile-media")]
+    [HttpPut("allowSearch/{allowSearch}")]
     [Authorize]
-    public async Task<IActionResult> DeleteProfileMedia()
+    public async Task<IActionResult> UpdateAllowSearch(bool allowSearch)
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
 
-        var deleteResult = await userService.UpdateProfileMediaAsync(userId, null);
-
-        if (deleteResult.IsSuccess) return Ok();
-        else if (deleteResult.Error == ErrorType.NotFound) return NotFound(deleteResult.ErrorMessage);
-        else return StatusCode(500, deleteResult.FullErrorMessage);
+        // Call the service to update the AllowSearch property
+        var result = await userService.UpdateAllowSearchAsync(userId, allowSearch);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
     }
 
     /// <summary>
-    /// Updates the profile image of a user
+    /// Updates the profile media of a user
     /// </summary>
-    /// <param name="file">The image file to upload</param>
+    /// <param name="file">The media file to upload</param>
     /// <returns>An action result indicating success or failure</returns>
     [HttpPut("profile-media")]
     [Authorize]
@@ -333,15 +373,20 @@ public class UserController(IUserService userService, IFriendshipService friends
         else return StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpDelete("background-media")]
+
+    /// <summary>
+    /// Deletes the profile media of a user
+    /// </summary>
+    /// <returns>An action result indicating success or failure</returns>
+    [HttpDelete("profile-media")]
     [Authorize]
-    public async Task<IActionResult> DeleteBackgroundMedia()
+    public async Task<IActionResult> DeleteProfileMedia()
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
 
-        var deleteResult = await userService.UpdateBackgroundMediaAsync(userId, null);
+        var deleteResult = await userService.UpdateProfileMediaAsync(userId, null);
 
         if (deleteResult.IsSuccess) return Ok();
         else if (deleteResult.Error == ErrorType.NotFound) return NotFound(deleteResult.ErrorMessage);
@@ -349,9 +394,9 @@ public class UserController(IUserService userService, IFriendshipService friends
     }
 
     /// <summary>
-    /// Updates the background image of a user
+    /// Updates the background media of a user
     /// </summary>
-    /// <param name="file">The image file to upload</param>
+    /// <param name="file">The media file to upload</param>
     /// <returns>An action result indicating success or failure</returns>
     [HttpPut("background-media")]
     [Authorize]
@@ -383,6 +428,25 @@ public class UserController(IUserService userService, IFriendshipService friends
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    /// <summary>
+    /// Deletes the background media of a user
+    /// </summary>
+    /// <returns>An action result indicating success or failure</returns>
+    [HttpDelete("background-media")]
+    [Authorize]
+    public async Task<IActionResult> DeleteBackgroundMedia()
+    {
+        // Get the user ID from the authenticated user claim
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var deleteResult = await userService.UpdateBackgroundMediaAsync(userId, null);
+
+        if (deleteResult.IsSuccess) return Ok();
+        else if (deleteResult.Error == ErrorType.NotFound) return NotFound(deleteResult.ErrorMessage);
+        else return StatusCode(500, deleteResult.FullErrorMessage);
     }
 
     /// <summary>
