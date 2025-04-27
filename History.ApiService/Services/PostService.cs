@@ -462,7 +462,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     {
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
 
-        var filter = Builders<Post>.Filter.Regex(p => p.SearchIndex, new BsonRegularExpression(query, "i"));
+        var loweredQuery = query.ToLower();
+        var filter = Builders<Post>.Filter.Where(p => p.SearchIndex.Contains(loweredQuery));
         if (!string.IsNullOrEmpty(fromPostId))
         {
             var fromPost = await _postCollection.Find(p => p.Id == fromPostId).FirstOrDefaultAsync();

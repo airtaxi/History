@@ -53,7 +53,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     /// <inheritdoc />
     public async Task<Result<List<User>>> FindUsersByNicknameAsync(string query, bool applyPermission)
     {
-        var filter = Builders<User>.Filter.Regex(u => u.Nickname, new BsonRegularExpression(query, "i"));
+        var filter = Builders<User>.Filter.Where(u => u.Nickname.Contains(query));
         if (applyPermission) filter &= Builders<User>.Filter.Eq(u => u.AllowSearch, true);
         return await _userCollection.Find(filter).ToListAsync();
     }
