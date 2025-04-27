@@ -25,7 +25,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     {
         var post = await _postCollection.Find(p => p.Id == postId).FirstOrDefaultAsync();
 
-        if (post == null) return Result<Post>.Failure(ErrorType.NotFound, "게시글을 찾을 수 없습니다.");
+        if (post == null) return (ErrorType.NotFound, "게시글을 찾을 수 없습니다.");
         else return post;
     }
 
@@ -341,7 +341,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
 
         // Upload medias
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, postId, userId, requestDto.Contents, files);
-        if (uploadResult.IsFailure) return Result<Comment>.Failure(uploadResult);
+        if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
         // Update the post contents
         post.Contents = requestDto.Contents;
@@ -518,7 +518,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
                 else hasAccess = true;
             }
 
-            if (!hasAccess) return Result<Comment>.Failure(ErrorType.Forbidden, "이 게시물에 대한 접근 권한이 없습니다.");
+            if (!hasAccess) return (ErrorType.Forbidden, "이 게시물에 대한 접근 권한이 없습니다.");
         }
 
         return Result.Success();

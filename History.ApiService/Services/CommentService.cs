@@ -21,7 +21,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         var postService = serviceProvider.GetRequiredService<IPostService>();
 
         var accessResult = await postService.CheckAccessAsync(postId, requesterId);
-        if (accessResult.IsFailure) return Result<List<Comment>>.Failure(accessResult);
+        if (accessResult.IsFailure) return accessResult.CastFailure< List<Comment>>());
 
         var filter = Builders<Comment>.Filter.Eq(f => f.PostId, postId);
         if (!string.IsNullOrEmpty(fromCommentId))
@@ -59,11 +59,11 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
 
         // Check access
         var accessResult = await postService.CheckAccessAsync(postId, requesterId);
-        if (accessResult.IsFailure) return Result<Comment>.Failure(accessResult);
+        if (accessResult.IsFailure) return accessResult.CastFailure<Comment>();
 
         // Upload medias
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, postId, requesterId, contents, files);
-        if (uploadResult.IsFailure) return Result<Comment>.Failure(uploadResult);
+        if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
         // Create comment
         var comment = new Comment
@@ -101,7 +101,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
 
         // Upload medias
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, originalComment.PostId, requesterId, contents, files);
-        if (uploadResult.IsFailure) return Result<Comment>.Failure(uploadResult);
+        if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
         // Update Comment
         var filter = Builders<Comment>.Filter.Eq(f => f.Id, commentId);

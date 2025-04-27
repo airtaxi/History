@@ -28,7 +28,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
     public async Task<Result<Media>> GetMediaByIdAsync(string mediaId)
     {
         var media = await _mediaCollection.Find(m => m.Id == mediaId).FirstOrDefaultAsync();
-        if (media == null) return Result<Media>.Failure(ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
+        if (media == null) return (ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
         else return media;
     }
 
@@ -156,7 +156,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             BucketName = bucketType.ToString()
         });
         var file = await bucket.Find(Builders<GridFSFileInfo>.Filter.Eq(x => x.Filename, fileName)).FirstOrDefaultAsync();
-        if (file == null) return Result<byte[]>.Failure(ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
+        if (file == null) return (ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
 
         return await bucket.DownloadAsBytesAsync(file.Id);
     }
