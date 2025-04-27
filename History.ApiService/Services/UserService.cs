@@ -239,15 +239,15 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
 
             var blockedUserIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
             if (blockedUserIdsResult.IsFailure) return blockedUserIdsResult.CastFailure<UserResponseDto>();
-            else if (blockedUserIdsResult.Value.Contains(user.Id)) return Result<UserResponseDto>.Failure(ErrorType.Forbidden, "차단한 사용자 접근 오류");
+            else if (blockedUserIdsResult.Value.Contains(user.Id)) return (ErrorType.Forbidden, "차단한 사용자 접근 오류");
 
             var ignoredUserIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
             if (ignoredUserIdsResult.IsFailure) return ignoredUserIdsResult.CastFailure<UserResponseDto>();
-            else if (ignoredUserIdsResult.Value.Contains(user.Id)) return Result<UserResponseDto>.Failure(ErrorType.Forbidden, "무시한 사용자 접근 오류");
+            else if (ignoredUserIdsResult.Value.Contains(user.Id)) return (ErrorType.Forbidden, "무시한 사용자 접근 오류");
 
             var blockerUserIdsResult = await friendshipService.GetBlockerUserIdsAsync(user.Id);
             if (blockerUserIdsResult.IsFailure) return blockerUserIdsResult.CastFailure<UserResponseDto>();
-            else if (blockerUserIdsResult.Value.Contains(requesterId)) return Result<UserResponseDto>.Failure(ErrorType.Forbidden, "차단당한 사용자 접근 오류");
+            else if (blockerUserIdsResult.Value.Contains(requesterId)) return (ErrorType.Forbidden, "차단당한 사용자 접근 오류");
         }
 
         var friendshipResult = await friendshipService.GetFriendshipAsync(user.Id, requesterId);

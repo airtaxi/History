@@ -12,7 +12,6 @@ public enum ErrorType
     NotFound,
     Forbidden,
     Conflict,
-    SenderEqualsReceiver,
     BadRequest,
     Unauthorized,
     ProgramError

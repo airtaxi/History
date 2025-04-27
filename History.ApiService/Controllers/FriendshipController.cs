@@ -21,7 +21,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 
         var result = await friendshipService.SendFriendRequestAsync(senderId, receiverId);
         if (result.IsSuccess) return Ok();
-        else if (result.Error == ErrorType.SenderEqualsReceiver) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
         else if (result.Error == ErrorType.Conflict) return BadRequest(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
