@@ -2,8 +2,7 @@
 <ContentPage
     x:Class="History.MobileClient.Pages.LoginPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    Title="LoginPage">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
     <Grid BackgroundColor="#fff112">
         <Image
             HeightRequest="256"
