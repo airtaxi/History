@@ -2,6 +2,7 @@
 using History.MobileClient.StaggeredLayout;
 using Microsoft.Extensions.Logging;
 using Mopups.Hosting;
+using SpeakLink;
 using System.ComponentModel.Design;
 using UraniumUI;
 
@@ -14,10 +15,11 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
-            .ConfigureMopups()
-            .UseUraniumUI()
             .UseMauiCommunityToolkitMediaElement()
+            .UseUraniumUI()
             .UseUraniumUIMaterial()
+            .UseSpeakLink()
+            .ConfigureMopups()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
