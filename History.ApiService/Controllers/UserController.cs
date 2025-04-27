@@ -158,7 +158,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [HttpGet("nickname-search/{query}")]
     public async Task<IActionResult> FindUsersByNickname(string query)
     {
-        var usersResult = await userService.FindUsersByNicknameAsync(query, true);
+        var usersResult = await userService.FindUsersByNicknameAsync(query, true, 15);
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var result = await userService.GenerateUserResponseDtosAsync(usersResult.Value, requesterId);
