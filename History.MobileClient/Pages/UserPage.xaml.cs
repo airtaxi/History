@@ -28,7 +28,6 @@ public partial class UserPage : ContentPage
         _ = InitializeAsync();
     }
 
-
     private async Task InitializeAsync()
     {
         MainCollectionView.ItemsSource = _viewModels;
