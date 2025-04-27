@@ -21,7 +21,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         var postService = serviceProvider.GetRequiredService<IPostService>();
 
         var accessResult = await postService.CheckAccessAsync(postId, requesterId);
-        if (accessResult.IsFailure) return accessResult.CastFailure< List<Comment>>());
+        if (accessResult.IsFailure) return accessResult.CastFailure< List<Comment>>();
 
         var filter = Builders<Comment>.Filter.Eq(f => f.PostId, postId);
         if (!string.IsNullOrEmpty(fromCommentId))
