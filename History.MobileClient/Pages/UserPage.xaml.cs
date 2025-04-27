@@ -18,14 +18,12 @@ public partial class UserPage : ContentPage
 	{
 		_userId = Shared.UserId;
 		InitializeComponent();
-        _ = InitializeAsync();
     }
 
     public UserPage(string userId)
 	{
 		_userId = userId;
         InitializeComponent();
-        _ = InitializeAsync();
     }
 
     private async Task InitializeAsync()
@@ -85,6 +83,18 @@ public partial class UserPage : ContentPage
         {
             MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
             await InitializeAsync();
+        }
+    }
+
+    private bool _isInitialized = false;
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        if (!_isInitialized)
+        {
+            await InitializeAsync();
+            _isInitialized = true;
         }
     }
 }
