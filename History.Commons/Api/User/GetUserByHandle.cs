@@ -1,9 +1,10 @@
+using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Interfaces;
 using RestSharp;
 
 namespace History.Commons.Api.User;
 
-public class GetUserByHandle : IOptionalAuthRequest, IRequestWithUrlParameters
+public class GetUserByHandle : IBaseRequest<UserResponseDto>, IOptionalAuthRequest, IRequestWithUrlParameters
 {
     public string Path => "/api/user/handle/{handle}";
     public Method Method => Method.Get;
