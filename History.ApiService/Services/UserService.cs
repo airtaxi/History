@@ -4,6 +4,7 @@ using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace History.ApiService.Services;
@@ -37,6 +38,25 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
 
     /// <inheritdoc />
     public async Task<Result<List<User>>> GetUsersByIdsAsync(IEnumerable<string> userIds) => await _userCollection.Find(u => userIds.Contains(u.Id)).ToListAsync();
+
+    /// <inheritdoc />
+    public async Task<Result<User>> GetUserByHandleAsync(string handle, bool applyPermission)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Handle, handle);
+        if (applyPermission) filter &= Builders<User>.Filter.Eq(u => u.AllowSearch, true);
+
+        var user = await _userCollection.Find(filter).FirstOrDefaultAsync();
+        if (user == null) return (ErrorType.NotFound, "사용자를 찾을 수 없습니다.");
+        return user;
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<List<User>>> FindUsersByNicknameAsync(string query, bool applyPermission)
+    {
+        var filter = Builders<User>.Filter.Regex(u => u.Nickname, new BsonRegularExpression(query, "i"));
+        if (applyPermission) filter &= Builders<User>.Filter.Eq(u => u.AllowSearch, true);
+        return await _userCollection.Find(filter).ToListAsync();
+    }
 
     /// <inheritdoc />
     public async Task<Result> ApproveUnauthorizedUserAsync(string userId)
@@ -126,6 +146,14 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
         var update = Builders<User>.Update.Set(u => u.Nickname, nickname);
         return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "닉네임을 변경하는 중 오류가 발생했습니다.");
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> UpdateAllowSearchAsync(string userId, bool allowSearch)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+        var update = Builders<User>.Update.Set(u => u.AllowSearch, allowSearch);
+        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "검색 허용 여부를 변경하는 중 오류가 발생했습니다.");
     }
 
     /// <inheritdoc />

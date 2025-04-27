@@ -28,6 +28,22 @@ public interface IUserService
     public Task<Result<List<User>>> GetUsersByIdsAsync(IEnumerable<string> userIds);
 
     /// <summary>
+    /// Get user by handle
+    /// </summary>
+    /// <param name="handle">The handle of the user to retrieve</param>
+    /// <param name="applyPermission">If true, apply user's AllowSearch property</param>
+    /// <returns>A task that represents the asynchronous operation, with result of the user</returns>
+    public Task<Result<User>> GetUserByHandleAsync(string handle, bool applyPermission);
+
+    /// <summary>
+    /// Find users by nickname
+    /// </summary>
+    /// <param name="query">The nickname to search for</param>
+    /// <param name="applyPermission">If true, apply user's AllowSearch property</param>
+    /// <returns>A task that represents the asynchronous operation, containing a list of users matching the nickname</returns>
+    public Task<Result<List<User>>> FindUsersByNicknameAsync(string query, bool applyPermission);
+
+    /// <summary>
     /// Approves a user who is not authorized
     /// </summary>
     /// <param name="userId">The identifier of the user to be approved</param>
@@ -88,6 +104,14 @@ public interface IUserService
     /// <param name="nickname">The nickname to update</param>
     /// <returns>A task that represents the asynchronous operation. with result of update success</returns>
     public Task<Result> UpdateNicknameAsync(string userId, string nickname);
+
+    /// <summary>
+    /// Update user's AllowSearch property
+    /// </summary>
+    /// <param name="userId">The ID of user to update</param>
+    /// <param name="allowSearch">The value indicating whether the user can be searched or not</param>
+    /// <returns>A task that represents the asynchronous operation, with result of update success</returns>
+    public Task<Result> UpdateAllowSearchAsync(string userId, bool allowSearch);
 
     /// <summary>
     /// Update user's profile media

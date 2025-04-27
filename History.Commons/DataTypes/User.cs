@@ -67,6 +67,11 @@ public class User
     public DiscoveryOption LastUsedPostDiscoveryOption { get; set; } = DiscoveryOption.FriendsOfFriends;
 
     /// <summary>
+    /// If true, the user can be searched by their handle or nickname.
+    /// </summary>
+    public bool AllowSearch { get; set; } = true;
+
+    /// <summary>
     /// Represents the date and time when the user was created.
     /// </summary>
     public DateTime CreatedAt { get; set; }
