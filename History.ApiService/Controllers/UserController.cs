@@ -46,7 +46,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         while (true)
         {
             newUser.Handle = Guid.NewGuid().ToString("N")[..8];
-            var existingHandleUserResult = await userService.GetUserByHandleAsync(newUser.Handle);
+            var existingHandleUserResult = await userService.GetUserByHandleAsync(newUser.Handle, false);
             if (existingHandleUserResult.IsFailure) break;
         }
 
