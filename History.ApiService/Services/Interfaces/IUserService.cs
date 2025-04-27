@@ -41,7 +41,7 @@ public interface IUserService
     /// <param name="query">The nickname to search for</param>
     /// <param name="applyPermission">If true, apply user's AllowSearch property</param>
     /// <returns>A task that represents the asynchronous operation, containing a list of users matching the nickname</returns>
-    public Task<Result<List<User>>> FindUsersByNicknameAsync(string query, bool applyPermission);
+    public Task<Result<List<User>>> FindUsersByNicknameAsync(string query, bool applyPermission, int limit = -1);
 
     /// <summary>
     /// Approves a user who is not authorized
