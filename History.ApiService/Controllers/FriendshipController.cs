@@ -134,20 +134,22 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var pendingRequestsResult = await friendshipService.GetPendingRequestsAsync(userId);
         if (pendingRequestsResult.IsFailure) return StatusCode(500, pendingRequestsResult.FullErrorMessage);
 
-        return Ok(pendingRequestsResult.Value);
+        var dtosResult = await userService.GenerateUserResponseDtosAsync(pendingRequestsResult.Value.Select(x => x.FriendId), userId);
+        return Ok(dtosResult.Value);
     }
 
-    [HttpGet("sent")]
+    [HttpGet("waiting")]
     [Authorize]
-    public async Task<IActionResult> GetSentRequests()
+    public async Task<IActionResult> GetWaitingRequests()
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var sentRequestsResult = await friendshipService.GetSentRequestsAsync(userId);
-        if (sentRequestsResult.IsFailure) return StatusCode(500, sentRequestsResult.FullErrorMessage);
+        var waitingRequestsResult = await friendshipService.GetWaitingRequestsAsync(userId);
+        if (waitingRequestsResult.IsFailure) return StatusCode(500, waitingRequestsResult.FullErrorMessage);
 
-        return Ok(sentRequestsResult.Value);
+        var dtosResult = await userService.GenerateUserResponseDtosAsync(waitingRequestsResult.Value.Select(x => x.FriendId), userId);
+        return Ok(dtosResult.Value);
     }
 
     [HttpGet("blocked")]
@@ -158,6 +160,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var blockedUserIdsResult = await friendshipService.GetBlockedUserIdsAsync(userId);
+        if (blockedUserIdsResult.IsFailure) return StatusCode(500, blockedUserIdsResult.FullErrorMessage);
 
         var dtosResult = await userService.GenerateUserResponseDtosAsync(blockedUserIdsResult.Value, userId);
         return Ok(dtosResult.Value);
@@ -171,6 +174,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var ignoredUserIdsResult = await friendshipService.GetIgnoredUserIdsAsync(userId);
+        if (ignoredUserIdsResult.IsFailure) await StatusCode(500, ignoredUserIdsResult.FullErrorMessage);
 
         var dtosResult = await userService.GenerateUserResponseDtosAsync(ignoredUserIdsResult.Value, userId);
         return Ok(dtosResult.Value);

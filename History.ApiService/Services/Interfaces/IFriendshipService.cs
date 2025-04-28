@@ -100,7 +100,7 @@ public interface IFriendshipService
     /// </summary>
     /// <param name="userId">The ID of the user whose awaiting requests are to be retrieved.</param>
     /// <returns>A task representing the asynchronous operation, with a collection of sent friend requests.</returns>
-    public Task<Result<List<Friendship>>> GetSentRequestsAsync(string userId);
+    public Task<Result<List<Friendship>>> GetWaitingRequestsAsync(string userId);
 
     /// <summary>
     /// Gets all friendships for a user.
