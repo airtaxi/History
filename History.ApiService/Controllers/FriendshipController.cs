@@ -174,7 +174,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var ignoredUserIdsResult = await friendshipService.GetIgnoredUserIdsAsync(userId);
-        if (ignoredUserIdsResult.IsFailure) await StatusCode(500, ignoredUserIdsResult.FullErrorMessage);
+        if (ignoredUserIdsResult.IsFailure) return StatusCode(500, ignoredUserIdsResult.FullErrorMessage);
 
         var dtosResult = await userService.GenerateUserResponseDtosAsync(ignoredUserIdsResult.Value, userId);
         return Ok(dtosResult.Value);
