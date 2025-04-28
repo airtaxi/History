@@ -3,6 +3,7 @@ using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.MobileClient.StaggeredLayout;
 using History.MobileClient.ViewModels;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
@@ -33,24 +34,23 @@ public partial class UserPage : ContentPage
         try
         {
             await _fetchSemaphore.WaitAsync();
-            IsEnabled = false;
-            IsBusy = true;
 
             _viewModels.Clear();
 
-            var user = await Shared.ApiHandler.ExecuteRequestAsync(new GetUser(_userId));
-            _viewModels.Add(new ProfileViewModel(user));
+            var user = await App.ExecuteRequestAsync(new GetUser(_userId));
+            if (user.IsSuccess) _viewModels.Add(new ProfileViewModel(user));
+            else return;
 
-            //var posts = await Shared.ApiHandler.ExecuteRequestAsync(new GetUserPosts(_userId));
-            //var postViewModels = posts.Select(x => new PostViewModel(x));
-            //foreach (var postViewModel in postViewModels) _viewModels.Add(postViewModel);
+            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(_userId));
+            if (postsResult.IsSuccess)
+            {
+                var posts = postsResult.Value;
+                var postViewModels = posts.Select(x => new PostViewModel(x));
+                foreach (var postViewModel in postViewModels) _viewModels.Add(postViewModel);
+            }
+            else return;
         }
-        finally
-        {
-            IsEnabled = true;
-            IsBusy = false;
-            _fetchSemaphore.Release();
-        }
+        finally { _fetchSemaphore.Release(); }
     }
 
     private async Task LoadMoreAsync()
@@ -58,20 +58,18 @@ public partial class UserPage : ContentPage
         try
         {
             await _fetchSemaphore.WaitAsync();
-            IsEnabled = false;
-            IsBusy = true;
 
             var lastPost = _viewModels.OfType<PostViewModel>().LastOrDefault();
-            var posts = await Shared.ApiHandler.ExecuteRequestAsync(new GetUserPosts(_userId, lastPost?.Post.Id));
-            var postViewModels = posts.Select(x => new PostViewModel(x));
-            foreach (var postViewModel in postViewModels) _viewModels.Add(postViewModel);
+            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(_userId, lastPost?.Post.Id));
+            if (postsResult.IsSuccess)
+            {
+                var posts = postsResult.Value;
+                var postViewModels = posts.Select(x => new PostViewModel(x));
+                foreach (var postViewModel in postViewModels) _viewModels.Add(postViewModel);
+            }
+            else return;
         }
-        finally
-        {
-            IsEnabled = true;
-            IsBusy = false;
-            _fetchSemaphore.Release();
-        }
+        finally { _fetchSemaphore.Release(); }
     }
 
     private async void OnSizeChanged(object sender, EventArgs e)
@@ -97,4 +95,4 @@ public partial class UserPage : ContentPage
             _isInitialized = true;
         }
     }
-}
+} 

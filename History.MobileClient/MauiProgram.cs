@@ -3,7 +3,6 @@ using History.MobileClient.StaggeredLayout;
 using Microsoft.Extensions.Logging;
 using Mopups.Hosting;
 using SpeakLink;
-using System.ComponentModel.Design;
 using UraniumUI;
 
 namespace History.MobileClient;
@@ -16,6 +15,7 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkitMediaElement()
+            .UseMauiCommunityToolkit()
             .UseUraniumUI()
             .UseUraniumUIMaterial()
             .UseSpeakLink()

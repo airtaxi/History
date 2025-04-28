@@ -1,8 +1,8 @@
 ﻿namespace History.MobileClient;
 
-public partial class MainPage : TabbedPage
+public partial class AppShell : Shell
 {
-	public MainPage()
+	public AppShell()
 	{
 		InitializeComponent();
 	}

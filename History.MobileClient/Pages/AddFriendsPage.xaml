@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.AddFriendsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Shell.NavBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
+    </ContentPage.Behaviors>
+    <Grid RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <SearchBar
+            x:Name="MainSearchBar"
+            Grid.Row="0"
+            Placeholder="친구의 닉네임 또는 핸들 검색"
+            SearchButtonPressed="OnSearchButtonPressed" />
+
+        <Label
+            Grid.Row="1"
+            Margin="6,0,0,0"
+            Text="검색 결과" />
+
+        <CollectionView
+            x:Name="MainCollectionView"
+            Grid.Row="2"
+            ItemTemplate="{StaticResource FriendshipTemplate}" />
+
+        <Label
+            x:Name="EmptyLabel"
+            Grid.Row="2"
+            FontAttributes="Bold"
+            FontSize="16"
+            HorizontalOptions="Center"
+            Text="검색 결과가 없습니다"
+            VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

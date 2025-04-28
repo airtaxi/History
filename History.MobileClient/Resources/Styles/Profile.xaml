@@ -27,7 +27,6 @@
                             BindingContext="{x:Binding ProfileMedia}"
                             ContentSelector="{StaticResource MediaTemplateSelector}"
                             HeightRequest="72"
-                            IsClippedToBounds="True"
                             WidthRequest="72">
                             <views:DataTemplatePresenter.Clip>
                                 <EllipseGeometry
@@ -163,6 +162,7 @@
                     <Button
                         IsVisible="{x:Binding IsNotMe}"
                         Text="{x:Binding FriendButtonText}"
+                        Clicked="OnFriendshipButtonClicked"
                         TextColor="White" />
                 </HorizontalStackLayout>
             </Grid>
