@@ -5,6 +5,7 @@ namespace History.Commons.DataTypes.ResponseDtos;
 public class UserResponseDto()
 {
     public string UserId { get; set; }
+    public string Handle { get; set; }
 
     public Rank Rank { get; set; }
     public SocialService SocialService { get; set; }
@@ -27,6 +28,7 @@ public class UserResponseDto()
     public UserResponseDto(User user) : this()
     {
         UserId = user.Id;
+        Handle = user.Handle;
 
         Rank = user.Rank;
         SocialService = user.SocialService;
