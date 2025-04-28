@@ -56,8 +56,8 @@ public class FriendshipService(IMongoDatabase database, IServiceProvider service
         while (true)
         {
             waitingFriendship.Id = Guid.NewGuid().ToString("N");
-            waitingFriendship = await _friendshipCollection.Find(f => f.Id == waitingFriendship.Id).FirstOrDefaultAsync();
-            if (waitingFriendship == null) break;
+            existingFriendship = await _friendshipCollection.Find(f => f.Id == waitingFriendship.Id).FirstOrDefaultAsync();
+            if (existingFriendship == null) break;
         }
 
         await _friendshipCollection.InsertOneAsync(requestFriendship);
