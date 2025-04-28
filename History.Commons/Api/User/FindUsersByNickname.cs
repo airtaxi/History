@@ -8,7 +8,7 @@ public class FindUsersByNickname : IBaseRequest<List<UserResponseDto>>, IOptiona
 {
     public string Path => "/api/user/nickname-search/{query}";
     public Method Method => Method.Get;
-    public Dictionary<string, string> UrlParameters { get; } = new();
+    public Dictionary<string, string> UrlParameters { get; } = [];
 
     public FindUsersByNickname(string query) => UrlParameters["query"] = query;
 }

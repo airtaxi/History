@@ -8,7 +8,7 @@ public class GetUserByHandle : IBaseRequest<UserResponseDto>, IOptionalAuthReque
 {
     public string Path => "/api/user/handle/{handle}";
     public Method Method => Method.Get;
-    public Dictionary<string, string> UrlParameters { get; } = new();
+    public Dictionary<string, string> UrlParameters { get; } = [];
 
     public GetUserByHandle(string handle) => UrlParameters["handle"] = handle;
 }
