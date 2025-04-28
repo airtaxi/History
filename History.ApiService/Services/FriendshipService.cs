@@ -244,14 +244,14 @@ public class FriendshipService(IMongoDatabase database, IServiceProvider service
     public async Task<Result<List<Friendship>>> GetPendingRequestsAsync(string userId)
     {
         var pendingRequests = await _friendshipCollection.Find(f =>
-            f.FriendId == userId && f.Status == FriendshipStatus.Requested)
+            f.UserId == userId && f.Status == FriendshipStatus.Waiting)
             .ToListAsync();
 
         return pendingRequests;
     }
 
     /// <inheritdoc/>
-    public async Task<Result<List<Friendship>>> GetSentRequestsAsync(string userId)
+    public async Task<Result<List<Friendship>>> GetWaitingRequestsAsync(string userId)
     {
         var waitingRequests = await _friendshipCollection.Find(f =>
             f.UserId == userId && f.Status == FriendshipStatus.Requested)
