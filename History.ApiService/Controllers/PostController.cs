@@ -26,7 +26,7 @@ public class PostController(IPostService postService, IFriendshipService friends
 
         var postsResult = await postService.GetUserPostsAsync(requesterId, userId, fromPostId, limit);
         var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
-        return Ok(postResponses);
+        return Ok(postResponses.Value);
     }
 
     [HttpGet("timeline")]
@@ -43,7 +43,7 @@ public class PostController(IPostService postService, IFriendshipService friends
 
         var postsResult = await postService.GetTimelinePostsAsync(requesterId, fromPostId, limit);
         var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
-        return Ok(postResponses);
+        return Ok(postResponses.Value);
     }
 
     [HttpGet("user/{userId}/count")]
@@ -121,7 +121,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         if (result.IsSuccess)
         {
             var postResponse = await postService.GeneratePostResponseDtoAsync(result.Value, requesterId);
-            return Ok(postResponse);
+            return Ok(postResponse.Value);
         }
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
