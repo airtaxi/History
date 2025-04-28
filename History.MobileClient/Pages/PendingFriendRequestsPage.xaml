@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.PendingFriendRequestsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Shell.NavBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
+    </ContentPage.Behaviors>
+    <RefreshView Refreshing="OnRefreshing">
+        <Grid>
+            <CollectionView
+                x:Name="MainCollectionView"
+                Grid.Row="2"
+                ItemTemplate="{StaticResource FriendshipTemplate}" />
+            <Label
+                x:Name="EmptyLabel"
+                FontAttributes="Bold"
+                FontSize="16"
+                HorizontalOptions="Center"
+                Text="받은 친구 신청이 없습니다"
+                VerticalOptions="Center" />
+        </Grid>
+    </RefreshView>
+</ContentPage>

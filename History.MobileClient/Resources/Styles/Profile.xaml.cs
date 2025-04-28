@@ -37,4 +37,11 @@ public partial class Profile : ResourceDictionary
         var viewModel = button?.BindingContext as ProfileViewModel;
         await viewModel.HandleChangeBackgroundMediaAsync();
     }
+
+    private async void OnFriendshipButtonClicked(object sender, EventArgs e)
+    {
+        var button = sender as Button;
+        var viewModel = button?.BindingContext as ProfileViewModel;
+        await viewModel.HandleFriendshipActionAsync();
+    }
 }

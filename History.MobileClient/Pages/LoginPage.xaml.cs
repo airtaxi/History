@@ -2,6 +2,7 @@
 using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.MobileClient.Auth;
+using System;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -19,34 +20,25 @@ public partial class LoginPage : ContentPage
     {
         if (Shared.ApiHandler == null) return;
 
-        try
+        var meResult = await App.ExecuteRequestAsync(new GetMyProfile(), [ErrorType.Unauthorized]);
+        if (meResult.IsSuccess)
         {
-            IsEnabled = false;
-            IsBusy = true;
-            var me = await Shared.ApiHandler.ExecuteRequestAsync(new GetMyProfile());
+            var me = meResult.Value;
             Shared.UserId = me.UserId;
             Shared.LastUsedPostDiscoveryOption = me.LastUsedPostDiscoveryOption;
-            App.MainWindow.Page = new MainPage();
+            App.MainWindow.Page = new AppShell();
         }
-        catch (HttpRequestException exception)
-        {
-            if (exception.StatusCode == HttpStatusCode.Unauthorized) await DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", "확인");
-            else await DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n코드: {exception.Message}", "확인");
-        }
-        finally
-        {
-            IsEnabled = true;
-            IsBusy = false;
-        }
+        else if (meResult.Error == ErrorType.Unauthorized) await DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
+        else await DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n코드: {meResult.ErrorMessage}", Constants.PromptOk);
     }
 
     private async Task Login(string idToken, SocialService socialService)
     {
-        try
+        var result = await App.ExecuteRequestAsync(new Login(idToken, socialService), [ErrorType.NotFound, ErrorType.Forbidden]);
+        if (result.IsSuccess)
         {
-            var response = await ApiHandler.Public.ExecuteRequestAsync(new Login(idToken, socialService));
-            var accessToken = response.AccessToken;
-            var refreshToken = response.RefreshToken;
+            var accessToken = result.Value.AccessToken;
+            var refreshToken = result.Value.RefreshToken;
 
             Configuration.SetValue("AccessToken", accessToken);
             Configuration.SetValue("RefreshToken", refreshToken);
@@ -54,37 +46,17 @@ public partial class LoginPage : ContentPage
             Shared.ApiHandler = new(accessToken, refreshToken);
             await AfterLogin();
         }
-        catch (HttpRequestException loginException)
+        else if (result.Error == ErrorType.NotFound)
         {
-            if (loginException.StatusCode == HttpStatusCode.NotFound)
+            var willing = await DisplayAlert("안내", "가입 신청이 필요합니다. 가입하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            if (willing)
             {
-                var willing = await DisplayAlert("안내", "가입 신청이 필요합니다. 가입하시겠습니까?", "예", "아니요");
-                if (willing)
-                {
-                    try
-                    {
-                        await ApiHandler.Public.ExecuteRequestAsync(new Register(idToken, SocialService.Google));
-                        await DisplayAlert("안내", "가입 신청이 완료되었습니다. 심사가 완료되는대로 가입이 완료됩니다.", "확인");
-                    }
-                    catch (HttpRequestException registerException)
-                    {
-                        await DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n코드: {registerException.Message}", "확인");
-                    }
-                }
-                else
-                {
-                    await DisplayAlert("안내", "가입 신청이 필요합니다.", "확인");
-                }
+                result = await App.ExecuteRequestAsync(new Register(idToken, SocialService.Google));
+                if(result.IsSuccess) await DisplayAlert("안내", "가입 신청이 완료되었습니다. 심사가 완료되는대로 가입이 완료됩니다.", Constants.PromptOk);
             }
-            else if (loginException.StatusCode == HttpStatusCode.Forbidden)
-            {
-                await DisplayAlert("안내", "가입 신청 대기중입니다. 심사가 완료되는대로 가입이 완료됩니다.", "확인");
-            }
-            else
-            {
-                await DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n코드: {loginException.Message}", "확인");
-            }
+            else await DisplayAlert("안내", "서비스 이용을 위해서는 가입 신청이 필요합니다.", Constants.PromptOk);
         }
+        else if (result.Error == ErrorType.Forbidden) await DisplayAlert("안내", "가입 신청 대기중입니다. 심사가 완료되는대로 가입이 완료됩니다.", Constants.PromptOk);
     }
 
     private async void OnGoogleLoginButtonClicked(object sender, EventArgs e)
@@ -98,11 +70,11 @@ public partial class LoginPage : ContentPage
             await Login(idToken, SocialService.Google);
         }
 #else
-        await DisplayAlert("안내", "구현되지 않은 플랫폼입니다.", "확인");
+        await DisplayAlert("안내", "구현되지 않은 플랫폼입니다.", Constants.PromptOk);
 #endif
     }
 
-    private async void OnAppleLoginButtonClicked(object sender, EventArgs e) => await DisplayAlert("안내", "애플 로그인은 개발 중입니다.", "확인");
+    private async void OnAppleLoginButtonClicked(object sender, EventArgs e) => await DisplayAlert("안내", "애플 로그인은 개발 중입니다.", Constants.PromptOk);
 
     protected override async void OnAppearing()
     {
