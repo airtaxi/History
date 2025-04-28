@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 
 namespace History.Commons.Api.Friendship;
 
-public class GetSentRequests : IBaseRequest<List<UserResponseDto>>, IAuthRequiredRequest
+public class GetWaitingRequests : IBaseRequest<List<UserResponseDto>>, IAuthRequiredRequest
 {
-    public string Path => "/api/friendship/sent";
+    public string Path => "/api/friendship/waiting";
     public Method Method => Method.Get;
 }
