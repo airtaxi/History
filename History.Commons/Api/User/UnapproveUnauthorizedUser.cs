@@ -8,7 +8,7 @@ public class UnapproveUnauthorizedUser : IAuthRequiredRequest, IRequestWithUrlPa
 {
     public string Path => "/api/user/unapprove/{userId}";
     public Method Method => Method.Post;
-    public Dictionary<string, string> UrlParameters { get; } = new();
+    public Dictionary<string, string> UrlParameters { get; } = [];
 
     public UnapproveUnauthorizedUser(string userId) => UrlParameters["userId"] = userId;
 }
