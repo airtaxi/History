@@ -261,14 +261,7 @@ public class FriendshipService(IMongoDatabase database, IServiceProvider service
     }
 
     /// <inheritdoc/>
-    public async Task<Result<List<Friendship>>> GetAllFriendshipsAsync(string userId)
-    {
-        var friendships = await _friendshipCollection.Find(f =>
-            f.UserId == userId || f.FriendId == userId)
-            .ToListAsync();
-
-        return friendships;
-    }
+    public async Task<Result<List<Friendship>>> GetAllFriendshipsAsync(string userId) => await _friendshipCollection.Find(f => f.UserId == userId).ToListAsync();
 
     /// <summary>
     /// Retrieves a list of user IDs that are blocked, blocked by, or ignored by the specified user.
