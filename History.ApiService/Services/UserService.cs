@@ -249,10 +249,10 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             var blockerUserIdsResult = await friendshipService.GetBlockerUserIdsAsync(user.Id);
             if (blockerUserIdsResult.IsFailure) return blockerUserIdsResult.CastFailure<UserResponseDto>();
             else if (blockerUserIdsResult.Value.Contains(requesterId)) return (ErrorType.Forbidden, "차단당한 사용자 접근 오류");
-        }
 
-        var friendshipResult = await friendshipService.GetFriendshipAsync(user.Id, requesterId);
-        result.Friendship = friendshipResult.Value;
+            var friendshipResult = await friendshipService.GetFriendshipAsync(requesterId, user.Id);
+            result.Friendship = friendshipResult.Value;
+        }
 
         return result;
     }
@@ -283,7 +283,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         var friendshipsResult = await friendshipService.GetAllFriendshipsAsync(requesterId);
         if (friendshipsResult.IsFailure) return friendshipsResult.CastFailure<List<UserResponseDto>>();
 
-        foreach (var result in results) result.Friendship = friendshipsResult.Value.FirstOrDefault(x => x.FriendId == requesterId);
+        foreach (var result in results) result.Friendship = friendshipsResult.Value.FirstOrDefault(x => x.FriendId == result.UserId);
 
         return results;
     }
