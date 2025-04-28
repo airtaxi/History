@@ -4,11 +4,11 @@ using RestSharp;
 
 namespace History.Commons.Api.User;
 
-public class FindUsersByNickname : IBaseRequest<List<UserResponseDto>>, IOptionalAuthRequest, IRequestWithQueryParameters
+public class FindUsersByNickname : IBaseRequest<List<UserResponseDto>>, IOptionalAuthRequest, IRequestWithUrlParameters
 {
     public string Path => "/api/user/nickname-search/{query}";
     public Method Method => Method.Get;
-    public Dictionary<string, string> QueryParameters { get; } = new();
+    public Dictionary<string, string> UrlParameters { get; } = new();
 
-    public FindUsersByNickname(string query) => QueryParameters["query"] = query;
+    public FindUsersByNickname(string query) => UrlParameters["query"] = query;
 }
