@@ -9,6 +9,10 @@ public class User
     [BsonId]
     public string Id { get; set; }
 
+    /// <summary>
+    /// Customized user ID.
+    /// Default: 8-digit UUID
+    /// </summary>
     public string Handle { get; set; }
 
     /// <summary>
