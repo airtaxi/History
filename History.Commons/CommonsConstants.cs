@@ -10,5 +10,6 @@ public static class CommonsConstants
 {
     public const string ApiBaseUrl = "https://api.history.cenox.io";
     public const int MaxNicknameLength = 20;
-    public const int MaxDescriptionLength = 40;
+    public const int MaxProfileDescriptionLength = 40;
+    public const int MaxMediaDescriptionLength = 80;
 }

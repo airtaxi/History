@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace History.Commons.Api.Comment;
 
-public class ModifyComment : IAuthRequiredRequest, IRequestWithUrlParameters, IRequestWithBody, IRequestWithFiles
+public class ModifyComment : IAuthRequiredRequest, IRequestWithUrlParameters, IRequestWithForm, IRequestWithFiles
 {
     public string Path => "/api/comment/{commentId}";
     public Method Method => Method.Put;

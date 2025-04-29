@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace History.Commons.Api.Post;
 
-public class ModifyPost : IAuthRequiredRequest, IRequestWithBody, IRequestWithFiles
+public class ModifyPost : IAuthRequiredRequest, IRequestWithForm, IRequestWithFiles
 {
-    public string Path => "/api/post/ignore/{postId}";
+    public string Path => "/api/post/modify/{postId}";
     public Method Method => Method.Post;
     public object Body { get; set; }
     public Dictionary<string, byte[]> Files { get; set; }

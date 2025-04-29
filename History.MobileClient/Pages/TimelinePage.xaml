@@ -23,7 +23,7 @@
                 HorizontalOptions="Start"
                 Source="icon_nobg_white.png"
                 WidthRequest="48" />
-            <ImageButton HorizontalOptions="End">
+            <ImageButton HorizontalOptions="End" Clicked="OnCreateNewPostImageButtonClicked">
                 <ImageButton.Source>
                     <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Edit_note}" />
                 </ImageButton.Source>

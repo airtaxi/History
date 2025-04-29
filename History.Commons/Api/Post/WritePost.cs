@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace History.Commons.Api.Post;
 
-public class WritePost : IAuthRequiredRequest, IRequestWithBody, IRequestWithFiles
+public class WritePost : IAuthRequiredRequest, IRequestWithForm, IRequestWithFiles
 {
-    public string Path => "/api/post/ignore/{postId}";
+    public string Path => "/api/post";
     public Method Method => Method.Post;
     public object Body { get; set; }
     public Dictionary<string, byte[]> Files { get; set; }
@@ -25,7 +25,7 @@ public class WritePost : IAuthRequiredRequest, IRequestWithBody, IRequestWithFil
             Contents = contents,
             DiscoveryOption = discoveryOption,
             ParentPostId = ParentPostId,
-            DiscoveryOptionSelectedUserIds = discoveryOptionSelectedUserIds
+            DiscoveryOptionSelectedUserIds = discoveryOptionSelectedUserIds,
         };
         Files = files ?? [];
     }

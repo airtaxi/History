@@ -3,40 +3,146 @@
     x:Class="History.MobileClient.Pages.EditPostPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:editPost="clr-namespace:History.MobileClient.ContentViews.EditPost"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
-    xmlns:mention="clr-namespace:SpeakLink.Mention;assembly=SpeakLink">
+    xmlns:staggered="clr-namespace:History.MobileClient.StaggeredLayout"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient"
+    SizeChanged="OnSizeChanged">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
     <Grid RowSpacing="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" HeightRequest="48">
-            <VerticalStackLayout>
-                <ImageButton>
-                    <ImageButton.Source>
-                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back}" />
-                    </ImageButton.Source>
-                </ImageButton>
-                <Picker x:Name="DiscoveryOptionPicker" SelectedIndex="0" />
-            </VerticalStackLayout>
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,0,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout>
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Picker x:Name="DiscoveryOptionPicker" />
+            </HorizontalStackLayout>
 
             <Button
+                x:Name="ButtonUpload"
+                Padding="12,0"
                 FontAttributes="Bold"
+                HorizontalOptions="End"
                 Text="올리기"
-                TextColor="{StaticResource Primary}" />
+                Clicked="OnUploadButtonClicked"
+                TextColor="{StaticResource White}"
+                VerticalOptions="Center" />
         </Grid>
 
-        <ScrollView x:Name="WritePost" Grid.Row="1">
-            <VerticalStackLayout Spacing="8">
-                <mention:MentionEditor
-                    x:Name="MainMentionEditor"
-                    ExplicitCharacters="@"
-                    FormattedText=""
-                    Placeholder="무슨 일이 일어나고 있나요?" />
+        <ScrollView Grid.Row="1" Orientation="Vertical">
+            <VerticalStackLayout Padding="6" Spacing="8">
+                <editPost:TextContentView x:Name="MainTextContent" />
+                <Grid>
+                    <CollectionView x:Name="MediaCollectionView" CanReorderItems="True">
+                        <CollectionView.ItemsLayout>
+                            <staggered:StaggeredItemsLayout Span="1" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:MediaAttachmentViewModel">
+                                <Border
+                                    Margin="6"
+                                    Stroke="#808080"
+                                    StrokeThickness="1">
+                                    <Border.GestureRecognizers>
+                                        <DragGestureRecognizer CanDrag="True" DragStarting="OnMediaDragStarting" />
+                                        <DropGestureRecognizer AllowDrop="True" Drop="OnMediaDrop" />
+                                    </Border.GestureRecognizers>
+                                    <Grid HeightRequest="200">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="150" />
+                                            <RowDefinition Height="*" />
+                                        </Grid.RowDefinitions>
+                                        <Image
+                                            Grid.Row="0"
+                                            Aspect="AspectFill"
+                                            Source="{x:Binding ImageSource}" />
+                                        <Rectangle
+                                            Grid.Row="0"
+                                            Fill="#808080"
+                                            HeightRequest="1"
+                                            HorizontalOptions="Fill"
+                                            VerticalOptions="End" />
+                                        <Grid Grid.Row="1">
+                                            <Grid.GestureRecognizers>
+                                                <TapGestureRecognizer Tapped="OnMediaDescriptionGridTapped" />
+                                            </Grid.GestureRecognizers>
+                                            <Label
+                                                HorizontalOptions="Center"
+                                                IsVisible="{x:Binding IsDescriptionEmpty}"
+                                                Text="설명 추가"
+                                                VerticalOptions="Center" />
+                                            <Label
+                                                Padding="4,0,4,0"
+                                                HorizontalTextAlignment="Center"
+                                                LineBreakMode="TailTruncation"
+                                                MaxLines="2"
+                                                Text="{x:Binding Description}"
+                                                TextColor="#808080"
+                                                VerticalOptions="Center"
+                                                VerticalTextAlignment="Center" />
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
             </VerticalStackLayout>
         </ScrollView>
 
+        <Grid
+            Grid.Row="2"
+            Padding="12"
+            HeightRequest="60">
+            <HorizontalStackLayout HorizontalOptions="Start" Spacing="12">
+                <Image
+                    HeightRequest="40"
+                    VerticalOptions="Center"
+                    WidthRequest="40">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnInsertImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Photo_library}" />
+                    </Image.Source>
+                </Image>
+                <Image
+                    HeightRequest="40"
+                    VerticalOptions="Center"
+                    WidthRequest="40">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnInsertVideoTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Video_library}" />
+                    </Image.Source>
+                </Image>
+            </HorizontalStackLayout>
+            <Rectangle
+                Margin="-12"
+                Fill="#808080"
+                HeightRequest="1"
+                HorizontalOptions="Fill"
+                VerticalOptions="Start" />
+        </Grid>
     </Grid>
 </ContentPage>

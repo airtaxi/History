@@ -49,11 +49,11 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
                 if (friendDays < 1)
                     return "친구가 된지 하루도 안됐어요!";
                 else if (friendDays < 30)
-                    return $"{friendDays}일째 친구에요!";
+                    return $"{friendDays:N0}일째 친구에요!";
                 else if (friendDays < 365)
-                    return $"{friendDays / 30}개월째 친구에요!";
+                    return $"{friendDays / 30:N0}개월째 친구에요!";
                 else
-                    return $"{friendDays / 365}년째 친구에요!";
+                    return $"{friendDays / 365:N0}년째 친구에요!";
             }
             else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Requested)
             {
@@ -90,7 +90,7 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
 
         if (shouldUpload)
         {
-            var request = new MediaPickRequest(1, MediaFileType.Image, MediaFileType.Video) { Title = "배경 이미지 선택" };
+            var request = new MediaPickRequest(1, MediaFileType.Image) { Title = "배경 이미지 선택" };
 
             var results = await MediaGallery.PickAsync(request);
             var files = results?.Files?.ToArray();
@@ -127,7 +127,7 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
 
         if (shouldUpload)
         {
-            var request = new MediaPickRequest(1, MediaFileType.Image, MediaFileType.Video)
+            var request = new MediaPickRequest(1, MediaFileType.Image)
             {
                 Title = "프로필 이미지 선택"
             };
@@ -205,9 +205,9 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
 
         if (prompt != null && prompt != User.Description)
         {
-            if (prompt.Length > CommonsConstants.MaxDescriptionLength)
+            if (prompt.Length > CommonsConstants.MaxProfileDescriptionLength)
             {
-                await App.MainWindow.Page.DisplayAlert("한줄 소개 변경 실패", $"한줄 소개는 {CommonsConstants.MaxDescriptionLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
+                await App.MainWindow.Page.DisplayAlert("한줄 소개 변경 실패", $"한줄 소개는 {CommonsConstants.MaxProfileDescriptionLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
                 return;
             }
 
