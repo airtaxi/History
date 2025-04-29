@@ -7,8 +7,10 @@ namespace History.MobileClient.ContentViews.EditPost;
 
 public partial class TextContentView : ContentView
 {
-    public event EventHandler<string> ImageInputRequested;
+    // MentionId of Android only supports integer value
     public static Dictionary<int, string> MentionIdMap = [];
+
+    public event EventHandler<string> ImageInputRequested;
     public TextContentView()
 	{
 		InitializeComponent();
