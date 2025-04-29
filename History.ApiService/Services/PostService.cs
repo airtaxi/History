@@ -293,7 +293,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         }
 
         // Upload medias
-        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, postId, userId, requestDto.Contents, files);
+        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Post, postId, userId, requestDto.Contents, files);
         if (uploadResult.IsFailure) return uploadResult;
 
         var post = new Post
@@ -340,7 +340,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         post.DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? requestDto.DiscoveryOptionSelectedUserIds : null;
 
         // Upload medias
-        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, postId, userId, requestDto.Contents, files);
+        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Post, postId, userId, requestDto.Contents, files);
         if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
         // Update the post contents
