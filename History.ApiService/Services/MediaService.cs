@@ -101,7 +101,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 {
                     MediaId = mediaResult.Value.Id,
                     Description = uploadContent.Description,
-                    MimeType = file.ContentType
+                    MimeType = contentType
                 };
 
                 contents.Insert(contents.IndexOf(uploadContent), mediaContent);
