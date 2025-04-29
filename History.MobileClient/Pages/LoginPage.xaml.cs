@@ -1,4 +1,5 @@
 ﻿using History.Commons;
+using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.MobileClient.Auth;
@@ -26,10 +27,20 @@ public partial class LoginPage : ContentPage
             var me = meResult.Value;
             Shared.UserId = me.UserId;
             Shared.LastUsedPostDiscoveryOption = me.LastUsedPostDiscoveryOption;
+            
+            await RefreshFriends();
+
             App.MainWindow.Page = new AppShell();
         }
+
         else if (meResult.Error == ErrorType.Unauthorized) await DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
         else await DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n코드: {meResult.ErrorMessage}", Constants.PromptOk);
+    }
+
+    public static async Task RefreshFriends()
+    {
+        var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
+        Shared.Friends = friendsResult.Value;
     }
 
     private async Task Login(string idToken, SocialService socialService)

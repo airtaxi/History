@@ -1,4 +1,5 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using History.ApiService.DataTypes;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.RequestDtos;
@@ -6,6 +7,7 @@ using History.Commons.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace History.ApiService.Controllers;
 
@@ -89,12 +91,13 @@ public class PostController(IPostService postService, IFriendshipService friends
 
     [HttpPost]
     [Authorize]
-    public async Task<IActionResult> WritePost([FromBody] WritePostRequestDto request, IEnumerable<IFormFile> files)
+    public async Task<IActionResult> WritePost([FromForm] DataWithFilesForm request)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
-        var result = await postService.WritePostAsync(requesterId, request, files);
+        var data = JsonSerializer.Deserialize<WritePostRequestDto>(request.JsonData);
+        var result = await postService.WritePostAsync(requesterId, data, request.Files);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
@@ -132,12 +135,13 @@ public class PostController(IPostService postService, IFriendshipService friends
 
     [HttpPut("{postId}")]
     [Authorize]
-    public async Task<IActionResult> ModifyPost(string postId, [FromBody] ModifyPostRequestDto request, IEnumerable<IFormFile> files)
+    public async Task<IActionResult> ModifyPost(string postId, [FromForm] DataWithFilesForm request)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
-        var result = await postService.ModifyPostAsync(postId, requesterId, request, files);
+        var data = JsonSerializer.Deserialize<ModifyPostRequestDto>(request.JsonData);
+        var result = await postService.ModifyPostAsync(postId, requesterId, data, request.Files);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);

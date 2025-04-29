@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace History.Commons;
@@ -55,7 +56,7 @@ public class ApiHandler(string accessToken = null, string refreshToken = null)
         // Add form file
         if (request is IRequestWithFile requestWithFile)
         {
-            restRequest.AddFile("file", requestWithFile.FileContent, requestWithFile.FileName, MimeTypes.GetMimeType(requestWithFile.FileName));
+            restRequest.AddFile("File", requestWithFile.FileContent, requestWithFile.FileName, MimeTypes.GetMimeType(requestWithFile.FileName));
         }
 
         // Add form files
@@ -63,11 +64,16 @@ public class ApiHandler(string accessToken = null, string refreshToken = null)
         {
             foreach (var file in requestWithFiles.Files)
             {
-                restRequest.AddFile("files", file.Value, file.Key, MimeTypes.GetMimeType(file.Key));
+                restRequest.AddFile("Files", file.Value, file.Key, MimeTypes.GetMimeType(file.Key));
             }
         }
 
         if (request is IRequestWithBody requestWithBody) restRequest.AddJsonBody(requestWithBody.Body);
+        if (request is IRequestWithForm requestWithForm)
+        {
+            restRequest.AlwaysMultipartFormData = true;
+            restRequest.AddParameter("JsonData", JsonSerializer.Serialize(requestWithForm.Body));
+        }
         return restRequest;
     }
 

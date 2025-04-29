@@ -1,10 +1,12 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using History.ApiService.DataTypes;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace History.ApiService.Controllers;
 
@@ -37,11 +39,12 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
     [HttpPost("{postId}")]
     [Authorize]
-    public async Task<IActionResult> CreateComment(string postId, [FromBody] List<BaseContent> contents, IEnumerable<IFormFile> files)
+    public async Task<IActionResult> CreateComment(string postId, [FromForm] DataWithFilesForm request)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var result = await commentService.WriteCommentAsync(postId, contents, requesterId, files);
+        var contents = JsonSerializer.Deserialize<List<BaseContent>>(request.JsonData);
+        var result = await commentService.WriteCommentAsync(postId, contents, requesterId, request.Files);
         if (result.IsSuccess) return Ok(result.Value);
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
@@ -52,11 +55,12 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
     [HttpPut("{commentId}")]
     [Authorize]
-    public async Task<IActionResult> ModifyComment(string commentId, [FromBody] List<BaseContent> contents, IEnumerable<IFormFile> files)
+    public async Task<IActionResult> ModifyComment(string commentId, [FromForm] DataWithFilesForm request)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var result = await commentService.ModifyCommentAsync(commentId, contents, requesterId, files);
+        var contents = JsonSerializer.Deserialize<List<BaseContent>>(request.JsonData);
+        var result = await commentService.ModifyCommentAsync(commentId, contents, requesterId, request.Files);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);

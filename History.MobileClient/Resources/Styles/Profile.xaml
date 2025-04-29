@@ -160,9 +160,9 @@
                         Text="배경 이미지 변경"
                         TextColor="White" />
                     <Button
+                        Clicked="OnFriendshipButtonClicked"
                         IsVisible="{x:Binding IsNotMe}"
                         Text="{x:Binding FriendButtonText}"
-                        Clicked="OnFriendshipButtonClicked"
                         TextColor="White" />
                 </HorizontalStackLayout>
             </Grid>

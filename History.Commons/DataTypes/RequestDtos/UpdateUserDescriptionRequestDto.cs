@@ -10,6 +10,6 @@ public class UpdateUserDescriptionRequestDto
     /// <summary>
     /// The new description for the user profile
     /// </summary>
-    [MaxLength(CommonsConstants.MaxDescriptionLength)]
+    [MaxLength(CommonsConstants.MaxProfileDescriptionLength)]
     public string Description { get; set; }
 }
