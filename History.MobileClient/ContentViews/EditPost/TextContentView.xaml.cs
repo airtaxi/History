@@ -8,6 +8,7 @@ namespace History.MobileClient.ContentViews.EditPost;
 public partial class TextContentView : ContentView
 {
     public event EventHandler<string> ImageInputRequested;
+    public static Dictionary<int, string> MentionIdMap = [];
     public TextContentView()
 	{
 		InitializeComponent();
@@ -21,7 +22,8 @@ public partial class TextContentView : ContentView
 		var element = sender as Element;
 		var viewModel = element.BindingContext as MentionViewModel;
 
-        MainMentionEditor.InsertMention(viewModel.UserId, viewModel.Nickname);
+        MentionIdMap[MentionIdMap.Count] = viewModel.UserId;
+        MainMentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => x.Value == viewModel.UserId).Key.ToString(), viewModel.Nickname);
     }
 
     public List<BaseContent> GetContents()
@@ -29,7 +31,7 @@ public partial class TextContentView : ContentView
         var result = new List<BaseContent>();
         foreach (var span in MainMentionEditor.FormattedText.Spans)
         {
-            if (span is MentionSpan mentionSpan) result.Add(new ProfileContent() { UserId = mentionSpan.MentionId });
+            if (span is MentionSpan mentionSpan) result.Add(new ProfileContent() { UserId = MentionIdMap[int.Parse(mentionSpan.MentionId)] });
             else result.Add(new TextContent() { Text = span.Text });
         }
         return result;
