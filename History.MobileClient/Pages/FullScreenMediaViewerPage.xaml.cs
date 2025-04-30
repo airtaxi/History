@@ -1,4 +1,3 @@
-using AndroidX.Lifecycle;
 using CommunityToolkit.Maui.Alerts;
 using History.MobileClient.ViewModels;
 using NativeMedia;
