@@ -6,6 +6,7 @@ var password = builder.AddParameter("password", "***REMOVED***", secret: true);
 var mongodb = builder.AddMongoDB("MongoDB", 27017, username, password)
     .WithLifetime(ContainerLifetime.Persistent)
     .WithMongoExpress()
+    .WithDataBindMount("C:\\HistoryData")
     .AddDatabase("History");
 
 builder.AddProject<Projects.History_ApiService>("ApiService")
