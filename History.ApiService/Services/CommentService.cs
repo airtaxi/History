@@ -220,6 +220,16 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
 
         var likedUserResults = await userService.GenerateUserResponseDtosAsync(likedUserIds, requesterId);
 
+
+        var profileContents = comment.Contents.OfType<ProfileContent>();
+        var profileContentUsersResult = await userService.GenerateUserResponseDtosAsync(profileContents.Select(x => x.UserId), requesterId);
+        foreach (var profileContent in profileContents)
+        {
+            var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == profileContent.UserId);
+            profileContent.UserId = user?.UserId;
+            profileContent.Nickname = user?.Nickname ?? "차단된 사용자";
+        }
+
         return new CommentResponseDto
         {
             Id = comment.Id,

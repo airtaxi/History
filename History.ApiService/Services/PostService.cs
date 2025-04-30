@@ -548,6 +548,15 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         var commentsCountResult = await commentService.GetCommentsCountByPostIdAsync(post.Id, requesterId);
         if (commentsCountResult.IsFailure) return commentsCountResult.CastFailure<Result<PostResponseDto>>();
 
+        var profileContents = post.Contents.OfType<ProfileContent>();
+        var profileContentUsersResult = await userService.GenerateUserResponseDtosAsync(profileContents.Select(x => x.UserId), requesterId);
+        foreach (var profileContent in profileContents)
+        {
+            var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == profileContent.UserId);
+            profileContent.UserId = user?.UserId;
+            profileContent.Nickname = user?.Nickname ?? "차단된 사용자";
+        }
+
         var postReactions = await GeneratePostReactionDtosAsync(post.Id, requesterId);
 
         var hasBeenSimpleReposted = requesterId != null ? await _postCollection
