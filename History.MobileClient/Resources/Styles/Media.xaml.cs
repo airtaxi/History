@@ -9,14 +9,8 @@ namespace History.MobileClient.Resources.Styles;
 public partial class Media : ResourceDictionary
 {
     private static readonly ConcurrentDictionary<ContentView, IViewHandler> MediaElementHandlerMap = [];
-	public Media()
-	{
-		InitializeComponent();
 
-		var element = new MediaElement();
-		element.Dispose();
-
-    }
+    public Media() => InitializeComponent();
 
     private void OnVideoContentViewLoaded(object sender, EventArgs e)
     {
