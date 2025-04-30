@@ -528,13 +528,37 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     /// <inheritdoc />
     public async Task<Result<PostResponseDto>> GeneratePostResponseDtoAsync(Post post, string requesterId)
     {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+        var commentService = serviceProvider.GetRequiredService<ICommentService>();
+
+        var userResult = await userService.GenerateUserResponseDtoAsync(post.UserId, requesterId);
+        if (userResult.IsFailure) return userResult.CastFailure<Result<PostResponseDto>>();
+
+        var commentsResult = await commentService.GetCommentsByPostIdAsync(post.Id, requesterId, null, 20);
+        if (commentsResult.IsFailure) return commentsResult.CastFailure<Result<PostResponseDto>>();
+        var commentDtosResult = await commentService.GenerateCommentResponseDtosAsync(commentsResult.Value, requesterId);
+
+        var commentsCountResult = await commentService.GetCommentsCountByPostIdAsync(post.Id, requesterId);
+        if (commentsCountResult.IsFailure) return commentsCountResult.CastFailure<Result<PostResponseDto>>();
+
+        var postReactions = await GeneratePostReactionDtosAsync(post.Id, requesterId);
+
+        var hasBeenSimpleReposted = requesterId != null ? await _postCollection
+                .Find(p => p.ParentPostId == post.Id && p.UserId == requesterId && p.Contents == null)
+                .AnyAsync() : false;
+
         var postResponse = new PostResponseDto
         {
             Id = post.Id,
-            UserId = post.UserId,
+            User = userResult.Value,
             Contents = post.Contents,
-            CreatedAt = post.CreatedAt,
+            Comments = commentDtosResult.Value,
+            CommentsCount = commentsCountResult.Value,
+            PostReactions = postReactions,
             IsRepost = post.IsRepost,
+            HasBeenSimpleReposted = hasBeenSimpleReposted,
+            CreatedAt = post.CreatedAt,
             ModifiedAt = post.ModifiedAt
         };
 
@@ -542,15 +566,16 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         {
             var parentPostResult = await GetPostByIdAsync(post.ParentPostId);
             var hasAccessResult = await CheckAccessAsync(parentPostResult.Value, requesterId);
-            if (parentPostResult.IsSuccess && hasAccessResult.IsSuccess)
+            var parentPostUserResult = await userService.GenerateUserResponseDtoAsync(parentPostResult.Value.UserId, requesterId);
+            if (parentPostResult.IsSuccess && hasAccessResult.IsSuccess && parentPostUserResult.IsSuccess)
             {
                 postResponse.ParentPost = new PostResponseDto
                 {
                     Id = parentPostResult.Value.Id,
-                    UserId = parentPostResult.Value.UserId,
+                    User = parentPostUserResult.Value,
                     Contents = parentPostResult.Value.Contents,
-                    CreatedAt = parentPostResult.Value.CreatedAt,
                     IsRepost = parentPostResult.Value.IsRepost,
+                    CreatedAt = parentPostResult.Value.CreatedAt,
                     ModifiedAt = parentPostResult.Value.ModifiedAt
                 };
             }
@@ -578,4 +603,34 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         .ReplaceLineEndings()
         .ToLower()
         .Replace(Environment.NewLine, " ");
+
+    private async Task<Result<List<PostReactionDto>>> GeneratePostReactionDtosAsync(string postId, string requesterId = null)
+    {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+
+        var postReactions = await _postReactionCollection
+            .Find(r => r.PostId == postId)
+            .ToListAsync();
+
+        var userIds = postReactions.Select(r => r.UserId).Distinct().ToList();
+        var userResponseDtos = await userService.GenerateUserResponseDtosAsync(userIds, requesterId);
+
+        var results = new List<PostReactionDto>();
+        foreach(var postReaction in postReactions)
+        {
+            var user = userResponseDtos.Value.FirstOrDefault(x => x.UserId == postReaction.UserId);
+            if (user != null)
+            {
+                var result = new PostReactionDto
+                {
+                    User = user,
+                    Type = postReaction.Type,
+                    CreatedAt = postReaction.CreatedAt
+                };
+                results.Add(result);
+            }
+        }
+
+        return results;
+    }
 }
