@@ -29,10 +29,15 @@ public partial class PendingFriendRequestsPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
+    private bool _isInitialized = false;
     protected override async void OnAppearing()
     {
         base.OnAppearing();
 
-        await RefreshAsync();
+        if (!_isInitialized)
+        {
+            await RefreshAsync();
+            _isInitialized = true;
+        }
     }
 }

@@ -6,4 +6,6 @@ namespace History.Commons.DataTypes.Contents;
 public class StickerContent : BaseContent
 {
     public string StickerId { get; set; }
+    public string StickerContentId { get; set; }
+    public string StickerMediaId { get; set; } // Read only
 }

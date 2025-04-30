@@ -9,6 +9,8 @@ public class MediaContent : BaseContent
     public string MediaId { get; set; }
     public string MimeType { get; set; }
 
+    public bool IsVideo => MimeType.StartsWith("video/");
+
     [MaxLength(CommonsConstants.MaxMediaDescriptionLength)]
     public string Description { get; set; }
 }

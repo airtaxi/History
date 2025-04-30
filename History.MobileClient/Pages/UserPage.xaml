@@ -10,16 +10,12 @@
     <ContentPage.Behaviors>
         <toolkit:StatusBarBehavior StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
     </ContentPage.Behaviors>
-    <ContentPage.Resources>
-        <vm:TimelineTemplateSelector
-            x:Key="TimelineTemplateSelector"
-            PostTemplate="{StaticResource PostTemplate}"
-            ProfileTemplate="{StaticResource ProfileTemplate}" />
-    </ContentPage.Resources>
 
-    <CollectionView x:Name="MainCollectionView" ItemTemplate="{StaticResource TimelineTemplateSelector}">
-        <CollectionView.ItemsLayout>
-            <staggered:StaggeredItemsLayout Span="1" />
-        </CollectionView.ItemsLayout>
-    </CollectionView>
+    <RefreshView Refreshing="OnRefreshing">
+        <CollectionView x:Name="MainCollectionView" ItemTemplate="{StaticResource TimelineTemplateSelector}">
+            <CollectionView.ItemsLayout>
+                <staggered:StaggeredItemsLayout Span="1" />
+            </CollectionView.ItemsLayout>
+        </CollectionView>
+    </RefreshView>
 </ContentPage>

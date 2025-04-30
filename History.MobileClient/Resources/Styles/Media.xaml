@@ -20,14 +20,29 @@
             ShouldAutoPlay="{x:Binding VideoShouldAutoPlay}"
             ShouldKeepScreenOn="False"
             ShouldLoopPlayback="{x:Binding VideoShouldLoopPlayback}"
-            ShouldMute="True"
+            ShouldMute="{x:Binding ShouldMute}"
             ShouldShowPlaybackControls="False"
+            Source="{x:Binding Uri}"
+            VerticalOptions="{x:Binding VerticalContentOptions}" />
+    </DataTemplate>
+
+    <!--  MAUI BUG: Cannot set ShouldShowPlaybackControls on xaml  -->
+    <DataTemplate x:Key="ControllableVideoTemplate" x:DataType="vm:VideoViewModel">
+        <toolkit:MediaElement
+            Aspect="{x:Binding Aspect}"
+            HorizontalOptions="{x:Binding HorizontalContentOptions}"
+            ShouldAutoPlay="{x:Binding VideoShouldAutoPlay}"
+            ShouldKeepScreenOn="False"
+            ShouldLoopPlayback="{x:Binding VideoShouldLoopPlayback}"
+            ShouldMute="{x:Binding ShouldMute}"
+            ShouldShowPlaybackControls="True"
             Source="{x:Binding Uri}"
             VerticalOptions="{x:Binding VerticalContentOptions}" />
     </DataTemplate>
 
     <vm:MediaTemplateSelector
         x:Key="MediaTemplateSelector"
+        ControllableVideoTemplate="{StaticResource ControllableVideoTemplate}"
         ImageTemplate="{StaticResource ImageTemplate}"
         VideoTemplate="{StaticResource VideoTemplate}" />
 </ResourceDictionary>

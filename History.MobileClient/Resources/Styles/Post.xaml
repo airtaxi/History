@@ -8,6 +8,49 @@
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
 
     <DataTemplate x:Key="PostTemplate" x:DataType="vm:PostViewModel">
-        <Grid />
+        <Border Margin="12" Padding="12">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8" />
+            </Border.StrokeShape>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="48" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <HorizontalStackLayout Spacing="6">
+                        <views:DataTemplatePresenter
+                            BindingContext="{x:Binding ProfileMedia}"
+                            ContentSelector="{StaticResource MediaTemplateSelector}"
+                            HeightRequest="48"
+                            WidthRequest="48">
+                            <views:DataTemplatePresenter.Clip>
+                                <EllipseGeometry
+                                    Center="24,24"
+                                    RadiusX="24"
+                                    RadiusY="24" />
+                            </views:DataTemplatePresenter.Clip>
+                        </views:DataTemplatePresenter>
+                        <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="16"
+                                LineBreakMode="TailTruncation"
+                                Text="{x:Binding Nickname}" />
+                            <Label
+                                FontSize="14"
+                                LineBreakMode="TailTruncation"
+                                Text="{x:Binding TimestampText}"
+                                TextColor="#808080" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </Grid>
+            </Grid>
+        </Border>
     </DataTemplate>
+
+    <vm:TimelineTemplateSelector
+        x:Key="TimelineTemplateSelector"
+        PostTemplate="{StaticResource PostTemplate}"
+        ProfileTemplate="{StaticResource ProfileTemplate}" />
 </ResourceDictionary>

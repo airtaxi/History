@@ -27,10 +27,8 @@ public partial class UserPage : ContentPage
         InitializeComponent();
     }
 
-    private async Task InitializeAsync()
+    private async Task RefreshAsync()
     {
-        MainCollectionView.ItemsSource = _viewModels;
-
         try
         {
             await _fetchSemaphore.WaitAsync();
@@ -45,7 +43,7 @@ public partial class UserPage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var postViewModels = posts.Select(x => new PostViewModel(x));
+                var postViewModels = posts.Select(x => new PostViewModel(x, true));
                 foreach (var postViewModel in postViewModels) _viewModels.Add(postViewModel);
             }
             else return;
@@ -64,7 +62,7 @@ public partial class UserPage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var postViewModels = posts.Select(x => new PostViewModel(x));
+                var postViewModels = posts.Select(x => new PostViewModel(x, true));
                 foreach (var postViewModel in postViewModels) _viewModels.Add(postViewModel);
             }
             else return;
@@ -80,19 +78,19 @@ public partial class UserPage : ContentPage
         if (newSpan != previousSpan)
         {
             MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
-            await InitializeAsync();
+            await RefreshAsync();
         }
     }
 
-    private bool _isInitialized = false;
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
-
-        if (!_isInitialized)
-        {
-            await InitializeAsync();
-            _isInitialized = true;
-        }
+        MainCollectionView.ItemsSource = _viewModels;
     }
-} 
+
+    private async void OnRefreshing(object sender, EventArgs e)
+    {
+        await RefreshAsync();
+        (sender as RefreshView).IsRefreshing = false;
+    }
+}
