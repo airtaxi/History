@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Maui;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using Microsoft.Extensions.Logging;
-using Mopups.Hosting;
 using SpeakLink;
 using UraniumUI;
 
@@ -19,7 +18,6 @@ public static class MauiProgram
             .UseUraniumUI()
             .UseUraniumUIMaterial()
             .UseSpeakLink()
-            .ConfigureMopups()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -31,7 +29,6 @@ public static class MauiProgram
                 c.AddHandler<CollectionView, StaggeredStructuredItemsViewHandler>();
             });
 
-        builder.Services.AddMopupsDialogs();
 #if DEBUG
         builder.Logging.AddDebug();
 #endif

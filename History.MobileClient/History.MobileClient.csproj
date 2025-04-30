@@ -163,7 +163,6 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.60" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.4" />
-		<PackageReference Include="UraniumUI.Dialogs.Mopups" Version="2.11.1" />
 		<PackageReference Include="UraniumUI.Icons.MaterialSymbols" Version="2.11.1" />
 		<PackageReference Include="UraniumUI.Material" Version="2.11.1" />
 		<PackageReference Include="Xamarin.MediaGallery" Version="3.0.0-preview" />
