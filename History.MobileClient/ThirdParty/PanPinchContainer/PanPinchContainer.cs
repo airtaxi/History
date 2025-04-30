@@ -134,7 +134,7 @@ public class PanPinchContainer : ContentView
         await ClampTranslationAsync(targetX, targetY, animate);
     }
 
-    private async void DoubleTappedAsync(object? sender, TappedEventArgs e)
+    private async void DoubleTappedAsync(object sender, TappedEventArgs e)
     {
         _startScale = Content.Scale;
         _currentScale = _startScale;
@@ -167,7 +167,7 @@ public class PanPinchContainer : ContentView
         _panY = Content.TranslationY;
     }
 
-    private async void OnPanUpdatedAsync(object? sender, PanUpdatedEventArgs e)
+    private async void OnPanUpdatedAsync(object sender, PanUpdatedEventArgs e)
     {
         if (!_isPanEnabled)
         {
@@ -205,7 +205,7 @@ public class PanPinchContainer : ContentView
         }
     }
 
-    private async void OnPinchUpdatedAsync(object? sender, PinchGestureUpdatedEventArgs e)
+    private async void OnPinchUpdatedAsync(object sender, PinchGestureUpdatedEventArgs e)
     {
         if (e.Status == GestureStatus.Started)
         {
