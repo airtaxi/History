@@ -8,23 +8,9 @@ using System.Threading.Tasks;
 
 namespace History.MobileClient.ViewModels;
 
-public class MediaContentViewModel(MediaContent mediaContent) : IContentViewModel
+public class MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents) : IContentViewModel
 {
-    public IMediaViewModel Media => mediaContent.IsVideo
-        ? new VideoViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId)
-        {
-            VideoShouldShowPlaybackControls = true,
-            Aspect = Aspect.AspectFit,
-            ShouldMute = true,
-            HorizontalContentOptions = LayoutOptions.Fill,
-            VideoShouldAutoPlay = true,
-            VideoShouldLoopPlayback = false,
-            VerticalContentOptions = LayoutOptions.Fill
-        }
-        : new ImageViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId)
-        {
-            Aspect = Aspect.AspectFit,
-            HorizontalContentOptions = LayoutOptions.Fill,
-            VerticalContentOptions = LayoutOptions.Fill
-        };
+    public IEnumerable<MediaContent> AllMediaContents { get; } = allMediaContents;
+
+    public IMediaViewModel Media => Utils.GenerateMediaViewModelFromMediaContent(mediaContent);
 }

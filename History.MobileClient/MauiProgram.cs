@@ -1,5 +1,5 @@
 ﻿using CommunityToolkit.Maui;
-using History.MobileClient.StaggeredLayout;
+using History.MobileClient.ThirdParty.StaggeredLayout;
 using Microsoft.Extensions.Logging;
 using Mopups.Hosting;
 using SpeakLink;

@@ -13,6 +13,7 @@
                 <ResourceDictionary Source="Resources/Styles/Profile.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Post.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Media.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Content.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Friendship.xaml" />
 
                 <material:StyleResource BasedOn="{x:Reference appStyles}" ColorsOverride="{x:Reference appColors}" />

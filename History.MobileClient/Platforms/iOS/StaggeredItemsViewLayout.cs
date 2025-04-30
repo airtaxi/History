@@ -1,6 +1,6 @@
 ﻿using CoreGraphics;
 using Foundation;
-using History.MobileClient.StaggeredLayout;
+using History.MobileClient.ThirdParty.StaggeredLayout;
 using Microsoft.Maui.Controls.Handlers.Items;
 using UIKit;
 

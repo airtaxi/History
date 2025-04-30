@@ -46,11 +46,12 @@ public partial class PostViewModel(PostResponseDto post, bool isTimeline) : Obse
             var contentViewModels = new List<IContentViewModel>();
 
             var mediaContents = new List<MediaContent>();
+            var allMediaContents = Contents.OfType<MediaContent>();
             void FlushMediaContents()
             {
                 if (mediaContents.Count > 0)
                 {
-                    contentViewModels.Add(new MediaContentsViewModel(mediaContents));
+                    contentViewModels.Add(new MediaContentsViewModel(mediaContents, allMediaContents));
                     mediaContents = [];
                 }
             }
@@ -86,7 +87,7 @@ public partial class PostViewModel(PostResponseDto post, bool isTimeline) : Obse
                         FlushTextAndProfileContents();
                         mediaContents.Add(mediaContent);
                     }
-                    else contentViewModels.Add(new MediaContentViewModel(mediaContent));
+                    else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents));
                 }
             }
 
