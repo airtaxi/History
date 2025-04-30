@@ -69,38 +69,52 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         // Add visibility filters based on privacy settings
         if (!isSelf)
         {
-            filter &= Builders<Post>.Filter.Or(
-                // Public posts are always visible (even to non-logged in users)
-                Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone),
+            // Always include public posts
+            var visibilityFilter = new List<FilterDefinition<Post>>
+            {
+                Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone)
+            };
 
-                // For logged in users who are friends, include posts with Friends or higher visibility
-                !string.IsNullOrEmpty(requesterId) && areFriends
-                    ? Builders<Post>.Filter.Or(
+            // Friends or FriendsOfFriends (if friends)
+            if (!string.IsNullOrEmpty(requesterId) && areFriends)
+            {
+                visibilityFilter.Add(
+                    Builders<Post>.Filter.Or(
                         Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Friends),
                         Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
-                      )
-                    : Builders<Post>.Filter.Empty,
+                    )
+                );
+            }
 
-                // For logged in users who are friends of friends, include posts with FriendsOfFriends visibility
-                !string.IsNullOrEmpty(requesterId) && areFriendsOfFriends
-                    ? Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
-                    : Builders<Post>.Filter.Empty,
+            // FriendsOfFriends (if not friends but are FoF)
+            if (!string.IsNullOrEmpty(requesterId) && areFriendsOfFriends)
+            {
+                visibilityFilter.Add(
+                    Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
+                );
+            }
 
-                // For logged in users included in SelectedUsers
-                !string.IsNullOrEmpty(requesterId)
-                    ? Builders<Post>.Filter.And(
+            // SelectedUsers
+            if (!string.IsNullOrEmpty(requesterId))
+            {
+                visibilityFilter.Add(
+                    Builders<Post>.Filter.And(
                         Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.SelectedUsers),
                         Builders<Post>.Filter.AnyEq(p => p.DiscoveryOptionSelectedUserIds, requesterId)
-                      )
-                    : Builders<Post>.Filter.Empty,
+                    )
+                );
 
-                !string.IsNullOrEmpty(requesterId)
-                ? Builders<Post>.Filter.And(
+                // UnselectedUsers (NOT in the excluded list)
+                visibilityFilter.Add(
+                    Builders<Post>.Filter.And(
                         Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.UnselectedUsers),
                         Builders<Post>.Filter.AnyNe(p => p.DiscoveryOptionSelectedUserIds, requesterId)
-                      )
-                    : Builders<Post>.Filter.Empty
-            );
+                    )
+                );
+            }
+
+            // Combine all filters
+            filter &= Builders<Post>.Filter.Or(visibilityFilter);
 
             if (bannedUserIds.Count > 0) filter &= Builders<Post>.Filter.Nin(p => p.UserId, bannedUserIds);
             if (ignoredPostIds.Count > 0) filter &= Builders<Post>.Filter.Nin(p => p.Id, ignoredPostIds);
@@ -215,35 +229,52 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         // Add visibility filters based on privacy settings
         if (!isSelf)
         {
-            var visibilityFilter = Builders<Post>.Filter.Or(
-                // Public posts are always visible (even to non-logged in users)
-                Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone),
-                // For logged in users who are friends, include posts with Friends or higher visibility
-                !string.IsNullOrEmpty(requesterId) && areFriends
-                    ? Builders<Post>.Filter.Or(
+            // Always include public posts
+            var visibilityFilter = new List<FilterDefinition<Post>>
+            {
+                Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone)
+            };
+
+            // Friends or FriendsOfFriends (if friends)
+            if (!string.IsNullOrEmpty(requesterId) && areFriends)
+            {
+                visibilityFilter.Add(
+                    Builders<Post>.Filter.Or(
                         Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Friends),
                         Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
-                      )
-                    : Builders<Post>.Filter.Empty,
-                // For logged in users who are friends of friends, include posts with FriendsOfFriends visibility
-                !string.IsNullOrEmpty(requesterId) && areFriendsOfFriends
-                    ? Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
-                    : Builders<Post>.Filter.Empty,
-                // For logged in users included in SelectedUsers
-                !string.IsNullOrEmpty(requesterId)
-                    ? Builders<Post>.Filter.And(
+                    )
+                );
+            }
+
+            // FriendsOfFriends (if not friends but are FoF)
+            if (!string.IsNullOrEmpty(requesterId) && areFriendsOfFriends)
+            {
+                visibilityFilter.Add(
+                    Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends)
+                );
+            }
+
+            // SelectedUsers
+            if (!string.IsNullOrEmpty(requesterId))
+            {
+                visibilityFilter.Add(
+                    Builders<Post>.Filter.And(
                         Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.SelectedUsers),
                         Builders<Post>.Filter.AnyEq(p => p.DiscoveryOptionSelectedUserIds, requesterId)
-                      )
-                    : Builders<Post>.Filter.Empty,
-                !string.IsNullOrEmpty(requesterId)
-                    ? Builders<Post>.Filter.And(
+                    )
+                );
+
+                // UnselectedUsers (NOT in the excluded list)
+                visibilityFilter.Add(
+                    Builders<Post>.Filter.And(
                         Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.UnselectedUsers),
                         Builders<Post>.Filter.AnyNe(p => p.DiscoveryOptionSelectedUserIds, requesterId)
-                      )
-                    : Builders<Post>.Filter.Empty
-            );
-            filter = Builders<Post>.Filter.And(filter, visibilityFilter);
+                    )
+                );
+            }
+
+            // Combine all filters
+            filter &= Builders<Post>.Filter.Or(visibilityFilter);
         }
 
         // Count the number of posts that match the filter
