@@ -1,4 +1,5 @@
-﻿using History.Commons;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using History.Commons;
 using History.Commons.DataTypes.Contents;
 using System;
 using System.Collections.Generic;
@@ -8,23 +9,15 @@ using System.Threading.Tasks;
 
 namespace History.MobileClient.ViewModels;
 
-public class MediaContentsViewModel(IEnumerable<MediaContent> mediaContents) : IContentViewModel
+public partial class MediaContentsViewModel(IEnumerable<MediaContent> mediaContents, IEnumerable<MediaContent> allMediaContents) : ObservableObject, IContentViewModel
 {
-    public List<IMediaViewModel> Medias => [.. mediaContents.Select(mediaContent => (IMediaViewModel)(mediaContent.IsVideo
-        ? new VideoViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId)
-        {
-            VideoShouldShowPlaybackControls = true,
-            Aspect = Aspect.AspectFit,
-            ShouldMute = true,
-            HorizontalContentOptions = LayoutOptions.Fill,
-            VideoShouldAutoPlay = true,
-            VideoShouldLoopPlayback = false,
-            VerticalContentOptions = LayoutOptions.Fill
-        }
-        : new ImageViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId)
-        {
-            Aspect = Aspect.AspectFit,
-            HorizontalContentOptions = LayoutOptions.Fill,
-            VerticalContentOptions = LayoutOptions.Fill
-        }))];
+    public IEnumerable<MediaContent> AllMediaContents { get; } = allMediaContents;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CarouselPositionText))]
+    public partial int CarouselPosition { get; set; }
+
+    public string CarouselPositionText => $"{CarouselPosition + 1} / {mediaContents.Count()}";
+
+    public List<IMediaViewModel> Medias => [.. mediaContents.Select(Utils.GenerateMediaViewModelFromMediaContent)];
 }

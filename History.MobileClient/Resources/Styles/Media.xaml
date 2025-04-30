@@ -3,6 +3,7 @@
     x:Class="History.MobileClient.Resources.Styles.Media"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:ppc="clr-namespace:History.MobileClient.ThirdParty.PanPinchContainer"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
     <DataTemplate x:Key="ImageTemplate" x:DataType="vm:ImageViewModel">
@@ -11,6 +12,15 @@
             HorizontalOptions="{x:Binding HorizontalContentOptions}"
             Source="{x:Binding Uri}"
             VerticalOptions="{x:Binding VerticalContentOptions}" />
+    </DataTemplate>
+    <DataTemplate x:Key="FullScreenImageTemplate" x:DataType="vm:ImageViewModel">
+        <ppc:PanPinchContainer>
+            <Image
+                Aspect="{x:Binding Aspect}"
+                HorizontalOptions="{x:Binding HorizontalContentOptions}"
+                Source="{x:Binding Uri}"
+                VerticalOptions="{x:Binding VerticalContentOptions}" />
+        </ppc:PanPinchContainer>
     </DataTemplate>
 
     <DataTemplate x:Key="VideoTemplate" x:DataType="vm:VideoViewModel">
@@ -40,9 +50,24 @@
             VerticalOptions="{x:Binding VerticalContentOptions}" />
     </DataTemplate>
 
+    <DataTemplate x:Key="FullScreenVideoTemplate" x:DataType="vm:VideoViewModel">
+        <toolkit:MediaElement
+            Aspect="{x:Binding Aspect}"
+            HorizontalOptions="{x:Binding HorizontalContentOptions}"
+            ShouldAutoPlay="{x:Binding VideoShouldAutoPlay}"
+            ShouldKeepScreenOn="True"
+            ShouldLoopPlayback="{x:Binding VideoShouldLoopPlayback}"
+            ShouldMute="{x:Binding ShouldMute}"
+            ShouldShowPlaybackControls="True"
+            Source="{x:Binding Uri}"
+            VerticalOptions="{x:Binding VerticalContentOptions}" />
+    </DataTemplate>
+
     <vm:MediaTemplateSelector
         x:Key="MediaTemplateSelector"
         ControllableVideoTemplate="{StaticResource ControllableVideoTemplate}"
+        FullScreenImageTemplate="{StaticResource FullScreenImageTemplate}"
+        FullScreenVideoTemplate="{StaticResource FullScreenVideoTemplate}"
         ImageTemplate="{StaticResource ImageTemplate}"
         VideoTemplate="{StaticResource VideoTemplate}" />
 </ResourceDictionary>

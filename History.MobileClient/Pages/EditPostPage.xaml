@@ -5,12 +5,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:editPost="clr-namespace:History.MobileClient.ContentViews.EditPost"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
-    xmlns:staggered="clr-namespace:History.MobileClient.StaggeredLayout"
+    xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient"
     SizeChanged="OnSizeChanged">
     <ContentPage.Behaviors>
-        <toolkit:StatusBarBehavior StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
     </ContentPage.Behaviors>
     <Grid RowSpacing="8">
         <Grid.RowDefinitions>
@@ -40,10 +41,10 @@
             <Button
                 x:Name="ButtonUpload"
                 Padding="12,0"
+                Clicked="OnUploadButtonClicked"
                 FontAttributes="Bold"
                 HorizontalOptions="End"
                 Text="올리기"
-                Clicked="OnUploadButtonClicked"
                 TextColor="{StaticResource White}"
                 VerticalOptions="Center" />
         </Grid>

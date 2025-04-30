@@ -1,6 +1,6 @@
 ﻿using Microsoft.Maui.Controls.Handlers.Items;
 
-namespace History.MobileClient.StaggeredLayout;
+namespace History.MobileClient.ThirdParty.StaggeredLayout;
 
 public class StaggeredStructuredItemsViewHandler : StructuredItemsViewHandler<CollectionView>
 {

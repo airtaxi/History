@@ -1,6 +1,6 @@
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
-using History.MobileClient.StaggeredLayout;
+using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 

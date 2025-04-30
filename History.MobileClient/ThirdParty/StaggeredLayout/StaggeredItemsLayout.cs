@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace History.MobileClient.StaggeredLayout;
+namespace History.MobileClient.ThirdParty.StaggeredLayout;
 
 public class StaggeredItemsLayout(ItemsLayoutOrientation orientation) : ItemsLayout(orientation)
 {

@@ -12,7 +12,7 @@
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="8" />
             </Border.StrokeShape>
-            <Grid>
+            <Grid RowSpacing="8">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="48" />
                     <RowDefinition Height="Auto" />
@@ -31,19 +31,26 @@
                                     RadiusY="24" />
                             </views:DataTemplatePresenter.Clip>
                         </views:DataTemplatePresenter>
-                        <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                        <VerticalStackLayout VerticalOptions="Center">
                             <Label
                                 FontAttributes="Bold"
                                 FontSize="16"
                                 LineBreakMode="TailTruncation"
                                 Text="{x:Binding Nickname}" />
                             <Label
+                                Margin="0,-2,0,0"
                                 FontSize="14"
                                 LineBreakMode="TailTruncation"
                                 Text="{x:Binding TimestampText}"
                                 TextColor="#808080" />
                         </VerticalStackLayout>
                     </HorizontalStackLayout>
+                </Grid>
+                <Grid Grid.Row="1">
+                    <VerticalStackLayout
+                        BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
+                        BindableLayout.ItemsSource="{x:Binding ContentViewModels}"
+                        Spacing="4" />
                 </Grid>
             </Grid>
         </Border>

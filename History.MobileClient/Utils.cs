@@ -1,5 +1,7 @@
-﻿using History.Commons.DataTypes.Contents;
+﻿using History.Commons;
+using History.Commons.DataTypes.Contents;
 using History.MobileClient.Pages;
+using History.MobileClient.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,9 +26,9 @@ public static class Utils
         if (time.TotalSeconds < 60)
             result = $"방금 전";
         else if (time.TotalMinutes < 60)
-            result = $"{time.TotalMinutes:N0} 분 전";
+            result = $"{time.TotalMinutes:N0}분 전";
         else if (time.TotalHours < 24)
-            result = $"{time.TotalHours:N0} 시간 전";
+            result = $"{time.TotalHours:N0}시간 전";
         else if (createdAt.Year == DateTime.UtcNow.Year) result = $"{createdAt:MM월 dd일 HH:mm}";
         else result = $"{createdAt.ToLocalTime():yyyy년 MM월dd일 HH:mm:ss}";
 
@@ -34,6 +36,24 @@ public static class Utils
 
         return result;
     }
+
+    public static IMediaViewModel GenerateMediaViewModelFromMediaContent(MediaContent mediaContent) => mediaContent.IsVideo
+    ? new VideoViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId)
+    {
+        VideoShouldShowPlaybackControls = false,
+        Aspect = Aspect.AspectFill,
+        ShouldMute = true,
+        HorizontalContentOptions = LayoutOptions.Fill,
+        VideoShouldAutoPlay = true,
+        VideoShouldLoopPlayback = true,
+        VerticalContentOptions = LayoutOptions.Fill
+    }
+    : new ImageViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId)
+    {
+        Aspect = Aspect.AspectFill,
+        HorizontalContentOptions = LayoutOptions.Fill,
+        VerticalContentOptions = LayoutOptions.Fill
+    };
 
     public static FormattedString GenerateSpanFromTextAndProfileContents(List<BaseContent> contents)
     {

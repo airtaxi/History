@@ -6,4 +6,7 @@ using System.Threading.Tasks;
 
 namespace History.MobileClient.ViewModels;
 
-public interface IMediaViewModel;
+public interface IMediaViewModel
+{
+    public string Uri { get; set; }
+}

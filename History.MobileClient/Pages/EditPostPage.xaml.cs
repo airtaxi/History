@@ -6,7 +6,7 @@ using History.Commons.Api.Post;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
-using History.MobileClient.StaggeredLayout;
+using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using NativeMedia;
 using SpeakLink.Mention;

@@ -12,13 +12,37 @@
     </DataTemplate>
 
     <DataTemplate x:Key="MediaContentsTemplate" x:DataType="vm:MediaContentsViewModel">
-        <CarouselView ItemsSource="{x:Binding Medias}">
-            <CarouselView.ItemTemplate>
-                <DataTemplate x:DataType="vm:IMediaViewModel">
-                    <views:DataTemplatePresenter BindingContext="{Binding}" ContentSelector="{StaticResource MediaTemplateSelector}" />
-                </DataTemplate>
-            </CarouselView.ItemTemplate>
-        </CarouselView>
+        <Grid>
+            <CarouselView
+                HeightRequest="350"
+                ItemsSource="{x:Binding Medias}"
+                Position="{x:Binding CarouselPosition}">
+                <CarouselView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:IMediaViewModel">
+                        <views:DataTemplatePresenter BindingContext="{Binding}" ContentSelector="{StaticResource MediaTemplateSelector}">
+                            <views:DataTemplatePresenter.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnMediaCarouselViewContentTapped" />
+                            </views:DataTemplatePresenter.GestureRecognizers>
+                        </views:DataTemplatePresenter>
+                    </DataTemplate>
+                </CarouselView.ItemTemplate>
+            </CarouselView>
+            <Border
+                Margin="12"
+                Padding="6,4,6,4"
+                Background="#80808080"
+                HorizontalOptions="End"
+                StrokeThickness="0"
+                VerticalOptions="End">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <Label
+                    FontAttributes="Bold"
+                    Text="{x:Binding CarouselPositionText}"
+                    TextColor="White" />
+            </Border>
+        </Grid>
     </DataTemplate>
 
     <DataTemplate x:Key="StickerContentTemplate" x:DataType="vm:StickerContentViewModel">
