@@ -4,7 +4,9 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
-    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit">
+    xmlns:staggered="clr-namespace:History.MobileClient.StaggeredLayout"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    SizeChanged="OnSizeChanged">
     <ContentPage.Behaviors>
         <toolkit:StatusBarBehavior StatusBarColor="{StaticResource Primary}" />
     </ContentPage.Behaviors>
@@ -23,11 +25,22 @@
                 HorizontalOptions="Start"
                 Source="icon_nobg_white.png"
                 WidthRequest="48" />
-            <ImageButton HorizontalOptions="End" Clicked="OnCreateNewPostImageButtonClicked">
+            <ImageButton Clicked="OnCreateNewPostImageButtonClicked" HorizontalOptions="End">
                 <ImageButton.Source>
                     <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Edit_note}" />
                 </ImageButton.Source>
             </ImageButton>
         </Grid>
+
+        <RefreshView Refreshing="OnRefreshing">
+            <CollectionView
+                x:Name="MainCollectionView"
+                Grid.Row="1"
+                ItemTemplate="{StaticResource TimelineTemplateSelector}">
+                <CollectionView.ItemsLayout>
+                    <staggered:StaggeredItemsLayout Span="1" />
+                </CollectionView.ItemsLayout>
+            </CollectionView>
+        </RefreshView>
     </Grid>
 </ContentPage>

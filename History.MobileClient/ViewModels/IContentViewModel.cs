@@ -4,9 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace History.MobileClient.ViewModels
-{
-    internal class TextContentViewModel
-    {
-    }
-}
+namespace History.MobileClient.ViewModels;
+
+public interface IContentViewModel;

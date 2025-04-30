@@ -28,6 +28,9 @@ public partial class VideoViewModel(string uri) : ObservableObject, IMediaViewMo
     public partial bool VideoShouldLoopPlayback { get; set; } = true;
 
     [ObservableProperty]
+    public partial bool ShouldMute { get; set; } = true;
+
+    [ObservableProperty]
     public partial bool VideoShouldShowPlaybackControls { get; set; } = false;
 }
 

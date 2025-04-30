@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    x:Class="History.MobileClient.Resources.Styles.Content"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:views="clr-namespace:History.MobileClient.ContentViews"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
+
+    <DataTemplate x:Key="MediaContentTemplate" x:DataType="vm:MediaContentViewModel">
+        <views:DataTemplatePresenter BindingContext="{x:Binding Media}" ContentSelector="{StaticResource MediaTemplateSelector}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="MediaContentsTemplate" x:DataType="vm:MediaContentsViewModel">
+        <CarouselView ItemsSource="{x:Binding Medias}">
+            <CarouselView.ItemTemplate>
+                <DataTemplate x:DataType="vm:IMediaViewModel">
+                    <views:DataTemplatePresenter BindingContext="{Binding}" ContentSelector="{StaticResource MediaTemplateSelector}" />
+                </DataTemplate>
+            </CarouselView.ItemTemplate>
+        </CarouselView>
+    </DataTemplate>
+
+    <DataTemplate x:Key="StickerContentTemplate" x:DataType="vm:StickerContentViewModel">
+        <views:DataTemplatePresenter BindingContext="{x:Binding Media}" ContentSelector="{StaticResource MediaTemplateSelector}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="TextAndProfileContentsTemplate" x:DataType="vm:TextAndProfileContentsViewModel">
+        <Label FormattedText="{x:Binding FormattedString}" />
+    </DataTemplate>
+
+    <vm:ContentTemplateSelector
+        x:Key="ContentTemplateSelector"
+        MediaContentTemplate="{StaticResource MediaContentTemplate}"
+        MediaContentsTemplate="{StaticResource MediaContentsTemplate}"
+        StickerContentTemplate="{StaticResource StickerContentTemplate}"
+        TextAndProfileContentsTemplate="{StaticResource TextAndProfileContentsTemplate}" />
+</ResourceDictionary>

@@ -63,8 +63,13 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
         }
     }
 
-    public IMediaViewModel BackgroundMedia => User.UsesAnimatedBackgroundMedia ? new VideoViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId)) : new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId) ?? Constants.DefaultBackgroundImageFileName);
-    public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId)) : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+    public IMediaViewModel BackgroundMedia => User.UsesAnimatedBackgroundMedia
+        ? new VideoViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId))
+        : new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId) ?? Constants.DefaultBackgroundImageFileName);
+
+    public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia
+        ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
+        : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
     private async Task RefreshAsync()
     {
