@@ -170,6 +170,13 @@ public partial class EditPostPage : ContentPage
         await App.MainWindow.Page.Navigation.PopModalAsync();
     }
 
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+
+        foreach (var viewModel in _attachmentViewModels) viewModel.Dispose();
+    }
+
     private void OnSizeChanged(object sender, EventArgs e)
     {
         var staggeredItemsLayout = MediaCollectionView.ItemsLayout as StaggeredItemsLayout;
