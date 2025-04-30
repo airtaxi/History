@@ -270,6 +270,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         var user = await userService.GetUserByIdAsync(userId);
         if (user.IsFailure) return user.CastFailure();
 
+        var mediaCount = requestDto.Contents.Count(x => x is UploadContent || x is MediaContent);
+        if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
+
         if ((requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers)
             && (requestDto.DiscoveryOptionSelectedUserIds == null
             || requestDto.DiscoveryOptionSelectedUserIds.Count == 0))
@@ -323,6 +326,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     {
         var postResult = await GetPostByIdAsync(postId);
         if (postResult.IsFailure) return postResult.CastFailure();
+
+        var mediaCount = requestDto.Contents.Count(x => x is UploadContent || x is MediaContent);
+        if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
 
         var post = postResult.Value;
         // Check if the user is the author of the post

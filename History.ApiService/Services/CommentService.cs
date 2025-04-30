@@ -74,6 +74,9 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
 
         if (requesterId == null) Result<Comment>.Failure(ErrorType.Unauthorized, "로그인이 필요합니다.");
 
+        var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
+        if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
+
         // Check access
         var accessResult = await postService.CheckAccessAsync(postId, requesterId);
         if (accessResult.IsFailure) return accessResult.CastFailure<Comment>();
@@ -112,6 +115,9 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
     {
         var permissionResult = await CheckPermissionAsync(commentId, requesterId);
         if (permissionResult.IsFailure) return permissionResult;
+
+        var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
+        if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
 
         // Fetch original comment before update
         var originalComment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
