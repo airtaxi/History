@@ -37,7 +37,6 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         if (requesterId != null)
         {
             var requesterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
-
             filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.UserId, requesterBannedFriendIdsResult.Value));
         }
 
@@ -48,6 +47,24 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
             .ToListAsync();
 
         return comments;
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<int>> GetCommentsCountByPostIdAsync(string postId, string requesterId)
+    {
+        var postService = serviceProvider.GetRequiredService<IPostService>();
+        var accessResult = await postService.CheckAccessAsync(postId, requesterId);
+        if (accessResult.IsFailure) return accessResult.CastFailure<int>();
+
+        var filter = Builders<Comment>.Filter.Eq(f => f.PostId, postId);
+        if (requesterId != null)
+        {
+            var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+            var requesterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
+            filter = Builders<Comment>.Filter.And(filter, Builders<Comment>.Filter.Nin(f => f.UserId, requesterBannedFriendIdsResult.Value));
+        }
+        var count = await _commentCollection.CountDocumentsAsync(filter);
+        return (int)count;
     }
 
     /// <inheritdoc />
@@ -187,28 +204,25 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
     {
         var userService = serviceProvider.GetRequiredService<IUserService>();
 
-        var responseDto = new CommentResponseDto
-        {
-            Id = comment.Id,
-
-            PostId = comment.PostId,
-            UserId = comment.UserId,
-
-            Contents = comment.Contents,
-
-            CreatedAt = comment.CreatedAt,
-            ModifiedAt = comment.ModifiedAt,
-        };
+        var userResult = await userService.GenerateUserResponseDtoAsync(comment.UserId, requesterId);
+        if (userResult.IsFailure) return userResult.CastFailure<CommentResponseDto>();
 
         var likedUserIds = await _commentLikeCollection
             .Find(f => f.CommentId == comment.Id)
             .Project(f => f.UserId)
             .ToListAsync();
 
-        var likedUsersDtoResult = await userService.GenerateUserResponseDtosAsync(likedUserIds, requesterId);
+        var likedUserResults = await userService.GenerateUserResponseDtosAsync(likedUserIds, requesterId);
 
-        responseDto.LikedUsers = likedUsersDtoResult.Value;
-        return responseDto;
+        return new CommentResponseDto
+        {
+            Id = comment.Id,
+            User = userResult.Value,
+            Contents = comment.Contents,
+            LikedUsers = likedUserResults.Value,
+            CreatedAt = comment.CreatedAt,
+            ModifiedAt = comment.ModifiedAt,
+        };
     }
 
     private async Task<Result> CheckPermissionAsync(string commentId, string requesterId)

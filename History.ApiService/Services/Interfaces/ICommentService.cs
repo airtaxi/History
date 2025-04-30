@@ -17,6 +17,13 @@ public interface ICommentService
     /// <returns>A task that represents the asynchronous operation. with result of comments</returns>
     public Task<Result<List<Comment>>> GetCommentsByPostIdAsync(string postId, string requesterId, string fromCommentId = null, int limit = 10);
 
+    /// <summary>
+    /// Get count of comments by post id.
+    /// </summary>
+    /// <param name="postId">The id of post to get comments count</param>
+    /// <param name="requesterId">The id of user who requests comments count</param>
+    /// <returns>A task that represents the asynchronous operation. with result of comments count</returns>
+    public Task<Result<int>> GetCommentsCountByPostIdAsync(string postId, string requesterId);
 
     /// <summary>
     /// Create comment to post

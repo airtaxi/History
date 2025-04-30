@@ -274,15 +274,10 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         var results = users.Select(x => new UserResponseDto(x)).ToList();
 
         var bannedUserIds = new List<string>();
-        if (requesterId != null) {
-            bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
-        }
-
+        if (requesterId != null) bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
         results.RemoveAll(x => bannedUserIds.Contains(x.UserId));
 
         var friendshipsResult = await friendshipService.GetAllFriendshipsAsync(requesterId);
-        if (friendshipsResult.IsFailure) return friendshipsResult.CastFailure<List<UserResponseDto>>();
-
         foreach (var result in results) result.Friendship = friendshipsResult.Value.FirstOrDefault(x => x.FriendId == result.UserId);
 
         return results;
