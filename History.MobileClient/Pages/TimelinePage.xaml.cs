@@ -57,7 +57,7 @@ public partial class TimelinePage : ContentPage
 
     private async void OnCreateNewPostImageButtonClicked(object sender, EventArgs e)
     {
-		await App.MainWindow.Page.Navigation.PushModalAsync(new EditPostPage());
+		await Application.Current.Windows[0].Page.Navigation.PushModalAsync(new EditPostPage());
     }
 
     private async void OnSizeChanged(object sender, EventArgs e)

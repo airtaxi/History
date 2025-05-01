@@ -22,8 +22,8 @@ public partial class App : Application
 
         try
         {
-            MainWindow.Page.IsEnabled = false;
-            MainWindow.Page.IsBusy = true;
+            Current.Windows[0].Page.IsEnabled = false;
+            Current.Windows[0].Page.IsBusy = true;
 
             await Shared.ApiHandler.ExecuteRequestAsync(request);
             return Result.Success();
@@ -33,13 +33,13 @@ public partial class App : Application
             var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
 
             if (!hiddenErrorTypes.Contains(errorType))
-                await MainWindow.Page.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
+                await Current.Windows[0].Page.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
         finally
         {
-            MainWindow.Page.IsEnabled = true;
-            MainWindow.Page.IsBusy = false;
+            Current.Windows[0].Page.IsEnabled = true;
+            Current.Windows[0].Page.IsBusy = false;
         }
     }
 
@@ -49,8 +49,8 @@ public partial class App : Application
 
         try
         {
-            MainWindow.Page.IsEnabled = false;
-            MainWindow.Page.IsBusy = true;
+            Current.Windows[0].Page.IsEnabled = false;
+            Current.Windows[0].Page.IsBusy = true;
 
             return await Shared.ApiHandler.ExecuteRequestAsync(request);
         }
@@ -59,13 +59,13 @@ public partial class App : Application
             var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
 
             if (!hiddenErrorTypes.Contains(errorType))
-                await MainWindow.Page.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
+                await Current.Windows[0].Page.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
         finally
         {
-            MainWindow.Page.IsEnabled = true;
-            MainWindow.Page.IsBusy = false;
+            Current.Windows[0].Page.IsEnabled = true;
+            Current.Windows[0].Page.IsBusy = false;
         }
     }
 

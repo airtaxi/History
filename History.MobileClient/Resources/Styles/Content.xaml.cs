@@ -22,6 +22,6 @@ public partial class Content : ResourceDictionary
         else throw new Exception("Invalid view model type.");
 
         var viewerPage = new FullScreenMediaViewerPage(fullScreenMediaViewModel);
-        await App.MainWindow.Page.Navigation.PushModalAsync(viewerPage);
+        await Application.Current.Windows[0].Page.Navigation.PushModalAsync(viewerPage);
     }
 }

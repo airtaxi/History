@@ -45,6 +45,6 @@ public partial class AddFriendsPage : ContentPage
         collectionView.SelectedItem = null;
 
         var viewModel = e.CurrentSelection as FriendshipViewModel;
-        App.MainWindow.Page.Navigation.PushModalAsync(new UserPage(viewModel.User.UserId));
+        Application.Current.Windows[0].Page.Navigation.PushModalAsync(new UserPage(viewModel.User.UserId));
     }
 }
