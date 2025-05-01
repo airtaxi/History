@@ -5,6 +5,7 @@ using History.Commons;
 using History.Commons.Enums;
 using History.ServiceDefaults;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -42,6 +43,10 @@ builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddHostedService<DatabaseInitService>();
+
+// Unlock the file upload size limit.
+builder.Services.Configure<FormOptions>(options => options.MultipartBodyLengthLimit = long.MaxValue);
+
 
 // Add controllers to the container.
 builder.Services.AddControllers();
