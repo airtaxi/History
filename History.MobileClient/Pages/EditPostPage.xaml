@@ -145,5 +145,16 @@
                 HorizontalOptions="Fill"
                 VerticalOptions="Start" />
         </Grid>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="4"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="True"
+            IsVisible="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
     </Grid>
 </ContentPage>
