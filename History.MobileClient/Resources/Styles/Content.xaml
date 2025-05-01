@@ -15,6 +15,7 @@
         <Grid>
             <CarouselView
                 HeightRequest="350"
+                HorizontalScrollBarVisibility="Never"
                 ItemsSource="{x:Binding Medias}"
                 Position="{x:Binding CarouselPosition}">
                 <CarouselView.ItemTemplate>
