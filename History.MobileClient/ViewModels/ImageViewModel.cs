@@ -16,6 +16,9 @@ public partial class ImageViewModel(string uri) : ObservableObject, IMediaViewMo
     public partial Aspect Aspect { get; set; } = Aspect.AspectFill;
 
     [ObservableProperty]
+    public partial bool ResizeParentCarouselViewWhenSizeChanged { get; set; }
+
+    [ObservableProperty]
     public partial LayoutOptions HorizontalContentOptions { get; set; } = LayoutOptions.Fill;
 
     [ObservableProperty]

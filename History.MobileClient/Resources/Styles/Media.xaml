@@ -10,7 +10,9 @@
         <Image
             Aspect="{x:Binding Aspect}"
             HorizontalOptions="{x:Binding HorizontalContentOptions}"
+            Loaded="OnImageLoaded"
             Source="{x:Binding Uri}"
+            Unloaded="OnImageUnloaded"
             VerticalOptions="{x:Binding VerticalContentOptions}" />
     </DataTemplate>
     <DataTemplate x:Key="FullScreenImageTemplate" x:DataType="vm:ImageViewModel">

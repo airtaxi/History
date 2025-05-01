@@ -12,5 +12,5 @@ public class MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaC
 {
     public IEnumerable<MediaContent> AllMediaContents { get; } = allMediaContents;
 
-    public IMediaViewModel Media => Utils.GenerateMediaViewModelFromMediaContent(mediaContent);
+    public IMediaViewModel Media => Utils.GenerateMediaViewModelFromMediaContent(mediaContent, false);
 }
