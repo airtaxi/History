@@ -72,7 +72,7 @@ public static class Utils
                 var span = new Span
                 {
                     Text = profileContent.Nickname,
-                    TextColor = App.Current.Resources["Primary"] as Color,
+                    TextColor = Application.Current.Resources["Primary"] as Color,
                 };
 
                 if (profileContent.UserId != null) 
@@ -88,7 +88,7 @@ public static class Utils
     private static void AddTapGestureRecognizerToProfileContentSnap(Span span, string userId)
     {
         var tapGestureRecognizer = new TapGestureRecognizer();
-        tapGestureRecognizer.Tapped += (s, e) => App.MainWindow.Page.Navigation.PushModalAsync(new UserPage(userId));
+        tapGestureRecognizer.Tapped += (s, e) => Application.Current.Windows[0].Page.Navigation.PushModalAsync(new UserPage(userId));
         span.GestureRecognizers.Add(tapGestureRecognizer);
     }
 }

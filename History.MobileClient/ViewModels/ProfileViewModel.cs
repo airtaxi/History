@@ -82,7 +82,7 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
         bool shouldUpload = true;
         if (User.BackgroundMediaId != null)
         {
-            var action = await App.MainWindow.Page.DisplayActionSheet("배경 이미지", Constants.PromptCancel, null, ["배경 이미지 변경", "배경 이미지 삭제"]);
+            var action = await Application.Current.Windows[0].Page.DisplayActionSheet("배경 이미지", Constants.PromptCancel, null, ["배경 이미지 변경", "배경 이미지 삭제"]);
             if (action == Constants.PromptCancel) return;
             else if (action == "배경 이미지 변경") shouldUpload = true;
             else if (action == "배경 이미지 삭제")
@@ -119,7 +119,7 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
         bool shouldUpload = true;
         if (User.ProfileMediaId != null)
         {
-            var action = await App.MainWindow.Page.DisplayActionSheet("프로필 이미지", Constants.PromptCancel, null, ["프로필 이미지 변경", "프로필 이미지 삭제"]);
+            var action = await Application.Current.Windows[0].Page.DisplayActionSheet("프로필 이미지", Constants.PromptCancel, null, ["프로필 이미지 변경", "프로필 이미지 삭제"]);
             if (action == Constants.PromptCancel) return;
             else if (action == "프로필 이미지 변경") shouldUpload = true;
             else if (action == "프로필 이미지 삭제")
@@ -158,22 +158,22 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
     {
         if (User.Friendship == null)
         {
-            var result = await App.MainWindow.Page.DisplayAlert("안내", $"{Nickname}에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var result = await Application.Current.Windows[0].Page.DisplayAlert("안내", $"{Nickname}에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Accepted)
         {
-            var result = await App.MainWindow.Page.DisplayAlert("안내", $"{Nickname}와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var result = await Application.Current.Windows[0].Page.DisplayAlert("안내", $"{Nickname}와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Requested)
         {
-            var result = await App.MainWindow.Page.DisplayAlert("안내", $"{Nickname}에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
+            var result = await Application.Current.Windows[0].Page.DisplayAlert("안내", $"{Nickname}에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new CancelFriendRequest(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Waiting)
         {
-            var result = await App.MainWindow.Page.DisplayAlert("안내", $"{Nickname}의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var result = await Application.Current.Windows[0].Page.DisplayAlert("안내", $"{Nickname}의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
         }
 
@@ -182,19 +182,19 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
 
     public async void OnEditNicknameImageTapped(object sender, TappedEventArgs e)
     {
-        var prompt = await App.MainWindow.Page.DisplayPromptAsync("닉네임 변경", "새로운 닉네임을 입력해주세요", "변경", Constants.PromptCancel, "새로운 닉네임", 40, Keyboard.Plain, User.Nickname);
+        var prompt = await Application.Current.Windows[0].Page.DisplayPromptAsync("닉네임 변경", "새로운 닉네임을 입력해주세요", "변경", Constants.PromptCancel, "새로운 닉네임", 40, Keyboard.Plain, User.Nickname);
         prompt = prompt?.Trim();
 
         if (prompt != null && prompt != User.Nickname)
         {
             if (string.IsNullOrWhiteSpace(prompt))
             {
-                await App.MainWindow.Page.DisplayAlert("닉네임 변경 실패", "닉네임은 공백으로 설정할 수 없습니다", Constants.PromptOk);
+                await Application.Current.Windows[0].Page.DisplayAlert("닉네임 변경 실패", "닉네임은 공백으로 설정할 수 없습니다", Constants.PromptOk);
                 return;
             }
             else if (prompt.Length > CommonsConstants.MaxNicknameLength)
             {
-                await App.MainWindow.Page.DisplayAlert("닉네임 변경 실패", $"닉네임은 {CommonsConstants.MaxNicknameLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
+                await Application.Current.Windows[0].Page.DisplayAlert("닉네임 변경 실패", $"닉네임은 {CommonsConstants.MaxNicknameLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
                 return;
             }
 
@@ -205,14 +205,14 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
 
     public async void OnEditDescriptionImageTapped(object sender, TappedEventArgs e)
     {
-        var prompt = await App.MainWindow.Page.DisplayPromptAsync("한줄 소개 변경", "새로운 한줄 소개를 입력해주세요 (공백 시 설정 해제)", "변경", Constants.PromptCancel, "새로운 한줄 소개 (공백 시 설정 해제)", 40, Keyboard.Plain, User.Description);
+        var prompt = await Application.Current.Windows[0].Page.DisplayPromptAsync("한줄 소개 변경", "새로운 한줄 소개를 입력해주세요 (공백 시 설정 해제)", "변경", Constants.PromptCancel, "새로운 한줄 소개 (공백 시 설정 해제)", 40, Keyboard.Plain, User.Description);
         prompt = prompt?.Trim();
 
         if (prompt != null && prompt != User.Description)
         {
             if (prompt.Length > CommonsConstants.MaxProfileDescriptionLength)
             {
-                await App.MainWindow.Page.DisplayAlert("한줄 소개 변경 실패", $"한줄 소개는 {CommonsConstants.MaxProfileDescriptionLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
+                await Application.Current.Windows[0].Page.DisplayAlert("한줄 소개 변경 실패", $"한줄 소개는 {CommonsConstants.MaxProfileDescriptionLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
                 return;
             }
 

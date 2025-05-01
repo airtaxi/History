@@ -139,7 +139,7 @@ public partial class EditPostPage : ContentPage
         }
     }
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.MainWindow.Page.Navigation.PopModalAsync();
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await Application.Current.Windows[0].Page.Navigation.PopModalAsync();
 
     private async void OnUploadButtonClicked(object sender, EventArgs e)
     {
@@ -167,7 +167,7 @@ public partial class EditPostPage : ContentPage
         foreach (var viewModel in _attachmentViewModels) files.Add(viewModel.FileName, viewModel.Data);
 
         await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, null, null, files));
-        await App.MainWindow.Page.Navigation.PopModalAsync();
+        await Application.Current.Windows[0].Page.Navigation.PopModalAsync();
     }
 
     protected override void OnDisappearing()
