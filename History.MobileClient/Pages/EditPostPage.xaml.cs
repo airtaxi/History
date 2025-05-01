@@ -166,8 +166,17 @@ public partial class EditPostPage : ContentPage
         var files = new Dictionary<string, byte[]>();
         foreach (var viewModel in _attachmentViewModels) files.Add(viewModel.FileName, viewModel.Data);
 
-        await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, null, null, files));
-        await Application.Current.Windows[0].Page.Navigation.PopModalAsync();
+        try
+		{
+			MainActivityIndicator.IsVisible = true;
+			var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, null, null, files), ErrorType.BadRequest);
+            if (result.IsSuccess) await Application.Current.Windows[0].Page.Navigation.PopModalAsync();
+            else if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+		}
+        finally
+		{
+			MainActivityIndicator.IsVisible = false;
+		}
     }
 
     protected override void OnDisappearing()
