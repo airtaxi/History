@@ -3,6 +3,7 @@ using History.Commons.Api.User;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace History.MobileClient.Pages;
 
@@ -72,10 +73,16 @@ public partial class TimelinePage : ContentPage
         }
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
         MainCollectionView.ItemsSource = _viewModels;
+
+        var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
+        if (staggeredItemsLayout.Span > 0)
+        {
+            await RefreshAsync();
+        }
     }
 
     private async void OnRefreshing(object sender, EventArgs e)

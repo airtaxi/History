@@ -82,10 +82,16 @@ public partial class UserPage : ContentPage
         }
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
         MainCollectionView.ItemsSource = _viewModels;
+
+        var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
+        if (staggeredItemsLayout.Span > 0)
+        {
+            await RefreshAsync();
+        }
     }
 
     private async void OnRefreshing(object sender, EventArgs e)
