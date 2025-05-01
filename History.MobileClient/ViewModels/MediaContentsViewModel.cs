@@ -19,5 +19,5 @@ public partial class MediaContentsViewModel(IEnumerable<MediaContent> mediaConte
 
     public string CarouselPositionText => $"{CarouselPosition + 1} / {mediaContents.Count()}";
 
-    public List<IMediaViewModel> Medias => [.. mediaContents.Select(Utils.GenerateMediaViewModelFromMediaContent)];
+    public List<IMediaViewModel> Medias => [.. mediaContents.Select(m => Utils.GenerateMediaViewModelFromMediaContent(m, true))];
 }

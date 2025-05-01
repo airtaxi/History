@@ -37,13 +37,14 @@ public static class Utils
         return result;
     }
 
-    public static IMediaViewModel GenerateMediaViewModelFromMediaContent(MediaContent mediaContent) => mediaContent.IsVideo
+    public static IMediaViewModel GenerateMediaViewModelFromMediaContent(MediaContent mediaContent, bool isInCarouselView) => mediaContent.IsVideo
     ? new VideoViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId)
     {
         VideoShouldShowPlaybackControls = false,
         Aspect = Aspect.AspectFill,
         ShouldMute = true,
-        HorizontalContentOptions = LayoutOptions.Fill,
+		ResizeParentCarouselViewWhenSizeChanged = isInCarouselView,
+		HorizontalContentOptions = LayoutOptions.Fill,
         VideoShouldAutoPlay = true,
         VideoShouldLoopPlayback = true,
         VerticalContentOptions = LayoutOptions.Fill
@@ -51,7 +52,8 @@ public static class Utils
     : new ImageViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId)
     {
         Aspect = Aspect.AspectFill,
-        HorizontalContentOptions = LayoutOptions.Fill,
+		ResizeParentCarouselViewWhenSizeChanged = isInCarouselView,
+		HorizontalContentOptions = LayoutOptions.Fill,
         VerticalContentOptions = LayoutOptions.Fill
     };
 
