@@ -7,7 +7,7 @@ namespace History.ApiService.Helpers;
 
 public static class ImageMagickHelper
 {
-    public static ImageConvertResult ConvertAndSave(byte[] imageBytes, bool convertAnimatedImageToMp4, uint? maxHeight = null)
+    public static ImageConvertResult ConvertAndSave(byte[] imageBytes, bool convertAnimatedImageToMp4, uint? maxWidth = null)
     {
         using var images = new MagickImageCollection();
         images.Read(imageBytes);
@@ -28,10 +28,10 @@ public static class ImageMagickHelper
                 File.WriteAllBytes(inputPath, imageBytes);
 
                 string scaleFilter = "scale=trunc(iw/2)*2:trunc(ih/2)*2";
-                if (maxHeight.HasValue)
+                if (maxWidth.HasValue)
                 {
-                    // Maintain aspect ratio, even width, and clamp height
-                    scaleFilter = $"scale='trunc((iw*min(1\\, {maxHeight.Value}/ih))/2)*2':'min({maxHeight.Value}\\,ih)'";
+                    // Maintain aspect ratio, even size, and clamp width
+                    scaleFilter = $"scale=trunc(min({maxWidth},iw)/2)*2:trunc(ih*min({maxWidth},iw)/iw/2)*2";
                 }
 
                 var ffmpegArgs = $"-y -i \"{inputPath}\" -vf \"{scaleFilter}\" -movflags faststart -pix_fmt yuv420p -c:v libx264 \"{outputPath}\"";
@@ -53,10 +53,10 @@ public static class ImageMagickHelper
         {
             using var image = (MagickImage)images.FirstOrDefault();
 
-            if (maxHeight.HasValue && image.Height > maxHeight.Value)
+            if (maxWidth.HasValue && image.Width > maxWidth.Value)
             {
-                var newWidth = (uint)Math.Round((double)image.Width * maxHeight.Value / image.Height);
-                image.Resize(newWidth, maxHeight.Value);
+                var newHeight = (uint)Math.Round((double)image.Height * maxWidth.Value / image.Width, 0);
+                image.Resize(maxWidth.Value, newHeight);
             }
 
             image.Format = MagickFormat.WebP;
