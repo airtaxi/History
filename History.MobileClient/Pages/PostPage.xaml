@@ -75,7 +75,10 @@
 
         <Grid Grid.Row="1">
             <RefreshView Refreshing="OnRefreshing">
-                <ScrollView x:Name="MainScrollView" SizeChanged="OnMainScrollViewSizeChanged">
+                <ScrollView
+                    x:Name="MainScrollView"
+                    Scrolled="OnMainScrollViewScrolled"
+                    SizeChanged="OnMainScrollViewSizeChanged">
                     <Grid
                         x:Name="MainGrid"
                         ColumnSpacing="6"
@@ -120,12 +123,11 @@
                                             </VerticalStackLayout>
                                         </HorizontalStackLayout>
                                     </Grid>
-                                    <Grid Grid.Row="1">
-                                        <VerticalStackLayout
-                                            BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
-                                            BindableLayout.ItemsSource="{x:Binding Contents}"
-                                            Spacing="8" />
-                                    </Grid>
+                                    <VerticalStackLayout
+                                        Grid.Row="1"
+                                        BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
+                                        BindableLayout.ItemsSource="{x:Binding Contents}"
+                                        Spacing="8" />
                                     <Grid Grid.Row="2" IsVisible="{x:Binding HasPostReactions}">
                                         <HorizontalStackLayout>
                                             <Label FontSize="16">
@@ -147,6 +149,7 @@
                             Grid.Column="1"
                             BackgroundColor="#000000">
                             <ScrollView
+                                x:Name="CommentsScrollView"
                                 Padding="16"
                                 IsVisible="{x:Binding HasComments}"
                                 Scrolled="OnCommentScrollViewScrolled">
@@ -159,7 +162,7 @@
                                             </FormattedString>
                                         </Label.FormattedText>
                                     </Label>
-                                    <CollectionView ItemTemplate="{StaticResource CommentTemplate}" ItemsSource="{x:Binding Comments}" />
+                                    <VerticalStackLayout BindableLayout.ItemTemplate="{StaticResource CommentTemplate}" BindableLayout.ItemsSource="{x:Binding Comments}" />
                                 </VerticalStackLayout>
                             </ScrollView>
                             <Label
@@ -242,6 +245,7 @@
                 VerticalOptions="End">
                 <Image.Source>
                     <FontImageSource
+                        x:Name="CommentLikeFontImageSource"
                         FontFamily="FARegular"
                         Glyph="{x:Static fa:Solid.Heart}"
                         Color="{AppThemeBinding Light=#000000,

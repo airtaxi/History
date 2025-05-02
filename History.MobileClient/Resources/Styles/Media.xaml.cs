@@ -6,6 +6,7 @@ using AndroidX.Lifecycle;
 using CommunityToolkit.Maui.Core.Handlers;
 using CommunityToolkit.Maui.Core.Primitives;
 using CommunityToolkit.Maui.Views;
+using FFImageLoading.Maui;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Handlers;
@@ -58,7 +59,7 @@ public partial class Media : ResourceDictionary
         }
     }
 
-    private static async void ResizeImage(Image image)
+    private static async void ResizeImage(CachedImage image)
     {
         if (image.BindingContext is not ImageViewModel viewModel) return;
 
@@ -104,13 +105,13 @@ public partial class Media : ResourceDictionary
 
     private void OnImageLoaded(object sender, EventArgs e)
     {
-        if (sender is not Image image) return;
+        if (sender is not CachedImage image) return;
         ResizeImage(image);
     }
 
     private void OnImageUnloaded(object sender, EventArgs e)
     {
-        if (sender is not Image image) return;
+        if (sender is not CachedImage image) return;
 
         var viewModel = image.BindingContext as ImageViewModel;
         if (viewModel.ResizeParentCarouselViewWhenSizeChanged) ImageHandlerMap.TryRemove(image, out var _);

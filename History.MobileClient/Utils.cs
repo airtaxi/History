@@ -78,15 +78,16 @@ public static class Utils
 
     public static void TrimContents(List<BaseContent> contents)
     {
-        var textContents = contents.OfType<TextContent>();
-        var textOrProfileContents = contents.Where(x => x is TextContent || x is ProfileContent);
+        IEnumerable<TextContent> textContents;
         do
         {
+            textContents = contents.OfType<TextContent>();
+            var textOrProfileContents = contents.Where(x => x is TextContent || x is ProfileContent);
             if (textOrProfileContents.FirstOrDefault() is TextContent firstTextContent) firstTextContent?.Text = firstTextContent.Text.TrimStart();
             if (textOrProfileContents.LastOrDefault() is TextContent lastTextContent) lastTextContent?.Text = lastTextContent?.Text.TrimEnd();
             contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrEmpty(textContent.Text));
         }
-        while (string.IsNullOrWhiteSpace(textContents.FirstOrDefault()?.Text) || string.IsNullOrWhiteSpace(textContents.LastOrDefault()?.Text));
+        while (textContents.Any() && (string.IsNullOrWhiteSpace(textContents.FirstOrDefault()?.Text) || string.IsNullOrWhiteSpace(textContents.LastOrDefault()?.Text)));
 
         var cloned = contents.ToList();
         contents.Clear();

@@ -17,7 +17,12 @@ public class MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaC
         get
         {
             var viewModel = Utils.GenerateMediaViewModelFromMediaContent(mediaContent, false);
-            if (viewModel is ImageViewModel) viewModel.Aspect = Aspect.AspectFit;
+            if (viewModel is ImageViewModel imageViewModel)
+            {
+                imageViewModel.Aspect = Aspect.AspectFit;
+                imageViewModel.HorizontalContentOptions = LayoutOptions.Start;
+                imageViewModel.VerticalContentOptions = LayoutOptions.Start;
+            }
             return viewModel;
         }
     }
