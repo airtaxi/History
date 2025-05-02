@@ -85,7 +85,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 var isImage = file.ContentType.StartsWith("image/");
                 if (isImage)
                 {
-                    var convertResult = ImageMagickHelper.ConvertAndSave(bytes, true, 1200);
+                    var convertResult = ImageMagickHelper.ConvertAndSave(bytes, true);
                     bytes = convertResult.Data;
                     contentType = convertResult.MimeType;
                 }
