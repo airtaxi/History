@@ -1,10 +1,13 @@
-﻿using History.Commons;
+﻿using AndroidX.Media3.Common;
+using History.Commons;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,6 +20,100 @@ public static class Utils
         if (mediaId == null) return null;
 
         return $"https://api.history.cenox.io/api/media/{mediaId}";
+    }
+
+    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, bool wrapMedias)
+    {
+        var contentViewModels = new List<IContentViewModel>();
+
+        var mediaContents = new List<MediaContent>();
+        var allMediaContents = contents.OfType<MediaContent>();
+        void FlushMediaContents()
+        {
+            if (mediaContents.Count > 0)
+            {
+                contentViewModels.Add(new MediaContentsViewModel(mediaContents, allMediaContents));
+                mediaContents = [];
+            }
+        }
+
+        var textAndProfileContents = new List<BaseContent>();
+        void FlushTextAndProfileContents()
+        {
+            if (textAndProfileContents.Count > 0)
+            {
+                contentViewModels.Add(new TextAndProfileContentsViewModel(textAndProfileContents));
+                textAndProfileContents = [];
+            }
+        }
+
+        // Fill contentViewModels with contents
+        foreach (var content in contents)
+        {
+            if (content is TextContent or ProfileContent)
+            {
+                FlushMediaContents();
+                textAndProfileContents.Add(content);
+            }
+            else if (content is StickerContent stickerContent)
+            {
+                FlushMediaContents();
+                FlushTextAndProfileContents();
+                contentViewModels.Add(new StickerContentViewModel(stickerContent));
+            }
+            else if (content is MediaContent mediaContent)
+            {
+                FlushTextAndProfileContents();
+                if (wrapMedias) mediaContents.Add(mediaContent);
+                else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents));
+            }
+        }
+
+        // Flush remaining contents
+        FlushTextAndProfileContents();
+        FlushMediaContents();
+
+        return contentViewModels;
+    }
+
+    public static void TrimContents(List<BaseContent> contents)
+    {
+        var textContents = contents.OfType<TextContent>();
+        do
+        {
+            textContents.FirstOrDefault()?.Text = textContents.FirstOrDefault()?.Text.TrimStart();
+            textContents.LastOrDefault()?.Text = textContents.LastOrDefault()?.Text.TrimEnd();
+            contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrEmpty(textContent.Text));
+        }
+        while (string.IsNullOrWhiteSpace(textContents.FirstOrDefault()?.Text) || string.IsNullOrWhiteSpace(textContents.LastOrDefault()?.Text));
+
+        var cloned = contents.ToList();
+        contents.Clear();
+        var textContentBuffer = new List<TextContent>();
+
+        void FlushTextContentBuffer()
+        {
+            if (textContentBuffer.Count > 1)
+            {
+                var texts = textContentBuffer.SelectMany(x => x.Text);
+                var text = string.Concat(texts);
+                var textContent = new TextContent() { Text = text };
+                contents.Add(textContent);
+            }
+            else if (textContentBuffer.Count == 1) contents.Add(textContentBuffer.First());
+        }
+
+        foreach (var content in cloned)
+        {
+            if (content is TextContent textContent) textContentBuffer.Add(textContent);
+            else
+            {
+                FlushTextContentBuffer();
+                contents.Add(content);
+            }
+        }
+        FlushTextContentBuffer();
+
     }
 
     public static string GenerateFriendlyTimestamp(DateTime createdAt, DateTime? modifiedAt)
@@ -90,7 +187,7 @@ public static class Utils
     private static void AddTapGestureRecognizerToProfileContentSnap(Span span, string userId)
     {
         var tapGestureRecognizer = new TapGestureRecognizer();
-        tapGestureRecognizer.Tapped += (s, e) => App.PushModalAsync(new UserPage(userId));
+        tapGestureRecognizer.Tapped += async (s, e) => await App.PushModalAsync(new UserPage(userId));
         span.GestureRecognizers.Add(tapGestureRecognizer);
     }
 }

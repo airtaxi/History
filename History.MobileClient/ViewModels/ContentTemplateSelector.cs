@@ -6,7 +6,6 @@ internal class ContentTemplateSelector : DataTemplateSelector
     public DataTemplate StickerContentTemplate { get; set; }
     public DataTemplate MediaContentTemplate { get; set; }
     public DataTemplate MediaContentsTemplate { get; set; }
-    public DataTemplate MediasContentTemplate { get; set; }
 
     protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
     {

@@ -11,7 +11,7 @@ public partial class Content : ResourceDictionary
 		InitializeComponent();
 	}
 
-    private async void OnMediaCarouselViewContentTapped(object sender, TappedEventArgs e)
+    private async void OnMediaContentTapped(object sender, TappedEventArgs e)
     {
         var element = sender as Element;
         var viewModel = element.BindingContext as IMediaViewModel;

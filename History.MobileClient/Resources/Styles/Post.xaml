@@ -13,7 +13,7 @@
                 <RoundRectangle CornerRadius="8" />
             </Border.StrokeShape>
             <Border.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnTapped"/>
+                <TapGestureRecognizer Tapped="OnTapped" />
             </Border.GestureRecognizers>
             <Grid RowSpacing="8">
                 <Grid.RowDefinitions>
@@ -23,9 +23,9 @@
                 <Grid Grid.Row="0">
                     <HorizontalStackLayout Spacing="6">
                         <views:DataTemplatePresenter
-                            BindingContext="{x:Binding ProfileMedia}"
                             ContentSelector="{StaticResource MediaTemplateSelector}"
                             HeightRequest="48"
+                            ViewModel="{x:Binding ProfileMedia}"
                             WidthRequest="48">
                             <views:DataTemplatePresenter.Clip>
                                 <EllipseGeometry
@@ -53,7 +53,7 @@
                     <VerticalStackLayout
                         BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
                         BindableLayout.ItemsSource="{x:Binding ContentViewModels}"
-                        Spacing="4" />
+                        Spacing="8" />
                 </Grid>
             </Grid>
         </Border>

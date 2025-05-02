@@ -3,10 +3,17 @@
     x:Class="History.MobileClient.Pages.PostPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:editPost="clr-namespace:History.MobileClient.ContentViews.EditPost"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
+    xmlns:foldable="clr-namespace:Microsoft.Maui.Controls.Foldable;assembly=Microsoft.Maui.Controls.Foldable"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:mention="clr-namespace:SpeakLink.Mention;assembly=SpeakLink"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
-    xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
+    x:DataType="vm:PostViewModel"
+    SizeChanged="OnSizeChanged"
+    Unloaded="OnUnloaded">
     <ContentPage.Behaviors>
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
         <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
@@ -15,28 +22,276 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid
             Grid.Row="0"
+            Padding="12,0,12,0"
             BackgroundColor="{StaticResource Primary}"
             HeightRequest="48">
-            <Image HeightRequest="24" WidthRequest="24">
-                <Image.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackImageTapped" />
-                </Image.GestureRecognizers>
+            <HorizontalStackLayout>
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="게시글"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            <HorizontalStackLayout HorizontalOptions="End" Spacing="12">
+                <Image>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Shift_lock}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Forward}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.More_horiz}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+            </HorizontalStackLayout>
+        </Grid>
+        <Grid Grid.Row="1">
+            <ScrollView x:Name="MainScrollView" SizeChanged="OnMainScrollViewSizeChanged">
+                <Grid x:Name="MainGrid">
+                    <Grid
+                        x:Name="ContentsGrid"
+                        Grid.Row="0"
+                        Grid.Column="0">
+                        <ScrollView Padding="12" BackgroundColor="#000000">
+                            <Grid RowSpacing="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="48" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0">
+                                    <HorizontalStackLayout Spacing="6">
+                                        <views:DataTemplatePresenter
+                                            ContentSelector="{StaticResource MediaTemplateSelector}"
+                                            HeightRequest="48"
+                                            ViewModel="{x:Binding ProfileMedia}"
+                                            WidthRequest="48">
+                                            <views:DataTemplatePresenter.Clip>
+                                                <EllipseGeometry
+                                                    Center="24,24"
+                                                    RadiusX="24"
+                                                    RadiusY="24" />
+                                            </views:DataTemplatePresenter.Clip>
+                                        </views:DataTemplatePresenter>
+                                        <VerticalStackLayout VerticalOptions="Center">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="16"
+                                                LineBreakMode="TailTruncation"
+                                                Text="{x:Binding Nickname}" />
+                                            <Label
+                                                Margin="0,-2,0,0"
+                                                FontSize="14"
+                                                LineBreakMode="TailTruncation"
+                                                Text="{x:Binding TimestampText}"
+                                                TextColor="#808080" />
+                                        </VerticalStackLayout>
+                                    </HorizontalStackLayout>
+                                </Grid>
+                                <Grid Grid.Row="1">
+                                    <VerticalStackLayout
+                                        BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
+                                        BindableLayout.ItemsSource="{x:Binding ContentViewModels}"
+                                        Spacing="8" />
+                                </Grid>
+                                <Grid Grid.Row="2">
+                                    <HorizontalStackLayout>
+                                        <Label>
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="느낌" />
+                                                    <Span Text=" " />
+                                                    <Span FontAttributes="Bold" Text="1" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                    </HorizontalStackLayout>
+                                </Grid>
+                            </Grid>
+                        </ScrollView>
+                    </Grid>
+                    <Grid
+                        x:Name="CommentsGrid"
+                        Grid.Row="1"
+                        Grid.Column="1">
+                        <ScrollView
+                            Padding="12"
+                            BackgroundColor="#000000"
+                            IsVisible="{x:Binding HasNoComments}">
+                            <CollectionView ItemsSource="{x:Binding Comments}" />
+                        </ScrollView>
+                        <Label
+                            Margin="24"
+                            HorizontalOptions="Center"
+                            IsVisible="{x:Binding HasNoComments}"
+                            Text="댓글이 없습니다"
+                            VerticalOptions="Center" />
+                    </Grid>
+                </Grid>
+            </ScrollView>
+            <CollectionView
+                x:Name="CommentUserCollectionView"
+                x:DataType="vm:MentionsViewModel"
+                BackgroundColor="{AppThemeBinding Light=#EEEEEE,
+                                                  Dark=#222222}"
+                HorizontalOptions="Fill"
+                IsVisible="{x:Binding IsDisplayingMentions}"
+                ItemsSource="{x:Binding ViewModels}"
+                MaximumHeightRequest="200"
+                SelectionMode="None"
+                VerticalOptions="End">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:MentionViewModel">
+                        <Grid HeightRequest="44">
+                            <HorizontalStackLayout
+                                Padding="8"
+                                HeightRequest="44"
+                                Spacing="8">
+                                <views:DataTemplatePresenter
+                                    ContentSelector="{StaticResource MediaTemplateSelector}"
+                                    HeightRequest="32"
+                                    VerticalOptions="Center"
+                                    ViewModel="{x:Binding ProfileMedia}"
+                                    WidthRequest="32">
+                                    <views:DataTemplatePresenter.Clip>
+                                        <EllipseGeometry
+                                            Center="16,16"
+                                            RadiusX="16"
+                                            RadiusY="16" />
+                                    </views:DataTemplatePresenter.Clip>
+                                </views:DataTemplatePresenter>
+                                <Label
+                                    FontAttributes="Bold"
+                                    FontSize="20"
+                                    HorizontalOptions="Start"
+                                    LineBreakMode="TailTruncation"
+                                    Text="{x:Binding Nickname}"
+                                    VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Grid
+                                BackgroundColor="#808080"
+                                HeightRequest="1"
+                                HorizontalOptions="Fill"
+                                VerticalOptions="End" />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnUserGridTapped" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+        <Grid
+            Grid.Row="2"
+            Padding="12"
+            ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Image
+                Grid.Column="0"
+                Margin="0,0,0,6"
+                HeightRequest="26"
+                VerticalOptions="End">
                 <Image.Source>
-                    <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    <FontImageSource
+                        FontFamily="FARegular"
+                        Glyph="{x:Static fa:Solid.Heart}"
+                        Color="{AppThemeBinding Light=#000000,
+                                                Dark=#FFFFFF}" />
                 </Image.Source>
             </Image>
-            <ImageButton HorizontalOptions="End">
-                <ImageButton.Source>
+
+            <mention:MentionEditor
+                x:Name="CommentMentionEditor"
+                Grid.Column="1"
+                x:DataType="vm:MentionsViewModel"
+                AutoSize="TextChanges"
+                HorizontalOptions="Fill"
+                ImageInputCommand="{x:Binding ImageInputCommand}"
+                IsSuggestionsPopupVisible="{x:Binding IsDisplayingMentions}"
+                MentionSearchCommand="{x:Binding MentionSearchCommand}"
+                MentionSelectedBackgroundColor="{StaticResource Primary}"
+                MentionSelectedTextColor="White"
+                MentionTextColor="{StaticResource Primary}"
+                Placeholder="댓글을 달아보세요." />
+
+            <Image Grid.Column="2" VerticalOptions="End">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnCommentAttachmentImageTapped" />
+                </Image.GestureRecognizers>
+                <Image.Source>
                     <FontImageSource
+                        x:Name="CommentImageFontImageSource"
                         FontFamily="MaterialSharp"
-                        Glyph="{x:Static m:MaterialSharp.More_horiz}"
-                        Color="White" />
-                </ImageButton.Source>
-            </ImageButton>
+                        Glyph="{x:Static m:MaterialSharp.Image}"
+                        Color="{AppThemeBinding Light=#000000,
+                                                Dark=#FFFFFF}" />
+                </Image.Source>
+            </Image>
+
+            <Image Grid.Column="3" VerticalOptions="End">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSendCommentImageTapped" />
+                </Image.GestureRecognizers>
+                <Image.Source>
+                    <FontImageSource
+                        x:Name="CommentSendFontImageSource"
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Send}"
+                        Color="{StaticResource Primary}" />
+                </Image.Source>
+            </Image>
+
+            <Rectangle
+                Grid.ColumnSpan="4"
+                Margin="-12"
+                Fill="#808080"
+                HeightRequest="1"
+                HorizontalOptions="Fill"
+                VerticalOptions="Start" />
         </Grid>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="3"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="True"
+            IsVisible="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
     </Grid>
 </ContentPage>

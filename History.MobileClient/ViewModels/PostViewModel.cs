@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class PostViewModel(PostResponseDto post, bool isTimeline) : ObservableObject
+public partial class PostViewModel(PostResponseDto post, bool wrapMedias) : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Nickname))]
@@ -20,6 +20,7 @@ public partial class PostViewModel(PostResponseDto post, bool isTimeline) : Obse
     [NotifyPropertyChangedFor(nameof(Contents))]
     [NotifyPropertyChangedFor(nameof(ParentPost))]
     [NotifyPropertyChangedFor(nameof(HasBeenSimpleReposted))]
+    [NotifyPropertyChangedFor(nameof(HasComments))]
     [NotifyPropertyChangedFor(nameof(CommentsCount))]
     [NotifyPropertyChangedFor(nameof(Comments))]
     [NotifyPropertyChangedFor(nameof(ContentViewModels))]
@@ -35,70 +36,14 @@ public partial class PostViewModel(PostResponseDto post, bool isTimeline) : Obse
         : new ImageViewModel(Utils.GenerateMediaUri(Post.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
     public bool IsRepost => Post.IsRepost;
-    public PostViewModel ParentPost => new(Post.ParentPost, isTimeline);
+    public PostViewModel ParentPost => new(Post.ParentPost, true);
     public bool HasBeenSimpleReposted => Post.HasBeenSimpleReposted;
 
     public List<BaseContent> Contents => Post.Contents;
-    public List<IContentViewModel> ContentViewModels
-    {
-        get
-        {
-            var contentViewModels = new List<IContentViewModel>();
+    public List<IContentViewModel> ContentViewModels => Utils.GenerateContentViewModels(Contents, wrapMedias);
 
-            var mediaContents = new List<MediaContent>();
-            var allMediaContents = Contents.OfType<MediaContent>();
-            void FlushMediaContents()
-            {
-                if (mediaContents.Count > 0)
-                {
-                    contentViewModels.Add(new MediaContentsViewModel(mediaContents, allMediaContents));
-                    mediaContents = [];
-                }
-            }
-
-            var textAndProfileContents = new List<BaseContent>();
-            void FlushTextAndProfileContents()
-            {
-                if (textAndProfileContents.Count > 0)
-                {
-                    contentViewModels.Add(new TextAndProfileContentsViewModel(textAndProfileContents));
-                    textAndProfileContents = [];
-                }
-            }
-
-            // Fill contentViewModels with contents
-            foreach (var content in Contents)
-            {
-                if (content is TextContent or ProfileContent)
-                {
-                    FlushMediaContents();
-                    textAndProfileContents.Add(content);
-                }
-                else if (content is StickerContent stickerContent)
-                {
-                    FlushMediaContents();
-                    FlushTextAndProfileContents();
-                    contentViewModels.Add(new StickerContentViewModel(stickerContent));
-                }
-                else if (content is MediaContent mediaContent)
-                {
-                    if (isTimeline)
-                    {
-                        FlushTextAndProfileContents();
-                        mediaContents.Add(mediaContent);
-                    }
-                    else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents));
-                }
-            }
-
-            // Flush remaining contents
-            FlushTextAndProfileContents();
-            FlushMediaContents();
-
-            return contentViewModels;
-        }
-    }
-
+    public bool HasNoComments => Post.CommentsCount == 0;
+    public bool HasComments => Post.CommentsCount > 0;
     public int CommentsCount => Post.CommentsCount;
     public List<CommentViewModel> Comments => [.. Post.Comments.Select(c => new CommentViewModel(c))];
 

@@ -15,7 +15,11 @@ public partial class App : Application
         InitializeComponent();
     }
 
-    public static Page Page => Current.Windows[0].Page;
+    public static Page Page
+    {
+        get => Current.Windows[0].Page;
+        set => Current.Windows[0].Page = value;
+    }
     public static INavigation Navigation => Current.Windows[0].Page.Navigation;
     public static async Task PushModalAsync(Page page) => await Current.Windows[0].Page.Navigation.PushModalAsync(page);
     public static async Task PopModalAsync() => await Current.Windows[0].Page.Navigation.PopModalAsync();
