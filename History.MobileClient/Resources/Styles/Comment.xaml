@@ -7,7 +7,7 @@
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
     <DataTemplate x:Key="CommentTemplate" x:DataType="vm:CommentViewModel">
-        <Grid Margin="0,0,0,12">
+        <Grid Margin="0,0,0,12" ColumnSpacing="6">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -16,16 +16,32 @@
             <views:DataTemplatePresenter
                 Grid.Column="0"
                 ContentSelector="{StaticResource MediaTemplateSelector}"
-                HeightRequest="32"
+                HeightRequest="36"
+                VerticalOptions="Start"
                 ViewModel="{x:Binding ProfileMedia}"
-                WidthRequest="32">
+                WidthRequest="36">
                 <views:DataTemplatePresenter.Clip>
                     <EllipseGeometry
-                        Center="16,16"
-                        RadiusX="16"
-                        RadiusY="16" />
+                        Center="18,18"
+                        RadiusX="18"
+                        RadiusY="18" />
                 </views:DataTemplatePresenter.Clip>
             </views:DataTemplatePresenter>
+            <VerticalStackLayout Grid.Column="1">
+                <Label
+                    FontAttributes="Bold"
+                    LineBreakMode="TailTruncation"
+                    Text="{x:Binding Nickname}" />
+                <VerticalStackLayout
+                    BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
+                    BindableLayout.ItemsSource="{x:Binding Contents}"
+                    Spacing="8" />
+                <Label
+                    FontSize="12"
+                    LineBreakMode="TailTruncation"
+                    Text="{x:Binding TimestampText}"
+                    TextColor="#808080" />
+            </VerticalStackLayout>
         </Grid>
     </DataTemplate>
 </ResourceDictionary>

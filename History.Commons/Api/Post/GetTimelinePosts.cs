@@ -15,10 +15,10 @@ public class GetTimelinePosts : IBaseRequest<List<PostResponseDto>>, IOptionalAu
     public Method Method => Method.Get;
     public Dictionary<string, string> QueryParameters { get; set; } = [];
 
-    public GetTimelinePosts(int limit = 10, string fromPostId = null)
+    public GetTimelinePosts(string fromPostId = null, int limit = 10)
     {
         QueryParameters["limit"] = limit.ToString();
-        if (fromPostId != null) QueryParameters["fromPostId"] = fromPostId;
+        if (fromPostId != null) QueryParameters["from"] = fromPostId;
     }
 
 }

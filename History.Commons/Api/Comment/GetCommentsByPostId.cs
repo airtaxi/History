@@ -16,7 +16,7 @@ public class GetCommentsByPostId : IBaseRequest<List<CommentResponseDto>>, IOpti
     public Dictionary<string, string> UrlParameters { get; set; } = [];
     public Dictionary<string, string> QueryParameters { get; set; } = [];
 
-    public GetCommentsByPostId(string postId, int limit = 10, string fromCommentId = null)
+    public GetCommentsByPostId(string postId, string fromCommentId = null, int limit = 10)
     {
         UrlParameters["postId"] = postId;
         QueryParameters["limit"] = limit.ToString();

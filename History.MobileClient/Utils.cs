@@ -79,10 +79,11 @@ public static class Utils
     public static void TrimContents(List<BaseContent> contents)
     {
         var textContents = contents.OfType<TextContent>();
+        var textOrProfileContents = contents.Where(x => x is TextContent || x is ProfileContent);
         do
         {
-            textContents.FirstOrDefault()?.Text = textContents.FirstOrDefault()?.Text.TrimStart();
-            textContents.LastOrDefault()?.Text = textContents.LastOrDefault()?.Text.TrimEnd();
+            if (textOrProfileContents.FirstOrDefault() is TextContent firstTextContent) firstTextContent?.Text = firstTextContent.Text.TrimStart();
+            if (textOrProfileContents.LastOrDefault() is TextContent lastTextContent) lastTextContent?.Text = lastTextContent?.Text.TrimEnd();
             contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrEmpty(textContent.Text));
         }
         while (string.IsNullOrWhiteSpace(textContents.FirstOrDefault()?.Text) || string.IsNullOrWhiteSpace(textContents.LastOrDefault()?.Text));
@@ -172,6 +173,7 @@ public static class Utils
                 {
                     Text = profileContent.Nickname,
                     TextColor = Application.Current.Resources["Primary"] as Color,
+                    FontAttributes = FontAttributes.Bold,
                 };
 
                 if (profileContent.UserId != null) 
