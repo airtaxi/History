@@ -65,7 +65,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
         {
             var comment = await commentService.GetCommentByIdAsync(commentId);
             var dtoResult = await commentService.GenerateCommentResponseDtoAsync(comment.Value, requesterId);
-            return Ok(dtoResult);
+            return Ok(dtoResult.Value);
         }
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
@@ -98,7 +98,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
         {
             var comment = await commentService.GetCommentByIdAsync(commentId);
             var dtoResult = await commentService.GenerateCommentResponseDtoAsync(comment.Value, requesterId);
-            return Ok(dtoResult);
+            return Ok(dtoResult.Value);
         }
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
