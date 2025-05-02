@@ -170,8 +170,13 @@ public partial class EditPostPage : ContentPage
 		{
 			MainActivityIndicator.IsVisible = true;
 			var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, null, null, files), ErrorType.BadRequest);
-            if (result.IsSuccess) await Application.Current.Windows[0].Page.Navigation.PopModalAsync();
-            else if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+            if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+            else if (result.IsSuccess)
+            {
+                TimelinePage.ShouldRefreshTimeline = true;
+                UserPage.ShouldRefreshMyProfile = true;
+                await Application.Current.Windows[0].Page.Navigation.PopModalAsync();
+            }
 		}
         finally
 		{

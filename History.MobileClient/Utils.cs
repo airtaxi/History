@@ -43,7 +43,7 @@ public static class Utils
         VideoShouldShowPlaybackControls = false,
         Aspect = Aspect.AspectFill,
         ShouldMute = true,
-		ResizeParentCarouselViewWhenSizeChanged = isInCarouselView,
+		ResizeParentCarouselViewWhenSizeChanged = isInCarouselView && false,
 		HorizontalContentOptions = LayoutOptions.Fill,
         VideoShouldAutoPlay = true,
         VideoShouldLoopPlayback = true,
@@ -52,7 +52,7 @@ public static class Utils
     : new ImageViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId)
     {
         Aspect = Aspect.AspectFill,
-		ResizeParentCarouselViewWhenSizeChanged = isInCarouselView,
+		ResizeParentCarouselViewWhenSizeChanged = isInCarouselView && false,
 		HorizontalContentOptions = LayoutOptions.Fill,
         VerticalContentOptions = LayoutOptions.Fill
     };
