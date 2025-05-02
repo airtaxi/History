@@ -123,6 +123,9 @@
 		<MauiXaml Update="Pages\PendingFriendRequestsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Pages\PostPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Pages\TimelinePage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

@@ -90,7 +90,7 @@ public static class Utils
     private static void AddTapGestureRecognizerToProfileContentSnap(Span span, string userId)
     {
         var tapGestureRecognizer = new TapGestureRecognizer();
-        tapGestureRecognizer.Tapped += (s, e) => Application.Current.Windows[0].Page.Navigation.PushModalAsync(new UserPage(userId));
+        tapGestureRecognizer.Tapped += (s, e) => App.PushModalAsync(new UserPage(userId));
         span.GestureRecognizers.Add(tapGestureRecognizer);
     }
 }

@@ -30,7 +30,7 @@ public partial class LoginPage : ContentPage
             
             await RefreshFriends();
 
-            Application.Current.Windows[0].Page = new AppShell();
+            App.Page = new AppShell();
         }
 
         else if (meResult.Error == ErrorType.Unauthorized) await DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
