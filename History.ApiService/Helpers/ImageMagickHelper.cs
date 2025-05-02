@@ -54,7 +54,7 @@ public static class ImageMagickHelper
             using var image = new MagickImage(imageBytes);
 
             image.Format = MagickFormat.WebP;
-            image.Quality = 70;
+            image.Quality = 50;
 
             if (maxWidth.HasValue && image.Width > maxWidth.Value)
             {
