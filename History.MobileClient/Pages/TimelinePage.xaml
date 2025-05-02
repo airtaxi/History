@@ -19,6 +19,7 @@
 
         <Grid
             Grid.Row="0"
+            Padding="0,0,12,0"
             BackgroundColor="{StaticResource Primary}"
             HeightRequest="48">
             <Image
@@ -26,14 +27,17 @@
                 HorizontalOptions="Start"
                 Source="icon_nobg_white.png"
                 WidthRequest="48" />
-            <ImageButton Clicked="OnCreateNewPostImageButtonClicked" HorizontalOptions="End">
-                <ImageButton.Source>
+            <Image HorizontalOptions="End" VerticalOptions="Center">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnWritePostImageTapped" />
+                </Image.GestureRecognizers>
+                <Image.Source>
                     <FontImageSource
                         FontFamily="MaterialSharp"
                         Glyph="{x:Static m:MaterialSharp.Edit_note}"
                         Color="White" />
-                </ImageButton.Source>
-            </ImageButton>
+                </Image.Source>
+            </Image>
         </Grid>
 
         <RefreshView Grid.Row="1" Refreshing="OnRefreshing">

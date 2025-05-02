@@ -37,7 +37,7 @@ public partial class AddFriendsPage : ContentPage
         EmptyLabel.IsVisible = !viewModels.Any();
     }
 
-    private void OnFriendCollectionViewSelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void OnFriendCollectionViewSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (e.CurrentSelection == null) return;
 
@@ -45,6 +45,6 @@ public partial class AddFriendsPage : ContentPage
         collectionView.SelectedItem = null;
 
         var viewModel = e.CurrentSelection as FriendshipViewModel;
-        App.PushModalAsync(new UserPage(viewModel.User.UserId));
+        await App.PushModalAsync(new UserPage(viewModel.User.UserId));
     }
 }

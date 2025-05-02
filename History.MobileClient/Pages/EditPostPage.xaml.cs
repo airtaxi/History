@@ -144,15 +144,7 @@ public partial class EditPostPage : ContentPage
     private async void OnUploadButtonClicked(object sender, EventArgs e)
     {
         var editorContents = MainTextContent.GetContents();
-        var textContents = editorContents.OfType<TextContent>();
-        textContents.FirstOrDefault()?.Text.TrimStart();
-        textContents.LastOrDefault()?.Text.TrimEnd();
-
-        if (editorContents.Count == 0 || (editorContents.Count == 1 && textContents.Count() == 1 && string.IsNullOrEmpty(textContents.First().Text)))
-        {
-            await DisplayAlert("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
-            return;
-        }
+        Utils.TrimContents(editorContents);
 
         var uploadContents = _attachmentViewModels.Select(x => new UploadContent()
         {
@@ -161,6 +153,13 @@ public partial class EditPostPage : ContentPage
         });
 
         var contents = editorContents.Concat(uploadContents).ToList();
+
+        if (contents.Count == 0)
+        {
+            await DisplayAlert("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
+            return;
+        }
+
         var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
 
         var files = new Dictionary<string, byte[]>();
@@ -178,10 +177,7 @@ public partial class EditPostPage : ContentPage
                 await App.PopModalAsync();
             }
 		}
-        finally
-		{
-			MainActivityIndicator.IsVisible = false;
-		}
+        finally { MainActivityIndicator.IsVisible = false; }
     }
 
     protected override void OnDisappearing()

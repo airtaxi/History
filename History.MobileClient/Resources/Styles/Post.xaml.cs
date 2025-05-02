@@ -13,7 +13,8 @@ public partial class Post : ResourceDictionary
     private async void OnTapped(object sender, TappedEventArgs e)
     {
 		var viewModel = (sender as Element)?.BindingContext as PostViewModel;
-		var postPage = new PostPage(viewModel.Post.Id);
+		var newViewModel = new PostViewModel(viewModel.Post, false);
+        var postPage = new PostPage(newViewModel);
 		await App.PushModalAsync(postPage);
     }
 }

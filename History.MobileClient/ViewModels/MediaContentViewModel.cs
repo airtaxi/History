@@ -12,5 +12,13 @@ public class MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaC
 {
     public IEnumerable<MediaContent> AllMediaContents { get; } = allMediaContents;
 
-    public IMediaViewModel Media => Utils.GenerateMediaViewModelFromMediaContent(mediaContent, false);
+    public IMediaViewModel Media
+    {
+        get
+        {
+            var viewModel = Utils.GenerateMediaViewModelFromMediaContent(mediaContent, false);
+            if (viewModel is ImageViewModel) viewModel.Aspect = Aspect.AspectFit;
+            return viewModel;
+        }
+    }
 }

@@ -15,8 +15,11 @@ public partial class CommentViewModel(CommentResponseDto comment) : ObservableOb
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Nickname))]
     [NotifyPropertyChangedFor(nameof(Contents))]
+    [NotifyPropertyChangedFor(nameof(ContentViewModels))]
     public partial CommentResponseDto Comment { get; set; } = comment;
 
     public string Nickname => Comment.User.Nickname;
     public List<BaseContent> Contents => Comment.Contents;
+
+    public List<IContentViewModel> ContentViewModels => Utils.GenerateContentViewModels(Contents, false);
 }

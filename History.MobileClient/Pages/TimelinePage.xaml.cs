@@ -61,8 +61,6 @@ public partial class TimelinePage : ContentPage
         finally { _fetchSemaphore.Release(); }
     }
 
-    private async void OnCreateNewPostImageButtonClicked(object sender, EventArgs e) => await App.PushModalAsync(new EditPostPage());
-
     private async void OnRefreshing(object sender, EventArgs e)
     {
         await RefreshAsync();
@@ -116,4 +114,6 @@ public partial class TimelinePage : ContentPage
             await LoadMoreAsync();
         }
     }
+
+    private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
 }

@@ -8,7 +8,11 @@
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
 
     <DataTemplate x:Key="MediaContentTemplate" x:DataType="vm:MediaContentViewModel">
-        <views:DataTemplatePresenter BindingContext="{x:Binding Media}" ContentSelector="{StaticResource MediaTemplateSelector}" />
+        <views:DataTemplatePresenter ContentSelector="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding Media}">
+            <views:DataTemplatePresenter.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnMediaContentTapped" />
+            </views:DataTemplatePresenter.GestureRecognizers>
+        </views:DataTemplatePresenter>
     </DataTemplate>
 
     <DataTemplate x:Key="MediaContentsTemplate" x:DataType="vm:MediaContentsViewModel">
@@ -20,9 +24,9 @@
                 Position="{x:Binding CarouselPosition}">
                 <CarouselView.ItemTemplate>
                     <DataTemplate x:DataType="vm:IMediaViewModel">
-                        <views:DataTemplatePresenter BindingContext="{Binding}" ContentSelector="{StaticResource MediaTemplateSelector}">
+                        <views:DataTemplatePresenter ContentSelector="{StaticResource MediaTemplateSelector}" ViewModel="{Binding}">
                             <views:DataTemplatePresenter.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnMediaCarouselViewContentTapped" />
+                                <TapGestureRecognizer Tapped="OnMediaContentTapped" />
                             </views:DataTemplatePresenter.GestureRecognizers>
                         </views:DataTemplatePresenter>
                     </DataTemplate>
@@ -47,7 +51,7 @@
     </DataTemplate>
 
     <DataTemplate x:Key="StickerContentTemplate" x:DataType="vm:StickerContentViewModel">
-        <views:DataTemplatePresenter BindingContext="{x:Binding Media}" ContentSelector="{StaticResource MediaTemplateSelector}" />
+        <views:DataTemplatePresenter ContentSelector="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding Media}" />
     </DataTemplate>
 
     <DataTemplate x:Key="TextAndProfileContentsTemplate" x:DataType="vm:TextAndProfileContentsViewModel">
