@@ -61,7 +61,6 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
         var contents = JsonSerializer.Deserialize<List<BaseContent>>(request.JsonData);
         var result = await commentService.ModifyCommentAsync(commentId, contents, requesterId, request.Files);
-        var result = await commentService.ModifyCommentAsync(commentId, contents, requesterId, request.Files);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
