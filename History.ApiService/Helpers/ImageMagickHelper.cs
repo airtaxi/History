@@ -59,7 +59,9 @@ public static class ImageMagickHelper
             if (maxWidth.HasValue && image.Width > maxWidth.Value)
             {
                 var newHeight = (uint)Math.Round((double)image.Height * maxWidth.Value / image.Width, 0);
-                image.Resize(maxWidth.Value, newHeight);
+
+                var size = new MagickGeometry(maxWidth.Value, newHeight) { IgnoreAspectRatio = true };
+                image.Resize(size);
             }
 
             using var ms = new MemoryStream();
