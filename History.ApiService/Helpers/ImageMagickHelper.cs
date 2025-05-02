@@ -51,16 +51,16 @@ public static class ImageMagickHelper
         }
         else
         {
-            using var image = (MagickImage)images.FirstOrDefault();
+            using var image = new MagickImage(imageBytes);
+
+            image.Format = MagickFormat.WebP;
+            image.Quality = 50;
 
             if (maxWidth.HasValue && image.Width > maxWidth.Value)
             {
                 var newHeight = (uint)Math.Round((double)image.Height * maxWidth.Value / image.Width, 0);
                 image.Resize(maxWidth.Value, newHeight);
             }
-
-            image.Format = MagickFormat.WebP;
-            image.Quality = 50;
 
             using var ms = new MemoryStream();
             image.Write(ms);
