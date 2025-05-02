@@ -61,7 +61,7 @@ public partial class TimelinePage : ContentPage
         finally { _fetchSemaphore.Release(); }
     }
 
-    private async void OnCreateNewPostImageButtonClicked(object sender, EventArgs e) => await Application.Current.Windows[0].Page.Navigation.PushModalAsync(new EditPostPage());
+    private async void OnCreateNewPostImageButtonClicked(object sender, EventArgs e) => await App.PushModalAsync(new EditPostPage());
 
     private async void OnRefreshing(object sender, EventArgs e)
     {

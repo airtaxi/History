@@ -14,6 +14,6 @@ public partial class Post : ResourceDictionary
     {
 		var viewModel = (sender as Element)?.BindingContext as PostViewModel;
 		var postPage = new PostPage(viewModel.Post.Id);
-		await Application.Current.Windows[0].Page.Navigation.PushModalAsync(postPage);
+		await App.PushModalAsync(postPage);
     }
 }

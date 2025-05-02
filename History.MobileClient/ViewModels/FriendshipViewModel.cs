@@ -48,29 +48,29 @@ public partial class FriendshipViewModel(UserResponseDto user) : ObservableObjec
     public async Task HandleTapAsync()
     {
         if (User == null) return;
-        await Application.Current.Windows[0].Page.Navigation.PushModalAsync(new UserPage(User.UserId));
+        await App.PushModalAsync(new UserPage(User.UserId));
     }
 
     public async Task HandleFriendshipActionAsync()
     {
         if (User.Friendship == null)
         {
-            var result = await Application.Current.Windows[0].Page.DisplayAlert("안내", $"{Nickname}에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var result = await App.Page.DisplayAlert("안내", $"{Nickname}에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Accepted)
         {
-            var result = await Application.Current.Windows[0].Page.DisplayAlert("안내", $"{Nickname}와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var result = await App.Page.DisplayAlert("안내", $"{Nickname}와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Requested)
         {
-            var result = await Application.Current.Windows[0].Page.DisplayAlert("안내", $"{Nickname}에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
+            var result = await App.Page.DisplayAlert("안내", $"{Nickname}에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new CancelFriendRequest(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Waiting)
         {
-            var result = await Application.Current.Windows[0].Page.DisplayAlert("안내", $"{Nickname}의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var result = await App.Page.DisplayAlert("안내", $"{Nickname}의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
         }
 

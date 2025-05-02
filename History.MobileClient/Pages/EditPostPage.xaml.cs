@@ -139,7 +139,7 @@ public partial class EditPostPage : ContentPage
         }
     }
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await Application.Current.Windows[0].Page.Navigation.PopModalAsync();
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
 
     private async void OnUploadButtonClicked(object sender, EventArgs e)
     {
@@ -175,7 +175,7 @@ public partial class EditPostPage : ContentPage
             {
                 TimelinePage.ShouldRefreshTimeline = true;
                 UserPage.ShouldRefreshMyProfile = true;
-                await Application.Current.Windows[0].Page.Navigation.PopModalAsync();
+                await App.PopModalAsync();
             }
 		}
         finally

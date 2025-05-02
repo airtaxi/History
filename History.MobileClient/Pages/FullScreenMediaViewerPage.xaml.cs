@@ -17,7 +17,7 @@ public partial class FullScreenMediaViewerPage : ContentPage
         MainDataTemplatePresenter.BindingContext = _viewModel;
     }
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await Application.Current.Windows[0].Page.Navigation.PopModalAsync();
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
 
     private async void OnDownloadImageTapped(object sender, TappedEventArgs e)
     {
