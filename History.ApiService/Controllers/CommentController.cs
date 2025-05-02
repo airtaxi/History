@@ -61,6 +61,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
         var contents = JsonSerializer.Deserialize<List<BaseContent>>(request.JsonData);
         var result = await commentService.ModifyCommentAsync(commentId, contents, requesterId, request.Files);
+        var result = await commentService.ModifyCommentAsync(commentId, contents, requesterId, request.Files);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
@@ -89,7 +90,12 @@ public class CommentController(ICommentService commentService) : ControllerBase
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var result = await commentService.HandleLikeCommentAsync(commentId, requesterId);
-        if (result.IsSuccess) return Ok();
+        if (result.IsSuccess)
+        {
+            var comment = await commentService.GetCommentByIdAsync(commentId);
+            var dtoResult = await commentService.GenerateCommentResponseDtoAsync(comment.Value, requesterId);
+            return Ok(dtoResult);
+        }
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);

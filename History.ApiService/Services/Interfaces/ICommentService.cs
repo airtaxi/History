@@ -9,6 +9,14 @@ namespace History.ApiService.Services.Interfaces;
 public interface ICommentService
 {
     /// <summary>
+    /// Get comment by id.
+    /// </summary>
+    /// <param name="commentId">The id of comment to get</param>
+    /// <param name="requesterId">The id of user who requests comment</param>
+    /// <returns>A task that represents the asynchronous operation. with result of comment</returns>
+    public Task<Result<Comment>> GetCommentByIdAsync(string commentId);
+
+    /// <summary>
     /// Get comment by post id.
     /// </summary>
     /// <param name="postId">The id of post to get comments</param>
