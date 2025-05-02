@@ -14,7 +14,7 @@
     <DataTemplate x:Key="MediaContentsTemplate" x:DataType="vm:MediaContentsViewModel">
         <Grid>
             <CarouselView
-                HeightRequest="350"
+                HeightRequest="400"
                 HorizontalScrollBarVisibility="Never"
                 ItemsSource="{x:Binding Medias}"
                 Position="{x:Binding CarouselPosition}">

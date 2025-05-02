@@ -3,13 +3,16 @@ using History.Commons.Api.User;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace History.MobileClient.Pages;
 
 public partial class TimelinePage : ContentPage
 {
-    private ObservableCollection<object> _viewModels = [];
+    public static bool ShouldRefreshTimeline { get; set; }
+
+    private ObservableCollection<PostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public TimelinePage()
@@ -17,7 +20,7 @@ public partial class TimelinePage : ContentPage
 		InitializeComponent();
     }
 
-    private async Task RefreshAsync()
+    public async Task RefreshAsync()
     {
         try
         {
@@ -33,6 +36,8 @@ public partial class TimelinePage : ContentPage
                 foreach (var postViewModel in postViewModels) _viewModels.Add(postViewModel);
             }
             else return;
+
+            var children = ((IVisualTreeElement)MainCollectionView).GetVisualChildren();
         }
         finally { _fetchSemaphore.Release(); }
     }
@@ -43,8 +48,8 @@ public partial class TimelinePage : ContentPage
         {
             await _fetchSemaphore.WaitAsync();
 
-            var lastPost = _viewModels.OfType<PostViewModel>().LastOrDefault();
-            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(lastPost?.Post.Id));
+            var lastViewModel = _viewModels.OfType<PostViewModel>().LastOrDefault();
+            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(Shared.UserId, lastViewModel?.Post.Id));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
@@ -56,14 +61,31 @@ public partial class TimelinePage : ContentPage
         finally { _fetchSemaphore.Release(); }
     }
 
-    private async void OnCreateNewPostImageButtonClicked(object sender, EventArgs e)
+    private async void OnCreateNewPostImageButtonClicked(object sender, EventArgs e) => await Application.Current.Windows[0].Page.Navigation.PushModalAsync(new EditPostPage());
+
+    private async void OnRefreshing(object sender, EventArgs e)
     {
-		await Application.Current.Windows[0].Page.Navigation.PushModalAsync(new EditPostPage());
+        await RefreshAsync();
+        (sender as RefreshView).IsRefreshing = false;
+    }
+
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        MainCollectionView.ItemsSource = _viewModels;
+
+        if (ShouldRefreshTimeline)
+        {
+            ShouldRefreshTimeline = false;
+            await RefreshAsync();
+        }
     }
 
     private async void OnSizeChanged(object sender, EventArgs e)
     {
         var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
+        if(staggeredItemsLayout == null) return;
+
         var previousSpan = staggeredItemsLayout.Span;
         var newSpan = ((int)Width / 700) + 1;
         if (newSpan != previousSpan)
@@ -73,21 +95,25 @@ public partial class TimelinePage : ContentPage
         }
     }
 
-    protected override async void OnAppearing()
+    private Border _lastElement;
+    private void OnChildAdded(object sender, ElementEventArgs e)
     {
-        base.OnAppearing();
-        MainCollectionView.ItemsSource = _viewModels;
-
-        var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
-        if (staggeredItemsLayout.Span > 0)
+        var border = e.Element as Border;
+        var viewModel = border.BindingContext as PostViewModel;
+        if (viewModel == _viewModels.LastOrDefault())
         {
-            await RefreshAsync();
+            _lastElement?.Loaded -= OnLastItemBorderLoaded;
+            border.Loaded += OnLastItemBorderLoaded;
+            _lastElement = border;
         }
     }
 
-    private async void OnRefreshing(object sender, EventArgs e)
+    private async void OnLastItemBorderLoaded(object sender, EventArgs e)
     {
-        await RefreshAsync();
-        (sender as RefreshView).IsRefreshing = false;
+        if (_fetchSemaphore.CurrentCount > 0)
+        {
+            _lastElement?.Loaded -= OnLastItemBorderLoaded;
+            await LoadMoreAsync();
+        }
     }
 }

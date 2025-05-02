@@ -19,8 +19,102 @@ public partial class Media : ResourceDictionary
 {
     private static readonly ConcurrentDictionary<ContentView, IViewHandler> MediaElementHandlerMap = [];
     private static readonly ConcurrentDictionary<object, object> ImageHandlerMap = [];
+    private static readonly ConcurrentDictionary<CarouselView, object> CarouselViewMap = [];
 
     public Media() => InitializeComponent();
+
+    private static void ResizeCarouselView(CarouselView carouselView, int width, int height)
+    {
+        var aspectRatio = (double)width / height;
+        var parentWidth = carouselView.Width;
+        var newHeight = parentWidth / aspectRatio;
+        var previousHeight = carouselView.Height;
+        carouselView.HeightRequest = newHeight;
+    }
+
+    private static CarouselView FindCarouselView(Element element)
+    {
+        var parent = element.Parent;
+        while (parent != null && parent is not CarouselView) parent = parent.Parent;
+
+        return parent as CarouselView;
+    }
+
+    private static void ResizeMediaElement(MediaElement mediaElement)
+    {
+        if (mediaElement.BindingContext is not VideoViewModel viewModel) return;
+
+        if (viewModel.ResizeParentCarouselViewWhenSizeChanged)
+        {
+            var carouselView = FindCarouselView(mediaElement);
+            if (carouselView != null)
+            {
+                var mediaElementWidth = mediaElement.MediaWidth;
+                var mediaElementHeight = mediaElement.MediaHeight;
+                if (mediaElementWidth == 0 || mediaElementHeight == 0) return;
+
+                ResizeCarouselView(carouselView, mediaElementWidth, mediaElementHeight);
+            }
+        }
+    }
+
+    private static async void ResizeImage(Image image)
+    {
+        if (image.BindingContext is not ImageViewModel viewModel) return;
+
+        if (viewModel.ResizeParentCarouselViewWhenSizeChanged)
+        {
+            if (ImageHandlerMap.ContainsKey(image)) return;
+
+            var imageWidth = 0;
+            var imageHeight = 0;
+
+            var handler = image.Handler as ImageHandler;
+            var nativeImageView = handler.PlatformView;
+            ImageHandlerMap[image] = true;
+
+#if ANDROID
+            while (nativeImageView.Drawable == null && ImageHandlerMap.ContainsKey(image)) await Task.Delay(13);
+
+            if (nativeImageView.Drawable is Android.Graphics.Drawables.BitmapDrawable bitmapDrawable)
+            {
+                var bitmap = bitmapDrawable.Bitmap;
+                imageWidth = bitmap.Width;
+                imageHeight = bitmap.Height;
+            }
+#elif IOS
+        while (nativeImageView.Image == null && ImageHandlerMap.ContainsKey(image)) await Task.Delay(13);
+
+        var uiImage = nativeImageView.Image;
+        if (uiImage == null) return;
+
+        imageWidth = (int)(uiImage.Size.Width * uiImage.CurrentScale);
+        imageHeight = (int)(uiImage.Size.Height * uiImage.CurrentScale);
+#endif
+
+            if (imageWidth <= 0 || imageHeight <= 0) return;
+
+            var carouselView = FindCarouselView(image);
+            if (carouselView == null) return;
+
+            ResizeCarouselView(carouselView, imageWidth, imageHeight);
+            ImageHandlerMap.TryRemove(image, out var _);
+        }
+    }
+
+    private void OnImageLoaded(object sender, EventArgs e)
+    {
+        if (sender is not Image image) return;
+        ResizeImage(image);
+    }
+
+    private void OnImageUnloaded(object sender, EventArgs e)
+    {
+        if (sender is not Image image) return;
+
+        var viewModel = image.BindingContext as ImageViewModel;
+        if (viewModel.ResizeParentCarouselViewWhenSizeChanged) ImageHandlerMap.TryRemove(image, out var _);
+    }
 
     private void OnVideoContentViewLoaded(object sender, EventArgs e)
     {
@@ -41,10 +135,27 @@ public partial class Media : ResourceDictionary
         mediaElement.ShouldShowPlaybackControls = viewModel.VideoShouldShowPlaybackControls;
         mediaElement.ShouldKeepScreenOn = false;
 
-        if (mediaElement.MediaWidth > 0 && mediaElement.MediaHeight > 0) ResizeMediaElement(mediaElement);
-        else mediaElement.StateChanged += OnMediaStateChanged;
+        if (viewModel.ResizeParentCarouselViewWhenSizeChanged)
+        {
+            if (mediaElement.MediaWidth > 0 && mediaElement.MediaHeight > 0) ResizeMediaElement(mediaElement);
+            else mediaElement.StateChanged += OnMediaStateChanged;
+        }
 
         mediaElement.Source = MediaSource.FromUri(viewModel.Uri);
+    }
+
+    private void OnVideoContentViewUnloaded(object sender, EventArgs e)
+    {
+        var contentView = sender as ContentView;
+        var mediaElement = contentView.Content as MediaElement;
+        mediaElement?.StateChanged -= OnMediaStateChanged;
+
+        if (MediaElementHandlerMap.TryGetValue(contentView, out var handler))
+        {
+            try { handler.DisconnectHandler(); }
+            catch (ObjectDisposedException) { }
+            finally { MediaElementHandlerMap.TryRemove(contentView, out var _); }
+        }
     }
 
     private void OnMediaStateChanged(object sender, MediaStateChangedEventArgs e)
@@ -55,127 +166,5 @@ public partial class Media : ResourceDictionary
             mediaElement.StateChanged -= OnMediaStateChanged;
             ResizeMediaElement(mediaElement);
         }
-    }
-
-    private static void ResizeMediaElement(MediaElement mediaElement)
-    {
-        if (mediaElement.BindingContext is not VideoViewModel viewModel) return;
-
-        if (viewModel.ResizeParentCarouselViewWhenSizeChanged)
-        {
-            var parent = mediaElement.Parent;
-            while (parent != null && parent is not CarouselView) parent = parent.Parent;
-
-            if (parent != null && parent is CarouselView carouselView)
-            {
-                var mediaElementWidth = mediaElement.MediaWidth;
-                var mediaElementHeight = mediaElement.MediaHeight;
-                if (mediaElementWidth == 0 || mediaElementHeight == 0) return;
-
-                var aspectRatio = (double)mediaElementWidth / mediaElementHeight;
-                var parentWidth = carouselView.Width;
-                var newHeight = parentWidth / aspectRatio;
-                carouselView.HeightRequest = newHeight;
-            }
-        }
-    }
-
-    private void OnVideoContentViewUnloaded(object sender, EventArgs e)
-    {
-        var contentView = sender as ContentView;
-        (contentView.Content as MediaElement)?.StateChanged -= OnMediaStateChanged;
-
-        if (MediaElementHandlerMap.TryGetValue(contentView, out var handler))
-        {
-            try { handler.DisconnectHandler(); }
-            catch (ObjectDisposedException) { }
-            finally { MediaElementHandlerMap.TryRemove(contentView, out var _); }
-        }
-    }
-
-    private static void OnAndroidImageLoaded(object sender, EventArgs e)
-    {
-        if (!ImageHandlerMap.TryGetValue(sender, out var rawImage) || rawImage is not Image image) return;
-        if (image.BindingContext is not ImageViewModel viewModel) return;
-
-        if (viewModel.ResizeParentCarouselViewWhenSizeChanged)
-        {
-            var imageWidth = 0;
-            var imageHeight = 0;
-#if ANDROID
-            var handler = image.Handler as ImageHandler;
-            var nativeImageView = handler.PlatformView as AppCompatImageView;
-
-            if (nativeImageView.Drawable is Android.Graphics.Drawables.BitmapDrawable bitmapDrawable)
-            {
-                var bitmap = bitmapDrawable.Bitmap;
-                imageWidth = bitmap.Width;
-                imageHeight = bitmap.Height;
-            }
-#endif
-            if (imageWidth <= 0 || imageHeight <= 0) return;
-#if ANDROID
-            nativeImageView.ViewTreeObserver.GlobalLayout -= OnAndroidImageLoaded;
-            ImageHandlerMap.TryRemove(nativeImageView.ViewTreeObserver, out var _);
-#endif
-            ResizeCarouselView(image, imageWidth, imageHeight);
-        }
-    }
-
-    private static void ResizeCarouselView(Image image, int imageWidth, int imageHeight)
-    {
-        var parent = image.Parent;
-        while (parent != null && parent is not CarouselView) parent = parent.Parent;
-
-        if (parent != null && parent is CarouselView carouselView)
-        {
-            var aspectRatio = (double)imageWidth / imageHeight;
-            var parentWidth = carouselView.Width;
-            var newHeight = parentWidth / aspectRatio;
-            carouselView.HeightRequest = newHeight;
-        }
-    }
-
-    private void OnImageLoaded(object sender, EventArgs e)
-    {
-        if (sender is not Image image) return;
-
-#if ANDROID
-        var handler = image.Handler as ImageHandler;
-        var imageView = handler.PlatformView as AppCompatImageView;
-        ImageHandlerMap[imageView.ViewTreeObserver] = image;
-        imageView.ViewTreeObserver.GlobalLayout += OnAndroidImageLoaded;
-#elif IOS
-        var handler = image.Handler as ImageHandler;
-        var nativeImageView = handler.PlatformView;
-        ImageHandlerMap[image] = true;
-
-        MainThread.BeginInvokeOnMainThread(async () =>
-        {
-            while (nativeImageView.Image == null && ImageHandlerMap.ContainsKey(image)) await Task.Delay(50);
-
-            var uiImage = nativeImageView.Image;
-            if (uiImage == null) return;
-
-            var pixelWidth = (int)(uiImage.Size.Width * uiImage.CurrentScale);
-            var pixelHeight = (int)(uiImage.Size.Height * uiImage.CurrentScale);
-            ResizeCarouselView(image, pixelWidth, pixelHeight);
-        });
-#endif
-    }
-
-    private void OnImageUnloaded(object sender, EventArgs e)
-    {
-        if (sender is not Image image) return;
-
-#if ANDROID
-        if (ImageHandlerMap.TryGetValue(image, out var rawImage) && rawImage is AppCompatImageView imageView)
-        {
-            imageView.ViewTreeObserver.GlobalLayout -= OnAndroidImageLoaded;
-            ImageHandlerMap.TryRemove(imageView.ViewTreeObserver, out var _);
-        }
-#elif IOS
-        if (ImageHandlerMap.TryGetValue(image, out var rawImage)) ImageHandlerMap.TryRemove(image, out var _);
-#endif
     }
 }

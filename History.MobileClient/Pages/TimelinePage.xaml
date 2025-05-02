@@ -37,7 +37,10 @@
         </Grid>
 
         <RefreshView Grid.Row="1" Refreshing="OnRefreshing">
-            <CollectionView x:Name="MainCollectionView" ItemTemplate="{StaticResource TimelineTemplateSelector}">
+            <CollectionView
+                x:Name="MainCollectionView"
+                ChildAdded="OnChildAdded"
+                ItemTemplate="{StaticResource TimelineTemplateSelector}">
                 <CollectionView.ItemsLayout>
                     <staggered:StaggeredItemsLayout Span="0" />
                 </CollectionView.ItemsLayout>

@@ -11,7 +11,9 @@ namespace History.MobileClient.Pages;
 
 public partial class UserPage : ContentPage
 {
-	private readonly string _userId;
+    public static bool ShouldRefreshMyProfile { get; set; }
+
+    private readonly string _userId;
     private ObservableCollection<object> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
@@ -27,7 +29,7 @@ public partial class UserPage : ContentPage
         InitializeComponent();
     }
 
-    private async Task RefreshAsync()
+    public async Task RefreshAsync()
     {
         try
         {
@@ -57,8 +59,8 @@ public partial class UserPage : ContentPage
         {
             await _fetchSemaphore.WaitAsync();
 
-            var lastPost = _viewModels.OfType<PostViewModel>().LastOrDefault();
-            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(_userId, lastPost?.Post.Id));
+            var lastViewModel = _viewModels.OfType<PostViewModel>().LastOrDefault();
+            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(_userId, lastViewModel?.Post.Id));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
@@ -87,9 +89,9 @@ public partial class UserPage : ContentPage
         base.OnAppearing();
         MainCollectionView.ItemsSource = _viewModels;
 
-        var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
-        if (staggeredItemsLayout.Span > 0)
+        if (ShouldRefreshMyProfile && _userId == Shared.UserId)
         {
+            ShouldRefreshMyProfile = false;
             await RefreshAsync();
         }
     }
@@ -98,5 +100,27 @@ public partial class UserPage : ContentPage
     {
         await RefreshAsync();
         (sender as RefreshView).IsRefreshing = false;
+    }
+
+    private Border _lastElement;
+    private void OnChildAdded(object sender, ElementEventArgs e)
+    {
+        var border = e.Element as Border;
+        var viewModel = border.BindingContext as PostViewModel;
+        if (viewModel == _viewModels.LastOrDefault())
+        {
+            _lastElement?.Loaded -= OnLastItemBorderLoaded;
+            border.Loaded += OnLastItemBorderLoaded;
+            _lastElement = border;
+        }
+    }
+
+    private async void OnLastItemBorderLoaded(object sender, EventArgs e)
+    {
+        if (_fetchSemaphore.CurrentCount > 0)
+        {
+            _lastElement?.Loaded -= OnLastItemBorderLoaded;
+            await LoadMoreAsync();
+        }
     }
 }

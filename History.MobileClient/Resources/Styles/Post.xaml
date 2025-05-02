@@ -8,10 +8,13 @@
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
 
     <DataTemplate x:Key="PostTemplate" x:DataType="vm:PostViewModel">
-        <Border Margin="12" Padding="12">
+        <Border Margin="6" Padding="12">
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="8" />
             </Border.StrokeShape>
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnTapped"/>
+            </Border.GestureRecognizers>
             <Grid RowSpacing="8">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="48" />

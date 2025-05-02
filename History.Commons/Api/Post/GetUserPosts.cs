@@ -20,7 +20,7 @@ public class GetUserPosts : IBaseRequest<List<PostResponseDto>>, IOptionalAuthRe
     {
         UrlParameters["userId"] = userId;
         QueryParameters["limit"] = limit.ToString();
-        if (fromPostId != null) QueryParameters["fromPostId"] = fromPostId;
+        if (fromPostId != null) QueryParameters["from"] = fromPostId;
     }
 
 }
