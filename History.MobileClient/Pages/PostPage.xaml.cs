@@ -18,7 +18,6 @@ public partial class PostPage : ContentPage
     private PostViewModel _viewModel;
     private MentionsViewModel _mentionsViewModel = new();
     private MediaAttachmentViewModel _commentMediaAttachmentViewModel;
-    private bool _isWideMode;
 
     private bool IsCommentEmpty
     {
@@ -50,6 +49,35 @@ public partial class PostPage : ContentPage
             else result.Add(new TextContent() { Text = span.Text });
         }
         return result;
+    }
+
+    private async Task LoadMoreComments()
+    {
+        var lastViewModel = _viewModel.Comments.LastOrDefault();
+        if (lastViewModel == null) return;
+
+        _commentUpdating = true;
+        IsEnabled = false;
+        MainActivityIndicator.IsVisible = true;
+        try
+        {
+            var commentsResult = await App.ExecuteRequestAsync(new GetCommentsByPostId(_viewModel.Post.Id, lastViewModel.Comment.Id, 20));
+            if (commentsResult.IsSuccess)
+            {
+                var comments = commentsResult.Value;
+                var commentViewModels = comments.Select(x => new CommentViewModel(x));
+                foreach (var commentViewModel in commentViewModels) _viewModel.Comments.Add(commentViewModel);
+            }
+            else return;
+        }
+        finally
+        {
+            IsEnabled = true;
+            MainActivityIndicator.IsVisible = false;
+            _commentUpdating = false;
+        }
+
+        return;
     }
 
     private void OnImageInputRequested(object sender, string path)
@@ -133,19 +161,61 @@ public partial class PostPage : ContentPage
             {
                 CommentMentionEditor.Text = string.Empty;
                 CommentMentionEditor.Unfocus();
+
                 await _viewModel.RefreshAsync();
+                if (!_viewModel.IsWideMode)
+                {
+                    await Task.Delay(1000);
+                    await MainScrollView.ScrollToAsync(0, MainScrollView.ContentSize.Height - MainScrollView.Height - CommentsScrollView.ContentSize.Height + 150, false);
+                }
+                else await CommentsScrollView.ScrollToAsync(0, 0, false);
             }
         }
         finally { MainActivityIndicator.IsVisible = false; }
     }
 
+    private void OnMainScrollViewSizeChanged(object sender, EventArgs e)
+    {
+        var scrollView = sender as ScrollView;
+        if (_viewModel.IsWideMode) MainGrid.HeightRequest = scrollView.Height;
+        else MainGrid.HeightRequest = -1;
+    }
+
+    private bool _commentUpdating = false;
+    private async void OnCommentScrollViewScrolled(object sender, ScrolledEventArgs e)
+    {
+        if (_commentUpdating) return;
+        else if (!_viewModel.IsWideMode) return;
+
+        var scrollView = sender as ScrollView;
+        // If scroll reached the bottom, load more comments
+        if (_viewModel.Comments.Count != _viewModel.CommentsCount
+            && scrollView.ScrollY >= scrollView.ContentSize.Height - scrollView.Height - 10)
+        {
+            await LoadMoreComments();
+        }
+    }
+
+    private async void OnMainScrollViewScrolled(object sender, ScrolledEventArgs e)
+    {
+        if (_commentUpdating) return;
+        else if (_viewModel.IsWideMode) return;
+
+        var scrollView = sender as ScrollView;
+        // If scroll reached the bottom, load more comments
+        if (_viewModel.Comments.Count != _viewModel.CommentsCount
+            && scrollView.ScrollY >= scrollView.ContentSize.Height - scrollView.Height - 10)
+        {
+            await LoadMoreComments();
+        }
+    }
 
     private void OnSizeChanged(object sender, EventArgs e)
     {
         MainGrid.ColumnDefinitions.Clear();
         MainGrid.RowDefinitions.Clear();
-        _isWideMode = Width > 700;
-        if(_isWideMode)
+        _viewModel.IsWideMode = Width > 700;
+        if (_viewModel.IsWideMode)
         {
             MainGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Star });
             MainGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(300, GridUnitType.Absolute) });
@@ -153,21 +223,10 @@ public partial class PostPage : ContentPage
         }
         else
         {
-            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Star });
+            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
             MainGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Star });
             MainGrid.HeightRequest = -1;
         }
-    }
-
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
-
-    private void OnUnloaded(object sender, EventArgs e) => _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
-
-    private void OnMainScrollViewSizeChanged(object sender, EventArgs e)
-    {
-        var scrollView = sender as ScrollView;
-        if (_isWideMode) MainGrid.HeightRequest = scrollView.Height;
-        else MainGrid.HeightRequest = -1;
     }
 
     private async void OnRefreshing(object sender, EventArgs e)
@@ -176,39 +235,7 @@ public partial class PostPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    private bool _commentUpdating = false;
-    private async void OnCommentScrollViewScrolled(object sender, ScrolledEventArgs e)
-    {
-        if (_commentUpdating) return;
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
 
-        var comment = sender as ScrollView;
-        // If scroll reached the bottom, load more comments
-        if (_viewModel.Comments.Count != _viewModel.CommentsCount
-            && comment.ScrollY >= comment.ContentSize.Height - comment.Height - 10)
-        {
-            var lastViewModel = _viewModel.Comments.LastOrDefault();
-            if (lastViewModel == null) return;
-
-            _commentUpdating = true;
-            IsEnabled = false;
-            MainActivityIndicator.IsVisible = true;
-            try
-            {
-                var commentsResult = await App.ExecuteRequestAsync(new GetCommentsByPostId(_viewModel.Post.Id, lastViewModel.Comment.Id, 20));
-                if (commentsResult.IsSuccess)
-                {
-                    var comments = commentsResult.Value;
-                    var commentViewModels = comments.Select(x => new CommentViewModel(x));
-                    foreach (var commentViewModel in commentViewModels) _viewModel.Comments.Add(commentViewModel);
-                }
-                else return;
-            }
-            finally
-            {
-                IsEnabled = true;
-                MainActivityIndicator.IsVisible = false;
-                _commentUpdating = false;
-            }
-        }
-    }
+    private void OnUnloaded(object sender, EventArgs e) => _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
 }

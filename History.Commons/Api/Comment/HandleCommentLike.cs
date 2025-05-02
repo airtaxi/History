@@ -1,4 +1,5 @@
-﻿using History.Commons.Interfaces;
+﻿using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Interfaces;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace History.Commons.Api.Comment;
 
-public class HandleCommentLike : IAuthRequiredRequest, IRequestWithUrlParameters
+public class HandleCommentLike : IBaseRequest<CommentResponseDto>, IAuthRequiredRequest, IRequestWithUrlParameters
 {
     public string Path => "/api/comment/{commentId}/like";
     public Method Method => Method.Post;

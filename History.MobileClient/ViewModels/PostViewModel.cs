@@ -35,6 +35,11 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(TimestampText))]
     public partial PostResponseDto Post { get; set; }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotWideMode))]
+    public partial bool IsWideMode { get; set; }
+    public bool IsNotWideMode => !IsWideMode;
+
     public string Nickname => Post.User.Nickname;
     public IMediaViewModel ProfileMedia => Post.User.UsesAnimatedProfileMedia
         ? new VideoViewModel(Utils.GenerateMediaUri(Post.User.ProfileMediaId))

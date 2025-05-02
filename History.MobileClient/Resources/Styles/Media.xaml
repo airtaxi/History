@@ -3,11 +3,12 @@
     x:Class="History.MobileClient.Resources.Styles.Media"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
     xmlns:ppc="clr-namespace:History.MobileClient.ThirdParty.PanPinchContainer"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
     <DataTemplate x:Key="ImageTemplate" x:DataType="vm:ImageViewModel">
-        <Image
+        <ffimageloading:CachedImage
             Aspect="{x:Binding Aspect}"
             HorizontalOptions="{x:Binding HorizontalContentOptions}"
             Loaded="OnImageLoaded"

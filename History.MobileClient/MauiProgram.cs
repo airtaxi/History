@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Maui;
+using FFImageLoading.Maui;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Foldable;
@@ -16,6 +17,7 @@ public static class MauiProgram
             .UseMauiApp<App>()
             .UseMauiCommunityToolkitMediaElement()
             .UseFoldable()
+            .UseFFImageLoading()
             .UseMauiCommunityToolkit()
             .UseUraniumUI()
             .UseUraniumUIMaterial()
