@@ -64,17 +64,12 @@ public static class ImageMagickHelper
                 image.Resize(size);
             }
 
+            image.Strip();
+
             using var ms = new MemoryStream();
             image.Write(ms);
             return new ImageConvertResult(false, ms.ToArray());
         }
-    }
-
-    private static MagickFormat GetFormatFromBytes(byte[] data)
-    {
-        using var ms = new MemoryStream(data);
-        var info = new MagickImageInfo(ms);
-        return info.Format;
     }
 
     private static void RunFFmpeg(string arguments)
