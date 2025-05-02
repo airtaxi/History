@@ -15,6 +15,13 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
     private readonly IMongoCollection<CommentLike> _commentLikeCollection = database.GetCollection<CommentLike>("CommentLikes");
 
     /// <inheritdoc />
+    public async Task<Result<Comment>> GetCommentByIdAsync(string commentId)
+    {
+        var comment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
+        if (comment == null) return (ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
+        return comment;
+    }
+
     public async Task<Result<List<Comment>>> GetCommentsByPostIdAsync(string postId, string requesterId, string fromCommentId = null, int limit = 10)
     {
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
