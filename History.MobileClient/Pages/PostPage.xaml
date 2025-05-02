@@ -72,90 +72,106 @@
                 </Image>
             </HorizontalStackLayout>
         </Grid>
+
         <Grid Grid.Row="1">
-            <ScrollView x:Name="MainScrollView" SizeChanged="OnMainScrollViewSizeChanged">
-                <Grid x:Name="MainGrid">
+            <RefreshView Refreshing="OnRefreshing">
+                <ScrollView x:Name="MainScrollView" SizeChanged="OnMainScrollViewSizeChanged">
                     <Grid
-                        x:Name="ContentsGrid"
-                        Grid.Row="0"
-                        Grid.Column="0">
-                        <ScrollView Padding="12" BackgroundColor="#000000">
-                            <Grid RowSpacing="8">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="48" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <Grid Grid.Row="0">
-                                    <HorizontalStackLayout Spacing="6">
-                                        <views:DataTemplatePresenter
-                                            ContentSelector="{StaticResource MediaTemplateSelector}"
-                                            HeightRequest="48"
-                                            ViewModel="{x:Binding ProfileMedia}"
-                                            WidthRequest="48">
-                                            <views:DataTemplatePresenter.Clip>
-                                                <EllipseGeometry
-                                                    Center="24,24"
-                                                    RadiusX="24"
-                                                    RadiusY="24" />
-                                            </views:DataTemplatePresenter.Clip>
-                                        </views:DataTemplatePresenter>
-                                        <VerticalStackLayout VerticalOptions="Center">
-                                            <Label
-                                                FontAttributes="Bold"
-                                                FontSize="16"
-                                                LineBreakMode="TailTruncation"
-                                                Text="{x:Binding Nickname}" />
-                                            <Label
-                                                Margin="0,-2,0,0"
-                                                FontSize="14"
-                                                LineBreakMode="TailTruncation"
-                                                Text="{x:Binding TimestampText}"
-                                                TextColor="#808080" />
-                                        </VerticalStackLayout>
-                                    </HorizontalStackLayout>
+                        x:Name="MainGrid"
+                        ColumnSpacing="6"
+                        RowSpacing="12">
+                        <Grid
+                            x:Name="ContentsGrid"
+                            Grid.Row="0"
+                            Grid.Column="0">
+                            <ScrollView Padding="12" BackgroundColor="#000000">
+                                <Grid RowSpacing="8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="48" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0">
+                                        <HorizontalStackLayout Spacing="6">
+                                            <views:DataTemplatePresenter
+                                                ContentSelector="{StaticResource MediaTemplateSelector}"
+                                                HeightRequest="48"
+                                                ViewModel="{x:Binding ProfileMedia}"
+                                                WidthRequest="48">
+                                                <views:DataTemplatePresenter.Clip>
+                                                    <EllipseGeometry
+                                                        Center="24,24"
+                                                        RadiusX="24"
+                                                        RadiusY="24" />
+                                                </views:DataTemplatePresenter.Clip>
+                                            </views:DataTemplatePresenter>
+                                            <VerticalStackLayout VerticalOptions="Center">
+                                                <Label
+                                                    FontAttributes="Bold"
+                                                    FontSize="16"
+                                                    LineBreakMode="TailTruncation"
+                                                    Text="{x:Binding Nickname}" />
+                                                <Label
+                                                    Margin="0,-2,0,0"
+                                                    FontSize="14"
+                                                    LineBreakMode="TailTruncation"
+                                                    Text="{x:Binding TimestampText}"
+                                                    TextColor="#808080" />
+                                            </VerticalStackLayout>
+                                        </HorizontalStackLayout>
+                                    </Grid>
+                                    <Grid Grid.Row="1">
+                                        <VerticalStackLayout
+                                            BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
+                                            BindableLayout.ItemsSource="{x:Binding Contents}"
+                                            Spacing="8" />
+                                    </Grid>
+                                    <Grid Grid.Row="2" IsVisible="{x:Binding HasPostReactions}">
+                                        <HorizontalStackLayout>
+                                            <Label FontSize="16">
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="느낌 " />
+                                                        <Span FontAttributes="Bold" Text="{x:Binding PostReactionsCount}" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                        </HorizontalStackLayout>
+                                    </Grid>
                                 </Grid>
-                                <Grid Grid.Row="1">
-                                    <VerticalStackLayout
-                                        BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
-                                        BindableLayout.ItemsSource="{x:Binding ContentViewModels}"
-                                        Spacing="8" />
-                                </Grid>
-                                <Grid Grid.Row="2">
-                                    <HorizontalStackLayout>
-                                        <Label>
-                                            <Label.FormattedText>
-                                                <FormattedString>
-                                                    <Span Text="느낌" />
-                                                    <Span Text=" " />
-                                                    <Span FontAttributes="Bold" Text="1" />
-                                                </FormattedString>
-                                            </Label.FormattedText>
-                                        </Label>
-                                    </HorizontalStackLayout>
-                                </Grid>
-                            </Grid>
-                        </ScrollView>
+                            </ScrollView>
+                        </Grid>
+                        <Grid
+                            x:Name="CommentsGrid"
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            BackgroundColor="#000000">
+                            <ScrollView
+                                Padding="16"
+                                IsVisible="{x:Binding HasComments}"
+                                Scrolled="OnCommentScrollViewScrolled">
+                                <VerticalStackLayout Spacing="16">
+                                    <Label FontSize="16">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="댓글 " />
+                                                <Span FontAttributes="Bold" Text="{x:Binding CommentsCount}" />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <CollectionView ItemTemplate="{StaticResource CommentTemplate}" ItemsSource="{x:Binding Comments}" />
+                                </VerticalStackLayout>
+                            </ScrollView>
+                            <Label
+                                Margin="16"
+                                HorizontalOptions="Center"
+                                IsVisible="{x:Binding HasNoComments}"
+                                Text="댓글이 없습니다"
+                                VerticalOptions="Center" />
+                        </Grid>
                     </Grid>
-                    <Grid
-                        x:Name="CommentsGrid"
-                        Grid.Row="1"
-                        Grid.Column="1">
-                        <ScrollView
-                            Padding="12"
-                            BackgroundColor="#000000"
-                            IsVisible="{x:Binding HasNoComments}">
-                            <CollectionView ItemsSource="{x:Binding Comments}" />
-                        </ScrollView>
-                        <Label
-                            Margin="24"
-                            HorizontalOptions="Center"
-                            IsVisible="{x:Binding HasNoComments}"
-                            Text="댓글이 없습니다"
-                            VerticalOptions="Center" />
-                    </Grid>
-                </Grid>
-            </ScrollView>
+                </ScrollView>
+            </RefreshView>
             <CollectionView
                 x:Name="CommentUserCollectionView"
                 x:DataType="vm:MentionsViewModel"

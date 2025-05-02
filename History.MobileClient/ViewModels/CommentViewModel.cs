@@ -15,11 +15,22 @@ public partial class CommentViewModel(CommentResponseDto comment) : ObservableOb
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Nickname))]
     [NotifyPropertyChangedFor(nameof(Contents))]
-    [NotifyPropertyChangedFor(nameof(ContentViewModels))]
+    [NotifyPropertyChangedFor(nameof(ProfileMedia))]
+    [NotifyPropertyChangedFor(nameof(CreatedAt))]
+    [NotifyPropertyChangedFor(nameof(ModifiedAt))]
+    [NotifyPropertyChangedFor(nameof(TimestampText))]
     public partial CommentResponseDto Comment { get; set; } = comment;
 
-    public string Nickname => Comment.User.Nickname;
-    public List<BaseContent> Contents => Comment.Contents;
+    public IMediaViewModel ProfileMedia => Comment.User.UsesAnimatedProfileMedia
+        ? new VideoViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId))
+        : new ImageViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
-    public List<IContentViewModel> ContentViewModels => Utils.GenerateContentViewModels(Contents, false);
+    public string Nickname => Comment.User.Nickname;
+
+    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Comment.Contents, false);
+
+    public DateTime CreatedAt => Comment.CreatedAt;
+    public DateTime? ModifiedAt => Comment.ModifiedAt;
+
+    public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
 }

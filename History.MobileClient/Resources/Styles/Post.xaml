@@ -52,7 +52,7 @@
                 <Grid Grid.Row="1">
                     <VerticalStackLayout
                         BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
-                        BindableLayout.ItemsSource="{x:Binding ContentViewModels}"
+                        BindableLayout.ItemsSource="{x:Binding Contents}"
                         Spacing="8" />
                 </Grid>
             </Grid>

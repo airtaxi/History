@@ -132,6 +132,7 @@ public partial class PostPage : ContentPage
             else if (result.IsSuccess)
             {
                 CommentMentionEditor.Text = string.Empty;
+                CommentMentionEditor.Unfocus();
                 await _viewModel.RefreshAsync();
             }
         }
@@ -147,7 +148,7 @@ public partial class PostPage : ContentPage
         if(_isWideMode)
         {
             MainGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Star });
-            MainGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Star });
+            MainGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(300, GridUnitType.Absolute) });
             MainGrid.HeightRequest = MainScrollView.Height;
         }
         else
@@ -167,5 +168,47 @@ public partial class PostPage : ContentPage
         var scrollView = sender as ScrollView;
         if (_isWideMode) MainGrid.HeightRequest = scrollView.Height;
         else MainGrid.HeightRequest = -1;
+    }
+
+    private async void OnRefreshing(object sender, EventArgs e)
+    {
+        await _viewModel.RefreshAsync();
+        (sender as RefreshView).IsRefreshing = false;
+    }
+
+    private bool _commentUpdating = false;
+    private async void OnCommentScrollViewScrolled(object sender, ScrolledEventArgs e)
+    {
+        if (_commentUpdating) return;
+
+        var comment = sender as ScrollView;
+        // If scroll reached the bottom, load more comments
+        if (_viewModel.Comments.Count != _viewModel.CommentsCount
+            && comment.ScrollY >= comment.ContentSize.Height - comment.Height - 10)
+        {
+            var lastViewModel = _viewModel.Comments.LastOrDefault();
+            if (lastViewModel == null) return;
+
+            _commentUpdating = true;
+            IsEnabled = false;
+            MainActivityIndicator.IsVisible = true;
+            try
+            {
+                var commentsResult = await App.ExecuteRequestAsync(new GetCommentsByPostId(_viewModel.Post.Id, lastViewModel.Comment.Id, 20));
+                if (commentsResult.IsSuccess)
+                {
+                    var comments = commentsResult.Value;
+                    var commentViewModels = comments.Select(x => new CommentViewModel(x));
+                    foreach (var commentViewModel in commentViewModels) _viewModel.Comments.Add(commentViewModel);
+                }
+                else return;
+            }
+            finally
+            {
+                IsEnabled = true;
+                MainActivityIndicator.IsVisible = false;
+                _commentUpdating = false;
+            }
+        }
     }
 }

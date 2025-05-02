@@ -49,7 +49,7 @@ public partial class TimelinePage : ContentPage
             await _fetchSemaphore.WaitAsync();
 
             var lastViewModel = _viewModels.OfType<PostViewModel>().LastOrDefault();
-            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(Shared.UserId, lastViewModel?.Post.Id));
+            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts (lastViewModel?.Post.Id));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;

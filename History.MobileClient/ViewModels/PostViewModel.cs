@@ -6,29 +6,34 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class PostViewModel(PostResponseDto post, bool wrapMedias) : ObservableObject
+public partial class PostViewModel : ObservableObject
 {
+    private readonly bool _wrapMedias;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Nickname))]
     [NotifyPropertyChangedFor(nameof(IsRepost))]
     [NotifyPropertyChangedFor(nameof(Contents))]
     [NotifyPropertyChangedFor(nameof(ParentPost))]
     [NotifyPropertyChangedFor(nameof(HasBeenSimpleReposted))]
+    [NotifyPropertyChangedFor(nameof(HasNoComments))]
     [NotifyPropertyChangedFor(nameof(HasComments))]
     [NotifyPropertyChangedFor(nameof(CommentsCount))]
     [NotifyPropertyChangedFor(nameof(Comments))]
-    [NotifyPropertyChangedFor(nameof(ContentViewModels))]
+    [NotifyPropertyChangedFor(nameof(HasPostReactions))]
+    [NotifyPropertyChangedFor(nameof(PostReactionsCount))]
     [NotifyPropertyChangedFor(nameof(PostReactions))]
     [NotifyPropertyChangedFor(nameof(CreatedAt))]
     [NotifyPropertyChangedFor(nameof(ModifiedAt))]
     [NotifyPropertyChangedFor(nameof(TimestampText))]
-    public partial PostResponseDto Post { get; set; } = post;
+    public partial PostResponseDto Post { get; set; }
 
     public string Nickname => Post.User.Nickname;
     public IMediaViewModel ProfileMedia => Post.User.UsesAnimatedProfileMedia
@@ -39,14 +44,17 @@ public partial class PostViewModel(PostResponseDto post, bool wrapMedias) : Obse
     public PostViewModel ParentPost => new(Post.ParentPost, true);
     public bool HasBeenSimpleReposted => Post.HasBeenSimpleReposted;
 
-    public List<BaseContent> Contents => Post.Contents;
-    public List<IContentViewModel> ContentViewModels => Utils.GenerateContentViewModels(Contents, wrapMedias);
+    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Post.Contents, _wrapMedias);
 
     public bool HasNoComments => Post.CommentsCount == 0;
     public bool HasComments => Post.CommentsCount > 0;
     public int CommentsCount => Post.CommentsCount;
-    public List<CommentViewModel> Comments => [.. Post.Comments.Select(c => new CommentViewModel(c))];
 
+    [ObservableProperty]
+    public partial ObservableCollection<CommentViewModel> Comments { get; private set; }
+
+    public bool HasPostReactions => Post.PostReactions.Count > 0;
+    public int PostReactionsCount => Post.PostReactions.Count;
     public List<PostReactionViewModel> PostReactions => [.. Post.PostReactions.Select(r => new PostReactionViewModel(r))];
 
     public DateTime CreatedAt => Post.CreatedAt;
@@ -54,9 +62,20 @@ public partial class PostViewModel(PostResponseDto post, bool wrapMedias) : Obse
 
     public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
 
+    public PostViewModel(PostResponseDto post, bool wrapMedias)
+    {
+        _wrapMedias = wrapMedias;
+        Post = post;
+        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
+    }
+
     public async Task RefreshAsync()
     {
         var result = await App.ExecuteRequestAsync(new GetPost(Post.Id));
-        if (result.IsSuccess) Post = result.Value;
+        if (result.IsSuccess)
+        {
+            Post = result.Value;
+            Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
+        }
     }
 }
