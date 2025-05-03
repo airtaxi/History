@@ -284,6 +284,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     /// <inheritdoc/>
     public async Task<Result> IgnorePostAsync(string userId, string postId)
     {
+        var post = await GetPostByIdAsync(postId);
+        if (post.IsFailure) return post.CastFailure();
+        else if (post.Value.UserId == userId) return Result.Failure(ErrorType.BadRequest, "자신의 게시글은 무시할 수 없습니다.");
+
         var ignoredPost = new IgnoredPost
         {
             UserId = userId,
