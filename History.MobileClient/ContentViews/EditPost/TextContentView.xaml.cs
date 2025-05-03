@@ -10,6 +10,8 @@ public partial class TextContentView : ContentView
     // MentionId of Android only supports integer value
     public static Dictionary<int, string> MentionIdMap = [];
 
+    public string Text => MainMentionEditor.Text;
+
     public event EventHandler<string> ImageInputRequested;
     public TextContentView()
 	{

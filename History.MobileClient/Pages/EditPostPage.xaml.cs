@@ -154,7 +154,7 @@ public partial class EditPostPage : ContentPage
 
         var contents = editorContents.Concat(uploadContents).ToList();
 
-        if (contents.Count == 0)
+        if (string.IsNullOrEmpty(MainTextContent.Text.Trim()) && !uploadContents.Any())
         {
             await DisplayAlert("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
             return;

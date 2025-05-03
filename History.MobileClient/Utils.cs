@@ -78,17 +78,6 @@ public static class Utils
 
     public static void TrimContents(List<BaseContent> contents)
     {
-        IEnumerable<TextContent> textContents;
-        do
-        {
-            textContents = contents.OfType<TextContent>();
-            var textOrProfileContents = contents.Where(x => x is TextContent || x is ProfileContent);
-            if (textOrProfileContents.FirstOrDefault() is TextContent firstTextContent) firstTextContent?.Text = firstTextContent.Text.TrimStart();
-            if (textOrProfileContents.LastOrDefault() is TextContent lastTextContent) lastTextContent?.Text = lastTextContent?.Text.TrimEnd();
-            contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrEmpty(textContent.Text));
-        }
-        while (textContents.Any() && (string.IsNullOrWhiteSpace(textContents.FirstOrDefault()?.Text) || string.IsNullOrWhiteSpace(textContents.LastOrDefault()?.Text)));
-
         var cloned = contents.ToList();
         contents.Clear();
         var textContentBuffer = new List<TextContent>();
@@ -116,6 +105,10 @@ public static class Utils
         }
         FlushTextContentBuffer();
 
+        var textContents = contents.OfType<TextContent>();
+        textContents.FirstOrDefault()?.Text = textContents.FirstOrDefault().Text.TrimStart();
+        textContents.LastOrDefault()?.Text = textContents.LastOrDefault().Text.TrimEnd();
+        contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrEmpty(textContent.Text));
     }
 
     public static string GenerateFriendlyTimestamp(DateTime createdAt, DateTime? modifiedAt)
@@ -137,7 +130,7 @@ public static class Utils
     }
 
     public static IMediaViewModel GenerateMediaViewModelFromMediaContent(MediaContent mediaContent, bool isInCarouselView) => mediaContent.IsVideo
-    ? new VideoViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId)
+    ? new VideoViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId, mediaContent.Description)
     {
         VideoShouldShowPlaybackControls = false,
         Aspect = Aspect.AspectFill,
@@ -148,7 +141,7 @@ public static class Utils
         VideoShouldLoopPlayback = true,
         VerticalContentOptions = LayoutOptions.Fill
     }
-    : new ImageViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId)
+    : new ImageViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId, mediaContent.Description)
     {
         Aspect = Aspect.AspectFill,
 		ResizeParentCarouselViewWhenSizeChanged = isInCarouselView && false,
