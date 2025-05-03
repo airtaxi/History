@@ -24,14 +24,16 @@ public partial class App : Application
     public static async Task PushModalAsync(Page page) => await Current.Windows[0].Page.Navigation.PushModalAsync(page);
     public static async Task PopModalAsync() => await Current.Windows[0].Page.Navigation.PopModalAsync();
 
+    public static Page TopPage => Navigation.ModalStack.Count > 0 ? Navigation.ModalStack[Navigation.ModalStack.Count - 1] : Current.Windows[0].Page;
+    
     public static async Task<Result> ExecuteRequestAsync(IBaseRequest request, params ErrorType[] hiddenErrorTypes)
     {
         hiddenErrorTypes ??= [];
 
         try
         {
-            Current.Windows[0].Page.IsEnabled = false;
-            Current.Windows[0].Page.IsBusy = true;
+            TopPage.IsEnabled = false;
+            TopPage.IsBusy = true;
 
             await Shared.ApiHandler.ExecuteRequestAsync(request);
             return Result.Success();
@@ -41,13 +43,13 @@ public partial class App : Application
             var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
 
             if (!hiddenErrorTypes.Contains(errorType))
-                await Current.Windows[0].Page.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
+                await TopPage.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
         finally
         {
-            Current.Windows[0].Page.IsEnabled = true;
-            Current.Windows[0].Page.IsBusy = false;
+            TopPage.IsEnabled = true;
+            TopPage.IsBusy = false;
         }
     }
 
@@ -57,8 +59,8 @@ public partial class App : Application
 
         try
         {
-            Current.Windows[0].Page.IsEnabled = false;
-            Current.Windows[0].Page.IsBusy = true;
+            TopPage.IsEnabled = false;
+            TopPage.IsBusy = true;
 
             return await Shared.ApiHandler.ExecuteRequestAsync(request);
         }
@@ -67,13 +69,13 @@ public partial class App : Application
             var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
 
             if (!hiddenErrorTypes.Contains(errorType))
-                await Current.Windows[0].Page.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
+                await TopPage.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
         finally
         {
-            Current.Windows[0].Page.IsEnabled = true;
-            Current.Windows[0].Page.IsBusy = false;
+            TopPage.IsEnabled = true;
+            TopPage.IsBusy = false;
         }
     }
 
