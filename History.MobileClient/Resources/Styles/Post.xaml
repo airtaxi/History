@@ -22,14 +22,16 @@
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0">
                     <HorizontalStackLayout Spacing="6">
-                        <Grid HorizontalOptions="Start" VerticalOptions="Start">
+                        <Grid
+                            HorizontalOptions="Start"
+                            Loaded="OnLoaded"
+                            VerticalOptions="Start">
                             <Grid.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnProfileImageTapped" />
                             </Grid.GestureRecognizers>
                             <views:DataTemplatePresenter
                                 ContentSelector="{StaticResource MediaTemplateSelector}"
                                 HeightRequest="48"
-                                ViewModel="{x:Binding ProfileMedia}"
                                 WidthRequest="48">
                                 <views:DataTemplatePresenter.Clip>
                                     <EllipseGeometry
