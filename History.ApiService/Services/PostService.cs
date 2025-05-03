@@ -423,11 +423,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         // Delete post reactions associated with the post
         await _postReactionCollection.DeleteManyAsync(r => r.PostId == postId);
 
-        // Delete the post from the database
-        await _postCollection.DeleteOneAsync(p => p.Id == postId);
-
         // Delete media files associated with the post
         await mediaService.DeleteMediaByAssociatedIdAsync(postId);
+
+        // Delete the post from the database
+        await _postCollection.DeleteOneAsync(p => p.Id == postId);
 
         return Result.Success();
     }
