@@ -588,7 +588,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         {
             var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == profileContent.UserId);
             profileContent.UserId = user?.UserId;
-            profileContent.Nickname = user?.Nickname ?? "차단된 사용자";
+            profileContent.Nickname = (user?.Nickname ?? "차단된 사용자") + ' ';
         }
 
         var postReactions = await GeneratePostReactionDtosAsync(post.Id, requesterId);
