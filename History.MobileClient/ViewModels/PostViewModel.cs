@@ -39,14 +39,19 @@ public partial class PostViewModel : ObservableObject
     public partial PostResponseDto Post { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Nickname))]
+    [NotifyPropertyChangedFor(nameof(ProfileMedia))]
+    public partial UserResponseDto User { get; private set; }
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotWideMode))]
     public partial bool IsWideMode { get; set; }
     public bool IsNotWideMode => !IsWideMode;
 
-    public string Nickname => Post.User.Nickname;
-    public IMediaViewModel ProfileMedia => Post.User.UsesAnimatedProfileMedia
-        ? new VideoViewModel(Utils.GenerateMediaUri(Post.User.ProfileMediaId))
-        : new ImageViewModel(Utils.GenerateMediaUri(Post.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+    public string Nickname => User.Nickname;
+    public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia
+        ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
+        : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
     public bool IsRepost => Post.IsRepost;
     public PostViewModel ParentPost => new(Post.ParentPost, true);
@@ -75,9 +80,13 @@ public partial class PostViewModel : ObservableObject
         _wrapMedias = wrapMedias;
 
         Post = post;
+        User = post.User;
         Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
 
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, OnUserChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, OnCommentChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<ValueDeletedMessage<CommentResponseDto>>(this, OnCommentDeletedMessageReceived);
     }
 
     private void OnPostChangedMessageReceived(object sender, ValueChangedMessage<PostResponseDto> message)
@@ -88,10 +97,33 @@ public partial class PostViewModel : ObservableObject
         Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
     }
 
+    private void OnUserChangedMessageReceived(object recipient, ValueChangedMessage<UserResponseDto> message)
+    {
+        if (message.Value.UserId != User.UserId) return;
+        User = message.Value;
+    }
+
+    private void OnCommentDeletedMessageReceived(object recipient, ValueDeletedMessage<CommentResponseDto> message)
+    {
+        var viewModel = Comments.FirstOrDefault(c => c.Comment.Id == message.Value.Id);
+        if (viewModel == null) return;
+
+        Comments.Remove(viewModel);
+    }
+
+    private void OnCommentChangedMessageReceived(object recipient, ValueChangedMessage<CommentResponseDto> message)
+    {
+        var viewModel = Comments.FirstOrDefault(c => c.Comment.Id == message.Value.Id);
+        if (viewModel == null) return;
+
+        viewModel.Comment = message.Value;
+    }
+
+
     public async Task DisplayActionSheet(bool popModal)
     {
         var options = new List<string>() { "관심글로 저장", "이 글 알림 끄기" };
-        if (Post.User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제"]);
+        if (User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제"]);
         else options.AddRange("게시글 신고");
 
         var result = await App.Page.DisplayActionSheet("게시물 옵션", "취소", null, [.. options]);
