@@ -20,5 +20,5 @@ public partial class MentionViewModel(UserResponseDto user)
 
     public string Nickname => user.Nickname;
 
-    public IMediaViewModel ProfileMedia => user.UsesAnimatedProfileMedia ? new VideoViewModel(Utils.GenerateMediaUri(user.ProfileMediaId)) : new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+    public IMediaViewModel ProfileMedia => new ImageViewModel(Utils.GenerateMediaUri(user.ProfileThumbnailMediaId);
 }
