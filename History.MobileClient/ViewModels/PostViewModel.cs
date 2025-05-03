@@ -131,7 +131,7 @@ public partial class PostViewModel : ObservableObject
         if (result == null) return;
 
         if (result == "게시글 삭제") await DeleteAsync(popModal);
-        else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
+        else if (result != "취소") await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
 
     public async Task RefreshAsync()
