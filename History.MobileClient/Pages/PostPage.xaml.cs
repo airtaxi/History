@@ -238,4 +238,6 @@ public partial class PostPage : ContentPage
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
 
     private void OnUnloaded(object sender, EventArgs e) => _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
+
+    private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await _viewModel.DisplayActionSheet(true);
 }

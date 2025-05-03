@@ -35,4 +35,12 @@ public partial class Post : ResourceDictionary
         var profilePage = new UserPage(viewModel.Post.User.UserId);
         await App.PushModalAsync(profilePage);
     }
+
+    private async void OnMoreImageTapped(object sender, TappedEventArgs e)
+    {
+        var element = sender as Element;
+        var viewModel = element.BindingContext as PostViewModel;
+
+        await viewModel.DisplayActionSheet(false);
+    }
 }
