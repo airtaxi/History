@@ -128,10 +128,10 @@ public partial class PostViewModel : ObservableObject
 
         var result = await App.Page.DisplayActionSheet("게시물 옵션", "취소", null, [.. options]);
 
-        if (result == null) return;
+        if (result == null || result == "취소") return;
 
         if (result == "게시글 삭제") await DeleteAsync(popModal);
-        else if (result != "취소") await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
+        else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
 
     public async Task RefreshAsync()
