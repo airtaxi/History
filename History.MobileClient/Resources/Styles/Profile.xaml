@@ -36,13 +36,14 @@
                             </views:DataTemplatePresenter.Clip>
                         </views:DataTemplatePresenter>
                         <Border
-                            HeightRequest="25"
+                            Margin="0,0,-5,3"
+                            HeightRequest="22.5"
                             HorizontalOptions="End"
                             IsVisible="{x:Binding IsMe}"
                             Stroke="#808080"
                             StrokeThickness="1"
                             VerticalOptions="End"
-                            WidthRequest="25"
+                            WidthRequest="22.5"
                             ZIndex="10">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnChangeProfileImageBorderTapped" />
@@ -55,12 +56,11 @@
                                     Fill="{StaticResource Primary}"
                                     HorizontalOptions="Fill"
                                     VerticalOptions="Fill" />
-                                <Image>
+                                <Image HeightRequest="15" WidthRequest="15">
                                     <Image.Source>
                                         <FontImageSource
                                             FontFamily="MaterialSharp"
                                             Glyph="{x:Static m:MaterialSharp.Edit}"
-                                            Size="15"
                                             Color="White" />
                                     </Image.Source>
                                 </Image>
