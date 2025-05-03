@@ -25,7 +25,7 @@ public partial class FriendshipViewModel(UserResponseDto user) : ObservableObjec
 
     public string Nickname => User.Nickname;
 
-    public IMediaViewModel ProfileMedia => new ImageViewModel(Utils.GenerateMediaUri(user.ProfileThumbnailMediaId));
+    public IMediaViewModel ProfileMedia => new ImageViewModel(Utils.GenerateMediaUri(User.ProfileThumbnailMediaId));
 
     public string FriendshipGlyph
     {
