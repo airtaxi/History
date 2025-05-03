@@ -179,7 +179,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         }
         else
         {
-            var convertResult = ImageMagickHelper.ConvertAndSave(image, true, 512);
+            var convertResult = ImageMagickHelper.ConvertAndSave(image, false, 512);
             var usesAnimatedProfileMedia = convertResult.IsMp4;
             var bytes = convertResult.Data;
             var contentType = convertResult.MimeType;
