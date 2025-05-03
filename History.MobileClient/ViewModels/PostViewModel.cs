@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes;
@@ -70,17 +72,22 @@ public partial class PostViewModel : ObservableObject
     public PostViewModel(PostResponseDto post, bool wrapMedias)
     {
         _wrapMedias = wrapMedias;
+
         Post = post;
+        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
+
+        WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostValueChangedMessageReceived);
+    }
+
+    private void OnPostValueChangedMessageReceived(object sender, ValueChangedMessage<PostResponseDto> message)
+    {
+        Post = message.Value;
         Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
     }
 
     public async Task RefreshAsync()
     {
         var result = await App.ExecuteRequestAsync(new GetPost(Post.Id));
-        if (result.IsSuccess)
-        {
-            Post = result.Value;
-            Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
-        }
+        if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
     }
 }

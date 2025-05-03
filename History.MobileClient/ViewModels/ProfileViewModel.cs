@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
@@ -8,7 +10,7 @@ using NativeMedia;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
+public partial class ProfileViewModel : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsMe))]
@@ -19,7 +21,7 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
     [NotifyPropertyChangedFor(nameof(FriendshipDescription))]
     [NotifyPropertyChangedFor(nameof(BackgroundMedia))]
     [NotifyPropertyChangedFor(nameof(ProfileMedia))]
-    public partial UserResponseDto User { get; private set; } = user;
+    public partial UserResponseDto User { get; private set; }
 
     public bool IsMe => User.UserId == Shared.UserId;
     public bool IsNotMe => User.UserId != Shared.UserId;
@@ -71,10 +73,16 @@ public partial class ProfileViewModel(UserResponseDto user) : ObservableObject
         ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
+    public ProfileViewModel(UserResponseDto user)
+    {
+        User = user;
+        WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, (r, m) => User = m.Value);
+    }
+
     private async Task RefreshAsync()
     {
         var result = await App.ExecuteRequestAsync(new GetUser(User.UserId));
-        if (result.IsSuccess) User = result.Value;
+        if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<UserResponseDto>(result.Value));
     }
 
     public async Task HandleChangeBackgroundMediaAsync()
