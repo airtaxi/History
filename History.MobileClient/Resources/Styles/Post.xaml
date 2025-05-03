@@ -32,6 +32,7 @@
                             <views:DataTemplatePresenter
                                 ContentSelector="{StaticResource MediaTemplateSelector}"
                                 HeightRequest="48"
+                                ViewModel="{x:Binding ProfileMedia}"
                                 WidthRequest="48">
                                 <views:DataTemplatePresenter.Clip>
                                     <EllipseGeometry
