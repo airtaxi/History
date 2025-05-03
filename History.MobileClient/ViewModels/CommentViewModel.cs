@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.Api.Comment;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
@@ -12,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class CommentViewModel(CommentResponseDto comment) : ObservableObject
+public partial class CommentViewModel : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Nickname))]
@@ -27,7 +29,7 @@ public partial class CommentViewModel(CommentResponseDto comment) : ObservableOb
     [NotifyPropertyChangedFor(nameof(CreatedAt))]
     [NotifyPropertyChangedFor(nameof(ModifiedAt))]
     [NotifyPropertyChangedFor(nameof(TimestampText))]
-    public partial CommentResponseDto Comment { get; set; } = comment;
+    public partial CommentResponseDto Comment { get; set; }
 
     public IMediaViewModel ProfileMedia => Comment.User.UsesAnimatedProfileMedia
         ? new VideoViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId))
@@ -57,4 +59,15 @@ public partial class CommentViewModel(CommentResponseDto comment) : ObservableOb
     public DateTime? ModifiedAt => Comment.ModifiedAt;
 
     public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
+
+    public CommentViewModel(CommentResponseDto comment)
+    {
+        Comment = comment;
+        WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, (r,m) =>
+        {
+            if (m.Value.Id != Comment.Id) return;
+
+            Comment = m.Value;
+        });
+    }
 }
