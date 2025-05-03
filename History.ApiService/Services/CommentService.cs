@@ -165,8 +165,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         await _commentLikeCollection.DeleteManyAsync(f => f.CommentId == commentId);
 
         // Delete Media
-        var deleteResult = await mediaService.DeleteMediaByAssociatedIdAsync(commentId);
-        if (deleteResult.IsFailure) return deleteResult;
+        await mediaService.DeleteMediaByAssociatedIdAsync(commentId);
 
         return Result.Success();
     }
