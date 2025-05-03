@@ -119,7 +119,6 @@ public partial class PostViewModel : ObservableObject
         viewModel.Comment = message.Value;
     }
 
-
     public async Task DisplayActionSheet(bool popModal)
     {
         var options = new List<string>() { "관심글로 저장", "이 글 알림 끄기" };
