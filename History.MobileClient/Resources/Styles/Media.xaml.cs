@@ -106,6 +106,9 @@ public partial class Media : ResourceDictionary
     private void OnImageLoaded(object sender, EventArgs e)
     {
         if (sender is not CachedImage image) return;
+        var isFullscreenViewModel = image.BindingContext is FullScreenImageViewModel;
+        image.DownsampleToViewSize = !isFullscreenViewModel;
+
         ResizeImage(image);
     }
 
