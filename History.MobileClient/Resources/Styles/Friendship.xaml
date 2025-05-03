@@ -19,7 +19,7 @@
             </Grid.ColumnDefinitions>
             <views:DataTemplatePresenter
                 Grid.Column="0"
-                ContentSelector="{StaticResource MediaTemplateSelector}"
+                Template="{StaticResource MediaTemplateSelector}"
                 HeightRequest="32"
                 ViewModel="{x:Binding ProfileMedia}"
                 WidthRequest="32">

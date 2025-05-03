@@ -1,3 +1,5 @@
+using AndroidX.Lifecycle;
+using CommunityToolkit.Mvvm.Input;
 using History.Commons.Api.User;
 using History.MobileClient.ContentViews;
 using History.MobileClient.Pages;
@@ -12,14 +14,6 @@ public partial class Post : ResourceDictionary
 	{
 		InitializeComponent();
 	}
-
-    private async void OnTapped(object sender, TappedEventArgs e)
-    {
-		var viewModel = (sender as Element)?.BindingContext as PostViewModel;
-		var newViewModel = new PostViewModel(viewModel.Post, false);
-        var postPage = new PostPage(newViewModel);
-		await App.PushModalAsync(postPage);
-    }
 
     private async void OnProfileImageTapped(object sender, TappedEventArgs e)
     {
@@ -45,13 +39,23 @@ public partial class Post : ResourceDictionary
         await viewModel.DisplayActionSheet(false);
     }
 
-    private void OnLoaded(object sender, EventArgs e)
+    private void OnProfileGridLoaded(object sender, EventArgs e)
     {
         var grid = sender as Grid;
         var viewModel = grid.BindingContext as PostViewModel;
         if (viewModel == null) return;
 
-        var presenter = grid.Children[0] as DataTemplatePresenter;
+        var presenter = grid.Children.OfType<DataTemplatePresenter>().FirstOrDefault();
         presenter.ViewModel = viewModel.ProfileMedia;
+    }
+
+    private void OnCommentGridLoaded(object sender, EventArgs e)
+    {
+        var grid = sender as Grid;
+        var viewModel = grid.BindingContext as PostViewModel;
+        if (viewModel == null) return;
+
+        var presenter = grid.Children.OfType<DataTemplatePresenter>().FirstOrDefault();
+        presenter.ViewModel = viewModel.FirstComment;
     }
 }

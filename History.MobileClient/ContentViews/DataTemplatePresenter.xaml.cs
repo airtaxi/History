@@ -2,12 +2,12 @@ namespace History.MobileClient.ContentViews;
 
 public partial class DataTemplatePresenter : ContentView
 {
-    public static readonly BindableProperty ContentSelectorProperty =
+    public static readonly BindableProperty TemplateProperty =
         BindableProperty.Create(
-            nameof(ContentSelector),
-            typeof(DataTemplateSelector),
+            nameof(Template),
+            typeof(DataTemplate),
             typeof(DataTemplatePresenter),
-            propertyChanged: OnSelectorChanged);
+            propertyChanged: OnTemplateChanged);
 
     public static readonly BindableProperty ViewModelProperty =
         BindableProperty.Create(
@@ -22,10 +22,10 @@ public partial class DataTemplatePresenter : ContentView
         set => SetValue(ViewModelProperty, value);
     }
 
-    public DataTemplateSelector ContentSelector
+    public DataTemplate Template
     {
-        get => (DataTemplateSelector)GetValue(ContentSelectorProperty);
-        set => SetValue(ContentSelectorProperty, value);
+        get => (DataTemplate)GetValue(TemplateProperty);
+        set => SetValue(TemplateProperty, value);
     }
 
     public DataTemplatePresenter()
@@ -33,7 +33,7 @@ public partial class DataTemplatePresenter : ContentView
         InitializeComponent();
     }
 
-    private static void OnSelectorChanged(BindableObject bindable, object oldValue, object newValue)
+    private static void OnTemplateChanged(BindableObject bindable, object oldValue, object newValue)
     {
         if (bindable is DataTemplatePresenter presenter)
         {
@@ -51,15 +51,27 @@ public partial class DataTemplatePresenter : ContentView
 
     private void ApplyTemplate()
     {
-        if (ContentSelector == null || ViewModel == null)
+        if (Template == null || ViewModel == null)
             return;
 
-        var template = ContentSelector.SelectTemplate(ViewModel, this);
-        if (template?.CreateContent() is View view)
+        if(Template is DataTemplateSelector selector)
         {
-            BindingContext = ViewModel;
-            view.BindingContext = ViewModel;
-            Content = view;
+            var template = selector.SelectTemplate(ViewModel, this);
+            if (template?.CreateContent() is View view)
+            {
+                BindingContext = ViewModel;
+                view.BindingContext = ViewModel;
+                Content = view;
+            }
+        }
+        else
+        {
+            if (Template.CreateContent() is View view)
+            {
+                BindingContext = ViewModel;
+                view.BindingContext = ViewModel;
+                Content = view;
+            }
         }
     }
 }

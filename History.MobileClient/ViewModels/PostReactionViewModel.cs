@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UraniumUI.Icons.FontAwesome;
 using UraniumUI.Icons.MaterialSymbols;
 
 namespace History.MobileClient.ViewModels;
@@ -13,9 +14,9 @@ namespace History.MobileClient.ViewModels;
 public partial class PostReactionViewModel(PostReactionDto reaction) : ObservableObject
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(User))]
-    [NotifyPropertyChangedFor(nameof(Type))]
-    [NotifyPropertyChangedFor(nameof(CreatedAt))]
+    [NotifyPropertyChangedFor(nameof(ProfileMedia))]
+    [NotifyPropertyChangedFor(nameof(Glyph))]
+    [NotifyPropertyChangedFor(nameof(Color))]
     [NotifyPropertyChangedFor(nameof(TypeText))]
     public partial PostReactionDto Reaction { get; set; } = reaction;
 
@@ -23,17 +24,21 @@ public partial class PostReactionViewModel(PostReactionDto reaction) : Observabl
     public PostReactionType Type => Reaction.Type;
     public DateTime CreatedAt => Reaction.CreatedAt;
 
+    public IMediaViewModel ProfileMedia => Reaction.User.UsesAnimatedProfileMedia
+        ? new VideoViewModel(Utils.GenerateMediaUri(Reaction.User.ProfileMediaId))
+        : new ImageViewModel(Utils.GenerateMediaUri(Reaction.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+
     public string Glyph
     {
         get
         {
             return Reaction.Type switch
             {
-                PostReactionType.Like => MaterialSharp.Favorite,
-                PostReactionType.Awesome => MaterialSharp.Star,
-                PostReactionType.Happy => MaterialSharp.Sentiment_satisfied,
-                PostReactionType.Sad => MaterialSharp.Water_drop,
-                PostReactionType.Support => MaterialSharp.Bolt,
+                PostReactionType.Like => Solid.Heart,
+                PostReactionType.Awesome => Solid.Star,
+                PostReactionType.Happy => Solid.FaceSmile,
+                PostReactionType.Sad => Solid.Droplet,
+                PostReactionType.Support => Solid.Bolt,
                 _ => throw new ArgumentOutOfRangeException(nameof(Reaction.Type), Reaction.Type, null)
             };
         }

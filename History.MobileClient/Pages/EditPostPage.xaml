@@ -35,7 +35,7 @@
                         <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
                     </Image.Source>
                 </Image>
-                <Picker x:Name="DiscoveryOptionPicker" />
+                <Picker x:Name="DiscoveryOptionPicker" TextColor="White" />
             </HorizontalStackLayout>
 
             <Button

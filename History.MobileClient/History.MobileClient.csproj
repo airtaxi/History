@@ -150,6 +150,9 @@
 		<MauiXaml Update="Resources\Styles\Post.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Resources\Styles\PostReaction.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Profile.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

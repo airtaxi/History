@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using AndroidX.Lifecycle;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.Api.Post;
@@ -6,13 +8,17 @@ using History.Commons.Api.User;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Enums;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Pages;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UraniumUI.Icons.FontAwesome;
+using static Android.App.Assist.AssistStructure;
 
 namespace History.MobileClient.ViewModels;
 
@@ -30,9 +36,14 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasComments))]
     [NotifyPropertyChangedFor(nameof(CommentsCount))]
     [NotifyPropertyChangedFor(nameof(Comments))]
-    [NotifyPropertyChangedFor(nameof(HasPostReactions))]
-    [NotifyPropertyChangedFor(nameof(PostReactionsCount))]
-    [NotifyPropertyChangedFor(nameof(PostReactions))]
+    [NotifyPropertyChangedFor(nameof(FirstComment))]
+    [NotifyPropertyChangedFor(nameof(HasReactions))]
+    [NotifyPropertyChangedFor(nameof(ReactionsCount))]
+    [NotifyPropertyChangedFor(nameof(Reactions))]
+    [NotifyPropertyChangedFor(nameof(Reaction))]
+    [NotifyPropertyChangedFor(nameof(ReactionGlyph))]
+    [NotifyPropertyChangedFor(nameof(ReactionFontFamily))]
+    [NotifyPropertyChangedFor(nameof(ReactionColor))]
     [NotifyPropertyChangedFor(nameof(CreatedAt))]
     [NotifyPropertyChangedFor(nameof(ModifiedAt))]
     [NotifyPropertyChangedFor(nameof(TimestampText))]
@@ -65,10 +76,16 @@ public partial class PostViewModel : ObservableObject
 
     [ObservableProperty]
     public partial ObservableCollection<CommentViewModel> Comments { get; private set; }
+    public CommentViewModel FirstComment => Comments.FirstOrDefault();
 
-    public bool HasPostReactions => Post.PostReactions.Count > 0;
-    public int PostReactionsCount => Post.PostReactions.Count;
-    public List<PostReactionViewModel> PostReactions => [.. Post.PostReactions.Select(r => new PostReactionViewModel(r))];
+    public bool HasReactions => Post.PostReactions.Count > 0;
+    public int ReactionsCount => Post.PostReactions.Count;
+    public List<PostReactionViewModel> Reactions => [.. Post.PostReactions.Select(r => new PostReactionViewModel(r))];
+
+    public PostReactionViewModel Reaction => Reactions.FirstOrDefault(r => r.User.UserId == Shared.UserId);
+    public string ReactionGlyph => Reaction?.Glyph ?? Solid.Heart;
+    public string ReactionFontFamily => Reaction != null ? "FASolid" : "FARegular";
+    public Color ReactionColor => Reaction?.Color ?? (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Colors.White : Colors.Black);
 
     public DateTime CreatedAt => Post.CreatedAt;
     public DateTime? ModifiedAt => Post.ModifiedAt;
@@ -151,5 +168,36 @@ public partial class PostViewModel : ObservableObject
                 if (popModal) await App.PopModalAsync();
             }
         }
+    }
+
+    [RelayCommand]
+    public async Task HandleReactionAsync()
+    {
+        HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
+
+        // Delete reaction
+        if (Reaction != null)
+        {
+            await App.ExecuteRequestAsync(new HandlePostReaction(Post.Id, Reaction.Type));
+            await RefreshAsync();
+            return;
+        }
+
+        // Add reaction
+        var rawReaction = await App.Page.DisplayActionSheet("느낌 달기", "취소", null, Enum.GetValues<PostReactionType>().Select(x => x.ToDisplayString()).ToArray());
+        if (rawReaction == null || rawReaction == "취소") return;
+
+        var reaction = PostReactionTypeExtensions.FromDisplayString(rawReaction);
+
+        await App.ExecuteRequestAsync(new HandlePostReaction(Post.Id, reaction));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    public async Task HandleTapAsync()
+    {
+        var newViewModel = new PostViewModel(Post, false);
+        var postPage = new PostPage(newViewModel);
+        await App.PushModalAsync(postPage);
     }
 }

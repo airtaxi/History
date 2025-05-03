@@ -3,6 +3,8 @@ using Android.Runtime;
 
 // Needed for Picking photo/video
 [assembly: UsesPermission(Android.Manifest.Permission.WriteExternalStorage)]
+[assembly: UsesPermission(Android.Manifest.Permission.Vibrate)]
+
 
 namespace History.MobileClient;
 [Application]

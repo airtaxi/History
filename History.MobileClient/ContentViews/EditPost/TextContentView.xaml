@@ -37,8 +37,8 @@
                             HeightRequest="44"
                             Spacing="8">
                             <views:DataTemplatePresenter
-                                ContentSelector="{StaticResource MediaTemplateSelector}"
                                 HeightRequest="32"
+                                Template="{StaticResource MediaTemplateSelector}"
                                 VerticalOptions="Center"
                                 ViewModel="{x:Binding ProfileMedia}"
                                 WidthRequest="32">

@@ -180,10 +180,19 @@ public static class Utils
         return formattedString;
     }
 
+    public static AppTheme GetGlobalAppTheme()
+    {
+        var theme = Application.Current.UserAppTheme;
+        if (theme == AppTheme.Unspecified) theme = Application.Current.PlatformAppTheme;
+        if (theme == AppTheme.Unspecified) theme = AppTheme.Light;
+        return theme;
+    }
+
     private static void AddTapGestureRecognizerToProfileContentSnap(Span span, string userId)
     {
         var tapGestureRecognizer = new TapGestureRecognizer();
         tapGestureRecognizer.Tapped += async (s, e) => await App.PushModalAsync(new UserPage(userId));
         span.GestureRecognizers.Add(tapGestureRecognizer);
     }
+
 }

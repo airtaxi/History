@@ -12,7 +12,7 @@
                 <RoundRectangle CornerRadius="8" />
             </Border.StrokeShape>
             <Grid>
-                <views:DataTemplatePresenter ContentSelector="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding BackgroundMedia}" />
+                <views:DataTemplatePresenter Template="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding BackgroundMedia}" />
                 <Rectangle
                     Fill="Black"
                     HorizontalOptions="Fill"
@@ -24,7 +24,7 @@
                     VerticalOptions="Start">
                     <Grid>
                         <views:DataTemplatePresenter
-                            ContentSelector="{StaticResource MediaTemplateSelector}"
+                            Template="{StaticResource MediaTemplateSelector}"
                             HeightRequest="72"
                             ViewModel="{x:Binding ProfileMedia}"
                             WidthRequest="72">

@@ -43,6 +43,7 @@
                     FontAttributes="Bold"
                     FontSize="20"
                     Text="게시글"
+                    TextColor="White"
                     VerticalOptions="Center" />
             </HorizontalStackLayout>
             <HorizontalStackLayout HorizontalOptions="End" Spacing="12">
@@ -85,12 +86,12 @@
                     <Grid
                         x:Name="MainGrid"
                         ColumnSpacing="6"
-                        RowSpacing="12">
+                        RowSpacing="6">
                         <Grid
                             x:Name="ContentsGrid"
                             Grid.Row="0"
                             Grid.Column="0">
-                            <ScrollView Padding="12" BackgroundColor="#000000">
+                            <ScrollView Padding="16" BackgroundColor="{AppThemeBinding Dark=Black, Light=White}">
                                 <Grid RowSpacing="8">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="48" />
@@ -100,8 +101,8 @@
                                     <Grid Grid.Row="0">
                                         <HorizontalStackLayout Spacing="6">
                                             <views:DataTemplatePresenter
-                                                ContentSelector="{StaticResource MediaTemplateSelector}"
                                                 HeightRequest="48"
+                                                Template="{StaticResource MediaTemplateSelector}"
                                                 ViewModel="{x:Binding ProfileMedia}"
                                                 WidthRequest="48">
                                                 <views:DataTemplatePresenter.Clip>
@@ -131,18 +132,29 @@
                                         BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
                                         BindableLayout.ItemsSource="{x:Binding Contents}"
                                         Spacing="8" />
-                                    <Grid Grid.Row="2" IsVisible="{x:Binding HasPostReactions}">
+                                    <VerticalStackLayout
+                                        Grid.Row="2"
+                                        IsVisible="{x:Binding HasReactions}"
+                                        Spacing="8">
                                         <HorizontalStackLayout>
-                                            <Label FontSize="16">
+                                            <Label FontSize="12">
                                                 <Label.FormattedText>
                                                     <FormattedString>
-                                                        <Span Text="느낌 " />
-                                                        <Span FontAttributes="Bold" Text="{x:Binding PostReactionsCount}" />
+                                                        <Span Text="느낌 " TextColor="#808080" />
+                                                        <Span
+                                                            FontAttributes="Bold"
+                                                            Text="{x:Binding ReactionsCount}"
+                                                            TextColor="{AppThemeBinding Dark=White,
+                                                                                        Light=Black}" />
                                                     </FormattedString>
                                                 </Label.FormattedText>
                                             </Label>
                                         </HorizontalStackLayout>
-                                    </Grid>
+                                        <CollectionView
+                                            ItemTemplate="{StaticResource PostReactionTemplate}"
+                                            ItemsLayout="HorizontalList"
+                                            ItemsSource="{x:Binding Reactions}" />
+                                    </VerticalStackLayout>
                                 </Grid>
                             </ScrollView>
                         </Grid>
@@ -150,7 +162,8 @@
                             x:Name="CommentsGrid"
                             Grid.Row="1"
                             Grid.Column="1"
-                            BackgroundColor="#000000">
+                            BackgroundColor="{AppThemeBinding Dark=Black,
+                                                              Light=White}">
                             <ScrollView
                                 x:Name="CommentsScrollView"
                                 Padding="16"
@@ -197,8 +210,8 @@
                                 HeightRequest="44"
                                 Spacing="8">
                                 <views:DataTemplatePresenter
-                                    ContentSelector="{StaticResource MediaTemplateSelector}"
                                     HeightRequest="32"
+                                    Template="{StaticResource MediaTemplateSelector}"
                                     VerticalOptions="Center"
                                     ViewModel="{x:Binding ProfileMedia}"
                                     WidthRequest="32">
@@ -245,14 +258,16 @@
                 Grid.Column="0"
                 Margin="0,0,0,6"
                 HeightRequest="26"
-                VerticalOptions="End">
+                VerticalOptions="End"
+                WidthRequest="26">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Command="{x:Binding HandleReactionCommand}" />
+                </Image.GestureRecognizers>
                 <Image.Source>
                     <FontImageSource
-                        x:Name="CommentLikeFontImageSource"
-                        FontFamily="FARegular"
-                        Glyph="{x:Static fa:Solid.Heart}"
-                        Color="{AppThemeBinding Light=#000000,
-                                                Dark=#FFFFFF}" />
+                        FontFamily="{x:Binding ReactionFontFamily}"
+                        Glyph="{x:Binding ReactionGlyph}"
+                        Color="{x:Binding ReactionColor}" />
                 </Image.Source>
             </Image>
 
