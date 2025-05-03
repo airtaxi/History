@@ -31,7 +31,7 @@ public static class ImageMagickHelper
                 if (maxWidth.HasValue)
                 {
                     // Maintain aspect ratio, even size, and clamp width
-                    scaleFilter = $"scale=trunc(min({maxWidth},iw)/2)*2:trunc(ih*min({maxWidth},iw)/iw/2)*2";
+                    scaleFilter = $"scale='min({maxWidth.Value},iw)':-2";
                 }
 
                 var ffmpegArgs = $"-y -i \"{inputPath}\" -vf \"{scaleFilter}\" -movflags faststart -pix_fmt yuv420p -c:v libx264 \"{outputPath}\"";
