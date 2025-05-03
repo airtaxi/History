@@ -157,7 +157,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
-        var result = await postService.DeletePostAsync(postId, requesterId);
+        var result = await postService.DeletePostAsync(requesterId, postId);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
