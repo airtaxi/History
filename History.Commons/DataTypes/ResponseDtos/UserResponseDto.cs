@@ -17,9 +17,11 @@ public class UserResponseDto()
     public string Description { get; set; }
 
     public string ProfileMediaId { get; set; }
+    public string ProfileThumbnailMediaId { get; set; }
     public bool UsesAnimatedProfileMedia { get; set; }
 
     public string BackgroundMediaId { get; set; }
+    public string BackgroundThumbnailMediaId { get; set; }
     public bool UsesAnimatedBackgroundMedia { get; set; }
 
 
@@ -40,9 +42,11 @@ public class UserResponseDto()
         Description = user.Description;
 
         ProfileMediaId = user.ProfileMediaId;
+        ProfileThumbnailMediaId = user.ProfileThumbnailMediaId;
         UsesAnimatedProfileMedia = user.UsesAnimatedProfileMedia;
 
         BackgroundMediaId = user.BackgroundMediaId;
+        BackgroundThumbnailMediaId = user.BackgroundThumbnailMediaId;
         UsesAnimatedBackgroundMedia = user.UsesAnimatedBackgroundMedia;
     }
 }
