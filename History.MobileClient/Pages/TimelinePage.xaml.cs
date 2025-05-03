@@ -49,8 +49,6 @@ public partial class TimelinePage : ContentPage
                 foreach (var postViewModel in postViewModels) _viewModels.Add(postViewModel);
             }
             else return;
-
-            var children = ((IVisualTreeElement)MainCollectionView).GetVisualChildren();
         }
         finally { _fetchSemaphore.Release(); }
     }
