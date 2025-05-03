@@ -13,6 +13,10 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
+
+#if ANDROID
+        Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (sender, e) => e.Handled = true;
+#endif
     }
 
     public static Page Page
