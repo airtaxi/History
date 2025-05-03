@@ -161,6 +161,9 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         var result = await _commentCollection.DeleteOneAsync(f => f.Id == commentId);
         if (result.DeletedCount == 0) return Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
 
+        // Delete Comment Likes
+        await _commentLikeCollection.DeleteManyAsync(f => f.CommentId == commentId);
+
         // Delete Media
         var deleteResult = await mediaService.DeleteMediaByAssociatedIdAsync(commentId);
         if (deleteResult.IsFailure) return deleteResult;
