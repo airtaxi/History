@@ -27,6 +27,9 @@
                             HeightRequest="48"
                             ViewModel="{x:Binding ProfileMedia}"
                             WidthRequest="48">
+                            <views:DataTemplatePresenter.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnProfileImageTapped"/>
+                            </views:DataTemplatePresenter.GestureRecognizers>
                             <views:DataTemplatePresenter.Clip>
                                 <EllipseGeometry
                                     Center="24,24"
