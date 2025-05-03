@@ -10,16 +10,6 @@ using MongoDB.Driver.GridFS;
 
 namespace History.ApiService.Services;
 
-//[BsonIgnoreExtraElements]
-//public class Media
-//{
-//    [BsonId]
-//    public string Id { get; set; }
-
-//    public string FileName { get; set; }
-//    public string BucketName { get; set; }
-//}
-
 public class MediaService(IMongoDatabase database) : IMediaService
 {
     private readonly IMongoCollection<Media> _mediaCollection = database.GetCollection<Media>("Medias");
@@ -115,16 +105,20 @@ public class MediaService(IMongoDatabase database) : IMediaService
     /// <inheritdoc />
     public async Task<Result> DeleteMediaByAssociatedIdAsync(string associatedId)
     {
-        var media = await _mediaCollection.Find(m => m.AssociatedId == associatedId).FirstOrDefaultAsync();
-        if (media == null) return Result.Failure(ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
+        var medias = await _mediaCollection.Find(m => m.AssociatedId == associatedId).ToListAsync();
 
-        var bucket = new GridFSBucket(database, new GridFSBucketOptions
+        foreach (var m in medias)
         {
-            BucketName = media.BucketType.ToString()
-        });
-        await bucket.DeleteAsync(ObjectId.Parse(media.Id));
+            var bucket = new GridFSBucket(database, new GridFSBucketOptions
+            {
+                BucketName = m.BucketType.ToString()
+            });
 
-        await _mediaCollection.DeleteOneAsync(m => m.AssociatedId == associatedId);
+            await bucket.DeleteAsync(ObjectId.Parse(m.Id));
+        }
+
+        await _mediaCollection.DeleteManyAsync(m => m.AssociatedId == associatedId);
+
         return Result.Success();
     }
 
@@ -132,7 +126,6 @@ public class MediaService(IMongoDatabase database) : IMediaService
     public async Task<Result> DeleteMediasByAssociatedIdsAsync(IEnumerable<string> associatedIds)
     {
         var media = await _mediaCollection.Find(m => associatedIds.Contains(m.AssociatedId)).ToListAsync();
-        if (media == null || media.Count == 0) return Result.Failure(ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
 
         foreach (var m in media)
         {
@@ -165,7 +158,6 @@ public class MediaService(IMongoDatabase database) : IMediaService
     public async Task<Result> DeleteMediasByUserIdAsync(string userId)
     {
         var medias = await _mediaCollection.Find(m => m.UserId == userId).ToListAsync();
-        if (medias == null || medias.Count == 0) return Result.Failure(ErrorType.NotFound, "미디어를 찾을 수 없습니다.");
 
         foreach (var m in medias)
         {

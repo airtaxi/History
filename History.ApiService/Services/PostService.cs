@@ -427,8 +427,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         await _postCollection.DeleteOneAsync(p => p.Id == postId);
 
         // Delete media files associated with the post
-        var deleteResult = await mediaService.DeleteMediaByAssociatedIdAsync(postId);
-        if (deleteResult.IsFailure) return deleteResult;
+        await mediaService.DeleteMediaByAssociatedIdAsync(postId);
 
         return Result.Success();
     }
