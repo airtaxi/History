@@ -6,6 +6,7 @@ using History.Commons.Api.User;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
+using History.MobileClient.DataTypes;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -76,10 +77,10 @@ public partial class PostViewModel : ObservableObject
         Post = post;
         Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
 
-        WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostValueChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
     }
 
-    private void OnPostValueChangedMessageReceived(object sender, ValueChangedMessage<PostResponseDto> message)
+    private void OnPostChangedMessageReceived(object sender, ValueChangedMessage<PostResponseDto> message)
     {
         if (message.Value.Id != Post.Id) return;
 
@@ -87,9 +88,37 @@ public partial class PostViewModel : ObservableObject
         Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
     }
 
+    public async Task DisplayActionSheet(bool popModal)
+    {
+        var options = new List<string>() { "관심글로 저장", "이 글 알림 끄기" };
+        if (Post.User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제"]);
+        else options.AddRange("게시글 신고");
+
+        var result = await App.Page.DisplayActionSheet("게시물 옵션", "취소", null, [.. options]);
+
+        if (result == null) return;
+
+        if (result == "게시글 삭제") await DeleteAsync(popModal);
+        else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
+    }
+
     public async Task RefreshAsync()
     {
         var result = await App.ExecuteRequestAsync(new GetPost(Post.Id));
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
+    }
+
+    public async Task DeleteAsync(bool popModal)
+    {
+        var confirm = await App.Page.DisplayAlert("게시글 삭제", "정말로 게시글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+        if (confirm)
+        {
+            var deleteResult = await App.ExecuteRequestAsync(new DeletePost(Post.Id));
+            if (deleteResult.IsSuccess)
+            {
+                WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostResponseDto>(Post));
+                if (popModal) await App.PopModalAsync();
+            }
+        }
     }
 }

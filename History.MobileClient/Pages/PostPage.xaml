@@ -63,6 +63,9 @@
                     </Image.Source>
                 </Image>
                 <Image>
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMoreImageTapped" />
+                    </Image.GestureRecognizers>
                     <Image.Source>
                         <FontImageSource
                             FontFamily="MaterialSharp"
