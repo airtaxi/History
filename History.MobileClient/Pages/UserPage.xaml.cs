@@ -1,6 +1,9 @@
 ﻿
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
+using History.Commons.DataTypes.ResponseDtos;
+using History.MobileClient.DataTypes;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.Immutable;
@@ -17,16 +20,24 @@ public partial class UserPage : ContentPage
     private ObservableCollection<object> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
-    public UserPage()
-	{
-		_userId = Shared.UserId;
-		InitializeComponent();
+    public UserPage() : this(Shared.UserId)
+    {
     }
 
     public UserPage(string userId)
 	{
 		_userId = userId;
         InitializeComponent();
+
+        WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
+    }
+
+    private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
+    {
+        var viewModel = _viewModels.OfType<PostViewModel>().FirstOrDefault(x => x.Post.Id == message.Value.Id);
+        if (viewModel == null) return;
+
+        _viewModels.Remove(viewModel);
     }
 
     public async Task RefreshAsync()
