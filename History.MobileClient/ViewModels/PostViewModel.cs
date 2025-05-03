@@ -81,6 +81,8 @@ public partial class PostViewModel : ObservableObject
 
     private void OnPostValueChangedMessageReceived(object sender, ValueChangedMessage<PostResponseDto> message)
     {
+        if (message.Value.Id != Post.Id) return;
+
         Post = message.Value;
         Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
     }

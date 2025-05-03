@@ -76,7 +76,12 @@ public partial class ProfileViewModel : ObservableObject
     public ProfileViewModel(UserResponseDto user)
     {
         User = user;
-        WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, (r, m) => User = m.Value);
+        WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, (r, m) =>
+        {
+            if (m.Value.UserId != User.UserId) return;
+
+            User = m.Value;
+        });
     }
 
     private async Task RefreshAsync()
