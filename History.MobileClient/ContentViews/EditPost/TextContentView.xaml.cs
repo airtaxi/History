@@ -1,3 +1,4 @@
+using FFImageLoading;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.ViewModels;
 using SpeakLink.Mention;
@@ -26,8 +27,9 @@ public partial class TextContentView : ContentView
 		var element = sender as Element;
 		var viewModel = element.BindingContext as MentionViewModel;
 
-        MentionIdMap[MentionIdMap.Count] = viewModel.UserId;
-        MainMentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => x.Value == viewModel.UserId).Key.ToString(), viewModel.Nickname);
+        if (!MentionIdMap.Any(x => x.Value == viewModel.UserId)) MentionIdMap[MentionIdMap.Count] = viewModel.UserId;
+
+        MainMentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => x.Value == viewModel.UserId).Key.ToString(), viewModel.Nickname + ' ');
     }
 
     public List<BaseContent> GetContents()

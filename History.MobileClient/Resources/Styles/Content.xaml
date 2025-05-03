@@ -9,7 +9,7 @@
 
     <DataTemplate x:Key="MediaContentTemplate" x:DataType="vm:MediaContentViewModel">
         <Grid>
-            <views:DataTemplatePresenter ContentSelector="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding Media}">
+            <views:DataTemplatePresenter Template="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding Media}">
                 <views:DataTemplatePresenter.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnMediaContentTapped" />
                 </views:DataTemplatePresenter.GestureRecognizers>
@@ -43,7 +43,7 @@
                 <CarouselView.ItemTemplate>
                     <DataTemplate x:DataType="vm:IMediaViewModel">
                         <Grid>
-                            <views:DataTemplatePresenter ContentSelector="{StaticResource MediaTemplateSelector}" ViewModel="{Binding}">
+                            <views:DataTemplatePresenter Template="{StaticResource MediaTemplateSelector}" ViewModel="{Binding}">
                                 <views:DataTemplatePresenter.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnMediaContentTapped" />
                                 </views:DataTemplatePresenter.GestureRecognizers>
@@ -88,11 +88,18 @@
     </DataTemplate>
 
     <DataTemplate x:Key="StickerContentTemplate" x:DataType="vm:StickerContentViewModel">
-        <views:DataTemplatePresenter ContentSelector="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding Media}" />
+        <views:DataTemplatePresenter Template="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding Media}" />
     </DataTemplate>
 
     <DataTemplate x:Key="TextAndProfileContentsTemplate" x:DataType="vm:TextAndProfileContentsViewModel">
-        <Label FormattedText="{x:Binding FormattedString}" />
+        <Label FormattedText="{x:Binding FormattedString}">
+            <Label.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnTextAndProfileContentsLabelTapped" />
+            </Label.GestureRecognizers>
+            <Label.Behaviors>
+                <toolkit:TouchBehavior LongPressCompleted="OnTextAndProfileContentsLabelLongPressed" />
+            </Label.Behaviors>
+        </Label>
     </DataTemplate>
 
     <vm:ContentTemplateSelector

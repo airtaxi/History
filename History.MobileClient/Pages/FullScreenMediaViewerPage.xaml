@@ -10,7 +10,7 @@
     NavigationPage.HasNavigationBar="False">
 
     <Grid>
-        <views:DataTemplatePresenter x:Name="MainDataTemplatePresenter" ContentSelector="{StaticResource MediaTemplateSelector}" />
+        <views:DataTemplatePresenter x:Name="MainDataTemplatePresenter" Template="{StaticResource MediaTemplateSelector}" />
 
         <Grid>
             <BoxView

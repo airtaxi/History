@@ -6,6 +6,7 @@ using History.Commons.Api.Comment;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
+using History.MobileClient.DataTypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,7 +46,23 @@ public partial class CommentViewModel : ObservableObject
 
     public bool Liked => Comment.LikedUsers.Any(x => x.UserId == Shared.UserId);
     public string CommentLikeFontFamily => Liked ? "FASolid" : "FARegular";
+
+    public CommentViewModel(CommentResponseDto comment)
+    {
+        Comment = comment;
+        WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, (r, m) =>
+        {
+            if (m.Value.Id != Comment.Id) return;
+
+            Comment = m.Value;
+        });
+    }
     public Color CommentLikeColor => Liked ? Color.FromRgb(0xeb, 0x55, 0x27) : Color.FromRgb(0x80, 0x80, 0x80);
+
+    public DateTime CreatedAt => Comment.CreatedAt;
+    public DateTime? ModifiedAt => Comment.ModifiedAt;
+
+    public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
 
     [RelayCommand]
     public async Task LikeAsync()
@@ -55,19 +72,6 @@ public partial class CommentViewModel : ObservableObject
         else return;
     }
 
-    public DateTime CreatedAt => Comment.CreatedAt;
-    public DateTime? ModifiedAt => Comment.ModifiedAt;
-
-    public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
-
-    public CommentViewModel(CommentResponseDto comment)
-    {
-        Comment = comment;
-        WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, (r,m) =>
-        {
-            if (m.Value.Id != Comment.Id) return;
-
-            Comment = m.Value;
-        });
-    }
+    [RelayCommand]
+    public void HandleTap() => WeakReferenceMessenger.Default.Send<CommentTappedMessage>(new(Comment.User));
 }
