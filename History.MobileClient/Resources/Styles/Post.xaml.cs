@@ -24,6 +24,14 @@ public partial class Post : ResourceDictionary
     {
         var element = sender as Element;
         var viewModel = element.BindingContext as PostViewModel;
+
+        var userId = viewModel.Post.User?.UserId;
+        if (userId == null)
+        {
+            await App.Page.DisplayAlert("오류", "사용자 정보를 가져올 수 없습니다", Constants.PromptOk);
+            return;
+        }
+
         var profilePage = new UserPage(viewModel.Post.User.UserId);
         await App.PushModalAsync(profilePage);
     }
