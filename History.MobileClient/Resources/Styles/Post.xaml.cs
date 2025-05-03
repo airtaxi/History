@@ -1,4 +1,5 @@
 using History.Commons.Api.User;
+using History.MobileClient.ContentViews;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using System.Threading.Tasks;
@@ -42,5 +43,15 @@ public partial class Post : ResourceDictionary
         var viewModel = element.BindingContext as PostViewModel;
 
         await viewModel.DisplayActionSheet(false);
+    }
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+        var grid = sender as Grid;
+        var viewModel = grid.BindingContext as PostViewModel;
+        if (viewModel == null) return;
+
+        var presenter = grid.Children[0] as DataTemplatePresenter;
+        presenter.ViewModel = viewModel.ProfileMedia;
     }
 }
