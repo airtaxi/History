@@ -104,7 +104,8 @@
                     <FontImageSource
                         FontFamily="MaterialSharp"
                         Glyph="{x:Static m:MaterialSharp.More_horiz}"
-                        Color="#808080" />
+                        Color="{AppThemeBinding Dark=White,
+                                                Light=Black}" />
                 </Image.Source>
             </Image>
         </Grid>
