@@ -48,7 +48,7 @@ public partial class Content : ResourceDictionary
         else if (parent?.BindingContext is PostViewModel postViewModel) await postViewModel.HandleTapAsync();
     }
 
-    private async void OnTextAndProfileContentsLabelLoaded(object sender, EventArgs e)
+    private void OnTextAndProfileContentsLabelSizeChanged(object sender, EventArgs e)
     {
         var label = sender as Label;
         var viewModel = label.BindingContext as TextAndProfileContentsViewModel;
