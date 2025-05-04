@@ -208,7 +208,7 @@ public partial class PostPage : ContentPage
                 await _viewModel.RefreshAsync();
                 if (!_viewModel.IsWideMode)
                 {
-                    await Task.Delay(1000);
+                    await Task.Delay(350);
                     await MainScrollView.ScrollToAsync(0, MainScrollView.ContentSize.Height - MainScrollView.Height - CommentsScrollView.ContentSize.Height + 150, false);
                 }
                 else await CommentsScrollView.ScrollToAsync(0, 0, false);
