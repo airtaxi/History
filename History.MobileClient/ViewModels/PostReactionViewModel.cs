@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.MobileClient.Pages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,4 +63,11 @@ public partial class PostReactionViewModel(PostReactionDto reaction) : Observabl
     }
 
     public string TypeText => Reaction.Type.ToDisplayString();
+
+    [RelayCommand]
+    private async Task HandleTapAsync()
+    {
+        var userPage = new UserPage(User.UserId);
+        await App.PushModalAsync(userPage);
+    }
 }

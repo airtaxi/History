@@ -11,6 +11,9 @@
             Margin="0,0,6,0"
             HeightRequest="36"
             WidthRequest="36">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+            </Grid.GestureRecognizers>
             <views:DataTemplatePresenter Template="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding ProfileMedia}">
                 <views:DataTemplatePresenter.Clip>
                     <EllipseGeometry
