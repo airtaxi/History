@@ -21,7 +21,11 @@ public static class ImageMagickHelper
 
             try
             {
+                var stopwatch = Stopwatch.StartNew();
                 images.Coalesce(); // Coalesce the images to ensure all frames are processed
+                Console.WriteLine($"Coalescing took: {stopwatch.ElapsedMilliseconds} ms (total: {images.Count} frames)");
+
+                stopwatch.Restart();
 
                 // Save each frame as an image
                 Parallel.ForEach(images, frame =>
@@ -53,6 +57,10 @@ public static class ImageMagickHelper
                     frame.Write(Path.Combine(tempDir, $"frame_{i:000}.png"));
                 });
 
+                Console.WriteLine($"Saving frames took: {stopwatch.ElapsedMilliseconds} ms (total: {images.Count} frames)");
+
+                stopwatch.Restart();
+
                 // Convert PNG sequence to MP4 using FFmpeg
                 var outputMp4Path = Path.Combine(tempDir, "output.mp4");
                 var framerate = DetermineFramerate(images);
@@ -64,10 +72,10 @@ public static class ImageMagickHelper
                         FileName = "ffmpeg",
                         Arguments = $"-framerate {framerate} -i \"{Path.Combine(tempDir, "frame_%03d.png")}\" " +
                                     $"-c:v libx265 -pix_fmt yuv420p -crf 23 \"{outputMp4Path}\"",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true
+                        UseShellExecute = true,
+                        RedirectStandardOutput = false,
+                        RedirectStandardError = false,
+                        CreateNoWindow = false
                     }
                 };
 
@@ -77,6 +85,10 @@ public static class ImageMagickHelper
                 if (ffmpegProcess.ExitCode != 0)
                 {
                     throw new Exception($"FFmpeg conversion failed: {ffmpegProcess.StandardError.ReadToEnd()}");
+                }
+                else
+                {
+                    Console.WriteLine($"FFmpeg conversion took: {stopwatch.ElapsedMilliseconds} ms (total: {images.Count} frames)");
                 }
 
                 // Read the generated MP4 file
