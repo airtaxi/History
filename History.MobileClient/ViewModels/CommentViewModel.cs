@@ -7,6 +7,7 @@ using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Pages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,7 @@ public partial class CommentViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(Nickname))]
     [NotifyPropertyChangedFor(nameof(Contents))]
     [NotifyPropertyChangedFor(nameof(ProfileMedia))]
+    [NotifyPropertyChangedFor(nameof(IsMyComment))]
     [NotifyPropertyChangedFor(nameof(HasLikes))]
     [NotifyPropertyChangedFor(nameof(LikesCount))]
     [NotifyPropertyChangedFor(nameof(LikedUsers))]
@@ -39,6 +41,8 @@ public partial class CommentViewModel : ObservableObject
     public string Nickname => Comment.User.Nickname;
 
     public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Comment.Contents, false);
+
+    public bool IsMyComment => Comment.User.UserId == Shared.UserId;
 
     public bool HasLikes => Comment.LikedUsers.Count > 0;
     public int LikesCount => Comment.LikedUsers.Count;
@@ -69,9 +73,25 @@ public partial class CommentViewModel : ObservableObject
     {
         var commentResult = await App.ExecuteRequestAsync(new HandleCommentLike(Comment.Id));
         if (commentResult.IsSuccess) Comment = commentResult.Value;
-        else return;
+    }
+
+    [RelayCommand]
+    public async Task DeleteAsync()
+    {
+        var result = await App.Page.DisplayAlert("댓글 삭제", "정말로 댓글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+        if (!result) return;
+
+        var commentResult = await App.ExecuteRequestAsync(new DeleteComment(Comment.Id));
+        if (commentResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<CommentResponseDto>(Comment));
     }
 
     [RelayCommand]
     public void HandleTap() => WeakReferenceMessenger.Default.Send<CommentTappedMessage>(new(Comment.User));
+
+    [RelayCommand]
+    public async Task HandleProfileTap()
+    {
+        var userPage = new UserPage(Comment.User.UserId);
+        await App.PushModalAsync(userPage);
+    }
 }

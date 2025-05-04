@@ -57,5 +57,6 @@ public partial class Post : ResourceDictionary
 
         var presenter = grid.Children.OfType<DataTemplatePresenter>().FirstOrDefault();
         presenter.ViewModel = viewModel.FirstComment;
+        viewModel.FirstCommentPresenter = new(presenter);
     }
 }

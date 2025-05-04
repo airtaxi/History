@@ -69,7 +69,9 @@ public partial class EditPostPage : ContentPage
         var files = results?.Files?.ToArray();
         if (files == null || files.Length == 0) return;
 
-        foreach(var file in files)
+        if (files.Any(x => x.Extension.ToLower() == "webp")) _ = Toast.Make("webp 애니메이션 파일을 선택하신 경우, 업로드를 처리하는 데 시간이 오래 걸릴 수 있습니다.").Show();
+
+        foreach (var file in files)
         {
             using var stream = await file.OpenReadAsync();
             using var memoryStream = new MemoryStream();
