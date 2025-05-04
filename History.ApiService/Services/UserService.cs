@@ -158,13 +158,16 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
-    public async Task<Result> UpdateHandleAsync(string userId, string newHandle)
+    public async Task<Result> UpdateHandleAsync(string userId, string handle)
     {
-        var existingUser = await _userCollection.Find(u => u.Handle == newHandle).FirstOrDefaultAsync();
+        if (handle.Contains(' ') || handle.Contains('@') || handle.Contains('#') || handle.Contains('!') || handle.Contains('$') || handle.Contains('%') || handle.Contains('^') || handle.Contains('&') || handle.Contains('*') || handle.Contains('(') || handle.Contains(')') || handle.Contains('+'))
+            return (ErrorType.BadRequest, "허용되지 않는 문자가 포함되어 있습니다.\n공백이나 특수 문자(@, #, !, $, %, ^, &, *, (, ), +)는 사용할 수 없습니다.");
+
+        var existingUser = await _userCollection.Find(u => u.Handle == handle).FirstOrDefaultAsync();
         if (existingUser != null) return (ErrorType.Conflict, "이미 사용 중인 핸들입니다.");
 
         var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
-        var update = Builders<User>.Update.Set(u => u.Handle, newHandle);
+        var update = Builders<User>.Update.Set(u => u.Handle, handle);
         return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "핸들을 변경하는 중 오류가 발생했습니다.");
     }
 
