@@ -162,9 +162,9 @@ public partial class PostViewModel : ObservableObject
         if (User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제"]);
         else options.AddRange("게시글 신고");
 
-        var result = await App.Page.DisplayActionSheet("게시물 옵션", "취소", null, [.. options]);
+        var result = await App.Page.DisplayActionSheet("게시물 옵션", Constants.PromptCancel, null, [.. options]);
 
-        if (result == null || result == "취소") return;
+        if (result == null || result == Constants.PromptCancel) return;
 
         if (result == "게시글 삭제") await DeleteAsync(popModal);
         else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
@@ -204,8 +204,8 @@ public partial class PostViewModel : ObservableObject
         }
 
         // Add reaction
-        var rawReaction = await App.Page.DisplayActionSheet("느낌 달기", "취소", null, [.. Enum.GetValues<PostReactionType>().Select(x => x.ToDisplayString())]);
-        if (rawReaction == null || rawReaction == "취소") return;
+        var rawReaction = await App.Page.DisplayActionSheet("느낌 달기", Constants.PromptCancel, null, [.. Enum.GetValues<PostReactionType>().Select(x => x.ToDisplayString())]);
+        if (rawReaction == null || rawReaction == Constants.PromptCancel) return;
 
         var reaction = PostReactionTypeExtensions.FromDisplayString(rawReaction);
 
