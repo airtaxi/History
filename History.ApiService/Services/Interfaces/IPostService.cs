@@ -63,12 +63,12 @@ public interface IPostService
     /// <summary>
     /// Asynchronously modifies a post based on the provided details and files.
     /// </summary>
-    /// <param name="userId">Identifies the user making the modification request.</param>
     /// <param name="postId">Specifies the unique identifier of the post to be modified.</param>
+    /// <param name="userId">Identifies the user making the modification request.</param>
     /// <param name="requestDto">Contains the new data and settings for the post modification.</param>
     /// <param name="files">Holds any files that need to be associated with the post during the modification.</param>
     /// <returns>Provides the result of the modification operation.</returns>
-    public Task<Result> ModifyPostAsync(string userId, string postId, ModifyPostRequestDto requestDto, IEnumerable<IFormFile> files);
+    public Task<Result> ModifyPostAsync(string postId, string userId, ModifyPostRequestDto requestDto, IEnumerable<IFormFile> files);
 
     /// <summary>
     /// Asynchronously deletes a post associated with a specific user.
