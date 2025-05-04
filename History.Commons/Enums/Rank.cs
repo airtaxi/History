@@ -7,6 +7,8 @@ public enum Rank
 {
     Unauthorized,
     User,
+    Supporter,
+    VIP,
     Moderator,
     Admin
 }
