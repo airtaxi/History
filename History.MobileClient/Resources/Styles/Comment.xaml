@@ -92,36 +92,21 @@
                     </Label>
                 </HorizontalStackLayout>
             </VerticalStackLayout>
-            <VerticalStackLayout
+            <Image
                 Grid.Column="2"
-                Spacing="8"
-                VerticalOptions="Start">
-                <Image HeightRequest="18" WidthRequest="18">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Command="{x:Binding LikeCommand}" />
-                    </Image.GestureRecognizers>
-                    <Image.Source>
-                        <FontImageSource
-                            FontFamily="{x:Binding CommentLikeFontFamily}"
-                            Glyph="{x:Static fa:Solid.Heart}"
-                            Color="{x:Binding CommentLikeColor}" />
-                    </Image.Source>
-                </Image>
-                <Image
-                    HeightRequest="18"
-                    IsVisible="{x:Binding IsMyComment}"
-                    WidthRequest="18">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Command="{x:Binding DeleteCommand}" />
-                    </Image.GestureRecognizers>
-                    <Image.Source>
-                        <FontImageSource
-                            FontFamily="FARegular"
-                            Glyph="{x:Static fa:Regular.TrashCan}"
-                            Color="#DD4040" />
-                    </Image.Source>
-                </Image>
-            </VerticalStackLayout>
+                HeightRequest="24"
+                VerticalOptions="Start"
+                WidthRequest="24">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Command="{x:Binding HandleMoreCommand}" />
+                </Image.GestureRecognizers>
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.More_horiz}"
+                        Color="#808080" />
+                </Image.Source>
+            </Image>
         </Grid>
     </DataTemplate>
 </ResourceDictionary>

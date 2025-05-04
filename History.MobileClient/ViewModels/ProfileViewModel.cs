@@ -274,9 +274,9 @@ public partial class ProfileViewModel : ObservableObject
     [RelayCommand]
     private async Task HandleProfileSettingsAsync()
     {
-        var action = await App.Page.DisplayActionSheet("프로필 설정", "취소", null, "닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정", "핸들 변경", "프로필 공개 설정");
+        var action = await App.Page.DisplayActionSheet("프로필 설정", Constants.PromptCancel, null, "닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정", "핸들 변경", "프로필 공개 설정");
 
-        if (action == null || action == "취소") return;
+        if (action == null || action == Constants.PromptCancel) return;
 
         if (action == "닉네임 변경") await HandleChangeNicknameAsync();
         else if (action == "한줄 소개 변경") await HandleChangeDescriptionAsync();

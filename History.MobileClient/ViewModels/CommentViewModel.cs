@@ -73,13 +73,37 @@ public partial class CommentViewModel : ObservableObject
     public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
 
     [RelayCommand]
-    public async Task LikeAsync()
+    public async Task HandleMore()
+    {
+        var actions = new List<string>
+        {
+            Liked ? "좋아요 취소" : "좋아요",
+            IsMyComment ? "댓글 수정" : null,
+            IsMyComment ? "댓글 삭제" : null,
+            IsMyComment ? null : "댓글 신고",
+        };
+        actions.RemoveAll(x => x == null);
+
+        var action = await App.Page.DisplayActionSheet("댓글 관리", Constants.PromptCancel, null, actions.ToArray());
+        if (action == null || action == Constants.PromptCancel) return;
+
+        if (action.StartsWith("좋아요")) await HandleLikeAsync();
+        //else if (action == "댓글 수정") await App.PushModalAsync(new EditCommentPage(Comment));
+        else if (action == "댓글 삭제") await DeleteAsync();
+        //else if (action == "댓글 신고")
+        //{
+            //var result = await App.ExecuteRequestAsync(new ReportComment(Comment.Id));
+            //if (result.IsSuccess) await App.Page.DisplayAlert("신고 완료", "댓글이 신고되었습니다.", Constants.PromptOk);
+        //}
+        else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
+    }
+
+    public async Task HandleLikeAsync()
     {
         var commentResult = await App.ExecuteRequestAsync(new HandleCommentLike(Comment.Id));
         if (commentResult.IsSuccess) Comment = commentResult.Value;
     }
 
-    [RelayCommand]
     public async Task DeleteAsync()
     {
         var result = await App.Page.DisplayAlert("댓글 삭제", "정말로 댓글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
