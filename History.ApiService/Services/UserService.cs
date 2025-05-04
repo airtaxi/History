@@ -160,6 +160,8 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     /// <inheritdoc />
     public async Task<Result> UpdateHandleAsync(string userId, string handle)
     {
+        handle = handle.Trim();
+
         if (handle.Contains(' ') || handle.Contains('@') || handle.Contains('#') || handle.Contains('!') || handle.Contains('$') || handle.Contains('%') || handle.Contains('^') || handle.Contains('&') || handle.Contains('*') || handle.Contains('(') || handle.Contains(')') || handle.Contains('+'))
             return (ErrorType.BadRequest, "허용되지 않는 문자가 포함되어 있습니다.\n공백이나 특수 문자(@, #, !, $, %, ^, &, *, (, ), +)는 사용할 수 없습니다.");
 
