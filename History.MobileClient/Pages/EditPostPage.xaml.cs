@@ -1,6 +1,7 @@
-using AndroidX.Lifecycle;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.Contents;
@@ -30,7 +31,6 @@ public partial class EditPostPage : ContentPage
         _post = post;
         InitializeComponent();
         Initialize();
-        LoadPost();
     }
 
     private void LoadPost()
@@ -189,13 +189,26 @@ public partial class EditPostPage : ContentPage
         try
 		{
 			MainActivityIndicator.IsVisible = true;
-			var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, null, null, files), ErrorType.BadRequest);
-            if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
-            else if (result.IsSuccess)
+            if (_post != null)
             {
-                TimelinePage.ShouldRefreshTimeline = true;
-                UserPage.ShouldRefreshMyProfile = true;
-                await App.PopModalAsync();
+                var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, null, files), ErrorType.BadRequest);
+                if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+                else if (result.IsSuccess)
+                {
+                    WeakReferenceMessenger.Default.Send<ValueChangedMessage<PostResponseDto>>(new(result.Value));
+                    await App.PopModalAsync();
+                }
+            }
+            else
+            {
+                var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, null, null, files), ErrorType.BadRequest);
+                if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+                else if (result.IsSuccess)
+                {
+                    TimelinePage.ShouldRefreshTimeline = true;
+                    UserPage.ShouldRefreshMyProfile = true;
+                    await App.PopModalAsync();
+                }
             }
 		}
         finally { MainActivityIndicator.IsVisible = false; }
@@ -214,6 +227,16 @@ public partial class EditPostPage : ContentPage
         var previousSpan = staggeredItemsLayout.Span;
         var newSpan = ((int)Width / 200) + 1;
         if (newSpan != previousSpan) MediaCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
+    }
+
+    private bool _loaded;
+    private void OnMainTextContentLoaded(object sender, EventArgs e)
+    {
+        if (_post != null && !_loaded)
+        {
+            _loaded = true;
+            LoadPost();
+        }
     }
 
     private void OnDeleteAttachmentBorderTapped(object sender, TappedEventArgs e)

@@ -52,7 +52,7 @@
 
         <ScrollView Grid.Row="1" Orientation="Vertical">
             <VerticalStackLayout Padding="6" Spacing="8">
-                <editPost:TextContentView x:Name="MainTextContent" />
+                <editPost:TextContentView x:Name="MainTextContent" Loaded="OnMainTextContentLoaded" />
                 <Grid>
                     <CollectionView x:Name="MediaCollectionView" CanReorderItems="True">
                         <CollectionView.ItemsLayout>
@@ -61,50 +61,50 @@
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="vm:MediaAttachmentViewModel">
                                 <Grid>
-                                <Border
-                                    Margin="6"
-                                    Stroke="#808080"
-                                    StrokeThickness="1">
-                                    <Border.GestureRecognizers>
-                                        <DragGestureRecognizer CanDrag="True" DragStarting="OnMediaDragStarting" />
-                                        <DropGestureRecognizer AllowDrop="True" Drop="OnMediaDrop" />
-                                    </Border.GestureRecognizers>
-                                    <Grid HeightRequest="200">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="150" />
-                                            <RowDefinition Height="*" />
-                                        </Grid.RowDefinitions>
-                                        <Image
-                                            Grid.Row="0"
-                                            Aspect="AspectFill"
-                                            Source="{x:Binding ImageSource}" />
-                                        <Rectangle
-                                            Grid.Row="0"
-                                            Fill="#808080"
-                                            HeightRequest="1"
-                                            HorizontalOptions="Fill"
-                                            VerticalOptions="End" />
-                                        <Grid Grid.Row="1">
-                                            <Grid.GestureRecognizers>
-                                                <TapGestureRecognizer Tapped="OnMediaDescriptionGridTapped" />
-                                            </Grid.GestureRecognizers>
-                                            <Label
-                                                HorizontalOptions="Center"
-                                                IsVisible="{x:Binding IsDescriptionEmpty}"
-                                                Text="설명 추가"
-                                                VerticalOptions="Center" />
-                                            <Label
-                                                Padding="4,0,4,0"
-                                                HorizontalTextAlignment="Center"
-                                                LineBreakMode="TailTruncation"
-                                                MaxLines="2"
-                                                Text="{x:Binding Description}"
-                                                TextColor="#808080"
-                                                VerticalOptions="Center"
-                                                VerticalTextAlignment="Center" />
+                                    <Border
+                                        Margin="6"
+                                        Stroke="#808080"
+                                        StrokeThickness="1">
+                                        <Border.GestureRecognizers>
+                                            <DragGestureRecognizer CanDrag="True" DragStarting="OnMediaDragStarting" />
+                                            <DropGestureRecognizer AllowDrop="True" Drop="OnMediaDrop" />
+                                        </Border.GestureRecognizers>
+                                        <Grid HeightRequest="200">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="150" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+                                            <Image
+                                                Grid.Row="0"
+                                                Aspect="AspectFill"
+                                                Source="{x:Binding ImageSource}" />
+                                            <Rectangle
+                                                Grid.Row="0"
+                                                Fill="#808080"
+                                                HeightRequest="1"
+                                                HorizontalOptions="Fill"
+                                                VerticalOptions="End" />
+                                            <Grid Grid.Row="1">
+                                                <Grid.GestureRecognizers>
+                                                    <TapGestureRecognizer Tapped="OnMediaDescriptionGridTapped" />
+                                                </Grid.GestureRecognizers>
+                                                <Label
+                                                    HorizontalOptions="Center"
+                                                    IsVisible="{x:Binding IsDescriptionEmpty}"
+                                                    Text="설명 추가"
+                                                    VerticalOptions="Center" />
+                                                <Label
+                                                    Padding="4,0,4,0"
+                                                    HorizontalTextAlignment="Center"
+                                                    LineBreakMode="TailTruncation"
+                                                    MaxLines="2"
+                                                    Text="{x:Binding Description}"
+                                                    TextColor="#808080"
+                                                    VerticalOptions="Center"
+                                                    VerticalTextAlignment="Center" />
+                                            </Grid>
                                         </Grid>
-                                    </Grid>
-                                </Border>
+                                    </Border>
 
                                     <Border
                                         BackgroundColor="#808080"
