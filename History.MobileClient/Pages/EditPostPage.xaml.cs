@@ -1,10 +1,10 @@
-
+using AndroidX.Lifecycle;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
 using History.Commons;
 using History.Commons.Api.Post;
-using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
+using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
@@ -16,18 +16,27 @@ namespace History.MobileClient.Pages;
 public partial class EditPostPage : ContentPage
 {
     private MediaAttachmentViewModel _attachmentViewModelBeingDragged;
-
+    private PostResponseDto _post;
     public ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
+
 	public EditPostPage()
     {
         InitializeComponent();
         Initialize();
     }
 
-    public EditPostPage(string postId)
+    public EditPostPage(PostResponseDto post)
     {
+        _post = post;
         InitializeComponent();
         Initialize();
+        LoadPost();
+    }
+
+    private void LoadPost()
+    {
+        MainTextContent.SetContents(_post.Contents);
+        foreach (var mediaContent in _post.Contents.OfType<MediaContent>()) _attachmentViewModels.Add(new(mediaContent));
     }
 
     private void Initialize()
@@ -65,7 +74,8 @@ public partial class EditPostPage : ContentPage
         var files = results?.Files?.ToArray();
         if (files == null || files.Length == 0) return;
 
-        if (files.Any(x => x.Extension.ToLower() == "webp")) _ = Toast.Make("webp 애니메이션 파일을 선택하신 경우, 업로드를 처리하는 데 시간이 오래 걸릴 수 있습니다.").Show();
+        if (files.Any(x => x.Extension.Equals("webp", StringComparison.OrdinalIgnoreCase)))
+            _ = Toast.Make("webp 애니메이션 파일을 선택하신 경우, 업로드를 처리하는 데 시간이 오래 걸릴 수 있습니다.").Show();
 
         foreach (var file in files)
         {
@@ -144,24 +154,37 @@ public partial class EditPostPage : ContentPage
         var editorContents = MainTextContent.GetContents();
         Utils.TrimContents(editorContents);
 
-        var uploadContents = _attachmentViewModels.Select(x => new UploadContent()
+        var files = new Dictionary<string, byte[]>();
+        var mediaAndUploadContents = new List<BaseContent>();
+        foreach(var viewModel in _attachmentViewModels)
         {
-            Description = string.IsNullOrEmpty(x.Description) ? null : x.Description,
-            FileName = x.FileName
-        });
+            if (viewModel.IsUpload)
+            {
+                var uploadContent = new UploadContent
+                {
+                    Description = string.IsNullOrEmpty(viewModel.Description) ? null : viewModel.Description,
+                    FileName = viewModel.FileName
+                };
+                mediaAndUploadContents.Add(uploadContent);
+                files.Add(viewModel.FileName, viewModel.Data);
+            }
+            else
+            {
+                var mediaContent = viewModel.ServerContent;
+                mediaContent.Description = viewModel.Description;
+                mediaAndUploadContents.Add(mediaContent);
+            }
+        }
 
-        var contents = editorContents.Concat(uploadContents).ToList();
+        var contents = editorContents.Concat(mediaAndUploadContents).ToList();
 
-        if (string.IsNullOrEmpty(MainTextContent.Text.Trim()) && !uploadContents.Any())
+        if (string.IsNullOrEmpty(MainTextContent.Text.Trim()) && mediaAndUploadContents.Count == 0)
         {
             await DisplayAlert("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
             return;
         }
 
         var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
-
-        var files = new Dictionary<string, byte[]>();
-        foreach (var viewModel in _attachmentViewModels) files.Add(viewModel.FileName, viewModel.Data);
 
         try
 		{

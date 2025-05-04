@@ -2,6 +2,7 @@ using FFImageLoading;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
+using SpeakLink.Handlers;
 using SpeakLink.Mention;
 using SpeakLink.RichText;
 
@@ -9,10 +10,13 @@ namespace History.MobileClient.ContentViews.EditPost;
 
 public partial class TextContentView : ContentView
 {
-    // MentionId of Android only supports integer value
-    public static Dictionary<int, string> MentionIdMap = [];
-
     public string Text => MainMentionEditor.Text;
+
+    public string Placeholder
+    {
+        get => MainMentionEditor.Placeholder;
+        set => MainMentionEditor.Placeholder = value;
+    }
 
     public event EventHandler<string> ImageInputRequested;
     public TextContentView()
@@ -28,9 +32,7 @@ public partial class TextContentView : ContentView
 		var element = sender as Element;
 		var viewModel = element.BindingContext as MentionViewModel;
 
-        if (!MentionIdMap.Any(x => x.Value == viewModel.UserId)) MentionIdMap[MentionIdMap.Count] = viewModel.UserId;
-
-        MentionHelper.InsertMention(MainMentionEditor, MentionIdMap.FirstOrDefault(x => x.Value == viewModel.UserId).Key.ToString(), viewModel.Nickname + ' ');
+        MentionHelper.InsertMention(MainMentionEditor, viewModel.UserId, viewModel.Nickname);
     }
 
     public List<BaseContent> GetContents()
@@ -38,10 +40,21 @@ public partial class TextContentView : ContentView
         var result = new List<BaseContent>();
         foreach (var span in MainMentionEditor.FormattedText.Spans)
         {
-            if (span is MentionSpan mentionSpan) result.Add(new ProfileContent() { UserId = MentionIdMap[int.Parse(mentionSpan.MentionId)] });
+            if (span is MentionSpan mentionSpan) result.Add(new ProfileContent() { UserId = MentionHelper.MentionIdMap[int.Parse(mentionSpan.MentionId)] });
             else result.Add(new TextContent() { Text = span.Text });
         }
         return result;
+    }
+
+    public void SetContents(List<BaseContent> contents)
+    {
+        MainMentionEditor.Text = "";
+
+        foreach (var content in contents)
+        {
+            if (content is ProfileContent profileContent) MentionHelper.AppendMention(MainMentionEditor, profileContent.UserId, profileContent.Nickname);
+            else if (content is TextContent textContent) MentionHelper.AppendText(MainMentionEditor, textContent.Text);
+        }
     }
 
     private void OnUnloaded(object sender, EventArgs e)
