@@ -215,4 +215,15 @@ public partial class EditPostPage : ContentPage
         var newSpan = ((int)Width / 200) + 1;
         if (newSpan != previousSpan) MediaCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
     }
+
+    private void OnDeleteAttachmentBorderTapped(object sender, TappedEventArgs e)
+    {
+        var element = sender as Element;
+        var viewModel = element.BindingContext as MediaAttachmentViewModel;
+
+        if (viewModel == null) return;
+
+        viewModel.Dispose();
+        _attachmentViewModels.Remove(viewModel);
+    }
 }
