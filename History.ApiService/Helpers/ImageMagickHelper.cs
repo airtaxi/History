@@ -21,10 +21,12 @@ public static class ImageMagickHelper
 
             try
             {
+                images.Coalesce(); // Coalesce the images to ensure all frames are processed
+
                 // Save each frame as an image
-                for (int i = 0; i < images.Count; i++)
+                Parallel.ForEach(images, frame =>
                 {
-                    var frame = images[i];
+                    var i = images.IndexOf(frame);
 
                     // Adjust resolution to even numbers if odd (h264 requirement)
                     if (frame.Width % 2 != 0)
@@ -49,7 +51,7 @@ public static class ImageMagickHelper
 
                     frame.Strip();
                     frame.Write(Path.Combine(tempDir, $"frame_{i:000}.png"));
-                }
+                });
 
                 // Convert PNG sequence to MP4 using FFmpeg
                 var outputMp4Path = Path.Combine(tempDir, "output.mp4");
