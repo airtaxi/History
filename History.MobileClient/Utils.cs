@@ -1,8 +1,9 @@
-﻿using AndroidX.Media3.Common;
-using History.Commons;
+﻿using History.Commons;
 using History.Commons.DataTypes.Contents;
+using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
+using SpeakLink.Mention;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -92,6 +93,7 @@ public static class Utils
                 contents.Add(textContent);
             }
             else if (textContentBuffer.Count == 1) contents.Add(textContentBuffer.First());
+            textContentBuffer.Clear();
         }
 
         foreach (var content in cloned)
@@ -194,5 +196,4 @@ public static class Utils
         tapGestureRecognizer.Tapped += async (s, e) => await App.PushModalAsync(new UserPage(userId));
         span.GestureRecognizers.Add(tapGestureRecognizer);
     }
-
 }

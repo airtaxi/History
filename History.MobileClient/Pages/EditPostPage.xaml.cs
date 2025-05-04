@@ -9,11 +9,7 @@ using History.Commons.Enums;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using NativeMedia;
-using SpeakLink.Mention;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Net.WebSockets;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.Pages;
 

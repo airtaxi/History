@@ -4,6 +4,7 @@ using History.Commons;
 using History.Commons.Api.Comment;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls.Handlers.Items;
 using NativeMedia;
@@ -14,8 +15,6 @@ namespace History.MobileClient.Pages;
 
 public partial class PostPage : ContentPage
 {
-    public static Dictionary<int, string> MentionIdMap = [];
-
     private PostViewModel _viewModel;
     private MentionsViewModel _mentionsViewModel = new();
     private MediaAttachmentViewModel _commentMediaAttachmentViewModel;
@@ -45,50 +44,16 @@ public partial class PostPage : ContentPage
         var user = message.Value;
         if (user.UserId == Shared.UserId) return;
 
-        if (!MentionIdMap.Any(x => x.Value == user.UserId)) MentionIdMap[MentionIdMap.Count] = user.UserId;
-        
-        // Add " @" to the end of the text to allow InsertMention to work properly
-        var formattedText = CommentMentionEditor.FormattedText;
-        CommentMentionEditor.Text += " @";
-        CommentMentionEditor.CursorPosition = CommentMentionEditor.Text.Length;
-        CommentMentionEditor.SelectionLength = 0;
-
-        // Call InsertMention to insert the mention span
-        CommentMentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => x.Value == user.UserId).Key.ToString(), user.Nickname + ' ');
-
-        // Insert newly added mention span to previous formatted text
-        var newFormattedText = CommentMentionEditor.FormattedText;
-        var newSpan = newFormattedText.Spans.LastOrDefault();
-        formattedText.Spans.Add(newSpan);
-
-        // Update the formatted text with the new mention span
-        CommentMentionEditor.SendFormattedTextChanged(formattedText);
-
-        // Focus to show the keyboard
-        CommentMentionEditor.Focus();
-
-        // Set the cursor position to the end of the text
-        var handler = CommentMentionEditor.Handler;
-#if ANDROID
-        var editText = handler.PlatformView as AndroidX.AppCompat.Widget.AppCompatEditText;
-        editText?.SetSelection(editText.Text.Length);
-        var imm = Microsoft.Maui.ApplicationModel.Platform.AppContext.GetSystemService(Android.Content.Context.InputMethodService) as Android.Views.InputMethods.InputMethodManager;
-        imm.ShowSoftInput(editText, Android.Views.InputMethods.ShowFlags.Forced);
-#elif IOS
-        if (handler.PlatformView is UIKit.UITextView nativeView)
-        {
-            nativeView.SelectedRange = new Foundation.NSRange(nativeView.Text.Length, 0);
-            nativeView.BecomeFirstResponder();
-        }
-#endif
+        MentionHelper.AppendMention(CommentMentionEditor, user.UserId, user.Nickname, true);
     }
 
     public List<BaseContent> GetCommentContents()
     {
         var result = new List<BaseContent>();
+        var spans = CommentMentionEditor.FormattedText.Spans;
         foreach (var span in CommentMentionEditor.FormattedText.Spans)
         {
-            if (span is MentionSpan mentionSpan) result.Add(new ProfileContent() { UserId = MentionIdMap[int.Parse(mentionSpan.MentionId)] });
+            if (span is MentionSpan mentionSpan) result.Add(new ProfileContent() { UserId = MentionHelper.MentionIdMap[int.Parse(mentionSpan.MentionId)] });
             else result.Add(new TextContent() { Text = span.Text });
         }
         return result;
@@ -129,7 +94,7 @@ public partial class PostPage : ContentPage
         var bytes = File.ReadAllBytes(path);
         _commentMediaAttachmentViewModel?.Dispose();
         _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(fileName, bytes);
-        CommentImageFontImageSource.Glyph = MaterialSharp.Hide_image;
+        CommentMediaFontImageSource.Glyph = MaterialSharp.Hide_image;
     }
 
     private void OnUserGridTapped(object sender, TappedEventArgs e)
@@ -137,8 +102,7 @@ public partial class PostPage : ContentPage
         var element = sender as Element;
         var viewModel = element.BindingContext as MentionViewModel;
 
-        if (!MentionIdMap.Any(x => x.Value == viewModel.UserId)) MentionIdMap[MentionIdMap.Count] = viewModel.UserId;
-        CommentMentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => x.Value == viewModel.UserId).Key.ToString(), viewModel.Nickname + ' ');
+        MentionHelper.InsertMention(CommentMentionEditor, viewModel.UserId, viewModel.Nickname);
     }
 
     private async void OnCommentAttachmentImageTapped(object sender, TappedEventArgs e)
@@ -162,13 +126,13 @@ public partial class PostPage : ContentPage
             var bytes = memoryStream.ToArray();
 
             _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(fileName, bytes);
-            CommentImageFontImageSource.Glyph = MaterialSharp.Hide_image;
+            CommentMediaFontImageSource.Glyph = MaterialSharp.Hide_image;
         }
         else
         {
             _commentMediaAttachmentViewModel.Dispose();
             _commentMediaAttachmentViewModel = null;
-            CommentImageFontImageSource.Glyph = MaterialSharp.Image;
+            CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
         }
     }
 
