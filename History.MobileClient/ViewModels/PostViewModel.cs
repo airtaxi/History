@@ -20,6 +20,9 @@ public partial class PostViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Nickname))]
+    [NotifyPropertyChangedFor(nameof(IsModerator))]
+    [NotifyPropertyChangedFor(nameof(IsAdmin))]
+    [NotifyPropertyChangedFor(nameof(ProfileMedia))]
     [NotifyPropertyChangedFor(nameof(IsRepost))]
     [NotifyPropertyChangedFor(nameof(Contents))]
     [NotifyPropertyChangedFor(nameof(ParentPost))]
@@ -52,6 +55,8 @@ public partial class PostViewModel : ObservableObject
     public bool IsNotWideMode => !IsWideMode;
 
     public string Nickname => User.Nickname;
+    public bool IsModerator => User.Rank == Rank.Moderator;
+    public bool IsAdmin => User.Rank == Rank.Admin;
     public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia
         ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);

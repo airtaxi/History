@@ -40,10 +40,34 @@
             </Grid>
 
             <VerticalStackLayout Grid.Column="1">
-                <Label
-                    FontAttributes="Bold"
-                    LineBreakMode="TailTruncation"
-                    Text="{x:Binding Nickname}" />
+                <HorizontalStackLayout Spacing="4">
+                    <Image
+                        HeightRequest="14"
+                        IsVisible="{x:Binding IsAdmin}"
+                        WidthRequest="14">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="FASolid"
+                                Glyph="{x:Static fa:Solid.Crown}"
+                                Color="#f78501" />
+                        </Image.Source>
+                    </Image>
+                    <Image
+                        HeightRequest="14"
+                        IsVisible="{x:Binding IsModerator}"
+                        WidthRequest="14">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="FASolid"
+                                Glyph="{x:Static fa:Solid.Gavel}"
+                                Color="#1a5bf3" />
+                        </Image.Source>
+                    </Image>
+                    <Label
+                        FontAttributes="Bold"
+                        LineBreakMode="TailTruncation"
+                        Text="{x:Binding Nickname}" />
+                </HorizontalStackLayout>
                 <VerticalStackLayout
                     BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
                     BindableLayout.ItemsSource="{x:Binding Contents}"

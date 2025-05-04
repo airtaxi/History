@@ -6,6 +6,7 @@ using History.Commons.Api.Comment;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Enums;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Pages;
 using System;
@@ -20,8 +21,10 @@ public partial class CommentViewModel : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Nickname))]
-    [NotifyPropertyChangedFor(nameof(Contents))]
+    [NotifyPropertyChangedFor(nameof(IsModerator))]
+    [NotifyPropertyChangedFor(nameof(IsAdmin))]
     [NotifyPropertyChangedFor(nameof(ProfileMedia))]
+    [NotifyPropertyChangedFor(nameof(Contents))]
     [NotifyPropertyChangedFor(nameof(IsMyComment))]
     [NotifyPropertyChangedFor(nameof(HasLikes))]
     [NotifyPropertyChangedFor(nameof(LikesCount))]
@@ -34,11 +37,12 @@ public partial class CommentViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(TimestampText))]
     public partial CommentResponseDto Comment { get; set; }
 
+    public string Nickname => Comment.User.Nickname;
+    public bool IsModerator => Comment.User.Rank == Rank.Moderator;
+    public bool IsAdmin => Comment.User.Rank == Rank.Admin;
     public IMediaViewModel ProfileMedia => Comment.User.UsesAnimatedProfileMedia
         ? new VideoViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
-
-    public string Nickname => Comment.User.Nickname;
 
     public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Comment.Contents, false);
 
