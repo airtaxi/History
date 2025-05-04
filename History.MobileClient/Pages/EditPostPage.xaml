@@ -59,6 +59,7 @@
                         </CollectionView.ItemsLayout>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="vm:MediaAttachmentViewModel">
+                                <Grid>
                                 <Border
                                     Margin="6"
                                     Stroke="#808080"
@@ -103,6 +104,30 @@
                                         </Grid>
                                     </Grid>
                                 </Border>
+
+                                    <Border
+                                        BackgroundColor="#808080"
+                                        HeightRequest="20"
+                                        HorizontalOptions="End"
+                                        StrokeThickness="0"
+                                        VerticalOptions="Start"
+                                        WidthRequest="20">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnDeleteAttachmentBorderTapped" />
+                                        </Border.GestureRecognizers>
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="10" />
+                                        </Border.StrokeShape>
+                                        <Image>
+                                            <Image.Source>
+                                                <FontImageSource
+                                                    FontFamily="MaterialSharp"
+                                                    Glyph="{x:Static m:MaterialSharp.Close}"
+                                                    Color="White" />
+                                            </Image.Source>
+                                        </Image>
+                                    </Border>
+                                </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
