@@ -75,21 +75,6 @@
                                 LineBreakMode="TailTruncation"
                                 Text="{x:Binding Nickname}"
                                 TextColor="White" />
-                            <Image
-                                HeightRequest="20"
-                                IsVisible="{x:Binding IsMe}"
-                                VerticalOptions="End"
-                                WidthRequest="20">
-                                <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnEditNicknameImageTapped" />
-                                </Image.GestureRecognizers>
-                                <Image.Source>
-                                    <FontImageSource
-                                        FontFamily="MaterialSharp"
-                                        Glyph="{x:Static m:MaterialSharp.Edit}"
-                                        Color="White" />
-                                </Image.Source>
-                            </Image>
                         </HorizontalStackLayout>
                         <HorizontalStackLayout Spacing="2">
                             <Label
@@ -98,22 +83,6 @@
                                 MaxLines="2"
                                 Text="{x:Binding Description}"
                                 TextColor="White" />
-                            <Image
-                                HeightRequest="20"
-                                IsVisible="{x:Binding IsMe}"
-                                VerticalOptions="End"
-                                WidthRequest="20">
-                                <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnEditDescriptionImageTapped" />
-                                </Image.GestureRecognizers>
-                                <Image.Source>
-                                    <FontImageSource
-                                        FontFamily="MaterialSharp"
-                                        Glyph="{x:Static m:MaterialSharp.Edit}"
-                                        Size="15"
-                                        Color="White" />
-                                </Image.Source>
-                            </Image>
                         </HorizontalStackLayout>
                         <Label
                             FontSize="12"
@@ -128,12 +97,12 @@
                     Spacing="4"
                     VerticalOptions="End">
                     <Button
-                        Clicked="OnProfileSettingsButtonClicked"
+                        Command="{x:Binding HandleProfileSettingsCommand}"
                         IsVisible="{x:Binding IsMe}"
                         Text="프로필 설정"
                         TextColor="White" />
                     <Button
-                        Clicked="OnFriendshipButtonClicked"
+                        Command="{x:Binding HandleFriendshipActionCommand}"
                         IsVisible="{x:Binding IsNotMe}"
                         Text="{x:Binding FriendButtonText}"
                         TextColor="White" />
