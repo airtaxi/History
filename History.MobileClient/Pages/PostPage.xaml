@@ -340,7 +340,7 @@
                 </Image.GestureRecognizers>
                 <Image.Source>
                     <FontImageSource
-                        x:Name="CommentImageFontImageSource"
+                        x:Name="CommentMediaFontImageSource"
                         FontFamily="MaterialSharp"
                         Glyph="{x:Static m:MaterialSharp.Image}"
                         Color="{AppThemeBinding Light=#000000,
