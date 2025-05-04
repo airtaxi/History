@@ -105,6 +105,9 @@
 		<MauiXaml Update="Pages\AddFriendsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Pages\EditCommentPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Pages\EditPostPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

@@ -1,4 +1,5 @@
 
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Comment;
@@ -114,6 +115,9 @@ public partial class PostPage : ContentPage
             var results = await MediaGallery.PickAsync(request);
             var files = results?.Files?.ToArray();
             if (files == null || files.Length == 0) return;
+
+            if (files.Any(x => x.Extension.Equals("webp", StringComparison.OrdinalIgnoreCase)))
+                _ = Toast.Make("webp 애니메이션 파일을 선택하신 경우, 업로드를 처리하는 데 시간이 오래 걸릴 수 있습니다.").Show();
 
             using var file = files.FirstOrDefault();
 

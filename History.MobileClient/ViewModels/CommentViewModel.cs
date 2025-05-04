@@ -88,7 +88,7 @@ public partial class CommentViewModel : ObservableObject
         if (action == null || action == Constants.PromptCancel) return;
 
         if (action.StartsWith("좋아요")) await HandleLikeAsync();
-        //else if (action == "댓글 수정") await App.PushModalAsync(new EditCommentPage(Comment));
+        else if (action == "댓글 수정") await App.PushModalAsync(new EditCommentPage(Comment));
         else if (action == "댓글 삭제") await DeleteAsync();
         //else if (action == "댓글 신고")
         //{
