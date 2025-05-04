@@ -201,9 +201,9 @@ public partial class EditPostPage : ContentPage
         finally { MainActivityIndicator.IsVisible = false; }
     }
 
-    protected override void OnDisappearing()
+    private void OnHandlerChanging(object sender, HandlerChangingEventArgs e)
     {
-        base.OnDisappearing();
+        if (e.NewHandler != null) return;
 
         foreach (var viewModel in _attachmentViewModels) viewModel.Dispose();
     }
