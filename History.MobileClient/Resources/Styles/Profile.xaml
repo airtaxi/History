@@ -7,9 +7,13 @@
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
     <DataTemplate x:Key="ProfileTemplate" x:DataType="vm:ProfileViewModel">
-        <Border Margin="8" HeightRequest="300">
+        <Border
+            Margin="8"
+            HeightRequest="300"
+            Stroke="{StaticResource Primary}"
+            StrokeThickness="2">
             <Border.StrokeShape>
-                <RoundRectangle CornerRadius="8" />
+                <RoundRectangle CornerRadius="12" />
             </Border.StrokeShape>
             <Grid>
                 <views:DataTemplatePresenter Template="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding BackgroundMedia}" />
@@ -24,8 +28,8 @@
                     VerticalOptions="Start">
                     <Grid>
                         <views:DataTemplatePresenter
-                            Template="{StaticResource MediaTemplateSelector}"
                             HeightRequest="72"
+                            Template="{StaticResource MediaTemplateSelector}"
                             ViewModel="{x:Binding ProfileMedia}"
                             WidthRequest="72">
                             <views:DataTemplatePresenter.Clip>
@@ -36,40 +40,9 @@
                             </views:DataTemplatePresenter.Clip>
                         </views:DataTemplatePresenter>
                         <Border
-                            Margin="0,0,-5,3"
-                            HeightRequest="22.5"
-                            HorizontalOptions="End"
-                            IsVisible="{x:Binding IsMe}"
-                            Stroke="#808080"
-                            StrokeThickness="1"
-                            VerticalOptions="End"
-                            WidthRequest="22.5"
-                            ZIndex="10">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnChangeProfileImageBorderTapped" />
-                            </Border.GestureRecognizers>
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="12.5" />
-                            </Border.StrokeShape>
-                            <Grid>
-                                <Rectangle
-                                    Fill="{StaticResource Primary}"
-                                    HorizontalOptions="Fill"
-                                    VerticalOptions="Fill" />
-                                <Image HeightRequest="15" WidthRequest="15">
-                                    <Image.Source>
-                                        <FontImageSource
-                                            FontFamily="MaterialSharp"
-                                            Glyph="{x:Static m:MaterialSharp.Edit}"
-                                            Color="White" />
-                                    </Image.Source>
-                                </Image>
-                            </Grid>
-                        </Border>
-                        <Border
                             HeightRequest="25"
                             HorizontalOptions="End"
-                            IsVisible="{x:Binding IsNotMe}"
+                            IsVisible="{x:Binding IsFriend}"
                             Stroke="#404040"
                             StrokeThickness="1"
                             VerticalOptions="End"
@@ -155,9 +128,9 @@
                     Spacing="4"
                     VerticalOptions="End">
                     <Button
-                        Clicked="OnChangeBackgroundImageButtonClicked"
+                        Clicked="OnProfileSettingsButtonClicked"
                         IsVisible="{x:Binding IsMe}"
-                        Text="배경 이미지 변경"
+                        Text="프로필 설정"
                         TextColor="White" />
                     <Button
                         Clicked="OnFriendshipButtonClicked"

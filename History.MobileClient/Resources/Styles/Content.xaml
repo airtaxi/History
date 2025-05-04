@@ -92,7 +92,7 @@
     </DataTemplate>
 
     <DataTemplate x:Key="TextAndProfileContentsTemplate" x:DataType="vm:TextAndProfileContentsViewModel">
-        <Label FormattedText="{x:Binding FormattedString}">
+        <Label FormattedText="{x:Binding FormattedString}" Loaded="OnTextAndProfileContentsLabelLoaded">
             <Label.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnTextAndProfileContentsLabelTapped" />
             </Label.GestureRecognizers>

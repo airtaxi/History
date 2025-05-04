@@ -12,8 +12,8 @@
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
     x:DataType="vm:PostViewModel"
-    SizeChanged="OnSizeChanged"
-    Unloaded="OnUnloaded">
+    HandlerChanging="OnHandlerChanging"
+    SizeChanged="OnSizeChanged">
     <ContentPage.Behaviors>
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
         <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />

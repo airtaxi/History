@@ -3,6 +3,7 @@ using CommunityToolkit.Maui.Core;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls;
+using System.Threading.Tasks;
 
 namespace History.MobileClient.Resources.Styles;
 
@@ -45,5 +46,20 @@ public partial class Content : ResourceDictionary
 
         if (parent?.BindingContext is CommentViewModel commentViewModel) commentViewModel.HandleTap();
         else if (parent?.BindingContext is PostViewModel postViewModel) await postViewModel.HandleTapAsync();
+    }
+
+    private async void OnTextAndProfileContentsLabelLoaded(object sender, EventArgs e)
+    {
+        var label = sender as Label;
+        var viewModel = label.BindingContext as TextAndProfileContentsViewModel;
+        Application.Current.Dispatcher.Dispatch(() =>
+        {
+            Application.Current.Dispatcher.Dispatch(() =>
+            {
+                var lineHeight = label.LineHeight;
+                label.LineHeight = lineHeight + 1;
+                label.LineHeight = lineHeight;
+            });
+        });
     }
 }
