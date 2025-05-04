@@ -14,8 +14,8 @@ namespace History.Commons.Api.Post;
 
 public class ModifyPost : IBaseRequest<PostResponseDto>, IAuthRequiredRequest, IRequestWithForm, IRequestWithFiles, IRequestWithUrlParameters
 {
-    public string Path => "/api/post/modify/{postId}";
-    public Method Method => Method.Post;
+    public string Path => "/api/post/{postId}";
+    public Method Method => Method.Put;
     public object Body { get; set; }
     public Dictionary<string, byte[]> Files { get; set; }
     public Dictionary<string, string> UrlParameters { get; set; } = [];
