@@ -388,6 +388,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         post.Contents = requestDto.Contents;
         post.SearchIndex = GenerateSearchIndexFromContents(requestDto.Contents);
 
+        post.ModifiedAt = DateTime.UtcNow;
+
         // Update the post in the database
         await _postCollection.ReplaceOneAsync(p => p.Id == postId, post);
         return Result.Success();
