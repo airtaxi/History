@@ -141,7 +141,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
         var data = JsonSerializer.Deserialize<ModifyPostRequestDto>(request.JsonData);
-        var result = await postService.ModifyPostAsync(requesterId, postId, data, request.Files);
+        var result = await postService.ModifyPostAsync(postId, requesterId, data, request.Files);
         if (result.IsSuccess)
         {
             var post = await postService.GetPostByIdAsync(postId);

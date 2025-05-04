@@ -357,7 +357,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc/>
-    public async Task<Result> ModifyPostAsync(string userId, string postId, ModifyPostRequestDto requestDto, IEnumerable<IFormFile> files)
+    public async Task<Result> ModifyPostAsync(string postId, string userId, ModifyPostRequestDto requestDto, IEnumerable<IFormFile> files)
     {
         var postResult = await GetPostByIdAsync(postId);
         if (postResult.IsFailure) return postResult.CastFailure();
