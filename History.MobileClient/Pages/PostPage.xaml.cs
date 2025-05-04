@@ -5,6 +5,7 @@ using History.Commons.Api.Comment;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Controls.Handlers.Items;
 using NativeMedia;
 using SpeakLink.Mention;
 using UraniumUI.Icons.MaterialSymbols;
@@ -37,9 +38,6 @@ public partial class PostPage : ContentPage
 		BindingContext = _viewModel;
         CommentMentionEditor.BindingContext = _mentionsViewModel;
         CommentUserCollectionView.BindingContext = _mentionsViewModel;
-        _mentionsViewModel.ImageInputRequested += OnImageInputRequested;
-
-        WeakReferenceMessenger.Default.Register<CommentTappedMessage>(this, OnCommentTappedMessageReceived);
     }
 
     private void OnCommentTappedMessageReceived(object recipient, CommentTappedMessage message)
@@ -257,6 +255,20 @@ public partial class PostPage : ContentPage
 
     private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await _viewModel.DisplayActionSheet(true);
 
+    private void OnHandlerChanging(object sender, HandlerChangingEventArgs e)
+    {
+        if (e.NewHandler == null)
+        {
+            WeakReferenceMessenger.Default.Unregister<CommentTappedMessage>(this);
+            _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
+        }
+        else
+        {
+            WeakReferenceMessenger.Default.Register<CommentTappedMessage>(this, OnCommentTappedMessageReceived);
+            _mentionsViewModel.ImageInputRequested += OnImageInputRequested;
+        }
+    }
+
     private void OnSizeChanged(object sender, EventArgs e)
     {
         MainGrid.ColumnDefinitions.Clear();
@@ -283,10 +295,4 @@ public partial class PostPage : ContentPage
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
-
-    private void OnUnloaded(object sender, EventArgs e)
-    {
-        _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
-        WeakReferenceMessenger.Default.UnregisterAll(this);
-    }
 }

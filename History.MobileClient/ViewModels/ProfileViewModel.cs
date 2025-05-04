@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
@@ -15,6 +16,7 @@ public partial class ProfileViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsMe))]
     [NotifyPropertyChangedFor(nameof(IsNotMe))]
+    [NotifyPropertyChangedFor(nameof(IsFriend))]
     [NotifyPropertyChangedFor(nameof(FriendButtonText))]
     [NotifyPropertyChangedFor(nameof(Nickname))]
     [NotifyPropertyChangedFor(nameof(Description))]
@@ -24,7 +26,11 @@ public partial class ProfileViewModel : ObservableObject
     public partial UserResponseDto User { get; private set; }
 
     public bool IsMe => User.UserId == Shared.UserId;
-    public bool IsNotMe => User.UserId != Shared.UserId;
+    public bool IsNotMe => !IsMe;
+    public bool IsFriend => User.Friendship?.Status == FriendshipStatus.Accepted;
+
+    public bool IsModerator => User.Rank == Rank.Moderator;
+    public bool IsAdmin => User.Rank == Rank.Admin;
 
     public string FriendButtonText
     {
@@ -90,7 +96,88 @@ public partial class ProfileViewModel : ObservableObject
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<UserResponseDto>(result.Value));
     }
 
-    public async Task HandleChangeBackgroundMediaAsync()
+    private async Task HandleChangeNicknameAsync()
+    {
+        var prompt = await App.Page.DisplayPromptAsync("닉네임 변경", "새로운 닉네임을 입력해주세요", "변경", Constants.PromptCancel, "새로운 닉네임", 40, Keyboard.Plain, User.Nickname);
+        prompt = prompt?.Trim();
+
+        if (prompt != null && prompt != User.Nickname)
+        {
+            if (string.IsNullOrWhiteSpace(prompt))
+            {
+                await App.Page.DisplayAlert("닉네임 변경 실패", "닉네임은 공백으로 설정할 수 없습니다", Constants.PromptOk);
+                return;
+            }
+            else if (prompt.Length > CommonsConstants.MaxNicknameLength)
+            {
+                await App.Page.DisplayAlert("닉네임 변경 실패", $"닉네임은 {CommonsConstants.MaxNicknameLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
+                return;
+            }
+
+            var result = await App.ExecuteRequestAsync(new UpdateNickname(prompt));
+            if (result.IsSuccess) await RefreshAsync();
+        }
+    }
+
+    private async Task HandleChangeDescriptionAsync()
+    {
+        var prompt = await App.Page.DisplayPromptAsync("한줄 소개 변경", "새로운 한줄 소개를 입력해주세요 (공백 시 설정 해제)", "변경", Constants.PromptCancel, "새로운 한줄 소개 (공백 시 설정 해제)", 40, Keyboard.Plain, User.Description);
+        prompt = prompt?.Trim();
+
+        if (prompt != null && prompt != User.Description)
+        {
+            if (prompt.Length > CommonsConstants.MaxProfileDescriptionLength)
+            {
+                await App.Page.DisplayAlert("한줄 소개 변경 실패", $"한줄 소개는 {CommonsConstants.MaxProfileDescriptionLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
+                return;
+            }
+
+            var result = await App.ExecuteRequestAsync(new UpdateDescription(prompt));
+            if (result.IsSuccess) await RefreshAsync();
+        }
+    }
+
+    private async Task HandleChangeProfileMediaAsync()
+    {
+        bool shouldUpload = true;
+        if (User.ProfileMediaId != null)
+        {
+            var action = await App.Page.DisplayActionSheet("프로필 이미지", Constants.PromptCancel, null, ["프로필 이미지 변경", "프로필 이미지 삭제"]);
+            if (action == Constants.PromptCancel) return;
+            else if (action == "프로필 이미지 변경") shouldUpload = true;
+            else if (action == "프로필 이미지 삭제")
+            {
+                var result = await App.ExecuteRequestAsync(new DeleteProfileMedia());
+                if (result.IsSuccess) await RefreshAsync();
+                return;
+            }
+        }
+
+        if (shouldUpload)
+        {
+            var request = new MediaPickRequest(1, MediaFileType.Image)
+            {
+                Title = "프로필 이미지 선택"
+            };
+
+            var results = await MediaGallery.PickAsync(request);
+            var files = results?.Files?.ToArray();
+            if (files == null || files.Length == 0) return;
+
+            using var file = files[0];
+            using var stream = await file.OpenReadAsync();
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+
+            var fileName = file.GenerateFileName();
+            var bytes = memoryStream.ToArray();
+
+            var result = await App.ExecuteRequestAsync(new UpdateProfileMedia(fileName, bytes));
+            if (result.IsSuccess) await RefreshAsync();
+        }
+    }
+
+    private async Task HandleChangeBackgroundMediaAsync()
     {
         bool shouldUpload = true;
         if (User.BackgroundMediaId != null)
@@ -123,114 +210,79 @@ public partial class ProfileViewModel : ObservableObject
             var bytes = memoryStream.ToArray();
 
             var result = await App.ExecuteRequestAsync(new UpdateBackgroundMedia(fileName, bytes));
-            if(result.IsSuccess) await RefreshAsync();
-        }
-    }
-
-    public async Task HandleChangeProfileMediaAsync()
-    {
-        bool shouldUpload = true;
-        if (User.ProfileMediaId != null)
-        {
-            var action = await App.Page.DisplayActionSheet("프로필 이미지", Constants.PromptCancel, null, ["프로필 이미지 변경", "프로필 이미지 삭제"]);
-            if (action == Constants.PromptCancel) return;
-            else if (action == "프로필 이미지 변경") shouldUpload = true;
-            else if (action == "프로필 이미지 삭제")
-            {
-                var result = await App.ExecuteRequestAsync(new DeleteProfileMedia());
-                if(result.IsSuccess) await RefreshAsync();
-                return;
-            }
-        }
-
-        if (shouldUpload)
-        {
-            var request = new MediaPickRequest(1, MediaFileType.Image)
-            {
-                Title = "프로필 이미지 선택"
-            };
-
-            var results = await MediaGallery.PickAsync(request);
-            var files = results?.Files?.ToArray();
-            if (files == null || files.Length == 0) return;
-
-            using var file = files[0];
-            using var stream = await file.OpenReadAsync();
-            using var memoryStream = new MemoryStream();
-            await stream.CopyToAsync(memoryStream);
-
-            var fileName = file.GenerateFileName();
-            var bytes = memoryStream.ToArray();
-
-            var result = await App.ExecuteRequestAsync(new UpdateProfileMedia(fileName, bytes));
             if (result.IsSuccess) await RefreshAsync();
         }
     }
 
-    public async Task HandleFriendshipActionAsync()
+    private async Task HandleChangeHandleAsync()
     {
+        var handle = await App.Page.DisplayPromptAsync("핸들 변경", "새로운 핸들을 입력해주세요 (최대 20자, 특수문자 사용 불가)", "변경", Constants.PromptCancel, "새로운 핸들", CommonsConstants.MaxHandleLength, null, User.Handle);
+        handle = handle?.Trim();
+        if (handle != null)
+        {
+            var result = await App.ExecuteRequestAsync(new UpdateHandle(handle), [ErrorType.BadRequest, ErrorType.Conflict]);
+            if (result.IsSuccess)
+            {
+                await App.Page.DisplayAlert("안내", "핸들이 변경되었습니다.", Constants.PromptOk);
+                await RefreshAsync();
+            }
+            else if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Conflict) await App.Page.DisplayAlert("핸들 변경 실패", result.ErrorMessage, Constants.PromptOk);
+        }
+    }
+
+    private async Task HandleChangeProfileVisibilityAsync()
+    {
+        var allowSearch = await App.Page.DisplayAlert("프로필 공개 설정", "내 프로필을 검색할 수 있도록 설정하시겠습니까?\n설정하는 경우, 닉네임이나 핸들을 통해 내 프로필을 검색할 수 있습니다.", "공개", "비공개");
+        var result = await App.ExecuteRequestAsync(new UpdateAllowSearch(allowSearch));
+        if (result.IsSuccess)
+        {
+            if (allowSearch) await App.Page.DisplayAlert("안내", "프로필 공개 설정이 완료되었습니다.", Constants.PromptOk);
+            else await App.Page.DisplayAlert("안내", "프로필 비공개 설정이 완료되었습니다.", Constants.PromptOk);
+            await RefreshAsync();
+        }
+        else await App.Page.DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+    }
+
+    [RelayCommand]
+    private async Task HandleFriendshipActionAsync()
+    {
+        Result result = null;
         if (User.Friendship == null)
         {
-            var result = await App.Page.DisplayAlert("안내", $"{Nickname}에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-            if (result) await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
+            var send = await App.Page.DisplayAlert("안내", $"{Nickname}에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            if (send) result = await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Accepted)
         {
-            var result = await App.Page.DisplayAlert("안내", $"{Nickname}와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-            if (result) await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
+            var dismiss = await App.Page.DisplayAlert("안내", $"{Nickname}와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            if (dismiss) result = await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Requested)
         {
-            var result = await App.Page.DisplayAlert("안내", $"{Nickname}에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
-            if (result) await App.ExecuteRequestAsync(new CancelFriendRequest(User.UserId));
+            var cancel = await App.Page.DisplayAlert("안내", $"{Nickname}에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
+            if (cancel) result = await App.ExecuteRequestAsync(new CancelFriendRequest(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Waiting)
         {
-            var result = await App.Page.DisplayAlert("안내", $"{Nickname}의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-            if (result) await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
+            var accept = await App.Page.DisplayAlert("안내", $"{Nickname}의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            if (accept) result = await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
         }
 
-        await RefreshAsync();
+        if (result != null && result.IsSuccess) await RefreshAsync();
     }
 
-    public async void OnEditNicknameImageTapped(object sender, TappedEventArgs e)
+    [RelayCommand]
+    private async Task HandleProfileSettingsAsync()
     {
-        var prompt = await App.Page.DisplayPromptAsync("닉네임 변경", "새로운 닉네임을 입력해주세요", "변경", Constants.PromptCancel, "새로운 닉네임", 40, Keyboard.Plain, User.Nickname);
-        prompt = prompt?.Trim();
+        var action = await App.Page.DisplayActionSheet("프로필 설정", "취소", null, "닉네임 변경", "한줄 소개 변경", "프로필 사진 변경", "배경 사진 변경", "핸들 변경", "프로필 공개 설정");
 
-        if (prompt != null && prompt != User.Nickname)
-        {
-            if (string.IsNullOrWhiteSpace(prompt))
-            {
-                await App.Page.DisplayAlert("닉네임 변경 실패", "닉네임은 공백으로 설정할 수 없습니다", Constants.PromptOk);
-                return;
-            }
-            else if (prompt.Length > CommonsConstants.MaxNicknameLength)
-            {
-                await App.Page.DisplayAlert("닉네임 변경 실패", $"닉네임은 {CommonsConstants.MaxNicknameLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
-                return;
-            }
+        if (action == null || action == "취소") return;
 
-            var result = await App.ExecuteRequestAsync(new UpdateNickname(prompt));
-            if (result.IsSuccess) await RefreshAsync();
-        }
-    }
-
-    public async void OnEditDescriptionImageTapped(object sender, TappedEventArgs e)
-    {
-        var prompt = await App.Page.DisplayPromptAsync("한줄 소개 변경", "새로운 한줄 소개를 입력해주세요 (공백 시 설정 해제)", "변경", Constants.PromptCancel, "새로운 한줄 소개 (공백 시 설정 해제)", 40, Keyboard.Plain, User.Description);
-        prompt = prompt?.Trim();
-
-        if (prompt != null && prompt != User.Description)
-        {
-            if (prompt.Length > CommonsConstants.MaxProfileDescriptionLength)
-            {
-                await App.Page.DisplayAlert("한줄 소개 변경 실패", $"한줄 소개는 {CommonsConstants.MaxProfileDescriptionLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
-                return;
-            }
-
-            var result = await App.ExecuteRequestAsync(new UpdateDescription(prompt));
-            if (result.IsSuccess) await RefreshAsync();
-        }
+        if (action == "닉넴임 변경") await HandleChangeNicknameAsync();
+        else if (action == "한줄 소개 변경") await HandleChangeDescriptionAsync();
+        else if (action == "프로필 사진 변경") await HandleChangeProfileMediaAsync();
+        else if (action == "배경 사진 변경") await HandleChangeBackgroundMediaAsync();
+        else if (action == "핸들 변경") await HandleChangeHandleAsync();
+        else if (action == "프로필 공개 설정") await HandleChangeProfileVisibilityAsync();
     }
 }

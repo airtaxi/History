@@ -18,13 +18,16 @@ namespace History.MobileClient.ViewModels;
 public partial class FriendshipViewModel(UserResponseDto user) : ObservableObject
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ProfileMedia))]
     [NotifyPropertyChangedFor(nameof(Nickname))]
+    [NotifyPropertyChangedFor(nameof(IsModerator))]
+    [NotifyPropertyChangedFor(nameof(IsAdmin))]
+    [NotifyPropertyChangedFor(nameof(ProfileMedia))]
     [NotifyPropertyChangedFor(nameof(FriendshipGlyph))]
     public partial UserResponseDto User { get; set; } = user;
 
     public string Nickname => User.Nickname;
-
+    public bool IsModerator => User.Rank == Rank.Moderator;
+    public bool IsAdmin => User.Rank == Rank.Admin;
     public IMediaViewModel ProfileMedia => new ImageViewModel(Utils.GenerateMediaUri(User.ProfileThumbnailMediaId));
 
     public string FriendshipGlyph

@@ -1,24 +1,16 @@
-﻿using AndroidX.Lifecycle;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using FFImageLoading;
 using History.Commons.Api.Post;
-using History.Commons.Api.User;
-using History.Commons.DataTypes;
-using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.MobileClient.ContentViews;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Pages;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UraniumUI.Icons.FontAwesome;
-using static Android.App.Assist.AssistStructure;
 
 namespace History.MobileClient.ViewModels;
 
@@ -28,6 +20,9 @@ public partial class PostViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Nickname))]
+    [NotifyPropertyChangedFor(nameof(IsModerator))]
+    [NotifyPropertyChangedFor(nameof(IsAdmin))]
+    [NotifyPropertyChangedFor(nameof(ProfileMedia))]
     [NotifyPropertyChangedFor(nameof(IsRepost))]
     [NotifyPropertyChangedFor(nameof(Contents))]
     [NotifyPropertyChangedFor(nameof(ParentPost))]
@@ -60,6 +55,8 @@ public partial class PostViewModel : ObservableObject
     public bool IsNotWideMode => !IsWideMode;
 
     public string Nickname => User.Nickname;
+    public bool IsModerator => User.Rank == Rank.Moderator;
+    public bool IsAdmin => User.Rank == Rank.Admin;
     public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia
         ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
@@ -70,13 +67,20 @@ public partial class PostViewModel : ObservableObject
 
     public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Post.Contents, _wrapMedias);
 
-    public bool HasNoComments => Post.CommentsCount == 0;
     public bool HasComments => Post.CommentsCount > 0;
+    public bool HasNoComments => Post.CommentsCount == 0;
     public int CommentsCount => Post.CommentsCount;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FirstComment))]
+    [NotifyPropertyChangedFor(nameof(HasComments))]
+    [NotifyPropertyChangedFor(nameof(HasNoComments))]
+    [NotifyPropertyChangedFor(nameof(CommentsCount))]
     public partial ObservableCollection<CommentViewModel> Comments { get; private set; }
-    public CommentViewModel FirstComment => Comments.FirstOrDefault();
+
+    [ObservableProperty]
+    public partial CommentViewModel FirstComment { get; private set; }
+    public WeakReference FirstCommentPresenter { get; set; }
 
     public bool HasReactions => Post.PostReactions.Count > 0;
     public int ReactionsCount => Post.PostReactions.Count;
@@ -99,6 +103,7 @@ public partial class PostViewModel : ObservableObject
         Post = post;
         User = post.User;
         Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
+        FirstComment = Comments.FirstOrDefault();
 
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, OnUserChangedMessageReceived);
@@ -111,7 +116,13 @@ public partial class PostViewModel : ObservableObject
         if (message.Value.Id != Post.Id) return;
 
         Post = message.Value;
+        User = message.Value.User;
+
+        Comments = null;
         Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
+
+        FirstComment = Comments.FirstOrDefault();
+        (FirstCommentPresenter?.Target as DataTemplatePresenter)?.ViewModel = FirstComment;
     }
 
     private void OnUserChangedMessageReceived(object recipient, ValueChangedMessage<UserResponseDto> message)
@@ -125,7 +136,16 @@ public partial class PostViewModel : ObservableObject
         var viewModel = Comments.FirstOrDefault(c => c.Comment.Id == message.Value.Id);
         if (viewModel == null) return;
 
+        var removedCount = Post.Comments.RemoveAll(x => x.Id == viewModel.Comment.Id);
+        Post.CommentsCount -= removedCount;
+
+        var comments = Comments;
         Comments.Remove(viewModel);
+        Comments = null;
+        Comments = comments;
+
+        FirstComment = Comments.FirstOrDefault();
+        (FirstCommentPresenter?.Target as DataTemplatePresenter)?.ViewModel = FirstComment;
     }
 
     private void OnCommentChangedMessageReceived(object recipient, ValueChangedMessage<CommentResponseDto> message)
@@ -184,7 +204,7 @@ public partial class PostViewModel : ObservableObject
         }
 
         // Add reaction
-        var rawReaction = await App.Page.DisplayActionSheet("느낌 달기", "취소", null, Enum.GetValues<PostReactionType>().Select(x => x.ToDisplayString()).ToArray());
+        var rawReaction = await App.Page.DisplayActionSheet("느낌 달기", "취소", null, [.. Enum.GetValues<PostReactionType>().Select(x => x.ToDisplayString())]);
         if (rawReaction == null || rawReaction == "취소") return;
 
         var reaction = PostReactionTypeExtensions.FromDisplayString(rawReaction);
