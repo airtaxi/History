@@ -11,89 +11,122 @@ public static class ImageMagickHelper
     {
         using var images = new MagickImageCollection();
         images.Read(imageBytes);
-
         var isAnimated = images.Count > 1;
 
         if (isAnimated && convertAnimatedImageToMp4)
         {
-            var tempDir = Path.Combine(Path.GetTempPath(), "anim2vid_" + Guid.NewGuid());
+            // Create temporary directory
+            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(tempDir);
+
             try
             {
-                var format = images[0].Format.ToString().ToLower(); // e.g., "gif" or "webp"
-                string inputPath = Path.Combine(tempDir, $"input.{format}");
-                string outputPath = Path.Combine(tempDir, "output.mp4");
-
-                // Save imageBytes to temp file
-                File.WriteAllBytes(inputPath, imageBytes);
-
-                string scaleFilter = "scale=trunc(iw/2)*2:trunc(ih/2)*2";
-                if (maxWidth.HasValue)
+                // Save each frame as an image
+                for (int i = 0; i < images.Count; i++)
                 {
-                    // Maintain aspect ratio, even size, and clamp width
-                    scaleFilter = $"scale='min({maxWidth.Value},iw)':-2";
+                    var frame = images[i];
+
+                    // Adjust resolution to even numbers if odd (h264 requirement)
+                    if (frame.Width % 2 != 0)
+                    {
+                        frame.Resize(frame.Width + 1, frame.Height);
+                    }
+                    if (frame.Height % 2 != 0)
+                    {
+                        frame.Resize(frame.Width, frame.Height + 1);
+                    }
+
+                    // Resize if necessary
+                    if (maxWidth.HasValue && frame.Width > maxWidth.Value)
+                    {
+                        var newHeight = (uint)Math.Round((double)frame.Height * maxWidth.Value / frame.Width, 0);
+                        // Adjust to even height for h264 encoding
+                        if (newHeight % 2 != 0) newHeight++;
+
+                        var size = new MagickGeometry(maxWidth.Value, newHeight) { IgnoreAspectRatio = true };
+                        frame.Resize(size);
+                    }
+
+                    frame.Strip();
+                    frame.Write(Path.Combine(tempDir, $"frame_{i:000}.png"));
                 }
 
-                var ffmpegArgs = $"-y -i \"{inputPath}\" -vf \"{scaleFilter}\" -movflags faststart -pix_fmt yuv420p -c:v libx264 \"{outputPath}\"";
-                RunFFmpeg(ffmpegArgs);
+                // Convert PNG sequence to MP4 using FFmpeg
+                var outputMp4Path = Path.Combine(tempDir, "output.mp4");
+                var framerate = DetermineFramerate(images);
 
-                byte[] mp4Bytes = File.ReadAllBytes(outputPath);
+                var ffmpegProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "ffmpeg",
+                        Arguments = $"-framerate {framerate} -i \"{Path.Combine(tempDir, "frame_%03d.png")}\" " +
+                                    $"-c:v libx265 -pix_fmt yuv420p -crf 23 \"{outputMp4Path}\"",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    }
+                };
+
+                ffmpegProcess.Start();
+                ffmpegProcess.WaitForExit();
+
+                if (ffmpegProcess.ExitCode != 0)
+                {
+                    throw new Exception($"FFmpeg conversion failed: {ffmpegProcess.StandardError.ReadToEnd()}");
+                }
+
+                // Read the generated MP4 file
+                var mp4Bytes = File.ReadAllBytes(outputMp4Path);
 
                 return new ImageConvertResult(true, mp4Bytes);
             }
             finally
             {
-                if (Directory.Exists(tempDir))
+                // Clean up temporary files
+                try
                 {
                     Directory.Delete(tempDir, true);
+                }
+                catch
+                {
+                    // Ignore cleanup failures
                 }
             }
         }
         else
         {
             using var image = new MagickImage(imageBytes);
-
             image.Format = MagickFormat.WebP;
             image.Quality = 50;
-
             if (maxWidth.HasValue && image.Width > maxWidth.Value)
             {
                 var newHeight = (uint)Math.Round((double)image.Height * maxWidth.Value / image.Width, 0);
-
                 var size = new MagickGeometry(maxWidth.Value, newHeight) { IgnoreAspectRatio = true };
                 image.Resize(size);
             }
-
             image.Strip();
-
             using var ms = new MemoryStream();
             image.Write(ms);
             return new ImageConvertResult(false, ms.ToArray());
         }
     }
 
-    private static void RunFFmpeg(string arguments)
+    // Helper method to determine the frame rate of animated images
+    private static double DetermineFramerate(MagickImageCollection images)
     {
-        var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "ffmpeg",
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            }
-        };
+        // Calculate frame rate based on the first frame's delay time
+        // Delay is specified in hundredths of a second
+        uint delay = images[0].AnimationDelay;
 
-        process.Start();
-        string stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit();
-
-        if (process.ExitCode != 0)
+        // Use default frame rate if delay is 0
+        if (delay == 0)
         {
-            throw new Exception($"FFmpeg failed:\n{stderr}");
+            return 10; // Default to 10 FPS
         }
+
+        // Convert delay time to frame rate (hundredths of a second -> frames per second)
+        return 100.0 / delay;
     }
 }
