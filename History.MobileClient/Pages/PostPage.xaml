@@ -113,11 +113,35 @@
                                                 </views:DataTemplatePresenter.Clip>
                                             </views:DataTemplatePresenter>
                                             <VerticalStackLayout VerticalOptions="Center">
-                                                <Label
-                                                    FontAttributes="Bold"
-                                                    FontSize="16"
-                                                    LineBreakMode="TailTruncation"
-                                                    Text="{x:Binding Nickname}" />
+                                                <HorizontalStackLayout Spacing="4">
+                                                    <Image
+                                                        HeightRequest="16"
+                                                        IsVisible="{x:Binding IsAdmin}"
+                                                        WidthRequest="16">
+                                                        <Image.Source>
+                                                            <FontImageSource
+                                                                FontFamily="FASolid"
+                                                                Glyph="{x:Static fa:Solid.Crown}"
+                                                                Color="#f78501" />
+                                                        </Image.Source>
+                                                    </Image>
+                                                    <Image
+                                                        HeightRequest="16"
+                                                        IsVisible="{x:Binding IsModerator}"
+                                                        WidthRequest="16">
+                                                        <Image.Source>
+                                                            <FontImageSource
+                                                                FontFamily="FASolid"
+                                                                Glyph="{x:Static fa:Solid.Gavel}"
+                                                                Color="#1a5bf3" />
+                                                        </Image.Source>
+                                                    </Image>
+                                                    <Label
+                                                        FontAttributes="Bold"
+                                                        FontSize="16"
+                                                        LineBreakMode="TailTruncation"
+                                                        Text="{x:Binding Nickname}" />
+                                                </HorizontalStackLayout>
                                                 <Label
                                                     Margin="0,-2,0,0"
                                                     FontSize="14"
@@ -222,13 +246,38 @@
                                             RadiusY="16" />
                                     </views:DataTemplatePresenter.Clip>
                                 </views:DataTemplatePresenter>
-                                <Label
-                                    FontAttributes="Bold"
-                                    FontSize="20"
+                                <HorizontalStackLayout
                                     HorizontalOptions="Start"
-                                    LineBreakMode="TailTruncation"
-                                    Text="{x:Binding Nickname}"
-                                    VerticalOptions="Center" />
+                                    Spacing="4"
+                                    VerticalOptions="Center">
+                                    <Image
+                                        HeightRequest="20"
+                                        IsVisible="{x:Binding IsAdmin}"
+                                        WidthRequest="20">
+                                        <Image.Source>
+                                            <FontImageSource
+                                                FontFamily="FASolid"
+                                                Glyph="{x:Static fa:Solid.Crown}"
+                                                Color="#f78501" />
+                                        </Image.Source>
+                                    </Image>
+                                    <Image
+                                        HeightRequest="20"
+                                        IsVisible="{x:Binding IsModerator}"
+                                        WidthRequest="20">
+                                        <Image.Source>
+                                            <FontImageSource
+                                                FontFamily="FASolid"
+                                                Glyph="{x:Static fa:Solid.Gavel}"
+                                                Color="#1a5bf3" />
+                                        </Image.Source>
+                                    </Image>
+                                    <Label
+                                        FontAttributes="Bold"
+                                        FontSize="20"
+                                        LineBreakMode="TailTruncation"
+                                        Text="{x:Binding Nickname}" />
+                                </HorizontalStackLayout>
                             </HorizontalStackLayout>
                             <Grid
                                 BackgroundColor="#808080"

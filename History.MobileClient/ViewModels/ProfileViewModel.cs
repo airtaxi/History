@@ -29,6 +29,9 @@ public partial class ProfileViewModel : ObservableObject
     public bool IsNotMe => !IsMe;
     public bool IsFriend => User.Friendship?.Status == FriendshipStatus.Accepted;
 
+    public bool IsModerator => User.Rank == Rank.Moderator;
+    public bool IsAdmin => User.Rank == Rank.Admin;
+
     public string FriendButtonText
     {
         get

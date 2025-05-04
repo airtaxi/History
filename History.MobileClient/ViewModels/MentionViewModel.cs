@@ -20,5 +20,8 @@ public partial class MentionViewModel(UserResponseDto user)
 
     public string Nickname => user.Nickname;
 
+    public bool IsModerator => user.Rank == Rank.Moderator;
+    public bool IsAdmin => user.Rank == Rank.Admin;
+
     public IMediaViewModel ProfileMedia => new ImageViewModel(Utils.GenerateMediaUri(user.ProfileThumbnailMediaId));
 }
