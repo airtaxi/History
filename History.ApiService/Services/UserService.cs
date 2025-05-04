@@ -158,6 +158,17 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
+    public async Task<Result> UpdateHandleAsync(string userId, string newHandle)
+    {
+        var existingUser = await _userCollection.Find(u => u.Handle == newHandle).FirstOrDefaultAsync();
+        if (existingUser != null) return (ErrorType.Conflict, "이미 사용 중인 핸들입니다.");
+
+        var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+        var update = Builders<User>.Update.Set(u => u.Handle, newHandle);
+        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "핸들을 변경하는 중 오류가 발생했습니다.");
+    }
+
+    /// <inheritdoc />
     public async Task<Result> UpdateProfileMediaAsync(string userId, byte[] image)
     {
         var userResult = await GetUserByIdAsync(userId);
