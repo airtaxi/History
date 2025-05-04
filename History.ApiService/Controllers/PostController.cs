@@ -142,7 +142,12 @@ public class PostController(IPostService postService, IFriendshipService friends
 
         var data = JsonSerializer.Deserialize<ModifyPostRequestDto>(request.JsonData);
         var result = await postService.ModifyPostAsync(postId, requesterId, data, request.Files);
-        if (result.IsSuccess) return Ok();
+        if (result.IsSuccess)
+        {
+            var post = await postService.GetPostByIdAsync(postId);
+            var dtoResult = await postService.GeneratePostResponseDtoAsync(post.Value, requesterId);
+            return Ok(dtoResult.Value);
+        }
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
