@@ -19,12 +19,16 @@
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
             </Grid.GestureRecognizers>
 
-            <Grid Loaded="OnProfileGridLoaded">
+            <Grid>
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
+                </Grid.GestureRecognizers>
                 <views:DataTemplatePresenter
                     Grid.Column="0"
                     HeightRequest="36"
                     Template="{StaticResource MediaTemplateSelector}"
                     VerticalOptions="Start"
+                    ViewModel="{x:Binding ProfileMedia}"
                     WidthRequest="36">
                     <views:DataTemplatePresenter.Clip>
                         <EllipseGeometry
@@ -34,11 +38,36 @@
                     </views:DataTemplatePresenter.Clip>
                 </views:DataTemplatePresenter>
             </Grid>
+
             <VerticalStackLayout Grid.Column="1">
-                <Label
-                    FontAttributes="Bold"
-                    LineBreakMode="TailTruncation"
-                    Text="{x:Binding Nickname}" />
+                <HorizontalStackLayout Spacing="4">
+                    <Image
+                        HeightRequest="14"
+                        IsVisible="{x:Binding IsAdmin}"
+                        WidthRequest="14">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="FASolid"
+                                Glyph="{x:Static fa:Solid.Crown}"
+                                Color="#f78501" />
+                        </Image.Source>
+                    </Image>
+                    <Image
+                        HeightRequest="14"
+                        IsVisible="{x:Binding IsModerator}"
+                        WidthRequest="14">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="FASolid"
+                                Glyph="{x:Static fa:Solid.Gavel}"
+                                Color="#1a5bf3" />
+                        </Image.Source>
+                    </Image>
+                    <Label
+                        FontAttributes="Bold"
+                        LineBreakMode="TailTruncation"
+                        Text="{x:Binding Nickname}" />
+                </HorizontalStackLayout>
                 <VerticalStackLayout
                     BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
                     BindableLayout.ItemsSource="{x:Binding Contents}"
@@ -63,22 +92,36 @@
                     </Label>
                 </HorizontalStackLayout>
             </VerticalStackLayout>
-            <Image
+            <VerticalStackLayout
                 Grid.Column="2"
-                HeightRequest="15"
-                VerticalOptions="Start"
-                WidthRequest="15">
-                <Image.GestureRecognizers>
-                    <TapGestureRecognizer Command="{x:Binding LikeCommand}" />
-                </Image.GestureRecognizers>
-                <Image.Source>
-                    <FontImageSource
-                        x:Name="LikeFontImageSource"
-                        FontFamily="{x:Binding CommentLikeFontFamily}"
-                        Glyph="{x:Static fa:Solid.Heart}"
-                        Color="{x:Binding CommentLikeColor}" />
-                </Image.Source>
-            </Image>
+                Spacing="8"
+                VerticalOptions="Start">
+                <Image HeightRequest="18" WidthRequest="18">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Binding LikeCommand}" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="{x:Binding CommentLikeFontFamily}"
+                            Glyph="{x:Static fa:Solid.Heart}"
+                            Color="{x:Binding CommentLikeColor}" />
+                    </Image.Source>
+                </Image>
+                <Image
+                    HeightRequest="18"
+                    IsVisible="{x:Binding IsMyComment}"
+                    WidthRequest="18">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Binding DeleteCommand}" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="FARegular"
+                            Glyph="{x:Static fa:Regular.TrashCan}"
+                            Color="#DD4040" />
+                    </Image.Source>
+                </Image>
+            </VerticalStackLayout>
         </Grid>
     </DataTemplate>
 </ResourceDictionary>

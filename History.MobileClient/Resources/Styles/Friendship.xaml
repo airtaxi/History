@@ -3,6 +3,7 @@
     x:Class="History.MobileClient.Resources.Styles.Friendship"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
@@ -19,8 +20,8 @@
             </Grid.ColumnDefinitions>
             <views:DataTemplatePresenter
                 Grid.Column="0"
-                Template="{StaticResource MediaTemplateSelector}"
                 HeightRequest="32"
+                Template="{StaticResource MediaTemplateSelector}"
                 ViewModel="{x:Binding ProfileMedia}"
                 WidthRequest="32">
                 <views:DataTemplatePresenter.Clip>
@@ -30,12 +31,35 @@
                         RadiusY="16" />
                 </views:DataTemplatePresenter.Clip>
             </views:DataTemplatePresenter>
-            <Label
-                Grid.Column="1"
-                FontAttributes="Bold"
-                FontSize="20"
-                LineBreakMode="TailTruncation"
-                Text="{x:Binding Nickname}" />
+            <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                <Image
+                    HeightRequest="20"
+                    IsVisible="{x:Binding IsAdmin}"
+                    WidthRequest="20">
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="FASolid"
+                            Glyph="{x:Static fa:Solid.Crown}"
+                            Color="#f78501" />
+                    </Image.Source>
+                </Image>
+                <Image
+                    HeightRequest="20"
+                    IsVisible="{x:Binding IsModerator}"
+                    WidthRequest="20">
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="FASolid"
+                            Glyph="{x:Static fa:Solid.Gavel}"
+                            Color="#1a5bf3" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    LineBreakMode="TailTruncation"
+                    Text="{x:Binding Nickname}" />
+            </HorizontalStackLayout>
             <Image
                 Grid.Column="2"
                 HeightRequest="32"

@@ -114,6 +114,14 @@ public interface IUserService
     public Task<Result> UpdateAllowSearchAsync(string userId, bool allowSearch);
 
     /// <summary>
+    /// Update user's handle
+    /// </summary>
+    /// <param name="userId">The ID of user to update</param>
+    /// <param name="newHandle">The new handle to update</param>
+    /// <returns>A task that represents the asynchronous operation. with result of update success</returns>
+    public Task<Result> UpdateHandleAsync(string userId, string newHandle);
+
+    /// <summary>
     /// Update user's profile media
     /// </summary>
     /// <param name="userId">The ID of user to update</param>
