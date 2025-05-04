@@ -94,17 +94,30 @@ public partial class ProfileViewModel : ObservableObject
 
     public async Task HandleChangeHandleAsync()
     {
-        var handle = await App.Page.DisplayPromptAsync("핸들 변경", "새로운 핸들을 입력해주세요", "변경", Constants.PromptCancel, "새로운 핸들", 8, Keyboard.Plain, User.Handle);
+        var handle = await App.Page.DisplayPromptAsync("핸들 변경", "새로운 핸들을 입력해주세요 (최대 20자, 특수문자 사용 불가)", "변경", Constants.PromptCancel, "새로운 핸들", CommonsConstants.MaxHandleLength, null, User.Handle);
         handle = handle?.Trim();
-        if (handle != null) {
+        if (handle != null)
+        {
+            var result = await App.ExecuteRequestAsync(new UpdateHandle(handle), [ErrorType.BadRequest, ErrorType.Conflict]);
+            if (result.IsSuccess)
+            {
+                await App.Page.DisplayAlert("안내", "핸들이 변경되었습니다.", Constants.PromptOk);
+                await RefreshAsync();
+            }
+            else if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Conflict) await App.Page.DisplayAlert("핸들 변경 실패", result.ErrorMessage, Constants.PromptOk);
         }
+    }
     public async Task HandleChangeProfileVisibilityAsync()
     {
-        var result = await App.Page.DisplayAlert("프로필 공개 설정", "내 프로필을 검색할 수 있도록 설정하시겠습니까?\n설정하는 경우, 닉네임이나 핸들을 통해 내 프로필을 검색할 수 있습니다.", "공개", "비공개");
-        await App.ExecuteRequestAsync(new UpdateAllowSearch(result));
-
-        if (result) await App.Page.DisplayAlert("안내", "프로필 공개 설정이 완료되었습니다.", Constants.PromptOk);
-        else await App.Page.DisplayAlert("안내", "프로필 비공개 설정이 완료되었습니다.", Constants.PromptOk);
+        var allowSearch = await App.Page.DisplayAlert("프로필 공개 설정", "내 프로필을 검색할 수 있도록 설정하시겠습니까?\n설정하는 경우, 닉네임이나 핸들을 통해 내 프로필을 검색할 수 있습니다.", "공개", "비공개");
+        var result = await App.ExecuteRequestAsync(new UpdateAllowSearch(allowSearch));
+        if (result.IsSuccess)
+        {
+            if (allowSearch) await App.Page.DisplayAlert("안내", "프로필 공개 설정이 완료되었습니다.", Constants.PromptOk);
+            else await App.Page.DisplayAlert("안내", "프로필 비공개 설정이 완료되었습니다.", Constants.PromptOk);
+            await RefreshAsync();
+        }
+        else await App.Page.DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
     }
 
     public async Task HandleChangeBackgroundMediaAsync()
