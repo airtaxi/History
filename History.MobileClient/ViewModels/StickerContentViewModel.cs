@@ -7,5 +7,5 @@ public class StickerContentViewModel(StickerContent stickerContent) : IContentVi
 {
     public string StickerId => stickerContent.StickerId;
     public string StickerContentId => stickerContent.StickerContentId;
-    public ImageViewModel Media { get; } = new ImageViewModel(CommonsConstants.MediaBaseUrl + stickerContent.StickerMediaId);
+    public ImageViewModel Media { get; } = new ImageViewModel(Utils.GenerateMediaUri(stickerContent.StickerMediaId));
 }

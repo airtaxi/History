@@ -6,7 +6,9 @@
     xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
     xmlns:ppc="clr-namespace:History.MobileClient.ThirdParty.PanPinchContainer"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
+
     <DataTemplate x:Key="ImageTemplate" x:DataType="vm:ImageViewModel">
         <ffimageloading:CachedImage
             Aspect="{x:Binding Aspect}"
@@ -31,20 +33,8 @@
         <ContentView Loaded="OnVideoContentViewLoaded" Unloaded="OnVideoContentViewUnloaded" />
     </DataTemplate>
 
-    <!--  MAUI BUG: Cannot set ShouldShowPlaybackControls on xaml  -->
-    <DataTemplate x:Key="ControllableVideoTemplate" x:DataType="vm:VideoViewModel">
-        <ContentView Loaded="OnVideoContentViewLoaded" Unloaded="OnVideoContentViewUnloaded" />
-    </DataTemplate>
-
-    <DataTemplate x:Key="FullScreenVideoTemplate" x:DataType="vm:VideoViewModel">
-        <ContentView Loaded="OnVideoContentViewLoaded" Unloaded="OnVideoContentViewUnloaded" />
-    </DataTemplate>
-
     <vm:MediaTemplateSelector
         x:Key="MediaTemplateSelector"
-        ControllableVideoTemplate="{StaticResource ControllableVideoTemplate}"
-        FullScreenImageTemplate="{StaticResource FullScreenImageTemplate}"
-        FullScreenVideoTemplate="{StaticResource FullScreenVideoTemplate}"
         ImageTemplate="{StaticResource ImageTemplate}"
         VideoTemplate="{StaticResource VideoTemplate}" />
 </ResourceDictionary>

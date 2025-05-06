@@ -14,7 +14,7 @@ public static class Utils
         return $"https://api.history.cenox.io/api/media/{mediaId}";
     }
 
-    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, bool wrapMedias)
+    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, bool isTimeline)
     {
         var contentViewModels = new List<IContentViewModel>();
 
@@ -24,7 +24,7 @@ public static class Utils
         {
             if (mediaContents.Count > 0)
             {
-                contentViewModels.Add(new MediaContentsViewModel(mediaContents, allMediaContents));
+                contentViewModels.Add(new WrappedMediaContentsViewModel(mediaContents, allMediaContents));
                 mediaContents = [];
             }
         }
@@ -56,8 +56,8 @@ public static class Utils
             else if (content is MediaContent mediaContent)
             {
                 FlushTextAndProfileContents();
-                if (wrapMedias) mediaContents.Add(mediaContent);
-                else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents));
+                if (isTimeline) mediaContents.Add(mediaContent);
+                else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents, false));
             }
         }
 
@@ -121,26 +121,6 @@ public static class Utils
 
         return result;
     }
-
-    public static IMediaViewModel GenerateMediaViewModelFromMediaContent(MediaContent mediaContent, bool isInCarouselView) => mediaContent.IsVideo
-    ? new VideoViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId, mediaContent.Description)
-    {
-        VideoShouldShowPlaybackControls = false,
-        Aspect = Aspect.AspectFill,
-        ShouldMute = true,
-		ResizeParentCarouselViewWhenSizeChanged = isInCarouselView && false,
-		HorizontalContentOptions = LayoutOptions.Fill,
-        VideoShouldAutoPlay = true,
-        VideoShouldLoopPlayback = true,
-        VerticalContentOptions = LayoutOptions.Fill
-    }
-    : new ImageViewModel(CommonsConstants.MediaBaseUrl + mediaContent.MediaId, mediaContent.Description)
-    {
-        Aspect = Aspect.AspectFill,
-		ResizeParentCarouselViewWhenSizeChanged = isInCarouselView && false,
-		HorizontalContentOptions = LayoutOptions.Fill,
-        VerticalContentOptions = LayoutOptions.Fill
-    };
 
     public static FormattedString GenerateSpanFromTextAndProfileContents(List<BaseContent> contents)
     {
