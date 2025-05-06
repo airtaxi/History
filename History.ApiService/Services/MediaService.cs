@@ -1,5 +1,4 @@
-﻿using History.ApiService.DataTypes;
-using History.ApiService.Helpers;
+﻿using History.ApiService.Helpers;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
@@ -86,14 +85,20 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 var isOverSize = bytes.Length > 15 * 1024 * 1024; // 15MB
                 if (isOverSize) return Result.Failure(ErrorType.BadRequest, "파일 크기가 너무 큽니다.");
 
-                var convertResult = MediaConverter.ConvertAndSave(bytes, false, 512);
-                var thumbnailBytes = convertResult.Data;
-                var thumbnailContentType = convertResult.MimeType;
+                string thumbnailId;
+                try
+                {
+                    var thumbnailConvertResult = MediaConverter.ConvertAndSave(bytes, false, 512);
+                    var thumbnailBytes = thumbnailConvertResult.Data;
+                    var thumbnailContentType = thumbnailConvertResult.MimeType;
 
-                var thumbnailResult = await CreateMediaAsync(bucketType, associatedId, userId, thumbnailBytes, thumbnailContentType);
-                if (thumbnailResult.IsFailure) return thumbnailResult.CastFailure();
+                    var thumbnailResult = await CreateMediaAsync(bucketType, associatedId, userId, thumbnailBytes, thumbnailContentType);
+                    if (thumbnailResult.IsFailure) return thumbnailResult.CastFailure();
 
-                var thumbnailId = thumbnailResult.Value.Id;
+                    thumbnailId = thumbnailResult.Value.Id;
+                }
+                catch { return (ErrorType.ProgramError, "지원하지 않는 미디어 형식입니다."); }
+
 
                 var mediaResult = await CreateMediaAsync(bucketType, associatedId, userId, bytes, contentType, thumbnailId);
                 if (mediaResult.IsFailure) return mediaResult.CastFailure();
