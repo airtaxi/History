@@ -210,6 +210,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update
                 .Set(u => u.ProfileMediaId, mediaResult.Value.Id)
+                .Set(u => u.ProfileThumbnailMediaId, thumbnailMediaResult.Value.Id)
                 .Set(u => u.UsesAnimatedProfileMedia, usesAnimatedProfileMedia);
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "프로필 이미지를 변경하는 중 오류가 발생했습니다.");
         }
@@ -253,6 +254,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update
                 .Set(u => u.BackgroundMediaId, mediaResult.Value.Id)
+                .Set(u => u.BackgroundThumbnailMediaId, thumbnailMediaResult.Value.Id)
                 .Set(u => u.UsesAnimatedBackgroundMedia, usesAnimatedBackgroundMedia);
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "배경 이미지를 변경하는 중 오류가 발생했습니다.");
         }

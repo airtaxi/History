@@ -46,6 +46,11 @@ public class User
     public string ProfileMediaId { get; set; }
 
     /// <summary>
+    /// Profile thumbnail media id.
+    /// </summary>
+    public string ProfileThumbnailMediaId { get; set; }
+
+    /// <summary>
     /// Determines whether the user has set a video as their profile media.
     /// </summary>
     public bool UsesAnimatedProfileMedia { get; set; }
@@ -54,6 +59,11 @@ public class User
     /// Background media id.
     /// </summary>
     public string BackgroundMediaId { get; set; }
+
+    /// <summary>
+    /// Background thumbnail media id.
+    /// </summary>
+    public string BackgroundThumbnailMediaId { get; set; }
 
     /// <summary>
     /// Determines whether the user has set a video as their background.
