@@ -527,7 +527,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
-    public async Task<Result> ChangeDiscoveryOptionAsync(string userId, string postId, DiscoveryOption discoveryOption, List<string> selectedUserIds)
+    public async Task<Result> ChangeDiscoveryOptionAsync(string postId, string userId, DiscoveryOption discoveryOption, List<string> selectedUserIds)
     {
         var postResult = await GetPostByIdAsync(postId);
         if (postResult.IsFailure) return postResult.CastFailure();
