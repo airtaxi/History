@@ -78,12 +78,24 @@
                                     LineBreakMode="TailTruncation"
                                     Text="{x:Binding Nickname}" />
                             </HorizontalStackLayout>
-                            <Label
-                                Margin="0,-2,0,0"
-                                FontSize="14"
-                                LineBreakMode="TailTruncation"
-                                Text="{x:Binding TimestampText}"
-                                TextColor="#808080" />
+                            <HorizontalStackLayout>
+                                <Label FontSize="14" TextColor="#808080">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{x:Binding TimestampText}" />
+                                            <Span Text=" · " />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                                <Image HeightRequest="14" WidthRequest="14">
+                                    <Image.Source>
+                                        <FontImageSource
+                                            FontFamily="FASolid"
+                                            Glyph="{x:Binding DiscoveryOptionGlyph}"
+                                            Color="#808080" />
+                                    </Image.Source>
+                                </Image>
+                            </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </HorizontalStackLayout>
                     <Image

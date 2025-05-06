@@ -49,17 +49,28 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(ProfileMedia))]
     public partial UserResponseDto User { get; private set; }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsNotWideMode))]
-    public partial bool IsWideMode { get; set; }
-    public bool IsNotWideMode => !IsWideMode;
-
     public string Nickname => User.Nickname;
     public bool IsModerator => User.Rank == Rank.Moderator;
     public bool IsAdmin => User.Rank == Rank.Admin;
     public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia
         ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+
+    public string DiscoveryOptionGlyph => Post.DiscoveryOption switch
+    {
+        DiscoveryOption.OnlyMe => Solid.Lock,
+        DiscoveryOption.SelectedUsers => Solid.UserPlus,
+        DiscoveryOption.UnselectedUsers => Solid.UserMinus,
+        DiscoveryOption.Friends => Solid.Users,
+        DiscoveryOption.FriendsOfFriends => Solid.UsersBetweenLines,
+        DiscoveryOption.Everyone => Solid.Globe,
+        _ => Solid.Question
+    };
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotWideMode))]
+    public partial bool IsWideMode { get; set; }
+    public bool IsNotWideMode => !IsWideMode;
 
     public bool IsRepost => Post.IsRepost;
     public PostViewModel ParentPost => new(Post.ParentPost, true);
