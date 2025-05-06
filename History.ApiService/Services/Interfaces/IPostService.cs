@@ -27,12 +27,12 @@ public interface IPostService
     /// <summary>
     /// Get posts of user.
     /// </summary>
-    /// <param name="requesterId">The id of user who requests posts</param>
     /// <param name="userId">The id of user to get posts</param>
+    /// <param name="requesterId">The id of user who requests posts</param>
     /// <param name="fromPostId">The id of post to start from</param>
     /// <param name="limit">The limit of posts to get</param>
     /// <returns>A task that represents the asynchronous operation. with result of posts</returns>
-    public Task<Result<List<Post>>> GetUserPostsAsync(string requesterId, string userId, string fromPostId = null, int limit = 10);
+    public Task<Result<List<Post>>> GetUserPostsAsync(string userId, string requesterId = null, string fromPostId = null, int limit = 10);
 
     /// <summary>
     /// Get count of posts of user.
@@ -46,10 +46,10 @@ public interface IPostService
     /// Asynchronously ignores a specified post for a user. This operation updates the user's preferences regarding the
     /// visibility of the post.
     /// </summary>
-    /// <param name="userId">Identifies the user who wants to ignore the post.</param>
     /// <param name="postId">Specifies the post that the user wishes to ignore.</param>
+    /// <param name="userId">Identifies the user who wants to ignore the post.</param>
     /// <returns>Returns a task that represents the asynchronous operation, containing the result of the ignore action.</returns>
-    public Task<Result> IgnorePostAsync(string userId, string postId);
+    public Task<Result> IgnorePostAsync(string postId, string userId);
 
     /// <summary>
     /// Asynchronously writes a post using the provided user information, request details, and associated files.
@@ -73,28 +73,28 @@ public interface IPostService
     /// <summary>
     /// Asynchronously deletes a post associated with a specific user.
     /// </summary>
-    /// <param name="userId">Identifies the user who owns the post to be deleted.</param>
     /// <param name="postId">Specifies the unique identifier of the post to be removed.</param>
+    /// <param name="userId">Identifies the user who owns the post to be deleted.</param>
     /// <returns>Returns a task that represents the asynchronous operation, containing the result of the deletion.</returns>
-    public Task<Result> DeletePostAsync(string userId, string postId);
+    public Task<Result> DeletePostAsync(string postId, string userId);
 
     /// <summary>
     /// Asynchronously reposts a specified post for a user.
     /// </summary>
-    /// <param name="userId">Identifies the user who is reposting the content.</param>
     /// <param name="postId">Specifies the post that is being reposted.</param>
+    /// <param name="userId">Identifies the user who is reposting the content.</param>
     /// <returns>Returns a task that represents the result of the repost operation.</returns>
-    public Task<Result> RepostPostAsync(string userId, string postId);
+    public Task<Result> RepostPostAsync(string postId, string userId);
 
     /// <summary>
     /// Handles the reaction to a post by a user asynchronously.
     /// Adds reaction if not already present, or removes it if it exists.
     /// </summary>
-    /// <param name="userId">Identifies the user who is reacting to the post.</param>
     /// <param name="postId">Specifies the post that is being reacted to.</param>
+    /// <param name="userId">Identifies the user who is reacting to the post.</param>
     /// <param name="type">Indicates the type of reaction being made to the post.</param>
     /// <returns>Returns a task that represents the asynchronous operation, yielding a result of the reaction handling.</returns>
-    public Task<Result> HandlePostReactionAsync(string userId, string postId, PostReactionType type);
+    public Task<Result> HandlePostReactionAsync(string postId, string userId, PostReactionType type);
 
     /// <summary>
     /// Searches for posts based on a specified query and returns a list of matching posts.

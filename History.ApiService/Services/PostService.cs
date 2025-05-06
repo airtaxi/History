@@ -29,7 +29,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
-    public async Task<Result<List<Post>>> GetUserPostsAsync(string requesterId, string userId, string fromPostId = null, int limit = 10)
+    public async Task<Result<List<Post>>> GetUserPostsAsync(string userId, string requesterId = null, string fromPostId = null, int limit = 10)
     {
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
 
@@ -281,7 +281,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc/>
-    public async Task<Result> IgnorePostAsync(string userId, string postId)
+    public async Task<Result> IgnorePostAsync(string postId, string userId)
     {
         var post = await GetPostByIdAsync(postId);
         if (post.IsFailure) return post.CastFailure();
@@ -395,7 +395,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc/>
-    public async Task<Result> DeletePostAsync(string userId, string postId)
+    public async Task<Result> DeletePostAsync(string postId, string userId)
     {
         var postResult = await GetPostByIdAsync(postId);
         if (postResult.IsFailure) return postResult.CastFailure();
@@ -434,7 +434,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
-    public async Task<Result> RepostPostAsync(string userId, string postId)
+    public async Task<Result> RepostPostAsync(string postId, string userId)
     {
         var accessResult = await CheckAccessAsync(postId, userId);
         if (accessResult.IsFailure) return accessResult;
@@ -461,7 +461,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc/>
-    public async Task<Result> HandlePostReactionAsync(string userId, string postId, PostReactionType type)
+    public async Task<Result> HandlePostReactionAsync(string postId, string userId, PostReactionType type)
     {
         var accessResult = await CheckAccessAsync(postId, userId);
         if (accessResult.IsFailure) return accessResult;
