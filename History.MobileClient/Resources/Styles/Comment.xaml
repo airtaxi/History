@@ -41,6 +41,10 @@
 
             <VerticalStackLayout Grid.Column="1">
                 <HorizontalStackLayout Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        LineBreakMode="TailTruncation"
+                        Text="{x:Binding Nickname}" />
                     <Image
                         HeightRequest="14"
                         IsVisible="{x:Binding IsAdmin}"
@@ -63,10 +67,6 @@
                                 Color="#1a5bf3" />
                         </Image.Source>
                     </Image>
-                    <Label
-                        FontAttributes="Bold"
-                        LineBreakMode="TailTruncation"
-                        Text="{x:Binding Nickname}" />
                 </HorizontalStackLayout>
                 <VerticalStackLayout
                     BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
