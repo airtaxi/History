@@ -110,12 +110,12 @@ public interface IPostService
     /// <summary>
     /// Changes the discovery option for a specified post.
     /// </summary>
-    /// <param name="userId">The id of the user who is changing the discovery option.</param>
     /// <param name="postId">The id of the post for which the discovery option is being changed.</param>
+    /// <param name="userId">The id of the user who is changing the discovery option.</param>
     /// <param name="discoveryOption">The new discovery option to be set for the post.</param>
     /// <param name="selectedUserIds">If the discovery option is set to selected users, this list contains the ids of the users who are selected.</param>
     /// <returns></returns>
-    public Task<Result> ChangeDiscoveryOptionAsync(string userId, string postId, DiscoveryOption discoveryOption, List<string> selectedUserIds);
+    public Task<Result> ChangeDiscoveryOptionAsync(string postId, string userId, DiscoveryOption discoveryOption, List<string> selectedUserIds);
 
     /// <summary>
     /// Checks if a user has access to a specific post asynchronously.
