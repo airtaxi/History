@@ -1,6 +1,5 @@
 ﻿using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2.Requests;
-using History.ApiService.Services;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;

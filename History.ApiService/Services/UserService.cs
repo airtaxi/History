@@ -4,7 +4,6 @@ using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace History.ApiService.Services;
@@ -181,39 +180,36 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         else if (userResult == null) return (ErrorType.NotFound, "사용자를 찾을 수 없습니다.");
 
         if (userResult.Value.ProfileMediaId != null) await mediaService.DeleteMediaByIdAsync(userResult.Value.ProfileMediaId);
-        if (userResult.Value.ProfileThumbnailMediaId != null) await mediaService.DeleteMediaByIdAsync(userResult.Value.ProfileThumbnailMediaId);
 
         if (image == null)
         {
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update
                 .Unset(u => u.ProfileMediaId)
-                .Unset(u => u.ProfileThumbnailMediaId)
                 .Set(u => u.UsesAnimatedProfileMedia, false);
 
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "프로필 이미지를 삭제하는 중 오류가 발생했습니다.");
         }
         else
         {
-            var convertResult = ImageMagickHelper.ConvertAndSave(image, false, 512);
-            var usesAnimatedProfileMedia = convertResult.IsMp4;
-            var bytes = convertResult.Data;
-            var contentType = convertResult.MimeType;
-
-            var thumbnailConvertResult = ImageMagickHelper.ConvertAndSave(image, false, 256);
+            var thumbnailConvertResult = MediaConverter.ConvertAndSave(image, false, 256);
             var thumbnailBytes = thumbnailConvertResult.Data;
             var thumbnailContentType = thumbnailConvertResult.MimeType;
 
-            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, bytes, contentType);
-            if (mediaResult.Error != null) return mediaResult.CastFailure<bool>();
-
             var thumbnailMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, thumbnailBytes, thumbnailContentType);
-            if (thumbnailMediaResult.Error != null) return thumbnailMediaResult.CastFailure<bool>();
+            if (thumbnailMediaResult.IsFailure) return thumbnailMediaResult.CastFailure<bool>();
+
+            var convertResult = MediaConverter.ConvertAndSave(image, false, 512);
+            var usesAnimatedProfileMedia = convertResult.IsVideo;
+            var bytes = convertResult.Data;
+            var contentType = convertResult.MimeType;
+
+            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, bytes, contentType, thumbnailMediaResult.Value.Id);
+            if (mediaResult.IsFailure) return mediaResult.CastFailure<bool>();
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update
                 .Set(u => u.ProfileMediaId, mediaResult.Value.Id)
-                .Set(u => u.ProfileThumbnailMediaId, thumbnailMediaResult.Value.Id)
                 .Set(u => u.UsesAnimatedProfileMedia, usesAnimatedProfileMedia);
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "프로필 이미지를 변경하는 중 오류가 발생했습니다.");
         }
@@ -227,39 +223,36 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         else if (userResult == null) return (ErrorType.NotFound, "사용자를 찾을 수 없습니다.");
 
         if (userResult.Value.BackgroundMediaId != null) await mediaService.DeleteMediaByIdAsync(userResult.Value.BackgroundMediaId);
-        if (userResult.Value.BackgroundThumbnailMediaId != null) await mediaService.DeleteMediaByIdAsync(userResult.Value.BackgroundThumbnailMediaId);
 
         if (image == null)
         {
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update
                 .Unset(u => u.BackgroundMediaId)
-                .Unset(u => u.BackgroundThumbnailMediaId)
                 .Set(u => u.UsesAnimatedBackgroundMedia, false);
 
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "배경 이미지를 삭제하는 중 오류가 발생했습니다.");
         }
         else
         {
-            var convertResult = ImageMagickHelper.ConvertAndSave(image, true, 1000);
-            var usesAnimatedBackgroundMedia = convertResult.IsMp4;
-            var bytes = convertResult.Data;
-            var contentType = convertResult.MimeType;
-
-            var thumbnailConvertResult = ImageMagickHelper.ConvertAndSave(image, false, 384);
+            var thumbnailConvertResult = MediaConverter.ConvertAndSave(image, false, 512);
             var thumbnailBytes = thumbnailConvertResult.Data;
             var thumbnailContentType = thumbnailConvertResult.MimeType;
 
-            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, bytes, contentType);
-            if (mediaResult.Error != null) return mediaResult.CastFailure<bool>();
-
             var thumbnailMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, thumbnailBytes, thumbnailContentType);
-            if (thumbnailMediaResult.Error != null) return thumbnailMediaResult.CastFailure<bool>();
+            if (thumbnailMediaResult.IsFailure) return thumbnailMediaResult.CastFailure<bool>();
+
+            var convertResult = MediaConverter.ConvertAndSave(image, true, 1000);
+            var usesAnimatedBackgroundMedia = convertResult.IsVideo;
+            var contentType = convertResult.MimeType;
+            var bytes = convertResult.Data;
+
+            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, bytes, contentType, thumbnailMediaResult.Value.Id);
+            if (mediaResult.IsFailure) return mediaResult.CastFailure<bool>();
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update
                 .Set(u => u.BackgroundMediaId, mediaResult.Value.Id)
-                .Set(u => u.BackgroundThumbnailMediaId, thumbnailMediaResult.Value.Id)
                 .Set(u => u.UsesAnimatedBackgroundMedia, usesAnimatedBackgroundMedia);
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "배경 이미지를 변경하는 중 오류가 발생했습니다.");
         }

@@ -40,7 +40,12 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
-	
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android' AND '$(Configuration)' == 'Release'">
+		<EnableLLVM>true</EnableLLVM>
+		<AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+		<AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
+	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
 		<!-- The AndroidKeyStore property is used to specify if the application should be signed with a key store.
       If set to true, the AndroidSigningKeyStore, AndroidSigningStorePass, AndroidSigningKeyAlias and AndroidSigningKeyPass properties must be set.-->
@@ -166,7 +171,7 @@
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
-	  <PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.3.0.1" />
+	  <PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.3.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -176,7 +181,6 @@
 		<PackageReference Include="FFImageLoading.Maui" Version="1.2.7" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.60" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.4" />
-		<PackageReference Include="Microsoft.Maui.Controls.Foldable" Version="9.0.60" />
 		<PackageReference Include="UraniumUI.Icons.FontAwesome" Version="2.11.1" />
 		<PackageReference Include="UraniumUI.Icons.MaterialSymbols" Version="2.11.1" />
 		<PackageReference Include="UraniumUI.Material" Version="2.11.1" />

@@ -2,8 +2,6 @@ using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
-using Microsoft.Maui.Controls;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.Resources.Styles;
 

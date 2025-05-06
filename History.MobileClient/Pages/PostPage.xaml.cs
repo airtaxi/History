@@ -7,7 +7,6 @@ using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
-using Microsoft.Maui.Controls.Handlers.Items;
 using NativeMedia;
 using SpeakLink.Mention;
 using UraniumUI.Icons.MaterialSymbols;

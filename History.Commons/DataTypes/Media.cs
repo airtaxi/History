@@ -37,6 +37,11 @@ public class Media
     public string MimeType { get; set; }
 
     /// <summary>
+    /// Represents the file name of the thumbnail associated with the media object. (optional)
+    /// </summary>
+    public string ThumbnailMediaId { get; set; }
+
+    /// <summary>
     /// Represents the type of media bucket. It can be one of the following:
     /// ProfileMedia
     /// BackgroundMedia

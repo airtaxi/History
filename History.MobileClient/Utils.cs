@@ -1,16 +1,7 @@
 ﻿using History.Commons;
 using History.Commons.DataTypes.Contents;
-using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
-using SpeakLink.Mention;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Management;
-using System.Net.WebSockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace History.MobileClient;
 

@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace History.Commons.DataTypes.RequestDtos;
+﻿namespace History.Commons.DataTypes.RequestDtos;
 
 /// <summary>
 /// DTO for updating user birthday

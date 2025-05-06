@@ -10,8 +10,6 @@ using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
-using System.IdentityModel.Tokens.Jwt;
-using System.Runtime.InteropServices;
 using System.Text;
 
 BsonSerializer.RegisterSerializer(new EnumSerializer<DiscoveryOption>(BsonType.String));

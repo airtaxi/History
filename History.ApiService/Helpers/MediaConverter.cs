@@ -1,11 +1,10 @@
 ﻿using History.ApiService.DataTypes;
 using ImageMagick;
-using ImageMagick.Formats;
 using System.Diagnostics;
 
 namespace History.ApiService.Helpers;
 
-public static class ImageMagickHelper
+public static class MediaConverter
 {
     public static ImageConvertResult ConvertAndSave(byte[] imageBytes, bool convertAnimatedImageToMp4, uint? maxWidth = null)
     {

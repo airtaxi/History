@@ -1,9 +1,7 @@
 ﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
-using History.Commons.DataTypes.RequestDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using System.Security.Claims;
 
 namespace History.ApiService.Controllers;

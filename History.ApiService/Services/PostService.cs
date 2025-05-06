@@ -5,7 +5,6 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace History.ApiService.Services;

@@ -1,8 +1,6 @@
 ﻿using Android.App;
 using Android.Content;
 using Android.Content.PM;
-using Android.Gms.Auth.Api;
-using Android.Gms.Auth.Api.SignIn;
 using Android.OS;
 
 #pragma warning disable CS0618 // Type or member is obsolete

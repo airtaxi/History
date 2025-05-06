@@ -1,7 +1,6 @@
 ﻿using History.Commons;
 using History.Commons.Interfaces;
 using History.MobileClient.Pages;
-using RestSharp;
 using System.Net;
 
 namespace History.MobileClient;

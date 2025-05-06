@@ -1,5 +1,4 @@
 using History.Commons.Interfaces;
-using History.Commons.DataTypes.RequestDtos;
 using RestSharp;
 
 namespace History.Commons.Api.User;

@@ -1,5 +1,4 @@
 using History.MobileClient.ViewModels;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.Resources.Styles;
 

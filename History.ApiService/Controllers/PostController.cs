@@ -1,7 +1,6 @@
 ﻿using History.ApiService.DataTypes;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
-using History.Commons.DataTypes;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.Enums;
 using Microsoft.AspNetCore.Authorization;
