@@ -1,5 +1,4 @@
-﻿using History.ApiService.Helpers;
-using History.ApiService.Services.Interfaces;
+﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
