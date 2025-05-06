@@ -44,7 +44,10 @@
                     VerticalOptions="Center"
                     WidthRequest="150">
                     <Image.Source>
-                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Play_circle}" />
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Play_circle}"
+                            Size="150" />
                     </Image.Source>
                 </Image>
             </Grid>
