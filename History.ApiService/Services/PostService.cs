@@ -340,7 +340,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             Contents = requestDto.Contents,
             CreatedAt = DateTime.UtcNow,
             DiscoveryOption = requestDto.DiscoveryOption,
-            DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? requestDto.DiscoveryOptionSelectedUserIds : null,
+            DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? (requestDto.DiscoveryOptionSelectedUserIds ?? []) : null,
             ParentPostId = requestDto.ParentPostId,
             SearchIndex = GenerateSearchIndexFromContents(requestDto.Contents),
             IsRepost = false
@@ -377,7 +377,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
 
         // Update discovery option (and selected user IDs if applicable)
         post.DiscoveryOption = requestDto.DiscoveryOption;
-        post.DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? requestDto.DiscoveryOptionSelectedUserIds : null;
+        post.DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? (requestDto.DiscoveryOptionSelectedUserIds ?? []) : null;
 
         // Upload medias
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Post, postId, userId, requestDto.Contents, files);
