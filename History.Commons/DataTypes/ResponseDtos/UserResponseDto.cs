@@ -42,9 +42,11 @@ public class UserResponseDto()
         Description = user.Description;
 
         ProfileMediaId = user.ProfileMediaId;
+        ProfileThumbnailMediaId = user.ProfileThumbnailMediaId;
         UsesAnimatedProfileMedia = user.UsesAnimatedProfileMedia;
 
         BackgroundMediaId = user.BackgroundMediaId;
+        BackgroundThumbnailMediaId = user.BackgroundThumbnailMediaId;
         UsesAnimatedBackgroundMedia = user.UsesAnimatedBackgroundMedia;
     }
 }
