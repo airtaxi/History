@@ -211,7 +211,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
-        var result = await postService.ChangeDiscoveryOptionAsync(requesterId, postId, request.NewDiscoveryOption, request.SelectedUserIds);
+        var result = await postService.ChangeDiscoveryOptionAsync(postId, requesterId, request.NewDiscoveryOption, request.SelectedUserIds);
         if (result.IsSuccess)
         {
             var post = await postService.GetPostByIdAsync(postId);
