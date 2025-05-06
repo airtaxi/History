@@ -3,13 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.Pages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UraniumUI.Icons.FontAwesome;
-using UraniumUI.Icons.MaterialSymbols;
 
 namespace History.MobileClient.ViewModels;
 

@@ -1,10 +1,6 @@
-using AndroidX.Lifecycle;
-using CommunityToolkit.Mvvm.Input;
-using History.Commons.Api.User;
 using History.MobileClient.ContentViews;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.Resources.Styles;
 

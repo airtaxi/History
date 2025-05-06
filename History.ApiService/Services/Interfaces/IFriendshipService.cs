@@ -1,6 +1,5 @@
 ﻿using History.Commons;
 using History.Commons.DataTypes;
-using History.Commons.Enums;
 
 namespace History.ApiService.Services.Interfaces;
 

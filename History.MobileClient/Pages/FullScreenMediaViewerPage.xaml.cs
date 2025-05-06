@@ -1,8 +1,6 @@
 using CommunityToolkit.Maui.Alerts;
 using History.MobileClient.ViewModels;
 using NativeMedia;
-using SharpCompress.Common;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.Pages;
 

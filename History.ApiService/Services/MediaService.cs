@@ -1,4 +1,5 @@
-﻿using History.ApiService.Helpers;
+﻿using History.ApiService.DataTypes;
+using History.ApiService.Helpers;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
@@ -23,7 +24,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
     }
 
     /// <inheritdoc />
-    public async Task<Result<Media>> CreateMediaAsync(MediaBucket bucketType, string associatedId, string userId, byte[] content, string mimeType)
+    public async Task<Result<Media>> CreateMediaAsync(MediaBucket bucketType, string associatedId, string userId, byte[] content, string mimeType, string thumbnailMediaId = null)
     {
         // Upload media file to GridFS
         var bucket = new GridFSBucket(database, new GridFSBucketOptions
@@ -39,6 +40,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             MediaSize = content.Length,
             BucketType = bucketType,
             MimeType = mimeType,
+            ThumbnailMediaId = thumbnailMediaId,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -75,21 +77,32 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 var isImage = file.ContentType.StartsWith("image/");
                 if (isImage)
                 {
-                    var convertResult = ImageMagickHelper.ConvertAndSave(bytes, true);
+                    var convertResult = MediaConverter.ConvertAndSave(bytes, true);
                     bytes = convertResult.Data;
                     contentType = convertResult.MimeType;
+                    isImage = !convertResult.IsVideo;
                 }
 
                 var isOverSize = bytes.Length > 15 * 1024 * 1024; // 15MB
                 if (isOverSize) return Result.Failure(ErrorType.BadRequest, "파일 크기가 너무 큽니다.");
 
-                var mediaResult = await CreateMediaAsync(bucketType, associatedId, userId, bytes, contentType);
+                var convertResult = MediaConverter.ConvertAndSave(bytes, false, 512);
+                var thumbnailBytes = convertResult.Data;
+                var thumbnailContentType = convertResult.MimeType;
+
+                var thumbnailResult = await CreateMediaAsync(bucketType, associatedId, userId, thumbnailBytes, thumbnailContentType);
+                if (thumbnailResult.IsFailure) return thumbnailResult.CastFailure();
+
+                var thumbnailId = thumbnailResult.Value.Id;
+
+                var mediaResult = await CreateMediaAsync(bucketType, associatedId, userId, bytes, contentType, thumbnailId);
                 if (mediaResult.IsFailure) return mediaResult.CastFailure();
 
                 // Replace UploadContent with MediaContent By remove after insert
                 var mediaContent = new MediaContent
                 {
                     MediaId = mediaResult.Value.Id,
+                    ThumbnailMediaId = thumbnailId,
                     Description = uploadContent.Description,
                     MimeType = contentType
                 };
@@ -186,6 +199,24 @@ public class MediaService(IMongoDatabase database) : IMediaService
 
         await bucket.DeleteAsync(ObjectId.Parse(mediaId));
         await _mediaCollection.DeleteOneAsync(m => m.Id == mediaId);
+
+        if (mediaResult.Value.ThumbnailMediaId != null)
+        {
+            var thumbnailMediaResult = await GetMediaByIdAsync(mediaResult.Value.ThumbnailMediaId);
+            if (thumbnailMediaResult.IsSuccess)
+            {
+                if (thumbnailMediaResult.Value.BucketType != mediaResult.Value.BucketType)
+                {
+                    bucket = new GridFSBucket(database, new GridFSBucketOptions
+                    {
+                        BucketName = thumbnailMediaResult.Value.BucketType.ToString()
+                    });
+                }
+
+                await bucket.DeleteAsync(ObjectId.Parse(thumbnailMediaResult.Value.Id));
+                await _mediaCollection.DeleteOneAsync(m => m.Id == thumbnailMediaResult.Value.Id);
+            }
+        }
 
         return Result.Success();
     }

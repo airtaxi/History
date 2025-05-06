@@ -2,7 +2,6 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
-using FFImageLoading;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;

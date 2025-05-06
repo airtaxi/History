@@ -6,9 +6,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.Pages;
 

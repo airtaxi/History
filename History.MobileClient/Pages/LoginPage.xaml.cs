@@ -3,10 +3,6 @@ using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.MobileClient.Auth;
-using System;
-using System.Net;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.Pages;
 
@@ -21,7 +17,7 @@ public partial class LoginPage : ContentPage
     {
         if (Shared.ApiHandler == null) return;
 
-        var meResult = await App.ExecuteRequestAsync(new GetMyProfile(), [ErrorType.Unauthorized]);
+        var meResult = await App.ExecuteRequestAsync(new GetMyProfile());
         if (meResult.IsSuccess)
         {
             var me = meResult.Value;

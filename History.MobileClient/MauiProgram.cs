@@ -2,7 +2,6 @@
 using FFImageLoading.Maui;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using Microsoft.Extensions.Logging;
-using Microsoft.Maui.Foldable;
 using SpeakLink;
 using UraniumUI;
 
@@ -16,7 +15,6 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkitMediaElement()
-            .UseFoldable()
             .UseFFImageLoading()
             .UseMauiCommunityToolkit()
             .UseUraniumUI()

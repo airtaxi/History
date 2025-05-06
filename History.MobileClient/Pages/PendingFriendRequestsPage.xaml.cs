@@ -1,7 +1,5 @@
-using History.Commons;
 using History.Commons.Api.Friendship;
 using History.MobileClient.ViewModels;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.Pages;
 

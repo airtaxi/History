@@ -2,7 +2,6 @@
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
-using Microsoft.Extensions.Primitives;
 
 namespace History.ApiService.Services.Interfaces;
 

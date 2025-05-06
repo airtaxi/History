@@ -3,17 +3,10 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.Api.Comment;
-using History.Commons.DataTypes;
-using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Pages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.ViewModels;
 

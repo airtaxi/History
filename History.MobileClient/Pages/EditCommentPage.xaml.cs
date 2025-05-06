@@ -7,7 +7,6 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.ViewModels;
 using NativeMedia;
-using System.Threading.Tasks;
 using UraniumUI.Icons.MaterialSymbols;
 
 namespace History.MobileClient.Pages;

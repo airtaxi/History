@@ -3,16 +3,12 @@ using AndroidX.AppCompat.Widget;
 using AndroidX.Lifecycle;
 #endif
 
-using CommunityToolkit.Maui.Core.Handlers;
 using CommunityToolkit.Maui.Core.Primitives;
 using CommunityToolkit.Maui.Views;
 using FFImageLoading.Maui;
 using History.MobileClient.ViewModels;
-using Microsoft.Maui.Controls;
 using Microsoft.Maui.Handlers;
 using System.Collections.Concurrent;
-using System.Net.WebSockets;
-using System.Reflection;
 
 namespace History.MobileClient.Resources.Styles;
 

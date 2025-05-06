@@ -1,13 +1,10 @@
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
-using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.Pages;
 
