@@ -203,4 +203,25 @@ public class PostController(IPostService postService, IFriendshipService friends
         var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
         return Ok(postResponses);
     }
+
+    [HttpPut("{postId}/discovery-option")]
+    [Authorize]
+    public async Task<IActionResult> ChangeDiscoveryOption(string postId, [FromBody] ChangeDiscoveryOptionRequestDto request)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var result = await postService.ChangeDiscoveryOptionAsync(postId, requesterId, request.NewDiscoveryOption, request.SelectedUserIds);
+        if (result.IsSuccess)
+        {
+            var post = await postService.GetPostByIdAsync(postId);
+            var dtoResult = await postService.GeneratePostResponseDtoAsync(post.Value, requesterId);
+            return Ok(dtoResult.Value);
+        }
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
 }
