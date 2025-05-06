@@ -102,9 +102,8 @@ public partial class Media : ResourceDictionary
     private void OnImageLoaded(object sender, EventArgs e)
     {
         if (sender is not CachedImage image) return;
-
-        var isFullscreenViewModel = image.BindingContext is FullScreenImageViewModel;
-        image.DownsampleToViewSize = !isFullscreenViewModel;
+        if (image.BindingContext is not ImageViewModel imageViewModel) return;
+        image.DownsampleToViewSize = !imageViewModel.IsFullScreen;
 
         ResizeImage(image);
     }
@@ -130,11 +129,11 @@ public partial class Media : ResourceDictionary
         mediaElement.BindingContext = viewModel;
         mediaElement.HorizontalOptions = viewModel.HorizontalContentOptions;
         mediaElement.VerticalOptions = viewModel.VerticalContentOptions;
-        mediaElement.ShouldAutoPlay = viewModel.VideoShouldAutoPlay;
-        mediaElement.ShouldLoopPlayback = viewModel.VideoShouldLoopPlayback;
-        mediaElement.ShouldMute = contentView.BindingContext is not FullScreenVideoViewModel;
-        mediaElement.ShouldShowPlaybackControls = viewModel.VideoShouldShowPlaybackControls;
-        mediaElement.ShouldKeepScreenOn = false;
+        mediaElement.ShouldAutoPlay = viewModel.ShouldAutoPlay;
+        mediaElement.ShouldLoopPlayback = viewModel.ShouldLoopPlayback;
+        mediaElement.ShouldMute = viewModel.ShouldMute;
+        mediaElement.ShouldShowPlaybackControls = viewModel.ShouldShowPlaybackControls;
+        mediaElement.ShouldKeepScreenOn = viewModel.ShouldKeepScreenOn;
 
         if (viewModel.ResizeParentCarouselViewWhenSizeChanged)
         {

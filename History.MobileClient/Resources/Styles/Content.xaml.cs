@@ -12,20 +12,6 @@ public partial class Content : ResourceDictionary
 		InitializeComponent();
 	}
 
-    private async void OnMediaContentTapped(object sender, TappedEventArgs e)
-    {
-        var element = sender as Element;
-        var viewModel = element.BindingContext as IMediaViewModel;
-
-        IMediaViewModel fullScreenMediaViewModel;
-        if (viewModel is ImageViewModel imageViewModel) fullScreenMediaViewModel = new FullScreenImageViewModel(imageViewModel);
-        else if (viewModel is VideoViewModel videoViewModel) fullScreenMediaViewModel = new FullScreenVideoViewModel(videoViewModel);
-        else throw new Exception("Invalid view model type.");
-
-        var viewerPage = new FullScreenMediaViewerPage(fullScreenMediaViewModel);
-        await App.PushModalAsync(viewerPage);
-    }
-
     private async void OnTextAndProfileContentsLabelLongPressed(object sender, LongPressCompletedEventArgs e)
     {
         var label = sender as Label;

@@ -2,15 +2,10 @@
 
 namespace History.MobileClient.ViewModels;
 
-public partial class ImageViewModel(string uri, string description = null) : ObservableObject, IMediaViewModel
+public partial class ImageViewModel(string uri) : ObservableObject, IMediaViewModel
 {
     [ObservableProperty]
     public partial string Uri { get; set; } = uri;
-
-    [ObservableProperty]
-    public partial string Description { get; set; } = description ?? string.Empty;
-
-    public bool HasDescription => !string.IsNullOrEmpty(Description);
 
     [ObservableProperty]
     public partial Aspect Aspect { get; set; } = Aspect.AspectFill;
@@ -23,5 +18,8 @@ public partial class ImageViewModel(string uri, string description = null) : Obs
 
     [ObservableProperty]
     public partial LayoutOptions VerticalContentOptions { get; set; } = LayoutOptions.Fill;
+
+    [ObservableProperty]
+    public partial bool IsFullScreen { get; set; } = false;
 }
 
