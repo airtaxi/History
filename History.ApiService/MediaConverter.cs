@@ -2,7 +2,7 @@
 using ImageMagick;
 using System.Diagnostics;
 
-namespace History.ApiService.Helpers;
+namespace History.ApiService;
 
 public static class MediaConverter
 {
@@ -71,10 +71,10 @@ public static class MediaConverter
                         FileName = "ffmpeg",
                         Arguments = $"-framerate {framerate} -i \"{Path.Combine(tempDir, "frame_%03d.png")}\" " +
                                     $"-c:v libx265 -pix_fmt yuv420p -crf 23 \"{outputMp4Path}\"",
-                        UseShellExecute = true,
-                        RedirectStandardOutput = false,
-                        RedirectStandardError = false,
-                        CreateNoWindow = false
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
                     }
                 };
 
