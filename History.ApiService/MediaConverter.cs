@@ -78,6 +78,7 @@ public static class MediaConverter
                 };
 
                 ffmpegProcess.Start();
+                ffmpegProcess.StandardError.ReadToEnd(); // If ommitted, ffmpeg hangs.
                 ffmpegProcess.WaitForExit();
 
                 if (ffmpegProcess.ExitCode != 0)
@@ -109,7 +110,7 @@ public static class MediaConverter
         }
         else
         {
-            using var image = new MagickImage(imageBytes);
+            var image = images.FirstOrDefault();
             image.Format = MagickFormat.WebP;
             image.Quality = 50;
             if (maxWidth.HasValue && image.Width > maxWidth.Value)
