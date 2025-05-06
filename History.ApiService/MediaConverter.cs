@@ -31,24 +31,23 @@ public static class MediaConverter
                 {
                     var i = images.IndexOf(frame);
 
-                    // Adjust resolution to even numbers if odd (h264 requirement)
-                    if (frame.Width % 2 != 0)
-                    {
-                        frame.Resize(frame.Width + 1, frame.Height);
-                    }
-                    if (frame.Height % 2 != 0)
-                    {
-                        frame.Resize(frame.Width, frame.Height + 1);
-                    }
+                    // Adjust resolution to even numbers if odd (h264, h265 requirement)
+                    uint newWidth = frame.Width;
+                    uint newHeight = frame.Height;
 
                     // Resize if necessary
                     if (maxWidth.HasValue && frame.Width > maxWidth.Value)
                     {
-                        var newHeight = (uint)Math.Round((double)frame.Height * maxWidth.Value / frame.Width, 0);
-                        // Adjust to even height for h264 encoding
-                        if (newHeight % 2 != 0) newHeight++;
+                        newWidth = maxWidth.Value;
+                        newHeight = (uint)Math.Round((double)frame.Height * maxWidth.Value / frame.Width, 0);
+                    }
 
-                        var size = new MagickGeometry(maxWidth.Value, newHeight) { IgnoreAspectRatio = true };
+                    if (newWidth % 2 != 0) newWidth++;
+                    if (newHeight % 2 != 0) newHeight++;
+
+                    if (newWidth != frame.Width || newHeight != frame.Height)
+                    {
+                        var size = new MagickGeometry(newWidth, newHeight) { IgnoreAspectRatio = true };
                         frame.Resize(size);
                     }
 
