@@ -22,6 +22,7 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(Nickname))]
     [NotifyPropertyChangedFor(nameof(IsModerator))]
     [NotifyPropertyChangedFor(nameof(IsAdmin))]
+    [NotifyPropertyChangedFor(nameof(DiscoveryOptionGlyph))]
     [NotifyPropertyChangedFor(nameof(ProfileMedia))]
     [NotifyPropertyChangedFor(nameof(IsRepost))]
     [NotifyPropertyChangedFor(nameof(Contents))]
