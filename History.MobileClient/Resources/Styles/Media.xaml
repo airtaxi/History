@@ -19,6 +19,7 @@
             Unloaded="OnImageUnloaded"
             VerticalOptions="{x:Binding VerticalContentOptions}" />
     </DataTemplate>
+
     <DataTemplate x:Key="FullScreenImageTemplate" x:DataType="vm:ImageViewModel">
         <ppc:PanPinchContainer>
             <Image
@@ -35,6 +36,7 @@
 
     <vm:MediaTemplateSelector
         x:Key="MediaTemplateSelector"
+        FullScreenImageTemplate="{StaticResource FullScreenImageTemplate}"
         ImageTemplate="{StaticResource ImageTemplate}"
         VideoTemplate="{StaticResource VideoTemplate}" />
 </ResourceDictionary>
