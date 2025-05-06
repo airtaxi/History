@@ -527,6 +527,30 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
+    public async Task<Result> ChangeDiscoveryOptionAsync(string userId, string postId, DiscoveryOption discoveryOption, List<string> selectedUserIds)
+    {
+        var postResult = await GetPostByIdAsync(postId);
+        if (postResult.IsFailure) return postResult.CastFailure();
+
+        var post = postResult.Value;
+
+        // Check if the user is the author of the post
+        if (post.UserId != userId) return Result.Failure(ErrorType.Forbidden, "게시글을 수정할 수 있는 권한이 없습니다.");
+
+        // Update discovery option and selected user IDs
+        post.DiscoveryOption = discoveryOption;
+        post.DiscoveryOptionSelectedUserIds = (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers) ? selectedUserIds : null;
+
+        var filter = Builders<Post>.Filter.Eq(p => p.Id, postId);
+        var update = Builders<Post>.Update
+            .Set(p => p.DiscoveryOption, post.DiscoveryOption)
+            .Set(p => p.DiscoveryOptionSelectedUserIds, post.DiscoveryOptionSelectedUserIds);
+
+        var result = await _postCollection.UpdateOneAsync(filter, update);
+        return result.IsAcknowledged ? Result.Success() : Result.Failure(ErrorType.ProgramError, "게시글의 공개 범위를 변경하는 데 실패했습니다.");
+    }
+
+    /// <inheritdoc />
     public async Task<Result> CheckAccessAsync(string postId, string requesterId)
     {
         var postResult = await GetPostByIdAsync(postId);
@@ -602,6 +626,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         {
             Id = post.Id,
             User = userResult.Value,
+            DiscoveryOption = post.DiscoveryOption,
             Contents = post.Contents,
             Comments = commentDtosResult.Value,
             CommentsCount = commentsCountResult.Value,
@@ -623,6 +648,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
                 {
                     Id = parentPostResult.Value.Id,
                     User = parentPostUserResult.Value,
+                    DiscoveryOption = parentPostResult.Value.DiscoveryOption,
                     Contents = parentPostResult.Value.Contents,
                     IsRepost = parentPostResult.Value.IsRepost,
                     CreatedAt = parentPostResult.Value.CreatedAt,

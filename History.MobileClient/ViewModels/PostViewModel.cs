@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using AndroidX.Media3.ExoPlayer.Drm;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -161,15 +162,31 @@ public partial class PostViewModel : ObservableObject
         if (User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제"]);
         else options.AddRange("게시글 신고");
 
-        var result = await App.Page.DisplayActionSheet("게시물 옵션", Constants.PromptCancel, null, [.. options]);
+        var action = await App.Page.DisplayActionSheet("게시물 옵션", Constants.PromptCancel, null, [.. options]);
 
-        if (result == null || result == Constants.PromptCancel) return;
+        if (action == null || action == Constants.PromptCancel) return;
 
-        if (result == "게시글 삭제") await DeleteAsync(popModal);
-        else if (result == "게시글 수정")
+        if (action == "게시글 삭제") await DeleteAsync(popModal);
+        else if (action == "게시글 수정")
         {
             var editPostPage = new EditPostPage(Post);
             await App.PushModalAsync(editPostPage);
+        }
+        else if(action == "공개범위 설정")
+        {
+            var discoveryOptions = Enum.GetValues<DiscoveryOption>().Select(x => x.ToDisplayString());
+            var rawNewDiscoveryOption = await App.Page.DisplayActionSheet("공개범위 설정", Constants.PromptCancel, null, [.. discoveryOptions]);
+            if (rawNewDiscoveryOption == null || rawNewDiscoveryOption == Constants.PromptCancel) return;
+
+            var newDiscoveryOption = DiscoveryOptionExtensions.FromDisplayString(rawNewDiscoveryOption);
+            if (newDiscoveryOption == Post.DiscoveryOption)
+            {
+                await App.Page.DisplayAlert("안내", "이미 선택된 공개범위입니다.", Constants.PromptOk);
+                return;
+            }
+
+            var result = await App.ExecuteRequestAsync(new ChangeDiscoveryOption(Post.Id, newDiscoveryOption, null));
+            if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
         }
         else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }

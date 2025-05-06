@@ -35,6 +35,7 @@ public partial class EditPostPage : ContentPage
 
     private void LoadPost()
     {
+        DiscoveryOptionPicker.SelectedIndex = (int)_post.DiscoveryOption;
         MainTextContent.SetContents(_post.Contents);
         foreach (var mediaContent in _post.Contents.OfType<MediaContent>()) _attachmentViewModels.Add(new(mediaContent));
     }
