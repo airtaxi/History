@@ -59,7 +59,6 @@ public partial class DataTemplatePresenter : ContentView
             var template = selector.SelectTemplate(ViewModel, this);
             if (template?.CreateContent() is View view)
             {
-                BindingContext = ViewModel;
                 view.BindingContext = ViewModel;
                 Content = view;
             }
@@ -68,7 +67,6 @@ public partial class DataTemplatePresenter : ContentView
         {
             if (Template.CreateContent() is View view)
             {
-                BindingContext = ViewModel;
                 view.BindingContext = ViewModel;
                 Content = view;
             }

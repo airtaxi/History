@@ -11,14 +11,27 @@
     <DataTemplate x:Key="MediaContentTemplate" x:DataType="vm:MediaContentViewModel">
         <Grid>
             <!--  View  -->
-            <views:DataTemplatePresenter Template="{StaticResource MediaTemplateSelector}" ViewModel="{Binding Media}">
-                <views:DataTemplatePresenter.GestureRecognizers>
-                    <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
-                </views:DataTemplatePresenter.GestureRecognizers>
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+            </Grid.GestureRecognizers>
+
+            <views:DataTemplatePresenter
+                x:Name="MediaContentView"
+                Template="{StaticResource MediaTemplateSelector}"
+                ViewModel="{x:Binding Media}">
+                <views:DataTemplatePresenter.Behaviors>
+                    <toolkit:EventToCommandBehavior
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference MediaContentView}, x:DataType=views:DataTemplatePresenter}"
+                        Command="{x:Binding UnloadedCommand}"
+                        EventName="Unloaded" />
+                </views:DataTemplatePresenter.Behaviors>
             </views:DataTemplatePresenter>
 
             <!--  Overlay  -->
-            <Grid HorizontalOptions="Fill" VerticalOptions="Fill">
+            <Grid
+                HorizontalOptions="Fill"
+                IsVisible="{x:Binding IsOverlayVisible}"
+                VerticalOptions="Fill">
                 <Grid.Background>
                     <SolidColorBrush Color="#80000000" />
                 </Grid.Background>

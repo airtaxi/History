@@ -2,11 +2,6 @@
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.Pages;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.ViewModels;
 
@@ -34,13 +29,15 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
         IsVideo = mediaContent.IsVideo;
         Description = mediaContent.Description ?? string.Empty;
         HasDescription = !string.IsNullOrEmpty(Description);
-        Media = new ImageViewModel(Utils.GenerateMediaUri(mediaContent.ThumbnailMediaId))
-        {
-            Aspect = isWrapped ? Aspect.AspectFill : Aspect.AspectFit,
-            HorizontalContentOptions = isWrapped ? LayoutOptions.Fill : LayoutOptions.Start,
-            VerticalContentOptions = isWrapped ? LayoutOptions.Fill : LayoutOptions.Start,
-        };
-        IsOverlayVisible = mediaContent.IsVideo;
+        GenerateMedia();
+    }
+
+    [RelayCommand]
+    public void Unloaded()
+    {
+        if (!MediaContent.IsVideo) return;
+
+        GenerateMedia();
     }
 
     [RelayCommand]
@@ -51,7 +48,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
         IsOverlayVisible = false;
         Media = new VideoViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
         {
-            Aspect = IsWrapped ? Aspect.AspectFill : Aspect.AspectFit,
+            Aspect = Aspect.AspectFill,
             HorizontalContentOptions = LayoutOptions.Fill,
             VerticalContentOptions = LayoutOptions.Fill
         };
@@ -79,5 +76,16 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
 
         var viewerPage = new FullScreenMediaViewerPage(viewModel);
         await App.PushModalAsync(viewerPage);
+    }
+
+    private void GenerateMedia()
+    {
+        Media = new ImageViewModel(Utils.GenerateMediaUri((IsWrapped || MediaContent.IsVideo) ? MediaContent.ThumbnailMediaId : MediaContent.MediaId))
+        {
+            Aspect = IsWrapped ? Aspect.AspectFill : Aspect.AspectFit,
+            HorizontalContentOptions = IsWrapped || MediaContent.IsVideo ? LayoutOptions.Fill : LayoutOptions.Start,
+            VerticalContentOptions = IsWrapped || MediaContent.IsVideo ? LayoutOptions.Fill : LayoutOptions.Start,
+        };
+        IsOverlayVisible = MediaContent.IsVideo;
     }
 }
