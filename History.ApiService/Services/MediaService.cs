@@ -69,17 +69,19 @@ public class MediaService(IMongoDatabase database) : IMediaService
 
                 using var writeStream = new MemoryStream();
                 await file.CopyToAsync(writeStream);
-                var bytes = writeStream.ToArray();
+                byte[] bytes;
+                var originalFileBytes = writeStream.ToArray();
                 var contentType = file.ContentType;
 
                 var isImage = file.ContentType.StartsWith("image/");
                 if (isImage)
                 {
-                    var convertResult = MediaConverter.ConvertAndSave(bytes, true);
+                    var convertResult = MediaConverter.ConvertAndSave(originalFileBytes, true);
                     bytes = convertResult.Data;
                     contentType = convertResult.MimeType;
                     isImage = !convertResult.IsVideo;
                 }
+                else bytes = originalFileBytes;
 
                 var isOverSize = bytes.Length > 15 * 1024 * 1024; // 15MB
                 if (isOverSize) return Result.Failure(ErrorType.BadRequest, "파일 크기가 너무 큽니다.");
@@ -87,7 +89,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 string thumbnailId;
                 try
                 {
-                    var thumbnailConvertResult = MediaConverter.ConvertAndSave(bytes, false, 512);
+                    var thumbnailConvertResult = MediaConverter.ConvertAndSave(originalFileBytes, false, 512);
                     var thumbnailBytes = thumbnailConvertResult.Data;
                     var thumbnailContentType = thumbnailConvertResult.MimeType;
 
@@ -96,7 +98,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
 
                     thumbnailId = thumbnailResult.Value.Id;
                 }
-                catch { return (ErrorType.ProgramError, "지원하지 않는 미디어 형식입니다."); }
+                catch(Exception exception) { return (ErrorType.ProgramError, $"지원하지 않는 미디어 형식입니다.\n코드: {exception.Message} {exception.StackTrace}"); }
 
 
                 var mediaResult = await CreateMediaAsync(bucketType, associatedId, userId, bytes, contentType, thumbnailId);
