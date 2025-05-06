@@ -114,6 +114,11 @@
                                             </views:DataTemplatePresenter>
                                             <VerticalStackLayout VerticalOptions="Center">
                                                 <HorizontalStackLayout Spacing="4">
+                                                    <Label
+                                                        FontAttributes="Bold"
+                                                        FontSize="16"
+                                                        LineBreakMode="TailTruncation"
+                                                        Text="{x:Binding Nickname}" />
                                                     <Image
                                                         HeightRequest="16"
                                                         IsVisible="{x:Binding IsAdmin}"
@@ -136,11 +141,6 @@
                                                                 Color="#1a5bf3" />
                                                         </Image.Source>
                                                     </Image>
-                                                    <Label
-                                                        FontAttributes="Bold"
-                                                        FontSize="16"
-                                                        LineBreakMode="TailTruncation"
-                                                        Text="{x:Binding Nickname}" />
                                                 </HorizontalStackLayout>
                                                 <HorizontalStackLayout>
                                                     <Label FontSize="14" TextColor="#808080">
@@ -262,6 +262,11 @@
                                     HorizontalOptions="Start"
                                     Spacing="4"
                                     VerticalOptions="Center">
+                                    <Label
+                                        FontAttributes="Bold"
+                                        FontSize="20"
+                                        LineBreakMode="TailTruncation"
+                                        Text="{x:Binding Nickname}" />
                                     <Image
                                         HeightRequest="20"
                                         IsVisible="{x:Binding IsAdmin}"
@@ -284,11 +289,6 @@
                                                 Color="#1a5bf3" />
                                         </Image.Source>
                                     </Image>
-                                    <Label
-                                        FontAttributes="Bold"
-                                        FontSize="20"
-                                        LineBreakMode="TailTruncation"
-                                        Text="{x:Binding Nickname}" />
                                 </HorizontalStackLayout>
                             </HorizontalStackLayout>
                             <Grid
