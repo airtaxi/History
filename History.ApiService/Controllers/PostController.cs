@@ -25,7 +25,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
-        var postsResult = await postService.GetUserPostsAsync(requesterId, userId, fromPostId, limit);
+        var postsResult = await postService.GetUserPostsAsync(userId, requesterId, fromPostId, limit);
         var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
         return Ok(postResponses.Value);
     }
@@ -79,7 +79,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
-        var result = await postService.IgnorePostAsync(requesterId, postId);
+        var result = await postService.IgnorePostAsync(postId, requesterId);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
@@ -161,7 +161,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
-        var result = await postService.DeletePostAsync(requesterId, postId);
+        var result = await postService.DeletePostAsync(postId, requesterId);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
@@ -177,7 +177,7 @@ public class PostController(IPostService postService, IFriendshipService friends
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
-        var result = await postService.HandlePostReactionAsync(requesterId, postId, type);
+        var result = await postService.HandlePostReactionAsync(postId, requesterId, type);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
