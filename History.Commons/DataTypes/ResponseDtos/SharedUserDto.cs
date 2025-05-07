@@ -9,6 +9,6 @@ namespace History.Commons.DataTypes.ResponseDtos;
 public class SharedUserDto
 {
     public UserResponseDto User { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime SharedAt { get; set; }
     public bool IsRepost { get; set; }
 }

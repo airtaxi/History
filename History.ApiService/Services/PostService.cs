@@ -634,7 +634,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             {
                 User = sharedUser,
                 IsRepost = sharedUserIdAndCreatedDates.First(x => x.UserId == sharedUser.UserId).IsRepost,
-                CreatedAt = sharedUserIdAndCreatedDates.First(x => x.UserId == sharedUser.UserId).CreatedAt
+                SharedAt = sharedUserIdAndCreatedDates.First(x => x.UserId == sharedUser.UserId).CreatedAt
             };
             sharedUserDtos.Add(sharedUserDto);
         }
