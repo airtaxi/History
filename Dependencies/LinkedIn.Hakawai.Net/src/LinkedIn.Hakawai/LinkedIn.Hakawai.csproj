@@ -11,7 +11,7 @@
 	<PropertyGroup>
 		<!-- NuGet Package properties -->
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<Version>7.4.8.9-beta-net9</Version>
+		<Version>7.4.8.9-beta-net9-no-trim</Version>
 		<Authors>Artem Valieiev</Authors>
 		<Product>LinkedIn.Hakawai.Net9</Product>
 		<PackageId>LinkedIn.Hakawai.Net9</PackageId>
