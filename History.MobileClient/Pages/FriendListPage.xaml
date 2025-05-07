@@ -26,12 +26,14 @@
 
             <Label
                 Grid.Row="1"
-                Margin="6,0,0,0"
+                Margin="12,0,0,0"
                 FontAttributes="Bold"
                 HorizontalOptions="Start"
                 Text="친구 목록"
                 VerticalOptions="Center" />
             <HorizontalStackLayout
+                Grid.Row="1"
+                Margin="0,0,12,0"
                 HorizontalOptions="End"
                 Spacing="4"
                 VerticalOptions="Center">
@@ -42,13 +44,18 @@
                     <Image.Source>
                         <FontImageSource
                             x:Name="SortFontImageSource"
-                            FontFamily="FARegular"
+                            FontFamily="FASolid"
                             Glyph="{x:Static fa:Solid.ArrowUpAZ}"
                             Color="{AppThemeBinding Dark=White,
                                                     Light=Black}" />
                     </Image.Source>
                 </Image>
-                <Label x:Name="SortLabel" Text="이름순" />
+                <Label
+                    x:Name="SortLabel"
+                    FontAttributes="Bold"
+                    Text="이름순"
+                    TextColor="{AppThemeBinding Dark=White,
+                                                Light=Black}" />
             </HorizontalStackLayout>
 
             <CollectionView
