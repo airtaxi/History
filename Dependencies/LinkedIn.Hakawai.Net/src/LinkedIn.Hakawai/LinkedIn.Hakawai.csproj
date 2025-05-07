@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
@@ -11,13 +11,14 @@
 	<PropertyGroup>
 		<!-- NuGet Package properties -->
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<Version>7.4.8.9-beta</Version>
+		<Version>7.4.8.9-beta-net9</Version>
 		<Authors>Artem Valieiev</Authors>
 		<Product>LinkedIn.Hakawai</Product>
 		<Description>A subclass of UITextView providing extended functionality and support for 'plugins'. Hakawai ships with the Mentions plug-in, which provides a powerful and flexible way to easily add social-media-esque @mentions-style annotation support to your iOS app.</Description>
 		<PackageTags>Mentions;UITextView;iOS editor</PackageTags>
 		<RepositoryUrl>https://github.com/artemvalieiev/Linked.Hakawai.Net</RepositoryUrl>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
 	<ItemGroup>
 		<ObjcBindingApiDefinition Include="ApiDefinitions.cs" />
