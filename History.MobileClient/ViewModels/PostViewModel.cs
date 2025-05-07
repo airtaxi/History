@@ -1,5 +1,4 @@
-﻿using AndroidX.Media3.ExoPlayer.Drm;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -27,7 +26,9 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsRepost))]
     [NotifyPropertyChangedFor(nameof(Contents))]
     [NotifyPropertyChangedFor(nameof(ParentPost))]
-    [NotifyPropertyChangedFor(nameof(HasBeenSimpleReposted))]
+    [NotifyPropertyChangedFor(nameof(IsShare))]
+    [NotifyPropertyChangedFor(nameof(SharedUsers))]
+    [NotifyPropertyChangedFor(nameof(SharedUsersCount))]
     [NotifyPropertyChangedFor(nameof(HasNoComments))]
     [NotifyPropertyChangedFor(nameof(HasComments))]
     [NotifyPropertyChangedFor(nameof(CommentsCount))]
@@ -74,14 +75,13 @@ public partial class PostViewModel : ObservableObject
     public bool IsNotWideMode => !IsWideMode;
 
     public bool IsRepost => Post.IsRepost;
-    public PostViewModel ParentPost => new(Post.ParentPost, true);
-    public bool HasBeenSimpleReposted => Post.HasBeenSimpleReposted;
+    public PostViewModel ParentPost => Post.ParentPost != null ? new(Post.ParentPost, true) : null;
+    public bool IsShare => Post.ParentPost != null && !IsRepost;
+
+    public List<SharedUserDto> SharedUsers => Post.SharedUsers;
+    public int SharedUsersCount => Post.SharedUsers.Count;
 
     public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Post.Contents, _wrapMedias);
-
-    public bool HasComments => Post.CommentsCount > 0;
-    public bool HasNoComments => Post.CommentsCount == 0;
-    public int CommentsCount => Post.CommentsCount;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FirstComment))]
@@ -90,15 +90,16 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CommentsCount))]
     public partial ObservableCollection<CommentViewModel> Comments { get; private set; }
 
-    [ObservableProperty]
-    public partial CommentViewModel FirstComment { get; private set; }
-    public WeakReference FirstCommentPresenter { get; set; }
+    public CommentViewModel FirstComment => Comments.FirstOrDefault();
+    public bool HasComments => Post.CommentsCount > 0;
+    public bool HasNoComments => Post.CommentsCount == 0;
+    public int CommentsCount => Post.CommentsCount;
 
     public bool HasReactions => Post.PostReactions.Count > 0;
     public int ReactionsCount => Post.PostReactions.Count;
-    public List<PostReactionViewModel> Reactions => [.. Post.PostReactions.Select(r => new PostReactionViewModel(r))];
+    public List<PostInteractionViewModel> Reactions => [.. Post.PostReactions.Select(r => new PostInteractionViewModel(r))];
 
-    public PostReactionViewModel Reaction => Reactions.FirstOrDefault(r => r.User.UserId == Shared.UserId);
+    public PostInteractionViewModel Reaction => Reactions.FirstOrDefault(r => r.User.UserId == Shared.UserId && r.ReactionType != null);
     public string ReactionGlyph => Reaction?.Glyph ?? Solid.Heart;
     public string ReactionFontFamily => Reaction != null ? "FASolid" : "FARegular";
     public Color ReactionColor => Reaction?.Color ?? (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Colors.White : Colors.Black);
@@ -115,7 +116,7 @@ public partial class PostViewModel : ObservableObject
         Post = post;
         User = post.User;
         Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
-        FirstComment = Comments.FirstOrDefault();
+        //FirstComment = Comments.FirstOrDefault();
 
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, OnUserChangedMessageReceived);
@@ -130,11 +131,7 @@ public partial class PostViewModel : ObservableObject
         Post = message.Value;
         User = message.Value.User;
 
-        Comments = null;
         Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
-
-        FirstComment = Comments.FirstOrDefault();
-        (FirstCommentPresenter?.Target as DataTemplatePresenter)?.ViewModel = FirstComment;
     }
 
     private void OnUserChangedMessageReceived(object recipient, ValueChangedMessage<UserResponseDto> message)
@@ -151,13 +148,11 @@ public partial class PostViewModel : ObservableObject
         var removedCount = Post.Comments.RemoveAll(x => x.Id == viewModel.Comment.Id);
         Post.CommentsCount -= removedCount;
 
-        var comments = Comments;
         Comments.Remove(viewModel);
-        Comments = null;
-        Comments = comments;
-
-        FirstComment = Comments.FirstOrDefault();
-        (FirstCommentPresenter?.Target as DataTemplatePresenter)?.ViewModel = FirstComment;
+        OnPropertyChanged(nameof(FirstComment));
+        OnPropertyChanged(nameof(HasComments));
+        OnPropertyChanged(nameof(HasNoComments));
+        OnPropertyChanged(nameof(CommentsCount));
     }
 
     private void OnCommentChangedMessageReceived(object recipient, ValueChangedMessage<CommentResponseDto> message)
@@ -168,7 +163,7 @@ public partial class PostViewModel : ObservableObject
         viewModel.Comment = message.Value;
     }
 
-    public async Task DisplayActionSheet(bool popModal)
+    public async Task DisplayActionSheetAsync(bool popModal)
     {
         var options = new List<string>() { "관심글로 저장", "이 글 알림 끄기" };
         if (User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제"]);
@@ -181,7 +176,7 @@ public partial class PostViewModel : ObservableObject
         if (action == "게시글 삭제") await DeleteAsync(popModal);
         else if (action == "게시글 수정")
         {
-            var editPostPage = new EditPostPage(Post);
+            var editPostPage = new EditPostPage(Post, false);
             await App.PushModalAsync(editPostPage);
         }
         else if(action == "공개범위 설정")
@@ -231,7 +226,7 @@ public partial class PostViewModel : ObservableObject
         // Delete reaction
         if (Reaction != null)
         {
-            await App.ExecuteRequestAsync(new HandlePostReaction(Post.Id, Reaction.Type));
+            await App.ExecuteRequestAsync(new HandlePostReaction(Post.Id, Reaction.ReactionType.Value));
             await RefreshAsync();
             return;
         }
@@ -249,8 +244,23 @@ public partial class PostViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleTapAsync()
     {
+        await RefreshAsync();
+
         var newViewModel = new PostViewModel(Post, false);
         var postPage = new PostPage(newViewModel);
         await App.PushModalAsync(postPage);
+    }
+
+    [RelayCommand]
+    public async Task HandleProfileTapAsync()
+    {
+        var profilePage = new UserPage(Post.User.UserId);
+        await App.PushModalAsync(profilePage);
+    }
+
+    [RelayCommand]
+    public async Task HandleMoreTapAsync()
+    {
+        await DisplayActionSheetAsync(false);
     }
 }

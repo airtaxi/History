@@ -220,7 +220,7 @@ public partial class PostPage : ContentPage
         }
     }
 
-    private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await _viewModel.DisplayActionSheet(true);
+    private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await _viewModel.DisplayActionSheetAsync(true);
 
     private void OnHandlerChanging(object sender, HandlerChangingEventArgs e)
     {
@@ -262,4 +262,10 @@ public partial class PostPage : ContentPage
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+
+    private async void OnShareImageTapped(object sender, TappedEventArgs e)
+    {
+        var page = new EditPostPage(_viewModel.Post, true);
+        await App.PushModalAsync(page);
+    }
 }

@@ -12,7 +12,8 @@
                 <ResourceDictionary x:Name="appStyles" Source="Resources/Styles/Styles.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Profile.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Post.xaml" />
-                <ResourceDictionary Source="Resources/Styles/PostReaction.xaml" />
+                <ResourceDictionary Source="Resources/Styles/SharedPost.xaml" />
+                <ResourceDictionary Source="Resources/Styles/PostInteraction.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Comment.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Media.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Content.xaml" />

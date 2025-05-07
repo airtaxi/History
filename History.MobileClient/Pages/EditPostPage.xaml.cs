@@ -11,6 +11,7 @@ using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using NativeMedia;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace History.MobileClient.Pages;
 
@@ -18,6 +19,7 @@ public partial class EditPostPage : ContentPage
 {
     private MediaAttachmentViewModel _attachmentViewModelBeingDragged;
     private PostResponseDto _post;
+    private bool _isShare;
     public ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
 
 	public EditPostPage()
@@ -26,8 +28,9 @@ public partial class EditPostPage : ContentPage
         Initialize();
     }
 
-    public EditPostPage(PostResponseDto post)
+    public EditPostPage(PostResponseDto post, bool isShare)
     {
+        _isShare = isShare;
         _post = post;
         InitializeComponent();
         Initialize();
@@ -35,9 +38,20 @@ public partial class EditPostPage : ContentPage
 
     private void LoadPost()
     {
+        if (!_isShare)
+        {
+            ButtonUpload.Text = "수정";
+            MainTextContent.SetContents(_post.Contents);
+            foreach (var mediaContent in _post.Contents.OfType<MediaContent>()) _attachmentViewModels.Add(new(mediaContent));
+        }
+        else
+        {
+            ButtonUpload.Text = "공유";
+            ShareTargetPostDataTemplatePresenter.ViewModel = new PostViewModel(_post, true);
+            ShareTargetPostDataTemplatePresenter.IsVisible = true;
+        }
+
         DiscoveryOptionPicker.SelectedIndex = (int)_post.DiscoveryOption;
-        MainTextContent.SetContents(_post.Contents);
-        foreach (var mediaContent in _post.Contents.OfType<MediaContent>()) _attachmentViewModels.Add(new(mediaContent));
     }
 
     private void Initialize()
@@ -179,7 +193,7 @@ public partial class EditPostPage : ContentPage
 
         var contents = editorContents.Concat(mediaAndUploadContents).ToList();
 
-        if (string.IsNullOrEmpty(MainTextContent.Text.Trim()) && mediaAndUploadContents.Count == 0)
+        if (string.IsNullOrEmpty(MainTextContent.Text.Trim()) && mediaAndUploadContents.Count == 0 && !_isShare)
         {
             await DisplayAlert("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
             return;
@@ -190,7 +204,7 @@ public partial class EditPostPage : ContentPage
         try
 		{
 			MainActivityIndicator.IsVisible = true;
-            if (_post != null)
+            if (_post != null && !_isShare)
             {
                 var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, null, files), ErrorType.BadRequest);
                 if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
@@ -202,10 +216,11 @@ public partial class EditPostPage : ContentPage
             }
             else
             {
-                var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, null, null, files), ErrorType.BadRequest);
+                var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _isShare ? _post.Id : null, null, files), ErrorType.BadRequest);
                 if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
                 else if (result.IsSuccess)
                 {
+                    if (!_isShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
                     TimelinePage.ShouldRefreshTimeline = true;
                     UserPage.ShouldRefreshMyProfile = true;
                     await App.PopModalAsync();
@@ -249,5 +264,17 @@ public partial class EditPostPage : ContentPage
 
         viewModel.Dispose();
         _attachmentViewModels.Remove(viewModel);
+    }
+
+    private async void OnDiscoveryOptionPickerSelectedIndexChanged(object sender, EventArgs e)
+    {
+        if (!_isShare) return;
+
+        var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
+        if (discoveryOption > _post.DiscoveryOption)
+        {
+            await DisplayAlert("오류", "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다", Constants.PromptOk);
+            DiscoveryOptionPicker.SelectedIndex = (int)_post.DiscoveryOption;
+        }
     }
 }

@@ -41,11 +41,11 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android' AND '$(Configuration)' == 'Release'">
+	<!--<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android' AND '$(Configuration)' == 'Release'">
 		<EnableLLVM>true</EnableLLVM>
 		<AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
 		<AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
-	</PropertyGroup>
+	</PropertyGroup>-->
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
 		<!-- The AndroidKeyStore property is used to specify if the application should be signed with a key store.
       If set to true, the AndroidSigningKeyStore, AndroidSigningStorePass, AndroidSigningKeyAlias and AndroidSigningKeyPass properties must be set.-->
@@ -97,6 +97,9 @@
 	  </Compile>
 	  <Compile Update="Resources\Styles\Content.xaml.cs">
 	    <DependentUpon>Content.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\Styles\PostInteraction.xaml.cs">
+	    <DependentUpon>PostInteraction.xaml</DependentUpon>
 	  </Compile>
 	</ItemGroup>
 
@@ -158,10 +161,13 @@
 		<MauiXaml Update="Resources\Styles\Post.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="Resources\Styles\PostReaction.xaml">
+		<MauiXaml Update="Resources\Styles\PostInteraction.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Profile.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Resources\Styles\SharedPost.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 	</ItemGroup>

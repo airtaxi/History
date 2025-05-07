@@ -11,48 +11,24 @@ public partial class Post : ResourceDictionary
 		InitializeComponent();
 	}
 
-    private async void OnProfileImageTapped(object sender, TappedEventArgs e)
-    {
-        var element = sender as Element;
-        var viewModel = element.BindingContext as PostViewModel;
+    //private void OnProfileGridLoaded(object sender, EventArgs e)
+    //{
+    //    var grid = sender as Grid;
+    //    var viewModel = grid.BindingContext as PostViewModel;
+    //    if (viewModel == null) return;
 
-        var userId = viewModel.Post.User?.UserId;
-        if (userId == null)
-        {
-            await App.Page.DisplayAlert("오류", "사용자 정보를 가져올 수 없습니다", Constants.PromptOk);
-            return;
-        }
+    //    var presenter = grid.Children.OfType<DataTemplatePresenter>().FirstOrDefault();
+    //    presenter.ViewModel = viewModel.ProfileMedia;
+    //}
 
-        var profilePage = new UserPage(viewModel.Post.User.UserId);
-        await App.PushModalAsync(profilePage);
-    }
+    //private void OnCommentGridLoaded(object sender, EventArgs e)
+    //{
+    //    var grid = sender as Grid;
+    //    var viewModel = grid.BindingContext as PostViewModel;
+    //    if (viewModel == null) return;
 
-    private async void OnMoreImageTapped(object sender, TappedEventArgs e)
-    {
-        var element = sender as Element;
-        var viewModel = element.BindingContext as PostViewModel;
-
-        await viewModel.DisplayActionSheet(false);
-    }
-
-    private void OnProfileGridLoaded(object sender, EventArgs e)
-    {
-        var grid = sender as Grid;
-        var viewModel = grid.BindingContext as PostViewModel;
-        if (viewModel == null) return;
-
-        var presenter = grid.Children.OfType<DataTemplatePresenter>().FirstOrDefault();
-        presenter.ViewModel = viewModel.ProfileMedia;
-    }
-
-    private void OnCommentGridLoaded(object sender, EventArgs e)
-    {
-        var grid = sender as Grid;
-        var viewModel = grid.BindingContext as PostViewModel;
-        if (viewModel == null) return;
-
-        var presenter = grid.Children.OfType<DataTemplatePresenter>().FirstOrDefault();
-        presenter.ViewModel = viewModel.FirstComment;
-        viewModel.FirstCommentPresenter = new(presenter);
-    }
+    //    var presenter = grid.Children.OfType<DataTemplatePresenter>().FirstOrDefault();
+    //    presenter.ViewModel = viewModel.FirstComment;
+    //    viewModel.FirstCommentPresenter = new(presenter);
+    //}
 }
