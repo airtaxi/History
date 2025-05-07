@@ -11,26 +11,53 @@
     <DataTemplate x:Key="FriendshipTemplate" x:DataType="vm:FriendshipViewModel">
         <Grid Padding="12,8,12,8" ColumnSpacing="12">
             <Grid.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnTapped" />
+                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
             </Grid.GestureRecognizers>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="32" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="32" />
             </Grid.ColumnDefinitions>
-            <views:DataTemplatePresenter
-                Grid.Column="0"
-                HeightRequest="32"
-                Template="{StaticResource MediaTemplateSelector}"
-                ViewModel="{x:Binding ProfileMedia}"
-                WidthRequest="32">
-                <views:DataTemplatePresenter.Clip>
-                    <EllipseGeometry
-                        Center="16,16"
-                        RadiusX="16"
-                        RadiusY="16" />
-                </views:DataTemplatePresenter.Clip>
-            </views:DataTemplatePresenter>
+            <Grid HeightRequest="32" WidthRequest="32">
+                <views:DataTemplatePresenter
+                    HeightRequest="32"
+                    Template="{StaticResource MediaTemplateSelector}"
+                    ViewModel="{x:Binding ProfileMedia}"
+                    WidthRequest="32">
+                    <views:DataTemplatePresenter.Clip>
+                        <EllipseGeometry
+                            Center="16,16"
+                            RadiusX="16"
+                            RadiusY="16" />
+                    </views:DataTemplatePresenter.Clip>
+                </views:DataTemplatePresenter>
+                <Grid
+                    Margin="0,0,-2,-2"
+                    BindingContext="{x:Binding PostInteractionViewModel}"
+                    IsVisible="{x:Binding IsInteractionAvailable}">
+                    <Border
+                        x:Name="PostInteractionBorder"
+                        x:DataType="vm:PostInteractionViewModel"
+                        Background="{x:Binding Color}"
+                        HeightRequest="16"
+                        HorizontalOptions="End"
+                        StrokeThickness="0"
+                        VerticalOptions="End"
+                        WidthRequest="16">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Image HeightRequest="{x:Binding IconSize}" WidthRequest="{x:Binding IconSize}">
+                            <Image.Source>
+                                <FontImageSource
+                                    FontFamily="{x:Binding FontFamily}"
+                                    Glyph="{x:Binding Glyph}"
+                                    Color="White" />
+                            </Image.Source>
+                        </Image>
+                    </Border>
+                </Grid>
+            </Grid>
             <HorizontalStackLayout Grid.Column="1" Spacing="4">
                 <Label
                     FontAttributes="Bold"
@@ -63,9 +90,10 @@
             <Image
                 Grid.Column="2"
                 HeightRequest="32"
+                IsVisible="{x:Binding IsFriendshipImageVisible}"
                 WidthRequest="32">
                 <Image.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnFriendshipImageTapped" />
+                    <TapGestureRecognizer Command="{x:Binding HandleFriendshipActionCommand}" />
                 </Image.GestureRecognizers>
                 <Image.Source>
                     <FontImageSource

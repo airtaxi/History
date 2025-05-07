@@ -81,8 +81,8 @@
                             </Image.GestureRecognizers>
                             <Image.Source>
                                 <FontImageSource
-                                    FontFamily="FASolid"
-                                    Glyph="{x:Static fa:Solid.ShareNodes}"
+                                    FontFamily="MaterialSharp"
+                                    Glyph="{x:Static m:MaterialSharp.Share}"
                                     Color="{AppThemeBinding Dark=White,
                                                             Light=Black}" />
                             </Image.Source>

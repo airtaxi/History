@@ -1,5 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using History.Commons;
 using History.Commons.Api.Friendship;
+using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
@@ -8,7 +11,7 @@ using UraniumUI.Icons.MaterialSymbols;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class FriendshipViewModel(UserResponseDto user) : ObservableObject
+public partial class FriendshipViewModel(UserResponseDto user, PostInteractionViewModel postInteractionViewModel = null) : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Nickname))]
@@ -23,6 +26,9 @@ public partial class FriendshipViewModel(UserResponseDto user) : ObservableObjec
     public bool IsAdmin => User.Rank == Rank.Admin;
     public IMediaViewModel ProfileMedia => new ImageViewModel(Utils.GenerateMediaUri(User.ProfileThumbnailMediaId));
 
+    public bool IsInteractionAvailable => PostInteractionViewModel != null;
+    public PostInteractionViewModel PostInteractionViewModel { get; } = postInteractionViewModel;
+
     public string FriendshipGlyph
     {
         get
@@ -35,38 +41,54 @@ public partial class FriendshipViewModel(UserResponseDto user) : ObservableObjec
         }
     }
 
+    public bool IsFriendshipImageVisible => User.UserId != Shared.UserId;
+
     private async Task RefreshAsync()
     {
         var result = await App.ExecuteRequestAsync(new GetUser(User.UserId));
         if (result.IsSuccess) User = result.Value;
     }
 
-    public async Task HandleTapAsync()
+    [RelayCommand]
+    private async Task HandleTapAsync()
     {
         if (User == null) return;
-        await App.PushModalAsync(new UserPage(User.UserId));
+
+        if (PostInteractionViewModel?.TargetPostId != null)
+        {
+            var postResult = await App.ExecuteRequestAsync(new GetPost(PostInteractionViewModel.TargetPostId), ErrorType.Forbidden);
+            if (postResult.IsSuccess)
+            {
+                var postViewModel = new PostViewModel(postResult.Value, false);
+                var postPage = new PostPage(postViewModel);
+                await App.PushModalAsync(postPage);
+            }
+            else if (postResult.Error == ErrorType.Forbidden) await App.Page.DisplayAlert("안내", "해당 게시글을 읽을 수 있는 권한이 없습니다.", Constants.PromptOk);
+        }
+        else await App.PushModalAsync(new UserPage(User.UserId));
     }
 
-    public async Task HandleFriendshipActionAsync()
+    [RelayCommand]
+    private async Task HandleFriendshipActionAsync()
     {
         if (User.Friendship == null)
         {
-            var result = await App.Page.DisplayAlert("안내", $"{Nickname}에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var result = await App.Page.DisplayAlert("안내", $"{Nickname}님에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Accepted)
         {
-            var result = await App.Page.DisplayAlert("안내", $"{Nickname}와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var result = await App.Page.DisplayAlert("안내", $"{Nickname}님과의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Requested)
         {
-            var result = await App.Page.DisplayAlert("안내", $"{Nickname}에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
+            var result = await App.Page.DisplayAlert("안내", $"{Nickname}님에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new CancelFriendRequest(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Waiting)
         {
-            var result = await App.Page.DisplayAlert("안내", $"{Nickname}의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var result = await App.Page.DisplayAlert("안내", $"{Nickname}님의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
         }
 

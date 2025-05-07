@@ -5,6 +5,7 @@ using History.Commons.Enums;
 using History.MobileClient.Enums;
 using History.MobileClient.Pages;
 using UraniumUI.Icons.FontAwesome;
+using UraniumUI.Icons.MaterialSymbols;
 
 namespace History.MobileClient.ViewModels;
 
@@ -13,9 +14,13 @@ public partial class PostInteractionViewModel
     public PostInteractionType Type { get; }
     public DateTime CreatedAt { get; }
     public UserResponseDto User { get; }
+    public string TargetPostId { get; }
     public PostReactionType? ReactionType { get; }
 
+
+    public double IconSize { get; } = 12;
     public IMediaViewModel ProfileMedia { get; }
+    public string FontFamily { get; }
     public string Glyph { get; }
     public Color Color { get; }
 
@@ -29,6 +34,7 @@ public partial class PostInteractionViewModel
         ProfileMedia = reaction.User.UsesAnimatedProfileMedia
         ? new VideoViewModel(Utils.GenerateMediaUri(reaction.User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(reaction.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+        FontFamily = "FASolid";
         Glyph = reaction.Type switch
         {
             PostReactionType.Like => Solid.Heart,
@@ -47,19 +53,23 @@ public partial class PostInteractionViewModel
             PostReactionType.Support => Color.FromRgb(0xa0, 0x61, 0xb1),
             _ => throw new ArgumentOutOfRangeException(nameof(reaction.Type), reaction.Type, null)
         };
+
+        if (reaction.Type == PostReactionType.Like) IconSize = 9;
     }
 
-    public PostInteractionViewModel(SharedUserDto sharedUser)
+    public PostInteractionViewModel(SharedAndRepostedUserDto sharedUser, bool isShare)
     {
         Type = PostInteractionType.Share;
         CreatedAt = sharedUser.SharedAt;
         User = sharedUser.User;
+        TargetPostId = !sharedUser.IsRepost ? sharedUser.PostId : null;
 
         ProfileMedia = sharedUser.User.UsesAnimatedProfileMedia
         ? new VideoViewModel(Utils.GenerateMediaUri(sharedUser.User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(sharedUser.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
-        Glyph = Solid.ShareNodes;
-        Color = Color.FromRgb(0x65, 0x52, 0xdf);
+        FontFamily = "MaterialSharp";
+        Glyph = isShare ? MaterialSharp.Share : MaterialSharp.Shift_lock;
+        Color = isShare ? Color.FromRgb(0x65, 0x52, 0xdf) : Color.FromRgb(0x99, 0x99, 0x99);
     }
 
     [RelayCommand]

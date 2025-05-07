@@ -166,9 +166,12 @@
                                         IsVisible="{x:Binding IsShare}"
                                         Template="{StaticResource SharedPostTemplate}"
                                         ViewModel="{x:Binding ParentPost}" />
-                                    <VerticalStackLayout IsVisible="{x:Binding HasReactions}" Spacing="8">
-                                        <HorizontalStackLayout>
-                                            <Label FontSize="12">
+                                    <VerticalStackLayout IsVisible="{x:Binding HasInteractions}" Spacing="8">
+                                        <HorizontalStackLayout Spacing="8">
+                                            <Label FontSize="12" IsVisible="{x:Binding HasReactions}">
+                                                <Label.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{x:Binding HandleReactionTapCommand}" />
+                                                </Label.GestureRecognizers>
                                                 <Label.FormattedText>
                                                     <FormattedString>
                                                         <Span Text="느낌 " TextColor="#808080" />
@@ -180,11 +183,41 @@
                                                     </FormattedString>
                                                 </Label.FormattedText>
                                             </Label>
+                                            <Label FontSize="12" IsVisible="{x:Binding HasSharedUsers}">
+                                                <Label.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{x:Binding HandleSharedTapCommand}" />
+                                                </Label.GestureRecognizers>
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="공유 " TextColor="#808080" />
+                                                        <Span
+                                                            FontAttributes="Bold"
+                                                            Text="{x:Binding SharedUsersCount}"
+                                                            TextColor="{AppThemeBinding Dark=White,
+                                                                                        Light=Black}" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
+                                            <Label FontSize="12" IsVisible="{x:Binding HasRepostedUsers}">
+                                                <Label.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{x:Binding HandleRepostTapCommand}" />
+                                                </Label.GestureRecognizers>
+                                                <Label.FormattedText>
+                                                    <FormattedString>
+                                                        <Span Text="리포스트 " TextColor="#808080" />
+                                                        <Span
+                                                            FontAttributes="Bold"
+                                                            Text="{x:Binding RepostedUsersCount}"
+                                                            TextColor="{AppThemeBinding Dark=White,
+                                                                                        Light=Black}" />
+                                                    </FormattedString>
+                                                </Label.FormattedText>
+                                            </Label>
                                         </HorizontalStackLayout>
                                         <CollectionView
                                             ItemTemplate="{StaticResource PostInteractionTemplate}"
                                             ItemsLayout="HorizontalList"
-                                            ItemsSource="{x:Binding Reactions}" />
+                                            ItemsSource="{x:Binding Interactions}" />
                                     </VerticalStackLayout>
                                 </VerticalStackLayout>
                             </ScrollView>

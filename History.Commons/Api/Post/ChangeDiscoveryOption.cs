@@ -9,23 +9,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace History.Commons.Api.Post
-{
-    public class ChangeDiscoveryOption : IBaseRequest<PostResponseDto>, IAuthRequiredRequest, IRequestWithBody, IRequestWithUrlParameters
-    {
-        public string Path => "/api/post/{postId}/discovery-option";
-        public Method Method => Method.Put;
-        public Dictionary<string, string> UrlParameters { get; set; } = [];
-        public object Body { get; set; }
+namespace History.Commons.Api.Post;
 
-        public ChangeDiscoveryOption(string postId, DiscoveryOption newDiscoveryOption , List<string> selectedUserIds = null)
+public class ChangeDiscoveryOption : IBaseRequest<PostResponseDto>, IAuthRequiredRequest, IRequestWithBody, IRequestWithUrlParameters
+{
+    public string Path => "/api/post/{postId}/discovery-option";
+    public Method Method => Method.Put;
+    public Dictionary<string, string> UrlParameters { get; set; } = [];
+    public object Body { get; set; }
+
+    public ChangeDiscoveryOption(string postId, DiscoveryOption newDiscoveryOption , List<string> selectedUserIds = null)
+    {
+        UrlParameters["postId"] = postId;
+        Body = new ChangeDiscoveryOptionRequestDto
         {
-            UrlParameters["postId"] = postId;
-            Body = new ChangeDiscoveryOptionRequestDto
-            {
-                NewDiscoveryOption = newDiscoveryOption,
-                SelectedUserIds = selectedUserIds
-            };
-        }
+            NewDiscoveryOption = newDiscoveryOption,
+            SelectedUserIds = selectedUserIds
+        };
     }
 }
