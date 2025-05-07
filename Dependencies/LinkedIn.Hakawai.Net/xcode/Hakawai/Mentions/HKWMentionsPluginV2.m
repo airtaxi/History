@@ -577,36 +577,7 @@ static int MAX_MENTION_QUERY_LENGTH = 100;
  */
 - (BOOL)mentionCanBeTrimmed:(HKWMentionsAttribute *)mention
               trimmedString:(NSString * __autoreleasing *)stringPointer {
-    // See if the mention is valid
-    if (!mention) { return NO; }
-    // See if the delegate will allow the mention to be trimmed
-    __strong __auto_type strongDefaultChooserViewDelegate = self.defaultChooserViewDelegate;
-    __strong __auto_type strongCustomChooserViewDelegate = self.customChooserViewDelegate;
-    BOOL delegateImplementsCustomTrimming = [strongDefaultChooserViewDelegate respondsToSelector:@selector(trimmedNameForEntity:)];
-    BOOL delegateAllowsTrimming = NO;
-    if ([strongCustomChooserViewDelegate respondsToSelector:@selector(entityCanBeTrimmed:)]) {
-        delegateAllowsTrimming = [strongCustomChooserViewDelegate entityCanBeTrimmed:mention];
-    } else if ([strongDefaultChooserViewDelegate respondsToSelector:@selector(entityCanBeTrimmed:)]) {
-        delegateAllowsTrimming = [strongDefaultChooserViewDelegate entityCanBeTrimmed:mention];
-    }
-    if (!delegateAllowsTrimming) { return NO; }
-    // See if the mention is actually eligible for trimming
-    NSString *text = [mention mentionText];
-    NSRange whitespaceRange = [text rangeOfCharacterFromSet:[NSCharacterSet whitespaceCharacterSet]];
-    if (whitespaceRange.location == NSNotFound && !delegateImplementsCustomTrimming) {
-        return NO;
-    }
-    // Return the trimmed string to the caller
-    if (stringPointer != NULL) {
-        *stringPointer = (delegateImplementsCustomTrimming
-                          ? [strongDefaultChooserViewDelegate trimmedNameForEntity:mention]
-                          : [text substringWithRange:NSMakeRange(0, whitespaceRange.location)]);
-        if ([(*stringPointer) length] == 0 || [(*stringPointer) isEqualToString:text]) {
-            // It's not valid to trim a mention to itself, or to return an empty string
-            return NO;
-        }
-    }
-    return delegateImplementsCustomTrimming || (whitespaceRange.length > 0);
+    return NO;
 }
 
 - (HKWMentionsAttribute *)mentionAttributeAtLocation:(NSUInteger)location
