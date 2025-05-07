@@ -620,7 +620,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
 
         var sharedUserIdAndCreatedDates = _postCollection
             .Find(p => p.ParentPostId == post.Id)
-            .Project(p => new { p.UserId, p.CreatedAt })
+            .Project(p => new { p.UserId, p.IsRepost, p.CreatedAt })
             .ToListAsync()
             .Result;
 
@@ -633,6 +633,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             var sharedUserDto = new SharedUserDto
             {
                 User = sharedUser,
+                IsRepost = sharedUserIdAndCreatedDates.First(x => x.UserId == sharedUser.UserId).IsRepost,
                 CreatedAt = sharedUserIdAndCreatedDates.First(x => x.UserId == sharedUser.UserId).CreatedAt
             };
             sharedUserDtos.Add(sharedUserDto);
