@@ -14,11 +14,11 @@ public class PostResponseDto
 
     public List<BaseContent> Contents { get; set; } = [];
     public PostResponseDto ParentPost { get; set; }
-    
-    public bool HasBeenSimpleReposted { get; set; }
 
     public int CommentsCount { get; set; }
     public List<CommentResponseDto> Comments { get; set; } = [];
+
+    public List<UserResponseDto> SharedUsers { get; set; } = [];
 
     public List<PostReactionDto> PostReactions { get; set; } = [];
 
