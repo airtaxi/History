@@ -13,7 +13,7 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<Version>7.4.8.9-beta-net9</Version>
 		<Authors>Artem Valieiev</Authors>
-		<Product>LinkedIn.Hakawai</Product>
+		<Product>LinkedIn.Hakawai.Net9</Product>
 		<Description>A subclass of UITextView providing extended functionality and support for 'plugins'. Hakawai ships with the Mentions plug-in, which provides a powerful and flexible way to easily add social-media-esque @mentions-style annotation support to your iOS app.</Description>
 		<PackageTags>Mentions;UITextView;iOS editor</PackageTags>
 		<RepositoryUrl>https://github.com/artemvalieiev/Linked.Hakawai.Net</RepositoryUrl>
