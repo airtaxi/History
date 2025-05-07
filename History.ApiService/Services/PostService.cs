@@ -616,14 +616,59 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             profileContent.Nickname = (user?.Nickname ?? "차단된 사용자") + ' ';
         }
 
-        var postReactions = await GeneratePostReactionDtosAsync(post.Id, requesterId);
+        var postReactionDtos = await GeneratePostReactionDtosAsync(post.Id, requesterId);
+        var sharedUserDtos = await GenerateSharedUserDtosAsync(post.Id, requesterId);
 
-        var sharedUserIdAndCreatedDates = _postCollection
-            .Find(p => p.ParentPostId == post.Id)
+        var postResponse = new PostResponseDto
+        {
+            Id = post.Id,
+            User = userResult.Value,
+            DiscoveryOption = post.DiscoveryOption,
+            Contents = post.Contents,
+            Comments = commentDtosResult.Value,
+            CommentsCount = commentsCountResult.Value,
+            PostReactions = postReactionDtos.Value,
+            SharedUsers = sharedUserDtos.Value,
+            IsRepost = post.IsRepost,
+            CreatedAt = post.CreatedAt,
+            ModifiedAt = post.ModifiedAt
+        };
+
+        if (post.ParentPostId != null)
+        {
+            var parentPostResult = await GetPostByIdAsync(post.ParentPostId);
+            var hasAccessResult = await CheckAccessAsync(parentPostResult.Value, requesterId);
+            var parentPostUserResult = await userService.GenerateUserResponseDtoAsync(parentPostResult.Value.UserId, requesterId);
+            var parentPostSharedUserDtos = await GenerateSharedUserDtosAsync(post.ParentPostId, requesterId);
+
+            if (parentPostResult.IsSuccess && hasAccessResult.IsSuccess && parentPostUserResult.IsSuccess)
+            {
+                postResponse.ParentPost = new PostResponseDto
+                {
+                    Id = parentPostResult.Value.Id,
+                    User = parentPostUserResult.Value,
+                    DiscoveryOption = parentPostResult.Value.DiscoveryOption,
+                    Contents = parentPostResult.Value.Contents,
+                    SharedUsers = parentPostSharedUserDtos,
+                    IsRepost = parentPostResult.Value.IsRepost,
+                    CreatedAt = parentPostResult.Value.CreatedAt,
+                    ModifiedAt = parentPostResult.Value.ModifiedAt
+                };
+            }
+        }
+
+        return postResponse;
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<List<SharedUserDto>>> GenerateSharedUserDtosAsync(string postId, string requesterId)
+    {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+
+        var sharedUserIdAndCreatedDates = await _postCollection
+            .Find(p => p.ParentPostId == postId)
             .Project(p => new { p.UserId, p.IsRepost, p.CreatedAt })
-            .ToListAsync()
-            .Result;
-
+            .ToListAsync();
         var sharedUserIds = sharedUserIdAndCreatedDates.Select(x => x.UserId);
         var sharedUsers = await userService.GenerateUserResponseDtosAsync(sharedUserIds, requesterId);
 
@@ -639,45 +684,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             sharedUserDtos.Add(sharedUserDto);
         }
 
-        var postResponse = new PostResponseDto
-        {
-            Id = post.Id,
-            User = userResult.Value,
-            DiscoveryOption = post.DiscoveryOption,
-            Contents = post.Contents,
-            Comments = commentDtosResult.Value,
-            CommentsCount = commentsCountResult.Value,
-            SharedUsers = sharedUserDtos,
-            PostReactions = postReactions,
-            IsRepost = post.IsRepost,
-            CreatedAt = post.CreatedAt,
-            ModifiedAt = post.ModifiedAt
-        };
-
-        if (post.ParentPostId != null)
-        {
-            var parentPostResult = await GetPostByIdAsync(post.ParentPostId);
-            var hasAccessResult = await CheckAccessAsync(parentPostResult.Value, requesterId);
-            var parentPostUserResult = await userService.GenerateUserResponseDtoAsync(parentPostResult.Value.UserId, requesterId);
-            if (parentPostResult.IsSuccess && hasAccessResult.IsSuccess && parentPostUserResult.IsSuccess)
-            {
-                postResponse.ParentPost = new PostResponseDto
-                {
-                    Id = parentPostResult.Value.Id,
-                    User = parentPostUserResult.Value,
-                    DiscoveryOption = parentPostResult.Value.DiscoveryOption,
-                    Contents = parentPostResult.Value.Contents,
-                    IsRepost = parentPostResult.Value.IsRepost,
-                    CreatedAt = parentPostResult.Value.CreatedAt,
-                    ModifiedAt = parentPostResult.Value.ModifiedAt
-                };
-            }
-        }
-
-        return postResponse;
+        return sharedUserDtos;
     }
-
-    /// <inheritdoc />
     public async Task<Result<List<PostResponseDto>>> GeneratePostResponseDtosAsync(List<Post> posts, string requesterId)
     {
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
