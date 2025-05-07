@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace History.Commons.DataTypes.ResponseDtos;
 
-public class SharedUserDto
+public class SharedAndReposetedUserDto
 {
     public UserResponseDto User { get; set; }
     public DateTime SharedAt { get; set; }
