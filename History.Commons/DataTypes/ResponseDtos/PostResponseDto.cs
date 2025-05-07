@@ -18,7 +18,7 @@ public class PostResponseDto
     public int CommentsCount { get; set; }
     public List<CommentResponseDto> Comments { get; set; } = [];
 
-    public List<SharedAndReposetedUserDto> SharedAndRepostedUsers { get; set; } = [];
+    public List<SharedAndRepostedUserDto> SharedAndRepostedUsers { get; set; } = [];
     public List<PostReactionDto> PostReactions { get; set; } = [];
 
     public DateTime CreatedAt { get; set; }

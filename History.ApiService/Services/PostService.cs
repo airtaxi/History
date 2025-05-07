@@ -661,25 +661,26 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
-    public async Task<Result<List<SharedAndReposetedUserDto>>> GenerateSharedAndRepostedUserDtosAsync(string postId, string requesterId)
+    public async Task<Result<List<SharedAndRepostedUserDto>>> GenerateSharedAndRepostedUserDtosAsync(string postId, string requesterId)
     {
         var userService = serviceProvider.GetRequiredService<IUserService>();
 
-        var sharedUserIdAndCreatedDates = await _postCollection
+        var posts = await _postCollection
             .Find(p => p.ParentPostId == postId)
-            .Project(p => new { p.UserId, p.IsRepost, p.CreatedAt })
+            .Project(p => new { p.UserId, p.Id, p.IsRepost, p.CreatedAt })
             .ToListAsync();
-        var sharedUserIds = sharedUserIdAndCreatedDates.Select(x => x.UserId);
+        var sharedUserIds = posts.Select(x => x.UserId);
         var sharedUsers = await userService.GenerateUserResponseDtosAsync(sharedUserIds, requesterId);
 
-        var sharedUserDtos = new List<SharedAndReposetedUserDto>();
+        var sharedUserDtos = new List<SharedAndRepostedUserDto>();
         foreach (var sharedUser in sharedUsers.Value)
         {
-            var sharedUserDto = new SharedAndReposetedUserDto
+            var sharedUserDto = new SharedAndRepostedUserDto
             {
                 User = sharedUser,
-                IsRepost = sharedUserIdAndCreatedDates.First(x => x.UserId == sharedUser.UserId).IsRepost,
-                SharedAt = sharedUserIdAndCreatedDates.First(x => x.UserId == sharedUser.UserId).CreatedAt
+                PostId = posts.First(x => x.UserId == sharedUser.UserId).Id,
+                IsRepost = posts.First(x => x.UserId == sharedUser.UserId).IsRepost,
+                SharedAt = posts.First(x => x.UserId == sharedUser.UserId).CreatedAt
             };
             sharedUserDtos.Add(sharedUserDto);
         }

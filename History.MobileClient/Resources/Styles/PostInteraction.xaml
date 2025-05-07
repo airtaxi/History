@@ -32,11 +32,11 @@
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
-                <Image HeightRequest="12" WidthRequest="12">
+                <Image HeightRequest="{x:Binding IconSize}" WidthRequest="{x:Binding IconSize}">
                     <Image.Source>
                         <FontImageSource
-                            FontFamily="FASolid"
-                            Glyph="{Binding Glyph}"
+                            FontFamily="{x:Binding FontFamily}"
+                            Glyph="{x:Binding Glyph}"
                             Color="White" />
                     </Image.Source>
                 </Image>

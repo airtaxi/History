@@ -249,22 +249,22 @@ public partial class ProfileViewModel : ObservableObject
         Result result = null;
         if (User.Friendship == null)
         {
-            var send = await App.Page.DisplayAlert("안내", $"{Nickname}에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var send = await App.Page.DisplayAlert("안내", $"{Nickname}님에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (send) result = await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Accepted)
         {
-            var dismiss = await App.Page.DisplayAlert("안내", $"{Nickname}와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var dismiss = await App.Page.DisplayAlert("안내", $"{Nickname}님와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (dismiss) result = await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Requested)
         {
-            var cancel = await App.Page.DisplayAlert("안내", $"{Nickname}에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
+            var cancel = await App.Page.DisplayAlert("안내", $"{Nickname}님에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
             if (cancel) result = await App.ExecuteRequestAsync(new CancelFriendRequest(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Waiting)
         {
-            var accept = await App.Page.DisplayAlert("안내", $"{Nickname}의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var accept = await App.Page.DisplayAlert("안내", $"{Nickname}님의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (accept) result = await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
         }
 

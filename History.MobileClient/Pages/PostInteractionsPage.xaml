@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<TabbedPage
+    x:Class="History.MobileClient.Pages.PostInteractionsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:d="http://schemas.microsoft.com/dotnet/2021/maui/design"
+    xmlns:local="clr-namespace:History.MobileClient.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <local:PostInteractionUsersPage x:Name="ReactionTab" Title="느낌" />
+    <local:PostInteractionUsersPage x:Name="ShareTab" Title="공유" />
+    <local:PostInteractionUsersPage x:Name="RepostTab" Title="리포스트" />
+</TabbedPage>

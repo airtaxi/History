@@ -27,16 +27,20 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(Contents))]
     [NotifyPropertyChangedFor(nameof(ParentPost))]
     [NotifyPropertyChangedFor(nameof(IsShare))]
-    [NotifyPropertyChangedFor(nameof(SharedUsers))]
+    [NotifyPropertyChangedFor(nameof(HasRepostedUsers))]
+    [NotifyPropertyChangedFor(nameof(RepostedUsersCount))]
+    [NotifyPropertyChangedFor(nameof(HasSharedUsers))]
     [NotifyPropertyChangedFor(nameof(SharedUsersCount))]
     [NotifyPropertyChangedFor(nameof(HasNoComments))]
     [NotifyPropertyChangedFor(nameof(HasComments))]
     [NotifyPropertyChangedFor(nameof(CommentsCount))]
     [NotifyPropertyChangedFor(nameof(Comments))]
     [NotifyPropertyChangedFor(nameof(FirstComment))]
+    [NotifyPropertyChangedFor(nameof(HasInteractions))]
     [NotifyPropertyChangedFor(nameof(HasReactions))]
+    [NotifyPropertyChangedFor(nameof(HasSharedUsers))]
     [NotifyPropertyChangedFor(nameof(ReactionsCount))]
-    [NotifyPropertyChangedFor(nameof(Reactions))]
+    [NotifyPropertyChangedFor(nameof(Interactions))]
     [NotifyPropertyChangedFor(nameof(Reaction))]
     [NotifyPropertyChangedFor(nameof(ReactionGlyph))]
     [NotifyPropertyChangedFor(nameof(ReactionFontFamily))]
@@ -74,14 +78,39 @@ public partial class PostViewModel : ObservableObject
     public partial bool IsWideMode { get; set; }
     public bool IsNotWideMode => !IsWideMode;
 
+    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Post.Contents, _wrapMedias);
+
+    public bool HasInteractions => Post.PostReactions.Count > 0 || Post.SharedAndRepostedUsers.Count > 0;
+
     public bool IsRepost => Post.IsRepost;
     public PostViewModel ParentPost => Post.ParentPost != null ? new(Post.ParentPost, true) : null;
     public bool IsShare => Post.ParentPost != null && !IsRepost;
 
-    public List<SharedUserDto> SharedUsers => Post.SharedUsers;
-    public int SharedUsersCount => Post.SharedUsers.Count;
+    public bool HasRepostedUsers => Post.SharedAndRepostedUsers.Any(x => x.IsRepost);
+    public int RepostedUsersCount => Post.SharedAndRepostedUsers.Count(x => x.IsRepost);
 
-    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Post.Contents, _wrapMedias);
+    public bool HasSharedUsers => Post.SharedAndRepostedUsers.Any(x => !x.IsRepost);
+    public int SharedUsersCount => Post.SharedAndRepostedUsers.Count(x => !x.IsRepost);
+
+    public bool HasReactions => Post.PostReactions.Count > 0;
+    public int ReactionsCount => Post.PostReactions.Count;
+    public List<PostInteractionViewModel> Interactions
+    {
+        get
+        {
+            var reactions = Post.PostReactions.Select(x => new PostInteractionViewModel(x));
+            var shared = Post.SharedAndRepostedUsers.Where(x => !x.IsRepost).Select(x => new PostInteractionViewModel(x, true));
+            var reposted = Post.SharedAndRepostedUsers.Where(x => x.IsRepost).Select(x => new PostInteractionViewModel(x, false));
+
+            var result = reactions.Concat(shared).Concat(reposted).OrderByDescending(x => x.CreatedAt).ToList();
+            return result;
+        }
+    }
+
+    public PostInteractionViewModel Reaction => Interactions.FirstOrDefault(r => r.User.UserId == Shared.UserId && r.ReactionType != null);
+    public string ReactionGlyph => Reaction?.Glyph ?? Solid.Heart;
+    public string ReactionFontFamily => Reaction != null ? "FASolid" : "FARegular";
+    public Color ReactionColor => Reaction?.Color ?? (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Colors.White : Colors.Black);
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FirstComment))]
@@ -94,15 +123,6 @@ public partial class PostViewModel : ObservableObject
     public bool HasComments => Post.CommentsCount > 0;
     public bool HasNoComments => Post.CommentsCount == 0;
     public int CommentsCount => Post.CommentsCount;
-
-    public bool HasReactions => Post.PostReactions.Count > 0;
-    public int ReactionsCount => Post.PostReactions.Count;
-    public List<PostInteractionViewModel> Reactions => [.. Post.PostReactions.Select(r => new PostInteractionViewModel(r))];
-
-    public PostInteractionViewModel Reaction => Reactions.FirstOrDefault(r => r.User.UserId == Shared.UserId && r.ReactionType != null);
-    public string ReactionGlyph => Reaction?.Glyph ?? Solid.Heart;
-    public string ReactionFontFamily => Reaction != null ? "FASolid" : "FARegular";
-    public Color ReactionColor => Reaction?.Color ?? (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Colors.White : Colors.Black);
 
     public DateTime CreatedAt => Post.CreatedAt;
     public DateTime? ModifiedAt => Post.ModifiedAt;
@@ -262,5 +282,26 @@ public partial class PostViewModel : ObservableObject
     public async Task HandleMoreTapAsync()
     {
         await DisplayActionSheetAsync(false);
+    }
+
+    [RelayCommand]
+    public async Task HandleReactionTap()
+    {
+        var page = new PostInteractionsPage(Interactions, Enums.PostInteractionType.Reaction);
+        await App.PushModalAsync(page);
+    }
+
+    [RelayCommand]
+    public async Task HandleSharedTap()
+    {
+        var page = new PostInteractionsPage(Interactions, Enums.PostInteractionType.Share);
+        await App.PushModalAsync(page);
+    }
+
+    [RelayCommand]
+    public async Task HandleRepostTap()
+    {
+        var page = new PostInteractionsPage(Interactions, Enums.PostInteractionType.Repost);
+        await App.PushModalAsync(page);
     }
 }
