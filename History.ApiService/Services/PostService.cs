@@ -618,11 +618,25 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
 
         var postReactions = await GeneratePostReactionDtosAsync(post.Id, requesterId);
 
-        var sharedUserIds = await _postCollection.Find(p => p.ParentPostId == post.Id)
-            .Project(p => p.UserId)
-            .ToListAsync();
+        var sharedUserIdAndCreatedDates = _postCollection
+            .Find(p => p.ParentPostId == post.Id)
+            .Project(p => new { p.UserId, p.CreatedAt })
+            .ToListAsync()
+            .Result;
 
-        var sharedUserDtosResult = await userService.GenerateUserResponseDtosAsync(sharedUserIds, requesterId);
+        var sharedUserIds = sharedUserIdAndCreatedDates.Select(x => x.UserId);
+        var sharedUsers = await userService.GenerateUserResponseDtosAsync(sharedUserIds, requesterId);
+
+        var sharedUserDtos = new List<SharedUserDto>();
+        foreach (var sharedUser in sharedUsers.Value)
+        {
+            var sharedUserDto = new SharedUserDto
+            {
+                User = sharedUser,
+                CreatedAt = sharedUserIdAndCreatedDates.First(x => x.UserId == sharedUser.UserId).CreatedAt
+            };
+            sharedUserDtos.Add(sharedUserDto);
+        }
 
         var postResponse = new PostResponseDto
         {
@@ -632,7 +646,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             Contents = post.Contents,
             Comments = commentDtosResult.Value,
             CommentsCount = commentsCountResult.Value,
-            SharedUsers = sharedUserDtosResult.Value,
+            SharedUsers = sharedUserDtos,
             PostReactions = postReactions,
             IsRepost = post.IsRepost,
             CreatedAt = post.CreatedAt,
