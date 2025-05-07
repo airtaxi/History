@@ -17,17 +17,18 @@ public partial class FriendshipViewModel(UserResponseDto user, PostInteractionVi
     [NotifyPropertyChangedFor(nameof(Nickname))]
     [NotifyPropertyChangedFor(nameof(IsModerator))]
     [NotifyPropertyChangedFor(nameof(IsAdmin))]
+    [NotifyPropertyChangedFor(nameof(CreatedAt))]
     [NotifyPropertyChangedFor(nameof(ProfileMedia))]
     [NotifyPropertyChangedFor(nameof(FriendshipGlyph))]
+    [NotifyPropertyChangedFor(nameof(IsFriendshipImageVisible))]
+    [NotifyPropertyChangedFor(nameof(IsInteractionAvailable))]
     public partial UserResponseDto User { get; set; } = user;
 
     public string Nickname => User.Nickname;
     public bool IsModerator => User.Rank == Rank.Moderator;
     public bool IsAdmin => User.Rank == Rank.Admin;
+    public DateTime CreatedAt => User.Friendship.CreatedAt;
     public IMediaViewModel ProfileMedia => new ImageViewModel(Utils.GenerateMediaUri(User.ProfileThumbnailMediaId));
-
-    public bool IsInteractionAvailable => PostInteractionViewModel != null;
-    public PostInteractionViewModel PostInteractionViewModel { get; } = postInteractionViewModel;
 
     public string FriendshipGlyph
     {
@@ -42,6 +43,9 @@ public partial class FriendshipViewModel(UserResponseDto user, PostInteractionVi
     }
 
     public bool IsFriendshipImageVisible => User.UserId != Shared.UserId;
+
+    public bool IsInteractionAvailable => PostInteractionViewModel != null;
+    public PostInteractionViewModel PostInteractionViewModel { get; } = postInteractionViewModel;
 
     private async Task RefreshAsync()
     {
