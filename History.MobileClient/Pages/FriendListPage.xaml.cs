@@ -1,16 +1,18 @@
 using History.Commons.Api.Friendship;
 using History.MobileClient.ViewModels;
+using UraniumUI.Icons.FontAwesome;
 
 namespace History.MobileClient.Pages;
 
 public partial class FriendListPage : ContentPage
 {
     private IEnumerable<FriendshipViewModel> _viewModels;
+    private bool _sortByTime = false;
 
 	public FriendListPage()
 	{
 		InitializeComponent();
-	}
+    }
 
     private async Task RefreshAsync()
     {
@@ -18,10 +20,27 @@ public partial class FriendListPage : ContentPage
         if (friendsResult.IsSuccess)
         {
             _viewModels = friendsResult.Value.Select(x => new FriendshipViewModel(x));
-            MainCollectionView.ItemsSource = _viewModels;
             MainSearchBar.Text = string.Empty;
             EmptyLabel.IsVisible = !_viewModels.Any();
+            ApplySort();
         }
+    }
+
+    private void ApplySort()
+    {
+        if (_sortByTime)
+        {
+            SortFontImageSource.Glyph = Solid.Timeline;
+            SortLabel.Text = "최신순";
+            MainCollectionView.ItemsSource = _viewModels.OrderByDescending(x => x.CreatedAt);
+        }
+        else
+        {
+            SortFontImageSource.Glyph = Solid.ArrowUpAZ;
+            SortLabel.Text = "이름순";
+            MainCollectionView.ItemsSource = _viewModels.OrderBy(x => x.Nickname);
+        }
+        Configuration.SetValue("FriendsListSortByTime", _sortByTime);
     }
 
     private void OnMainSearchBarTextChanged(object sender, TextChangedEventArgs e)
@@ -58,8 +77,16 @@ public partial class FriendListPage : ContentPage
 
         if (!_isInitialized)
         {
-            await RefreshAsync();
             _isInitialized = true;
+            _sortByTime = Configuration.GetValue<bool>("FriendsListSortByTime");
+
+            await RefreshAsync();
         }
+    }
+
+    private void OnSortTapped(object sender, TappedEventArgs e)
+    {
+        _sortByTime = !_sortByTime;
+        ApplySort();
     }
 }
