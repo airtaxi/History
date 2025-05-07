@@ -19,6 +19,8 @@ public partial class FriendListPage : ContentPage
         var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
         if (friendsResult.IsSuccess)
         {
+            Shared.Friends = friendsResult.Value;
+
             _viewModels = friendsResult.Value.Select(x => new FriendshipViewModel(x));
             MainSearchBar.Text = string.Empty;
             EmptyLabel.IsVisible = !_viewModels.Any();
