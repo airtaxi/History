@@ -618,9 +618,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
 
         var postReactions = await GeneratePostReactionDtosAsync(post.Id, requesterId);
 
-        var hasBeenSimpleReposted = requesterId != null ? await _postCollection
-                .Find(p => p.ParentPostId == post.Id && p.UserId == requesterId && p.Contents == null)
-                .AnyAsync() : false;
+        var sharedUserIds = await _postCollection.Find(p => p.ParentPostId == post.Id)
+            .Project(p => p.UserId)
+            .ToListAsync();
+
+        var sharedUserDtosResult = await userService.GenerateUserResponseDtosAsync(sharedUserIds, requesterId);
 
         var postResponse = new PostResponseDto
         {
@@ -630,9 +632,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             Contents = post.Contents,
             Comments = commentDtosResult.Value,
             CommentsCount = commentsCountResult.Value,
+            SharedUsers = sharedUserDtosResult.Value,
             PostReactions = postReactions,
             IsRepost = post.IsRepost,
-            HasBeenSimpleReposted = hasBeenSimpleReposted,
             CreatedAt = post.CreatedAt,
             ModifiedAt = post.ModifiedAt
         };
