@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary
+    x:Class="History.MobileClient.Resources.Styles.SharedPost"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:d="http://schemas.microsoft.com/dotnet/2021/maui/design"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
+    xmlns:local="clr-namespace:History.MobileClient.Resources.Styles"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="clr-namespace:History.MobileClient.ContentViews"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient"
+    mc:Ignorable="d">
+    <DataTemplate x:Key="SharedPostTemplate" x:DataType="vm:PostViewModel">
+        <Border
+            Margin="6"
+            Padding="12"
+            StrokeThickness="1.5">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="12" />
+            </Border.StrokeShape>
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+            </Border.GestureRecognizers>
+            <VerticalStackLayout Spacing="8">
+                <Grid>
+                    <HorizontalStackLayout Spacing="6">
+                        <views:DataTemplatePresenter
+                            HeightRequest="32"
+                            Template="{StaticResource MediaTemplateSelector}"
+                            ViewModel="{x:Binding ProfileMedia}"
+                            WidthRequest="32">
+                            <views:DataTemplatePresenter.GestureRecognizers>
+                                <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
+                            </views:DataTemplatePresenter.GestureRecognizers>
+                            <views:DataTemplatePresenter.Clip>
+                                <EllipseGeometry
+                                    Center="16,16"
+                                    RadiusX="16"
+                                    RadiusY="16" />
+                            </views:DataTemplatePresenter.Clip>
+                        </views:DataTemplatePresenter>
+                        <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="14"
+                                LineBreakMode="TailTruncation"
+                                Text="{x:Binding Nickname}" />
+                            <Image
+                                HeightRequest="14"
+                                IsVisible="{x:Binding IsAdmin}"
+                                WidthRequest="14">
+                                <Image.Source>
+                                    <FontImageSource
+                                        FontFamily="FASolid"
+                                        Glyph="{x:Static fa:Solid.Crown}"
+                                        Color="#f78501" />
+                                </Image.Source>
+                            </Image>
+                            <Image
+                                HeightRequest="14"
+                                IsVisible="{x:Binding IsModerator}"
+                                VerticalOptions="Center"
+                                WidthRequest="14">
+                                <Image.Source>
+                                    <FontImageSource
+                                        FontFamily="FASolid"
+                                        Glyph="{x:Static fa:Solid.Gavel}"
+                                        Color="#1a5bf3" />
+                                </Image.Source>
+                            </Image>
+                        </HorizontalStackLayout>
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout
+                        HorizontalOptions="End"
+                        Spacing="4"
+                        VerticalOptions="Center">
+                        <Image HeightRequest="14" WidthRequest="14">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Command="{x:Binding HandleMoreTapCommand}" />
+                            </Image.GestureRecognizers>
+                            <Image.Source>
+                                <FontImageSource
+                                    FontFamily="FASolid"
+                                    Glyph="{x:Static fa:Solid.ShareNodes}"
+                                    Color="{AppThemeBinding Dark=White,
+                                                            Light=Black}" />
+                            </Image.Source>
+                        </Image>
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="14"
+                            Text="{x:Binding SharedUsersCount}" />
+                    </HorizontalStackLayout>
+                </Grid>
+                <VerticalStackLayout
+                    BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
+                    BindableLayout.ItemsSource="{x:Binding Contents}"
+                    Spacing="8" />
+            </VerticalStackLayout>
+        </Border>
+    </DataTemplate>
+</ResourceDictionary>

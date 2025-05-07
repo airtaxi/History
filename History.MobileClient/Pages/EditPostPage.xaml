@@ -4,9 +4,11 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:editPost="clr-namespace:History.MobileClient.ContentViews.EditPost"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient"
     HandlerChanging="OnHandlerChanging"
     SizeChanged="OnSizeChanged">
@@ -36,7 +38,10 @@
                         <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
                     </Image.Source>
                 </Image>
-                <Picker x:Name="DiscoveryOptionPicker" TextColor="White" />
+                <Picker
+                    x:Name="DiscoveryOptionPicker"
+                    SelectedIndexChanged="OnDiscoveryOptionPickerSelectedIndexChanged"
+                    TextColor="White" />
             </HorizontalStackLayout>
 
             <Button
@@ -53,6 +58,11 @@
         <ScrollView Grid.Row="1" Orientation="Vertical">
             <VerticalStackLayout Padding="6" Spacing="8">
                 <editPost:TextContentView x:Name="MainTextContent" Loaded="OnMainTextContentLoaded" />
+                <views:DataTemplatePresenter
+                    x:Name="ShareTargetPostDataTemplatePresenter"
+                    InputTransparent="True"
+                    IsVisible="False"
+                    Template="{StaticResource SharedPostTemplate}" />
                 <Grid>
                     <CollectionView x:Name="MediaCollectionView" CanReorderItems="True">
                         <CollectionView.ItemsLayout>

@@ -19,35 +19,24 @@
             <Border.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
             </Border.GestureRecognizers>
-            <Grid RowSpacing="8">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="48" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Grid Grid.Row="0">
+            <VerticalStackLayout Spacing="8">
+                <Grid Grid.Row="0" HeightRequest="48">
                     <HorizontalStackLayout Spacing="6">
-                        <Grid
-                            HorizontalOptions="Start"
-                            Loaded="OnProfileGridLoaded"
-                            VerticalOptions="Start">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnProfileImageTapped" />
-                            </Grid.GestureRecognizers>
-                            <views:DataTemplatePresenter
-                                HeightRequest="48"
-                                Template="{StaticResource MediaTemplateSelector}"
-                                ViewModel="{x:Binding ProfileMedia}"
-                                WidthRequest="48">
-                                <views:DataTemplatePresenter.Clip>
-                                    <EllipseGeometry
-                                        Center="24,24"
-                                        RadiusX="24"
-                                        RadiusY="24" />
-                                </views:DataTemplatePresenter.Clip>
-                            </views:DataTemplatePresenter>
-                        </Grid>
+                        <views:DataTemplatePresenter
+                            HeightRequest="48"
+                            Template="{StaticResource MediaTemplateSelector}"
+                            ViewModel="{x:Binding ProfileMedia}"
+                            WidthRequest="48">
+                            <views:DataTemplatePresenter.GestureRecognizers>
+                                <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
+                            </views:DataTemplatePresenter.GestureRecognizers>
+                            <views:DataTemplatePresenter.Clip>
+                                <EllipseGeometry
+                                    Center="24,24"
+                                    RadiusX="24"
+                                    RadiusY="24" />
+                            </views:DataTemplatePresenter.Clip>
+                        </views:DataTemplatePresenter>
                         <VerticalStackLayout VerticalOptions="Center">
                             <HorizontalStackLayout Spacing="4">
                                 <Label
@@ -104,7 +93,7 @@
                         VerticalOptions="Center"
                         WidthRequest="28">
                         <Image.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnMoreImageTapped" />
+                            <TapGestureRecognizer Command="{x:Binding HandleMoreTapCommand}" />
                         </Image.GestureRecognizers>
                         <Image.Source>
                             <FontImageSource
@@ -115,16 +104,15 @@
                         </Image.Source>
                     </Image>
                 </Grid>
-                <Grid Grid.Row="1">
-                    <VerticalStackLayout
-                        BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
-                        BindableLayout.ItemsSource="{x:Binding Contents}"
-                        Spacing="8" />
-                </Grid>
-                <HorizontalStackLayout
-                    Grid.Row="2"
-                    Margin="0,12,0,0"
-                    Spacing="12">
+                <VerticalStackLayout
+                    BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
+                    BindableLayout.ItemsSource="{x:Binding Contents}"
+                    Spacing="8" />
+                <views:DataTemplatePresenter
+                    IsVisible="{x:Binding IsShare}"
+                    Template="{StaticResource SharedPostTemplate}"
+                    ViewModel="{x:Binding ParentPost}" />
+                <HorizontalStackLayout Margin="0,4,0,0" Spacing="12">
                     <HorizontalStackLayout Spacing="8">
                         <Image HeightRequest="24" WidthRequest="24">
                             <Image.GestureRecognizers>
@@ -160,18 +148,17 @@
                             VerticalOptions="End" />
                     </HorizontalStackLayout>
                 </HorizontalStackLayout>
-                <Grid
-                    Grid.Row="3"
-                    Margin="0,12,0,0"
-                    IsVisible="{x:Binding HasComments}"
-                    Loaded="OnCommentGridLoaded">
+                <Grid Margin="0,4,0,0" IsVisible="{x:Binding HasComments}">
                     <Rectangle
                         Fill="#808080"
                         HeightRequest="1"
                         VerticalOptions="Start" />
-                    <views:DataTemplatePresenter Margin="0,12,0,0" Template="{StaticResource CommentTemplate}" />
+                    <views:DataTemplatePresenter
+                        Margin="0,12,0,0"
+                        Template="{StaticResource CommentTemplate}"
+                        ViewModel="{x:Binding FirstComment}" />
                 </Grid>
-            </Grid>
+            </VerticalStackLayout>
         </Border>
     </DataTemplate>
 
