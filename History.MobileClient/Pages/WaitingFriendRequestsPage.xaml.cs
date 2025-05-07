@@ -34,8 +34,8 @@ public partial class WaitingFriendRequestsPage : ContentPage
 
         if (!_isInitialized)
         {
-            await RefreshAsync();
             _isInitialized = true;
+            await RefreshAsync();
         }
     }
 }
