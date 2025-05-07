@@ -19,7 +19,6 @@ public class PostResponseDto
     public List<CommentResponseDto> Comments { get; set; } = [];
 
     public List<SharedUserDto> SharedUsers { get; set; } = [];
-
     public List<PostReactionDto> PostReactions { get; set; } = [];
 
     public DateTime CreatedAt { get; set; }
