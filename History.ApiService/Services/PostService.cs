@@ -617,7 +617,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         }
 
         var postReactionDtos = await GeneratePostReactionDtosAsync(post.Id, requesterId);
-        var sharedUserDtos = await GenerateSharedUserDtosAsync(post.Id, requesterId);
+        var sharedandRepostedUserDtos = await GenerateSharedAndRepostedUserDtosAsync(post.Id, requesterId);
 
         var postResponse = new PostResponseDto
         {
@@ -628,7 +628,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             Comments = commentDtosResult.Value,
             CommentsCount = commentsCountResult.Value,
             PostReactions = postReactionDtos.Value,
-            SharedUsers = sharedUserDtos.Value,
+            SharedAndRepostedUsers = sharedandRepostedUserDtos.Value,
             IsRepost = post.IsRepost,
             CreatedAt = post.CreatedAt,
             ModifiedAt = post.ModifiedAt
@@ -639,7 +639,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             var parentPostResult = await GetPostByIdAsync(post.ParentPostId);
             var hasAccessResult = await CheckAccessAsync(parentPostResult.Value, requesterId);
             var parentPostUserResult = await userService.GenerateUserResponseDtoAsync(parentPostResult.Value.UserId, requesterId);
-            var parentPostSharedUserDtos = await GenerateSharedUserDtosAsync(post.ParentPostId, requesterId);
+            var parentPostSharedAndRepostedUserDtos = await GenerateSharedAndRepostedUserDtosAsync(post.ParentPostId, requesterId);
 
             if (parentPostResult.IsSuccess && hasAccessResult.IsSuccess && parentPostUserResult.IsSuccess)
             {
@@ -649,7 +649,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
                     User = parentPostUserResult.Value,
                     DiscoveryOption = parentPostResult.Value.DiscoveryOption,
                     Contents = parentPostResult.Value.Contents,
-                    SharedUsers = parentPostSharedUserDtos,
+                    SharedAndRepostedUsers = parentPostSharedAndRepostedUserDtos,
                     IsRepost = parentPostResult.Value.IsRepost,
                     CreatedAt = parentPostResult.Value.CreatedAt,
                     ModifiedAt = parentPostResult.Value.ModifiedAt
@@ -661,7 +661,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
-    public async Task<Result<List<SharedUserDto>>> GenerateSharedUserDtosAsync(string postId, string requesterId)
+    public async Task<Result<List<SharedAndReposetedUserDto>>> GenerateSharedAndRepostedUserDtosAsync(string postId, string requesterId)
     {
         var userService = serviceProvider.GetRequiredService<IUserService>();
 
@@ -672,10 +672,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         var sharedUserIds = sharedUserIdAndCreatedDates.Select(x => x.UserId);
         var sharedUsers = await userService.GenerateUserResponseDtosAsync(sharedUserIds, requesterId);
 
-        var sharedUserDtos = new List<SharedUserDto>();
+        var sharedUserDtos = new List<SharedAndReposetedUserDto>();
         foreach (var sharedUser in sharedUsers.Value)
         {
-            var sharedUserDto = new SharedUserDto
+            var sharedUserDto = new SharedAndReposetedUserDto
             {
                 User = sharedUser,
                 IsRepost = sharedUserIdAndCreatedDates.First(x => x.UserId == sharedUser.UserId).IsRepost,
