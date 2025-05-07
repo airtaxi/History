@@ -13,7 +13,7 @@
 	<PropertyGroup>
 		<!-- NuGet Package properties -->
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<Version>0.6.8</Version>
+		<Version>0.7.0</Version>
 		<Authors>Artem Valieiev</Authors>
 		<Product>SpeakLink</Product>
 		<Description>The SpeakLink MentionEditor is a extended mention control for .NET MAUI applications. It provides an enriched text editing experience with support for '@' mentions or any other trigger character, similar to popular social media platforms. The MentionEditor control is highly customizable, allowing developers to easily integrate and adapt it to their specific application needs. There is also RichEditor that supports mentions as described above and support for bold/italic/underline/strikethrough formatting.</Description>
@@ -22,9 +22,6 @@
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageIconUrl>https://cdn.githubraw.com/artemvalieiev/SpeakLink/main/logo.png</PackageIconUrl>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
@@ -48,6 +45,6 @@
 		<PackageReference Include="LinkedIn.Spyglass" Version="3.0.3.1" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-ios' OR '$(TargetFramework)' == 'net9.0-maccatalyst'">
-	  <ProjectReference Include="..\..\LinkedIn.Hakawai.Net\src\LinkedIn.Hakawai\LinkedIn.Hakawai.csproj" />
+		<PackageReference Include="LinkedIn.Hakawai.Net9" Version="7.4.9-no-trim" />
 	</ItemGroup>
 </Project>
