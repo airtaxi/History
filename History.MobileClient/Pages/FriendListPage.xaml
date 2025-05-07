@@ -3,6 +3,7 @@
     x:Class="History.MobileClient.Pages.FriendListPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     Shell.NavBarIsVisible="False">
     <ContentPage.Behaviors>
@@ -26,7 +27,29 @@
             <Label
                 Grid.Row="1"
                 Margin="6,0,0,0"
-                Text="친구 목록" />
+                FontAttributes="Bold"
+                HorizontalOptions="Start"
+                Text="친구 목록"
+                VerticalOptions="Center" />
+            <HorizontalStackLayout
+                HorizontalOptions="End"
+                Spacing="4"
+                VerticalOptions="Center">
+                <HorizontalStackLayout.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSortTapped" />
+                </HorizontalStackLayout.GestureRecognizers>
+                <Image HeightRequest="14" WidthRequest="14">
+                    <Image.Source>
+                        <FontImageSource
+                            x:Name="SortFontImageSource"
+                            FontFamily="FARegular"
+                            Glyph="{x:Static fa:Solid.ArrowUpAZ}"
+                            Color="{AppThemeBinding Dark=White,
+                                                    Light=Black}" />
+                    </Image.Source>
+                </Image>
+                <Label x:Name="SortLabel" Text="이름순" />
+            </HorizontalStackLayout>
 
             <CollectionView
                 x:Name="MainCollectionView"
