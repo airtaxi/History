@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.Pages;
@@ -41,10 +42,15 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
     }
 
     [RelayCommand]
+#if ANDROID
     public void HandleOverlayTap()
+#elif IOS
+    public async Task HandleOverlayTap()
+#endif
     {
         if (!MediaContent.IsVideo) throw new InvalidOperationException("MediaContent is not a video.");
 
+#if ANDROID
         IsOverlayVisible = false;
         Media = new VideoViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
         {
@@ -52,6 +58,42 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
             HorizontalContentOptions = LayoutOptions.Fill,
             VerticalContentOptions = LayoutOptions.Fill
         };
+#elif IOS
+        if (IsWrapped)
+        {
+            IMediaViewModel viewModel = MediaContent.IsVideo ?
+            new VideoViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
+            {
+                Aspect = Aspect.AspectFit,
+                ShouldAutoPlay = true,
+                ShouldLoopPlayback = true,
+                ShouldMute = false,
+                ShouldShowPlaybackControls = true
+            }
+            : new ImageViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
+            {
+                Aspect = Aspect.AspectFit,
+                HorizontalContentOptions = LayoutOptions.Fill,
+                VerticalContentOptions = LayoutOptions.Fill,
+                IsFullScreen = true
+            };
+
+            var viewerPage = new FullScreenMediaViewerPage(viewModel);
+            await App.PushModalAsync(viewerPage);
+
+            await Toast.Make("iOS에서는 현재 타임라인에서 영상 재생이 지원되지 않습니다.").Show();
+        }
+        else
+        {
+            IsOverlayVisible = false;
+            Media = new VideoViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
+            {
+                Aspect = Aspect.AspectFill,
+                HorizontalContentOptions = LayoutOptions.Fill,
+                VerticalContentOptions = LayoutOptions.Fill
+            };
+        }
+#endif
     }
 
     [RelayCommand]
