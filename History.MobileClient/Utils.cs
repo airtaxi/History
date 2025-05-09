@@ -100,10 +100,10 @@ public static class Utils
         var textContents = contents.OfType<TextContent>();
 
         var firstTextContent = textContents.FirstOrDefault();
-        if (firstTextContent != null) firstTextContent.Text = textContents.FirstOrDefault().Text.TrimStart();
+        if (firstTextContent != null) firstTextContent.Text = firstTextContent.Text.TrimStart();
 
         var lastTextContent = textContents.LastOrDefault();
-        if (lastTextContent != null) lastTextContent.Text = textContents.LastOrDefault().Text.TrimEnd();
+        if (lastTextContent != null) lastTextContent.Text = lastTextContent.Text.TrimEnd();
 
         contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrEmpty(textContent.Text));
     }

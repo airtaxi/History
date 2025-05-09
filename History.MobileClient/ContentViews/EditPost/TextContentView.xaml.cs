@@ -35,10 +35,13 @@ public partial class TextContentView : ContentView
     public List<BaseContent> GetContents()
     {
         var result = new List<BaseContent>();
-        foreach (var span in MainMentionEditor.FormattedText.Spans)
+        if (MainMentionEditor?.FormattedText?.Spans != null)
         {
-            if (span is MentionSpan mentionSpan) result.Add(new ProfileContent() { UserId = MentionHelper.MentionIdMap[int.Parse(mentionSpan.MentionId)] });
-            else result.Add(new TextContent() { Text = span.Text });
+            foreach (var span in MainMentionEditor.FormattedText.Spans)
+            {
+                if (span is MentionSpan mentionSpan) result.Add(new ProfileContent() { UserId = MentionHelper.MentionIdMap[int.Parse(mentionSpan.MentionId)] });
+                else result.Add(new TextContent() { Text = span.Text });
+            }
         }
         return result;
     }

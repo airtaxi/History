@@ -40,4 +40,13 @@
     <SolidColorBrush x:Key="Gray600Brush" Color="{StaticResource Gray600}" />
     <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}" />
     <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}" />
+
+    <Style TargetType="TabBar">
+        <Setter Property="Shell.TabBarForegroundColor" Value="{StaticResource Primary}" />
+        <Setter Property="Shell.TabBarTitleColor" Value="{StaticResource Primary}" />
+    </Style>
+    <Style TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource Primary}" />
+        <Setter Property="Padding" Value="20,5,20,5" />
+    </Style>
 </ResourceDictionary>

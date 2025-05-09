@@ -44,11 +44,15 @@ public partial class PostPage : ContentPage
     public List<BaseContent> GetCommentContents()
     {
         var result = new List<BaseContent>();
-        var spans = CommentMentionEditor.FormattedText.Spans;
-        foreach (var span in CommentMentionEditor.FormattedText.Spans)
+
+        var spans = CommentMentionEditor?.FormattedText?.Spans;
+        if (spans != null)
         {
-            if (span is MentionSpan mentionSpan) result.Add(new ProfileContent() { UserId = MentionHelper.MentionIdMap[int.Parse(mentionSpan.MentionId)] });
-            else result.Add(new TextContent() { Text = span.Text });
+            foreach (var span in spans)
+            {
+                if (span is MentionSpan mentionSpan) result.Add(new ProfileContent() { UserId = MentionHelper.MentionIdMap[int.Parse(mentionSpan.MentionId)] });
+                else result.Add(new TextContent() { Text = span.Text });
+            }
         }
         return result;
     }

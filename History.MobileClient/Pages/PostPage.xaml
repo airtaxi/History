@@ -107,6 +107,9 @@
                                             Template="{StaticResource MediaTemplateSelector}"
                                             ViewModel="{x:Binding ProfileMedia}"
                                             WidthRequest="48">
+                                            <views:DataTemplatePresenter.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
+                                            </views:DataTemplatePresenter.GestureRecognizers>
                                             <views:DataTemplatePresenter.Clip>
                                                 <EllipseGeometry
                                                     Center="24,24"
@@ -329,7 +332,8 @@
                             </HorizontalStackLayout>
                             <Grid
                                 BackgroundColor="#808080"
-                                HeightRequest="1"
+                                HeightRequest="{OnPlatform iOS=1.5,
+                                                           Android=1}"
                                 HorizontalOptions="Fill"
                                 VerticalOptions="End" />
                             <Grid.GestureRecognizers>
@@ -413,7 +417,8 @@
                 Grid.ColumnSpan="4"
                 Margin="-12"
                 Fill="#808080"
-                HeightRequest="1"
+                HeightRequest="{OnPlatform iOS=1.5,
+                                           Android=1}"
                 HorizontalOptions="Fill"
                 VerticalOptions="Start" />
         </Grid>

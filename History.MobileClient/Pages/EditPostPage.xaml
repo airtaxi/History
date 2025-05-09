@@ -94,7 +94,8 @@
                                             <Rectangle
                                                 Grid.Row="0"
                                                 Fill="#808080"
-                                                HeightRequest="1"
+                                                HeightRequest="{OnPlatform iOS=1.5,
+                                                                           Android=1}"
                                                 HorizontalOptions="Fill"
                                                 VerticalOptions="End" />
                                             <Grid Grid.Row="1">
@@ -188,7 +189,8 @@
             <Rectangle
                 Margin="-12"
                 Fill="#808080"
-                HeightRequest="1"
+                HeightRequest="{OnPlatform iOS=1.5,
+                                           Android=1}"
                 HorizontalOptions="Fill"
                 VerticalOptions="Start" />
         </Grid>

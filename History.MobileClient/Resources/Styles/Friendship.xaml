@@ -114,7 +114,8 @@
                 Grid.ColumnSpan="3"
                 Margin="-12,0,-12,-8"
                 Fill="#808080"
-                HeightRequest="1"
+                HeightRequest="{OnPlatform iOS=1.5,
+                                           Android=1}"
                 HorizontalOptions="Fill"
                 VerticalOptions="End" />
         </Grid>
