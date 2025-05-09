@@ -48,10 +48,10 @@
 	
 	<!-- for saving photo/video on iOS 14+ -->
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>This app needs access to the photo gallery for saving photos and videos</string>
+	<string>이 앱은 사진과 비디오를 저장하기 위해 사진 갤러리에 대한 액세스 권한이 필요합니다.</string>
 
 	<!-- for saving photo/video on older versions -->
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs access to the photo gallery for saving photos and videos</string>
+	<string>이 앱은 사진과 비디오를 저장하기 위해 사진 갤러리에 대한 액세스 권한이 필요합니다.</string>
 </dict>
 </plist>
