@@ -76,7 +76,7 @@ public partial class EditPostPage : ContentPage
         _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, bytes));
     }
 
-    private async void OnInsertImageTapped(object sender, TappedEventArgs e)
+    private async void OnOnInsertImageTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e)
     {
         if (_attachmentViewModels.Count == 20)
         {
@@ -108,7 +108,7 @@ public partial class EditPostPage : ContentPage
         }
     }
 
-    private async void OnInsertVideoTapped(object sender, TappedEventArgs e)
+    private async void OnOnInsertVideoTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e)
     {
         if (_attachmentViewModels.Count == 20)
         {
@@ -163,7 +163,7 @@ public partial class EditPostPage : ContentPage
         }
     }
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+    private async void OnBackImageTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e) => await App.PopModalAsync();
 
     private async void OnUploadButtonClicked(object sender, EventArgs e)
     {

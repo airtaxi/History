@@ -31,9 +31,9 @@
             HeightRequest="48">
             <HorizontalStackLayout>
                 <Image HeightRequest="24" WidthRequest="24">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
-                    </Image.GestureRecognizers>
+                    <Image.Behaviors>
+                        <toolkit:TouchBehavior TouchGestureCompleted="OnBackImageTouchGestureCompleted" />
+                    </Image.Behaviors>
                     <Image.Source>
                         <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
                     </Image.Source>
@@ -158,9 +158,9 @@
                     HeightRequest="40"
                     VerticalOptions="Center"
                     WidthRequest="40">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnInsertImageTapped" />
-                    </Image.GestureRecognizers>
+                    <Image.Behaviors>
+                        <toolkit:TouchBehavior TouchGestureCompleted="OnOnInsertImageTouchGestureCompleted" />
+                    </Image.Behaviors>
                     <Image.Source>
                         <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Photo_library}" />
                     </Image.Source>
@@ -169,9 +169,9 @@
                     HeightRequest="40"
                     VerticalOptions="Center"
                     WidthRequest="40">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnInsertVideoTapped" />
-                    </Image.GestureRecognizers>
+                    <Image.Behaviors>
+                        <toolkit:TouchBehavior TouchGestureCompleted="OnOnInsertVideoTouchGestureCompleted" />
+                    </Image.Behaviors>
                     <Image.Source>
                         <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Video_library}" />
                     </Image.Source>

@@ -7,6 +7,7 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.ViewModels;
 using NativeMedia;
+using System.Threading.Tasks;
 using UraniumUI.Icons.MaterialSymbols;
 
 namespace History.MobileClient.Pages;
@@ -33,7 +34,7 @@ public partial class EditCommentPage : ContentPage
         CommentMediaFontImageSource.Glyph = hasMediaContent ? MaterialSharp.Hide_image : MaterialSharp.Image;
     }
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+    private async void OnBackImageTouchGestureCompleted(object sender, CommunityToolkit.Maui.Core.TouchGestureCompletedEventArgs e) => await App.PopModalAsync();
 
     private async void OnEditButtonClicked(object sender, EventArgs e)
     {
@@ -72,7 +73,7 @@ public partial class EditCommentPage : ContentPage
         finally { MainActivityIndicator.IsVisible = false; }
     }
 
-    private async void OnCommentMediaImageTapped(object sender, TappedEventArgs e)
+    private async void OnCommentMediaImageTouchGestureCompleted(object sender, CommunityToolkit.Maui.Core.TouchGestureCompletedEventArgs e)
     {
         if (_attachmentViewModel != null)
         {
@@ -106,8 +107,5 @@ public partial class EditCommentPage : ContentPage
         }
     }
 
-    private void OnMainTextContentLoaded(object sender, EventArgs e)
-    {
-        LoadComment(_comment);
-    }
+    private void OnMainTextContentLoaded(object sender, EventArgs e) => LoadComment(_comment);
 }
