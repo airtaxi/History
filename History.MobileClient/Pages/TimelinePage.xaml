@@ -29,9 +29,9 @@
                 Source="icon_nobg_white.png"
                 WidthRequest="48" />
             <Image HorizontalOptions="End" VerticalOptions="Center">
-                <Image.Behaviors>
-                    <toolkit:TouchBehavior TouchGestureCompleted="OnWritePostImageTouchGestureCompleted" />
-                </Image.Behaviors>
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnWritePostImageTapped" />
+                </Image.GestureRecognizers>
                 <Image.Source>
                     <FontImageSource
                         FontFamily="MaterialSharp"
