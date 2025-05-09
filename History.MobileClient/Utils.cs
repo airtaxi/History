@@ -1,5 +1,4 @@
-﻿using History.Commons;
-using History.Commons.DataTypes.Contents;
+﻿using History.Commons.DataTypes.Contents;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 
