@@ -215,9 +215,11 @@
                                             </Label>
                                         </HorizontalStackLayout>
                                         <CollectionView
+                                            HeightRequest="48"
                                             ItemTemplate="{StaticResource PostInteractionTemplate}"
                                             ItemsLayout="HorizontalList"
-                                            ItemsSource="{x:Binding Interactions}" />
+                                            ItemsSource="{x:Binding Interactions}"
+                                            VerticalOptions="Start" />
                                     </VerticalStackLayout>
                                 </VerticalStackLayout>
                             </ScrollView>

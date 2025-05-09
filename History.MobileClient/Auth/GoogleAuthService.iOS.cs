@@ -18,7 +18,7 @@ public class GoogleAuthService : IGoogleAuthService
     public GoogleAuthService()
     {
         SignIn.SharedInstance.Scopes = ["https://www.googleapis.com/auth/userinfo.email"];
-        SignIn.SharedInstance.ClientId = Constants.GoogleAuthWebClientId;
+        SignIn.SharedInstance.ClientId = Constants.GoogleAuthAppleClientId;
     }
 
     public async Task<string> AuthenticateAsync()
@@ -42,7 +42,7 @@ public class GoogleAuthService : IGoogleAuthService
 
         SignIn.SharedInstance.CurrentUser.Authentication.GetTokens((Authentication auth, NSError error) =>
         {
-            if (error == null) _tcs.SetResult(auth.AccessToken);
+            if (error == null || auth?.IdToken != null) _tcs.SetResult(auth.IdToken);
             else _tcs.SetException(new Exception($"Error - {error.LocalizedDescription} - {Convert.ToInt32(error.Code)}"));
         });
     }

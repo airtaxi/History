@@ -148,7 +148,7 @@ public partial class Media : ResourceDictionary
     {
         var contentView = sender as ContentView;
         var mediaElement = contentView.Content as MediaElement;
-        mediaElement?.StateChanged -= OnMediaStateChanged;
+        if (mediaElement != null) mediaElement.StateChanged -= OnMediaStateChanged;
 
         if (MediaElementHandlerMap.TryGetValue(contentView, out var handler))
         {

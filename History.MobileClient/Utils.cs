@@ -99,8 +99,13 @@ public static class Utils
         FlushTextContentBuffer();
 
         var textContents = contents.OfType<TextContent>();
-        textContents.FirstOrDefault()?.Text = textContents.FirstOrDefault().Text.TrimStart();
-        textContents.LastOrDefault()?.Text = textContents.LastOrDefault().Text.TrimEnd();
+
+        var firstTextContent = textContents.FirstOrDefault();
+        if (firstTextContent != null) firstTextContent.Text = textContents.FirstOrDefault().Text.TrimStart();
+
+        var lastTextContent = textContents.LastOrDefault();
+        if (lastTextContent != null) lastTextContent.Text = textContents.LastOrDefault().Text.TrimEnd();
+
         contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrEmpty(textContent.Text));
     }
 

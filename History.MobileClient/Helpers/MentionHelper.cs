@@ -15,7 +15,7 @@ public static class MentionHelper
 
     public static void AppendText(MentionEditor mentionEditor, string text, bool showKeyboard = false)
     {
-        var formattedText = mentionEditor.FormattedText.Spans.ToList();
+        var formattedText = mentionEditor.FormattedText?.Spans?.ToList() ?? [];
         formattedText.Add(new Span() { Text = text });
 
         var result = new FormattedString();
@@ -32,7 +32,8 @@ public static class MentionHelper
         if (!MentionIdMap.Any(x => x.Value == userId)) MentionIdMap[MentionIdMap.Count] = userId;
 
         // Add " @" to the end of the text to allow InsertMention to work properly
-        var formattedText = mentionEditor.FormattedText.Spans.ToList();
+        var formattedText = mentionEditor.FormattedText?.Spans?.ToList() ?? [];
+        mentionEditor.Text ??= string.Empty;
         mentionEditor.Text += " @";
         mentionEditor.CursorPosition = mentionEditor.Text.Length;
         mentionEditor.SelectionLength = 0;

@@ -27,6 +27,10 @@ public partial class UserPage : ContentPage
 		_userId = userId;
         InitializeComponent();
 
+#if IOS
+        MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
+
+#endif
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
     }
 
@@ -81,26 +85,29 @@ public partial class UserPage : ContentPage
         finally { _fetchSemaphore.Release(); }
     }
 
-    private async void OnSizeChanged(object sender, EventArgs e)
+    private void OnSizeChanged(object sender, EventArgs e)
     {
         var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
+        if (staggeredItemsLayout == null) return;
+
         var previousSpan = staggeredItemsLayout.Span;
         var newSpan = ((int)Width / 700) + 1;
         if (newSpan != previousSpan)
         {
             MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
-            await RefreshAsync();
         }
     }
 
+    private bool _isFirstLoad = true;
     protected override async void OnAppearing()
     {
         base.OnAppearing();
         MainCollectionView.ItemsSource = _viewModels;
 
-        if (ShouldRefreshMyProfile && _userId == Shared.UserId)
+        if (_isFirstLoad || (ShouldRefreshMyProfile && _userId == Shared.UserId))
         {
-            ShouldRefreshMyProfile = false;
+            if (ShouldRefreshMyProfile) ShouldRefreshMyProfile = false;
+            if (_isFirstLoad) _isFirstLoad = false;
             await RefreshAsync();
         }
     }
@@ -118,7 +125,7 @@ public partial class UserPage : ContentPage
         var viewModel = border.BindingContext as PostViewModel;
         if (viewModel == _viewModels.LastOrDefault())
         {
-            _lastElement?.Loaded -= OnLastItemBorderLoaded;
+            if (_lastElement != null) _lastElement.Loaded -= OnLastItemBorderLoaded;
             border.Loaded += OnLastItemBorderLoaded;
             _lastElement = border;
         }
@@ -128,7 +135,7 @@ public partial class UserPage : ContentPage
     {
         if (_fetchSemaphore.CurrentCount > 0)
         {
-            _lastElement?.Loaded -= OnLastItemBorderLoaded;
+            if (_lastElement != null) _lastElement.Loaded -= OnLastItemBorderLoaded;
             await LoadMoreAsync();
         }
     }

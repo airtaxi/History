@@ -19,6 +19,10 @@ public partial class TimelinePage : ContentPage
 	{
 		InitializeComponent();
 
+#if IOS
+        MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
+
+#endif
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
     }
 
@@ -75,29 +79,30 @@ public partial class TimelinePage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
+    private bool _isFirstLoad = true;
     protected override async void OnAppearing()
     {
         base.OnAppearing();
         MainCollectionView.ItemsSource = _viewModels;
 
-        if (ShouldRefreshTimeline)
+        if (_isFirstLoad || ShouldRefreshTimeline)
         {
-            ShouldRefreshTimeline = false;
+            if (_isFirstLoad) _isFirstLoad = false;
+            if (ShouldRefreshTimeline) ShouldRefreshTimeline = false;
             await RefreshAsync();
         }
     }
 
-    private async void OnSizeChanged(object sender, EventArgs e)
+    private void OnSizeChanged(object sender, EventArgs e)
     {
         var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
-        if(staggeredItemsLayout == null) return;
+        if (staggeredItemsLayout == null) return;
 
         var previousSpan = staggeredItemsLayout.Span;
         var newSpan = ((int)Width / 700) + 1;
         if (newSpan != previousSpan)
         {
             MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
-            await RefreshAsync();
         }
     }
 
@@ -108,7 +113,7 @@ public partial class TimelinePage : ContentPage
         var viewModel = border.BindingContext as PostViewModel;
         if (viewModel == _viewModels.LastOrDefault())
         {
-            _lastElement?.Loaded -= OnLastItemBorderLoaded;
+            if (_lastElement != null) _lastElement.Loaded -= OnLastItemBorderLoaded;
             border.Loaded += OnLastItemBorderLoaded;
             _lastElement = border;
         }
@@ -118,7 +123,7 @@ public partial class TimelinePage : ContentPage
     {
         if (_fetchSemaphore.CurrentCount > 0)
         {
-            _lastElement?.Loaded -= OnLastItemBorderLoaded;
+            if (_lastElement != null) _lastElement.Loaded -= OnLastItemBorderLoaded;
             await LoadMoreAsync();
         }
     }
