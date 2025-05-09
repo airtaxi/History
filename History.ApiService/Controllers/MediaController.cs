@@ -16,6 +16,8 @@ public class MediaController(IMediaService mediaService) : ControllerBase
     [HttpGet("{mediaId}")]
     public async Task<IActionResult> GetMediaContent(string mediaId)
     {
+        if(mediaId.Contains('.')) mediaId = mediaId.Split(".")[0]; // Remove file extension if exists
+
         var mediaResult = await mediaService.GetMediaByIdAsync(mediaId);
         if (mediaResult.Error == ErrorType.NotFound) return NotFound(mediaResult.ErrorMessage);
         else if (mediaResult.IsFailure) return StatusCode(500, mediaResult.FullErrorMessage);
@@ -24,6 +26,6 @@ public class MediaController(IMediaService mediaService) : ControllerBase
         if (mediaContent.Error == ErrorType.NotFound) return NotFound(mediaContent.ErrorMessage);
         else if (mediaContent.IsFailure) return StatusCode(500, mediaContent.FullErrorMessage);
 
-        return File(mediaContent, mediaResult.Value.MimeType);
+        return File(mediaContent, mediaResult.Value.MimeType, true);
     }
 }
