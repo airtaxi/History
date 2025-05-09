@@ -181,7 +181,9 @@ public partial class PostPage : ContentPage
                 if (!_viewModel.IsWideMode)
                 {
                     await Task.Delay(350);
-                    await MainScrollView.ScrollToAsync(0, MainScrollView.ContentSize.Height - MainScrollView.Height - CommentsScrollView.ContentSize.Height + 150, false);
+                    var scrollY = MainScrollView.ContentSize.Height - MainScrollView.Height - CommentsScrollView.ContentSize.Height + 150;
+                    scrollY = Math.Clamp(scrollY, 0, MainScrollView.ContentSize.Height - MainScrollView.Height);
+                    await MainScrollView.ScrollToAsync(0, scrollY, false);
                 }
                 else await CommentsScrollView.ScrollToAsync(0, 0, false);
             }
