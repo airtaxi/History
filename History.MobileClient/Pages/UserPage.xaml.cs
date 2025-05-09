@@ -15,11 +15,14 @@ public partial class UserPage : ContentPage
     public static bool ShouldRefreshMyProfile { get; set; }
 
     private readonly string _userId;
+    private readonly bool _isMyProfile;
     private ObservableCollection<object> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public UserPage() : this(Shared.UserId)
     {
+        _isMyProfile = true;
+        TitleGrid.IsVisible = false;
     }
 
     public UserPage(string userId)
@@ -112,6 +115,21 @@ public partial class UserPage : ContentPage
         }
     }
 
+    protected override void OnNavigatedTo(NavigatedToEventArgs args)
+    {
+        base.OnNavigatedTo(args);
+
+        if (_isMyProfile)
+        {
+            var theme = Utils.GetGlobalAppTheme();
+            if (theme == AppTheme.Dark)
+                CommunityToolkit.Maui.Core.Platform.StatusBar.SetColor(Application.Current.Resources["OffBlack"] as Color);
+            else
+                CommunityToolkit.Maui.Core.Platform.StatusBar.SetColor(Application.Current.Resources["White"] as Color);
+        }
+        else CommunityToolkit.Maui.Core.Platform.StatusBar.SetColor(Application.Current.Resources["Primary"] as Color);
+    }
+
     private async void OnRefreshing(object sender, EventArgs e)
     {
         await RefreshAsync();
@@ -139,4 +157,6 @@ public partial class UserPage : ContentPage
             await LoadMoreAsync();
         }
     }
+
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
 }
