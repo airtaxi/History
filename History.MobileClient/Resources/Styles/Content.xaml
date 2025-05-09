@@ -76,6 +76,7 @@
             <CarouselView
                 HeightRequest="400"
                 HorizontalScrollBarVisibility="Never"
+                IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
                 ItemTemplate="{StaticResource MediaContentTemplate}"
                 ItemsSource="{x:Binding Medias}"
                 Position="{x:Binding CarouselPosition}" />
