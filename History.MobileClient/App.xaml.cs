@@ -23,11 +23,12 @@ public partial class App : Application
         get => Current.Windows[0].Page;
         set => Current.Windows[0].Page = value;
     }
+    public static Page TopPage => Navigation.ModalStack.Count > 0 ? Navigation.ModalStack[Navigation.ModalStack.Count - 1] : Page;
+
     public static INavigation Navigation => Current.Windows[0].Page.Navigation;
     public static async Task PushModalAsync(Page page) => await Current.Windows[0].Page.Navigation.PushModalAsync(page);
     public static async Task PopModalAsync() => await Current.Windows[0].Page.Navigation.PopModalAsync();
 
-    public static Page TopPage => Navigation.ModalStack.Count > 0 ? Navigation.ModalStack[Navigation.ModalStack.Count - 1] : Current.Windows[0].Page;
     
     public static async Task<Result> ExecuteRequestAsync(IBaseRequest request, params ErrorType[] hiddenErrorTypes)
     {

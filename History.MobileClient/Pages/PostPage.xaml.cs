@@ -1,9 +1,11 @@
 
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.Api.Comment;
 using History.Commons.DataTypes.Contents;
+using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
@@ -37,14 +39,6 @@ public partial class PostPage : ContentPage
 		BindingContext = _viewModel;
         CommentMentionEditor.BindingContext = _mentionsViewModel;
         CommentUserCollectionView.BindingContext = _mentionsViewModel;
-    }
-
-    private void OnCommentTappedMessageReceived(object recipient, CommentTappedMessage message)
-    {
-        var user = message.Value;
-        if (user.UserId == Shared.UserId) return;
-
-        MentionHelper.AppendMention(CommentMentionEditor, user.UserId, user.Nickname, true);
     }
 
     public List<BaseContent> GetCommentContents()
@@ -87,6 +81,17 @@ public partial class PostPage : ContentPage
 
         return;
     }
+
+    private void OnCommentTappedMessageReceived(object recipient, CommentTappedMessage message)
+    {
+        var user = message.Value;
+        if (user.UserId == Shared.UserId) return;
+
+        MentionHelper.AppendMention(CommentMentionEditor, user.UserId, user.Nickname, true);
+    }
+
+    private void OnAppleVideoUnloadedMessageMessageReceived(object recipient, AppleVideoUnloadedMessage message) => (ContentsScrollView as IView).InvalidateMeasure();
+    private void OnPostChangedMessageReceived(object recipient, ValueChangedMessage<PostResponseDto> message) => (ContentsScrollView as IView).InvalidateMeasure();
 
     private void OnImageInputRequested(object sender, string path)
     {
@@ -222,18 +227,18 @@ public partial class PostPage : ContentPage
 
     private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await _viewModel.DisplayActionSheetAsync(true);
 
-    private void OnHandlerChanging(object sender, HandlerChangingEventArgs e)
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+
+    private async void OnShareImageTapped(object sender, TappedEventArgs e)
     {
-        if (e.NewHandler == null)
-        {
-            WeakReferenceMessenger.Default.Unregister<CommentTappedMessage>(this);
-            _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
-        }
-        else
-        {
-            WeakReferenceMessenger.Default.Register<CommentTappedMessage>(this, OnCommentTappedMessageReceived);
-            _mentionsViewModel.ImageInputRequested += OnImageInputRequested;
-        }
+        var page = new EditPostPage(_viewModel.Post, true);
+        await App.PushModalAsync(page);
+    }
+
+    private async void OnRefreshing(object sender, EventArgs e)
+    {
+        await _viewModel.RefreshAsync();
+        (sender as RefreshView).IsRefreshing = false;
     }
 
     private void OnSizeChanged(object sender, EventArgs e)
@@ -255,17 +260,21 @@ public partial class PostPage : ContentPage
         }
     }
 
-    private async void OnRefreshing(object sender, EventArgs e)
+    private void OnHandlerChanging(object sender, HandlerChangingEventArgs e)
     {
-        await _viewModel.RefreshAsync();
-        (sender as RefreshView).IsRefreshing = false;
-    }
-
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
-
-    private async void OnShareImageTapped(object sender, TappedEventArgs e)
-    {
-        var page = new EditPostPage(_viewModel.Post, true);
-        await App.PushModalAsync(page);
+        if (e.NewHandler == null)
+        {
+            WeakReferenceMessenger.Default.Unregister<ValueChangedMessage<PostResponseDto>>(this);
+            WeakReferenceMessenger.Default.Unregister<AppleVideoUnloadedMessage>(this);
+            WeakReferenceMessenger.Default.Unregister<CommentTappedMessage>(this);
+            _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
+        }
+        else
+        {
+            WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
+            WeakReferenceMessenger.Default.Register<AppleVideoUnloadedMessage>(this, OnAppleVideoUnloadedMessageMessageReceived);
+            WeakReferenceMessenger.Default.Register<CommentTappedMessage>(this, OnCommentTappedMessageReceived);
+            _mentionsViewModel.ImageInputRequested += OnImageInputRequested;
+        }
     }
 }

@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.DataTypes.Contents;
+using History.MobileClient.DataTypes;
 using History.MobileClient.Pages;
 
 namespace History.MobileClient.ViewModels;
@@ -39,6 +41,9 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
         if (!MediaContent.IsVideo) return;
 
         GenerateMedia();
+#if IOS
+        WeakReferenceMessenger.Default.Send(new AppleVideoUnloadedMessage());
+#endif
     }
 
     [RelayCommand]
