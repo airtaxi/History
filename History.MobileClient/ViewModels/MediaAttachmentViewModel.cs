@@ -27,8 +27,7 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
         Description = serverContent.Description ?? string.Empty;
 
         // Set ImageSource
-        if (serverContent.IsVideo) ImageSource = ImageSource.FromFile("video.png");
-        else ImageSource = ImageSource.FromUri(new(Utils.GenerateMediaUri(serverContent.ThumbnailMediaId)));
+        ImageSource = ImageSource.FromUri(new(Utils.GenerateMediaUri(serverContent.ThumbnailMediaId)));
     }
 
     public MediaAttachmentViewModel(string fileName, byte[] imageBytes, bool isVideo = false)
