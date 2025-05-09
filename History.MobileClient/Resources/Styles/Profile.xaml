@@ -100,20 +100,38 @@
                             </Image>
                         </HorizontalStackLayout>
                         <Label
-                            Margin="{OnPlatform Android=0 -4 0 0,
-                                                iOS=0 0 0 0}"
                             FontSize="15"
                             LineBreakMode="TailTruncation"
                             MaxLines="2"
                             Text="{x:Binding Description}"
-                            TextColor="White" />
+                            TextColor="White">
+                            <Label.Margin>
+                                <OnPlatform x:TypeArguments="Thickness">
+                                    <On Platform="Android">
+                                        <Thickness>0,-4,0,0</Thickness>
+                                    </On>
+                                    <On Platform="iOS">
+                                        <Thickness>0,0,0,0</Thickness>
+                                    </On>
+                                </OnPlatform>
+                            </Label.Margin>
+                        </Label>
                         <Label
-                            Margin="{OnPlatform Android=0 -2 0 0,
-                                                iOS=0 0 0 0}"
                             FontSize="12"
                             LineBreakMode="TailTruncation"
                             Text="{x:Binding FriendshipDescription}"
-                            TextColor="White" />
+                            TextColor="White">
+                            <Label.Margin>
+                                <OnPlatform x:TypeArguments="Thickness">
+                                    <On Platform="Android">
+                                        <Thickness>0,-2,0,0</Thickness>
+                                    </On>
+                                    <On Platform="iOS">
+                                        <Thickness>0,0,0,0</Thickness>
+                                    </On>
+                                </OnPlatform>
+                            </Label.Margin>
+                        </Label>
                     </VerticalStackLayout>
                 </HorizontalStackLayout>
                 <HorizontalStackLayout
@@ -128,6 +146,7 @@
                         Text="프로필 설정"
                         TextColor="White" />
                     <Button
+                        Background="{StaticResource Primary}"
                         Command="{x:Binding HandleFriendshipActionCommand}"
                         IsVisible="{x:Binding IsNotMe}"
                         Text="{x:Binding FriendButtonText}"
