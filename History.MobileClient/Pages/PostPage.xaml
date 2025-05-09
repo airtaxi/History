@@ -30,14 +30,16 @@
             BackgroundColor="{StaticResource Primary}"
             HeightRequest="48">
             <HorizontalStackLayout>
-                <Image HeightRequest="24" WidthRequest="24">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
-                    </Image.GestureRecognizers>
-                    <Image.Source>
-                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
-                    </Image.Source>
-                </Image>
+                <Grid>
+                    <Image HeightRequest="24" WidthRequest="24">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                        </Image.GestureRecognizers>
+                        <Image.Source>
+                            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
                 <Label
                     FontAttributes="Bold"
                     FontSize="20"
@@ -417,8 +419,9 @@
             Grid.RowSpan="3"
             HeightRequest="100"
             HorizontalOptions="Center"
-            IsRunning="True"
-            IsVisible="False"
+            IsRunning="False"
+            IsVisible="{x:Binding Path=IsRunning,
+                                  Source={x:Reference MainActivityIndicator}}"
             VerticalOptions="Center"
             WidthRequest="100"
             Color="{StaticResource Primary}" />

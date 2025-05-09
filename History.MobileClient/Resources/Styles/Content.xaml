@@ -76,6 +76,7 @@
             <CarouselView
                 HeightRequest="400"
                 HorizontalScrollBarVisibility="Never"
+                IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
                 ItemTemplate="{StaticResource MediaContentTemplate}"
                 ItemsSource="{x:Binding Medias}"
                 Position="{x:Binding CarouselPosition}" />
@@ -84,6 +85,7 @@
                 Padding="6,4,6,4"
                 Background="#80808080"
                 HorizontalOptions="End"
+                IsVisible="{x:Binding CarouselSwipeEnabled}"
                 StrokeThickness="0"
                 VerticalOptions="End">
                 <Border.StrokeShape>

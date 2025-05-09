@@ -1,8 +1,4 @@
-#if ANDROID
-using AndroidX.AppCompat.Widget;
-using AndroidX.Lifecycle;
-#endif
-
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core.Primitives;
 using CommunityToolkit.Maui.Views;
 using FFImageLoading.Maui;
@@ -140,15 +136,38 @@ public partial class Media : ResourceDictionary
             if (mediaElement.MediaWidth > 0 && mediaElement.MediaHeight > 0) ResizeMediaElement(mediaElement);
             else mediaElement.StateChanged += OnMediaStateChanged;
         }
+#if IOS
+        mediaElement.StateChanged += OnAppleMediaStateChanged;
+#endif
 
         mediaElement.Source = MediaSource.FromUri(viewModel.Uri);
+        mediaElement.MediaFailed += OnMediaFailed;
     }
+
+    private void OnAppleMediaStateChanged(object sender, MediaStateChangedEventArgs e)
+    {
+        if (e.NewState == MediaElementState.Playing)
+        {
+            if (sender is not MediaElement mediaElement) return;
+            mediaElement.StateChanged -= OnMediaStateChanged;
+            mediaElement.HeightRequest = mediaElement.MediaHeight;
+        }
+    }
+
+    private void OnMediaFailed(object sender, MediaFailedEventArgs e) => Toast.Make(e.ErrorMessage).Show();
 
     private void OnVideoContentViewUnloaded(object sender, EventArgs e)
     {
         var contentView = sender as ContentView;
         var mediaElement = contentView.Content as MediaElement;
-        if (mediaElement != null) mediaElement.StateChanged -= OnMediaStateChanged;
+        if (mediaElement != null)
+        {
+#if IOS
+            mediaElement.StateChanged -= OnAppleMediaStateChanged;
+#endif
+            mediaElement.StateChanged -= OnMediaStateChanged;
+            mediaElement.MediaFailed -= OnMediaFailed;
+        }
 
         if (MediaElementHandlerMap.TryGetValue(contentView, out var handler))
         {
