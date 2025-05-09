@@ -11,8 +11,7 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
-        var builder = MauiApp.CreateBuilder();
-        builder
+        var builder = MauiApp.CreateBuilder()
             .UseMauiApp<App>()
             .UseMauiCommunityToolkitMediaElement()
             .UseFFImageLoading()
@@ -31,6 +30,14 @@ public static class MauiProgram
             {
                 c.AddHandler<CollectionView, StaggeredStructuredItemsViewHandler>();
             });
+
+#if IOS
+        Microsoft.Maui.Handlers.SearchBarHandler.Mapper.AppendToMapping("NoBackground", (h, v) =>
+        {
+            h.PlatformView.SearchBarStyle = UIKit.UISearchBarStyle.Minimal;
+        });
+#endif
+
 
 #if DEBUG
         builder.Logging.AddDebug();
