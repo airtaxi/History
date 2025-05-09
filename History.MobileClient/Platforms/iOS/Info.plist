@@ -29,13 +29,13 @@
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
 	<key>GIDClientID</key>
-	<string>401981104412-fp8jll2dd4brb14skupcpsqa2g6blmqv.apps.googleusercontent.com</string>
+	<string>401981104412-6tbj8kobldvl3if26qv069h4crcc2cp0.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.401981104412-fp8jll2dd4brb14skupcpsqa2g6blmqv</string>
+				<string>com.googleusercontent.apps.401981104412-6tbj8kobldvl3if26qv069h4crcc2cp0</string>
 			</array>
 		</dict>
 	</array>

@@ -18,7 +18,11 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="32" />
             </Grid.ColumnDefinitions>
-            <Grid HeightRequest="32" WidthRequest="32">
+            <Grid
+                Grid.Column="0"
+                HeightRequest="32"
+                VerticalOptions="Center"
+                WidthRequest="32">
                 <views:DataTemplatePresenter
                     HeightRequest="32"
                     Template="{StaticResource MediaTemplateSelector}"
@@ -58,7 +62,10 @@
                     </Border>
                 </Grid>
             </Grid>
-            <HorizontalStackLayout Grid.Column="1" Spacing="4">
+            <HorizontalStackLayout
+                Grid.Column="1"
+                Spacing="4"
+                VerticalOptions="Center">
                 <Label
                     FontAttributes="Bold"
                     FontSize="20"
@@ -91,6 +98,7 @@
                 Grid.Column="2"
                 HeightRequest="32"
                 IsVisible="{x:Binding IsFriendshipImageVisible}"
+                VerticalOptions="Center"
                 WidthRequest="32">
                 <Image.GestureRecognizers>
                     <TapGestureRecognizer Command="{x:Binding HandleFriendshipActionCommand}" />

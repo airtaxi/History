@@ -29,7 +29,7 @@
                 <ImageButton
                     Clicked="OnAppleLoginButtonClicked"
                     HeightRequest="52"
-                    Source="sign_in/apple_light.png"
+                    Source="apple_light.png"
                     WidthRequest="52" />
             </HorizontalStackLayout>
         </VerticalStackLayout>

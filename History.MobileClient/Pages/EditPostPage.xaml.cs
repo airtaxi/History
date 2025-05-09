@@ -26,14 +26,15 @@ public partial class EditPostPage : ContentPage
     {
         InitializeComponent();
         Initialize();
+#if IOS
+        MediaCollectionView.ItemsLayout = new GridItemsLayout(3, ItemsLayoutOrientation.Vertical);
+#endif
     }
 
-    public EditPostPage(PostResponseDto post, bool isShare)
+    public EditPostPage(PostResponseDto post, bool isShare) : this()
     {
         _isShare = isShare;
         _post = post;
-        InitializeComponent();
-        Initialize();
     }
 
     private void LoadPost()
@@ -239,10 +240,21 @@ public partial class EditPostPage : ContentPage
 
     private void OnSizeChanged(object sender, EventArgs e)
     {
+#if ANDROID
         var staggeredItemsLayout = MediaCollectionView.ItemsLayout as StaggeredItemsLayout;
+        if (staggeredItemsLayout == null) return;
+
         var previousSpan = staggeredItemsLayout.Span;
         var newSpan = ((int)Width / 200) + 1;
         if (newSpan != previousSpan) MediaCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
+#elif IOS
+        var gridItemsLayout = MediaCollectionView.ItemsLayout as GridItemsLayout;
+        if (gridItemsLayout == null) return;
+
+        var previousSpan = gridItemsLayout.Span;
+        var newSpan = ((int)Width / 200) + 1;
+        if (newSpan != previousSpan) gridItemsLayout.Span = newSpan;
+#endif
     }
 
     private bool _loaded;

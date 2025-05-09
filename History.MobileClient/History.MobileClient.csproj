@@ -24,7 +24,7 @@
 		<ApplicationTitle>히스토리</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.airtaxi.history</ApplicationId>
+		<!--<ApplicationId>com.airtaxi.history</ApplicationId>-->
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -46,7 +46,14 @@
 		<AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
 		<AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
 	</PropertyGroup>-->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
+		<ApplicationId>com.airtaxi.history.test</ApplicationId>
+		<ProvisioningType>manual</ProvisioningType>
+		<CodesignKey>Apple Development: Created via API (FXDKK32DDS)</CodesignKey>
+		<CodesignProvision>History-Dev</CodesignProvision>
+	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
+		<ApplicationId>com.airtaxi.history</ApplicationId>
 		<!-- The AndroidKeyStore property is used to specify if the application should be signed with a key store.
       If set to true, the AndroidSigningKeyStore, AndroidSigningStorePass, AndroidSigningKeyAlias and AndroidSigningKeyPass properties must be set.-->
 		<AndroidKeyStore>true</AndroidKeyStore>
@@ -55,13 +62,23 @@
 		<AndroidSigningKeyAlias>hoyo_ftp</AndroidSigningKeyAlias>
 		<AndroidSigningKeyPass>kck4156</AndroidSigningKeyPass>
 	</PropertyGroup>
+	
+	<Target Name="_OverrideFirebaseStripBitcodeFromFrameworksMasterDependsOnTargets" BeforeTargets="_ResolveNativeReferencesForFirebaseCore">
+		<PropertyGroup>
+			<_FirebaseStripBitcodeFromFrameworksMasterDependsOnTargets Condition="'$(OS)'=='Unix'">_OverrideFirebaseStripBitcodeFromFrameworksOnMac</_FirebaseStripBitcodeFromFrameworksMasterDependsOnTargets>
+			<_FirebaseStripBitcodeFromFrameworksMasterDependsOnTargets Condition="'$(OS)'!='Unix'">_OverrideFirebaseStripBitcodeFromFrameworksOnWindows</_FirebaseStripBitcodeFromFrameworksMasterDependsOnTargets>
+		</PropertyGroup>
+	</Target>
+	
+	<Target Name="_OverrideFirebaseStripBitcodeFromFrameworksOnMac" />
+	<Target Name="_OverrideFirebaseStripBitcodeFromFrameworksOnWindows" />
 
 	<ItemGroup>
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.png" Color="#fff112" BaseSize="1024,1024" ForegroundScale="0.7" />
 
 		<!-- Splash Screen -->
-		<MauiSplashScreen Include="Resources\Splash\foreground.svg" Color="#fff112" BaseSize="1024,1024" TintColor="#594431" />
+		<MauiSplashScreen Include="Resources\Splash\foreground.svg" Color="#fff112" BaseSize="256,256" TintColor="#594431" />
 
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\**" />
@@ -82,6 +99,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\Dependencies\SpeakLink\SpeakLink\SpeakLink.csproj" />
 	  <ProjectReference Include="..\History.Commons\History.Commons.csproj" />
 	</ItemGroup>
 
@@ -199,8 +217,8 @@
 		<PackageReference Include="UraniumUI.Icons.FontAwesome" Version="2.11.1" />
 		<PackageReference Include="UraniumUI.Icons.MaterialSymbols" Version="2.11.1" />
 		<PackageReference Include="UraniumUI.Material" Version="2.11.1" />
+		<PackageReference Include="Xamarin.Build.Download" Version="0.11.4" />
 		<PackageReference Include="Xamarin.MediaGallery" Version="3.0.0-preview" />
-		<PackageReference Include="SpeakLink" Version="0.6.10" />
 	</ItemGroup>
 	
 	<ItemGroup>

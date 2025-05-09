@@ -64,7 +64,10 @@
                     IsVisible="False"
                     Template="{StaticResource SharedPostTemplate}" />
                 <Grid>
-                    <CollectionView x:Name="MediaCollectionView" CanReorderItems="True">
+                    <CollectionView
+                        x:Name="MediaCollectionView"
+                        CanReorderItems="True"
+                        SelectionMode="None">
                         <CollectionView.ItemsLayout>
                             <staggered:StaggeredItemsLayout Span="1" />
                         </CollectionView.ItemsLayout>
