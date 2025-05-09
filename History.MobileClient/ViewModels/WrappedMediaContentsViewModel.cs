@@ -9,6 +9,8 @@ public partial class WrappedMediaContentsViewModel(IEnumerable<MediaContent> med
     [NotifyPropertyChangedFor(nameof(CarouselPositionText))]
     public partial int CarouselPosition { get; set; }
 
+    // Single media content won't be scrolled
+    public bool CarouselSwipeEnabled => mediaContents.Count() > 1;
     public string CarouselPositionText => $"{CarouselPosition + 1} / {mediaContents.Count()}";
 
     public List<MediaContentViewModel> Medias => [.. mediaContents.Select(m => new MediaContentViewModel(m, allMediaContents, true))];
