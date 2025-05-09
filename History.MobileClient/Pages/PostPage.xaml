@@ -95,8 +95,12 @@
                             x:Name="ContentsGrid"
                             Grid.Row="0"
                             Grid.Column="0">
-                            <ScrollView Padding="16" BackgroundColor="{AppThemeBinding Dark=Black, Light=White}">
-                                <VerticalStackLayout Spacing="8">
+                            <ScrollView x:Name="ContentsScrollView">
+                                <VerticalStackLayout
+                                    Padding="16"
+                                    BackgroundColor="{AppThemeBinding Dark=Black,
+                                                                      Light=White}"
+                                    Spacing="8">
                                     <HorizontalStackLayout HeightRequest="48" Spacing="6">
                                         <views:DataTemplatePresenter
                                             HeightRequest="48"
