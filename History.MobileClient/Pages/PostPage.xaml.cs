@@ -66,7 +66,7 @@ public partial class PostPage : ContentPage
 
         _commentUpdating = true;
         IsEnabled = false;
-        MainActivityIndicator.IsVisible = true;
+        MainActivityIndicator.IsRunning = true;
         try
         {
             var commentsResult = await App.ExecuteRequestAsync(new GetCommentsByPostId(_viewModel.Post.Id, lastViewModel.Comment.Id, 20));
@@ -81,7 +81,7 @@ public partial class PostPage : ContentPage
         finally
         {
             IsEnabled = true;
-            MainActivityIndicator.IsVisible = false;
+            MainActivityIndicator.IsRunning = false;
             _commentUpdating = false;
         }
 
@@ -164,7 +164,7 @@ public partial class PostPage : ContentPage
 
         try
         {
-            MainActivityIndicator.IsVisible = true;
+            MainActivityIndicator.IsRunning = true;
             var result = await App.ExecuteRequestAsync(new CreateComment(_viewModel.Post.Id, contents, files), ErrorType.BadRequest);
             if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
             else if (result.IsSuccess)
@@ -181,7 +181,7 @@ public partial class PostPage : ContentPage
                 else await CommentsScrollView.ScrollToAsync(0, 0, false);
             }
         }
-        finally { MainActivityIndicator.IsVisible = false; }
+        finally { MainActivityIndicator.IsRunning = false; }
     }
 
     private void OnMainScrollViewSizeChanged(object sender, EventArgs e)
