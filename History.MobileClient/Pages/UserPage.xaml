@@ -3,19 +3,44 @@
     x:Class="History.MobileClient.Pages.UserPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
     Shell.NavBarIsVisible="False"
     SizeChanged="OnSizeChanged">
-    <ContentPage.Behaviors>
-        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
-        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
-    </ContentPage.Behaviors>
 
     <Grid>
-        <RefreshView Refreshing="OnRefreshing">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid
+            x:Name="TitleGrid"
+            Grid.Row="0"
+            Padding="12,0,0,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout>
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="프로필"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <RefreshView Grid.Row="1" Refreshing="OnRefreshing">
             <CollectionView
                 x:Name="MainCollectionView"
                 ChildAdded="OnChildAdded"
