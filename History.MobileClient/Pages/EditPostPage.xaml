@@ -162,7 +162,11 @@
                         <TapGestureRecognizer Tapped="OnInsertImageTapped" />
                     </Image.GestureRecognizers>
                     <Image.Source>
-                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Photo_library}" />
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Photo_library}"
+                            Color="{AppThemeBinding Light=Black,
+                                                    Dark=White}" />
                     </Image.Source>
                 </Image>
                 <Image
@@ -173,7 +177,11 @@
                         <TapGestureRecognizer Tapped="OnInsertVideoTapped" />
                     </Image.GestureRecognizers>
                     <Image.Source>
-                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Video_library}" />
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Video_library}"
+                            Color="{AppThemeBinding Light=Black,
+                                                    Dark=White}" />
                     </Image.Source>
                 </Image>
             </HorizontalStackLayout>
