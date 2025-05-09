@@ -85,6 +85,7 @@
                 Padding="6,4,6,4"
                 Background="#80808080"
                 HorizontalOptions="End"
+                IsVisible="{x:Binding CarouselSwipeEnabled}"
                 StrokeThickness="0"
                 VerticalOptions="End">
                 <Border.StrokeShape>
