@@ -31,9 +31,9 @@
             HeightRequest="48">
             <HorizontalStackLayout>
                 <Image HeightRequest="24" WidthRequest="24">
-                    <Image.Behaviors>
-                        <toolkit:TouchBehavior TouchGestureCompleted="OnBackImageTouchGestureCompleted" />
-                    </Image.Behaviors>
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
                     <Image.Source>
                         <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
                     </Image.Source>
@@ -55,9 +55,9 @@
                     </Image.Source>
                 </Image>
                 <Image>
-                    <Image.Behaviors>
-                        <toolkit:TouchBehavior TouchGestureCompleted="OnShareImageTouchGestureCompleted" />
-                    </Image.Behaviors>
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnShareImageTapped" />
+                    </Image.GestureRecognizers>
                     <Image.Source>
                         <FontImageSource
                             FontFamily="MaterialSharp"
@@ -66,9 +66,9 @@
                     </Image.Source>
                 </Image>
                 <Image>
-                    <Image.Behaviors>
-                        <toolkit:TouchBehavior TouchGestureCompleted="OnMoreImageTouchGestureCompleted" />
-                    </Image.Behaviors>
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMoreImageTapped" />
+                    </Image.GestureRecognizers>
                     <Image.Source>
                         <FontImageSource
                             FontFamily="MaterialSharp"
@@ -377,9 +377,9 @@
                 Placeholder="댓글을 달아보세요." />
 
             <Image Grid.Column="2" VerticalOptions="End">
-                <Image.Behaviors>
-                    <toolkit:TouchBehavior TouchGestureCompleted="OnCommentAttachmentImageTouchGestureCompleted" />
-                </Image.Behaviors>
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnCommentAttachmentImageTapped" />
+                </Image.GestureRecognizers>
                 <Image.Source>
                     <FontImageSource
                         x:Name="CommentMediaFontImageSource"
@@ -391,9 +391,9 @@
             </Image>
 
             <Image Grid.Column="3" VerticalOptions="End">
-                <Image.Behaviors>
-                    <toolkit:TouchBehavior TouchGestureCompleted="OnSendCommentImageTouchGestureCompleted" />
-                </Image.Behaviors>
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSendCommentImageTapped" />
+                </Image.GestureRecognizers>
                 <Image.Source>
                     <FontImageSource
                         x:Name="CommentSendFontImageSource"

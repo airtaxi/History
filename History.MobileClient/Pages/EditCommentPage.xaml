@@ -23,9 +23,9 @@
             HeightRequest="48">
             <HorizontalStackLayout>
                 <Image HeightRequest="24" WidthRequest="24">
-                    <Image.Behaviors>
-                        <toolkit:TouchBehavior TouchGestureCompleted="OnBackImageTouchGestureCompleted" />
-                    </Image.Behaviors>
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
                     <Image.Source>
                         <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
                     </Image.Source>
@@ -46,9 +46,9 @@
                             FontFamily="MaterialSharp"
                             Color="White" />
                     </Image.Source>
-                    <Image.Behaviors>
-                        <toolkit:TouchBehavior TouchGestureCompleted="OnCommentMediaImageTouchGestureCompleted" />
-                    </Image.Behaviors>
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCommentMediaImageTapped" />
+                    </Image.GestureRecognizers>
                 </Image>
                 <Button
                     x:Name="ButtonEdit"

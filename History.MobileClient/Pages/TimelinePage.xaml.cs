@@ -1,4 +1,3 @@
-using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
@@ -129,5 +128,5 @@ public partial class TimelinePage : ContentPage
         }
     }
 
-    private async void OnWritePostImageTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e) => await App.PushModalAsync(new EditPostPage());
+    private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
 }

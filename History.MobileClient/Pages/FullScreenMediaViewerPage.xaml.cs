@@ -1,5 +1,4 @@
 using CommunityToolkit.Maui.Alerts;
-using CommunityToolkit.Maui.Core;
 using History.MobileClient.ViewModels;
 using NativeMedia;
 
@@ -16,9 +15,9 @@ public partial class FullScreenMediaViewerPage : ContentPage
         MainDataTemplatePresenter.ViewModel = _viewModel;
     }
 
-    private async void OnBackImageTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e) => await App.PopModalAsync();
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
 
-    private async void OnDownloadImageTouchGestureCompleted(object sender, CommunityToolkit.Maui.Core.TouchGestureCompletedEventArgs e)
+    private async void OnDownloadImageTapped(object sender, TappedEventArgs e)
     {
         var status = await Permissions.RequestAsync<SaveMediaPermission>();
         if (status != PermissionStatus.Granted) return;
