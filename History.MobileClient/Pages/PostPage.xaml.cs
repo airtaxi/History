@@ -1,5 +1,6 @@
 
 using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Comment;
@@ -105,7 +106,7 @@ public partial class PostPage : ContentPage
         MentionHelper.InsertMention(CommentMentionEditor, viewModel.UserId, viewModel.Nickname);
     }
 
-    private async void OnCommentAttachmentImageTapped(object sender, TappedEventArgs e)
+    private async void OnCommentAttachmentImageTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e)
     {
         if (_commentMediaAttachmentViewModel == null)
         {
@@ -139,7 +140,7 @@ public partial class PostPage : ContentPage
         }
     }
 
-    private async void OnSendCommentImageTapped(object sender, TappedEventArgs e)
+    private async void OnSendCommentImageTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e)
     {
         if (!IsCommentAvailable)
         {
@@ -220,7 +221,7 @@ public partial class PostPage : ContentPage
         }
     }
 
-    private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await _viewModel.DisplayActionSheetAsync(true);
+    private async void OnMoreImageTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e) => await _viewModel.DisplayActionSheetAsync(true);
 
     private void OnHandlerChanging(object sender, HandlerChangingEventArgs e)
     {
@@ -261,9 +262,9 @@ public partial class PostPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+    private async void OnBackImageTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e) => await App.PopModalAsync();
 
-    private async void OnShareImageTapped(object sender, TappedEventArgs e)
+    private async void OnShareImageTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e)
     {
         var page = new EditPostPage(_viewModel.Post, true);
         await App.PushModalAsync(page);

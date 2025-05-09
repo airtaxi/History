@@ -31,9 +31,9 @@
                 Spacing="12"
                 VerticalOptions="Start">
                 <Image HeightRequest="48" WidthRequest="48">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnDownloadImageTapped" />
-                    </Image.GestureRecognizers>
+                    <Image.Behaviors>
+                        <toolkit:TouchBehavior TouchGestureCompleted="OnDownloadImageTouchGestureCompleted" />
+                    </Image.Behaviors>
                     <Image.Source>
                         <FontImageSource
                             FontFamily="MaterialSharp"
@@ -42,9 +42,9 @@
                     </Image.Source>
                 </Image>
                 <Image HeightRequest="48" WidthRequest="48">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
-                    </Image.GestureRecognizers>
+                    <Image.Behaviors>
+                        <toolkit:TouchBehavior TouchGestureCompleted="OnBackImageTouchGestureCompleted" />
+                    </Image.Behaviors>
                     <Image.Source>
                         <FontImageSource
                             FontFamily="MaterialSharp"
