@@ -204,7 +204,7 @@ public partial class EditPostPage : ContentPage
 
         try
 		{
-			MainActivityIndicator.IsVisible = true;
+			MainActivityIndicator.IsRunning = true;
             if (_post != null && !_isShare)
             {
                 var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, null, files), ErrorType.BadRequest);
@@ -228,7 +228,7 @@ public partial class EditPostPage : ContentPage
                 }
             }
 		}
-        finally { MainActivityIndicator.IsVisible = false; }
+        finally { MainActivityIndicator.IsRunning = false; }
     }
 
     private void OnHandlerChanging(object sender, HandlerChangingEventArgs e)

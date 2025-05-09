@@ -59,7 +59,7 @@ public partial class EditCommentPage : ContentPage
 
         try
         {
-            MainActivityIndicator.IsVisible = true;
+            MainActivityIndicator.IsRunning = true;
             var result = await App.ExecuteRequestAsync(new ModifyComment(_comment.Id, contents, files), ErrorType.BadRequest);
             if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
             else if (result.IsSuccess)
@@ -69,7 +69,7 @@ public partial class EditCommentPage : ContentPage
             }
 
         }
-        finally { MainActivityIndicator.IsVisible = false; }
+        finally { MainActivityIndicator.IsRunning = false; }
     }
 
     private async void OnCommentMediaImageTapped(object sender, TappedEventArgs e)
