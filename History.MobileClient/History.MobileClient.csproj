@@ -42,8 +42,8 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android' AND '$(Configuration)' == 'Release'">
-		<EnableLLVM>true</EnableLLVM>
-		<AndroidEnableMarshalMethods>true</AndroidEnableMarshalMethods>
+		<!--<EnableLLVM>true</EnableLLVM>-->
+		<!--<AndroidEnableMarshalMethods>true</AndroidEnableMarshalMethods>-->
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
 		<ApplicationId>com.airtaxi.history.test</ApplicationId>
