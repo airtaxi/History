@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core.Primitives;
 using CommunityToolkit.Maui.Views;
 using FFImageLoading.Maui;
@@ -99,7 +99,6 @@ public partial class Media : ResourceDictionary
     {
         if (sender is not CachedImage image) return;
         if (image.BindingContext is not ImageViewModel imageViewModel) return;
-        image.DownsampleToViewSize = !imageViewModel.IsFullScreen;
 
         ResizeImage(image);
     }

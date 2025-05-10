@@ -20,6 +20,9 @@ public partial class ImageViewModel(string uri) : ObservableObject, IMediaViewMo
     public partial LayoutOptions VerticalContentOptions { get; set; } = LayoutOptions.Fill;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNotFullScreen))]
     public partial bool IsFullScreen { get; set; } = false;
+
+    public bool IsNotFullScreen => !IsFullScreen;
 }
 
