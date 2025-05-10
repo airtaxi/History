@@ -41,11 +41,10 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
-	<!--<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android' AND '$(Configuration)' == 'Release'">
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android' AND '$(Configuration)' == 'Release'">
 		<EnableLLVM>true</EnableLLVM>
-		<AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
-		<AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
-	</PropertyGroup>-->
+		<AndroidEnableMarshalMethods>true</AndroidEnableMarshalMethods>
+	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
 		<ApplicationId>com.airtaxi.history.test</ApplicationId>
 		<ProvisioningType>manual</ProvisioningType>
