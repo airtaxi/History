@@ -69,7 +69,8 @@ public static class MediaConverter
                     {
                         FileName = "ffmpeg",
                         Arguments = $"-framerate {framerate} -i \"{Path.Combine(tempDir, "frame_%03d.png")}\" " +
-                                    $"-c:v libx264 -crf 28 -an \"{outputMp4Path}\"",
+                        $"-c:v libx264 -profile:v baseline -level 3.0 -pix_fmt yuv420p -crf 23 " +
+                        $"-movflags +faststart -f lavfi -i anullsrc -c:a aac -b:a 128k -shortest \"{outputMp4Path}\"",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
