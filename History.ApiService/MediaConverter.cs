@@ -78,12 +78,12 @@ public static class MediaConverter
                 };
 
                 ffmpegProcess.Start();
-                ffmpegProcess.StandardError.ReadToEnd(); // If ommitted, ffmpeg hangs.
+                var error = ffmpegProcess.StandardError.ReadToEnd(); // If ommitted, ffmpeg hangs.
                 ffmpegProcess.WaitForExit();
 
                 if (ffmpegProcess.ExitCode != 0)
                 {
-                    throw new Exception($"FFmpeg conversion failed: {ffmpegProcess.StandardError.ReadToEnd()}");
+                    throw new Exception($"FFmpeg conversion failed: {error + ffmpegProcess.StandardError.ReadToEnd()}");
                 }
                 else
                 {
