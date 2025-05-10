@@ -98,7 +98,7 @@ public partial class Media : ResourceDictionary
     private void OnImageLoaded(object sender, EventArgs e)
     {
         if (sender is not CachedImage image) return;
-        if (image.BindingContext is not ImageViewModel imageViewModel) return;
+        //if (image.BindingContext is not ImageViewModel imageViewModel) return;
 
         ResizeImage(image);
     }

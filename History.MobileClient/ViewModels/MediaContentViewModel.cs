@@ -130,8 +130,8 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
         Media = new ImageViewModel(Utils.GenerateMediaUri((IsWrapped || MediaContent.IsVideo) ? MediaContent.ThumbnailMediaId : MediaContent.MediaId))
         {
             Aspect = IsWrapped ? Aspect.AspectFill : Aspect.AspectFit,
-            HorizontalContentOptions = IsWrapped || MediaContent.IsVideo ? LayoutOptions.Fill : LayoutOptions.Start,
-            VerticalContentOptions = IsWrapped || MediaContent.IsVideo ? LayoutOptions.Fill : LayoutOptions.Start,
+            //HorizontalContentOptions = IsWrapped || MediaContent.IsVideo ? LayoutOptions.Fill : LayoutOptions.Start,
+            //VerticalContentOptions = IsWrapped || MediaContent.IsVideo ? LayoutOptions.Fill : LayoutOptions.Start,
         };
         IsOverlayVisible = MediaContent.IsVideo;
     }
