@@ -7,9 +7,6 @@ using Microsoft.Maui.LifecycleEvents;
 using Plugin.Firebase.CloudMessaging;
 using Microsoft.Extensions.Logging;
 
-
-
-
 #if IOS
 using Plugin.Firebase.Core.Platforms.iOS;
 #elif ANDROID

@@ -3,12 +3,14 @@ using Android.App;
 using Android.App.Job;
 using Android.Content;
 using Android.Content.PM;
+using Android.Graphics;
 using Android.Media;
 using Android.OS;
 using Android.Util;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using Plugin.Firebase.CloudMessaging;
+using Plugin.Firebase.CloudMessaging.Platforms.Android.Extensions;
 using System.Runtime.Versioning;
 using System.Text.Json;
 
@@ -30,6 +32,36 @@ public class MainActivity : MauiAppCompatActivity
         CheckNotificationPermission();
         HandleIntent(Intent);
         NativeMedia.Platform.Init(this, savedInstanceState);
+
+        FirebaseCloudMessagingImplementation.ShowLocalNotificationAction = notification => {
+
+            var intent = PackageManager.GetLaunchIntentForPackage(PackageName);
+            intent.PutExtra(FirebaseCloudMessagingImplementation.IntentKeyFCMNotification, notification.ToBundle());
+            intent.SetFlags(ActivityFlags.SingleTop);
+
+            var pendingIntent = PendingIntent.GetActivity(this, 0, intent, PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent);
+            var builder = new NotificationCompat.Builder(this, $"{PackageName}.push")
+            .SetSmallIcon(Android.Resource.Drawable.SymDefAppIcon)
+            .SetContentTitle(notification.Title)
+            .SetContentText(notification.Body)
+            .SetPriority(NotificationCompat.PriorityDefault)
+            .SetAutoCancel(true);
+
+            if (notification.ImageUrl != null)
+            {
+                var url = new Java.Net.URL(notification.ImageUrl);
+                var image = BitmapFactory.DecodeStream(url.OpenConnection().InputStream);
+
+                builder = builder
+                .SetLargeIcon(image)
+                .SetStyle(new NotificationCompat.BigPictureStyle()
+                    .BigPicture(image)
+                    .SetSummaryText(notification.Body));
+            }
+
+            var notificationManager = (NotificationManager)GetSystemService(NotificationService);
+            notificationManager.Notify(123, builder.SetContentIntent(pendingIntent).Build());
+        };
     }
 
     protected override void OnNewIntent(Intent intent)
@@ -38,7 +70,7 @@ public class MainActivity : MauiAppCompatActivity
         HandleIntent(intent);
     }
 
-    protected override async void OnActivityResult(int requestCode, Result resultCode, Intent data)
+    protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)
     {
         if (NativeMedia.Platform.CheckCanProcessResult(requestCode, resultCode, data))
             NativeMedia.Platform.OnActivityResult(requestCode, resultCode, data);
@@ -60,7 +92,7 @@ public class MainActivity : MauiAppCompatActivity
         }
     }
 
-    private async void CheckNotificationPermission()
+    private void CheckNotificationPermission()
     {
         if ((int)Build.VERSION.SdkInt < 33) return;
 
@@ -96,16 +128,8 @@ public class MainActivity : MauiAppCompatActivity
     private void CreateNotificationChannel()
     {
         var channelId = $"{PackageName}.push";
-        var notificationManager = (NotificationManager)GetSystemService(NotificationService);
         var channel = new NotificationChannel(channelId, "푸시 알림", NotificationImportance.Default);
-
-        notificationManager.DeleteNotificationChannel(channelId);
-
-        AudioAttributes audioAttributes = new AudioAttributes.Builder()
-            .SetContentType(AudioContentType.Sonification)
-            .SetUsage(AudioUsageKind.Notification)
-            .Build();
-
+        var notificationManager = (NotificationManager)GetSystemService(NotificationService);
         notificationManager.CreateNotificationChannel(channel);
         FirebaseCloudMessagingImplementation.ChannelId = channelId;
     }
