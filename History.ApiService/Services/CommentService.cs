@@ -4,12 +4,13 @@ using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using Microsoft.OpenApi.Validations;
 using MongoDB.Driver;
 
 namespace History.ApiService.Services;
 
 
-public class CommentService(IMongoDatabase database, IMediaService mediaService, IServiceProvider serviceProvider) : ICommentService
+public class CommentService(IMongoDatabase database, IMediaService mediaService, INotificationService notificationService, IServiceProvider serviceProvider) : ICommentService
 {
     private readonly IMongoCollection<Comment> _commentCollection = database.GetCollection<Comment>("Comments");
     private readonly IMongoCollection<CommentLike> _commentLikeCollection = database.GetCollection<CommentLike>("CommentLikes");
@@ -20,6 +21,24 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         var comment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
         if (comment == null) return (ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
         return comment;
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<CommentLike>> GetCommentLikeByIdAsync(string commentLikeId)
+    {
+        var commentLike = await _commentLikeCollection.Find(f => f.Id == commentLikeId).FirstOrDefaultAsync();
+        if (commentLike == null) return (ErrorType.NotFound, "댓글 좋아요를 찾을 수 없습니다.");
+        return commentLike;
+    }
+
+    public async Task<Result<List<string>>> GetCommenterUserIdsByPostIdAsync(string postId)
+    {
+        var userIds = await _commentCollection
+            .Find(x => x.PostId == postId)
+            .Project(x => x.UserId)
+            .ToListAsync();
+
+        return userIds.Distinct().ToList();
     }
 
     public async Task<Result<List<Comment>>> GetCommentsByPostIdAsync(string postId, string requesterId, string fromCommentId = null, int limit = 10)
@@ -78,6 +97,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
     public async Task<Result<Comment>> WriteCommentAsync(string postId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files)
     {
         var postService = serviceProvider.GetRequiredService<IPostService>();
+        var userService = serviceProvider.GetRequiredService<IUserService>();
 
         if (requesterId == null) Result<Comment>.Failure(ErrorType.Unauthorized, "로그인이 필요합니다.");
 
@@ -87,10 +107,6 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         // Check access
         var accessResult = await postService.CheckAccessAsync(postId, requesterId);
         if (accessResult.IsFailure) return accessResult.CastFailure<Comment>();
-
-        // Upload medias
-        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, postId, requesterId, contents, files);
-        if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
         // Create comment
         var comment = new Comment
@@ -110,8 +126,16 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         }
         comment.CreatedAt = DateTime.UtcNow;
 
+        // Upload medias
+        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, comment.Id, requesterId, contents, files);
+        if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
+
         // Insert the comment
         await _commentCollection.InsertOneAsync(comment);
+
+        // Send Push Notification
+        if (comment.Contents.OfType<ProfileContent>().Any()) await notificationService.SendNotificationsAsync(NotificationType.CommentMention, comment.Id);
+        else await notificationService.SendNotificationsAsync(NotificationType.Comment, comment.Id);
 
         // return newly created comment
         return comment;
@@ -130,7 +154,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         var originalComment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
 
         // Upload medias
-        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, originalComment.PostId, requesterId, contents, files);
+        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, originalComment.Id, requesterId, contents, files);
         if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
         // Update Comment
@@ -167,6 +191,9 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         // Delete Media
         await mediaService.DeleteMediaByAssociatedIdAsync(commentId);
 
+        // Delete Notifications
+        await notificationService.DeleteNotificationsAsync("Data.CommentId", commentId);
+
         return Result.Success();
     }
 
@@ -181,6 +208,10 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         {
             // Unlike
             var result = await _commentLikeCollection.DeleteOneAsync(f => f.CommentId == commentId && f.UserId == requesterId);
+
+            // Delete Notifications
+            await notificationService.DeleteNotificationsAsync("AssociatedId", existingLike.Id, NotificationType.CommentLike);
+
             return result.DeletedCount > 0 ? Result.Success() : Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
         }
 
@@ -201,6 +232,8 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         }
 
         await _commentLikeCollection.InsertOneAsync(commentLike);
+
+        await notificationService.SendNotificationsAsync(NotificationType.Comment, commentLike.Id);
 
         return Result.Success();
     }
@@ -227,7 +260,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
             .Project(f => f.UserId)
             .ToListAsync();
 
-        var likedUserResults = await userService.GenerateUserResponseDtosAsync(likedUserIds, requesterId);
+        var likedUserResults = await userService.GenerateUserResponseDtosAsync(likedUserIds.Distinct(), requesterId);
 
 
         var profileContents = comment.Contents.OfType<ProfileContent>();

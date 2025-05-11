@@ -1,8 +1,11 @@
 ﻿using History.Commons;
 using History.Commons.Api.Friendship;
+using History.Commons.Api.PushNotification;
 using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.MobileClient.Auth;
+using Plugin.Firebase.CloudMessaging;
+using System.Text.Json;
 
 namespace History.MobileClient.Pages;
 
@@ -26,7 +29,14 @@ public partial class LoginPage : ContentPage
             
             await RefreshFriends();
 
+            await CrossFirebaseCloudMessaging.Current.CheckIfValidAsync();
+            var firebaseToken = await CrossFirebaseCloudMessaging.Current.GetTokenAsync();
+            await App.ExecuteRequestAsync(new RegisterFirebaseToken(firebaseToken));
+
             App.Page = new AppShell();
+
+            var pushData = Preferences.Get("PushData", null);
+            if (!string.IsNullOrEmpty(pushData)) await App.HandlePushNotificationAsync(pushData);
         }
         else if (meResult.Error == ErrorType.Unauthorized) await DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
         else await DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n코드: {meResult.ErrorMessage}", Constants.PromptOk);

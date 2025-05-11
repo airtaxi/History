@@ -1,7 +1,15 @@
 ﻿using History.Commons;
+using History.Commons.Api.Friendship;
+using History.Commons.Api.Post;
+using History.Commons.Api.User;
+using History.Commons.Enums;
 using History.Commons.Interfaces;
 using History.MobileClient.Pages;
+using History.MobileClient.ViewModels;
+using ShimSkiaSharp;
 using System.Net;
+using System.Reflection;
+using System.Text.Json;
 
 namespace History.MobileClient;
 
@@ -97,5 +105,33 @@ public partial class App : Application
     {
         MainWindow = new Window(new LoginPage());
         return MainWindow;
+    }
+
+    public static async Task HandlePushNotificationAsync(string pushData)
+    {
+        var data = JsonSerializer.Deserialize<Dictionary<string, string>>(pushData);
+
+        if (!data.TryGetValue("Type", out var rawType)) return;
+        if (!Enum.TryParse<NotificationType>(rawType, out var type)) return;
+
+        if (type == NotificationType.FriendRequest)
+        {
+            if (!data.TryGetValue("UserId", out var userId)) return;
+
+            var page = new UserPage(userId);
+            await PushModalAsync(page);
+        }
+        else
+        {
+            if (!data.TryGetValue("PostId", out var postId)) return;
+
+            var postResult = await ExecuteRequestAsync(new GetPost(postId));
+            if (postResult.IsFailure) return;
+
+            var postViewModel = new PostViewModel(postResult.Value, false);
+            var page = new PostPage(postViewModel);
+            await PushModalAsync(page);
+        }
+
     }
 }

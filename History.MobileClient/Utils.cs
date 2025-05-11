@@ -1,6 +1,9 @@
-﻿using History.Commons.DataTypes.Contents;
+﻿using History.Commons;
+using History.Commons.DataTypes;
+using History.Commons.DataTypes.Contents;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
+using Plugin.Firebase.CloudMessaging;
 
 namespace History.MobileClient;
 
@@ -170,5 +173,12 @@ public static class Utils
         var tapGestureRecognizer = new TapGestureRecognizer();
         tapGestureRecognizer.Tapped += async (s, e) => await App.PushModalAsync(new UserPage(userId));
         span.GestureRecognizers.Add(tapGestureRecognizer);
+    }
+
+    public static async Task RefreshFirebaseToken(bool isNotificationPermissionGranted)
+    {
+        await CrossFirebaseCloudMessaging.Current.CheckIfValidAsync();
+        var firebaseToken = await CrossFirebaseCloudMessaging.Current.GetTokenAsync();
+        Console.WriteLine($"FCM token: {firebaseToken}");
     }
 }

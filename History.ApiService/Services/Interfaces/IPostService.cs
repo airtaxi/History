@@ -16,6 +16,13 @@ public interface IPostService
     public Task<Result<Post>> GetPostByIdAsync(string postId);
 
     /// <summary>
+    /// Get post by id.
+    /// </summary>
+    /// <param name="postReactionId">The id of post reaction to get</param>
+    /// <returns>A task that represents the asynchronous operation. with result of post reaction</returns>
+    public Task<Result<PostReaction>> GetPostReactionByIdAsync(string postReactionId);
+
+    /// <summary>
     /// Get timeline posts of user.
     /// </summary>
     /// <param name="userId">The id of user to get timeline posts</param>

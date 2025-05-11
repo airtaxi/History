@@ -1,9 +1,11 @@
 ﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
+using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using MongoDB.Driver;
+using System.Text;
 
 namespace History.ApiService.Services;
 
@@ -258,6 +260,37 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "배경 이미지를 변경하는 중 오류가 발생했습니다.");
         }
     }
+
+    /// <inheritdoc/>
+    public async Task<string> GenerateTextPreviewFromContentsAsync(IEnumerable<BaseContent> contents, string requesterId = null)
+    {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
+        var textAndProfileContents = contents.Where(x => x is TextContent || x is ProfileContent);
+        var profileContents = textAndProfileContents.OfType<ProfileContent>();
+        var profileUserIds = profileContents.Select(x => x.UserId).Distinct();
+        var users = await GetUsersByIdsAsync(profileUserIds);
+        var bannedUsers = await friendshipService.GetBannedUserIdsAsync(requesterId);
+        users.Value.RemoveAll(x => bannedUsers.Value.Contains(x.Id));
+
+        var builder = new StringBuilder();
+        foreach (var textAndProfileContent in textAndProfileContents)
+        {
+            if (textAndProfileContent is TextContent textContent)
+            {
+                var text = textContent.Text.ReplaceLineEndings().Replace(Environment.NewLine, "");
+                builder.Append(text);
+            }
+            else if (textAndProfileContent is ProfileContent profileContent)
+            {
+                var user = users.Value.FirstOrDefault(x => x.Id == profileContent.UserId);
+                var nickname = user?.Nickname ?? "차단된 사용자";
+                builder.Append(nickname + ' ');
+            }
+        }
+        return builder.ToString();
+    }
+
     /// <inheritdoc/>
     public async Task<Result<UserResponseDto>> GenerateUserResponseDtoAsync(User user, string requesterId = null)
     {

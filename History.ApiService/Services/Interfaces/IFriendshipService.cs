@@ -9,6 +9,13 @@ namespace History.ApiService.Services.Interfaces;
 public interface IFriendshipService
 {
     /// <summary>
+    /// Retrieves a friendship by its unique identifier.
+    /// </summary>
+    /// <param name="friendshipId">The unique identifier of the friendship.</param>
+    /// <returns>A task representing the asynchronous operation, with the friendship.</returns>
+    public Task<Result<Friendship>> GetFriendshipByIdAsync(string friendshipId);
+
+    /// <summary>
     /// Sends a friend request from one user to another.
     /// </summary>
     /// <param name="senderId">The ID of the user sending the request.</param>

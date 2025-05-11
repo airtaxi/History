@@ -9,6 +9,7 @@ using History.Commons.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -17,7 +18,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UserController(IUserService userService, IFriendshipService friendshipService, IRefreshTokenService refreshTokenService) : ControllerBase
+public class UserController(IUserService userService, IFriendshipService friendshipService, IRefreshTokenService refreshTokenService, INotificationService notificationService) : ControllerBase
 {
     /// <summary>
     /// Register with OAuth
@@ -462,6 +463,57 @@ public class UserController(IUserService userService, IFriendshipService friends
         if (deleteResult.IsSuccess) return Ok();
         else if (deleteResult.Error == ErrorType.NotFound) return NotFound(deleteResult.ErrorMessage);
         else return StatusCode(500, deleteResult.FullErrorMessage);
+    }
+
+    [HttpGet("notifications")]
+    [Authorize]
+    public async Task<IActionResult> GetNotifications()
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var from = Request.Query["from"];
+        var rawLimit = Request.Query["limit"];
+        if (!int.TryParse(rawLimit, out var limit)) return BadRequest("리밋은 필수입니다.");
+        limit = Math.Clamp(limit, 1, 100);
+
+        var notificationsResult = await notificationService.GetNotificationsAsync(requesterId, from, limit);
+        if (notificationsResult.IsFailure) return StatusCode(500, notificationsResult.FullErrorMessage);
+
+        var notificationUserIds = notificationsResult.Value.Select(x => x.UserId);
+        var userDtosResult = await userService.GenerateUserResponseDtosAsync(notificationUserIds, requesterId);
+
+        var dtos = new List<NotificationResponseDto>();
+        foreach (var notification in notificationsResult.Value)
+        {
+            var userId = notification.UserId;
+            var userDto = userDtosResult.Value.FirstOrDefault(x => x.UserId == userId);
+            if (userDto == null) continue;
+
+            var dto = new NotificationResponseDto(notification) { User = userDto };
+            dtos.Add(dto);
+        }
+
+        return Ok(dtos);
+    }
+
+    [HttpPost("register-firebase-token")]
+    [Authorize]
+    public async Task<IActionResult> RegisterToken()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return BadRequest("로그인이 필요한 서비스입니다.");
+
+        var token = Request.Query["token"];
+        if (string.IsNullOrEmpty(token)) return BadRequest("토큰은 필수입니다.");
+
+        var userResult = await userService.GetUserByIdAsync(userId);
+        if (userResult.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else if (userResult.IsFailure) return StatusCode(500, userResult.FullErrorMessage);
+
+        await notificationService.RegisterFirebaseTokenAsync(userId, token);
+
+        return Ok();
     }
 
     /// <summary>
