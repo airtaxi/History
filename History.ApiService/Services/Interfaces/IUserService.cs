@@ -1,5 +1,6 @@
 ﻿using History.Commons;
 using History.Commons.DataTypes;
+using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 
 namespace History.ApiService.Services.Interfaces;
@@ -136,6 +137,14 @@ public interface IUserService
     /// <param name="image">The image to update. Null if user want to delete background media</param>
     /// <returns>A task that represents the asynchronous operation. with result of update success</returns>
     public Task<Result> UpdateBackgroundMediaAsync(string userId, byte[] image);
+
+    /// <summary>
+    /// Generate text preview asynchronously based on the provided contents.
+    /// </summary>
+    /// <param name="contents">The contents of post or comments to generate preview from.</param>
+    /// <param name="requesterId">Identifies the entity making the request, which can be optional.</param>
+    /// <returns>A task that resolves to a string containing the generated text preview.</returns>
+    public Task<string> GenerateTextPreviewFromContentsAsync(IEnumerable<BaseContent> contents, string requesterId = null);
 
     /// <summary>
     /// Generates a UserResponseDto asynchronously based on the provided user information.

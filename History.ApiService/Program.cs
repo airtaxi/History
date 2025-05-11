@@ -1,4 +1,6 @@
-﻿using History.ApiService;
+﻿using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
+using History.ApiService;
 using History.ApiService.Services;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
@@ -12,9 +14,16 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using System.Text;
 
+var firebaseServiceAccountKeyJsonPath = Path.Combine(AppContext.BaseDirectory, "firebaseServiceAccountKey.json");
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = GoogleCredential.FromFile(firebaseServiceAccountKeyJsonPath)
+});
+
 BsonSerializer.RegisterSerializer(new EnumSerializer<DiscoveryOption>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<PostReactionType>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<FriendshipStatus>(BsonType.String));
+BsonSerializer.RegisterSerializer(new EnumSerializer<NotificationType>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<MediaBucket>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<Rank>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<ErrorType>(BsonType.String));
@@ -40,6 +49,7 @@ builder.Services.AddScoped<IFriendshipService, FriendshipService>();
 builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<DatabaseInitService>();
 
 // Unlock the file upload size limit.

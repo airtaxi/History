@@ -13,9 +13,17 @@ namespace History.ApiService.Services;
 /// Initializes a new instance of the FriendshipService class.
 /// </remarks>
 /// <param name="database">The MongoDB database instance.</param>
-public class FriendshipService(IMongoDatabase database, IServiceProvider serviceProvider) : IFriendshipService
+public class FriendshipService(IMongoDatabase database, INotificationService notificationService, IServiceProvider serviceProvider) : IFriendshipService
 {
     private readonly IMongoCollection<Friendship> _friendshipCollection = database.GetCollection<Friendship>("Friendships");
+
+    /// <inheritdoc/>
+    public async Task<Result<Friendship>> GetFriendshipByIdAsync(string friendshipId)
+    {
+        var friendship = await _friendshipCollection.Find(f => f.Id == friendshipId).FirstOrDefaultAsync();
+        if (friendship == null) return (ErrorType.NotFound, "친구 관계를 찾을 수 없습니다.");
+        else return friendship;
+    }
 
     /// <inheritdoc/>
     public async Task<Result> SendFriendRequestAsync(string senderId, string receiverId)
@@ -62,6 +70,10 @@ public class FriendshipService(IMongoDatabase database, IServiceProvider service
 
         await _friendshipCollection.InsertOneAsync(requestFriendship);
         await _friendshipCollection.InsertOneAsync(waitingFriendship);
+
+        // Send notification
+        await notificationService.SendNotificationsAsync(NotificationType.FriendRequest, waitingFriendship.Id);
+
         return Result.Success();
     }
 
@@ -90,6 +102,10 @@ public class FriendshipService(IMongoDatabase database, IServiceProvider service
         result = await _friendshipCollection.UpdateOneAsync(f => f.Id == waitingFriendship.Id, updateDefinition);
         if (result.ModifiedCount == 0) return (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.");
 
+        // Send notifications
+        await notificationService.SendNotificationsAsync(NotificationType.FriendRequest, waitingFriendship.Id);
+        await notificationService.SendNotificationsAsync(NotificationType.FriendRequest, requestFriendship.Id);
+
         return Result.Success();
     }
 
@@ -113,6 +129,8 @@ public class FriendshipService(IMongoDatabase database, IServiceProvider service
 
         result = await _friendshipCollection.DeleteOneAsync(f => f.Id == waitingFriendship.Id);
         if (result.DeletedCount == 0) return (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.");
+
+        await notificationService.DeleteNotificationsAsync("AssociatedId", waitingFriendship.Id, NotificationType.FriendRequest);
 
         return Result.Success();
     }
@@ -138,12 +156,18 @@ public class FriendshipService(IMongoDatabase database, IServiceProvider service
         result = await _friendshipCollection.DeleteOneAsync(f => f.Id == waitingFriendship.Id);
         if (result.DeletedCount == 0) return (ErrorType.NotFound, "친구 요청을 찾을 수 없습니다.");
 
+        await notificationService.DeleteNotificationsAsync("AssociatedId", waitingFriendship.Id, NotificationType.FriendRequest);
+
         return Result.Success();
     }
 
     /// <inheritdoc/>
     public async Task<Result> BlockUserAsync(string userId, string userToBlockId)
     {
+        var existingFriendships = await _friendshipCollection.Find(f =>
+            (f.UserId == userId && f.FriendId == userToBlockId) ||
+            (f.UserId == userToBlockId && f.FriendId == userId)).ToListAsync();
+
         // First, remove any existing friendship
         await _friendshipCollection.DeleteManyAsync(f =>
             (f.UserId == userId && f.FriendId == userToBlockId) ||
@@ -167,12 +191,19 @@ public class FriendshipService(IMongoDatabase database, IServiceProvider service
         }
 
         await _friendshipCollection.InsertOneAsync(blockFriendship);
+
+        if (existingFriendships.Count > 0) await notificationService.DeleteNotificationsAsync("AssociatedId", existingFriendships.Select(x => x.Id), NotificationType.FriendRequest);
+
         return Result.Success();
     }
 
     /// <inheritdoc/>
     public async Task<Result> IgnoreUserAsync(string userId, string userToIgnoreId)
     {
+        var existingFriendships = await _friendshipCollection.Find(f =>
+            (f.UserId == userId && f.FriendId == userToIgnoreId) ||
+            (f.UserId == userToIgnoreId && f.FriendId == userId)).ToListAsync();
+
         // First, remove any existing friendship
         await _friendshipCollection.DeleteManyAsync(f =>
             (f.UserId == userId && f.FriendId == userToIgnoreId) ||
@@ -196,15 +227,24 @@ public class FriendshipService(IMongoDatabase database, IServiceProvider service
         }
 
         await _friendshipCollection.InsertOneAsync(blockFriendship);
+
+        if (existingFriendships.Count > 0) await notificationService.DeleteNotificationsAsync("AssociatedId", existingFriendships.Select(x => x.Id), NotificationType.FriendRequest);
+
         return Result.Success();
     }
 
     /// <inheritdoc/>
     public async Task<Result> RemoveFriendAsync(string userId, string friendId)
     {
+        var existingFriendships = await _friendshipCollection.Find(f =>
+            (f.UserId == userId && f.FriendId == friendId && f.Status == FriendshipStatus.Accepted) ||
+            (f.UserId == friendId && f.FriendId == userId && f.Status == FriendshipStatus.Accepted)).ToListAsync();
+
         var result = await _friendshipCollection.DeleteManyAsync(f =>
             (f.UserId == userId && f.FriendId == friendId && f.Status == FriendshipStatus.Accepted) ||
             (f.UserId == friendId && f.FriendId == userId && f.Status == FriendshipStatus.Accepted));
+
+        if (existingFriendships.Count > 0) await notificationService.DeleteNotificationsAsync("AssociatedId", existingFriendships.Select(x => x.Id), NotificationType.FriendRequest);
 
         return result.DeletedCount > 0 ? (ErrorType.NotFound, "친구 관계를 찾을 수 없습니다.") : null;
     }

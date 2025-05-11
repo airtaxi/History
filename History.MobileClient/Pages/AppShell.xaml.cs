@@ -4,9 +4,12 @@ namespace History.MobileClient;
 
 public partial class AppShell : Shell
 {
+    public static bool IsLoaded { get; private set; }
+
 	public AppShell()
 	{
 		InitializeComponent();
+        IsLoaded = true;
 	}
 
     private static DateTime s_lastBackPressedTime = DateTime.MinValue;

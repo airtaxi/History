@@ -9,7 +9,7 @@ using MongoDB.Driver;
 
 namespace History.ApiService.Services;
 
-public class PostService(IMongoDatabase database, IMediaService mediaService, IServiceProvider serviceProvider) : IPostService
+public class PostService(IMongoDatabase database, IMediaService mediaService, INotificationService notificationService, IServiceProvider serviceProvider) : IPostService
 {
     private readonly IMongoCollection<User> _userCollection = database.GetCollection<User>("Users");
     private readonly IMongoCollection<Comment> _commentCollection = database.GetCollection<Comment>("Comments");
@@ -26,6 +26,13 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
 
         if (post == null) return (ErrorType.NotFound, "게시글을 찾을 수 없습니다.");
         else return post;
+    }
+    public async Task<Result<PostReaction>> GetPostReactionByIdAsync(string postReactionId)
+    {
+        var postReaction = await _postReactionCollection.Find(p => p.Id == postReactionId).FirstOrDefaultAsync();
+
+        if (postReaction == null) return (ErrorType.NotFound, "게시글 반응을 찾을 수 없습니다.");
+        else return postReaction;
     }
 
     /// <inheritdoc />
@@ -352,6 +359,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         var userUpdate = Builders<User>.Update.Set(u => u.LastUsedPostDiscoveryOption, post.DiscoveryOption);
         await _userCollection.UpdateOneAsync(userFilter, userUpdate);
 
+        // Send notification
+        if (post.ParentPostId != null) await notificationService.SendNotificationsAsync(NotificationType.Share, post.Id);
+        else if (post.Contents.OfType<ProfileContent>().Any()) await notificationService.SendNotificationsAsync(NotificationType.PostMention, post.Id);
+
         return Result.Success();
     }
 
@@ -426,6 +437,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
 
         // Delete media files associated with the post
         await mediaService.DeleteMediaByAssociatedIdAsync(postId);
+        await mediaService.DeleteMediasByAssociatedIdsAsync(commentIds);
+
+        // Delete notifications
+        await notificationService.DeleteNotificationsAsync("Data.PostId", postId);
 
         // Delete the post from the database
         await _postCollection.DeleteOneAsync(p => p.Id == postId);
@@ -471,7 +486,13 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             .Find(r => r.UserId == userId && r.PostId == postId)
             .FirstOrDefaultAsync();
 
-        if (existingReaction != null) await _postReactionCollection.DeleteOneAsync(r => r.UserId == userId && r.PostId == postId);
+        if (existingReaction != null)
+        {
+            await _postReactionCollection.DeleteOneAsync(r => r.UserId == userId && r.PostId == postId);
+
+            // Delete notifications
+            await notificationService.DeleteNotificationsAsync("AssociatedId", existingReaction.Id, NotificationType.PostReaction);
+        }
         else
         {
             // Add a new reaction
@@ -493,6 +514,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             }
 
             await _postReactionCollection.InsertOneAsync(newReaction);
+
+            // Send notification
+            await notificationService.SendNotificationsAsync(NotificationType.PostReaction, newReaction.Id);
         }
 
         return Result.Success();
@@ -617,7 +641,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
         }
 
         var postReactionDtos = await GeneratePostReactionDtosAsync(post.Id, requesterId);
-        var sharedandRepostedUserDtos = await GenerateSharedAndRepostedUserDtosAsync(post.Id, requesterId);
+        var sharedAndRepostedUserDtos = await GenerateSharedAndRepostedUserDtosAsync(post.Id, requesterId);
 
         var postResponse = new PostResponseDto
         {
@@ -628,7 +652,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IS
             Comments = commentDtosResult.Value,
             CommentsCount = commentsCountResult.Value,
             PostReactions = postReactionDtos.Value,
-            SharedAndRepostedUsers = sharedandRepostedUserDtos.Value,
+            SharedAndRepostedUsers = sharedAndRepostedUserDtos.Value,
             IsRepost = post.IsRepost,
             CreatedAt = post.CreatedAt,
             ModifiedAt = post.ModifiedAt
