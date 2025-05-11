@@ -146,6 +146,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         var tokensResult = await GetFirebaseTokensFromUserIdsAsync(recipientUserIds);
         var tokens = tokensResult.Value;
 
+        if (tokens.Count == 0) return Result.Success();
+
         var message = new MulticastMessage
         {
             Tokens = tokensResult.Value,
