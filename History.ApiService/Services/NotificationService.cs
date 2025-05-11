@@ -125,6 +125,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         var imageUrl = notification.ImageUrl;
         var data = notification.Data;
 
+        recipients = recipients.Except([notification.UserId]).Distinct();
+
         if (!recipients.Any()) return Result.Success();
 
         while (true)
@@ -263,13 +265,13 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var userService = serviceProvider.GetRequiredService<IUserService>();
             var commentService = serviceProvider.GetRequiredService<ICommentService>();
 
-            var commentLike = await commentService.GetCommentLikeByIdAsync(associatedId);
-            if (commentLike.IsFailure) return commentLike.CastFailure<Notification>();
+            var commentLikeResult = await commentService.GetCommentLikeByIdAsync(associatedId);
+            if (commentLikeResult.IsFailure) return commentLikeResult.CastFailure<Notification>();
 
-            var userResult = await userService.GetUserByIdAsync(commentLike.Value.UserId);
+            var userResult = await userService.GetUserByIdAsync(commentLikeResult.Value.UserId);
             if (userResult.IsFailure) return userResult.CastFailure<Notification>();
 
-            var commentResult = await commentService.GetCommentByIdAsync(commentLike.Value.CommentId);
+            var commentResult = await commentService.GetCommentByIdAsync(commentLikeResult.Value.CommentId);
             if (commentResult.IsFailure) return commentResult.CastFailure<Notification>();
 
             core.Recipients = [commentResult.Value.UserId];

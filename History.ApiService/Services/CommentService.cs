@@ -233,7 +233,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
 
         await _commentLikeCollection.InsertOneAsync(commentLike);
 
-        await notificationService.SendNotificationsAsync(NotificationType.Comment, commentLike.Id);
+        await notificationService.SendNotificationsAsync(NotificationType.CommentLike, commentLike.Id);
 
         return Result.Success();
     }
