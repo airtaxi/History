@@ -211,6 +211,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
         if (type == NotificationType.Comment)
         {
+            var postService = serviceProvider.GetRequiredService<IPostService>();
             var userService = serviceProvider.GetRequiredService<IUserService>();
             var commentService = serviceProvider.GetRequiredService<ICommentService>();
             var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
@@ -224,10 +225,14 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var commenterIdsResult = await commentService.GetCommenterUserIdsByPostIdAsync(commentResult.Value.PostId);
             if (commenterIdsResult.IsFailure) return commenterIdsResult.CastFailure<Notification>();
 
+            var postResult = await postService.GetPostByIdAsync(commentResult.Value.PostId);
+            if (postResult.IsFailure) return postResult.CastFailure<Notification>();
+
             var userFriendsIds = await friendshipService.GetUserFriendIdsAsync(commentResult.Value.UserId, commentResult.Value.UserId);
             if (userFriendsIds.IsFailure) return userFriendsIds.CastFailure<Notification>();
 
-            core.Recipients = commenterIdsResult.Value.Intersect(userFriendsIds.Value);
+            core.Recipients = [.. commenterIdsResult.Value.Intersect(userFriendsIds.Value), postResult.Value.UserId];
+            core.Recipients = core.Recipients.Distinct();
             core.UserId = userResult.Value.Id;
 
             core.Title = $"{userResult.Value.Nickname}님이 게시글에 댓글을 달았습니다.";

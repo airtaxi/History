@@ -4,13 +4,15 @@ using Android.App.Job;
 using Android.Content;
 using Android.Content.PM;
 using Android.Graphics;
-using Android.Media;
 using Android.OS;
 using Android.Util;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
+using History.Commons.Api.Post;
+using History.Commons.DataTypes.ResponseDtos;
 using Plugin.Firebase.CloudMessaging;
-using Plugin.Firebase.CloudMessaging.Platforms.Android.Extensions;
 using System.Runtime.Versioning;
 using System.Text.Json;
 
@@ -20,7 +22,6 @@ namespace History.MobileClient;
 public class MainActivity : MauiAppCompatActivity
 {
     private const string TAG = "History";
-    private const int NotificationPermissionRequestCode = 3939;
 
     public static event EventHandler<string> LoginCompleted;
 
@@ -30,20 +31,23 @@ public class MainActivity : MauiAppCompatActivity
 
         ScheduleJob();
         CheckNotificationPermission();
+        CreateNotificationChannelIfNeeded();
         HandleIntent(Intent);
-        NativeMedia.Platform.Init(this, savedInstanceState);
 
         FirebaseCloudMessagingImplementation.ShowLocalNotificationAction = notification => {
+            var notificationId = Guid.NewGuid().GetHashCode();
 
             var intent = PackageManager.GetLaunchIntentForPackage(PackageName);
-            intent.PutExtra(FirebaseCloudMessagingImplementation.IntentKeyFCMNotification, notification.ToBundle());
             intent.SetFlags(ActivityFlags.SingleTop);
+            foreach (var entry in notification.Data) intent.PutExtra(entry.Key, entry.Value);
 
-            var pendingIntent = PendingIntent.GetActivity(this, 0, intent, PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent);
+            var pendingIntent = PendingIntent.GetActivity(this, notificationId, intent, PendingIntentFlags.OneShot | PendingIntentFlags.Immutable);
+
             var builder = new NotificationCompat.Builder(this, $"{PackageName}.push")
-            .SetSmallIcon(Android.Resource.Drawable.SymDefAppIcon)
+            .SetSmallIcon(Resource.Mipmap.appicon)
             .SetContentTitle(notification.Title)
             .SetContentText(notification.Body)
+            .SetContentIntent(pendingIntent)
             .SetPriority(NotificationCompat.PriorityDefault)
             .SetAutoCancel(true);
 
@@ -60,8 +64,25 @@ public class MainActivity : MauiAppCompatActivity
             }
 
             var notificationManager = (NotificationManager)GetSystemService(NotificationService);
-            notificationManager.Notify(123, builder.SetContentIntent(pendingIntent).Build());
+            notificationManager.Notify(notificationId, builder.Build());
+
+            UpdatePostIfExists(notification.Data);
         };
+
+        NativeMedia.Platform.Init(this, savedInstanceState);
+    }
+
+    private async void UpdatePostIfExists(IDictionary<string, string> data)
+    {
+        if (data == null || !data.TryGetValue("PostId", out var postId)) return;
+        else if (Shared.ApiHandler == null) return;
+
+        try
+        {
+            var post = await Shared.ApiHandler.ExecuteRequestAsync(new GetPost(postId));
+            MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post)));
+        }
+        catch { }
     }
 
     protected override void OnNewIntent(Intent intent)

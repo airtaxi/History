@@ -7,6 +7,7 @@ using History.Commons.Interfaces;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using ShimSkiaSharp;
+using System.Diagnostics;
 using System.Net;
 using System.Reflection;
 using System.Text.Json;
@@ -22,7 +23,16 @@ public partial class App : Application
         InitializeComponent();
 
 #if ANDROID
-        Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (sender, e) => e.Handled = true;
+        Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (sender, e) =>
+        {
+            e.Handled = true;
+            var exception = e.Exception;
+            if (exception != null)
+            {
+                Android.Util.Log.Error("History", $"History Unhandled Exception: {exception.Message}\n{exception.StackTrace}");
+                Debugger.BreakForUserUnhandledException(exception);
+            }
+        };
 #endif
     }
 
