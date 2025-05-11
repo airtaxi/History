@@ -5,6 +5,8 @@ using SpeakLink;
 using UraniumUI;
 using Microsoft.Maui.LifecycleEvents;
 using Plugin.Firebase.CloudMessaging;
+using Microsoft.Extensions.Logging;
+
 
 
 
