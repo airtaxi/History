@@ -1,102 +1,102 @@
-﻿using Android.App;
-using Android.Content;
-using Android.Graphics;
-using AndroidX.Core.App;
-using CommunityToolkit.Mvvm.Messaging;
-using CommunityToolkit.Mvvm.Messaging.Messages;
-using Firebase.Messaging;
-using History.Commons.Api.Post;
-using History.Commons.DataTypes.ResponseDtos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿//using Android.App;
+//using Android.Content;
+//using Android.Graphics;
+//using AndroidX.Core.App;
+//using CommunityToolkit.Mvvm.Messaging;
+//using CommunityToolkit.Mvvm.Messaging.Messages;
+//using Firebase.Messaging;
+//using History.Commons.Api.Post;
+//using History.Commons.DataTypes.ResponseDtos;
+//using Plugin.Firebase.CloudMessaging.Platforms.Android;
+//using System.Diagnostics.CodeAnalysis;
 
-namespace History.MobileClient;
+//namespace History.MobileClient;
 
-[Service(Exported = false)]
-[IntentFilter(["com.google.firebase.MESSAGING_EVENT"])]
-public class NotificationMessagingService : FirebaseMessagingService
-{
-    public override void OnMessageReceived(RemoteMessage message)
-    {
-        var notification = message.GetNotification();
-        var notificationId = Guid.NewGuid().GetHashCode();
-        var pendingIntent = BuildIntent(notificationId, message.Data);
+//[Service(Exported = false)]
+//[IntentFilter(["com.google.firebase.MESSAGING_EVENT"])]
+//public class NotificationMessagingService : FirebaseMessagingService
+//{
+//    [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(NotificationMessagingService))]
+//    public override void OnMessageReceived(RemoteMessage message)
+//    {
+//        Android.Util.Log.Info("History", $"History FCM Received!");
 
-        var builtNotification = BuildNotification(pendingIntent, notification);
-        CreateNotificationChannel();
-        SendNotification(notificationId, builtNotification);
+//        var notification = message.GetNotification();
+//        var notificationId = Guid.NewGuid().GetHashCode();
+//        var pendingIntent = BuildIntent(notificationId, message.Data);
 
-        UpdatePostIfExists(message.Data);
-    }
+//        var builtNotification = BuildNotification(pendingIntent, notification);
+//        CreateNotificationChannel();
+//        SendNotification(notificationId, builtNotification);
 
-    private PendingIntent BuildIntent(int notificationId, IDictionary<string, string> data)
-    {
-        using var intent = new Intent(this, typeof(MainActivity));
-        intent.AddFlags(ActivityFlags.SingleTop);
+//        UpdatePostIfExists(message.Data);
+//    }
 
-        foreach (var entry in data)
-        {
-            intent.PutExtra(entry.Key, entry.Value);
-        }
+//    private PendingIntent BuildIntent(int notificationId, IDictionary<string, string> data)
+//    {
+//        using var intent = new Intent(this, typeof(MainActivity));
+//        intent.AddFlags(ActivityFlags.SingleTop);
 
-        return PendingIntent.GetActivity(
-            this,
-            notificationId,
-            intent,
-            PendingIntentFlags.OneShot | PendingIntentFlags.Immutable);
-    }
+//        foreach (var entry in data)
+//        {
+//            intent.PutExtra(entry.Key, entry.Value);
+//        }
 
-    private Notification BuildNotification(PendingIntent intent, RemoteMessage.Notification notification)
-    {
-        var builder = new NotificationCompat.Builder(this, $"{PackageName}.push")
-            .SetSmallIcon(Resource.Mipmap.appicon)
-            .SetContentTitle(notification.Title)
-            .SetContentText(notification.Body)
-            .SetContentIntent(intent)
-            .SetPriority(NotificationCompat.PriorityDefault)
-            .SetAutoCancel(true);
+//        return PendingIntent.GetActivity(
+//            this,
+//            notificationId,
+//            intent,
+//            PendingIntentFlags.OneShot | PendingIntentFlags.Immutable);
+//    }
 
-        if (notification.ImageUrl != null)
-        {
-            var url = new Java.Net.URL(notification.ImageUrl.ToString());
-            var image = BitmapFactory.DecodeStream(url.OpenConnection().InputStream);
+//    private Notification BuildNotification(PendingIntent intent, RemoteMessage.Notification notification)
+//    {
+//        var builder = new NotificationCompat.Builder(this, $"{PackageName}.push")
+//            .SetSmallIcon(Resource.Mipmap.appicon)
+//            .SetContentTitle(notification.Title)
+//            .SetContentText(notification.Body)
+//            .SetContentIntent(intent)
+//            .SetPriority(NotificationCompat.PriorityDefault)
+//            .SetAutoCancel(true);
 
-            builder = builder
-            .SetLargeIcon(image)
-            .SetStyle(new NotificationCompat.BigPictureStyle()
-                .BigPicture(image)
-                .SetSummaryText(notification.Body));
-        }
+//        if (notification.ImageUrl != null)
+//        {
+//            var url = new Java.Net.URL(notification.ImageUrl.ToString());
+//            var image = BitmapFactory.DecodeStream(url.OpenConnection().InputStream);
 
-        return builder.Build();
-    }
+//            builder = builder
+//            .SetLargeIcon(image)
+//            .SetStyle(new NotificationCompat.BigPictureStyle()
+//                .BigPicture(image)
+//                .SetSummaryText(notification.Body));
+//        }
 
-    private void CreateNotificationChannel()
-    {
-        var channel = new NotificationChannel($"{PackageName}.push", "푸시 알림", NotificationImportance.Default);
-        var notificationManager = GetSystemService(NotificationService) as NotificationManager;
-        notificationManager?.CreateNotificationChannel(channel);
-    }
+//        return builder.Build();
+//    }
 
-    private void SendNotification(int notificationId, Notification notification)
-    {
-        var notificationManager = NotificationManagerCompat.From(this);
-        notificationManager.Notify(notificationId, notification);
-    }
+//    private void CreateNotificationChannel()
+//    {
+//        var channel = new NotificationChannel($"{PackageName}.push", "푸시 알림", NotificationImportance.Default);
+//        var notificationManager = GetSystemService(NotificationService) as NotificationManager;
+//        notificationManager.CreateNotificationChannel(channel);
+//    }
 
-    private async void UpdatePostIfExists(IDictionary<string, string> data)
-    {
-        if (!data.TryGetValue("PostId", out var postId)) return;
-        else if (Shared.ApiHandler == null) return;
+//    private void SendNotification(int notificationId, Notification notification)
+//    {
+//        var notificationManager = NotificationManagerCompat.From(this);
+//        notificationManager.Notify(notificationId, notification);
+//    }
 
-        try
-        {
-            var post = await Shared.ApiHandler.ExecuteRequestAsync(new GetPost(postId));
-            WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post));
-        }
-        catch { }
-    }
-}
+//    private async void UpdatePostIfExists(IDictionary<string, string> data)
+//    {
+//        if (data == null || !data.TryGetValue("PostId", out var postId)) return;
+//        else if (Shared.ApiHandler == null) return;
+
+//        try
+//        {
+//            var post = await Shared.ApiHandler.ExecuteRequestAsync(new GetPost(postId));
+//            MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post)));
+//        }
+//        catch { }
+//    }
+//}

@@ -33,6 +33,7 @@ public partial class LoginPage : ContentPage
             App.Page = new AppShell();
 
             var pushData = Preferences.Get("PushData", null);
+            Preferences.Remove("PushData");
             if (!string.IsNullOrEmpty(pushData)) await App.HandlePushNotificationAsync(pushData);
         }
         else if (meResult.Error == ErrorType.Unauthorized) await DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
