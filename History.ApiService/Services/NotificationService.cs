@@ -125,6 +125,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         var imageUrl = notification.ImageUrl;
         var data = notification.Data;
 
+        if (!recipients.Any()) return Result.Success();
+
         while (true)
         {
             notification.Id = Guid.NewGuid().ToString("N");
