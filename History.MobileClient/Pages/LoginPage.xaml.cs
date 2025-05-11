@@ -28,10 +28,7 @@ public partial class LoginPage : ContentPage
             Shared.LastUsedPostDiscoveryOption = me.LastUsedPostDiscoveryOption;
             
             await RefreshFriends();
-
-            await CrossFirebaseCloudMessaging.Current.CheckIfValidAsync();
-            var firebaseToken = await CrossFirebaseCloudMessaging.Current.GetTokenAsync();
-            await App.ExecuteRequestAsync(new RegisterFirebaseToken(firebaseToken));
+            await Utils.RefreshFirebaseToken();
 
             App.Page = new AppShell();
 

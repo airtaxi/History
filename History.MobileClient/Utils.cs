@@ -1,5 +1,4 @@
-﻿using History.Commons;
-using History.Commons.DataTypes;
+﻿using History.Commons.Api.PushNotification;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
@@ -175,10 +174,22 @@ public static class Utils
         span.GestureRecognizers.Add(tapGestureRecognizer);
     }
 
-    public static async Task RefreshFirebaseToken(bool isNotificationPermissionGranted)
+    public static async Task RefreshFirebaseToken()
     {
         await CrossFirebaseCloudMessaging.Current.CheckIfValidAsync();
         var firebaseToken = await CrossFirebaseCloudMessaging.Current.GetTokenAsync();
         Console.WriteLine($"FCM token: {firebaseToken}");
+
+        if (Shared.ApiHandler == null)
+        {
+            var accessToken = Configuration.GetValue<string>("AccessToken");
+            var refreshToken = Configuration.GetValue<string>("RefreshToken");
+
+            if (accessToken != null && refreshToken != null) Shared.ApiHandler = new(accessToken, refreshToken);
+            else return;
+        }
+
+        try { await Shared.ApiHandler.ExecuteRequestAsync(new RegisterFirebaseToken(firebaseToken)); }
+        catch { }
     }
 }
