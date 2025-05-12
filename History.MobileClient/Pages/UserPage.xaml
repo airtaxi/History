@@ -10,6 +10,10 @@
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
     Shell.NavBarIsVisible="False"
     SizeChanged="OnSizeChanged">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -17,13 +21,15 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid
-            x:Name="TitleGrid"
             Grid.Row="0"
             Padding="12,0,0,0"
             BackgroundColor="{StaticResource Primary}"
             HeightRequest="48">
             <HorizontalStackLayout>
-                <Image HeightRequest="24" WidthRequest="24">
+                <Image
+                    x:Name="BackImage"
+                    HeightRequest="24"
+                    WidthRequest="24">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnBackImageTapped" />
                     </Image.GestureRecognizers>
@@ -32,12 +38,29 @@
                     </Image.Source>
                 </Image>
                 <Label
+                    x:Name="TitleLabel"
                     FontAttributes="Bold"
                     FontSize="20"
                     Text="프로필"
                     TextColor="White"
                     VerticalOptions="Center" />
             </HorizontalStackLayout>
+
+            <Image
+                x:Name="SettingsImage"
+                HorizontalOptions="End"
+                IsVisible="False"
+                VerticalOptions="Center">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSettingsImageTapped" />
+                </Image.GestureRecognizers>
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Settings}"
+                        Color="White" />
+                </Image.Source>
+            </Image>
         </Grid>
 
         <RefreshView Grid.Row="1" Refreshing="OnRefreshing">

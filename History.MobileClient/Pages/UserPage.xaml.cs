@@ -1,5 +1,6 @@
 ﻿
 using CommunityToolkit.Mvvm.Messaging;
+using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
@@ -15,14 +16,14 @@ public partial class UserPage : ContentPage
     public static bool ShouldRefreshMyProfile { get; set; }
 
     private readonly string _userId;
-    private readonly bool _isMyProfile;
     private ObservableCollection<object> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public UserPage() : this(Shared.UserId)
     {
-        _isMyProfile = true;
-        TitleGrid.IsVisible = false;
+        BackImage.IsVisible = false;
+        TitleLabel.Text = "내 프로필";
+        SettingsImage.IsVisible = true;
     }
 
     public UserPage(string userId)
@@ -53,6 +54,9 @@ public partial class UserPage : ContentPage
 
             _viewModels.Clear();
 
+            var friends = await Shared.ApiHandler.ExecuteRequestAsync(new GetFriends(Shared.UserId));
+            Shared.Friends = friends;
+
             var user = await App.ExecuteRequestAsync(new GetUser(_userId));
             if (user.IsSuccess) _viewModels.Add(new ProfileViewModel(user));
             else return;
@@ -80,8 +84,8 @@ public partial class UserPage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var postViewModels = posts.Select(x => new PostViewModel(x, true));
-                foreach (var postViewModel in postViewModels) _viewModels.Add(postViewModel);
+                var viewModels = posts.Select(x => new PostViewModel(x, true));
+                foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
             else return;
         }
@@ -115,48 +119,35 @@ public partial class UserPage : ContentPage
         }
     }
 
-    protected override void OnNavigatedTo(NavigatedToEventArgs args)
-    {
-        base.OnNavigatedTo(args);
-
-        if (_isMyProfile)
-        {
-            var theme = Utils.GetGlobalAppTheme();
-            if (theme == AppTheme.Dark)
-                CommunityToolkit.Maui.Core.Platform.StatusBar.SetColor(Application.Current.Resources["OffBlack"] as Color);
-            else
-                CommunityToolkit.Maui.Core.Platform.StatusBar.SetColor(Application.Current.Resources["White"] as Color);
-        }
-        else CommunityToolkit.Maui.Core.Platform.StatusBar.SetColor(Application.Current.Resources["Primary"] as Color);
-    }
-
     private async void OnRefreshing(object sender, EventArgs e)
     {
         await RefreshAsync();
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    private Border _lastElement;
+    private View _lastElement;
     private void OnChildAdded(object sender, ElementEventArgs e)
     {
-        var border = e.Element as Border;
-        var viewModel = border.BindingContext as PostViewModel;
+        var view = e.Element as View;
+        var viewModel = view.BindingContext as PostViewModel;
         if (viewModel == _viewModels.LastOrDefault())
         {
-            if (_lastElement != null) _lastElement.Loaded -= OnLastItemBorderLoaded;
-            border.Loaded += OnLastItemBorderLoaded;
-            _lastElement = border;
+            if (_lastElement != null) _lastElement.Loaded -= OnLastItemViewLoaded;
+            view.Loaded += OnLastItemViewLoaded;
+            _lastElement = view;
         }
     }
 
-    private async void OnLastItemBorderLoaded(object sender, EventArgs e)
+    private async void OnLastItemViewLoaded(object sender, EventArgs e)
     {
         if (_fetchSemaphore.CurrentCount > 0)
         {
-            if (_lastElement != null) _lastElement.Loaded -= OnLastItemBorderLoaded;
+            if (_lastElement != null) _lastElement.Loaded -= OnLastItemViewLoaded;
             await LoadMoreAsync();
         }
     }
+
+    private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await DisplayAlert("안내", "제작중입니다.", "확인");
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
 }
