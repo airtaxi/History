@@ -104,10 +104,7 @@ public partial class UserPage : ContentPage
 
         var previousSpan = staggeredItemsLayout.Span;
         var newSpan = ((int)Width / 700) + 1;
-        if (newSpan != previousSpan)
-        {
-            MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
-        }
+        if (newSpan != previousSpan) MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
     }
 
     private bool _isFirstLoad = true;
@@ -129,24 +126,13 @@ public partial class UserPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    private View _lastView;
-    private void OnChildAdded(object sender, ElementEventArgs e)
+    private async void OnChildAdded(object sender, ElementEventArgs e)
     {
         var view = e.Element as View;
         var viewModel = view.BindingContext as PostViewModel;
-        if (viewModel == _lastViewModel)
+        if (viewModel.Post.Id == (_lastViewModel as PostViewModel)?.Post.Id)
         {
-            if (_lastView != null) _lastView.Loaded -= OnLastItemViewLoaded;
-            view.Loaded += OnLastItemViewLoaded;
-            _lastView = view;
-        }
-    }
-
-    private async void OnLastItemViewLoaded(object sender, EventArgs e)
-    {
-        if (_fetchSemaphore.CurrentCount > 0)
-        {
-            if (_lastView != null) _lastView.Loaded -= OnLastItemViewLoaded;
+            _lastViewModel = null;
             await LoadMoreAsync();
         }
     }

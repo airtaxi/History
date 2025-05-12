@@ -25,7 +25,8 @@
                         <views:DataTemplatePresenter
                             HeightRequest="48"
                             Template="{StaticResource MediaTemplateSelector}"
-                            ViewModel="{x:Binding ProfileMedia}"
+                            ViewModel="{x:Binding ProfileMedia,
+                                                  Mode=OneWay}"
                             WidthRequest="48">
                             <views:DataTemplatePresenter.GestureRecognizers>
                                 <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
@@ -104,14 +105,20 @@
                         </Image.Source>
                     </Image>
                 </Grid>
-                <VerticalStackLayout
-                    BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
-                    BindableLayout.ItemsSource="{x:Binding Contents}"
-                    Spacing="8" />
+                <CollectionView
+                    Margin="0"
+                    ItemTemplate="{StaticResource ContentTemplateSelector}"
+                    ItemsSource="{x:Binding Contents}"
+                    SelectionMode="None">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout ItemSpacing="8" Orientation="Vertical" />
+                    </CollectionView.ItemsLayout>
+                </CollectionView>
                 <views:DataTemplatePresenter
                     IsVisible="{x:Binding IsShare}"
                     Template="{StaticResource SharedPostTemplate}"
-                    ViewModel="{x:Binding ParentPost}" />
+                    ViewModel="{x:Binding ParentPost,
+                                          Mode=OneWay}" />
                 <HorizontalStackLayout Margin="0,4,0,0" Spacing="12">
                     <HorizontalStackLayout Spacing="8">
                         <Image HeightRequest="24" WidthRequest="24">
@@ -158,7 +165,8 @@
                     <views:DataTemplatePresenter
                         Margin="0,12,0,0"
                         Template="{StaticResource CommentTemplate}"
-                        ViewModel="{x:Binding FirstComment}" />
+                        ViewModel="{x:Binding FirstComment,
+                                              Mode=OneWay}" />
                 </Grid>
             </VerticalStackLayout>
         </Border>

@@ -45,7 +45,8 @@
             <CollectionView
                 x:Name="MainCollectionView"
                 ChildAdded="OnChildAdded"
-                ItemTemplate="{StaticResource TimelineTemplateSelector}">
+                ItemTemplate="{StaticResource TimelineTemplateSelector}"
+                ItemsUpdatingScrollMode="KeepScrollOffset">
                 <CollectionView.ItemsLayout>
                     <staggered:StaggeredItemsLayout Span="0" />
                 </CollectionView.ItemsLayout>

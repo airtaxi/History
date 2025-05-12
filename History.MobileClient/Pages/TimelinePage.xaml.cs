@@ -19,8 +19,6 @@ public partial class TimelinePage : ContentPage
     public TimelinePage()
 	{
 		InitializeComponent();
-
-        MainCollectionView.ItemsSource = _viewModels;
 #if IOS
         MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
 
@@ -88,6 +86,7 @@ public partial class TimelinePage : ContentPage
     {
         base.OnAppearing();
 
+        MainCollectionView.ItemsSource = _viewModels;
         if (_isFirstLoad || ShouldRefreshTimeline)
         {
             if (_isFirstLoad) _isFirstLoad = false;
@@ -103,30 +102,16 @@ public partial class TimelinePage : ContentPage
 
         var previousSpan = staggeredItemsLayout.Span;
         var newSpan = ((int)Width / 700) + 1;
-        if (newSpan != previousSpan)
-        {
-            MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
-        }
+        if (newSpan != previousSpan) MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
     }
 
-    private View _lastView;
-    private void OnChildAdded(object sender, ElementEventArgs e)
+    private async void OnChildAdded(object sender, ElementEventArgs e)
     {
         var view = e.Element as View;
         var viewModel = view.BindingContext as PostViewModel;
-        if (viewModel == _lastViewModel)
+        if (viewModel.Post.Id == _lastViewModel?.Post.Id)
         {
-            if (_lastView != null) _lastView.Loaded -= OnLastItemViewLoaded;
-            view.Loaded += OnLastItemViewLoaded;
-            _lastView = view;
-        }
-    }
-
-    private async void OnLastItemViewLoaded(object sender, EventArgs e)
-    {
-        if (_fetchSemaphore.CurrentCount > 0)
-        {
-            if (_lastView != null) _lastView.Loaded -= OnLastItemViewLoaded;
+            _lastViewModel = null;
             await LoadMoreAsync();
         }
     }

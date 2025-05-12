@@ -48,7 +48,7 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CreatedAt))]
     [NotifyPropertyChangedFor(nameof(ModifiedAt))]
     [NotifyPropertyChangedFor(nameof(TimestampText))]
-    public partial PostResponseDto Post { get; set; }
+    public partial PostResponseDto Post { get; private set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Nickname))]
