@@ -202,6 +202,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         var core = new Notification()
         {
             AssociatedId = associatedId,
+            Type = type,
             Data = new Dictionary<string, string>
             {
                 { "Type", type.ToString() }
