@@ -123,7 +123,7 @@ public class MainActivity : MauiAppCompatActivity
             AlertDialog.Builder dialog = new AlertDialog.Builder(this);
             AlertDialog alert = dialog.Create();
             alert.SetTitle("안내");
-            alert.SetMessage("푸쉬 알림을 받기 위해서는 알림 권한을 활성화해주세요");
+            alert.SetMessage("푸시 알림을 받기 위해서는 알림 권한을 활성화해주세요");
             alert.SetButton("확인", (_, _) =>
             {
                 var denied = ActivityCompat.ShouldShowRequestPermissionRationale(this, Manifest.Permission.PostNotifications);
