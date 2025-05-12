@@ -34,14 +34,14 @@ public class StaggeredStructuredItemsViewHandler : StructuredItemsViewHandler<Co
     }
 #endif
 #if IOS || MACCATALYST
-protected override ItemsViewLayout SelectLayout()
-{
-    var itemsLayout = ItemsView.ItemsLayout;
-    if (itemsLayout is StaggeredItemsLayout staggeredItemsLayout)
+    protected override ItemsViewLayout SelectLayout()
     {
-        return new StaggeredItemsViewLayout(staggeredItemsLayout, ItemSizingStrategy.MeasureAllItems);
+        var itemsLayout = ItemsView.ItemsLayout;
+        if (itemsLayout is StaggeredItemsLayout staggeredItemsLayout)
+        {
+            return new StaggeredItemsViewLayout(staggeredItemsLayout, ItemSizingStrategy.MeasureAllItems);
+        }
+        return base.SelectLayout();
     }
-    return base.SelectLayout();
-}
 #endif
 }
