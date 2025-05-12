@@ -474,7 +474,7 @@ public class UserController(IUserService userService, IFriendshipService friends
 
         var from = Request.Query["from"];
         var rawLimit = Request.Query["limit"];
-        if (!int.TryParse(rawLimit, out var limit)) return BadRequest("리밋은 필수입니다.");
+        if (!int.TryParse(rawLimit, out var limit)) limit = 30;
         limit = Math.Clamp(limit, 1, 100);
 
         var notificationsResult = await notificationService.GetNotificationsAsync(requesterId, from, limit);
