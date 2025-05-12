@@ -32,6 +32,7 @@ public partial class UserPage : ContentPage
 		_userId = userId;
         InitializeComponent();
 
+        MainCollectionView.ItemsSource = _viewModels;
 #if IOS
         MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
 
@@ -113,7 +114,6 @@ public partial class UserPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        MainCollectionView.ItemsSource = _viewModels;
 
         if (_isFirstLoad || (ShouldRefreshMyProfile && _userId == Shared.UserId))
         {
