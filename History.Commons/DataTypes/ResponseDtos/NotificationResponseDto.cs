@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace History.Commons.DataTypes.ResponseDtos;
 
-public class NotificationResponseDto
+public class NotificationResponseDto()
 {
     public string Id { get; set; }
 
@@ -25,7 +25,7 @@ public class NotificationResponseDto
 
     public DateTime CreatedAt { get; set; }
 
-    public NotificationResponseDto(Notification notification)
+    public NotificationResponseDto(Notification notification) : this()
     {
         Id = notification.Id;
 
