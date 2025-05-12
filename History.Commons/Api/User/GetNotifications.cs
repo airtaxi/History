@@ -4,15 +4,15 @@ using RestSharp;
 
 namespace History.Commons.Api.User;
 
-public class GetNotifications : IBaseRequest<List<NotificationResponseDto>>, IAuthRequiredRequest, IRequestWithUrlParameters
+public class GetNotifications : IBaseRequest<List<NotificationResponseDto>>, IAuthRequiredRequest, IRequestWithQueryParameters
 {
     public string Path => "/api/user/notifications";
     public Method Method => Method.Get;
-    public Dictionary<string, string> UrlParameters { get; set; } = [];
+    public Dictionary<string, string> QueryParameters { get; set; } = [];
 
     public GetNotifications(string fromNotificationId = null, int limit = 30)
     {
-        UrlParameters["limit"] = limit.ToString();
-        if (fromNotificationId != null) UrlParameters["from"] = fromNotificationId;
+        QueryParameters["limit"] = limit.ToString();
+        if (fromNotificationId != null) QueryParameters["from"] = fromNotificationId;
     }
 }
