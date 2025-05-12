@@ -10,8 +10,12 @@ using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
+using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Enums;
+using History.MobileClient.DataTypes;
 using Plugin.Firebase.CloudMessaging;
 using System.Runtime.Versioning;
 using System.Text.Json;
@@ -66,21 +70,36 @@ public class MainActivity : MauiAppCompatActivity
             var notificationManager = (NotificationManager)GetSystemService(NotificationService);
             notificationManager.Notify(notificationId, builder.Build());
 
-            UpdatePostIfExists(notification.Data);
+            UpdateNotificationContext(notification.Data);
         };
 
         NativeMedia.Platform.Init(this, savedInstanceState);
     }
 
-    private async void UpdatePostIfExists(IDictionary<string, string> data)
+    private async void UpdateNotificationContext(IDictionary<string, string> data)
     {
-        if (data == null || !data.TryGetValue("PostId", out var postId)) return;
+        if (data == null) return;
+        if (!data.TryGetValue("Type", out var rawType) || !Enum.TryParse<NotificationType>(rawType, out var type)) return;
         else if (Shared.ApiHandler == null) return;
 
         try
         {
-            var post = await Shared.ApiHandler.ExecuteRequestAsync(new GetPost(postId));
-            MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post)));
+            if (data.TryGetValue("PostId", out var postId))
+            {
+                var post = await Shared.ApiHandler.ExecuteRequestAsync(new GetPost(postId));
+                MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post)));
+            }
+            else if (type == NotificationType.FriendRequest && data.TryGetValue("UserId", out var userId))
+            {
+                var user = await Shared.ApiHandler.ExecuteRequestAsync(new GetUser(userId));
+                MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new ValueChangedMessage<UserResponseDto>(user)));
+            }
+
+            var notifications = await Shared.ApiHandler.ExecuteRequestAsync(new GetNotifications());
+            MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new NotificationsMessage(notifications)));
+
+            var friends = await Shared.ApiHandler.ExecuteRequestAsync(new GetFriends(Shared.UserId));
+            Shared.Friends = friends;
         }
         catch { }
     }
