@@ -1,4 +1,5 @@
 ﻿using History.Commons.Api.User;
+using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Interfaces;
 using RestSharp;
 using System.Net;
@@ -9,6 +10,7 @@ namespace History.Commons;
 public class ApiHandler(string accessToken = null, string refreshToken = null)
 {
     public static ApiHandler Public { get; } = new();
+    public static event EventHandler<(string AccessToken, string RefreshToken)> TokenRefreshed;
     private static readonly RestClient Client = new(CommonsConstants.ApiBaseUrl);
 
     private readonly bool _initialized = accessToken != null && refreshToken != null;
@@ -78,7 +80,7 @@ public class ApiHandler(string accessToken = null, string refreshToken = null)
 
         var response = await Client.ExecuteAsync<T>(restRequest);
 
-        if (response.IsSuccessful) return response.Data;
+        if (response.IsSuccessStatusCode) return response.Data;
         else if (response.StatusCode == HttpStatusCode.Unauthorized && request is not RefreshToken)
         {
             var refreshTokenRequest = new RefreshToken(refreshToken);
@@ -104,6 +106,8 @@ public class ApiHandler(string accessToken = null, string refreshToken = null)
 
             accessToken = refreshResponse.AccessToken;
             refreshToken = refreshResponse.RefreshToken;
+            TokenRefreshed?.Invoke(this, (accessToken, refreshToken));
+
             await ExecuteRequestAsync(request);
         }
         else if (!response.IsSuccessful) throw new HttpRequestException(response.Content, response.ErrorException, response.StatusCode);
