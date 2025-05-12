@@ -284,8 +284,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             core.UserId = userResult.Value.Id;
 
             core.Title = $"{userResult.Value.Nickname}님이 내 댓글을 좋아합니다";
-            core.Body = string.Empty;
-            core.ImageUrl = null;
+            core.Body = userService.GenerateTextPreviewFromContentsAsync(commentResult.Value.Contents).Result;
+            core.ImageUrl = Utils.GenerateThumbnailUrlFromContents(commentResult.Value.Contents);
 
             core.Data.Add("UserId", userResult.Value.Id);
             core.Data.Add("PostId", commentResult.Value.PostId);
