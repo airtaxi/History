@@ -20,6 +20,7 @@ public partial class TimelinePage : ContentPage
 	{
 		InitializeComponent();
 
+        MainCollectionView.ItemsSource = _viewModels;
 #if IOS
         MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
 
@@ -86,7 +87,6 @@ public partial class TimelinePage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        MainCollectionView.ItemsSource = _viewModels;
 
         if (_isFirstLoad || ShouldRefreshTimeline)
         {
