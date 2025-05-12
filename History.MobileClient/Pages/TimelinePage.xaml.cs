@@ -12,7 +12,8 @@ public partial class TimelinePage : ContentPage
 {
     public static bool ShouldRefreshTimeline { get; set; }
 
-    private ObservableCollection<PostViewModel> _viewModels = [];
+    private readonly ObservableCollection<PostViewModel> _viewModels = [];
+    private PostViewModel _lastViewModel;
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public TimelinePage()
@@ -46,8 +47,9 @@ public partial class TimelinePage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var postViewModels = posts.Select(x => new PostViewModel(x, true));
-                foreach (var postViewModel in postViewModels) _viewModels.Add(postViewModel);
+                var viewModels = posts.Select(x => new PostViewModel(x, true));
+                _lastViewModel = viewModels.LastOrDefault();
+                foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
             else return;
         }
@@ -65,8 +67,9 @@ public partial class TimelinePage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var postViewModels = posts.Select(x => new PostViewModel(x, true));
-                foreach (var postViewModel in postViewModels) _viewModels.Add(postViewModel);
+                var viewModels = posts.Select(x => new PostViewModel(x, true));
+                _lastViewModel = viewModels.LastOrDefault();
+                foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
             else return;
         }
@@ -106,24 +109,24 @@ public partial class TimelinePage : ContentPage
         }
     }
 
-    private Border _lastElement;
+    private View _lastView;
     private void OnChildAdded(object sender, ElementEventArgs e)
     {
-        var border = e.Element as Border;
-        var viewModel = border.BindingContext as PostViewModel;
-        if (viewModel == _viewModels.LastOrDefault())
+        var view = e.Element as View;
+        var viewModel = view.BindingContext as PostViewModel;
+        if (viewModel == _lastViewModel)
         {
-            if (_lastElement != null) _lastElement.Loaded -= OnLastItemBorderLoaded;
-            border.Loaded += OnLastItemBorderLoaded;
-            _lastElement = border;
+            if (_lastView != null) _lastView.Loaded -= OnLastItemViewLoaded;
+            view.Loaded += OnLastItemViewLoaded;
+            _lastView = view;
         }
     }
 
-    private async void OnLastItemBorderLoaded(object sender, EventArgs e)
+    private async void OnLastItemViewLoaded(object sender, EventArgs e)
     {
         if (_fetchSemaphore.CurrentCount > 0)
         {
-            if (_lastElement != null) _lastElement.Loaded -= OnLastItemBorderLoaded;
+            if (_lastView != null) _lastView.Loaded -= OnLastItemViewLoaded;
             await LoadMoreAsync();
         }
     }
