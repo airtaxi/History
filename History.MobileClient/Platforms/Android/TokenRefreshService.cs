@@ -33,6 +33,7 @@ public class TokenRefreshService : JobService
                 {
                     accessToken = result.Value.AccessToken;
                     refreshToken = result.Value.RefreshToken;
+                    Shared.ApiHandler = new ApiHandler(accessToken, refreshToken);
 
                     Configuration.SetValue("AccessToken", accessToken);
                     Configuration.SetValue("RefreshToken", refreshToken);
