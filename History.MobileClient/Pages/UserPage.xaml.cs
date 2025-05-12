@@ -16,7 +16,8 @@ public partial class UserPage : ContentPage
     public static bool ShouldRefreshMyProfile { get; set; }
 
     private readonly string _userId;
-    private ObservableCollection<object> _viewModels = [];
+    private readonly ObservableCollection<object> _viewModels = [];
+    private object _lastViewModel;
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public UserPage() : this(Shared.UserId)
@@ -44,6 +45,7 @@ public partial class UserPage : ContentPage
         if (viewModel == null) return;
 
         _viewModels.Remove(viewModel);
+        _lastViewModel = _viewModels.LastOrDefault();
     }
 
     public async Task RefreshAsync()
@@ -65,8 +67,9 @@ public partial class UserPage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var postViewModels = posts.Select(x => new PostViewModel(x, true));
-                foreach (var postViewModel in postViewModels) _viewModels.Add(postViewModel);
+                var viewModels = posts.Select(x => new PostViewModel(x, true));
+                _lastViewModel = viewModels.LastOrDefault();
+                foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
             else return;
         }
@@ -85,6 +88,7 @@ public partial class UserPage : ContentPage
             {
                 var posts = postsResult.Value;
                 var viewModels = posts.Select(x => new PostViewModel(x, true));
+                _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
             else return;
@@ -125,16 +129,16 @@ public partial class UserPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    private View _lastElement;
+    private View _lastView;
     private void OnChildAdded(object sender, ElementEventArgs e)
     {
         var view = e.Element as View;
         var viewModel = view.BindingContext as PostViewModel;
-        if (viewModel == _viewModels.LastOrDefault())
+        if (viewModel == _lastViewModel)
         {
-            if (_lastElement != null) _lastElement.Loaded -= OnLastItemViewLoaded;
+            if (_lastView != null) _lastView.Loaded -= OnLastItemViewLoaded;
             view.Loaded += OnLastItemViewLoaded;
-            _lastElement = view;
+            _lastView = view;
         }
     }
 
@@ -142,7 +146,7 @@ public partial class UserPage : ContentPage
     {
         if (_fetchSemaphore.CurrentCount > 0)
         {
-            if (_lastElement != null) _lastElement.Loaded -= OnLastItemViewLoaded;
+            if (_lastView != null) _lastView.Loaded -= OnLastItemViewLoaded;
             await LoadMoreAsync();
         }
     }
