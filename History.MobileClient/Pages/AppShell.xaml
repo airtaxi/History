@@ -22,6 +22,12 @@
             <ShellContent Title="보낸 신청" ContentTemplate="{DataTemplate pages:WaitingFriendRequestsPage}" />
             <ShellContent Title="받은 신청" ContentTemplate="{DataTemplate pages:PendingFriendRequestsPage}" />
         </Tab>
+        <Tab Title="알림">
+            <Tab.Icon>
+                <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Notifications}" />
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate pages:NotificationsPage}" />
+        </Tab>
         <Tab Title="프로필">
             <Tab.Icon>
                 <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Person}" />
