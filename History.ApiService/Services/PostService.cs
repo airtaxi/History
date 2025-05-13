@@ -342,10 +342,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         if (uploadResult.IsFailure) return uploadResult;
 
         var externalUrlContents = requestDto.Contents.OfType<ExternalUrlContent>();
-        foreach (var externalUrlContent in externalUrlContents)
+        foreach (var externalUrlContent in externalUrlContents.ToList())
         {
             var fillResult = await FillExternalUrlContentAsync(externalUrlContent);
-            if (!fillResult.IsFailure) requestDto.Contents.Remove(externalUrlContent);
+            if (fillResult.IsFailure) requestDto.Contents.Remove(externalUrlContent);
         }
 
         var post = new Post
@@ -403,10 +403,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
         var externalUrlContents = requestDto.Contents.OfType<ExternalUrlContent>();
-        foreach (var externalUrlContent in externalUrlContents)
+        foreach (var externalUrlContent in externalUrlContents.ToList())
         {
             var fillResult = await FillExternalUrlContentAsync(externalUrlContent);
-            if (!fillResult.IsFailure) requestDto.Contents.Remove(externalUrlContent);
+            if (fillResult.IsFailure) requestDto.Contents.Remove(externalUrlContent);
         }
 
         // Update the post contents

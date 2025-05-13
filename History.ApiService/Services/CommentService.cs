@@ -132,10 +132,10 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
         var externalUrlContents = comment.Contents.OfType<ExternalUrlContent>();
-        foreach (var externalUrlContent in externalUrlContents)
+        foreach (var externalUrlContent in externalUrlContents.ToList())
         {
             var fillResult = await postService.FillExternalUrlContentAsync(externalUrlContent);
-            if (!fillResult.IsFailure) comment.Contents.Remove(externalUrlContent);
+            if (fillResult.IsFailure) comment.Contents.Remove(externalUrlContent);
         }
 
         // Insert the comment
@@ -168,10 +168,10 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
         var externalUrlContents = contents.OfType<ExternalUrlContent>();
-        foreach (var externalUrlContent in externalUrlContents)
+        foreach (var externalUrlContent in externalUrlContents.ToList())
         {
             var fillResult = await postService.FillExternalUrlContentAsync(externalUrlContent);
-            if (!fillResult.IsFailure) contents.Remove(externalUrlContent);
+            if (fillResult.IsFailure) contents.Remove(externalUrlContent);
         }
 
         // Update Comment
