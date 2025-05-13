@@ -114,8 +114,49 @@
         </Label>
     </DataTemplate>
 
+    <DataTemplate x:Key="ExternalUrlContentTemplate" x:DataType="vm:ExternalUrlContentViewModel">
+        <Grid IsClippedToBounds="True" MinimumHeightRequest="250">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+            </Grid.GestureRecognizers>
+
+            <views:DataTemplatePresenter Template="{StaticResource ImageTemplate}" ViewModel="{x:Binding ThumbnailImage}" />
+
+            <Rectangle
+                Margin="-4"
+                Fill="Black"
+                HorizontalOptions="Fill"
+                Opacity="0.4"
+                VerticalOptions="Fill" />
+
+            <VerticalStackLayout Padding="12" VerticalOptions="End">
+                <Label
+                    FontSize="12"
+                    LineBreakMode="TailTruncation"
+                    MaxLines="1"
+                    Text="{x:Binding Domain}"
+                    TextColor="#CCCCCC" />
+                <Label
+                    Margin="0,4,0,0"
+                    FontSize="16"
+                    LineBreakMode="TailTruncation"
+                    MaxLines="1"
+                    Text="{x:Binding Title}"
+                    TextColor="White" />
+                <Label
+                    Margin="0,2,0,0"
+                    FontSize="14"
+                    LineBreakMode="TailTruncation"
+                    MaxLines="1"
+                    Text="{x:Binding Description}"
+                    TextColor="#CCCCCC" />
+            </VerticalStackLayout>
+        </Grid>
+    </DataTemplate>
+
     <vm:ContentTemplateSelector
         x:Key="ContentTemplateSelector"
+        ExternalUrlContentTemplate="{StaticResource ExternalUrlContentTemplate}"
         MediaContentTemplate="{StaticResource MediaContentTemplate}"
         StickerContentTemplate="{StaticResource StickerContentTemplate}"
         TextAndProfileContentsTemplate="{StaticResource TextAndProfileContentsTemplate}"
