@@ -54,6 +54,12 @@ public static class Utils
                 FlushTextAndProfileContents();
                 contentViewModels.Add(new StickerContentViewModel(stickerContent));
             }
+            else if (content is ExternalUrlContent externalUrlContent)
+            {
+                FlushMediaContents();
+                FlushTextAndProfileContents();
+                contentViewModels.Add(new ExternalUrlContentViewModel(externalUrlContent));
+            }
             else if (content is MediaContent mediaContent)
             {
                 FlushTextAndProfileContents();

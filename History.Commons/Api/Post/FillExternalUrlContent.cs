@@ -12,11 +12,9 @@ using System.Threading.Tasks;
 
 namespace History.Commons.Api.Post;
 
-public class FillExternalUrlContent : IBaseRequest<ExternalUrlContent>, IAuthRequiredRequest, IRequestWithBody
+public class FillExternalUrlContent(ExternalUrlContent externalUrlContent) : IBaseRequest<ExternalUrlContent>, IAuthRequiredRequest, IRequestWithBody
 {
     public string Path => "/api/post/fill-external-url-content";
     public Method Method => Method.Post;
-    public object Body { get; set; }
-
-    public FillExternalUrlContent(ExternalUrlContent externalUrlContent) => Body = externalUrlContent;
+    public object Body { get; set; } = externalUrlContent;
 }

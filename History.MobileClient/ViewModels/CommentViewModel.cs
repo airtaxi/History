@@ -94,7 +94,7 @@ public partial class CommentViewModel : ObservableObject
     public async Task HandleLikeAsync()
     {
         var commentResult = await App.ExecuteRequestAsync(new HandleCommentLike(Comment.Id));
-        if (commentResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<CommentResponseDto>(Comment));
+        if (commentResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<CommentResponseDto>(commentResult.Value));
     }
 
     public async Task DeleteAsync()

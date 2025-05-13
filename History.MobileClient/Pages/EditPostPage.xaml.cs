@@ -1,3 +1,5 @@
+using Android.Net.Wifi.P2p;
+using AndroidX.Media3.Common;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.Messaging;
@@ -12,12 +14,14 @@ using History.MobileClient.ViewModels;
 using NativeMedia;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using UraniumUI.Icons.MaterialSymbols;
 
 namespace History.MobileClient.Pages;
 
 public partial class EditPostPage : ContentPage
 {
     private MediaAttachmentViewModel _attachmentViewModelBeingDragged;
+    private ExternalUrlContentViewModel _externalUrlContentViewModel;
     private PostResponseDto _post;
     private bool _isShare;
     public ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
@@ -44,6 +48,14 @@ public partial class EditPostPage : ContentPage
             ButtonUpload.Text = "수정";
             MainTextContent.SetContents(_post.Contents);
             foreach (var mediaContent in _post.Contents.OfType<MediaContent>()) _attachmentViewModels.Add(new(mediaContent));
+            var externalUrlContent = _post.Contents.OfType<ExternalUrlContent>().FirstOrDefault();
+            if(externalUrlContent != null)
+            {
+                _externalUrlContentViewModel = new(externalUrlContent);
+                ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
+                ExternalUrlContentGrid.IsVisible = true;
+                ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
+            }
         }
         else
         {
@@ -61,6 +73,47 @@ public partial class EditPostPage : ContentPage
         DiscoveryOptionPicker.ItemsSource = Enum.GetValues<DiscoveryOption>().Select(x => x.ToDisplayString()).ToList();
         DiscoveryOptionPicker.SelectedIndex = (int)Shared.LastUsedPostDiscoveryOption;
         MainTextContent.ImageInputRequested += OnImageInputRequested;
+    }
+
+    private async Task ToggleExternalMediaAsync()
+    {
+        if (_externalUrlContentViewModel == null)
+        {
+            var url = await DisplayPromptAsync("URL 입력", "URL을 입력해주세요", Constants.PromptOk, Constants.PromptCancel, "URL 입력", -1, Keyboard.Url, string.Empty);
+            if (url == null || url == Constants.PromptCancel) return;
+
+            var externalUrlContent = new ExternalUrlContent { SourceUrl = url };
+
+            IsEnabled = false;
+            MainActivityIndicator.IsRunning = true;
+            try
+            {
+                var fillResult = await App.ExecuteRequestAsync(new FillExternalUrlContent(externalUrlContent), ErrorType.BadRequest);
+                if(fillResult.IsFailure)
+                {
+                    if (fillResult.Error == ErrorType.BadRequest) await DisplayAlert("오류", fillResult.ErrorMessage, Constants.PromptOk);
+                    return;
+                }
+
+                externalUrlContent = fillResult.Value;
+                _externalUrlContentViewModel = new ExternalUrlContentViewModel(externalUrlContent);
+                ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
+                ExternalUrlContentGrid.IsVisible = true;
+                ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
+            }
+            finally
+            {
+                IsEnabled = true;
+                MainActivityIndicator.IsRunning = false;
+            }
+        }
+        else
+        {
+            ExternalUrlContentGrid.IsVisible = false;
+            ExternalUrlContentDataTemplatePresenter.ViewModel = null;
+            _externalUrlContentViewModel = null;
+            ExternalUrlFontImageSource.Glyph = MaterialSharp.Link;
+        }
     }
 
     private async void OnImageInputRequested(object sender, string path)
@@ -194,7 +247,9 @@ public partial class EditPostPage : ContentPage
 
         var contents = editorContents.Concat(mediaAndUploadContents).ToList();
 
-        if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && !_isShare)
+        if (_externalUrlContentViewModel != null) contents.Add(_externalUrlContentViewModel.ExternalUrlContent);
+
+        if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && !_isShare)
         {
             await DisplayAlert("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
             return;
@@ -289,4 +344,7 @@ public partial class EditPostPage : ContentPage
             DiscoveryOptionPicker.SelectedIndex = (int)_post.DiscoveryOption;
         }
     }
+
+    private async void OnDeleteExternalUrlContentBorderTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
+    private async void OnInsertOrDeleteExternalUrlTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
 }
