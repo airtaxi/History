@@ -1,6 +1,7 @@
 ﻿using History.ApiService.DataTypes;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
+using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -218,6 +219,19 @@ public class PostController(IPostService postService, IFriendshipService friends
             var dtoResult = await postService.GeneratePostResponseDtoAsync(post.Value, requesterId);
             return Ok(dtoResult.Value);
         }
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpPost("fill-external-url-content")]
+    [Authorize]
+    public async Task<IActionResult> FillExternalUrlContent([FromBody] ExternalUrlContent externalUrlContent)
+    {
+        var result = await postService.FillExternalUrlContentAsync(externalUrlContent);
+        if (result.IsSuccess) return Ok(externalUrlContent);
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);

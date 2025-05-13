@@ -1,4 +1,5 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using History.ApiService.Helpers;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
@@ -340,6 +341,13 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Post, postId, userId, requestDto.Contents, files);
         if (uploadResult.IsFailure) return uploadResult;
 
+        var externalUrlContents = requestDto.Contents.OfType<ExternalUrlContent>();
+        foreach (var externalUrlContent in externalUrlContents)
+        {
+            var fillResult = await FillExternalUrlContentAsync(externalUrlContent);
+            if (!fillResult.IsFailure) requestDto.Contents.Remove(externalUrlContent);
+        }
+
         var post = new Post
         {
             Id = postId,
@@ -393,6 +401,13 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         // Upload medias
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Post, postId, userId, requestDto.Contents, files);
         if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
+
+        var externalUrlContents = requestDto.Contents.OfType<ExternalUrlContent>();
+        foreach (var externalUrlContent in externalUrlContents)
+        {
+            var fillResult = await FillExternalUrlContentAsync(externalUrlContent);
+            if (!fillResult.IsFailure) requestDto.Contents.Remove(externalUrlContent);
+        }
 
         // Update the post contents
         post.Contents = requestDto.Contents;
@@ -572,6 +587,14 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         var result = await _postCollection.UpdateOneAsync(filter, update);
         return result.IsAcknowledged ? Result.Success() : Result.Failure(ErrorType.ProgramError, "게시글의 공개 범위를 변경하는 데 실패했습니다.");
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> FillExternalUrlContentAsync(ExternalUrlContent externalUrlContent)
+    {
+        var success = await ExternalUrlHelper.FillExternalUrlContentAsync(externalUrlContent);
+        if (!success) return Result.Failure(ErrorType.BadRequest, "URL을 처리하는 데 실패했습니다.");
+        return Result.Success();
     }
 
     /// <inheritdoc />

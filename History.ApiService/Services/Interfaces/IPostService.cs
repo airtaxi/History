@@ -1,5 +1,6 @@
 ﻿using History.Commons;
 using History.Commons.DataTypes;
+using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
@@ -123,6 +124,13 @@ public interface IPostService
     /// <param name="selectedUserIds">If the discovery option is set to selected users, this list contains the ids of the users who are selected.</param>
     /// <returns></returns>
     public Task<Result> ChangeDiscoveryOptionAsync(string postId, string userId, DiscoveryOption discoveryOption, List<string> selectedUserIds);
+
+    /// <summary>
+    /// Fills the external URL content.
+    /// </summary>
+    /// <param name="externalUrlContent">The external URL content to fill.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the fill operation.</returns>
+    public Task<Result> FillExternalUrlContentAsync(ExternalUrlContent externalUrlContent);
 
     /// <summary>
     /// Checks if a user has access to a specific post asynchronously.
