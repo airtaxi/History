@@ -3,8 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace History.Commons.DataTypes.Contents;
 
-[BsonKnownTypes(typeof(ProfileContent), typeof(MediaContent), typeof(UploadContent), typeof(TextContent), typeof(StickerContent))]
+[BsonKnownTypes(typeof(ProfileContent), typeof(ExternalUrlContent), typeof(MediaContent), typeof(UploadContent), typeof(TextContent), typeof(StickerContent))]
 [JsonDerivedType(typeof(ProfileContent), "profile")]
+[JsonDerivedType(typeof(ExternalUrlContent), "text")]
 [JsonDerivedType(typeof(MediaContent), "media")]
 [JsonDerivedType(typeof(UploadContent), "upload")]
 [JsonDerivedType(typeof(TextContent), "text")]
