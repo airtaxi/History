@@ -105,15 +105,10 @@
                         </Image.Source>
                     </Image>
                 </Grid>
-                <CollectionView
-                    Margin="0"
-                    ItemTemplate="{StaticResource ContentTemplateSelector}"
-                    ItemsSource="{x:Binding Contents}"
-                    SelectionMode="None">
-                    <CollectionView.ItemsLayout>
-                        <LinearItemsLayout ItemSpacing="8" Orientation="Vertical" />
-                    </CollectionView.ItemsLayout>
-                </CollectionView>
+                <VerticalStackLayout
+                    BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
+                    BindableLayout.ItemsSource="{x:Binding Contents}"
+                    Spacing="8" />
                 <views:DataTemplatePresenter
                     IsVisible="{x:Binding IsShare}"
                     Template="{StaticResource SharedPostTemplate}"
