@@ -32,7 +32,7 @@ public static class ExternalUrlHelper
                                ?? GetMetaTagContent(doc, "description")
                                ?? content.SourceUrl;
 
-            content.ThumbnailUrl = GetMetaTagContent(doc, "og:image")
+            content.ThumbnailImageUrl = GetMetaTagContent(doc, "og:image")
                                 ?? GetFirstImageUrl(doc, content.SourceUrl)
                                 ?? "";
 
