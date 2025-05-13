@@ -6,4 +6,5 @@ public class ExternalUrlContent : BaseContent
     public string Description { get; set; }
     public string SourceUrl { get; set; }
     public string ThumbnailImageUrl { get; set; }
+    public string Domain => Uri.IsWellFormedUriString(SourceUrl, UriKind.Absolute) ? new Uri(SourceUrl).Host : "ERROR";
 }
