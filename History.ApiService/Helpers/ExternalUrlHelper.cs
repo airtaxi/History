@@ -1,6 +1,7 @@
 ﻿using History.Commons.DataTypes.Contents;
 using HtmlAgilityPack;
 using RestSharp;
+using System.Net;
 
 namespace History.ApiService.Helpers;
 
@@ -21,29 +22,37 @@ public static class ExternalUrlHelper
             if (!response.IsSuccessful || string.IsNullOrEmpty(response.Content))
                 return false;
 
+            if (response.ResponseUri != null
+                && !string.Equals(response.ResponseUri.ToString(), content.SourceUrl, StringComparison.OrdinalIgnoreCase))
+                content.SourceUrl = response.ResponseUri.ToString();
+
             var doc = new HtmlDocument();
             doc.LoadHtml(response.Content);
 
-            content.Title = GetMetaTagContent(doc, "og:title")
+            content.Title = HtmlDecode(GetMetaTagContent(doc, "og:title")
                          ?? GetDocumentTitle(doc)
-                         ?? "제목 없음";
+                         ?? "제목 없음");
 
-            content.Description = GetMetaTagContent(doc, "og:description")
+            content.Description = HtmlDecode(GetMetaTagContent(doc, "og:description")
                                ?? GetMetaTagContent(doc, "description")
-                               ?? content.SourceUrl;
+                               ?? content.SourceUrl);
 
-            content.ThumbnailImageUrl = GetMetaTagContent(doc, "og:image")
+            content.ThumbnailImageUrl = HtmlDecode(GetMetaTagContent(doc, "og:image")
                                 ?? GetFirstImageUrl(doc, content.SourceUrl)
-                                ?? "";
+                                ?? "");
 
             return true;
         }
-        catch { return false; }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error while fetching URL metadata: {ex.Message}");
+            return false;
+        }
     }
 
     private static string GetMetaTagContent(HtmlDocument doc, string property) =>
-        doc.DocumentNode.SelectSingleNode($"//meta[@property='{property}']")?.GetAttributeValue("content", null)
-        ?? doc.DocumentNode.SelectSingleNode($"//meta[@name='{property}']")?.GetAttributeValue("content", null);
+        doc.DocumentNode.SelectSingleNode($"//meta[@property='{property}']")?.GetAttributeValue("content", null) ??
+        doc.DocumentNode.SelectSingleNode($"//meta[@name='{property}']")?.GetAttributeValue("content", null);
 
     private static string GetDocumentTitle(HtmlDocument doc) => doc.DocumentNode.SelectSingleNode("//title")?.InnerText?.Trim();
 
@@ -74,4 +83,6 @@ public static class ExternalUrlHelper
         }
         return null;
     }
+
+    private static string HtmlDecode(string value) => string.IsNullOrEmpty(value) ? value : WebUtility.HtmlDecode(value);
 }
