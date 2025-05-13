@@ -96,9 +96,9 @@
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.png" Color="#fff112" BaseSize="1024,1024" ForegroundScale="1" />
 	</ItemGroup>
-	
+		
 	<ItemGroup>
-	  <None Remove="google-services.json" />
+	  <AndroidEnvironment Include="Platforms\Android\GarbageCollector.config" />
 	</ItemGroup>
 
 	<ItemGroup>
