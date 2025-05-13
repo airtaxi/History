@@ -1,4 +1,5 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using History.ApiService.Helpers;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
@@ -130,6 +131,13 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, comment.Id, requesterId, contents, files);
         if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
+        var externalUrlContents = comment.Contents.OfType<ExternalUrlContent>();
+        foreach (var externalUrlContent in externalUrlContents)
+        {
+            var fillResult = await postService.FillExternalUrlContentAsync(externalUrlContent);
+            if (!fillResult.IsFailure) comment.Contents.Remove(externalUrlContent);
+        }
+
         // Insert the comment
         await _commentCollection.InsertOneAsync(comment);
 
@@ -144,6 +152,8 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
     /// <inheritdoc />
     public async Task<Result> ModifyCommentAsync(string commentId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files)
     {
+        var postService = serviceProvider.GetRequiredService<IPostService>();
+
         var permissionResult = await CheckPermissionAsync(commentId, requesterId);
         if (permissionResult.IsFailure) return permissionResult;
 
@@ -156,6 +166,13 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         // Upload medias
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, originalComment.Id, requesterId, contents, files);
         if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
+
+        var externalUrlContents = contents.OfType<ExternalUrlContent>();
+        foreach (var externalUrlContent in externalUrlContents)
+        {
+            var fillResult = await postService.FillExternalUrlContentAsync(externalUrlContent);
+            if (!fillResult.IsFailure) contents.Remove(externalUrlContent);
+        }
 
         // Update Comment
         var filter = Builders<Comment>.Filter.Eq(f => f.Id, commentId);
