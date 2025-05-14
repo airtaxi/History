@@ -53,7 +53,7 @@ public partial class EditPostPage : ContentPage
             {
                 _externalUrlContentViewModel = new(externalUrlContent);
                 ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
-                ExternalUrlContentGrid.IsVisible = true;
+                ExternalUrlContentBorder.IsVisible = true;
                 ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
             }
         }
@@ -98,7 +98,7 @@ public partial class EditPostPage : ContentPage
                 externalUrlContent = fillResult.Value;
                 _externalUrlContentViewModel = new ExternalUrlContentViewModel(externalUrlContent);
                 ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
-                ExternalUrlContentGrid.IsVisible = true;
+                ExternalUrlContentBorder.IsVisible = true;
                 ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
             }
             finally
@@ -109,7 +109,7 @@ public partial class EditPostPage : ContentPage
         }
         else
         {
-            ExternalUrlContentGrid.IsVisible = false;
+            ExternalUrlContentBorder.IsVisible = false;
             ExternalUrlContentDataTemplatePresenter.ViewModel = null;
             _externalUrlContentViewModel = null;
             ExternalUrlFontImageSource.Glyph = MaterialSharp.Link;
