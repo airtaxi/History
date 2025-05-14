@@ -145,28 +145,35 @@
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
-                <Grid x:Name="ExternalUrlContentGrid" IsVisible="False">
-                    <views:DataTemplatePresenter
-                        x:Name="ExternalUrlContentDataTemplatePresenter"
-                        InputTransparent="True"
-                        Template="{StaticResource ExternalUrlContentTemplate}" />
-                    <Image
-                        Margin="6"
-                        HeightRequest="32"
-                        HorizontalOptions="End"
-                        VerticalOptions="Start"
-                        WidthRequest="32">
-                        <Image.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnDeleteExternalUrlContentBorderTapped" />
-                        </Image.GestureRecognizers>
-                        <Image.Source>
-                            <FontImageSource
-                                FontFamily="MaterialSharp"
-                                Glyph="{x:Static m:MaterialSharp.Close}"
-                                Color="White" />
-                        </Image.Source>
-                    </Image>
-                </Grid>
+                <Border
+                    x:Name="ExternalUrlContentBorder"
+                    Margin="6"
+                    IsVisible="False"
+                    Stroke="#808080"
+                    StrokeThickness="1">
+                    <Grid>
+                        <views:DataTemplatePresenter
+                            x:Name="ExternalUrlContentDataTemplatePresenter"
+                            InputTransparent="True"
+                            Template="{StaticResource ExternalUrlContentTemplate}" />
+                        <Image
+                            Margin="6"
+                            HeightRequest="32"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start"
+                            WidthRequest="32">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDeleteExternalUrlContentBorderTapped" />
+                            </Image.GestureRecognizers>
+                            <Image.Source>
+                                <FontImageSource
+                                    FontFamily="MaterialSharp"
+                                    Glyph="{x:Static m:MaterialSharp.Close}"
+                                    Color="White" />
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </Border>
             </VerticalStackLayout>
         </ScrollView>
 
