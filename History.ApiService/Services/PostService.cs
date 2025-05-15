@@ -293,7 +293,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     {
         var post = await GetPostByIdAsync(postId);
         if (post.IsFailure) return post.CastFailure();
-        else if (post.Value.UserId == userId) return Result.Failure(ErrorType.BadRequest, "자신의 게시글은 무시할 수 없습니다.");
+        else if (post.Value.UserId == userId) return (ErrorType.BadRequest, "자신의 게시글은 무시할 수 없습니다.");
 
         var ignoredPost = new IgnoredPost
         {
@@ -319,13 +319,23 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             && (requestDto.DiscoveryOptionSelectedUserIds == null
             || requestDto.DiscoveryOptionSelectedUserIds.Count == 0))
         {
-            return Result.Failure(ErrorType.BadRequest, "특정 친구 (비)공개 설정을 선택한 경우, 친구를 선택해야 합니다.");
+            return (ErrorType.BadRequest, "특정 친구 (비)공개 설정을 선택한 경우, 친구를 선택해야 합니다.");
         }
 
         if (requestDto.ParentPostId != null)
         {
             var accessResult = await CheckAccessAsync(requestDto.ParentPostId, userId);
             if (accessResult.IsFailure) return accessResult;
+
+            var parentPostResult = await GetPostByIdAsync(requestDto.ParentPostId);
+            if (parentPostResult.IsFailure) return parentPostResult.CastFailure();
+
+            var parentPost = parentPostResult.Value;
+            if (parentPost.DiscoveryOption == DiscoveryOption.SelectedUsers
+                || parentPost.DiscoveryOption == DiscoveryOption.UnselectedUsers)
+                return (ErrorType.BadRequest, "공개 범위가 특정 친구 (비)공개인 게시글은 공유할 수 없습니다");
+            else if (requestDto.DiscoveryOption > parentPost.DiscoveryOption)
+                return (ErrorType.BadRequest, "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다.");
         }
 
         string postId;
@@ -385,7 +395,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         var post = postResult.Value;
         // Check if the user is the author of the post
-        if (post.UserId != userId) return Result.Failure(ErrorType.Forbidden, "게시글을 수정할 수 있는 권한이 없습니다.");
+        if (post.UserId != userId) return (ErrorType.Forbidden, "게시글을 수정할 수 있는 권한이 없습니다.");
 
         // Delete Media
         var originalPostMediaIds = post.Contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
@@ -428,7 +438,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var post = postResult.Value;
 
         // Check if the user is the author of the post
-        if (post.UserId != userId) return Result.Failure(ErrorType.Forbidden, "게시글을 삭제할 수 있는 권한이 없습니다.");
+        if (post.UserId != userId) return (ErrorType.Forbidden, "게시글을 삭제할 수 있는 권한이 없습니다.");
 
         // Delete comments and comment likes associated with the post
         var commentIds = await _commentCollection
@@ -574,7 +584,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var post = postResult.Value;
 
         // Check if the user is the author of the post
-        if (post.UserId != userId) return Result.Failure(ErrorType.Forbidden, "게시글을 수정할 수 있는 권한이 없습니다.");
+        if (post.UserId != userId) return (ErrorType.Forbidden, "게시글을 수정할 수 있는 권한이 없습니다.");
 
         // Update discovery option and selected user IDs
         post.DiscoveryOption = discoveryOption;
@@ -593,7 +603,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     public async Task<Result> FillExternalUrlContentAsync(ExternalUrlContent externalUrlContent)
     {
         var success = await ExternalUrlHelper.FillExternalUrlContentAsync(externalUrlContent);
-        if (!success) return Result.Failure(ErrorType.BadRequest, "URL을 처리하는 데 실패했습니다.");
+        if (!success) return (ErrorType.BadRequest, "URL을 처리하는 데 실패했습니다.");
         return Result.Success();
     }
 
