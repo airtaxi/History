@@ -340,7 +340,7 @@ public partial class EditPostPage : ContentPage
         var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
         if (discoveryOption > _post.DiscoveryOption)
         {
-            await DisplayAlert("오류", "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다", Constants.PromptOk);
+            await DisplayAlert("오류", "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다.", Constants.PromptOk);
             DiscoveryOptionPicker.SelectedIndex = (int)_post.DiscoveryOption;
         }
     }

@@ -237,6 +237,12 @@ public partial class PostPage : ContentPage
 
     private async void OnShareImageTapped(object sender, TappedEventArgs e)
     {
+        if (_viewModel.Post.DiscoveryOption == Commons.Enums.DiscoveryOption.SelectedUsers || _viewModel.Post.DiscoveryOption == Commons.Enums.DiscoveryOption.UnselectedUsers)
+        {
+            await DisplayAlert("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 공유할 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+
         var page = new EditPostPage(_viewModel.Post, true);
         await App.PushModalAsync(page);
     }
