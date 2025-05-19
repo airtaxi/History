@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.DiscoveryOptionSelectUsersPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:views="clr-namespace:History.MobileClient.ContentViews"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
+    Shell.NavBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,0,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout>
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Picker
+                    x:Name="DiscoveryOptionPicker"
+                    SelectedIndexChanged="OnDiscoveryOptionPickerSelectedIndexChanged"
+                    TextColor="White" />
+            </HorizontalStackLayout>
+
+            <Button
+                x:Name="ButtonUpload"
+                Padding="12,0"
+                Clicked="OnUploadButtonClicked"
+                FontAttributes="Bold"
+                HorizontalOptions="End"
+                Text="올리기"
+                TextColor="{StaticResource White}"
+                VerticalOptions="Center" />
+        </Grid>
+
+        <RefreshView Grid.Row="1" Refreshing="OnRefreshing">
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid
+                    Grid.Row="0"
+                    Padding="12,12,0,12"
+                    HeightRequest="60">
+                    <VerticalStackLayout VerticalOptions="Center">
+                        <Label
+                            x:Name="LabelHeaderTitle"
+                            FontSize="12"
+                            HorizontalTextAlignment="Center"
+                            LineBreakMode="TailTruncation"
+                            Text="이 게시글을 (비)공개할 친구를 선택해보세요." />
+                        <Label
+                            x:Name="LabelHeaderDescription"
+                            Margin="0,2,0,0"
+                            FontSize="12"
+                            HorizontalOptions="Center"
+                            LineBreakMode="TailTruncation"
+                            Text="선택된 친구에게만 (비)공개되며, 공유는 허용되지 않습니다."
+                            TextColor="#808080" />
+                    </VerticalStackLayout>
+                    <CollectionView x:Name="SelectedUserCollectionView" />
+                </Grid>
+
+                <SearchBar
+                    x:Name="MainSearchBar"
+                    Grid.Row="1"
+                    Placeholder="친구의 닉네임 또는 핸들 검색"
+                    TextChanged="OnMainSearchBarTextChanged" />
+
+                <Grid Grid.Row="2" />
+
+                <CollectionView x:Name="MainCollectionView" Grid.Row="3">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SelectUserViewModel">
+                            <Grid>
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="32" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="32" />
+                                </Grid.ColumnDefinitions>
+                                <views:DataTemplatePresenter
+                                    Grid.Column="0"
+                                    HeightRequest="32"
+                                    Template="{StaticResource MediaTemplateSelector}"
+                                    VerticalOptions="Center"
+                                    ViewModel="{x:Binding ProfileMedia}"
+                                    WidthRequest="32">
+                                    <views:DataTemplatePresenter.Clip>
+                                        <EllipseGeometry
+                                            Center="16,16"
+                                            RadiusX="16"
+                                            RadiusY="16" />
+                                    </views:DataTemplatePresenter.Clip>
+                                </views:DataTemplatePresenter>
+                                <HorizontalStackLayout
+                                    Grid.Column="1"
+                                    Spacing="4"
+                                    VerticalOptions="Center">
+                                    <Label
+                                        FontAttributes="Bold"
+                                        FontSize="20"
+                                        LineBreakMode="TailTruncation"
+                                        Text="{x:Binding Nickname}" />
+                                    <Image
+                                        HeightRequest="20"
+                                        IsVisible="{x:Binding IsAdmin}"
+                                        WidthRequest="20">
+                                        <Image.Source>
+                                            <FontImageSource
+                                                FontFamily="FASolid"
+                                                Glyph="{x:Static fa:Solid.Crown}"
+                                                Color="#f78501" />
+                                        </Image.Source>
+                                    </Image>
+                                    <Image
+                                        HeightRequest="20"
+                                        IsVisible="{x:Binding IsModerator}"
+                                        WidthRequest="20">
+                                        <Image.Source>
+                                            <FontImageSource
+                                                FontFamily="FASolid"
+                                                Glyph="{x:Static fa:Solid.Gavel}"
+                                                Color="#1a5bf3" />
+                                        </Image.Source>
+                                    </Image>
+                                </HorizontalStackLayout>
+                                <CheckBox
+                                    Grid.Column="2"
+                                    IsChecked="{x:Binding IsSelected}"
+                                    VerticalOptions="Center" />
+                                <Rectangle
+                                    Grid.ColumnSpan="3"
+                                    Margin="-12,0,-12,-8"
+                                    Fill="#808080"
+                                    HeightRequest="{OnPlatform iOS=1.5,
+                                                               Android=1}"
+                                    HorizontalOptions="Fill"
+                                    VerticalOptions="End" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Label
+                    x:Name="EmptyLabel"
+                    Grid.Row="3"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    HorizontalOptions="Center"
+                    Text="비어있음"
+                    VerticalOptions="Center" />
+            </Grid>
+        </RefreshView>
+    </Grid>
+</ContentPage>
