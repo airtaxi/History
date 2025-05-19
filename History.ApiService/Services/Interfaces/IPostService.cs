@@ -87,12 +87,12 @@ public interface IPostService
     public Task<Result> DeletePostAsync(string postId, string userId);
 
     /// <summary>
-    /// Asynchronously reposts a specified post for a user.
+    /// Asynchronously reposts or un-repost a specified post for a user.
     /// </summary>
     /// <param name="postId">Specifies the post that is being reposted.</param>
     /// <param name="userId">Identifies the user who is reposting the content.</param>
     /// <returns>Returns a task that represents the result of the repost operation.</returns>
-    public Task<Result> RepostPostAsync(string postId, string userId);
+    public Task<Result> HandleRepostAsync(string postId, string userId);
 
     /// <summary>
     /// Handles the reaction to a post by a user asynchronously.
