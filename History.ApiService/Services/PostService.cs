@@ -474,28 +474,46 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     }
 
     /// <inheritdoc />
-    public async Task<Result> RepostPostAsync(string postId, string userId)
+    public async Task<Result> HandleRepostAsync(string postId, string userId)
     {
         var accessResult = await CheckAccessAsync(postId, userId);
         if (accessResult.IsFailure) return accessResult;
 
-        var post = new Post
-        {
-            UserId = userId,
-            DiscoveryOption = DiscoveryOption.Friends,
-            ParentPostId = postId,
-            IsRepost = true,
-        };
+        var existingRepost = await _postCollection
+            .Find(p => p.UserId == userId && p.ParentPostId == postId && p.IsRepost)
+            .FirstOrDefaultAsync();
 
-        while (true)
+        if (existingRepost == null)
         {
-            post.Id = Guid.NewGuid().ToString("N");
+            var post = new Post
+            {
+                UserId = userId,
+                DiscoveryOption = DiscoveryOption.Friends,
+                ParentPostId = postId,
+                IsRepost = true,
+            };
 
-            var existingPost = await GetPostByIdAsync(post.Id);
-            if (existingPost.IsFailure) break;
+            while (true)
+            {
+                post.Id = Guid.NewGuid().ToString("N");
+
+                var existingPost = await GetPostByIdAsync(post.Id);
+                if (existingPost.IsFailure) break;
+            }
+
+            _postCollection.InsertOne(post);
+
+            // Send notification
+            await notificationService.SendNotificationsAsync(NotificationType.Repost, post.Id);
         }
+        else
+        {
+            // If the repost already exists, delete it
+            await _postCollection.DeleteOneAsync(p => p.UserId == userId && p.ParentPostId == postId && p.IsRepost);
 
-        _postCollection.InsertOne(post);
+            // Delete notifications
+            await notificationService.DeleteNotificationsAsync("AssociatedId", existingRepost.Id, NotificationType.Repost);
+        }
 
         return Result.Success();
     }
