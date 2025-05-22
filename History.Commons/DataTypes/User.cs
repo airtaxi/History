@@ -10,6 +10,11 @@ public class User
     public string Id { get; set; }
 
     /// <summary>
+    /// User's email address. (from social service)
+    /// </summary>
+    public string Email { get; set; }
+
+    /// <summary>
     /// Customized user ID.
     /// Default: 8-digit UUID
     /// </summary>
