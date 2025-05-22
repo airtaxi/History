@@ -137,6 +137,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             }
         }
 
+        filter &= Builders<Post>.Filter.Eq(p => p.IsRepost, false);
+
         // Retrieve and return posts sorted by creation time (newest first)
         return await _postCollection
             .Find(filter)
