@@ -129,17 +129,33 @@ public static class MediaConverter
     // Helper method to determine the frame rate of animated images
     private static double DetermineFramerate(MagickImageCollection images)
     {
-        // Calculate frame rate based on the first frame's delay time
-        // Delay is specified in hundredths of a second
-        uint delay = images[0].AnimationDelay;
-
-        // Use default frame rate if delay is 0
-        if (delay == 0)
+        if (images == null || images.Count == 0)
         {
-            return 10; // Default to 10 FPS
+            return 0;
         }
 
-        // Convert delay time to frame rate (hundredths of a second -> frames per second)
-        return 100.0 / delay;
+        double totalDelay = 0;
+        int frameCount = 0;
+
+        foreach (var frame in images)
+        {
+            // Usually, a delay of 0 is invalid or too fast to render correctly.
+            // Assign a minimum fallback delay if needed.
+            uint delay = frame.AnimationDelay;
+            if (delay == 0)
+            {
+                delay = 10; // Fallback to minimum 0.1s (10/100s)
+            }
+
+            totalDelay += delay;
+            frameCount++;
+        }
+
+        // Calculate average delay and convert it to FPS.
+        // Delay is in 1/100ths of a second, so multiply by 100 to get FPS.
+        double averageDelay = totalDelay / frameCount;
+        double fps = 100.0 / averageDelay;
+
+        return fps;
     }
 }
