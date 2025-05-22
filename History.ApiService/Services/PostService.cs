@@ -335,7 +335,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             var parentPost = parentPostResult.Value;
             if (parentPost.DiscoveryOption == DiscoveryOption.SelectedUsers
                 || parentPost.DiscoveryOption == DiscoveryOption.UnselectedUsers)
-                return (ErrorType.BadRequest, "공개 범위가 특정 친구 (비)공개인 게시글은 공유할 수 없습니다");
+                return (ErrorType.BadRequest, "공개 범위가 특정 친구 (비)공개인 게시글은 공유할 수 없습니다.");
             else if (requestDto.DiscoveryOption > parentPost.DiscoveryOption)
                 return (ErrorType.BadRequest, "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다.");
         }
@@ -484,6 +484,15 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var existingRepost = await _postCollection
             .Find(p => p.UserId == userId && p.ParentPostId == postId && p.IsRepost)
             .FirstOrDefaultAsync();
+
+        var parentPostResult = await GetPostByIdAsync(postId);
+        if (parentPostResult.IsFailure) return parentPostResult.CastFailure();
+
+        var parentPost = parentPostResult.Value;
+
+        if (parentPost.DiscoveryOption == DiscoveryOption.SelectedUsers
+            || parentPost.DiscoveryOption == DiscoveryOption.UnselectedUsers)
+            return (ErrorType.BadRequest, "공개 범위가 특정 친구 (비)공개인 게시글은 리포스트할 수 없습니다.");
 
         if (existingRepost == null)
         {
