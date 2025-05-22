@@ -11,6 +11,7 @@ public class PostResponseDto
     public bool IsRepost { get; set; }
 
     public DiscoveryOption DiscoveryOption { get; set; }
+    public List<string> DiscoveryOptionSelectedUserIds { get; set; }
 
     public List<BaseContent> Contents { get; set; } = [];
     public PostResponseDto ParentPost { get; set; }
