@@ -150,6 +150,7 @@ public class Configuration
 }
 
 [JsonSourceGenerationOptions()]
+[JsonSerializable(typeof(Dictionary<string, List<string>>))] // Preset
 [JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSerializable(typeof(bool))]
 [JsonSerializable(typeof(int))]

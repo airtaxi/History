@@ -1,5 +1,3 @@
-using Android.Net.Wifi.P2p;
-using AndroidX.Media3.Common;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.Messaging;
@@ -255,14 +253,31 @@ public partial class EditPostPage : ContentPage
             return;
         }
 
-        var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
-
         try
 		{
 			MainActivityIndicator.IsRunning = true;
+
+            List<string> discoveryOptionSelectedUserIds = null;
+            var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
+            if (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers)
+            {
+                var selectUserPage = new DiscoveryOptionSelectUsersPage(_post?.DiscoveryOptionSelectedUserIds);
+                await App.PushModalAsync(selectUserPage);
+
+                var result = await selectUserPage.GetResultAsync();
+                if (result == null || result.Count == 0)
+                {
+                    await DisplayAlert("오류", "선택된 친구가 없습니다.", Constants.PromptOk);
+                    return;
+                }
+
+                discoveryOptionSelectedUserIds = result;
+                await Task.Delay(1000);
+            }
+
             if (_post != null && !_isShare)
             {
-                var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, null, files), ErrorType.BadRequest);
+                var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
                 if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
                 else if (result.IsSuccess)
                 {
@@ -272,7 +287,7 @@ public partial class EditPostPage : ContentPage
             }
             else
             {
-                var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _isShare ? _post.Id : null, null, files), ErrorType.BadRequest);
+                var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
                 if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
                 else if (result.IsSuccess)
                 {
