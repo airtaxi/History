@@ -502,6 +502,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                 DiscoveryOption = DiscoveryOption.Friends,
                 ParentPostId = postId,
                 IsRepost = true,
+                CreatedAt = DateTime.UtcNow,
             };
 
             while (true)
