@@ -60,7 +60,7 @@ public partial class FriendListPage : ContentPage
         }
         else
         {
-            var viewModels = _viewModels.Where(x => x.Nickname.Contains(query, StringComparison.InvariantCultureIgnoreCase) || x.User.Handle.Equals(query, StringComparison.InvariantCultureIgnoreCase)).ToList();
+            var viewModels = _viewModels.Where(x => x.Nickname.Contains(query, StringComparison.InvariantCultureIgnoreCase) || x.User.Handle.Equals(query, StringComparison.InvariantCultureIgnoreCase));
             MainCollectionView.ItemsSource = viewModels;
             EmptyLabel.IsVisible = !viewModels.Any();
         }
