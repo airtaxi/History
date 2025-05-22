@@ -177,6 +177,9 @@
 		<MauiXaml Update="Resources\Styles\Media.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Resources\Styles\Repost.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Post.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
@@ -212,6 +215,12 @@
 		<PackageReference Include="UraniumUI.Material" Version="2.11.1" />
 		<PackageReference Include="Xamarin.Build.Download" Version="0.11.4" />
 		<PackageReference Include="Xamarin.MediaGallery" Version="3.0.0-preview" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Resources\Styles\Repost.xaml.cs">
+	    <DependentUpon>Repost.xaml</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 </Project>

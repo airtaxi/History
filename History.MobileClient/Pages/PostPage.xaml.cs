@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.Api.Comment;
+using History.Commons.Api.Post;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
@@ -36,6 +37,8 @@ public partial class PostPage : ContentPage
 	{
 		_viewModel = viewModel;
         InitializeComponent();
+        UpdateRepostStatus(viewModel.Post);
+
 		BindingContext = _viewModel;
         CommentMentionEditor.BindingContext = _mentionsViewModel;
         CommentUserCollectionView.BindingContext = _mentionsViewModel;
@@ -84,6 +87,13 @@ public partial class PostPage : ContentPage
         }
 
         return;
+    }
+
+    private void UpdateRepostStatus(PostResponseDto post)
+    {
+        var isReposted = post.SharedAndRepostedUsers.Any(x => x.User.UserId == Shared.UserId && x.IsRepost);
+        if (isReposted) RepostFontImageSource.Glyph = MaterialSharp.Shift_lock_off;
+        else RepostFontImageSource.Glyph = MaterialSharp.Shift_lock;
     }
 
     private void OnCommentTappedMessageReceived(object recipient, CommentTappedMessage message)
@@ -245,6 +255,23 @@ public partial class PostPage : ContentPage
 
         var page = new EditPostPage(_viewModel.Post, true);
         await App.PushModalAsync(page);
+    }
+
+    private async void OnRepostImageTapped(object sender, TappedEventArgs e)
+    {
+        if (_viewModel.Post.DiscoveryOption == Commons.Enums.DiscoveryOption.SelectedUsers || _viewModel.Post.DiscoveryOption == Commons.Enums.DiscoveryOption.UnselectedUsers)
+        {
+            await DisplayAlert("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 리포스트할 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        var result = await App.ExecuteRequestAsync(new HandleRepost(_viewModel.Post.Id));
+        if (result.IsFailure) return;
+
+        var post = result.Value;
+        UpdateRepostStatus(post);
+        TimelinePage.ShouldRefreshTimeline = true;
+        WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post));
     }
 
     private async void OnRefreshing(object sender, EventArgs e)

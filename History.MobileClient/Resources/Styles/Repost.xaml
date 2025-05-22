@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ResourceDictionary
-    x:Class="History.MobileClient.Resources.Styles.Post"
+    x:Class="History.MobileClient.Resources.Styles.Repost"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
@@ -8,7 +8,7 @@
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
 
-    <DataTemplate x:Key="PostTemplate" x:DataType="vm:PostViewModel">
+    <DataTemplate x:Key="RepostTemplate" x:DataType="vm:RepostViewModel">
         <Border
             Margin="6"
             Padding="12"
@@ -109,67 +109,54 @@
                     BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
                     BindableLayout.ItemsSource="{x:Binding Contents}"
                     Spacing="8" />
-                <views:DataTemplatePresenter
-                    IsVisible="{x:Binding IsShare}"
-                    Template="{StaticResource SharedPostTemplate}"
-                    ViewModel="{x:Binding ParentPost,
-                                          Mode=OneWay}" />
-                <HorizontalStackLayout Margin="0,4,0,0" Spacing="12">
-                    <HorizontalStackLayout Spacing="8">
-                        <Image HeightRequest="24" WidthRequest="24">
-                            <Image.GestureRecognizers>
-                                <TapGestureRecognizer Command="{x:Binding HandleReactionCommand}" />
-                            </Image.GestureRecognizers>
-                            <Image.Source>
-                                <FontImageSource
-                                    FontFamily="{x:Binding ReactionFontFamily}"
-                                    Glyph="{x:Binding ReactionGlyph}"
-                                    Color="{x:Binding ReactionColor}" />
-                            </Image.Source>
-                        </Image>
-                        <Label
-                            FontAttributes="Bold"
-                            FontSize="16"
-                            Text="{x:Binding ReactionsCount}"
-                            VerticalOptions="End" />
-                    </HorizontalStackLayout>
-                    <HorizontalStackLayout Spacing="8">
-                        <Image HeightRequest="24" WidthRequest="24">
-                            <Image.Source>
-                                <FontImageSource
-                                    FontFamily="FARegular"
-                                    Glyph="{x:Static fa:Regular.Comments}"
-                                    Color="{AppThemeBinding Dark=#FFFFFF,
-                                                            Light=#000000}" />
-                            </Image.Source>
-                        </Image>
-                        <Label
-                            FontAttributes="Bold"
-                            FontSize="16"
-                            Text="{x:Binding CommentsCount}"
-                            VerticalOptions="End" />
-                    </HorizontalStackLayout>
-                </HorizontalStackLayout>
-                <Grid Margin="0,4,0,0" IsVisible="{x:Binding HasComments}">
+                <Grid Margin="0,4,0,0">
                     <Rectangle
                         Fill="#808080"
                         HeightRequest="{OnPlatform iOS=1.5,
                                                    Android=1}"
                         HorizontalOptions="Fill"
                         VerticalOptions="Start" />
-                    <views:DataTemplatePresenter
+                    <Grid
                         Margin="0,12,0,0"
-                        Template="{StaticResource CommentTemplate}"
-                        ViewModel="{x:Binding FirstComment,
-                                              Mode=OneWay}" />
+                        Padding="6,0,0,6"
+                        ColumnSpacing="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="36" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            Background="{AppThemeBinding Dark=#AAAAAA,
+                                                         Light=#555555}"
+                            HeightRequest="36"
+                            WidthRequest="36">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="18" />
+                            </Border.StrokeShape>
+                            <Image HeightRequest="28" WidthRequest="28">
+                                <Image.Source>
+                                    <FontImageSource
+                                        FontFamily="MaterialSharp"
+                                        Glyph="{x:Static m:MaterialSharp.Shift_lock}"
+                                        Color="{AppThemeBinding Dark=#000000,
+                                                                Light=#FFFFFF}" />
+                                </Image.Source>
+                            </Image>
+                        </Border>
+                        <Label Grid.Column="1" VerticalOptions="Center">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span FontAttributes="Bold" Text="{x:Binding RepostedUserNickname}">
+                                        <Span.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{x:Binding HandleRepostedUserTapCommand}" />
+                                        </Span.GestureRecognizers>
+                                    </Span>
+                                    <Span>님이 리포스트 했어요</Span>
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                    </Grid>
                 </Grid>
             </VerticalStackLayout>
         </Border>
     </DataTemplate>
-
-    <vm:TimelineTemplateSelector
-        x:Key="TimelineTemplateSelector"
-        PostTemplate="{StaticResource PostTemplate}"
-        ProfileTemplate="{StaticResource ProfileTemplate}"
-        RepostTemplate="{StaticResource RepostTemplate}" />
 </ResourceDictionary>

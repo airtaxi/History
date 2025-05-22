@@ -10,7 +10,6 @@ namespace History.Commons;
 public class ApiHandler(string accessToken = null, string refreshToken = null)
 {
     public static ApiHandler Public { get; } = new();
-    public static event EventHandler<(string AccessToken, string RefreshToken)> TokenRefreshed;
     private static readonly RestClient Client = new(CommonsConstants.ApiBaseUrl);
 
     private readonly bool _initialized = accessToken != null && refreshToken != null;
@@ -106,7 +105,8 @@ public class ApiHandler(string accessToken = null, string refreshToken = null)
 
             accessToken = refreshResponse.AccessToken;
             refreshToken = refreshResponse.RefreshToken;
-            TokenRefreshed?.Invoke(this, (accessToken, refreshToken));
+            Configuration.SetValue("AccessToken", accessToken);
+            Configuration.SetValue("RefreshToken", refreshToken);
 
             await ExecuteRequestAsync(request);
         }
