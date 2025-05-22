@@ -46,7 +46,7 @@ public partial class TimelinePage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var viewModels = posts.Select(x => new PostViewModel(x, true));
+                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.ParentPost, x.User) : new PostViewModel(x, true));
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
@@ -66,7 +66,7 @@ public partial class TimelinePage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var viewModels = posts.Select(x => new PostViewModel(x, true));
+                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.ParentPost, x.User) : new PostViewModel(x, true));
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }

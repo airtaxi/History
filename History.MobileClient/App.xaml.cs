@@ -22,7 +22,6 @@ public partial class App : Application
     {
         InitializeComponent();
 
-        ApiHandler.TokenRefreshed += OnTokenRefreshed;
 #if ANDROID
         Android.Runtime.AndroidEnvironment.UnhandledExceptionRaiser += (sender, e) =>
         {
@@ -35,12 +34,6 @@ public partial class App : Application
             }
         };
 #endif
-    }
-
-    private void OnTokenRefreshed(object sender, (string AccessToken, string RefreshToken) e)
-    {
-        Configuration.SetValue("AccessToken", e.AccessToken);
-        Configuration.SetValue("RefreshToken", e.RefreshToken);
     }
 
     public static Page Page

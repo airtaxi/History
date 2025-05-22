@@ -1,4 +1,5 @@
-﻿using History.Commons.Api.PushNotification;
+﻿using History.Commons;
+using History.Commons.Api.PushNotification;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;

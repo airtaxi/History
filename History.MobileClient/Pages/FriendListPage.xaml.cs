@@ -1,3 +1,4 @@
+using History.Commons;
 using History.Commons.Api.Friendship;
 using History.MobileClient.ViewModels;
 using UraniumUI.Icons.FontAwesome;

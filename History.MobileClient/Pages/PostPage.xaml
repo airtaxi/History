@@ -52,8 +52,12 @@
                 Spacing="12"
                 VerticalOptions="Center">
                 <Image VerticalOptions="Center">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnRepostImageTapped" />
+                    </Image.GestureRecognizers>
                     <Image.Source>
                         <FontImageSource
+                            x:Name="RepostFontImageSource"
                             FontFamily="MaterialSharp"
                             Glyph="{x:Static m:MaterialSharp.Shift_lock}"
                             Color="White" />
