@@ -8,6 +8,7 @@
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
+    HandlerChanging="OnHandlerChanging"
     Shell.NavBarIsVisible="False">
     <ContentPage.Behaviors>
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
@@ -33,21 +34,29 @@
                         <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
                     </Image.Source>
                 </Image>
-                <Picker
-                    x:Name="DiscoveryOptionPicker"
-                    SelectedIndexChanged="OnDiscoveryOptionPickerSelectedIndexChanged"
-                    TextColor="White" />
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="친구 선택"
+                    TextColor="White"
+                    VerticalOptions="Center" />
             </HorizontalStackLayout>
 
-            <Button
-                x:Name="ButtonUpload"
-                Padding="12,0"
-                Clicked="OnUploadButtonClicked"
-                FontAttributes="Bold"
-                HorizontalOptions="End"
-                Text="올리기"
-                TextColor="{StaticResource White}"
-                VerticalOptions="Center" />
+            <HorizontalStackLayout HorizontalOptions="End" VerticalOptions="Center">
+                <Button
+                    Padding="12,0"
+                    Clicked="OnPresetButtonClicked"
+                    FontAttributes="Bold"
+                    Text="프리셋"
+                    TextColor="{StaticResource White}" />
+                <Button
+                    Margin="0,-4,0,0"
+                    Padding="12,0"
+                    Clicked="OnSelectButtonClicked"
+                    FontAttributes="Bold"
+                    Text="선택"
+                    TextColor="{StaticResource White}" />
+            </HorizontalStackLayout>
         </Grid>
 
         <RefreshView Grid.Row="1" Refreshing="OnRefreshing">
@@ -62,7 +71,7 @@
                     Grid.Row="0"
                     Padding="12,12,0,12"
                     HeightRequest="60">
-                    <VerticalStackLayout VerticalOptions="Center">
+                    <VerticalStackLayout x:Name="SelectedUserPlaceholderVerticalStackLayout" VerticalOptions="Center">
                         <Label
                             x:Name="LabelHeaderTitle"
                             FontSize="12"
@@ -78,7 +87,57 @@
                             Text="선택된 친구에게만 (비)공개되며, 공유는 허용되지 않습니다."
                             TextColor="#808080" />
                     </VerticalStackLayout>
-                    <CollectionView x:Name="SelectedUserCollectionView" />
+                    <CollectionView
+                        x:Name="SelectedUserCollectionView"
+                        HeightRequest="48"
+                        VerticalOptions="Center">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout ItemSpacing="12" Orientation="Horizontal" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SelectUserViewModel">
+                                <Grid IsClippedToBounds="False" WidthRequest="54">
+                                    <views:DataTemplatePresenter
+                                        Grid.Column="0"
+                                        HeightRequest="48"
+                                        HorizontalOptions="Start"
+                                        Template="{StaticResource MediaTemplateSelector}"
+                                        VerticalOptions="Center"
+                                        ViewModel="{x:Binding ProfileMedia}"
+                                        WidthRequest="48">
+                                        <views:DataTemplatePresenter.Clip>
+                                            <EllipseGeometry
+                                                Center="24,24"
+                                                RadiusX="24"
+                                                RadiusY="24" />
+                                        </views:DataTemplatePresenter.Clip>
+                                    </views:DataTemplatePresenter>
+                                    <Border
+                                        Background="White"
+                                        HeightRequest="20"
+                                        HorizontalOptions="End"
+                                        StrokeThickness="0"
+                                        VerticalOptions="End"
+                                        WidthRequest="20">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="10" />
+                                        </Border.StrokeShape>
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+                                        </Border.GestureRecognizers>
+                                        <Image HeightRequest="20" WidthRequest="20">
+                                            <Image.Source>
+                                                <FontImageSource
+                                                    FontFamily="MaterialSharp"
+                                                    Glyph="{x:Static m:MaterialSharp.Close}"
+                                                    Color="#808080" />
+                                            </Image.Source>
+                                        </Image>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
                 </Grid>
 
                 <SearchBar
@@ -92,7 +151,7 @@
                 <CollectionView x:Name="MainCollectionView" Grid.Row="3">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="vm:SelectUserViewModel">
-                            <Grid>
+                            <Grid Padding="12,8,12,8" ColumnSpacing="12">
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
                                 </Grid.GestureRecognizers>

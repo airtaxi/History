@@ -1,4 +1,5 @@
 ﻿using History.Commons.DataTypes.ResponseDtos;
+using History.MobileClient.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,4 +8,4 @@ using System.Threading.Tasks;
 
 namespace History.MobileClient.DataTypes;
 
-public class UserSelectedMessage(UserResponseDto user) : ValueDeletedMessage<UserResponseDto>(user);
+public class SelectUserSelectionMessage(SelectUserViewModel user) : ValueDeletedMessage<SelectUserViewModel>(user);

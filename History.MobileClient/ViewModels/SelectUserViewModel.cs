@@ -2,21 +2,24 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Enums;
 using History.MobileClient.DataTypes;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace History.MobileClient.ViewModels
 {
-    public partial class SelectUserViewModel : ObservableObject
+    public partial class SelectUserViewModel(UserResponseDto user, bool isSelected) : ObservableObject
     {
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(Nickname))]
         [NotifyPropertyChangedFor(nameof(ProfileMedia))]
-        public partial UserResponseDto User { get; set; }
+        public partial UserResponseDto User { get; set; } = user;
 
         public bool IsSelected
         {
@@ -25,14 +28,12 @@ namespace History.MobileClient.ViewModels
             {
                 if (field == value) return;
 
-                if (value) WeakReferenceMessenger.Default.Send(new UserSelectedMessage(User));
-                else WeakReferenceMessenger.Default.Send(new UserUnselectedMessage(User));
-
-                OnPropertyChanging(nameof(IsSelected));
                 field = value;
-                OnPropertyChanged(nameof(IsSelected));
+                OnPropertyChanged();
+
+                WeakReferenceMessenger.Default.Send(new SelectUserSelectionMessage(this));
             }
-        }
+        } = isSelected;
 
         public string Nickname => User.Nickname;
 
@@ -40,28 +41,8 @@ namespace History.MobileClient.ViewModels
         ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
-        public SelectUserViewModel(UserResponseDto user)
-        {
-            User = user;
-
-            WeakReferenceMessenger.Default.Register<UserSelectedMessage>(this, OnUserSelectedMessageReceived);
-
-            WeakReferenceMessenger.Default.Register<UserUnselectedMessage>(this,  OnUserUnselectedMessageReceived);
-        }
-
-        public void OnUserSelectedMessageReceived(object recipient, UserSelectedMessage message)
-        {
-            if (message.Value.UserId != User.UserId) return;
-
-            IsSelected = true;
-        }
-
-        public void OnUserUnselectedMessageReceived(object recipient, UserUnselectedMessage message)
-        {
-            if (message.Value.UserId != User.UserId) return;
-
-            IsSelected = false;
-        }
+        public bool IsModerator => User.Rank == Rank.Moderator;
+        public bool IsAdmin => User.Rank == Rank.Admin;
 
         [RelayCommand]
         public void HandleTap() => IsSelected = !IsSelected;

@@ -55,6 +55,8 @@ public partial class TextContentView : ContentView
             if (content is ProfileContent profileContent) MentionHelper.AppendMention(MainMentionEditor, profileContent.UserId, profileContent.Nickname);
             else if (content is TextContent textContent) MentionHelper.AppendText(MainMentionEditor, textContent.Text);
         }
+
+        MainMentionEditor.Focus();
     }
 
     private void OnUnloaded(object sender, EventArgs e)
