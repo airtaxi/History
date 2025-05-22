@@ -244,8 +244,6 @@
             HeightRequest="100"
             HorizontalOptions="Center"
             IsRunning="False"
-            IsVisible="{x:Binding Path=IsRunning,
-                                  Source={x:Reference MainActivityIndicator}}"
             VerticalOptions="Center"
             WidthRequest="100"
             Color="{StaticResource Primary}" />

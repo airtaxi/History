@@ -47,8 +47,11 @@
                     TextColor="White"
                     VerticalOptions="Center" />
             </HorizontalStackLayout>
-            <HorizontalStackLayout HorizontalOptions="End" Spacing="12">
-                <Image>
+            <HorizontalStackLayout
+                HorizontalOptions="End"
+                Spacing="12"
+                VerticalOptions="Center">
+                <Image VerticalOptions="Center">
                     <Image.Source>
                         <FontImageSource
                             FontFamily="MaterialSharp"
@@ -56,7 +59,7 @@
                             Color="White" />
                     </Image.Source>
                 </Image>
-                <Image>
+                <Image VerticalOptions="Center">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnShareImageTapped" />
                     </Image.GestureRecognizers>
@@ -67,7 +70,7 @@
                             Color="White" />
                     </Image.Source>
                 </Image>
-                <Image>
+                <Image VerticalOptions="Center">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnMoreImageTapped" />
                     </Image.GestureRecognizers>
@@ -429,8 +432,6 @@
             HeightRequest="100"
             HorizontalOptions="Center"
             IsRunning="False"
-            IsVisible="{x:Binding Path=IsRunning,
-                                  Source={x:Reference MainActivityIndicator}}"
             VerticalOptions="Center"
             WidthRequest="100"
             Color="{StaticResource Primary}" />
