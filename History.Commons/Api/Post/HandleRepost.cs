@@ -4,11 +4,11 @@ using RestSharp;
 
 namespace History.Commons.Api.Post;
 
-public class GetPost : IBaseRequest<PostResponseDto>, IOptionalAuthRequest, IRequestWithUrlParameters
+public class HandleRepost : IBaseRequest<PostResponseDto>, IAuthRequiredRequest, IRequestWithUrlParameters
 {
-    public string Path => "/api/post/{postId}";
-    public Method Method => Method.Get;
+    public string Path => "/api/post/{postId}/repost";
+    public Method Method => Method.Post;
     public Dictionary<string, string> UrlParameters { get; set; } = [];
 
-    public GetPost(string postId) => UrlParameters["postId"] = postId;
+    public HandleRepost(string postId) => UrlParameters["postId"] = postId;
 }
