@@ -62,15 +62,17 @@ public partial class LoginPage : ContentPage
         }
         else if (result.Error == ErrorType.NotFound)
         {
-            var willing = await DisplayAlert("안내", "가입 신청이 필요합니다. 가입하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var willing = await DisplayAlert("안내", "가입이 필요합니다. 가입하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (willing)
             {
                 result = await App.ExecuteRequestAsync(new Register(idToken, SocialService.Google));
-                if(result.IsSuccess) await DisplayAlert("안내", "가입 신청이 완료되었습니다. 심사가 완료되는대로 가입이 완료됩니다.", Constants.PromptOk);
+                if (result.IsSuccess) await DisplayAlert("안내", "가입이 완료되었습니다.", Constants.PromptOk);
+
+                await Login(idToken, socialService);
             }
-            else await DisplayAlert("안내", "서비스 이용을 위해서는 가입 신청이 필요합니다.", Constants.PromptOk);
+            else await DisplayAlert("안내", "서비스 이용을 위해서는 가입이 필요합니다.", Constants.PromptOk);
         }
-        else if (result.Error == ErrorType.Forbidden) await DisplayAlert("안내", "가입 신청 대기중입니다. 심사가 완료되는대로 가입이 완료됩니다.", Constants.PromptOk);
+        else if (result.Error == ErrorType.Forbidden) await DisplayAlert("안내", "서비스 이용이 제한되었습니다.", Constants.PromptOk);
     }
 
     private async void OnGoogleLoginButtonClicked(object sender, EventArgs e)
