@@ -18,7 +18,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     {
         var isUserCollectionEmpty = await _userCollection.CountDocumentsAsync(FilterDefinition<User>.Empty) == 0;
         if (isUserCollectionEmpty) user.Rank = Rank.Admin;
-        else user.Rank = Rank.Unauthorized;
+        else user.Rank = Rank.User;
 
         user.CreatedAt = DateTime.UtcNow;
 
