@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Android.Net.Wifi.Aware;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -243,6 +244,18 @@ public partial class ProfileViewModel : ObservableObject
         else await App.Page.DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
     }
 
+    private static async Task HandleChangeFriendListDiscoveryOptionAsync()
+    {
+        var discoveryOptions = Enum.GetValues<DiscoveryOption>().Select(x => x.ToDisplayString()).ToArray();
+        var rawDiscoveryOption = await App.Page.DisplayActionSheet("친구 목록 공개 범위 설정", Constants.PromptCancel, null, discoveryOptions);
+
+        if (rawDiscoveryOption == null || rawDiscoveryOption == Constants.PromptCancel) return;
+
+        var discoveryOption = DiscoveryOptionExtensions.FromDisplayString(rawDiscoveryOption);
+        var result = await App.ExecuteRequestAsync(new UpdateFriendListDiscoveryOption(discoveryOption));
+        if (result.IsSuccess) await App.Page.DisplayAlert("안내", $"친구 목록 공개 범위 설정이 {rawDiscoveryOption} 으로 변경되었습니다.", Constants.PromptOk);
+    }
+
     [RelayCommand]
     private async Task HandleFriendshipActionAsync()
     {
@@ -274,7 +287,7 @@ public partial class ProfileViewModel : ObservableObject
     [RelayCommand]
     private async Task HandleProfileSettingsAsync()
     {
-        var action = await App.Page.DisplayActionSheet("프로필 설정", Constants.PromptCancel, null, "닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정", "핸들 변경", "프로필 공개 설정");
+        var action = await App.Page.DisplayActionSheet("프로필 설정", Constants.PromptCancel, null, "닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정", "핸들 변경", "프로필 공개 설정", "친구 목록 공개 범위 설정");
 
         if (action == null || action == Constants.PromptCancel) return;
 
@@ -284,5 +297,6 @@ public partial class ProfileViewModel : ObservableObject
         else if (action == "배경 이미지 설정") await HandleChangeBackgroundMediaAsync();
         else if (action == "핸들 변경") await HandleChangeHandleAsync();
         else if (action == "프로필 공개 설정") await HandleChangeProfileVisibilityAsync();
+        else if (action == "친구 목록 공개 범위 설정") await HandleChangeFriendListDiscoveryOptionAsync();
     }
 }

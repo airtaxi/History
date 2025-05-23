@@ -337,6 +337,21 @@ public class UserController(IUserService userService, IFriendshipService friends
         else return StatusCode(500, result.FullErrorMessage);
     }
 
+    [HttpPut("friend-list-discovery-option/{discoveryOption}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateFriendListDiscoveryOption(DiscoveryOption discoveryOption)
+    {
+        // Get the user ID from the authenticated user claim
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        // Call the service to update the AllowSearch property
+        var result = await userService.UpdateFriendListDiscoveryOptionAsync(userId, discoveryOption);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
     [HttpPut("handle")]
     [Authorize]
     public async Task<IActionResult> UpdateHandle([FromBody] UpdateUserHandleRequestDto request)

@@ -12,16 +12,25 @@ public partial class FriendListPage : ContentPage
     private IEnumerable<FriendshipViewModel> _viewModels;
     private bool _sortByTime = false;
 
+    private readonly string _userId;
+
 	public FriendListPage()
 	{
+        _userId = Shared.UserId;
 		InitializeComponent();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
+    public FriendListPage(string userId) : this()
+    {
+        _userId = userId;
+        TitleGrid.IsVisible = true;
+    }
+
     private async Task RefreshAsync()
     {
-        var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
+        var friendsResult = await App.ExecuteRequestAsync(new GetFriends(_userId));
         if (friendsResult.IsSuccess)
         {
             Shared.Friends = friendsResult.Value;
@@ -31,6 +40,7 @@ public partial class FriendListPage : ContentPage
             EmptyLabel.IsVisible = !_viewModels.Any();
             ApplySort();
         }
+        else if (_userId != Shared.UserId) await App.PopModalAsync();
     }
 
     private void ApplySort()

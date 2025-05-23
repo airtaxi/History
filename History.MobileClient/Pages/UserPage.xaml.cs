@@ -7,6 +7,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
+using Org.Apache.Http.Impl.Client;
 using System.Collections.ObjectModel;
 
 namespace History.MobileClient.Pages;
@@ -60,7 +61,11 @@ public partial class UserPage : ContentPage
             Shared.Friends = friends;
 
             var user = await App.ExecuteRequestAsync(new GetUser(_userId));
-            if (user.IsSuccess) _viewModels.Add(new ProfileViewModel(user));
+            if (user.IsSuccess)
+            {
+                _viewModels.Add(new ProfileViewModel(user.Value));
+                FriendsImage.IsVisible = true;
+            }
             else return;
 
             var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(_userId));
@@ -94,6 +99,20 @@ public partial class UserPage : ContentPage
             else return;
         }
         finally { _fetchSemaphore.Release(); }
+    }
+
+    private async void OnFriendsImageTapped(object sender, TappedEventArgs e)
+    {
+        if (_userId == Shared.UserId)
+        {
+            var page = new FriendsPage();
+            await App.PushModalAsync(page);
+        }
+        else
+        {
+            var page = new FriendListPage(_userId);
+            await App.PushModalAsync(page);
+        }
     }
 
     private void OnSizeChanged(object sender, EventArgs e)

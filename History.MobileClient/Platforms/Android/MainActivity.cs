@@ -16,6 +16,7 @@ using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Pages;
 using Plugin.Firebase.CloudMessaging;
 using System.Runtime.Versioning;
 using System.Text.Json;
@@ -229,7 +230,11 @@ public class MainActivity : MauiAppCompatActivity
             if (data.Count > 0)
             {
                 var pushData = JsonSerializer.Serialize(data);
+#if ANDROID
+                if (!MainPage.IsLoaded) Preferences.Set("PushData", pushData);
+#else
                 if (!AppShell.IsLoaded) Preferences.Set("PushData", pushData);
+#endif
                 else await App.HandlePushNotificationAsync(pushData);
             }
         }

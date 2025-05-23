@@ -34,7 +34,11 @@ public partial class LoginPage : ContentPage
             await RefreshFriends();
             await Utils.RefreshFirebaseToken();
 
+#if ANDROID
+            App.Page = new MainPage();
+#else
             App.Page = new AppShell();
+#endif
 
             var pushData = Preferences.Get("PushData", null);
             Preferences.Remove("PushData");
