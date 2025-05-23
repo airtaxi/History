@@ -5,6 +5,7 @@ using History.MobileClient.DataTypes;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
+using System.Text.Json;
 
 namespace History.MobileClient.Pages;
 
@@ -46,6 +47,8 @@ public partial class TimelinePage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
+                var nullPosts = posts.Where(x => x is null);
+                if (nullPosts.Any()) await DisplayAlert("오류", JsonSerializer.Serialize(posts), Constants.PromptOk);
                 var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.ParentPost, x.User) : new PostViewModel(x, true));
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
