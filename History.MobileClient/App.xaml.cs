@@ -34,7 +34,9 @@ public partial class App : Application
             if (exception != null)
             {
                 Android.Util.Log.Error("History", $"History Unhandled Exception: {exception.Message}\n{exception.StackTrace}");
+#if DEBUG
                 Dispatcher.Dispatch(() => Page.DisplayAlert("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk));
+#endif
                 Debugger.BreakForUserUnhandledException(exception);
             }
         };
