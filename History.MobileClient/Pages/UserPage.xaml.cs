@@ -26,6 +26,7 @@ public partial class UserPage : ContentPage
         BackImage.IsVisible = false;
         TitleLabel.Text = "내 프로필";
         SettingsImage.IsVisible = true;
+        WritePostImage.IsVisible = true;
     }
 
     public UserPage(string userId)
@@ -175,4 +176,6 @@ public partial class UserPage : ContentPage
 
         MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
     }
+
+    private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
 }
