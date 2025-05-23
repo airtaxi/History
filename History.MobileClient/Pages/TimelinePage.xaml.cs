@@ -128,9 +128,9 @@ public partial class TimelinePage : ContentPage
 
     private void OnLogoImageTapped(object sender, TappedEventArgs e)
     {
-        var first = _viewModels.FirstOrDefault();
-        if (first == null) return;
+        var firstViewModel = _viewModels.FirstOrDefault();
+        if (firstViewModel == null) return;
 
-        MainCollectionView.ScrollTo(first);
+        MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
     }
 }
