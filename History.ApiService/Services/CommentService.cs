@@ -217,9 +217,6 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
     /// <inheritdoc />
     public async Task<Result> HandleLikeCommentAsync(string commentId, string requesterId)
     {
-        var permissionResult = await CheckPermissionAsync(commentId, requesterId);
-        if (permissionResult.IsFailure) return permissionResult;
-
         var existingLike = await _commentLikeCollection.Find(f => f.CommentId == commentId && f.UserId == requesterId).FirstOrDefaultAsync();
         if (existingLike != null)
         {
