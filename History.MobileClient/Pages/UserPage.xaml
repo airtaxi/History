@@ -78,6 +78,21 @@
                             Color="White" />
                     </Image.Source>
                 </Image>
+                <Image
+                    x:Name="WritePostImage"
+                    HorizontalOptions="End"
+                    IsVisible="False"
+                    VerticalOptions="Center">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnWritePostImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Edit_note}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
             </HorizontalStackLayout>
         </Grid>
 
