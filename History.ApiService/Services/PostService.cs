@@ -773,17 +773,20 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             .Project(p => new { p.UserId, p.Id, p.IsRepost, p.CreatedAt })
             .ToListAsync();
         var sharedUserIds = posts.Select(x => x.UserId);
-        var sharedUsers = await userService.GenerateUserResponseDtosAsync(sharedUserIds, requesterId);
+        var sharedUsersResult = await userService.GenerateUserResponseDtosAsync(sharedUserIds, requesterId);
 
         var sharedUserDtos = new List<SharedAndRepostedUserDto>();
-        foreach (var sharedUser in sharedUsers.Value)
+        foreach (var post in posts)
         {
+            var sharedUser = sharedUsersResult.Value.FirstOrDefault(x => x.UserId == post.UserId);
+            if (sharedUser == null) continue;
+
             var sharedUserDto = new SharedAndRepostedUserDto
             {
                 User = sharedUser,
-                PostId = posts.First(x => x.UserId == sharedUser.UserId).Id,
-                IsRepost = posts.First(x => x.UserId == sharedUser.UserId).IsRepost,
-                SharedAt = posts.First(x => x.UserId == sharedUser.UserId).CreatedAt
+                PostId = post.Id,
+                IsRepost = post.IsRepost,
+                SharedAt = post.CreatedAt
             };
             sharedUserDtos.Add(sharedUserDto);
         }
