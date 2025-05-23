@@ -144,7 +144,7 @@ public partial class PostViewModel : ObservableObject
             User = post?.User;
             if (User == null) throw new Exception("[PostViewModel] USER IS NULL");
             if (Post.Comments == null) throw new Exception("[PostViewModel] COMMENT IS NULL");
-            else Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
+            else Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId))];
 
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, OnUserChangedMessageReceived);
@@ -161,7 +161,7 @@ public partial class PostViewModel : ObservableObject
         Post = message.Value;
         User = message.Value.User;
 
-        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
+        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId))];
     }
 
     private void OnUserChangedMessageReceived(object recipient, ValueChangedMessage<UserResponseDto> message)

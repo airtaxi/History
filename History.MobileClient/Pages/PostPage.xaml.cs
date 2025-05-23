@@ -74,7 +74,7 @@ public partial class PostPage : ContentPage
             if (commentsResult.IsSuccess)
             {
                 var comments = commentsResult.Value;
-                var commentViewModels = comments.Select(x => new CommentViewModel(x));
+                var commentViewModels = comments.Select(x => new CommentViewModel(x, _viewModel.User.UserId == Shared.UserId));
                 foreach (var commentViewModel in commentViewModels) _viewModel.Comments.Add(commentViewModel);
             }
             else return;
