@@ -131,17 +131,24 @@ public partial class PostViewModel : ObservableObject
 
     public PostViewModel(PostResponseDto post, bool wrapMedias)
     {
-        _wrapMedias = wrapMedias;
+        try
+        {
+            _wrapMedias = wrapMedias;
 
-        Post = post;
-        User = post.User;
-        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
-        //FirstComment = Comments.FirstOrDefault();
+            if (post == null) throw new Exception("[PostViewModel] POST IS NULL");
 
-        WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
-        WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, OnUserChangedMessageReceived);
-        WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, OnCommentChangedMessageReceived);
-        WeakReferenceMessenger.Default.Register<ValueDeletedMessage<CommentResponseDto>>(this, OnCommentDeletedMessageReceived);
+            Post = post;
+            User = post?.User;
+            if (User == null) throw new Exception("[PostViewModel] USER IS NULL");
+            if (Post.Comments == null) throw new Exception("[PostViewModel] COMMENT IS NULL");
+            else Comments = [.. Post.Comments.Select(c => new CommentViewModel(c))];
+
+            WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
+            WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, OnUserChangedMessageReceived);
+            WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, OnCommentChangedMessageReceived);
+            WeakReferenceMessenger.Default.Register<ValueDeletedMessage<CommentResponseDto>>(this, OnCommentDeletedMessageReceived);
+        }
+        catch(Exception exception) { App.Page.DisplayAlert("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk); }
     }
 
     private void OnPostChangedMessageReceived(object sender, ValueChangedMessage<PostResponseDto> message)
