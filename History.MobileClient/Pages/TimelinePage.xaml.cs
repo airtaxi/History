@@ -46,9 +46,7 @@ public partial class TimelinePage : ContentPage
             var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts());
             if (postsResult.IsSuccess)
             {
-                var posts = postsResult.Value;
-                var nullPosts = posts.Where(x => x is null);
-                if (nullPosts.Any()) await DisplayAlert("오류", JsonSerializer.Serialize(posts), Constants.PromptOk);
+                var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
                 var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.ParentPost, x.User) : new PostViewModel(x, true));
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
@@ -126,5 +124,13 @@ public partial class TimelinePage : ContentPage
         var isLoading = message.Value;
         MainActivityIndicator.IsRunning = isLoading;
         IsEnabled = !isLoading;
+    }
+
+    private void OnLogoImageTapped(object sender, TappedEventArgs e)
+    {
+        var first = _viewModels.FirstOrDefault();
+        if (first == null) return;
+
+        MainCollectionView.ScrollTo(first);
     }
 }

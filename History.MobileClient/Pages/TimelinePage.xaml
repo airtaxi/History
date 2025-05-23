@@ -27,7 +27,11 @@
                 HeightRequest="48"
                 HorizontalOptions="Start"
                 Source="icon_nobg_white.png"
-                WidthRequest="48" />
+                WidthRequest="48">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnLogoImageTapped"/>
+                </Image.GestureRecognizers>
+            </Image>
             <Image HorizontalOptions="End" VerticalOptions="Center">
                 <Image.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnWritePostImageTapped" />

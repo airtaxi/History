@@ -135,7 +135,10 @@ public partial class PostViewModel : ObservableObject
         {
             _wrapMedias = wrapMedias;
 
-            if (post == null) throw new Exception("[PostViewModel] POST IS NULL");
+            if (post == null)
+            {
+                throw new Exception("[PostViewModel] POST IS NULL");
+            }
 
             Post = post;
             User = post?.User;

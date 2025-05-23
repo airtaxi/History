@@ -45,22 +45,38 @@
                     TextColor="White"
                     VerticalOptions="Center" />
             </HorizontalStackLayout>
-
-            <Image
-                x:Name="SettingsImage"
-                HorizontalOptions="End"
-                IsVisible="False"
-                VerticalOptions="Center">
-                <Image.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnSettingsImageTapped" />
-                </Image.GestureRecognizers>
-                <Image.Source>
-                    <FontImageSource
-                        FontFamily="MaterialSharp"
-                        Glyph="{x:Static m:MaterialSharp.Settings}"
-                        Color="White" />
-                </Image.Source>
-            </Image>
+            <HorizontalStackLayout Spacing="16">
+                <Image
+                    x:Name="FriendsImage"
+                    HorizontalOptions="End"
+                    IsVisible="False"
+                    VerticalOptions="Center">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnFriendsImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Group}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image
+                    x:Name="SettingsImage"
+                    HorizontalOptions="End"
+                    IsVisible="False"
+                    VerticalOptions="Center">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSettingsImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Settings}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+            </HorizontalStackLayout>
         </Grid>
 
         <RefreshView Grid.Row="1" Refreshing="OnRefreshing">

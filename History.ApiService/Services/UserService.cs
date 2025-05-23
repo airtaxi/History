@@ -158,6 +158,14 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
+    public async Task<Result> UpdateFriendListDiscoveryOptionAsync(string userId, DiscoveryOption discoveryOption)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+        var update = Builders<User>.Update.Set(u => u.FriendListDiscoveryOption, discoveryOption);
+        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "친구 목록 공개 범위를 변경하는 중 오류가 발생했습니다.");
+    }
+
+    /// <inheritdoc />
     public async Task<Result> UpdateHandleAsync(string userId, string handle)
     {
         handle = handle.Trim();

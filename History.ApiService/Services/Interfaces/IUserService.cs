@@ -2,6 +2,7 @@
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Enums;
 
 namespace History.ApiService.Services.Interfaces;
 
@@ -113,6 +114,14 @@ public interface IUserService
     /// <param name="allowSearch">The value indicating whether the user can be searched or not</param>
     /// <returns>A task that represents the asynchronous operation, with result of update success</returns>
     public Task<Result> UpdateAllowSearchAsync(string userId, bool allowSearch);
+
+    /// <summary>
+    /// Update user's FriendListDiscoveryOption property
+    /// </summary>
+    /// <param name="userId">The ID of user to update</param>
+    /// <param name="discoveryOption">The new discovery option</param>
+    /// <returns>A task that represents the asynchronous operation, with result of update success</returns>
+    public Task<Result> UpdateFriendListDiscoveryOptionAsync(string userId, DiscoveryOption discoveryOption);
 
     /// <summary>
     /// Update user's handle

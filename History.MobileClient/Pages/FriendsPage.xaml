@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<TabbedPage
+    x:Class="History.MobileClient.Pages.FriendsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:android="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;assembly=Microsoft.Maui.Controls"
+    xmlns:local="clr-namespace:History.MobileClient.Pages"
+    android:TabbedPage.IsSwipePagingEnabled="False">
+    <local:FriendListPage Title="친구 목록" />
+    <local:AddFriendsPage Title="친구 추가" />
+    <local:WaitingFriendRequestsPage Title="보낸 신청" />
+    <local:PendingFriendRequestsPage Title="받은 신청" />
+</TabbedPage>

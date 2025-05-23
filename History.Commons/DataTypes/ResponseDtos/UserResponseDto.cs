@@ -10,6 +10,7 @@ public class UserResponseDto()
     public Rank Rank { get; set; }
     public SocialService SocialService { get; set; }
 
+    public DiscoveryOption FriendListDiscoveryOption { get; set; }
     public DiscoveryOption LastUsedPostDiscoveryOption { get; set; }
 
     public string Nickname { get; set; }
@@ -35,6 +36,7 @@ public class UserResponseDto()
         Rank = user.Rank;
         SocialService = user.SocialService;
 
+        FriendListDiscoveryOption = user.FriendListDiscoveryOption;
         LastUsedPostDiscoveryOption = user.LastUsedPostDiscoveryOption;
 
         Nickname = user.Nickname;

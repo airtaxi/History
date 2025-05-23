@@ -1,17 +1,15 @@
-﻿using CommunityToolkit.Maui.Alerts;
-using System.Diagnostics;
+using CommunityToolkit.Maui.Alerts;
 
-namespace History.MobileClient;
+namespace History.MobileClient.Pages;
 
-public partial class AppShell : Shell
+public partial class MainPage : TabbedPage
 {
     public static new bool IsLoaded { get; private set; }
-
-	public AppShell()
+    public MainPage()
 	{
 		InitializeComponent();
         IsLoaded = true;
-	}
+    }
 
     private static DateTime s_lastBackPressedTime = DateTime.MinValue;
     protected override bool OnBackButtonPressed()

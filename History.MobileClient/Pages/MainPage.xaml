@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<TabbedPage
+    x:Class="History.MobileClient.Pages.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:android="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;assembly=Microsoft.Maui.Controls"
+    xmlns:local="clr-namespace:History.MobileClient.Pages"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    android:TabbedPage.ToolbarPlacement="Bottom">
+    <local:TimelinePage Title="타임라인">
+        <local:TimelinePage.IconImageSource>
+            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.View_timeline}" />
+        </local:TimelinePage.IconImageSource>
+    </local:TimelinePage>
+    <local:NotificationsPage Title="알림">
+        <local:NotificationsPage.IconImageSource>
+            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Notifications}" />
+        </local:NotificationsPage.IconImageSource>
+    </local:NotificationsPage>
+    <local:UserPage Title="내 프로필">
+        <local:UserPage.IconImageSource>
+            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Person}" />
+        </local:UserPage.IconImageSource>
+    </local:UserPage>
+</TabbedPage>
