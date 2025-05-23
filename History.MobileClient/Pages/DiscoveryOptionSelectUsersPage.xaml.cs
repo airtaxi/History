@@ -222,7 +222,7 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
             foreach (var userId in userIds)
             {
                 var viewModel = _viewModels.FirstOrDefault(x => x.User.UserId == userId);
-                viewModel?.IsSelected = true;
+                if (viewModel != null) viewModel.IsSelected = true;
             }
 
             await Toast.Make($"{key} 프리셋을 불러왔습니다.").Show();
