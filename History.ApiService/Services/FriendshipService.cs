@@ -420,22 +420,21 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
         var userResult = await userService.GetUserByIdAsync(userId);
         if (userResult.IsFailure) return (ErrorType.NotFound, userResult.ErrorMessage);
 
-        var hasAccess = false;
-        if (userResult.Value.FriendListDiscoveryOption == DiscoveryOption.Everyone) hasAccess = true;
-        else if (requesterId == null) hasAccess = false;
-        else if (userResult.Value.FriendListDiscoveryOption == DiscoveryOption.FriendsOfFriends)
+        var hasAccess = requesterId == userId;
+        if(!hasAccess)
         {
-            var friendsOfFriendsResult = await GetFriendsOfFriendIdsAsync(requesterId);
-            hasAccess = friendsOfFriendsResult.Value.Contains(requesterId);
-        }
-        else if (userResult.Value.FriendListDiscoveryOption == DiscoveryOption.Friends)
-        {
-            var areFriendsResult = await AreFriendsAsync(requesterId, userId);
-            hasAccess = areFriendsResult.Value;
-        }
-        else if (userResult.Value.FriendListDiscoveryOption == DiscoveryOption.OnlyMe)
-        {
-            hasAccess = requesterId == userId;
+            if (userResult.Value.FriendListDiscoveryOption == DiscoveryOption.Everyone) hasAccess = true;
+            else if (requesterId == null) hasAccess = false;
+            else if (userResult.Value.FriendListDiscoveryOption == DiscoveryOption.FriendsOfFriends)
+            {
+                var friendsOfFriendsResult = await GetFriendsOfFriendIdsAsync(requesterId);
+                hasAccess = friendsOfFriendsResult.Value.Contains(requesterId);
+            }
+            else if (userResult.Value.FriendListDiscoveryOption == DiscoveryOption.Friends)
+            {
+                var areFriendsResult = await AreFriendsAsync(requesterId, userId);
+                hasAccess = areFriendsResult.Value;
+            }
         }
 
         if (!hasAccess) return (ErrorType.Forbidden, "해당 사용자의 친구 목록을 볼 수 없습니다.");
