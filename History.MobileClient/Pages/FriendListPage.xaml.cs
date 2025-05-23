@@ -113,4 +113,6 @@ public partial class FriendListPage : ContentPage
         MainActivityIndicator.IsRunning = isLoading;
         IsEnabled = !isLoading;
     }
+
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
 }

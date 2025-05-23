@@ -126,7 +126,7 @@ public partial class UserPage : ContentPage
     }
 
     private bool _isFirstLoad = true;
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
 
@@ -134,7 +134,7 @@ public partial class UserPage : ContentPage
         {
             if (ShouldRefreshMyProfile) ShouldRefreshMyProfile = false;
             if (_isFirstLoad) _isFirstLoad = false;
-            await RefreshAsync();
+            Dispatcher.Dispatch(async () => await RefreshAsync());
         }
     }
 

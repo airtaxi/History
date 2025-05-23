@@ -83,7 +83,7 @@ public partial class TimelinePage : ContentPage
     }
 
     private bool _isFirstLoad = true;
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
 
@@ -92,7 +92,7 @@ public partial class TimelinePage : ContentPage
         {
             if (_isFirstLoad) _isFirstLoad = false;
             if (ShouldRefreshTimeline) ShouldRefreshTimeline = false;
-            await RefreshAsync();
+            Dispatcher.Dispatch(async () => await RefreshAsync());
         }
     }
 

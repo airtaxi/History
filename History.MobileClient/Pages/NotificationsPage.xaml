@@ -31,79 +31,81 @@
             </HorizontalStackLayout>
         </Grid>
 
-        <RefreshView Grid.Row="1" Refreshing="OnRefreshing">
-            <CollectionView
-                x:Name="MainCollectionView"
-                ChildAdded="OnChildAdded"
-                SelectionMode="None">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:NotificationViewModel">
-                        <Grid Padding="12,6,12,6" ColumnSpacing="8">
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
-                            </Grid.GestureRecognizers>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Grid Grid.Column="0">
-                                <views:DataTemplatePresenter
+        <Grid Grid.Row="1">
+            <RefreshView Refreshing="OnRefreshing">
+                <CollectionView
+                    x:Name="MainCollectionView"
+                    ChildAdded="OnChildAdded"
+                    SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:NotificationViewModel">
+                            <Grid Padding="12,6,12,6" ColumnSpacing="8">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid Grid.Column="0">
+                                    <views:DataTemplatePresenter
+                                        HeightRequest="40"
+                                        Template="{StaticResource MediaTemplateSelector}"
+                                        ViewModel="{x:Binding ProfileMedia}"
+                                        WidthRequest="40">
+                                        <views:DataTemplatePresenter.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
+                                        </views:DataTemplatePresenter.GestureRecognizers>
+                                        <views:DataTemplatePresenter.Clip>
+                                            <EllipseGeometry
+                                                Center="20,20"
+                                                RadiusX="20"
+                                                RadiusY="20" />
+                                        </views:DataTemplatePresenter.Clip>
+                                    </views:DataTemplatePresenter>
+                                </Grid>
+                                <VerticalStackLayout Grid.Column="1">
+                                    <Label
+                                        FontAttributes="Bold"
+                                        FontSize="14"
+                                        LineBreakMode="TailTruncation"
+                                        MaxLines="1"
+                                        Text="{x:Binding Title}" />
+
+                                    <Label
+                                        FontSize="14"
+                                        IsVisible="{x:Binding IsBodyVisible}"
+                                        LineBreakMode="TailTruncation"
+                                        MaxLines="1"
+                                        Text="{x:Binding Body}"
+                                        TextColor="{AppThemeBinding Dark=#CFCFCF,
+                                                                    Light=#303030}" />
+                                    <Label
+                                        FontSize="12"
+                                        LineBreakMode="TailTruncation"
+                                        MaxLines="1"
+                                        Text="{x:Binding TimestampText}"
+                                        TextColor="#808080" />
+                                </VerticalStackLayout>
+
+                                <Border
+                                    Grid.Column="2"
                                     HeightRequest="40"
-                                    Template="{StaticResource MediaTemplateSelector}"
-                                    ViewModel="{x:Binding ProfileMedia}"
+                                    IsVisible="{x:Binding IsImageVisible}"
                                     WidthRequest="40">
-                                    <views:DataTemplatePresenter.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
-                                    </views:DataTemplatePresenter.GestureRecognizers>
-                                    <views:DataTemplatePresenter.Clip>
-                                        <EllipseGeometry
-                                            Center="20,20"
-                                            RadiusX="20"
-                                            RadiusY="20" />
-                                    </views:DataTemplatePresenter.Clip>
-                                </views:DataTemplatePresenter>
+                                    <views:DataTemplatePresenter
+                                        HeightRequest="40"
+                                        Template="{StaticResource MediaTemplateSelector}"
+                                        ViewModel="{x:Binding ImageMedia}"
+                                        WidthRequest="40" />
+                                </Border>
                             </Grid>
-                            <VerticalStackLayout Grid.Column="1">
-                                <Label
-                                    FontAttributes="Bold"
-                                    FontSize="14"
-                                    LineBreakMode="TailTruncation"
-                                    MaxLines="1"
-                                    Text="{x:Binding Title}" />
-
-                                <Label
-                                    FontSize="14"
-                                    IsVisible="{x:Binding IsBodyVisible}"
-                                    LineBreakMode="TailTruncation"
-                                    MaxLines="1"
-                                    Text="{x:Binding Body}"
-                                    TextColor="{AppThemeBinding Dark=#CFCFCF,
-                                                                Light=#303030}" />
-                                <Label
-                                    FontSize="12"
-                                    LineBreakMode="TailTruncation"
-                                    MaxLines="1"
-                                    Text="{x:Binding TimestampText}"
-                                    TextColor="#808080" />
-                            </VerticalStackLayout>
-
-                            <Border
-                                Grid.Column="2"
-                                HeightRequest="40"
-                                IsVisible="{x:Binding IsImageVisible}"
-                                WidthRequest="40">
-                                <views:DataTemplatePresenter
-                                    HeightRequest="40"
-                                    Template="{StaticResource MediaTemplateSelector}"
-                                    ViewModel="{x:Binding ImageMedia}"
-                                    WidthRequest="40" />
-                            </Border>
-                        </Grid>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </RefreshView>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </RefreshView>
+        </Grid>
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"
