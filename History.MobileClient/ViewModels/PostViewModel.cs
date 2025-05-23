@@ -273,6 +273,8 @@ public partial class PostViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleTapAsync()
     {
+        await RefreshAsync();
+
         var newViewModel = new PostViewModel(Post, false);
         var postPage = new PostPage(newViewModel);
         await App.PushModalAsync(postPage);
