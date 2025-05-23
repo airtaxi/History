@@ -30,7 +30,7 @@ public partial class TimelinePage : ContentPage
 
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {
-        var viewModels = _viewModels.Where(x => x.Post.Id == message.Value.Id);
+        var viewModels = _viewModels.Where(x => x.Post.Id == message.Value.Id).ToList(); // ToList is needed (Collection will be modified)
         foreach (var viewModel in viewModels) _viewModels.Remove(viewModel);
         _lastViewModel = _viewModels.LastOrDefault();
     }
