@@ -15,8 +15,6 @@ namespace History.MobileClient.ViewModels;
 
 public partial class PostViewModel : ObservableObject
 {
-    private readonly bool _wrapMedias;
-
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Nickname))]
     [NotifyPropertyChangedFor(nameof(IsModerator))]
@@ -78,7 +76,7 @@ public partial class PostViewModel : ObservableObject
     public partial bool IsWideMode { get; set; }
     public bool IsNotWideMode => !IsWideMode;
 
-    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Post.Contents, _wrapMedias);
+    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Post.Contents, WrapMedias);
 
     public bool HasInteractions => Post.PostReactions.Count > 0 || Post.SharedAndRepostedUsers.Count > 0;
 
@@ -106,6 +104,7 @@ public partial class PostViewModel : ObservableObject
             return result;
         }
     }
+    public bool WrapMedias { get; }
 
     public PostInteractionViewModel Reaction => Interactions.FirstOrDefault(r => r.User.UserId == Shared.UserId && r.ReactionType != null);
     public string ReactionGlyph => Reaction?.Glyph ?? Solid.Heart;
@@ -133,7 +132,7 @@ public partial class PostViewModel : ObservableObject
     {
         try
         {
-            _wrapMedias = wrapMedias;
+            WrapMedias = wrapMedias;
 
             if (post == null)
             {
@@ -274,8 +273,6 @@ public partial class PostViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleTapAsync()
     {
-        await RefreshAsync();
-
         var newViewModel = new PostViewModel(Post, false);
         var postPage = new PostPage(newViewModel);
         await App.PushModalAsync(postPage);
