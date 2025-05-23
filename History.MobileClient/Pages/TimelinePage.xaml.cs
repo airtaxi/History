@@ -122,8 +122,8 @@ public partial class TimelinePage : ContentPage
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
         var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
+        //MainActivityIndicator.IsRunning = isLoading;
+        //IsEnabled = !isLoading;
     }
 
     private void OnLogoImageTapped(object sender, TappedEventArgs e)
