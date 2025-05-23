@@ -113,6 +113,9 @@ public static class MediaConverter
             var image = images.FirstOrDefault();
             image.Format = MagickFormat.WebP;
             image.Quality = 50;
+            image.AutoOrient(); // Pre-apply rotation
+
+
             if (maxWidth.HasValue && image.Width > maxWidth.Value)
             {
                 var newHeight = (uint)Math.Round((double)image.Height * maxWidth.Value / image.Width, 0);
