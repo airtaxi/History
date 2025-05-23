@@ -18,6 +18,8 @@ namespace History.MobileClient;
 
 public partial class App : Application
 {
+    private static readonly SemaphoreSlim ApiRequestSemaphore = new(1, 1);
+
     public static Window MainWindow { get; private set; }
 
     public App()
@@ -32,6 +34,7 @@ public partial class App : Application
             if (exception != null)
             {
                 Android.Util.Log.Error("History", $"History Unhandled Exception: {exception.Message}\n{exception.StackTrace}");
+                Dispatcher.Dispatch(() => Page.DisplayAlert("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk));
                 Debugger.BreakForUserUnhandledException(exception);
             }
         };
@@ -56,6 +59,7 @@ public partial class App : Application
 
         try
         {
+            await ApiRequestSemaphore.WaitAsync();
             WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
 
             await Shared.ApiHandler.ExecuteRequestAsync(request);
@@ -69,7 +73,11 @@ public partial class App : Application
                 await TopPage.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
-        finally { WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(false)); }
+        finally
+        {
+            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(false));
+            ApiRequestSemaphore.Release();
+        }
     }
 
     public static async Task<Result<T>> ExecuteRequestAsync<T>(IBaseRequest<T> request, params ErrorType[] hiddenErrorTypes)
@@ -78,6 +86,7 @@ public partial class App : Application
 
         try
         {
+            await ApiRequestSemaphore.WaitAsync();
             WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
 
             return await Shared.ApiHandler.ExecuteRequestAsync(request);
@@ -90,7 +99,11 @@ public partial class App : Application
                 await TopPage.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
-        finally { WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(false)); }
+        finally
+        {
+            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(false));
+            ApiRequestSemaphore.Release();
+        }
     }
 
     private static ErrorType StatusCodeToErrorType(HttpStatusCode statusCode) => statusCode switch
