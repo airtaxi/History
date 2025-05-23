@@ -55,8 +55,9 @@ public partial class App : Application
 
     public static async Task PushModalAsync(Page page)
     {
-        if (!await NavigationSemaphore.WaitAsync(0)) return;
+        if (NavigationSemaphore.CurrentCount == 0) return;
 
+        await NavigationSemaphore.WaitAsync();
         try { await Current.Windows[0].Page.Navigation.PushModalAsync(page); }
         finally
         {
@@ -69,8 +70,9 @@ public partial class App : Application
 
     public static async Task PopModalAsync()
     {
-        if (!await NavigationSemaphore.WaitAsync(0)) return;
+        if (NavigationSemaphore.CurrentCount == 0) return;
 
+        await NavigationSemaphore.WaitAsync();
         try { await Current.Windows[0].Page.Navigation.PopModalAsync(); }
         finally
         {
