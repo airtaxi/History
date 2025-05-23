@@ -88,22 +88,6 @@
                             </HorizontalStackLayout>
                         </VerticalStackLayout>
                     </HorizontalStackLayout>
-                    <Image
-                        HeightRequest="28"
-                        HorizontalOptions="End"
-                        VerticalOptions="Center"
-                        WidthRequest="28">
-                        <Image.GestureRecognizers>
-                            <TapGestureRecognizer Command="{x:Binding HandleMoreTapCommand}" />
-                        </Image.GestureRecognizers>
-                        <Image.Source>
-                            <FontImageSource
-                                FontFamily="MaterialSharp"
-                                Glyph="{x:Static m:MaterialSharp.More_horiz}"
-                                Color="{AppThemeBinding Dark=White,
-                                                        Light=Black}" />
-                        </Image.Source>
-                    </Image>
                 </Grid>
                 <VerticalStackLayout
                     BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
