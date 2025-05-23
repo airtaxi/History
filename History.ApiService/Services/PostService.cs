@@ -473,7 +473,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         await _postCollection.DeleteOneAsync(p => p.Id == postId);
 
         // Delete reposts of this post from the database
-        await _postCollection.DeleteOneAsync(p => p.ParentPostId == postId && p.IsRepost);
+        await _postCollection.DeleteManyAsync(p => p.ParentPostId == postId && p.IsRepost);
 
         return Result.Success();
     }
