@@ -19,8 +19,8 @@ public class Result
     public string ErrorMessage { get; protected init; }
     protected string TypeName { get; set; }
     public string FullErrorMessage => Error.HasValue ? $"{(string.IsNullOrEmpty(TypeName) ? string.Empty : $"[{TypeName}] ")}{Error}: {ErrorMessage ?? "N/A"}" : null;
-    public bool IsSuccess => Error == null;
-    public bool IsFailure => Error != null;
+    public bool IsSuccess => !Error.HasValue;
+    public bool IsFailure => Error.HasValue;
 
     protected Result(ErrorType? error = null, string errorMessage = null)
     {
