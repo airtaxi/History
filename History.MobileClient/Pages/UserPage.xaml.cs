@@ -163,7 +163,7 @@ public partial class UserPage : ContentPage
 
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        var isLoading = message.Value;
+        //var isLoading = message.Value;
         //MainActivityIndicator.IsRunning = isLoading;
         //IsEnabled = !isLoading;
     }
