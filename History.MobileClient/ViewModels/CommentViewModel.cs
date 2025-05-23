@@ -48,8 +48,11 @@ public partial class CommentViewModel : ObservableObject
     public bool Liked => Comment.LikedUsers.Any(x => x.UserId == Shared.UserId);
     public string CommentLikeFontFamily => Liked ? "FASolid" : "FARegular";
 
-    public CommentViewModel(CommentResponseDto comment)
+    private readonly bool _isMyPost;
+
+    public CommentViewModel(CommentResponseDto comment, bool isMyPost)
     {
+        _isMyPost = isMyPost;
         Comment = comment;
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, (r, m) =>
         {
@@ -72,7 +75,7 @@ public partial class CommentViewModel : ObservableObject
         {
             Liked ? "좋아요 취소" : "좋아요",
             IsMyComment ? "댓글 수정" : null,
-            IsMyComment ? "댓글 삭제" : null,
+            IsMyComment || _isMyPost ? "댓글 삭제" : null,
             IsMyComment ? null : "댓글 신고",
         };
         actions.RemoveAll(x => x == null);
