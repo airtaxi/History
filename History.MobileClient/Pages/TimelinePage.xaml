@@ -29,7 +29,7 @@
                 Source="icon_nobg_white.png"
                 WidthRequest="48">
                 <Image.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnLogoImageTapped"/>
+                    <TapGestureRecognizer Tapped="OnLogoImageTapped" />
                 </Image.GestureRecognizers>
             </Image>
             <Image HorizontalOptions="End" VerticalOptions="Center">
@@ -45,17 +45,19 @@
             </Image>
         </Grid>
 
-        <RefreshView Grid.Row="1" Refreshing="OnRefreshing">
-            <CollectionView
-                x:Name="MainCollectionView"
-                ChildAdded="OnChildAdded"
-                ItemTemplate="{StaticResource TimelineTemplateSelector}"
-                ItemsUpdatingScrollMode="KeepScrollOffset">
-                <CollectionView.ItemsLayout>
-                    <staggered:StaggeredItemsLayout Span="0" />
-                </CollectionView.ItemsLayout>
-            </CollectionView>
-        </RefreshView>
+        <Grid Grid.Row="1">
+            <RefreshView Refreshing="OnRefreshing">
+                <CollectionView
+                    x:Name="MainCollectionView"
+                    ChildAdded="OnChildAdded"
+                    ItemTemplate="{StaticResource TimelineTemplateSelector}"
+                    ItemsUpdatingScrollMode="KeepScrollOffset">
+                    <CollectionView.ItemsLayout>
+                        <staggered:StaggeredItemsLayout Span="0" />
+                    </CollectionView.ItemsLayout>
+                </CollectionView>
+            </RefreshView>
+        </Grid>
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"

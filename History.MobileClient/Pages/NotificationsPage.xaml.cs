@@ -84,14 +84,14 @@ public partial class NotificationsPage : ContentPage
     }
 
     private bool _isInitialized = false;
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
 
         if (_isInitialized) return;
         _isInitialized = true;
 
-        await RefreshAsync();
+        Dispatcher.Dispatch(async () => await RefreshAsync());
     }
 
     private void OnNotificationsMessage(object recipient, NotificationsMessage message)

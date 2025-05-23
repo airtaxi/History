@@ -45,10 +45,9 @@
                     TextColor="White"
                     VerticalOptions="Center" />
             </HorizontalStackLayout>
-            <HorizontalStackLayout Spacing="16">
+            <HorizontalStackLayout HorizontalOptions="End" Spacing="16">
                 <Image
                     x:Name="FriendsImage"
-                    HorizontalOptions="End"
                     IsVisible="False"
                     VerticalOptions="Center">
                     <Image.GestureRecognizers>
@@ -63,7 +62,6 @@
                 </Image>
                 <Image
                     x:Name="SettingsImage"
-                    HorizontalOptions="End"
                     IsVisible="False"
                     VerticalOptions="Center">
                     <Image.GestureRecognizers>
@@ -79,16 +77,18 @@
             </HorizontalStackLayout>
         </Grid>
 
-        <RefreshView Grid.Row="1" Refreshing="OnRefreshing">
-            <CollectionView
-                x:Name="MainCollectionView"
-                ChildAdded="OnChildAdded"
-                ItemTemplate="{StaticResource TimelineTemplateSelector}">
-                <CollectionView.ItemsLayout>
-                    <staggered:StaggeredItemsLayout Span="0" />
-                </CollectionView.ItemsLayout>
-            </CollectionView>
-        </RefreshView>
+        <Grid Grid.Row="1">
+            <RefreshView Refreshing="OnRefreshing">
+                <CollectionView
+                    x:Name="MainCollectionView"
+                    ChildAdded="OnChildAdded"
+                    ItemTemplate="{StaticResource TimelineTemplateSelector}">
+                    <CollectionView.ItemsLayout>
+                        <staggered:StaggeredItemsLayout Span="0" />
+                    </CollectionView.ItemsLayout>
+                </CollectionView>
+            </RefreshView>
+        </Grid>
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"

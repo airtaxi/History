@@ -108,6 +108,7 @@
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"
+            Grid.RowSpan="2"
             HeightRequest="100"
             HorizontalOptions="Center"
             IsRunning="False"
