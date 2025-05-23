@@ -28,10 +28,10 @@ public partial class TimelinePage : ContentPage
 
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {
-        var viewModel = _viewModels.FirstOrDefault(x => x.Post.Id == message.Value.Id);
-        if (viewModel == null) return;
+        var viewModels = _viewModels.Where(x => x.Post.Id == message.Value.Id);
+        if (viewModels == null) return;
 
-        _viewModels.Remove(viewModel);
+        foreach (var viewModel in viewModels) _viewModels.Remove(viewModel);
     }
 
     public async Task RefreshAsync()
