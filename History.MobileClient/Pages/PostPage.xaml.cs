@@ -303,9 +303,7 @@ public partial class PostPage : ContentPage
     {
         if (e.NewHandler == null)
         {
-            WeakReferenceMessenger.Default.Unregister<ValueChangedMessage<PostResponseDto>>(this);
-            WeakReferenceMessenger.Default.Unregister<AppleVideoUnloadedMessage>(this);
-            WeakReferenceMessenger.Default.Unregister<CommentTappedMessage>(this);
+            WeakReferenceMessenger.Default.UnregisterAll(this);
             _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
         }
         else
@@ -313,7 +311,15 @@ public partial class PostPage : ContentPage
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
             WeakReferenceMessenger.Default.Register<AppleVideoUnloadedMessage>(this, OnAppleVideoUnloadedMessageMessageReceived);
             WeakReferenceMessenger.Default.Register<CommentTappedMessage>(this, OnCommentTappedMessageReceived);
+            WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
             _mentionsViewModel.ImageInputRequested += OnImageInputRequested;
         }
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        var isLoading = message.Value;
+        MainActivityIndicator.IsRunning = isLoading;
+        IsEnabled = !isLoading;
     }
 }

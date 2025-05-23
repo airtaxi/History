@@ -23,6 +23,15 @@
                 IsVisible="{x:Binding HasNoUsers}"
                 Text="{x:Binding NoUsersText}"
                 VerticalOptions="Center" />
+
+            <ActivityIndicator
+                x:Name="MainActivityIndicator"
+                HeightRequest="100"
+                HorizontalOptions="Center"
+                IsRunning="False"
+                VerticalOptions="Center"
+                WidthRequest="100"
+                Color="{StaticResource Primary}" />
         </Grid>
     </ContentPage.Content>
 </ContentPage>

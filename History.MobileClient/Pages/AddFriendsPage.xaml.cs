@@ -1,6 +1,8 @@
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
+using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
 
 namespace History.MobileClient.Pages;
@@ -10,7 +12,9 @@ public partial class AddFriendsPage : ContentPage
 	public AddFriendsPage()
 	{
 		InitializeComponent();
-	}
+
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+    }
 
     private async void OnSearchButtonPressed(object sender, EventArgs e)
     {
@@ -46,5 +50,12 @@ public partial class AddFriendsPage : ContentPage
 
         var viewModel = e.CurrentSelection as FriendshipViewModel;
         await App.PushModalAsync(new UserPage(viewModel.User.UserId));
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        var isLoading = message.Value;
+        MainActivityIndicator.IsRunning = isLoading;
+        IsEnabled = !isLoading;
     }
 }

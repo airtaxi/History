@@ -5,6 +5,7 @@ using History.Commons;
 using History.Commons.Api.Comment;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
+using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
 using NativeMedia;
 using UraniumUI.Icons.MaterialSymbols;
@@ -20,7 +21,9 @@ public partial class EditCommentPage : ContentPage
 	{
         _comment = comment;
         InitializeComponent();
-	}
+
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+    }
 
     private void LoadComment(CommentResponseDto comment)
     {
@@ -106,8 +109,12 @@ public partial class EditCommentPage : ContentPage
         }
     }
 
-    private void OnMainTextContentLoaded(object sender, EventArgs e)
+    private void OnMainTextContentLoaded(object sender, EventArgs e) => LoadComment(_comment);
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        LoadComment(_comment);
+        var isLoading = message.Value;
+        MainActivityIndicator.IsRunning = isLoading;
+        IsEnabled = !isLoading;
     }
 }

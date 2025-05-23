@@ -46,6 +46,44 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
         }
     }
 
+    public static Dictionary<string, List<string>> GetPresets() => Configuration.GetValue<Dictionary<string, List<string>>>("DiscoveryOptionSelectUsersPresets") ?? [];
+
+    public static Result SavePreset(string key, List<string> presets)
+    {
+        var presetsDict = GetPresets();
+        if (presets.Count > 10) return (ErrorType.BadRequest, "프리셋은 최대 10개까지 저장할 수 있습니다.");
+        else if (presetsDict.ContainsKey(key)) return (ErrorType.Conflict, $"{key}이라는 이름의 프리셋은 이미 존재합니다.");
+
+        presetsDict[key] = presets;
+        Configuration.SetValue("DiscoveryOptionSelectUsersPresets", presetsDict);
+
+        return Result.Success();
+    }
+
+    public static Result CheckForSamePreset(List<string> userIds)
+    {
+        var presetsDict = GetPresets();
+        foreach (var preset in presetsDict)
+        {
+            if (!preset.Value.Except(userIds).Any() && !userIds.Except(preset.Value).Any())
+            {
+                return (ErrorType.Conflict, $"{preset.Key}이라는 이름의 프리셋과 동일한 설정입니다.");
+            }
+        }
+        return Result.Success();
+    }
+
+    public static Result DeletePreset(string key)
+    {
+        var presetsDict = GetPresets();
+        if (!presetsDict.ContainsKey(key)) return (ErrorType.NotFound, $"{key}이라는 이름의 프리셋은 존재하지 않습니다.");
+
+        presetsDict.Remove(key);
+        Configuration.SetValue("DiscoveryOptionSelectUsersPresets", presetsDict);
+
+        return Result.Success();
+    }
+
     private void OnMainSearchBarTextChanged(object sender, TextChangedEventArgs e)
     {
         if (_viewModels == null) return;
@@ -123,8 +161,12 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
     
     private void OnHandlerChanging(object sender, HandlerChangingEventArgs e)
     {
-        if (e.NewHandler == null) WeakReferenceMessenger.Default.Unregister<SelectUserSelectionMessage>(this);
-        else WeakReferenceMessenger.Default.Register<SelectUserSelectionMessage>(this, OnSelectUserSelectionMessageReceived);
+        if (e.NewHandler == null) WeakReferenceMessenger.Default.UnregisterAll(this);
+        else
+        {
+            WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+            WeakReferenceMessenger.Default.Register<SelectUserSelectionMessage>(this, OnSelectUserSelectionMessageReceived);
+        }
     }
 
     private async void OnPresetButtonClicked(object sender, EventArgs e)
@@ -208,41 +250,10 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
         }
     }
 
-    public static Dictionary<string, List<string>> GetPresets() => Configuration.GetValue<Dictionary<string, List<string>>>("DiscoveryOptionSelectUsersPresets") ?? [];
-
-    public static Result SavePreset(string key, List<string> presets)
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        var presetsDict = GetPresets();
-        if (presets.Count > 10) return (ErrorType.BadRequest, "프리셋은 최대 10개까지 저장할 수 있습니다.");
-        else if (presetsDict.ContainsKey(key)) return (ErrorType.Conflict, $"{key}이라는 이름의 프리셋은 이미 존재합니다.");
-
-        presetsDict[key] = presets;
-        Configuration.SetValue("DiscoveryOptionSelectUsersPresets", presetsDict);
-
-        return Result.Success();
-    }
-
-    public static Result CheckForSamePreset(List<string> userIds)
-    {
-        var presetsDict = GetPresets();
-        foreach (var preset in presetsDict)
-        {
-            if (!preset.Value.Except(userIds).Any() && !userIds.Except(preset.Value).Any())
-            {
-                return (ErrorType.Conflict, $"{preset.Key}이라는 이름의 프리셋과 동일한 설정입니다.");
-            }
-        }
-        return Result.Success();
-    }
-
-    public static Result DeletePreset(string key)
-    {
-        var presetsDict = GetPresets();
-        if (!presetsDict.ContainsKey(key)) return (ErrorType.NotFound, $"{key}이라는 이름의 프리셋은 존재하지 않습니다.");
-
-        presetsDict.Remove(key);
-        Configuration.SetValue("DiscoveryOptionSelectUsersPresets", presetsDict);
-
-        return Result.Success();
+        var isLoading = message.Value;
+        MainActivityIndicator.IsRunning = isLoading;
+        IsEnabled = !isLoading;
     }
 }

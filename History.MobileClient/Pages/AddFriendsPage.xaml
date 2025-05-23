@@ -40,5 +40,15 @@
             HorizontalOptions="Center"
             Text="검색 결과가 없습니다"
             VerticalOptions="Center" />
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="3"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
     </Grid>
 </ContentPage>

@@ -1,4 +1,6 @@
-﻿using History.MobileClient.Enums;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using History.MobileClient.DataTypes;
+using History.MobileClient.Enums;
 using History.MobileClient.ViewModels;
 using System.ComponentModel;
 
@@ -15,6 +17,8 @@ public partial class PostInteractionUsersPage : ContentPage, INotifyPropertyChan
     {
         InitializeComponent();
         BindingContext = this;
+
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
     public void SetUsers(IEnumerable<FriendshipViewModel> users, PostInteractionType type)
@@ -30,5 +34,12 @@ public partial class PostInteractionUsersPage : ContentPage, INotifyPropertyChan
         OnPropertyChanged(nameof(Users));
         OnPropertyChanged(nameof(NoUsersText));
         OnPropertyChanged(nameof(HasNoUsers));
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        var isLoading = message.Value;
+        MainActivityIndicator.IsRunning = isLoading;
+        IsEnabled = !isLoading;
     }
 }

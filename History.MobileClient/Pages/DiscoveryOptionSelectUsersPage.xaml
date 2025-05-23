@@ -233,5 +233,15 @@
                     VerticalOptions="Center" />
             </Grid>
         </RefreshView>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="2"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
     </Grid>
 </ContentPage>

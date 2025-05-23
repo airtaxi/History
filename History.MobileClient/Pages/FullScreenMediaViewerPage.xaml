@@ -55,5 +55,14 @@
                 </Image>
             </HorizontalStackLayout>
         </Grid>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
     </Grid>
 </ContentPage>
