@@ -193,10 +193,16 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
     /// <inheritdoc />
     public async Task<Result> DeleteCommentAsync(string commentId, string requesterId)
     {
+        var postService = serviceProvider.GetRequiredService<IPostService>();
+
         var comment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
         if (comment == null) return Result.Failure(ErrorType.NotFound, "댓글을 찾을 수 없습니다.");
 
-        if (requesterId != comment.UserId) return Result.Failure(ErrorType.Forbidden, "권한이 없습니다.");
+        var postResult = await postService.GetPostByIdAsync(comment.PostId);
+        if (postResult.IsFailure) return postResult.CastFailure();
+
+        var hasPermission = requesterId == comment.UserId || requesterId == postResult.Value.Id;
+        if (!hasPermission) return Result.Failure(ErrorType.Forbidden, "권한이 없습니다.");
 
         // Delete Comment
         var result = await _commentCollection.DeleteOneAsync(f => f.Id == commentId);
