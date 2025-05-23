@@ -42,10 +42,8 @@ public partial class UserPage : ContentPage
 
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {
-        var viewModel = _viewModels.OfType<PostViewModel>().FirstOrDefault(x => x.Post.Id == message.Value.Id);
-        if (viewModel == null) return;
-
-        _viewModels.Remove(viewModel);
+        var viewModels = _viewModels.OfType<PostViewModel>().Where(x => x.Post.Id == message.Value.Id);
+        foreach (var viewModel in viewModels) _viewModels.Remove(viewModel);
         _lastViewModel = _viewModels.LastOrDefault();
     }
 
