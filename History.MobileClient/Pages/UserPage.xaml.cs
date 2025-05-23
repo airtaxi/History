@@ -38,6 +38,7 @@ public partial class UserPage : ContentPage
 
 #endif
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
@@ -138,4 +139,11 @@ public partial class UserPage : ContentPage
     private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await DisplayAlert("안내", "제작중입니다.", "확인");
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        var isLoading = message.Value;
+        MainActivityIndicator.IsRunning = isLoading;
+        IsEnabled = !isLoading;
+    }
 }

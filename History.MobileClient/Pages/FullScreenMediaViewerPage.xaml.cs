@@ -1,4 +1,6 @@
 using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Mvvm.Messaging;
+using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
 using NativeMedia;
 
@@ -13,6 +15,8 @@ public partial class FullScreenMediaViewerPage : ContentPage
 
         InitializeComponent();
         MainDataTemplatePresenter.ViewModel = _viewModel;
+
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
@@ -44,5 +48,12 @@ public partial class FullScreenMediaViewerPage : ContentPage
             IsBusy = false;
             await Toast.Make("미디어 파일이 저장되었습니다.").Show();
         }
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        var isLoading = message.Value;
+        MainActivityIndicator.IsRunning = isLoading;
+        IsEnabled = !isLoading;
     }
 }

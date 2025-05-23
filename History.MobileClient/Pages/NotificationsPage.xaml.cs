@@ -20,6 +20,7 @@ public partial class NotificationsPage : ContentPage
 
         MainCollectionView.ItemsSource = _viewModels;
         WeakReferenceMessenger.Default.Register<NotificationsMessage>(this, OnNotificationsMessage);
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
     public async Task RefreshAsync()
@@ -102,5 +103,12 @@ public partial class NotificationsPage : ContentPage
         var viewModels = notifications.Select(x => new NotificationViewModel(x));
         _lastViewModel = viewModels.LastOrDefault();
         foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        var isLoading = message.Value;
+        MainActivityIndicator.IsRunning = isLoading;
+        IsEnabled = !isLoading;
     }
 }

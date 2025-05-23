@@ -1,9 +1,11 @@
-﻿using History.Commons;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.PushNotification;
 using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.MobileClient.Auth;
+using History.MobileClient.DataTypes;
 using Plugin.Firebase.CloudMessaging;
 using System.Text.Json;
 
@@ -14,7 +16,9 @@ public partial class LoginPage : ContentPage
 	public LoginPage()
 	{
 		InitializeComponent();
-	}
+
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+    }
 
     private async Task AfterLogin()
     {
@@ -104,5 +108,12 @@ public partial class LoginPage : ContentPage
             Shared.ApiHandler = new(accessToken, refreshToken);
             await AfterLogin();
         }
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        var isLoading = message.Value;
+        MainActivityIndicator.IsRunning = isLoading;
+        IsEnabled = !isLoading;
     }
 }

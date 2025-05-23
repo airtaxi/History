@@ -1,4 +1,6 @@
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Friendship;
+using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
 
 namespace History.MobileClient.Pages;
@@ -8,6 +10,8 @@ public partial class WaitingFriendRequestsPage : ContentPage
 	public WaitingFriendRequestsPage()
 	{
 		InitializeComponent();
+
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
     private async Task RefreshAsync()
@@ -37,5 +41,12 @@ public partial class WaitingFriendRequestsPage : ContentPage
             _isInitialized = true;
             await RefreshAsync();
         }
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        var isLoading = message.Value;
+        MainActivityIndicator.IsRunning = isLoading;
+        IsEnabled = !isLoading;
     }
 }

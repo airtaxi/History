@@ -1,5 +1,7 @@
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
+using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
 using UraniumUI.Icons.FontAwesome;
 
@@ -13,6 +15,8 @@ public partial class FriendListPage : ContentPage
 	public FriendListPage()
 	{
 		InitializeComponent();
+
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
     private async Task RefreshAsync()
@@ -91,5 +95,12 @@ public partial class FriendListPage : ContentPage
     {
         _sortByTime = !_sortByTime;
         ApplySort();
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        var isLoading = message.Value;
+        MainActivityIndicator.IsRunning = isLoading;
+        IsEnabled = !isLoading;
     }
 }

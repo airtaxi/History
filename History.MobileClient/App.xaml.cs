@@ -1,9 +1,11 @@
-﻿using History.Commons;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.Commons.Interfaces;
+using History.MobileClient.DataTypes;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using ShimSkiaSharp;
@@ -54,8 +56,7 @@ public partial class App : Application
 
         try
         {
-            TopPage.IsEnabled = false;
-            TopPage.IsBusy = true;
+            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
 
             await Shared.ApiHandler.ExecuteRequestAsync(request);
             return Result.Success();
@@ -68,11 +69,7 @@ public partial class App : Application
                 await TopPage.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
-        finally
-        {
-            TopPage.IsEnabled = true;
-            TopPage.IsBusy = false;
-        }
+        finally { WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(false)); }
     }
 
     public static async Task<Result<T>> ExecuteRequestAsync<T>(IBaseRequest<T> request, params ErrorType[] hiddenErrorTypes)
@@ -81,8 +78,7 @@ public partial class App : Application
 
         try
         {
-            TopPage.IsEnabled = false;
-            TopPage.IsBusy = true;
+            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
 
             return await Shared.ApiHandler.ExecuteRequestAsync(request);
         }
@@ -94,11 +90,7 @@ public partial class App : Application
                 await TopPage.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
-        finally
-        {
-            TopPage.IsEnabled = true;
-            TopPage.IsBusy = false;
-        }
+        finally { WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(false)); }
     }
 
     private static ErrorType StatusCodeToErrorType(HttpStatusCode statusCode) => statusCode switch

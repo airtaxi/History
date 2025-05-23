@@ -10,16 +10,27 @@
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
         <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
     </ContentPage.Behaviors>
-    <RefreshView Refreshing="OnRefreshing">
-        <Grid>
-            <CollectionView x:Name="MainCollectionView" ItemTemplate="{StaticResource FriendshipTemplate}" />
-            <Label
-                x:Name="EmptyLabel"
-                FontAttributes="Bold"
-                FontSize="16"
-                HorizontalOptions="Center"
-                Text="보낸 친구 신청이 없습니다"
-                VerticalOptions="Center" />
-        </Grid>
-    </RefreshView>
+    <Grid>
+        <RefreshView Refreshing="OnRefreshing">
+            <Grid>
+                <CollectionView x:Name="MainCollectionView" ItemTemplate="{StaticResource FriendshipTemplate}" />
+                <Label
+                    x:Name="EmptyLabel"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    HorizontalOptions="Center"
+                    Text="보낸 친구 신청이 없습니다"
+                    VerticalOptions="Center" />
+            </Grid>
+        </RefreshView>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
+    </Grid>
 </ContentPage>
