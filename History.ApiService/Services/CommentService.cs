@@ -201,7 +201,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         var postResult = await postService.GetPostByIdAsync(comment.PostId);
         if (postResult.IsFailure) return postResult.CastFailure();
 
-        var hasPermission = requesterId == comment.UserId || requesterId == postResult.Value.Id;
+        var hasPermission = requesterId == comment.UserId || requesterId == postResult.Value.UserId;
         if (!hasPermission) return Result.Failure(ErrorType.Forbidden, "권한이 없습니다.");
 
         // Delete Comment
