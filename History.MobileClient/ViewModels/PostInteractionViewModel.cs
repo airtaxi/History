@@ -59,7 +59,7 @@ public partial class PostInteractionViewModel
 
     public PostInteractionViewModel(SharedAndRepostedUserDto sharedUser, bool isShare)
     {
-        Type = PostInteractionType.Share;
+        Type = sharedUser.IsRepost ? PostInteractionType.Repost : PostInteractionType.Share;
         CreatedAt = sharedUser.SharedAt;
         User = sharedUser.User;
         TargetPostId = !sharedUser.IsRepost ? sharedUser.PostId : null;
