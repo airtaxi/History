@@ -129,6 +129,8 @@ public partial class UserPage : ContentPage
     {
         var view = e.Element as View;
         var viewModel = view.BindingContext as PostViewModel;
+        if (viewModel == null) return;
+
         if (viewModel.Post.Id == (_lastViewModel as PostViewModel)?.Post.Id)
         {
             _lastViewModel = null;
