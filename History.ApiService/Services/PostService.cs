@@ -725,11 +725,13 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         if (post.ParentPostId != null)
         {
             var parentPostResult = await GetPostByIdAsync(post.ParentPostId);
+            if (parentPostResult.IsFailure) return postResponse;
+
             var hasAccessResult = await CheckAccessAsync(parentPostResult.Value, requesterId);
             var parentPostUserResult = await userService.GenerateUserResponseDtoAsync(parentPostResult.Value.UserId, requesterId);
             var parentPostSharedAndRepostedUserDtos = await GenerateSharedAndRepostedUserDtosAsync(post.ParentPostId, requesterId);
 
-            if (parentPostResult.IsSuccess && hasAccessResult.IsSuccess && parentPostUserResult.IsSuccess)
+            if (hasAccessResult.IsSuccess && parentPostUserResult.IsSuccess)
             {
                 postResponse.ParentPost = new PostResponseDto
                 {
