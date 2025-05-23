@@ -34,6 +34,8 @@ public partial class AddFriendsPage : ContentPage
 
         // Remove myself from results
         results.RemoveAll(x => x.UserId == Shared.UserId);
+
+        // Delete duplicated records
         results = [.. results.DistinctBy(x => x.UserId)];
 
         var viewModels = results.Select(x => new FriendshipViewModel(x));
