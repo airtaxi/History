@@ -108,7 +108,7 @@ public partial class NotificationsPage : ContentPage
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
         var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
+        //MainActivityIndicator.IsRunning = isLoading;
+        //IsEnabled = !isLoading;
     }
 }
