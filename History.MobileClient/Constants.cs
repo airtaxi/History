@@ -2,7 +2,7 @@
 
 public static class Constants
 {
-    public const int TokenRefreshIntervalMilliseconds = 5 * 60 * 1000; // 5 minutes
+    public const int TokenRefreshIntervalMilliseconds = 24 * 60 * 60 * 1000; // 1 Day
 
     public const int GoogleAuthRequestCode = 9001;
     public const string GoogleAuthWebClientId = "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com";
