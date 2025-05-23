@@ -164,7 +164,15 @@ public partial class UserPage : ContentPage
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
         var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
+        //MainActivityIndicator.IsRunning = isLoading;
+        //IsEnabled = !isLoading;
+    }
+
+    private void OnTitleLabelTapped(object sender, TappedEventArgs e)
+    {
+        var firstViewModel = _viewModels.FirstOrDefault();
+        if (firstViewModel == null) return;
+
+        MainCollectionView.ScrollTo(firstViewModel);
     }
 }

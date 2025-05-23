@@ -43,7 +43,11 @@
                     FontSize="20"
                     Text="프로필"
                     TextColor="White"
-                    VerticalOptions="Center" />
+                    VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnTitleLabelTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
             </HorizontalStackLayout>
             <HorizontalStackLayout HorizontalOptions="End" Spacing="16">
                 <Image
