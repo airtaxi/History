@@ -29,7 +29,7 @@ public partial class Content : ResourceDictionary
         var parent = label.Parent;
 
         if (parent?.BindingContext is CommentViewModel commentViewModel) commentViewModel.HandleTap();
-        else if (parent?.BindingContext is PostViewModel postViewModel) await postViewModel.HandleTapAsync();
+        else if (parent?.BindingContext is PostViewModel postViewModel && postViewModel.WrapMedias) await postViewModel.HandleTapAsync();
     }
 
     private void OnTextAndProfileContentsLabelSizeChanged(object sender, EventArgs e)
