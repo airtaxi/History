@@ -738,7 +738,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             var parentPostProfileContentUsersResult = await userService.GenerateUserResponseDtosAsync(parentPostProfileContents.Select(x => x.UserId), requesterId);
             foreach (var parentPostProfileContent in parentPostProfileContents)
             {
-                var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == parentPostProfileContent.UserId);
+                var user = parentPostProfileContentUsersResult.Value.FirstOrDefault(x => x.UserId == parentPostProfileContent.UserId);
                 parentPostProfileContent.UserId = user?.UserId;
                 parentPostProfileContent.Nickname = (user?.Nickname ?? "차단된 사용자") + ' ';
             }
