@@ -338,8 +338,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             core.ImageUrl = Utils.GenerateThumbnailUrlFromContents(parentPostResult.Value.Contents);
 
             core.Data.Add("UserId", userResult.Value.Id);
-            core.Data.Add("PostId", postResult.Value.Id);
-            core.Data.Add("ParentPostId", parentPostResult.Value.Id);
+            core.Data.Add("PostId", parentPostResult.Value.Id);
         }
         else if (type == NotificationType.PostReaction)
         {
