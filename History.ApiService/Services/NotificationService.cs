@@ -236,6 +236,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             core.Recipients = core.Recipients.Distinct();
             core.UserId = userResult.Value.Id;
 
+            if (userResult.Value.Id == postResult.Value.UserId) core.Recipients = core.Recipients.Except([userResult.Value.Id]);
+
             core.Title = $"{userResult.Value.Nickname}님이 게시글에 댓글을 달았습니다.";
             core.Body = await userService.GenerateTextPreviewFromContentsAsync(commentResult.Value.Contents);
             core.ImageUrl = Utils.GenerateThumbnailUrlFromContents(commentResult.Value.Contents);
