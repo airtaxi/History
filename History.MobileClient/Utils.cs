@@ -15,7 +15,7 @@ public static class Utils
 {
     private const int TimelineMaxTextLengthWithoutMedias = 400;
     private const int TimelineMaxTextLengthWithMedias = 80;
-    private const int TimelineMaxTextLinesWithoutMedias = 16;
+    private const int TimelineMaxTextLinesWithoutMedias = 12;
     private const int TimelineMaxTextLinesWithMedias = 8;
 
     public static string GenerateMediaUri(string mediaId)
@@ -179,9 +179,8 @@ public static class Utils
                 }
                 else if (currentLength > maxLength)
                 {
-                    var previousLength = currentLength - span.Text.Length;
-                    var remainingLength = maxLength - previousLength;
-                    span.Text = span.Text[..remainingLength];
+                    var allowedLength = maxLength - (currentLength - span.Text.Length);
+                    if (allowedLength >= 0) span.Text = span.Text[..allowedLength];
                 }
             }
 
@@ -216,7 +215,6 @@ public static class Utils
                         TextColor = Application.Current.Resources["Primary"] as Color
                     };
                     AddTapGestureRecognizerToLinkSpan(linkSpan, url);
-                    formattedString.Spans.Add(linkSpan);
 
                     lastIndex = match.Index + match.Length;
 
@@ -236,7 +234,6 @@ public static class Utils
                     string remaining = textContent.Text[lastIndex..];
 
                     var span = new Span { Text = remaining };
-                    formattedString.Spans.Add(span);
 
                     currentLength += span.Text.Length;
                     currentLines += span.Text.Count(x => x == '\n');
@@ -257,7 +254,6 @@ public static class Utils
                     TextColor = Application.Current.Resources["Primary"] as Color,
                     FontAttributes = FontAttributes.Bold,
                 };
-                formattedString.Spans.Add(span);
 
                 if (profileContent.UserId != null) AddTapGestureRecognizerToProfileContentSnap(span, profileContent.UserId);
 
