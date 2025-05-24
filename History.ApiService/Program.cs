@@ -8,6 +8,7 @@ using History.Commons.Enums;
 using History.ServiceDefaults;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -53,7 +54,16 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddHostedService<DatabaseInitService>();
 
 // Unlock the file upload size limit.
-builder.Services.Configure<FormOptions>(options => options.MultipartBodyLengthLimit = long.MaxValue);
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartBodyLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+});
+builder.Services.Configure<KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = int.MaxValue;
+});
 
 
 // Add controllers to the container.
