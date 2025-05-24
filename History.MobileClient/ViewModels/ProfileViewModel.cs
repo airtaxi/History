@@ -9,6 +9,7 @@ using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.MobileClient.Helpers;
 using NativeMedia;
 
 namespace History.MobileClient.ViewModels;
@@ -157,6 +158,10 @@ public partial class ProfileViewModel : ObservableObject
 
         if (shouldUpload)
         {
+            string fileName;
+            byte[] bytes;
+
+#if IOS
             var request = new MediaPickRequest(1, MediaFileType.Image)
             {
                 Title = "프로필 이미지 선택"
@@ -171,9 +176,15 @@ public partial class ProfileViewModel : ObservableObject
             using var memoryStream = new MemoryStream();
             await stream.CopyToAsync(memoryStream);
 
-            var fileName = file.GenerateFileName();
-            var bytes = memoryStream.ToArray();
+            fileName = file.GenerateFileName();
+            bytes = memoryStream.ToArray();
+#elif ANDROID
+            var image = await AndroidMediaPickerHelper.PickMediaAsync(true, false);
+            if (image == null) return;
 
+            fileName = image.FileName;
+            bytes = image.Bytes;
+#endif
             var result = await App.ExecuteRequestAsync(new UpdateProfileMedia(fileName, bytes));
             if (result.IsSuccess) await RefreshAsync();
         }
@@ -197,6 +208,10 @@ public partial class ProfileViewModel : ObservableObject
 
         if (shouldUpload)
         {
+            string fileName;
+            byte[] bytes;
+
+#if IOS
             var request = new MediaPickRequest(1, MediaFileType.Image) { Title = "배경 이미지 선택" };
 
             var results = await MediaGallery.PickAsync(request);
@@ -208,8 +223,15 @@ public partial class ProfileViewModel : ObservableObject
             using var memoryStream = new MemoryStream();
             await stream.CopyToAsync(memoryStream);
 
-            var fileName = file.GenerateFileName();
-            var bytes = memoryStream.ToArray();
+            fileName = file.GenerateFileName();
+            bytes = memoryStream.ToArray();
+#elif ANDROID
+            var media = await AndroidMediaPickerHelper.PickMediaAsync(true, true);
+            if (media == null) return;
+
+            fileName = media.FileName;
+            bytes = media.Bytes;
+#endif
 
             var result = await App.ExecuteRequestAsync(new UpdateBackgroundMedia(fileName, bytes));
             if (result.IsSuccess) await RefreshAsync();
