@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using FFImageLoading.Maui;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
@@ -38,10 +39,10 @@ public partial class ProfileViewModel : ObservableObject
         get
         {
             if (IsMe) return "ERROR";
-            else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Accepted) return "친구 삭제";
+            else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Accepted) return "친구 삭제 / 차단 / 무시";
             else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Waiting) return "친구 수락 / 거절";
             else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Requested) return "친구 요청 취소";
-            else return "친구 추가";
+            else return "친구 신청 / 차단 / 무시";
         }
     }
 
@@ -260,15 +261,48 @@ public partial class ProfileViewModel : ObservableObject
     private async Task HandleFriendshipActionAsync()
     {
         Result result = null;
+
+        async Task Block()
+        {
+            var block = await App.Page.DisplayAlert("안내", $"정말로 {Nickname}님을 차단하시겠습니까? 차단하는 경우, 해제할 때 까지  히스토리에서 나와 상대방 모두 서로를 볼 수 없게 됩니다.", Constants.PromptYes, Constants.PromptNo);
+            if (block) result = await App.ExecuteRequestAsync(new BlockUser(User.UserId));
+            await App.PopModalAsync();
+            return;
+        }
+
+        async Task Ignore()
+        {
+            var block = await App.Page.DisplayAlert("안내", $"정말로 {Nickname}님을 무시하시겠습니까? 무시하는 경우, 해제할 때 까지 히스토리에서 상대방을 볼 수 없습니다. 다만, 상대방은 나를 볼 수 있습니다.", Constants.PromptYes, Constants.PromptNo);
+            if (block) result = await App.ExecuteRequestAsync(new IgnoreUser(User.UserId));
+            await App.PopModalAsync();
+            return;
+        }
+
         if (User.Friendship == null)
         {
-            var send = await App.Page.DisplayAlert("안내", $"{Nickname}님에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-            if (send) result = await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
+            var action = await App.Page.DisplayActionSheet("친구 신청 / 차단 / 무시", Constants.PromptCancel, null, ["친구 신청", "차단", "무시"]);
+            if (action == null || action == Constants.PromptCancel) return;
+
+            if (action == "친구 신청")
+            {
+                var send = await App.Page.DisplayAlert("안내", $"{Nickname}님에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+                if (send) result = await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
+            }
+            else if (action == "차단") await Block();
+            else if (action == "무시") await Ignore();
         }
         else if (User.Friendship.Status == FriendshipStatus.Accepted)
         {
-            var dismiss = await App.Page.DisplayAlert("안내", $"{Nickname}님와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-            if (dismiss) result = await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
+            var action = await App.Page.DisplayActionSheet("친구 삭제 / 차단 / 무시", Constants.PromptCancel, null, ["친구 삭제", "차단", "무시"]);
+            if (action == null || action == Constants.PromptCancel) return;
+
+            if (action == "친구 삭제")
+            {
+                var delete = await App.Page.DisplayAlert("안내", $"{Nickname}님와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+                if (delete) result = await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
+            }
+            else if (action == "차단") await Block();
+            else if (action == "무시") await Ignore();
         }
         else if (User.Friendship.Status == FriendshipStatus.Requested)
         {
