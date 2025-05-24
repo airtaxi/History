@@ -1,4 +1,3 @@
-using Accessibility;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
@@ -6,7 +5,6 @@ using History.MobileClient.DataTypes;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
-using System.Text.Json;
 
 namespace History.MobileClient.Pages;
 
