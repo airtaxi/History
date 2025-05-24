@@ -40,7 +40,6 @@ public partial class PostPage : ContentPage
         InitializeComponent();
         UpdateRepostStatus(viewModel.Post);
 
-		BindingContext = _viewModel;
         CommentMentionEditor.BindingContext = _mentionsViewModel;
         CommentUserCollectionView.BindingContext = _mentionsViewModel;
     }
@@ -105,13 +104,23 @@ public partial class PostPage : ContentPage
         MentionHelper.AppendMention(CommentMentionEditor, user.UserId, user.Nickname, true);
     }
 
-    private void OnAppleVideoUnloadedMessageMessageReceived(object recipient, AppleVideoUnloadedMessage message) => (ContentsScrollView as IView).InvalidateMeasure();
-    private void OnPostChangedMessageReceived(object recipient, ValueChangedMessage<PostResponseDto> message) => (ContentsScrollView as IView).InvalidateMeasure();
+    private void OnAppleVideoUnloadedMessageMessageReceived(object recipient, AppleVideoUnloadedMessage message)
+    {
+        (PhoneContentDataTemplatePresenter as IView)?.InvalidateMeasure();
+        (TabletContentDataTemplatePresenter as IView)?.InvalidateMeasure();
+    }
+
+    private void OnPostChangedMessageReceived(object recipient, ValueChangedMessage<PostResponseDto> message)
+    {
+        (PhoneContentDataTemplatePresenter as IView)?.InvalidateMeasure();
+        (TabletContentDataTemplatePresenter as IView)?.InvalidateMeasure();
+    }
 
     private void OnImageInputRequested(object sender, string path)
     {
         var fileName = Path.GetFileName(path);
         var bytes = File.ReadAllBytes(path);
+
         _commentMediaAttachmentViewModel?.Dispose();
         _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(fileName, bytes);
         CommentMediaFontImageSource.Glyph = MaterialSharp.Hide_image;
@@ -129,6 +138,7 @@ public partial class PostPage : ContentPage
     {
         if (_commentMediaAttachmentViewModel == null)
         {
+#if IOS
             var request = new MediaPickRequest(1, MediaFileType.Image) { Title = "이미지 추가" };
 
             var results = await MediaGallery.PickAsync(request);
@@ -148,7 +158,15 @@ public partial class PostPage : ContentPage
             var fileName = file.GenerateFileName();
             var bytes = memoryStream.ToArray();
 
+            _commentMediaAttachmentViewModel?.Dispose();
             _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(fileName, bytes);
+#elif ANDROID
+            var image = await AndroidMediaPickerHelper.PickMediaAsync(true, false);
+            if (image == null) return;
+
+            _commentMediaAttachmentViewModel?.Dispose();
+            _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(image.FileName, image.Bytes);
+#endif
             CommentMediaFontImageSource.Glyph = MaterialSharp.Hide_image;
         }
         else
@@ -196,21 +214,14 @@ public partial class PostPage : ContentPage
                 if (!_viewModel.IsWideMode)
                 {
                     await Task.Delay(350);
-                    var scrollY = MainScrollView.ContentSize.Height - MainScrollView.Height - CommentsScrollView.ContentSize.Height + 150;
-                    scrollY = Math.Clamp(scrollY, 0, MainScrollView.ContentSize.Height - MainScrollView.Height);
-                    await MainScrollView.ScrollToAsync(0, scrollY, false);
+                    var scrollY = PhoneScrollView.ContentSize.Height - PhoneContentDataTemplatePresenter.Height - PhoneCommentDataTemplatePresenter.Height + 150;
+                    scrollY = Math.Clamp(scrollY, 0, PhoneScrollView.ContentSize.Height - PhoneScrollView.Height);
+                    await PhoneScrollView.ScrollToAsync(0, scrollY, false);
                 }
-                else await CommentsScrollView.ScrollToAsync(0, 0, false);
+                else await TabletCommentScrollView.ScrollToAsync(0, 0, false);
             }
         }
         finally { MainActivityIndicator.IsRunning = false; }
-    }
-
-    private void OnMainScrollViewSizeChanged(object sender, EventArgs e)
-    {
-        var scrollView = sender as ScrollView;
-        if (_viewModel.IsWideMode) MainGrid.HeightRequest = scrollView.Height;
-        else MainGrid.HeightRequest = -1;
     }
 
     private bool _commentUpdating = false;
@@ -281,22 +292,26 @@ public partial class PostPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    private void OnSizeChanged(object sender, EventArgs e)
+    private async void OnSizeChanged(object sender, EventArgs e)
     {
-        MainGrid.ColumnDefinitions.Clear();
-        MainGrid.RowDefinitions.Clear();
         _viewModel.IsWideMode = Width > 700;
         if (_viewModel.IsWideMode)
         {
-            MainGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Star });
-            MainGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(300, GridUnitType.Absolute) });
-            MainGrid.HeightRequest = MainScrollView.Height;
+            PhoneContentDataTemplatePresenter.ViewModel = null;
+            PhoneCommentDataTemplatePresenter.ViewModel = null;
+            TabletContentDataTemplatePresenter.ViewModel = _viewModel;
+            TabletCommentDataTemplatePresenter.ViewModel = _viewModel;
+            PhoneRefreshView.IsVisible = false;
+            TabletGrid.IsVisible = true;
         }
         else
         {
-            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
-            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Star });
-            MainGrid.HeightRequest = -1;
+            PhoneContentDataTemplatePresenter.ViewModel = _viewModel;
+            PhoneCommentDataTemplatePresenter.ViewModel = _viewModel;
+            TabletContentDataTemplatePresenter.ViewModel = null;
+            TabletCommentDataTemplatePresenter.ViewModel = null;
+            PhoneRefreshView.IsVisible = true;
+            TabletGrid.IsVisible = false;
         }
     }
 
@@ -304,6 +319,7 @@ public partial class PostPage : ContentPage
     {
         if (e.NewHandler == null)
         {
+            _commentMediaAttachmentViewModel?.Dispose();
             WeakReferenceMessenger.Default.UnregisterAll(this);
             _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
         }
@@ -321,6 +337,8 @@ public partial class PostPage : ContentPage
     {
         base.OnAppearing();
         _isInForeground = true;
+
+        BindingContext = _viewModel;
     }
 
     protected override void OnDisappearing()

@@ -5,7 +5,6 @@ using FFImageLoading.Maui;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Handlers;
 using System.Collections.Concurrent;
-using System.Linq.Expressions;
 
 namespace History.MobileClient.Resources.Styles;
 
@@ -101,7 +100,6 @@ public partial class Media : ResourceDictionary
         if (sender is not CachedImage image) return;
         //if (image.BindingContext is not ImageViewModel imageViewModel) return;
         image.DownsampleToViewSize = true;
-        image.BitmapOptimizations = true;
 
         ResizeImage(image);
     }
