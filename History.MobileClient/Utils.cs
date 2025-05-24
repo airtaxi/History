@@ -9,6 +9,9 @@ namespace History.MobileClient;
 
 public static class Utils
 {
+    private const int TimelineMaxTextLengthWithoutMedias = 1000;
+    private const int TimelineMaxTextLengthWithMedias = 100;
+
     public static string GenerateMediaUri(string mediaId)
     {
         if (mediaId == null) return null;
@@ -36,7 +39,7 @@ public static class Utils
         {
             if (textAndProfileContents.Count > 0)
             {
-                contentViewModels.Add(new TextAndProfileContentsViewModel(textAndProfileContents));
+                contentViewModels.Add(new TextAndProfileContentsViewModel(textAndProfileContents, isTimeline, contents.OfType<MediaContent>().Any() || contents.OfType<ExternalUrlContent>().Any()));
                 textAndProfileContents = [];
             }
         }
@@ -135,17 +138,32 @@ public static class Utils
         return result;
     }
 
-    public static FormattedString GenerateSpanFromTextAndProfileContents(List<BaseContent> contents)
+    public static FormattedString GenerateSpanFromTextAndProfileContents(List<BaseContent> contents, bool isTimeline, bool hasMedias)
     {
         var formattedString = new FormattedString();
+        var maxLength = hasMedias ? TimelineMaxTextLengthWithMedias : TimelineMaxTextLengthWithoutMedias;
+        var currentLength = 0;
         foreach (var content in contents)
         {
+            if (currentLength > maxLength)
+            {
+                formattedString.Spans.Add(new Span
+                {
+                    Text = " ... 더보기",
+                    FontAttributes = FontAttributes.Bold,
+                    TextColor = Color.FromRgb(0x99, 0x99, 0x99)
+                });
+                break;
+            }
+
             if (content is TextContent textContent)
             {
                 formattedString.Spans.Add(new Span
                 {
                     Text = textContent.Text,
                 });
+
+                currentLength += textContent.Text.Length;
             }
             else if (content is ProfileContent profileContent)
             {
@@ -160,6 +178,8 @@ public static class Utils
                     AddTapGestureRecognizerToProfileContentSnap(span, profileContent.UserId);
 
                 formattedString.Spans.Add(span);
+
+                currentLength += profileContent.Nickname.Length;
             }
         }
 
