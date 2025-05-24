@@ -365,11 +365,4 @@ public partial class EditPostPage : ContentPage
 
     private async void OnDeleteExternalUrlContentBorderTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
     private async void OnInsertOrDeleteExternalUrlTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
-
-    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
-    {
-        var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
-    }
 }

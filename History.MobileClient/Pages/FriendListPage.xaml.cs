@@ -9,8 +9,9 @@ namespace History.MobileClient.Pages;
 
 public partial class FriendListPage : ContentPage
 {
+    private bool _isInForeground;
+    private bool _sortByTime;
     private IEnumerable<FriendshipViewModel> _viewModels;
-    private bool _sortByTime = false;
 
     private readonly string _userId;
 
@@ -91,6 +92,7 @@ public partial class FriendListPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _isInForeground = true;
 
         if (!_isInitialized)
         {
@@ -101,17 +103,28 @@ public partial class FriendListPage : ContentPage
         }
     }
 
-    private void OnSortTapped(object sender, TappedEventArgs e)
+    protected override void OnDisappearing()
     {
-        _sortByTime = !_sortByTime;
-        ApplySort();
+        base.OnDisappearing();
+        _isInForeground = false;
     }
 
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
+    }
+
+    private void OnSortTapped(object sender, TappedEventArgs e)
+    {
+        _sortByTime = !_sortByTime;
+        ApplySort();
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();

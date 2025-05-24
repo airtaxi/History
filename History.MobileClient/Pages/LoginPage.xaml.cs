@@ -13,7 +13,9 @@ namespace History.MobileClient.Pages;
 
 public partial class LoginPage : ContentPage
 {
-	public LoginPage()
+    private bool _isInForeground;
+
+    public LoginPage()
 	{
 		InitializeComponent();
 
@@ -103,6 +105,7 @@ public partial class LoginPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _isInForeground = true;
 
         var accessToken = Configuration.GetValue<string>("AccessToken");
         var refreshToken = Configuration.GetValue<string>("RefreshToken");
@@ -114,10 +117,21 @@ public partial class LoginPage : ContentPage
         }
     }
 
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+    }
+
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 }
