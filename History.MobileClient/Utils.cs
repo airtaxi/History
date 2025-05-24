@@ -3,15 +3,20 @@ using History.Commons.Api.PushNotification;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Animations;
+using Microsoft.Maui.Controls;
 using Plugin.Firebase.CloudMessaging;
+using System;
 using System.Text.RegularExpressions;
 
 namespace History.MobileClient;
 
 public static class Utils
 {
-    private const int TimelineMaxTextLengthWithoutMedias = 600;
-    private const int TimelineMaxTextLengthWithMedias = 100;
+    private const int TimelineMaxTextLengthWithoutMedias = 400;
+    private const int TimelineMaxTextLengthWithMedias = 80;
+    private const int TimelineMaxTextLinesWithoutMedias = 16;
+    private const int TimelineMaxTextLinesWithMedias = 8;
 
     public static string GenerateMediaUri(string mediaId)
     {
@@ -143,21 +148,41 @@ public static class Utils
     {
         var formattedString = new FormattedString();
         var maxLength = hasMedias ? TimelineMaxTextLengthWithMedias : TimelineMaxTextLengthWithoutMedias;
+        var maxLines = hasMedias ? TimelineMaxTextLinesWithMedias : TimelineMaxTextLinesWithoutMedias;
         var currentLength = 0;
+        var currentLines = 0;
 
         var urlRegex = new Regex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled);
 
         foreach (var content in contents)
         {
-            if (isTimeline && currentLength > maxLength)
+            void AddMoreSpan(Span span)
             {
+                formattedString.Spans.Add(span);
                 formattedString.Spans.Add(new Span
                 {
                     Text = " ... 더보기",
                     FontAttributes = FontAttributes.Bold,
                     TextColor = Color.FromRgb(0x99, 0x99, 0x99)
                 });
-                break;
+            }
+
+            void TrimSpan(Span span)
+            {
+                if (currentLines > maxLines)
+                {
+                    var lines = span.Text.Split(["\r\n", "\n"], StringSplitOptions.None);
+                    var allowedLines = maxLines - (currentLines - lines.Length);
+
+                    if (allowedLines <= 0) span.Text = string.Empty;
+                    else span.Text = string.Join(Environment.NewLine, lines.Take(allowedLines));
+                }
+                else if (currentLength > maxLength)
+                {
+                    var previousLength = currentLength - span.Text.Length;
+                    var remainingLength = maxLength - previousLength;
+                    span.Text = span.Text[..remainingLength];
+                }
             }
 
             if (content is TextContent textContent)
@@ -171,14 +196,16 @@ public static class Utils
                         string plainText = textContent.Text[lastIndex..match.Index];
 
                         var span = new Span { Text = plainText };
-                        formattedString.Spans.Add(span);
 
-                        currentLength += plainText.Length;
-                        if (isTimeline && currentLength > maxLength)
+                        currentLength += span.Text.Length;
+                        currentLines += span.Text.Count(x => x == '\n');
+                        if (isTimeline && (currentLength > maxLength || currentLines > maxLines))
                         {
-                            span.Text = span.Text[..maxLength];
+                            TrimSpan(span);
+                            AddMoreSpan(span);
                             break;
                         }
+                        else formattedString.Spans.Add(span);
                     }
 
                     string url = match.Value;
@@ -193,12 +220,15 @@ public static class Utils
 
                     lastIndex = match.Index + match.Length;
 
-                    currentLength += url.Length;
-                    if (isTimeline && currentLength > maxLength)
+                    currentLength += linkSpan.Text.Length;
+                    currentLines += linkSpan.Text.Count(x => x == '\n');
+                    if (isTimeline && (currentLength > maxLength || currentLines > maxLines))
                     {
-                        linkSpan.Text = linkSpan.Text[..maxLength];
+                        TrimSpan(linkSpan);
+                        AddMoreSpan(linkSpan);
                         break;
                     }
+                    else formattedString.Spans.Add(linkSpan);
                 }
 
                 if (lastIndex < textContent.Text.Length)
@@ -208,12 +238,15 @@ public static class Utils
                     var span = new Span { Text = remaining };
                     formattedString.Spans.Add(span);
 
-                    currentLength += remaining.Length;
-                    if (isTimeline && currentLength > maxLength)
+                    currentLength += span.Text.Length;
+                    currentLines += span.Text.Count(x => x == '\n');
+                    if (isTimeline && (currentLength > maxLength || currentLines > maxLines))
                     {
-                        span.Text = span.Text[..maxLength];
+                        TrimSpan(span);
+                        AddMoreSpan(span);
                         break;
                     }
+                    else formattedString.Spans.Add(span);
                 }
             }
             else if (content is ProfileContent profileContent)
@@ -228,12 +261,15 @@ public static class Utils
 
                 if (profileContent.UserId != null) AddTapGestureRecognizerToProfileContentSnap(span, profileContent.UserId);
 
-                currentLength += profileContent.Nickname.Length;
-                if (isTimeline && currentLength > maxLength)
+                currentLength += span.Text.Length;
+                currentLines += span.Text.Count(x => x == '\n');
+                if (isTimeline && (currentLength > maxLength || currentLines > maxLines))
                 {
-                    span.Text = span.Text[..maxLength];
+                    TrimSpan(span);
+                    AddMoreSpan(span);
                     break;
                 }
+                else formattedString.Spans.Add(span);
             }
         }
 
