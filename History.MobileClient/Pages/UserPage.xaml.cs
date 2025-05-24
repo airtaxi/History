@@ -187,7 +187,6 @@ public partial class UserPage : ContentPage
         var firstViewModel = _viewModels.FirstOrDefault();
         if (firstViewModel == null) return;
 
-        MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
         await RefreshAsync();
     }
 
