@@ -7,7 +7,6 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
-using Org.Apache.Http.Impl.Client;
 using System.Collections.ObjectModel;
 
 namespace History.MobileClient.Pages;
