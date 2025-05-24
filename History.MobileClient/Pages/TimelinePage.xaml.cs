@@ -138,11 +138,12 @@ public partial class TimelinePage : ContentPage
 
     private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
 
-    private void OnLogoImageTapped(object sender, TappedEventArgs e)
+    private async void OnLogoImageTapped(object sender, TappedEventArgs e)
     {
         var firstViewModel = _viewModels.FirstOrDefault();
         if (firstViewModel == null) return;
 
         MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+        await RefreshAsync();
     }
 }
