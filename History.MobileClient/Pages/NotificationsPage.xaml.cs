@@ -10,8 +10,9 @@ namespace History.MobileClient.Pages;
 
 public partial class NotificationsPage : ContentPage
 {
-    private readonly ObservableCollection<NotificationViewModel> _viewModels = [];
+    private bool _isInForeground;
     private NotificationViewModel _lastViewModel;
+    private readonly ObservableCollection<NotificationViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public NotificationsPage()
@@ -87,11 +88,18 @@ public partial class NotificationsPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        _isInForeground = true;
 
         if (_isInitialized) return;
         _isInitialized = true;
 
         Dispatcher.Dispatch(async () => await RefreshAsync());
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
     }
 
     private void OnNotificationsMessage(object recipient, NotificationsMessage message)
@@ -107,8 +115,13 @@ public partial class NotificationsPage : ContentPage
 
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        //var isLoading = message.Value;
-        //MainActivityIndicator.IsRunning = isLoading;
-        //IsEnabled = !isLoading;
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 }

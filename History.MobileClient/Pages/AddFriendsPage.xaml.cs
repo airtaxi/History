@@ -9,6 +9,8 @@ namespace History.MobileClient.Pages;
 
 public partial class AddFriendsPage : ContentPage
 {
+    private bool _isInForeground;
+
 	public AddFriendsPage()
 	{
 		InitializeComponent();
@@ -55,10 +57,27 @@ public partial class AddFriendsPage : ContentPage
         await App.PushModalAsync(new UserPage(viewModel.User.UserId));
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _isInForeground = true;
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+    }
+
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 }

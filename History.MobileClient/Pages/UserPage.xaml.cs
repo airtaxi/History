@@ -16,9 +16,10 @@ public partial class UserPage : ContentPage
 {
     public static bool ShouldRefreshMyProfile { get; set; }
 
+    private bool _isInForeground;
+    private object _lastViewModel;
     private readonly string _userId;
     private readonly ObservableCollection<object> _viewModels = [];
-    private object _lastViewModel;
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public UserPage() : this(Shared.UserId)
@@ -130,6 +131,7 @@ public partial class UserPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        _isInForeground = true;
 
         if (_isFirstLoad || (ShouldRefreshMyProfile && _userId == Shared.UserId))
         {
@@ -137,6 +139,24 @@ public partial class UserPage : ContentPage
             if (_isFirstLoad) _isFirstLoad = false;
             Dispatcher.Dispatch(async () => await RefreshAsync());
         }
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 
     private async void OnRefreshing(object sender, EventArgs e)
@@ -161,13 +181,6 @@ public partial class UserPage : ContentPage
     private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await DisplayAlert("안내", "제작중입니다.", "확인");
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
-
-    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
-    {
-        //var isLoading = message.Value;
-        //MainActivityIndicator.IsRunning = isLoading;
-        //IsEnabled = !isLoading;
-    }
 
     private void OnTitleLabelTapped(object sender, TappedEventArgs e)
     {

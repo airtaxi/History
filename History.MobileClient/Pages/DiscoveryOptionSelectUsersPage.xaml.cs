@@ -14,6 +14,7 @@ namespace History.MobileClient.Pages;
 
 public partial class DiscoveryOptionSelectUsersPage : ContentPage
 {
+    private bool _isInForeground;
     private readonly ObservableCollection<SelectUserViewModel> _selectedViewModels = [];
     private readonly TaskCompletionSource<List<string>> _taskCompletionSource = new();
     private readonly List<string> _originallySelectedUserIds;
@@ -140,6 +141,7 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _isInForeground = true;
 
         if (!_isInitialized)
         {
@@ -152,13 +154,26 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
+        _isInForeground = false;
 
         if (!_taskCompletionSource.Task.IsCompleted)
         {
             _taskCompletionSource.TrySetResult(null);
         }
     }
-    
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
+    }
+
     private void OnHandlerChanging(object sender, HandlerChangingEventArgs e)
     {
         if (e.NewHandler == null) WeakReferenceMessenger.Default.UnregisterAll(this);
@@ -248,12 +263,5 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
 
             await Toast.Make("프리셋이 삭제되었습니다.").Show();
         }
-    }
-
-    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
-    {
-        var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
     }
 }

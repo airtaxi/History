@@ -1,3 +1,4 @@
+using Accessibility;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
@@ -13,8 +14,9 @@ public partial class TimelinePage : ContentPage
 {
     public static bool ShouldRefreshTimeline { get; set; }
 
-    private readonly ObservableCollection<PostViewModel> _viewModels = [];
+    private bool _isInForeground;
     private PostViewModel _lastViewModel;
+    private readonly ObservableCollection<PostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public TimelinePage()
@@ -86,6 +88,7 @@ public partial class TimelinePage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        _isInForeground = true;
 
         MainCollectionView.ItemsSource = _viewModels;
         if (_isFirstLoad || ShouldRefreshTimeline)
@@ -94,6 +97,24 @@ public partial class TimelinePage : ContentPage
             if (ShouldRefreshTimeline) ShouldRefreshTimeline = false;
             Dispatcher.Dispatch(async () => await RefreshAsync());
         }
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 
     private void OnSizeChanged(object sender, EventArgs e)
@@ -118,13 +139,6 @@ public partial class TimelinePage : ContentPage
     }
 
     private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
-
-    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
-    {
-        var isLoading = message.Value;
-        //MainActivityIndicator.IsRunning = isLoading;
-        //IsEnabled = !isLoading;
-    }
 
     private void OnLogoImageTapped(object sender, TappedEventArgs e)
     {

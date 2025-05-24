@@ -14,6 +14,7 @@ namespace History.MobileClient.Pages;
 
 public partial class EditCommentPage : ContentPage
 {
+    private bool _isInForeground;
     private CommentResponseDto _comment;
     private MediaAttachmentViewModel _attachmentViewModel;
 
@@ -111,10 +112,27 @@ public partial class EditCommentPage : ContentPage
 
     private void OnMainTextContentLoaded(object sender, EventArgs e) => LoadComment(_comment);
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _isInForeground = true;
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+    }
+
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 }
