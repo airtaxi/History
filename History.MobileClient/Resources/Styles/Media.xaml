@@ -15,8 +15,7 @@
             DownsampleToViewSize="True"
             HorizontalOptions="{x:Binding HorizontalContentOptions}"
             Loaded="OnImageLoaded"
-            Source="{x:Binding Uri,
-                               Mode=OneTime}"
+            Source="{x:Binding Uri}"
             Unloaded="OnImageUnloaded"
             VerticalOptions="{x:Binding VerticalContentOptions}" />
     </DataTemplate>
