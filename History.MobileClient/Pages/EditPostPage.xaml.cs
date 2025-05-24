@@ -19,11 +19,15 @@ namespace History.MobileClient.Pages;
 
 public partial class EditPostPage : ContentPage
 {
+    public ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
+
+    private bool _isInForeground;
+
+    private readonly bool _isShare;
+    private readonly PostResponseDto _post;
+
     private MediaAttachmentViewModel _attachmentViewModelBeingDragged;
     private ExternalUrlContentViewModel _externalUrlContentViewModel;
-    private PostResponseDto _post;
-    private bool _isShare;
-    public ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
 
 	public EditPostPage()
     {
@@ -365,4 +369,28 @@ public partial class EditPostPage : ContentPage
 
     private async void OnDeleteExternalUrlContentBorderTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
     private async void OnInsertOrDeleteExternalUrlTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _isInForeground = true;
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
+    }
 }
