@@ -177,9 +177,17 @@ public partial class UserPage : ContentPage
             await LoadMoreAsync();
         }
     }
+    private async void OnTitleLabelTapped(object sender, TappedEventArgs e)
+    {
+        await RefreshAsync();
+
+        var firstViewModel = _viewModels.FirstOrDefault();
+        if (firstViewModel == null) return;
+
+        MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+    }
 
     private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await DisplayAlert("안내", "제작중입니다.", "확인");
     private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
-    private async void OnTitleLabelTapped(object sender, TappedEventArgs e) => await RefreshAsync();
 }
