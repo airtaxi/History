@@ -4,6 +4,7 @@ using History.Commons.DataTypes.Contents;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
+using System.Text.RegularExpressions;
 
 namespace History.MobileClient;
 
@@ -143,6 +144,9 @@ public static class Utils
         var formattedString = new FormattedString();
         var maxLength = hasMedias ? TimelineMaxTextLengthWithMedias : TimelineMaxTextLengthWithoutMedias;
         var currentLength = 0;
+
+        var urlRegex = new Regex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled);
+
         foreach (var content in contents)
         {
             if (currentLength > maxLength)
@@ -158,10 +162,37 @@ public static class Utils
 
             if (content is TextContent textContent)
             {
-                formattedString.Spans.Add(new Span
+                var matches = urlRegex.Matches(textContent.Text);
+                int lastIndex = 0;
+                foreach (Match match in matches)
                 {
-                    Text = textContent.Text,
-                });
+                    if (match.Index > lastIndex)
+                    {
+                        string plainText = textContent.Text[lastIndex..match.Index];
+                        formattedString.Spans.Add(new Span { Text = plainText });
+                        currentLength += plainText.Length;
+                    }
+
+                    string url = match.Value;
+
+                    var linkSpan = new Span
+                    {
+                        Text = url,
+                        TextColor = Application.Current.Resources["Primary"] as Color
+                    };
+                    AddTapGestureRecognizerToLinkSpan(linkSpan, url);
+                    formattedString.Spans.Add(linkSpan);
+
+                    currentLength += url.Length;
+                    lastIndex = match.Index + match.Length;
+                }
+
+                if (lastIndex < textContent.Text.Length)
+                {
+                    string remaining = textContent.Text.Substring(lastIndex);
+                    formattedString.Spans.Add(new Span { Text = remaining });
+                    currentLength += remaining.Length;
+                }
 
                 currentLength += textContent.Text.Length;
             }
@@ -192,6 +223,14 @@ public static class Utils
         if (theme == AppTheme.Unspecified) theme = Application.Current.PlatformAppTheme;
         if (theme == AppTheme.Unspecified) theme = AppTheme.Light;
         return theme;
+    }
+
+    private static void AddTapGestureRecognizerToLinkSpan(Span linkSpan, string url)
+    {
+        var tapGesture = new TapGestureRecognizer();
+        tapGesture.Tapped += (s, e) => Launcher.Default.OpenAsync(url);
+
+        linkSpan.GestureRecognizers.Add(tapGesture);
     }
 
     private static void AddTapGestureRecognizerToProfileContentSnap(Span span, string userId)
