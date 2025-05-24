@@ -10,9 +10,8 @@
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
 
     <DataTemplate x:Key="ImageTemplate" x:DataType="vm:ImageViewModel">
-        <ffimageloading:CachedImage
+        <Image
             Aspect="{x:Binding Aspect}"
-            DownsampleWidth="1000"
             HorizontalOptions="{x:Binding HorizontalContentOptions}"
             Loaded="OnImageLoaded"
             Source="{x:Binding Uri,
