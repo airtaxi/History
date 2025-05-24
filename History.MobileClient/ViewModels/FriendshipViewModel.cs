@@ -95,6 +95,16 @@ public partial class FriendshipViewModel(UserResponseDto user, PostInteractionVi
             var result = await App.Page.DisplayAlert("안내", $"{Nickname}님의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (result) await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
         }
+        else if (User.Friendship.Status == FriendshipStatus.Blocked)
+        {
+            var result = await App.Page.DisplayAlert("안내", $"{Nickname}님의 차단 조치를 해제하시곘습니까?", Constants.PromptYes, Constants.PromptNo);
+            if (result) await App.ExecuteRequestAsync(new UnblockUser(User.UserId));
+        }
+        else if (User.Friendship.Status == FriendshipStatus.Ignored)
+        {
+            var result = await App.Page.DisplayAlert("안내", $"{Nickname}님의 무시 조치를 해제하시곘습니까?", Constants.PromptYes, Constants.PromptNo);
+            if (result) await App.ExecuteRequestAsync(new UnignoreUser(User.UserId));
+        }
 
         await RefreshAsync();
     }
