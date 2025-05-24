@@ -10,7 +10,7 @@ namespace History.MobileClient;
 
 public static class Utils
 {
-    private const int TimelineMaxTextLengthWithoutMedias = 1000;
+    private const int TimelineMaxTextLengthWithoutMedias = 600;
     private const int TimelineMaxTextLengthWithMedias = 100;
 
     public static string GenerateMediaUri(string mediaId)
@@ -149,7 +149,7 @@ public static class Utils
 
         foreach (var content in contents)
         {
-            if (currentLength > maxLength)
+            if (isTimeline && currentLength > maxLength)
             {
                 formattedString.Spans.Add(new Span
                 {
@@ -169,8 +169,16 @@ public static class Utils
                     if (match.Index > lastIndex)
                     {
                         string plainText = textContent.Text[lastIndex..match.Index];
-                        formattedString.Spans.Add(new Span { Text = plainText });
+
+                        var span = new Span { Text = plainText };
+                        formattedString.Spans.Add(span);
+
                         currentLength += plainText.Length;
+                        if (isTimeline && currentLength > maxLength)
+                        {
+                            span.Text = span.Text[..maxLength];
+                            break;
+                        }
                     }
 
                     string url = match.Value;
@@ -183,18 +191,30 @@ public static class Utils
                     AddTapGestureRecognizerToLinkSpan(linkSpan, url);
                     formattedString.Spans.Add(linkSpan);
 
-                    currentLength += url.Length;
                     lastIndex = match.Index + match.Length;
+
+                    currentLength += url.Length;
+                    if (isTimeline && currentLength > maxLength)
+                    {
+                        linkSpan.Text = linkSpan.Text[..maxLength];
+                        break;
+                    }
                 }
 
                 if (lastIndex < textContent.Text.Length)
                 {
-                    string remaining = textContent.Text.Substring(lastIndex);
-                    formattedString.Spans.Add(new Span { Text = remaining });
-                    currentLength += remaining.Length;
-                }
+                    string remaining = textContent.Text[lastIndex..];
 
-                currentLength += textContent.Text.Length;
+                    var span = new Span { Text = remaining };
+                    formattedString.Spans.Add(span);
+
+                    currentLength += remaining.Length;
+                    if (isTimeline && currentLength > maxLength)
+                    {
+                        span.Text = span.Text[..maxLength];
+                        break;
+                    }
+                }
             }
             else if (content is ProfileContent profileContent)
             {
@@ -204,13 +224,16 @@ public static class Utils
                     TextColor = Application.Current.Resources["Primary"] as Color,
                     FontAttributes = FontAttributes.Bold,
                 };
-
-                if (profileContent.UserId != null) 
-                    AddTapGestureRecognizerToProfileContentSnap(span, profileContent.UserId);
-
                 formattedString.Spans.Add(span);
 
+                if (profileContent.UserId != null) AddTapGestureRecognizerToProfileContentSnap(span, profileContent.UserId);
+
                 currentLength += profileContent.Nickname.Length;
+                if (isTimeline && currentLength > maxLength)
+                {
+                    span.Text = span.Text[..maxLength];
+                    break;
+                }
             }
         }
 
