@@ -136,7 +136,15 @@ public partial class TimelinePage : ContentPage
         }
     }
 
-    private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
+    private async void OnLogoImageTapped(object sender, TappedEventArgs e)
+    {
+        await RefreshAsync();
 
-    private async void OnLogoImageTapped(object sender, TappedEventArgs e) => await RefreshAsync();
+        var firstViewModel = _viewModels.FirstOrDefault();
+        if (firstViewModel == null) return;
+
+        MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+    }
+
+    private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
 }
