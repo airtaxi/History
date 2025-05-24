@@ -39,6 +39,8 @@ public partial class TimelinePage : ContentPage
     {
         try
         {
+            if (_fetchSemaphore.CurrentCount == 0) return;
+
             await _fetchSemaphore.WaitAsync();
 
             _viewModels.Clear();
@@ -143,6 +145,7 @@ public partial class TimelinePage : ContentPage
 
         MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
 
+        await Task.Delay(100);
         await RefreshAsync();
     }
 
