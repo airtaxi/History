@@ -99,7 +99,6 @@ public partial class Media : ResourceDictionary
     {
         if (sender is not CachedImage image) return;
         //if (image.BindingContext is not ImageViewModel imageViewModel) return;
-        image.DownsampleToViewSize = true;
 
         ResizeImage(image);
     }
