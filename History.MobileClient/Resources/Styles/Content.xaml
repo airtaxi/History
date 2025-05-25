@@ -116,8 +116,11 @@
 
     <DataTemplate x:Key="ExternalUrlContentTemplate" x:DataType="vm:ExternalUrlContentViewModel">
         <Grid IsClippedToBounds="True" MinimumHeightRequest="250">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+            </Grid.GestureRecognizers>
             <Grid.Behaviors>
-                <toolkit:TouchBehavior Command="{x:Binding HandleTapCommand}" LongPressCommand="{x:Binding HandleLongPressCommand}" />
+                <toolkit:TouchBehavior LongPressCompleted="OnExternalUrlContentLongPressed" />
             </Grid.Behaviors>
 
             <Rectangle

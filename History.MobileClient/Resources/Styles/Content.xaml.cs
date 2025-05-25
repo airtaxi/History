@@ -46,4 +46,11 @@ public partial class Content : ResourceDictionary
             });
         });
     }
+
+    private async void OnExternalUrlContentLongPressed(object sender, LongPressCompletedEventArgs e)
+    {
+        var view = sender as View;
+        var viewModel = view.BindingContext as ExternalUrlContentViewModel;
+        await viewModel.HandleLongPressAsync();
+    }
 }
