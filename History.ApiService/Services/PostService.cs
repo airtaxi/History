@@ -453,14 +453,19 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     }
 
     /// <inheritdoc/>
-    public async Task<Result> DeletePostAsync(string postId, string userId)
+    public async Task<Result> DeletePostAsync(string postId, string requesterId)
     {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+        var userResult = await userService.GetUserByIdAsync(requesterId);
+        if (userResult.IsFailure) return userResult.CastFailure();
+
         var postResult = await GetPostByIdAsync(postId);
         if (postResult.IsFailure) return postResult.CastFailure();
         var post = postResult.Value;
 
-        // Check if the user is the author of the post
-        if (post.UserId != userId) return (ErrorType.Forbidden, "게시글을 삭제할 수 있는 권한이 없습니다.");
+        // Check permission
+        var hasPermission = post.UserId == requesterId || userResult.Value.Rank >= Rank.Moderator;
+        if (!hasPermission) return (ErrorType.Forbidden, "게시글을 삭제할 수 있는 권한이 없습니다.");
 
         // Delete comments and comment likes associated with the post
         var commentIds = await _commentCollection
@@ -499,13 +504,13 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     }
 
     /// <inheritdoc />
-    public async Task<Result> HandleRepostAsync(string postId, string userId)
+    public async Task<Result> HandleRepostAsync(string postId, string requesterId)
     {
-        var accessResult = await CheckAccessAsync(postId, userId);
+        var accessResult = await CheckAccessAsync(postId, requesterId);
         if (accessResult.IsFailure) return accessResult;
 
         var existingRepost = await _postCollection
-            .Find(p => p.UserId == userId && p.ParentPostId == postId && p.IsRepost)
+            .Find(p => p.UserId == requesterId && p.ParentPostId == postId && p.IsRepost)
             .FirstOrDefaultAsync();
 
         var parentPostResult = await GetPostByIdAsync(postId);
@@ -521,7 +526,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         {
             var post = new Post
             {
-                UserId = userId,
+                UserId = requesterId,
                 DiscoveryOption = DiscoveryOption.Friends,
                 ParentPostId = postId,
                 IsRepost = true,
@@ -544,7 +549,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         else
         {
             // If the repost already exists, delete it
-            await _postCollection.DeleteOneAsync(p => p.UserId == userId && p.ParentPostId == postId && p.IsRepost);
+            await _postCollection.DeleteOneAsync(p => p.UserId == requesterId && p.ParentPostId == postId && p.IsRepost);
 
             // Delete notifications
             await notificationService.DeleteNotificationsAsync("AssociatedId", existingRepost.Id, NotificationType.Repost);
