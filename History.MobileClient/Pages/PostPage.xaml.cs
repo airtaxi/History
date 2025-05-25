@@ -232,29 +232,12 @@ public partial class PostPage : ContentPage
     private async void OnCommentScrollViewScrolled(object sender, ScrolledEventArgs e)
     {
         if (_commentUpdating) return;
-        else if (!_viewModel.IsWideMode) return;
 
         var scrollView = sender as ScrollView;
         // If scroll reached the bottom, load more comments
         if (_viewModel.Comments.Count != _viewModel.CommentsCount
             && scrollView.ScrollY >= scrollView.ContentSize.Height - scrollView.Height - 10)
-        {
             await LoadMoreComments();
-        }
-    }
-
-    private async void OnMainScrollViewScrolled(object sender, ScrolledEventArgs e)
-    {
-        if (_commentUpdating) return;
-        else if (_viewModel.IsWideMode) return;
-
-        var scrollView = sender as ScrollView;
-        // If scroll reached the bottom, load more comments
-        if (_viewModel.Comments.Count != _viewModel.CommentsCount
-            && scrollView.ScrollY >= scrollView.ContentSize.Height - scrollView.Height - 10)
-        {
-            await LoadMoreComments();
-        }
     }
 
     private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await _viewModel.DisplayActionSheetAsync(true);

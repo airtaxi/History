@@ -95,7 +95,7 @@
                     Grid.Column="0"
                     IsVisible="False"
                     Refreshing="OnRefreshing">
-                    <ScrollView x:Name="PhoneScrollView">
+                    <ScrollView x:Name="PhoneScrollView" Scrolled="OnCommentScrollViewScrolled">
                         <Grid RowSpacing="8">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -126,8 +126,7 @@
                         </ScrollView>
                     </RefreshView>
                     <RefreshView Grid.Column="1" Refreshing="OnRefreshing">
-
-                        <ScrollView x:Name="TabletCommentScrollView">
+                        <ScrollView x:Name="TabletCommentScrollView" Scrolled="OnCommentScrollViewScrolled">
                             <views:DataTemplatePresenter x:Name="TabletCommentDataTemplatePresenter" Template="{StaticResource PostCommentTemplate}" />
                         </ScrollView>
                     </RefreshView>
