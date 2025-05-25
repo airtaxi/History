@@ -257,33 +257,14 @@ public partial class PostPage : ContentPage
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
 
-    private async void OnShareImageTapped(object sender, TappedEventArgs e)
-    {
-        if (_viewModel.Post.DiscoveryOption == Commons.Enums.DiscoveryOption.SelectedUsers || _viewModel.Post.DiscoveryOption == Commons.Enums.DiscoveryOption.UnselectedUsers)
-        {
-            await DisplayAlert("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 공유할 수 없습니다.", Constants.PromptOk);
-            return;
-        }
-
-        var page = new EditPostPage(_viewModel.Post, true);
-        await App.PushModalAsync(page);
-    }
+    private async void OnShareImageTapped(object sender, TappedEventArgs e) => await _viewModel.HandleShareAsync();
 
     private async void OnRepostImageTapped(object sender, TappedEventArgs e)
     {
-        if (_viewModel.Post.DiscoveryOption == Commons.Enums.DiscoveryOption.SelectedUsers || _viewModel.Post.DiscoveryOption == Commons.Enums.DiscoveryOption.UnselectedUsers)
-        {
-            await DisplayAlert("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 리포스트할 수 없습니다.", Constants.PromptOk);
-            return;
-        }
+        await _viewModel.HandleRepostAsync();
 
-        var result = await App.ExecuteRequestAsync(new HandleRepost(_viewModel.Post.Id));
-        if (result.IsFailure) return;
-
-        var post = result.Value;
-        UpdateRepostStatus(post);
+        UpdateRepostStatus(_viewModel.Post);
         TimelinePage.ShouldRefreshTimeline = true;
-        WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post));
     }
 
     private async void OnRefreshing(object sender, EventArgs e)
