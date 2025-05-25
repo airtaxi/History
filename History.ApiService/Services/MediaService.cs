@@ -79,6 +79,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                     byte[] bytes;
                     var contentType = file.ContentType;
                     var isImage = file.ContentType.StartsWith("image/");
+                    var wasImage = isImage;
 
                     // Convert image if needed
                     if (isImage)
@@ -107,7 +108,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                     try
                     {
                         MediaConvertResult thumbnailConvertResult;
-                        if (isImage)
+                        if (wasImage)
                         {
                             thumbnailConvertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, false, 512);
                         }
