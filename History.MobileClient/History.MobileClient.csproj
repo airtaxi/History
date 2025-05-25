@@ -27,7 +27,7 @@
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0.7</ApplicationDisplayVersion>
-		<ApplicationVersion>7</ApplicationVersion>
+		<ApplicationVersion>11</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
@@ -62,16 +62,6 @@
 		<AndroidSigningKeyAlias>hoyo_ftp</AndroidSigningKeyAlias>
 		<AndroidSigningKeyPass>kck4156</AndroidSigningKeyPass>
 	</PropertyGroup>
-	
-	<Target Name="_OverrideFirebaseStripBitcodeFromFrameworksMasterDependsOnTargets" BeforeTargets="_ResolveNativeReferencesForFirebaseCore">
-		<PropertyGroup>
-			<_FirebaseStripBitcodeFromFrameworksMasterDependsOnTargets Condition="'$(OS)'=='Unix'">_OverrideFirebaseStripBitcodeFromFrameworksOnMac</_FirebaseStripBitcodeFromFrameworksMasterDependsOnTargets>
-			<_FirebaseStripBitcodeFromFrameworksMasterDependsOnTargets Condition="'$(OS)'!='Unix'">_OverrideFirebaseStripBitcodeFromFrameworksOnWindows</_FirebaseStripBitcodeFromFrameworksMasterDependsOnTargets>
-		</PropertyGroup>
-	</Target>
-	
-	<Target Name="_OverrideFirebaseStripBitcodeFromFrameworksOnMac" />
-	<Target Name="_OverrideFirebaseStripBitcodeFromFrameworksOnWindows" />
 
 	<ItemGroup>
 		<!-- Splash Screen -->
@@ -210,7 +200,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
-		<PackageReference Include="Xamarin.Google.iOS.SignIn" Version="5.0.2.4" />
+		<PackageReference Include="AdamE.Google.iOS.SignIn" Version="8.0.0" />
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
