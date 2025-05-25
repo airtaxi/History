@@ -55,14 +55,21 @@ public static class AndroidMediaPickerHelper
     {
         if (!includeImage && !includeVideo) throw new ArgumentException("At least one of includeImage or includeVideo must be true.");
         
-        var mimeTypes = new List<string>();
-        if (includeImage) mimeTypes.Add("image/*");
-        if (includeVideo) mimeTypes.Add("video/*");
 
-        var intent = new Intent(Intent.ActionOpenDocument);
-        intent.AddCategory(Intent.CategoryOpenable);
-        intent.SetType("*/*");
-        intent.PutExtra(Intent.ExtraMimeTypes, mimeTypes.ToArray());
+        //var intent = new Intent(Intent.ActionOpenDocument);
+        //intent.AddCategory(Intent.CategoryOpenable);
+        var intent = new Intent(Intent.ActionPick);
+        if (includeImage && includeVideo)
+        {
+            var mimeTypes = new List<string>();
+            if (includeImage) mimeTypes.Add("image/*");
+            if (includeVideo) mimeTypes.Add("video/*");
+
+            intent.SetType("*/*");
+            intent.PutExtra(Intent.ExtraMimeTypes, mimeTypes.ToArray());
+        }
+        else if (includeImage) intent.SetType("image/*");
+        else if (includeVideo) intent.SetType("video/*");
         if (_allowMultiple) intent.PutExtra(Intent.ExtraAllowMultiple, _allowMultiple);
 
         var activity = Platform.CurrentActivity ?? Application.Context as Activity;
