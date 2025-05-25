@@ -207,7 +207,7 @@ public partial class PostPage : ContentPage
             if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
             else if (result.IsSuccess)
             {
-                _commentMediaAttachmentViewModel.Dispose();
+                _commentMediaAttachmentViewModel?.Dispose();
                 _commentMediaAttachmentViewModel = null;
                 CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
 
