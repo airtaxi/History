@@ -125,11 +125,7 @@
                 Fill="#808080"
                 HorizontalOptions="Fill"
                 Opacity="0.4"
-                VerticalOptions="Fill">
-                <Rectangle.Behaviors>
-                    <toolkit:TouchBehavior LongPressCommand="{x:Binding HandleLongPressCommand}" />
-                </Rectangle.Behaviors>
-            </Rectangle>
+                VerticalOptions="Fill" />
 
             <views:DataTemplatePresenter Template="{StaticResource ImageTemplate}" ViewModel="{x:Binding ThumbnailImage}" />
 
@@ -138,7 +134,11 @@
                 Fill="Black"
                 HorizontalOptions="Fill"
                 Opacity="0.4"
-                VerticalOptions="Fill" />
+                VerticalOptions="Fill">
+                <Rectangle.Behaviors>
+                    <toolkit:TouchBehavior LongPressCompleted="OnExternalUrlContentLongPressCompleted" />
+                </Rectangle.Behaviors>
+            </Rectangle>
 
             <VerticalStackLayout Padding="12" VerticalOptions="End">
                 <Label

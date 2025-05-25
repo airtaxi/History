@@ -2,6 +2,7 @@ using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
+using System.Threading.Tasks;
 
 namespace History.MobileClient.Resources.Styles;
 
@@ -45,5 +46,17 @@ public partial class Content : ResourceDictionary
                 label.LineHeight = lineHeight;
             });
         });
+    }
+
+    private void Text(object sender, LongPressCompletedEventArgs e)
+    {
+
+    }
+
+    private async void OnExternalUrlContentLongPressCompleted(object sender, LongPressCompletedEventArgs e)
+    {
+        var view = sender as View;
+        var viewModel = view?.BindingContext as ExternalUrlContentViewModel;
+        await viewModel?.HandleLongPressAsync();
     }
 }
