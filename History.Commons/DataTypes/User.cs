@@ -81,6 +81,11 @@ public class User
     public DiscoveryOption FriendListDiscoveryOption { get; set; } = DiscoveryOption.Everyone;
 
     /// <summary>
+    /// Represents the ID of the user's pinned post.
+    /// </summary>
+    public string PinnedPostId { get; set; }
+
+    /// <summary>
     /// Discovery option for post.
     /// </summary>
     public DiscoveryOption LastUsedPostDiscoveryOption { get; set; } = DiscoveryOption.FriendsOfFriends;

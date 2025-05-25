@@ -140,11 +140,31 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         filter &= Builders<Post>.Filter.Eq(p => p.IsRepost, false);
 
         // Retrieve and return posts sorted by creation time (newest first)
-        return await _postCollection
+        var result = await _postCollection
             .Find(filter)
             .Sort(Builders<Post>.Sort.Descending(p => p.CreatedAt))
             .Limit(limit)
             .ToListAsync();
+
+        if (fromPostId == null)
+        {
+            var userService = serviceProvider.GetRequiredService<IUserService>();
+            var userResult = await userService.GetUserByIdAsync(userId);
+            if (userResult.IsFailure) return userResult.CastFailure<List<Post>>();
+
+            var pinnedPostid = userResult.Value.PinnedPostId;
+            if (string.IsNullOrEmpty(pinnedPostid)) return result;
+
+            var pinnedPost = await _postCollection.Find(p => p.UserId == userId && p.Id == pinnedPostid).FirstOrDefaultAsync();
+            if (pinnedPost != null)
+            {
+                var existingPinnedPost = result.FirstOrDefault(p => p.Id == pinnedPost.Id);
+                if (existingPinnedPost != null) result.Remove(existingPinnedPost);
+                result.Insert(0, pinnedPost);
+            }
+        }
+
+        return result;
     }
 
     /// <inheritdoc />

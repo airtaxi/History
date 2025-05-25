@@ -269,6 +269,18 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         }
     }
 
+    /// <inheritdoc />
+    public async Task<Result> UpdatePinnedPostAsync(string userId, string pinnedPostId)
+    {
+        var userResult = await GetUserByIdAsync(userId);
+        if (userResult.Error != null) return userResult.CastFailure<bool>();
+        else if (userResult == null) return (ErrorType.NotFound, "사용자를 찾을 수 없습니다.");
+
+        var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+        var update = Builders<User>.Update.Set(u => u.PinnedPostId, pinnedPostId);
+        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "고정 게시글을 변경하는 중 오류가 발생했습니다.");
+    }
+
     /// <inheritdoc/>
     public async Task<string> GenerateTextPreviewFromContentsAsync(IEnumerable<BaseContent> contents, string requesterId = null)
     {
