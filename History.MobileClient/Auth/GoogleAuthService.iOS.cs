@@ -25,7 +25,7 @@ public class GoogleAuthService : IGoogleAuthService
         {
             if (error != null)
             {
-                _tcs.SetException(new Exception($"Error - {error.LocalizedDescription} - {Convert.ToInt32(error.Code)}"));
+                tcs.SetException(new Exception($"Error - {error.LocalizedDescription} - {Convert.ToInt32(error.Code)}"));
                 return;
             }
 
