@@ -76,7 +76,7 @@ public partial class CommentViewModel : ObservableObject
             Liked ? "좋아요 취소" : "좋아요",
             IsMyComment ? "댓글 수정" : null,
             IsMyComment || _isMyPost || Shared.MyRank >= Rank.Moderator ? "댓글 삭제" : null,
-            IsMyComment && Shared.MyRank < Rank.Moderator ? null : "댓글 신고",
+            IsMyComment || Shared.MyRank < Rank.Moderator ? null : "댓글 신고",
         };
         actions.RemoveAll(x => x == null);
 
