@@ -16,6 +16,11 @@ public class Post
     public DiscoveryOption DiscoveryOption { get; set; }
 
     /// <summary>
+    /// Selected user ids if discovery option is selected users.
+    /// </summary>
+    public List<string> DiscoveryOptionSelectedUserIds { get; set; } = [];
+
+    /// <summary>
     /// A user id who created this post.
     /// </summary>
     public string UserId { get; set; }
@@ -35,11 +40,6 @@ public class Post
     /// Parent post id. Not null means this post shares other post.
     /// </summary>
     public string ParentPostId { get; set; }
-
-    /// <summary>
-    /// Selected user ids if discovery option is selected users.
-    /// </summary>
-    public List<string> DiscoveryOptionSelectedUserIds { get; set; } = [];
 
     /// <summary>
     /// Created at time of post.
