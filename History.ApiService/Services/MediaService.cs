@@ -97,7 +97,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                     }
 
                     // Check file size
-                    var isOverSize = bytes.Length > 15 * 1024 * 1024; // 15MB
+                    var isOverSize = bytes.Length > CommonsConstants.MaxUploadFileSize; // 15MB
                     if (isOverSize)
                     {
                         return (Index: index, Result: Result.Failure(ErrorType.BadRequest, $"{file.FileName}: 파일 크기가 너무 큽니다."), MediaContent: null);
