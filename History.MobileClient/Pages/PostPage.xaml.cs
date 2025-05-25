@@ -171,7 +171,7 @@ public partial class PostPage : ContentPage
         }
         else
         {
-            _commentMediaAttachmentViewModel.Dispose();
+            _commentMediaAttachmentViewModel?.Dispose();
             _commentMediaAttachmentViewModel = null;
             CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
         }
