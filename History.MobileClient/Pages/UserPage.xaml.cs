@@ -17,12 +17,14 @@ public partial class UserPage : ContentPage
 
     private bool _isInForeground;
     private object _lastViewModel;
+    private readonly bool _isMyProfile;
     private readonly string _userId;
     private readonly ObservableCollection<object> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public UserPage() : this(Shared.UserId)
     {
+        _isMyProfile = true;
         BackImage.IsVisible = false;
         TitleLabel.Text = "내 프로필";
         SettingsImage.IsVisible = true;
@@ -203,5 +205,13 @@ public partial class UserPage : ContentPage
 
     private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await DisplayAlert("안내", "제작중입니다.", "확인");
     private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
+
+    protected override bool OnBackButtonPressed()
+    {
+        if (_isMyProfile) return false;
+
+        _ = App.PopModalAsync();
+        return true;
+    }
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
 }

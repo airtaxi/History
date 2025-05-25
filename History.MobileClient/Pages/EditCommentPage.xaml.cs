@@ -146,4 +146,10 @@ public partial class EditCommentPage : ContentPage
             IsEnabled = !isLoading;
         });
     }
+
+    protected override bool OnBackButtonPressed()
+    {
+        _ = App.PopModalAsync();
+        return true;
+    }
 }

@@ -20,4 +20,10 @@ public partial class PostInteractionsPage : TabbedPage
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }
+
+    protected override bool OnBackButtonPressed()
+    {
+        _ = App.PopModalAsync();
+        return true;
+    }
 }
