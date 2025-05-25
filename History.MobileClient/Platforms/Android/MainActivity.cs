@@ -6,6 +6,7 @@ using Android.Content.PM;
 using Android.Graphics;
 using Android.OS;
 using Android.Util;
+using Android.Views;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using CommunityToolkit.Mvvm.Messaging;
@@ -24,7 +25,7 @@ using System.Text.Json;
 
 namespace History.MobileClient;
 
-[Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, ResizeableActivity = true, LaunchMode = LaunchMode.SingleTask, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+[Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, ResizeableActivity = true, WindowSoftInputMode = SoftInput.AdjustResize, LaunchMode = LaunchMode.SingleTask, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
 public class MainActivity : MauiAppCompatActivity
 {
     private const string TAG = "History";
