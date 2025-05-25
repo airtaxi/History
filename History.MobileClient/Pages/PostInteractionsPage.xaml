@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/dotnet/2021/maui/design"
     xmlns:local="clr-namespace:History.MobileClient.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="느낌 / 공유 / 리포스트"
     mc:Ignorable="d">
     <local:PostInteractionUsersPage x:Name="ReactionTab" Title="느낌" />
     <local:PostInteractionUsersPage x:Name="ShareTab" Title="공유" />
