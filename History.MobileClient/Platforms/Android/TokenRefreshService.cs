@@ -26,16 +26,15 @@ public class TokenRefreshService : JobService
             {
                 var accessToken = Configuration.GetValue<string>("AccessToken");
                 var refreshToken = Configuration.GetValue<string>("RefreshToken");
-                Shared.ApiHandler = new ApiHandler(accessToken, refreshToken);
 
-                var result = await App.ExecuteRequestAsync(new RefreshToken(refreshToken));
-                if (result.IsSuccess)
-                {
-                    accessToken = result.Value.AccessToken;
-                    refreshToken = result.Value.RefreshToken;
-                    Shared.ApiHandler = new ApiHandler(accessToken, refreshToken);
-                    Log.Debug(TAG, "Token refreshed.");
-                }
+                var result = await Shared.ApiHandler.ExecuteRequestAsync(new RefreshToken(refreshToken));
+                accessToken = result.AccessToken;
+                refreshToken = result.RefreshToken;
+
+                Configuration.SetValue("AccessToken", accessToken);
+                Configuration.SetValue("RefreshToken", refreshToken);
+
+                Log.Debug(TAG, "Token refreshed.");
             }
             catch (Exception exception)
             {
