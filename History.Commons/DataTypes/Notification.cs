@@ -19,6 +19,8 @@ public class Notification
     public string Body { get; set; }
     public string ImageUrl { get; set; }
 
+    public bool PushNotificationDisabled { get; set; }
+
     public Dictionary<string, string> Data { get; set; }
 
     public DateTime CreatedAt { get; set; }
