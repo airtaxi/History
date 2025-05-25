@@ -80,7 +80,7 @@ public partial class CommentViewModel : ObservableObject
         };
         actions.RemoveAll(x => x == null);
 
-        var action = await App.Page.DisplayActionSheet("댓글 관리", Constants.PromptCancel, null, actions.ToArray());
+        var action = await App.Page.DisplayActionSheet("댓글 관리", Constants.PromptCancel, null, [.. actions]);
         if (action == null || action == Constants.PromptCancel) return;
 
         if (action.StartsWith("좋아요")) await HandleLikeAsync();
