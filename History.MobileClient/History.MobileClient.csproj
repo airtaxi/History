@@ -49,8 +49,8 @@
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
 		<ApplicationId>com.airtaxi.history</ApplicationId>
 		<ProvisioningType>manual</ProvisioningType>
-		<CodesignKey>Apple Development: Created via API (FXDKK32DDS)</CodesignKey>
-		<CodesignProvision>History-Dev</CodesignProvision>
+		<CodesignKey>Apple Distribution: Byeong-Su Kang (UP6EXS2HJJ)</CodesignKey>
+		<CodesignProvision>History iOS (Dist)</CodesignProvision>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
 		<ApplicationId>com.airtaxi.history</ApplicationId>
