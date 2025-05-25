@@ -120,7 +120,7 @@
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
             </Grid.GestureRecognizers>
             <Grid.Behaviors>
-                <toolkit:TouchBehavior LongPressCompleted="OnExternalUrlContentLongPressed" />
+                <toolkit:TouchBehavior LongPressCommand="{x:Binding HandleLongPressCommand}" />
             </Grid.Behaviors>
 
             <Rectangle
