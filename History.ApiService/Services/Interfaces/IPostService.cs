@@ -82,17 +82,17 @@ public interface IPostService
     /// Asynchronously deletes a post associated with a specific user.
     /// </summary>
     /// <param name="postId">Specifies the unique identifier of the post to be removed.</param>
-    /// <param name="userId">Identifies the user who owns the post to be deleted.</param>
+    /// <param name="requeesterId">The identifier of the user requesting the deletion.</param>
     /// <returns>Returns a task that represents the asynchronous operation, containing the result of the deletion.</returns>
-    public Task<Result> DeletePostAsync(string postId, string userId);
+    public Task<Result> DeletePostAsync(string postId, string requeesterId);
 
     /// <summary>
     /// Asynchronously reposts or un-repost a specified post for a user.
     /// </summary>
     /// <param name="postId">Specifies the post that is being reposted.</param>
-    /// <param name="userId">Identifies the user who is reposting the content.</param>
+    /// <param name="requesterId">The identifier of the user who is performing the repost operation.</param>
     /// <returns>Returns a task that represents the result of the repost operation.</returns>
-    public Task<Result> HandleRepostAsync(string postId, string userId);
+    public Task<Result> HandleRepostAsync(string postId, string requesterId);
 
     /// <summary>
     /// Handles the reaction to a post by a user asynchronously.

@@ -3,12 +3,21 @@ using History.Commons.Api.PushNotification;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Animations;
+using Microsoft.Maui.Controls;
 using Plugin.Firebase.CloudMessaging;
+using System;
+using System.Text.RegularExpressions;
 
 namespace History.MobileClient;
 
 public static class Utils
 {
+    private const int TimelineMaxTextLengthWithoutMedias = 400;
+    private const int TimelineMaxTextLengthWithMedias = 80;
+    private const int TimelineMaxTextLinesWithoutMedias = 12;
+    private const int TimelineMaxTextLinesWithMedias = 8;
+
     public static string GenerateMediaUri(string mediaId)
     {
         if (mediaId == null) return null;
@@ -36,7 +45,7 @@ public static class Utils
         {
             if (textAndProfileContents.Count > 0)
             {
-                contentViewModels.Add(new TextAndProfileContentsViewModel(textAndProfileContents));
+                contentViewModels.Add(new TextAndProfileContentsViewModel(textAndProfileContents, isTimeline, contents.OfType<MediaContent>().Any() || contents.OfType<ExternalUrlContent>().Any()));
                 textAndProfileContents = [];
             }
         }
@@ -135,17 +144,107 @@ public static class Utils
         return result;
     }
 
-    public static FormattedString GenerateSpanFromTextAndProfileContents(List<BaseContent> contents)
+    public static FormattedString GenerateSpanFromTextAndProfileContents(List<BaseContent> contents, bool isTimeline, bool hasMedias)
     {
         var formattedString = new FormattedString();
+        var maxLength = hasMedias ? TimelineMaxTextLengthWithMedias : TimelineMaxTextLengthWithoutMedias;
+        var maxLines = hasMedias ? TimelineMaxTextLinesWithMedias : TimelineMaxTextLinesWithoutMedias;
+        var currentLength = 0;
+        var currentLines = 0;
+
+        var urlRegex = new Regex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled);
+
         foreach (var content in contents)
         {
-            if (content is TextContent textContent)
+            void AddMoreSpan(Span span)
             {
+                formattedString.Spans.Add(span);
                 formattedString.Spans.Add(new Span
                 {
-                    Text = textContent.Text,
+                    Text = " ... 더보기",
+                    FontAttributes = FontAttributes.Bold,
+                    TextColor = Color.FromRgb(0x99, 0x99, 0x99)
                 });
+            }
+
+            void TrimSpan(Span span)
+            {
+                if (currentLines > maxLines)
+                {
+                    var lines = span.Text.Split(["\r\n", "\n"], StringSplitOptions.None);
+                    var allowedLines = maxLines - (currentLines - lines.Length);
+
+                    if (allowedLines <= 0) span.Text = string.Empty;
+                    else span.Text = string.Join(Environment.NewLine, lines.Take(allowedLines));
+                }
+                else if (currentLength > maxLength)
+                {
+                    var allowedLength = maxLength - (currentLength - span.Text.Length);
+                    if (allowedLength >= 0) span.Text = span.Text[..allowedLength];
+                }
+            }
+
+            if (content is TextContent textContent)
+            {
+                var matches = urlRegex.Matches(textContent.Text);
+                int lastIndex = 0;
+                foreach (Match match in matches)
+                {
+                    if (match.Index > lastIndex)
+                    {
+                        string plainText = textContent.Text[lastIndex..match.Index];
+
+                        var span = new Span { Text = plainText };
+
+                        currentLength += span.Text.Length;
+                        currentLines += span.Text.Count(x => x == '\n');
+                        if (isTimeline && (currentLength > maxLength || currentLines > maxLines))
+                        {
+                            TrimSpan(span);
+                            AddMoreSpan(span);
+                            break;
+                        }
+                        else formattedString.Spans.Add(span);
+                    }
+
+                    string url = match.Value;
+
+                    var linkSpan = new Span
+                    {
+                        Text = url,
+                        TextColor = Application.Current.Resources["Primary"] as Color
+                    };
+                    AddTapGestureRecognizerToLinkSpan(linkSpan, url);
+
+                    lastIndex = match.Index + match.Length;
+
+                    currentLength += linkSpan.Text.Length;
+                    currentLines += linkSpan.Text.Count(x => x == '\n');
+                    if (isTimeline && (currentLength > maxLength || currentLines > maxLines))
+                    {
+                        TrimSpan(linkSpan);
+                        AddMoreSpan(linkSpan);
+                        break;
+                    }
+                    else formattedString.Spans.Add(linkSpan);
+                }
+
+                if (lastIndex < textContent.Text.Length)
+                {
+                    string remaining = textContent.Text[lastIndex..];
+
+                    var span = new Span { Text = remaining };
+
+                    currentLength += span.Text.Length;
+                    currentLines += span.Text.Count(x => x == '\n');
+                    if (isTimeline && (currentLength > maxLength || currentLines > maxLines))
+                    {
+                        TrimSpan(span);
+                        AddMoreSpan(span);
+                        break;
+                    }
+                    else formattedString.Spans.Add(span);
+                }
             }
             else if (content is ProfileContent profileContent)
             {
@@ -156,10 +255,17 @@ public static class Utils
                     FontAttributes = FontAttributes.Bold,
                 };
 
-                if (profileContent.UserId != null) 
-                    AddTapGestureRecognizerToProfileContentSnap(span, profileContent.UserId);
+                if (profileContent.UserId != null) AddTapGestureRecognizerToProfileContentSnap(span, profileContent.UserId);
 
-                formattedString.Spans.Add(span);
+                currentLength += span.Text.Length;
+                currentLines += span.Text.Count(x => x == '\n');
+                if (isTimeline && (currentLength > maxLength || currentLines > maxLines))
+                {
+                    TrimSpan(span);
+                    AddMoreSpan(span);
+                    break;
+                }
+                else formattedString.Spans.Add(span);
             }
         }
 
@@ -172,6 +278,14 @@ public static class Utils
         if (theme == AppTheme.Unspecified) theme = Application.Current.PlatformAppTheme;
         if (theme == AppTheme.Unspecified) theme = AppTheme.Light;
         return theme;
+    }
+
+    private static void AddTapGestureRecognizerToLinkSpan(Span linkSpan, string url)
+    {
+        var tapGesture = new TapGestureRecognizer();
+        tapGesture.Tapped += (s, e) => Launcher.Default.OpenAsync(url);
+
+        linkSpan.GestureRecognizers.Add(tapGesture);
     }
 
     private static void AddTapGestureRecognizerToProfileContentSnap(Span span, string userId)

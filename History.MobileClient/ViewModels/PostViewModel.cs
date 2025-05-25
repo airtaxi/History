@@ -1,8 +1,10 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using AndroidX.Lifecycle;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.Api.Post;
+using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.ContentViews;
@@ -194,8 +196,18 @@ public partial class PostViewModel : ObservableObject
 
     public async Task DisplayActionSheetAsync(bool popModal)
     {
-        var options = new List<string>() { "관심글로 저장", "이 글 알림 끄기" };
-        if (User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제"]);
+        var options = new List<string>();
+
+        if (WrapMedias)
+        {
+            var isReposted = Post.SharedAndRepostedUsers.Any(x => x.IsRepost && x.User.UserId == Shared.UserId);
+            options.AddRange(["게시글 공유", isReposted ? "리포스트" : "리포스트 해제"]);
+        }
+
+        options.AddRange(["관심글로 저장", "이 글 알림 끄기"]);
+
+        if (User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제", "프로필에 고정"]);
+        else if (Shared.MyRank >= Rank.Moderator) options.AddRange("게시글 삭제");
         else options.AddRange("게시글 신고");
 
         var action = await App.Page.DisplayActionSheet("게시물 옵션", Constants.PromptCancel, null, [.. options]);
@@ -208,7 +220,7 @@ public partial class PostViewModel : ObservableObject
             var editPostPage = new EditPostPage(Post, false);
             await App.PushModalAsync(editPostPage);
         }
-        else if(action == "공개범위 설정")
+        else if (action == "공개범위 설정")
         {
             var discoveryOptions = Enum.GetValues<DiscoveryOption>().Select(x => x.ToDisplayString());
             var rawNewDiscoveryOption = await App.Page.DisplayActionSheet("공개범위 설정", Constants.PromptCancel, null, [.. discoveryOptions]);
@@ -224,6 +236,16 @@ public partial class PostViewModel : ObservableObject
             var result = await App.ExecuteRequestAsync(new ChangeDiscoveryOption(Post.Id, newDiscoveryOption, null));
             if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
         }
+        else if (action == "프로필에 고정")
+        {
+            var pin = await App.Page.DisplayAlert("안내", "프로필에 이 게시글을 고정하시겠습니까? 기존에 고정된 게시글은 해제됩니다.", Constants.PromptOk, Constants.PromptCancel);
+            if (!pin) return;
+
+            var result = await App.ExecuteRequestAsync(new UpdatePinnedPost(Post.Id));
+            if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new PostPinnedMessage());
+        }
+        else if (action == "게시글 공유") await HandleShareAsync();
+        else if (action.StartsWith("리포스트")) await HandleRepostAsync();
         else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
 
@@ -245,29 +267,6 @@ public partial class PostViewModel : ObservableObject
                 if (popModal) await App.PopModalAsync();
             }
         }
-    }
-
-    [RelayCommand]
-    public async Task HandleReactionAsync()
-    {
-        HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
-
-        // Delete reaction
-        if (Reaction != null)
-        {
-            await App.ExecuteRequestAsync(new HandlePostReaction(Post.Id, Reaction.ReactionType.Value));
-            await RefreshAsync();
-            return;
-        }
-
-        // Add reaction
-        var rawReaction = await App.Page.DisplayActionSheet("느낌 달기", Constants.PromptCancel, null, [.. Enum.GetValues<PostReactionType>().Select(x => x.ToDisplayString())]);
-        if (rawReaction == null || rawReaction == Constants.PromptCancel) return;
-
-        var reaction = PostReactionTypeExtensions.FromDisplayString(rawReaction);
-
-        await App.ExecuteRequestAsync(new HandlePostReaction(Post.Id, reaction));
-        await RefreshAsync();
     }
 
     [RelayCommand]
@@ -294,21 +293,73 @@ public partial class PostViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public async Task HandleReactionTap()
+    public async Task HandleReactionAsync()
+    {
+        HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
+
+        // Delete reaction
+        if (Reaction != null)
+        {
+            await App.ExecuteRequestAsync(new HandlePostReaction(Post.Id, Reaction.ReactionType.Value));
+            await RefreshAsync();
+            return;
+        }
+
+        // Add reaction
+        var rawReaction = await App.Page.DisplayActionSheet("느낌 달기", Constants.PromptCancel, null, [.. Enum.GetValues<PostReactionType>().Select(x => x.ToDisplayString())]);
+        if (rawReaction == null || rawReaction == Constants.PromptCancel) return;
+
+        var reaction = PostReactionTypeExtensions.FromDisplayString(rawReaction);
+
+        await App.ExecuteRequestAsync(new HandlePostReaction(Post.Id, reaction));
+        await RefreshAsync();
+    }
+
+    [RelayCommand]
+    public async Task HandleShareAsync()
+    {
+        if (Post.DiscoveryOption == DiscoveryOption.SelectedUsers || Post.DiscoveryOption == DiscoveryOption.UnselectedUsers)
+        {
+            await App.Page.DisplayAlert("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 공유할 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        var page = new EditPostPage(Post, true);
+        await App.PushModalAsync(page);
+    }
+
+    [RelayCommand]
+    public async Task HandleRepostAsync()
+    {
+        if (Post.DiscoveryOption == DiscoveryOption.SelectedUsers || Post.DiscoveryOption == DiscoveryOption.UnselectedUsers)
+        {
+            await App.Page.DisplayAlert("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 리포스트할 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        var result = await App.ExecuteRequestAsync(new HandleRepost(Post.Id));
+        if (result.IsFailure) return;
+
+        var post = result.Value;
+        WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post));
+    }
+
+    [RelayCommand]
+    public async Task HandleReactionTapAsync()
     {
         var page = new PostInteractionsPage(Interactions, Enums.PostInteractionType.Reaction);
         await App.PushModalAsync(page);
     }
 
     [RelayCommand]
-    public async Task HandleSharedTap()
+    public async Task HandleSharedTapAsync()
     {
         var page = new PostInteractionsPage(Interactions, Enums.PostInteractionType.Share);
         await App.PushModalAsync(page);
     }
 
     [RelayCommand]
-    public async Task HandleRepostTap()
+    public async Task HandleRepostTapAsync()
     {
         var page = new PostInteractionsPage(Interactions, Enums.PostInteractionType.Repost);
         await App.PushModalAsync(page);

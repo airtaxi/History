@@ -7,7 +7,9 @@ namespace History.MobileClient.Pages;
 
 public partial class WaitingFriendRequestsPage : ContentPage
 {
-	public WaitingFriendRequestsPage()
+    private bool _isInForeground;
+
+    public WaitingFriendRequestsPage()
 	{
 		InitializeComponent();
 
@@ -35,6 +37,7 @@ public partial class WaitingFriendRequestsPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _isInForeground = true;
 
         if (!_isInitialized)
         {
@@ -43,10 +46,21 @@ public partial class WaitingFriendRequestsPage : ContentPage
         }
     }
 
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+    }
+
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 }

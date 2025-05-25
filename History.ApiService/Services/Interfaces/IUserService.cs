@@ -148,6 +148,14 @@ public interface IUserService
     public Task<Result> UpdateBackgroundMediaAsync(string userId, byte[] image);
 
     /// <summary>
+    /// Update user's profile thumbnail media
+    /// </summary>
+    /// <param name="userId">The ID of user to update</param>
+    /// <param name="pinnedPostId">The ID of the pinned post to update. Null if user want to delete profile thumbnail media</param>
+    /// <returns>A task that represents the asynchronous operation. with result of update success</returns>
+    public Task<Result> UpdatePinnedPostAsync(string userId, string pinnedPostId);
+
+    /// <summary>
     /// Generate text preview asynchronously based on the provided contents.
     /// </summary>
     /// <param name="contents">The contents of post or comments to generate preview from.</param>

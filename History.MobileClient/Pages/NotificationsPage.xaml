@@ -39,7 +39,7 @@
                     SelectionMode="None">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="vm:NotificationViewModel">
-                            <Grid Padding="12,6,12,6" ColumnSpacing="8">
+                            <Grid Padding="12,8,12,8" ColumnSpacing="8">
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
                                 </Grid.GestureRecognizers>
@@ -100,6 +100,15 @@
                                         ViewModel="{x:Binding ImageMedia}"
                                         WidthRequest="40" />
                                 </Border>
+
+                                <Rectangle
+                                    Grid.ColumnSpan="3"
+                                    Margin="-8"
+                                    Fill="#808080"
+                                    HeightRequest="{OnPlatform iOS=1.5,
+                                                               Android=1}"
+                                    HorizontalOptions="Fill"
+                                    VerticalOptions="End" />
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>

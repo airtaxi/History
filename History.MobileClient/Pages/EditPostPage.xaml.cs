@@ -1,3 +1,4 @@
+using AndroidX.Media3.Common;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.Messaging;
@@ -8,6 +9,7 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using NativeMedia;
@@ -19,11 +21,15 @@ namespace History.MobileClient.Pages;
 
 public partial class EditPostPage : ContentPage
 {
+    public ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
+
+    private bool _isInForeground;
+
+    private readonly bool _isShare;
+    private readonly PostResponseDto _post;
+
     private MediaAttachmentViewModel _attachmentViewModelBeingDragged;
     private ExternalUrlContentViewModel _externalUrlContentViewModel;
-    private PostResponseDto _post;
-    private bool _isShare;
-    public ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
 
 	public EditPostPage()
     {
@@ -138,7 +144,9 @@ public partial class EditPostPage : ContentPage
             return;
         }
 
-        var request = new MediaPickRequest(20 - _attachmentViewModels.Count, MediaFileType.Image) { Title = "이미지 추가" };
+        var maxCount = 20 - _attachmentViewModels.Count;
+#if IOS
+        var request = new MediaPickRequest(maxCount, MediaFileType.Image) { Title = "이미지 추가" };
 
         var results = await MediaGallery.PickAsync(request);
         var files = results?.Files?.ToArray();
@@ -160,6 +168,16 @@ public partial class EditPostPage : ContentPage
             _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, bytes));
             file.Dispose();
         }
+#elif ANDROID
+        await Toast.Make("길게 눌러 여러 개를 선택할 수 있습니다. 20개를 넘는 파일부터는 무시됩니다.").Show();
+        var images = await AndroidMediaPickerHelper.PickMediasAsync(maxCount, true, false);
+        if (images == null || images.Count == 0) return;
+
+        if (images.Any(x => x.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) || x.FileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)))
+            await Toast.Make("애니메이션 이미지 파일(gif, webp)을 선택하신 경우, 업로드를 처리하는 데 시간이 오래 걸릴 수 있습니다.").Show();
+
+        foreach (var image in images) _attachmentViewModels.Add(new MediaAttachmentViewModel(image.FileName, image.Bytes));
+#endif
     }
 
     private async void OnInsertVideoTapped(object sender, TappedEventArgs e)
@@ -170,7 +188,9 @@ public partial class EditPostPage : ContentPage
             return;
         }
 
-        var request = new MediaPickRequest(20 - _attachmentViewModels.Count, MediaFileType.Video) { Title = "비디오 추가" };
+        var maxCount = 20 - _attachmentViewModels.Count;
+#if IOS
+        var request = new MediaPickRequest(maxCount, MediaFileType.Video) { Title = "비디오 추가" };
 
         var results = await MediaGallery.PickAsync(request);
         var files = results?.Files?.ToArray();
@@ -189,6 +209,13 @@ public partial class EditPostPage : ContentPage
             _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, bytes, true));
             file.Dispose();
         }
+#elif ANDROID
+        await Toast.Make("길게 눌러 여러 개를 선택할 수 있습니다. 20개를 넘는 파일부터는 무시됩니다.").Show();
+        var videos = await AndroidMediaPickerHelper.PickMediasAsync(maxCount, false, true);
+        if (videos == null || videos.Count == 0) return;
+
+        foreach (var image in videos) _attachmentViewModels.Add(new MediaAttachmentViewModel(image.FileName, image.Bytes));
+#endif
     }
 
     private async void OnMediaDescriptionGridTapped(object sender, TappedEventArgs e)
@@ -366,10 +393,27 @@ public partial class EditPostPage : ContentPage
     private async void OnDeleteExternalUrlContentBorderTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
     private async void OnInsertOrDeleteExternalUrlTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _isInForeground = true;
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+    }
+
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 }

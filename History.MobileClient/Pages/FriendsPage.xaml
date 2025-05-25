@@ -14,4 +14,6 @@
     <local:AddFriendsPage Title="친구 추가" />
     <local:WaitingFriendRequestsPage Title="보낸 신청" />
     <local:PendingFriendRequestsPage Title="받은 신청" />
+    <local:BlockedFriendsPage Title="차단한 친구" />
+    <local:IgnoredFriendsPage Title="무시한 친구" />
 </TabbedPage>
