@@ -288,4 +288,82 @@ public static class MediaEncodingHelper
             }
         }
     }
+
+    public static MediaConvertResult GenerateThumbnailFromVideo(byte[] videoBytes, uint? maxWidth = null)
+    {
+        // Create temporary directory
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            // Save input video to temporary file
+            var inputVideoPath = Path.Combine(tempDir, "input_video");
+            File.WriteAllBytes(inputVideoPath, videoBytes);
+
+            // Extract first frame using FFmpeg
+            var outputImagePath = Path.Combine(tempDir, "thumbnail.jpg");
+
+            var ffmpegProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "ffmpeg",
+                    Arguments = $"-i \"{inputVideoPath}\" -vframes 1 -q:v 2 \"{outputImagePath}\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            ffmpegProcess.Start();
+            var error = ffmpegProcess.StandardError.ReadToEnd();
+            ffmpegProcess.WaitForExit();
+
+            if (ffmpegProcess.ExitCode != 0)
+            {
+                throw new Exception($"FFmpeg thumbnail generation failed: {error}");
+            }
+
+            Console.WriteLine($"Thumbnail extraction took: {stopwatch.ElapsedMilliseconds} ms");
+
+            // Read the generated image and process with ImageMagick
+            var jpgBytes = File.ReadAllBytes(outputImagePath);
+
+            using var image = new MagickImage(jpgBytes);
+            image.Format = MagickFormat.WebP;
+            image.Quality = 50;
+            image.AutoOrient();
+
+            // Resize if necessary
+            if (maxWidth.HasValue && image.Width > maxWidth.Value)
+            {
+                var newHeight = (uint)Math.Round((double)image.Height * maxWidth.Value / image.Width, 0);
+                var size = new MagickGeometry(maxWidth.Value, newHeight) { IgnoreAspectRatio = true };
+                image.Resize(size);
+            }
+
+            image.Strip();
+
+            using var ms = new MemoryStream();
+            image.Write(ms);
+
+            return new MediaConvertResult(false, ms.ToArray());
+        }
+        finally
+        {
+            // Clean up temporary files
+            try
+            {
+                Directory.Delete(tempDir, true);
+            }
+            catch
+            {
+                // Ignore cleanup failures
+            }
+        }
+    }
 }
