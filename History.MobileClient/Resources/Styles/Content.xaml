@@ -119,16 +119,17 @@
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
             </Grid.GestureRecognizers>
-            <Grid.Behaviors>
-                <toolkit:TouchBehavior LongPressCommand="{x:Binding HandleLongPressCommand}" />
-            </Grid.Behaviors>
 
             <Rectangle
                 Margin="-4"
                 Fill="#808080"
                 HorizontalOptions="Fill"
                 Opacity="0.4"
-                VerticalOptions="Fill" />
+                VerticalOptions="Fill">
+                <Rectangle.Behaviors>
+                    <toolkit:TouchBehavior LongPressCommand="{x:Binding HandleLongPressCommand}" />
+                </Rectangle.Behaviors>
+            </Rectangle>
 
             <views:DataTemplatePresenter Template="{StaticResource ImageTemplate}" ViewModel="{x:Binding ThumbnailImage}" />
 
