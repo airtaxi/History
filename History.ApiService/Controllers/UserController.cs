@@ -492,6 +492,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         var result = await userService.UpdatePinnedPostAsync(userId, pinnedPostId);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(StatusCodes.Status403Forbidden, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
