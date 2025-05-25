@@ -168,7 +168,7 @@ public partial class EditPostPage : ContentPage
             file.Dispose();
         }
 #elif ANDROID
-        await Toast.Make("길게 눌러 여러 개를 선택할 수 있습니다. 20개를 넘는 파일부터는 무시됩니다.").Show();
+        await Toast.Make($"{maxCount}개가 넘는 미디어 파일은 무시됩니다.").Show();
         var images = await AndroidMediaPickerHelper.PickMediasAsync(maxCount, true, false);
         if (images == null || images.Count == 0) return;
 
