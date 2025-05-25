@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Pages;
+using Newtonsoft.Json.Converters;
 
 namespace History.MobileClient.ViewModels;
 
@@ -13,7 +14,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
     public IEnumerable<MediaContent> AllMediaContents { get; }
 
     public MediaContent MediaContent { get; }
-    public bool IsWrapped { get; }
+    public bool IsTimeline { get; }
     public bool IsVideo { get; }
     public string Description { get; }
     public bool HasDescription { get; }
@@ -24,11 +25,11 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
     [ObservableProperty]
     public partial IMediaViewModel Media { get; private set; }
 
-    public MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, bool isWrapped)
+    public MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, bool isTimeline)
     {
         AllMediaContents = allMediaContents;
         MediaContent = mediaContent;
-        IsWrapped = isWrapped;
+        IsTimeline = isTimeline;
         IsVideo = mediaContent.IsVideo;
         Description = mediaContent.Description ?? string.Empty;
         HasDescription = !string.IsNullOrEmpty(Description);
@@ -64,7 +65,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
             VerticalContentOptions = LayoutOptions.Fill
         };
 #elif IOS
-        if (IsWrapped)
+        if (IsTimeline)
         {
             IMediaViewModel viewModel = MediaContent.IsVideo ?
             new VideoViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
@@ -127,9 +128,10 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
 
     private void GenerateMedia()
     {
-        Media = new ImageViewModel(Utils.GenerateMediaUri((IsWrapped || MediaContent.IsVideo) ? MediaContent.ThumbnailMediaId : MediaContent.MediaId))
+        Media = new ImageViewModel(Utils.GenerateMediaUri((IsTimeline || MediaContent.IsVideo) ? MediaContent.ThumbnailMediaId : MediaContent.MediaId))
         {
-            Aspect = IsWrapped ? Aspect.AspectFill : Aspect.AspectFit,
+            Aspect = IsTimeline ? Aspect.AspectFill : Aspect.AspectFit,
+            ResizeParentCarouselViewWhenSizeChanged = !IsTimeline
             //HorizontalContentOptions = IsWrapped || MediaContent.IsVideo ? LayoutOptions.Fill : LayoutOptions.Start,
             //VerticalContentOptions = IsWrapped || MediaContent.IsVideo ? LayoutOptions.Fill : LayoutOptions.Start,
         };
