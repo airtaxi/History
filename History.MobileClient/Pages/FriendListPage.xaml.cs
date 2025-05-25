@@ -121,6 +121,12 @@ public partial class FriendListPage : ContentPage
         });
     }
 
+    protected override bool OnBackButtonPressed()
+    {
+        _ = App.PopModalAsync();
+        return true;
+    }
+
     private void OnSortTapped(object sender, TappedEventArgs e)
     {
         _sortByTime = !_sortByTime;

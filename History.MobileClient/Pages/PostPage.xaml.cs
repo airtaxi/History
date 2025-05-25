@@ -326,4 +326,10 @@ public partial class PostPage : ContentPage
             IsEnabled = !isLoading;
         });
     }
+
+    protected override bool OnBackButtonPressed()
+    {
+        _ = App.PopModalAsync();
+        return true;
+    }
 }

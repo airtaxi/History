@@ -5,5 +5,11 @@ public partial class FriendsPage : TabbedPage
 	public FriendsPage()
 	{
 		InitializeComponent();
-	}
+    }
+
+    protected override bool OnBackButtonPressed()
+    {
+        _ = App.PopModalAsync();
+        return true;
+    }
 }

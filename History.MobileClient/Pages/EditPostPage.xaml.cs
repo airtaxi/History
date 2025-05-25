@@ -453,4 +453,10 @@ public partial class EditPostPage : ContentPage
             IsEnabled = !isLoading;
         });
     }
+
+    protected override bool OnBackButtonPressed()
+    {
+        _ = App.PopModalAsync();
+        return true;
+    }
 }
