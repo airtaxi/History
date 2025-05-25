@@ -200,7 +200,7 @@ public partial class PostViewModel : ObservableObject
         if (WrapMedias)
         {
             var isReposted = Post.SharedAndRepostedUsers.Any(x => x.IsRepost && x.User.UserId == Shared.UserId);
-            options.AddRange(["게시글 공유", isReposted ? "리포스트" : "리포스트 해제"]);
+            options.AddRange(["게시글 공유", isReposted ? "리포스트 해제" : "리포스트"]);
         }
 
         options.AddRange(["관심글로 저장", "이 글 알림 끄기"]);
