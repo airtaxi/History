@@ -13,38 +13,30 @@ namespace History.MobileClient.Auth;
 
 public class GoogleAuthService : IGoogleAuthService
 {
-    private TaskCompletionSource<string> _tcs;
-
-    public GoogleAuthService()
-    {
-        SignIn.SharedInstance.Scopes = ["https://www.googleapis.com/auth/userinfo.email"];
-        SignIn.SharedInstance.ClientId = Constants.GoogleAuthAppleClientId;
-    }
-
     public async Task<string> AuthenticateAsync()
     {
-        _tcs = new TaskCompletionSource<string>();
+        var tcs = new TaskCompletionSource<string>();
 
-        SignIn.SharedInstance.SignedIn += OnSharedInstanceSignedIn;
-        PreparePresentedViewController();
-        SignIn.SharedInstance.SignInUser();
+        var config = new Configuration(Constants.GoogleAuthAppleClientId, Constants.GoogleAuthWebClientId);
 
-        var token = await _tcs.Task;
-
-        SignIn.SharedInstance.SignedIn -= OnSharedInstanceSignedIn;
-        return token;
-    }
-
-
-    private void OnSharedInstanceSignedIn(object sender, SignInDelegateEventArgs arg)
-    {
-        if (arg.Error != null) throw new Exception($"Error - {arg.Error.LocalizedDescription} - {Convert.ToInt32(arg.Error.Code)}");
-
-        SignIn.SharedInstance.CurrentUser.Authentication.GetTokens((Authentication auth, NSError error) =>
+        var viewController = GetPresentedViewController();
+        SignIn.SharedInstance.Configuration = config;
+        SignIn.SharedInstance.SignInWithPresentingViewController(viewController, (signInResult, error) =>
         {
-            if (error == null || auth?.IdToken != null) _tcs.SetResult(auth.IdToken);
-            else _tcs.SetException(new Exception($"Error - {error.LocalizedDescription} - {Convert.ToInt32(error.Code)}"));
+            if (error != null)
+            {
+                _tcs.SetException(new Exception($"Error - {error.LocalizedDescription} - {Convert.ToInt32(error.Code)}"));
+                return;
+            }
+
+            var user = signInResult.User;
+            var idToken = user.IdToken.TokenString;
+
+            if (!string.IsNullOrEmpty(idToken)) tcs.SetResult(idToken);
         });
+
+        var token = await tcs.Task;
+        return token;
     }
 
     public Task<bool> SignOutAsync()
@@ -58,7 +50,7 @@ public class GoogleAuthService : IGoogleAuthService
         return Task.FromResult(false);
     }
 
-    private static void PreparePresentedViewController()
+    private static UIViewController GetPresentedViewController()
     {
         var window = UIApplication.SharedApplication.KeyWindow;
 
@@ -67,7 +59,7 @@ public class GoogleAuthService : IGoogleAuthService
         while (viewController.PresentingViewController != null)
             viewController = viewController.PresentingViewController;
 
-        SignIn.SharedInstance.PresentingViewController = viewController;
+        return viewController;
     }
 }
 #pragma warning restore CA1422 // Type or member is obsolete
