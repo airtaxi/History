@@ -1,4 +1,5 @@
-﻿using History.ApiService.Helpers;
+﻿using History.ApiService.DataTypes;
+using History.ApiService.Helpers;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
@@ -54,67 +55,124 @@ public class MediaService(IMongoDatabase database) : IMediaService
     public async Task<Result> HandleUploadContentsAsync(MediaBucket bucketType, string associatedId, string userId, IList<BaseContent> contents, IEnumerable<IFormFile> files)
     {
         var uploadContents = contents.OfType<UploadContent>().ToList();
-
         if (uploadContents.Count > 0)
         {
+            // Validate all files exist first
             foreach (var uploadContent in uploadContents)
             {
                 var fileExists = files.FirstOrDefault(f => f.FileName == uploadContent.FileName);
                 if (fileExists == null) return Result.Failure(ErrorType.BadRequest, "파일이 존재하지 않습니다.");
             }
 
-            // Upload files
-            foreach (var uploadContent in uploadContents)
+            // Process files in parallel while maintaining order
+            var processingTasks = uploadContents.Select(async (uploadContent, index) =>
             {
                 var file = files.FirstOrDefault(f => f.FileName == uploadContent.FileName);
 
-                using var writeStream = new MemoryStream();
-                await file.CopyToAsync(writeStream);
-                byte[] bytes;
-                var originalFileBytes = writeStream.ToArray();
-                var contentType = file.ContentType;
-
-                var isImage = file.ContentType.StartsWith("image/");
-                if (isImage)
-                {
-                    var convertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, true);
-                    bytes = convertResult.Data;
-                    contentType = convertResult.MimeType;
-                    isImage = !convertResult.IsVideo;
-                }
-                else bytes = originalFileBytes;
-
-                var isOverSize = bytes.Length > 15 * 1024 * 1024; // 15MB
-                if (isOverSize) return Result.Failure(ErrorType.BadRequest, "파일 크기가 너무 큽니다.");
-
-                string thumbnailId;
                 try
                 {
-                    var thumbnailConvertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, false, 512);
-                    var thumbnailBytes = thumbnailConvertResult.Data;
-                    var thumbnailContentType = thumbnailConvertResult.MimeType;
+                    // Read file bytes
+                    using var writeStream = new MemoryStream();
+                    await file.CopyToAsync(writeStream);
+                    var originalFileBytes = writeStream.ToArray();
 
-                    var thumbnailResult = await CreateMediaAsync(bucketType, associatedId, userId, thumbnailBytes, thumbnailContentType);
-                    if (thumbnailResult.IsFailure) return thumbnailResult.CastFailure();
+                    byte[] bytes;
+                    var contentType = file.ContentType;
+                    var isImage = file.ContentType.StartsWith("image/");
 
-                    thumbnailId = thumbnailResult.Value.Id;
+                    // Convert image if needed
+                    if (isImage)
+                    {
+                        var convertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, true);
+                        bytes = convertResult.Data;
+                        contentType = convertResult.MimeType;
+                        isImage = !convertResult.IsVideo;
+                    }
+                    else
+                    {
+                        bytes = originalFileBytes;
+                    }
+
+                    // Check file size
+                    var isOverSize = bytes.Length > 15 * 1024 * 1024; // 15MB
+                    if (isOverSize)
+                    {
+                        return (Index: index, Result: Result.Failure(ErrorType.BadRequest, $"{file.FileName}: 파일 크기가 너무 큽니다."), MediaContent: null);
+                    }
+
+                    // Generate thumbnail
+                    string thumbnailId;
+                    try
+                    {
+                        MediaConvertResult thumbnailConvertResult;
+                        if (isImage)
+                        {
+                            thumbnailConvertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, false, 512);
+                        }
+                        else
+                        {
+                            thumbnailConvertResult = MediaEncodingHelper.GenerateThumbnailFromVideo(originalFileBytes, 512);
+                        }
+
+                        var thumbnailBytes = thumbnailConvertResult.Data;
+                        var thumbnailContentType = thumbnailConvertResult.MimeType;
+
+                        var thumbnailResult = await CreateMediaAsync(bucketType, associatedId, userId, thumbnailBytes, thumbnailContentType);
+                        if (thumbnailResult.IsFailure)
+                        {
+                            return (Index: index, Result: thumbnailResult.CastFailure(), MediaContent: null);
+                        }
+
+                        thumbnailId = thumbnailResult.Value.Id;
+                    }
+                    catch (Exception exception)
+                    {
+                        return (Index: index,
+                               Result: Result.Failure(ErrorType.ProgramError, $"지원하지 않는 미디어 형식입니다.\n코드: {exception.Message} {exception.StackTrace}"),
+                               MediaContent: null);
+                    }
+
+                    // Upload main media
+                    var mediaResult = await CreateMediaAsync(bucketType, associatedId, userId, bytes, contentType, thumbnailId);
+                    if (mediaResult.IsFailure)
+                    {
+                        return (Index: index, Result: mediaResult.CastFailure(), MediaContent: null);
+                    }
+
+                    // Create MediaContent
+                    var mediaContent = new MediaContent
+                    {
+                        MediaId = mediaResult.Value.Id,
+                        ThumbnailMediaId = thumbnailId,
+                        Description = uploadContent.Description,
+                        MimeType = contentType
+                    };
+
+                    return (Index: index, Result: Result.Success(), MediaContent: mediaContent);
                 }
-                catch(Exception exception) { return (ErrorType.ProgramError, $"지원하지 않는 미디어 형식입니다.\n코드: {exception.Message} {exception.StackTrace}"); }
-
-
-                var mediaResult = await CreateMediaAsync(bucketType, associatedId, userId, bytes, contentType, thumbnailId);
-                if (mediaResult.IsFailure) return mediaResult.CastFailure();
-
-                // Replace UploadContent with MediaContent By remove after insert
-                var mediaContent = new MediaContent
+                catch (Exception ex)
                 {
-                    MediaId = mediaResult.Value.Id,
-                    ThumbnailMediaId = thumbnailId,
-                    Description = uploadContent.Description,
-                    MimeType = contentType
-                };
+                    return (Index: index,
+                           Result: Result.Failure(ErrorType.ProgramError, $"파일 처리 중 오류 발생: {ex.Message}"),
+                           MediaContent: null);
+                }
+            }).ToList();
 
-                contents.Insert(contents.IndexOf(uploadContent), mediaContent);
+            // Wait for all tasks to complete
+            var results = await Task.WhenAll(processingTasks);
+
+            // Check if any task failed
+            var firstFailure = results.FirstOrDefault(r => r.Result.IsFailure);
+            if (firstFailure != default) return firstFailure.Result;
+
+            // Replace UploadContent with MediaContent in the original order
+            // Process in reverse order to maintain correct indices
+            foreach (var result in results.OrderByDescending(r => r.Index))
+            {
+                var uploadContent = uploadContents[result.Index];
+                var uploadContentIndex = contents.IndexOf(uploadContent);
+
+                contents.Insert(uploadContentIndex, result.MediaContent);
                 contents.Remove(uploadContent);
             }
         }
