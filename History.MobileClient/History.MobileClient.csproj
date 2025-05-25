@@ -47,7 +47,7 @@
 		<!--<AndroidEnableMarshalMethods>true</AndroidEnableMarshalMethods>-->
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
-		<ApplicationId>com.airtaxi.history.test</ApplicationId>
+		<ApplicationId>com.airtaxi.history</ApplicationId>
 		<ProvisioningType>manual</ProvisioningType>
 		<CodesignKey>Apple Development: Created via API (FXDKK32DDS)</CodesignKey>
 		<CodesignProvision>History-Dev</CodesignProvision>
