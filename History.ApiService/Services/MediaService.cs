@@ -1,4 +1,5 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using History.ApiService.Helpers;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
@@ -76,7 +77,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 var isImage = file.ContentType.StartsWith("image/");
                 if (isImage)
                 {
-                    var convertResult = MediaConverter.ConvertAndSave(originalFileBytes, true);
+                    var convertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, true);
                     bytes = convertResult.Data;
                     contentType = convertResult.MimeType;
                     isImage = !convertResult.IsVideo;
@@ -89,7 +90,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 string thumbnailId;
                 try
                 {
-                    var thumbnailConvertResult = MediaConverter.ConvertAndSave(originalFileBytes, false, 512);
+                    var thumbnailConvertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, false, 512);
                     var thumbnailBytes = thumbnailConvertResult.Data;
                     var thumbnailContentType = thumbnailConvertResult.MimeType;
 
