@@ -19,6 +19,7 @@ namespace History.MobileClient;
 public partial class App : Application
 {
     private static readonly SemaphoreSlim ApiRequestSemaphore = new(1, 1);
+    private static readonly SemaphoreSlim NavigationSemaphore = new(1, 1);
 
     public static Window MainWindow { get; private set; }
 
@@ -51,10 +52,37 @@ public partial class App : Application
     public static Page TopPage => Navigation.ModalStack.Count > 0 ? Navigation.ModalStack[Navigation.ModalStack.Count - 1] : Page;
 
     public static INavigation Navigation => Current.Windows[0].Page.Navigation;
-    public static async Task PushModalAsync(Page page) => await Current.Windows[0].Page.Navigation.PushModalAsync(page);
-    public static async Task PopModalAsync() => await Current.Windows[0].Page.Navigation.PopModalAsync();
 
-    
+    public static async Task PushModalAsync(Page page)
+    {
+        if (NavigationSemaphore.CurrentCount == 0) return;
+
+        await NavigationSemaphore.WaitAsync();
+        try { await Current.Windows[0].Page.Navigation.PushModalAsync(page); }
+        finally
+        {
+            if(NavigationSemaphore.CurrentCount == 0)
+            {
+                NavigationSemaphore.Release();
+            }
+        }
+    }
+
+    public static async Task PopModalAsync()
+    {
+        if (NavigationSemaphore.CurrentCount == 0) return;
+
+        await NavigationSemaphore.WaitAsync();
+        try { await Current.Windows[0].Page.Navigation.PopModalAsync(); }
+        finally
+        {
+            if (NavigationSemaphore.CurrentCount == 0)
+            {
+                NavigationSemaphore.Release();
+            }
+        }
+    }
+
     public static async Task<Result> ExecuteRequestAsync(IBaseRequest request, params ErrorType[] hiddenErrorTypes)
     {
         hiddenErrorTypes ??= [];
@@ -126,6 +154,8 @@ public partial class App : Application
 
     public static async Task HandlePushNotificationAsync(string pushData)
     {
+        Preferences.Remove("PushData");
+
         var data = JsonSerializer.Deserialize<Dictionary<string, string>>(pushData);
 
         if (!data.TryGetValue("Type", out var rawType)) return;

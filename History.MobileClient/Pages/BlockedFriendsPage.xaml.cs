@@ -5,11 +5,11 @@ using History.MobileClient.ViewModels;
 
 namespace History.MobileClient.Pages;
 
-public partial class PendingFriendRequestsPage : ContentPage
+public partial class BlockedFriendsPage : ContentPage
 {
     private bool _isInForeground;
 
-    public PendingFriendRequestsPage()
+    public BlockedFriendsPage()
 	{
 		InitializeComponent();
 
@@ -18,7 +18,7 @@ public partial class PendingFriendRequestsPage : ContentPage
 
     private async Task RefreshAsync()
     {
-        var pendingUsersResult = await App.ExecuteRequestAsync(new GetPendingRequests());
+        var pendingUsersResult = await App.ExecuteRequestAsync(new GetBlockedUsers());
         if (pendingUsersResult.IsSuccess)
         {
             var viewModels = pendingUsersResult.Value.Select(x => new FriendshipViewModel(x));

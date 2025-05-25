@@ -6,6 +6,7 @@ using History.Commons.Api.Comment;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using NativeMedia;
 using UraniumUI.Icons.MaterialSymbols;
@@ -14,6 +15,7 @@ namespace History.MobileClient.Pages;
 
 public partial class EditCommentPage : ContentPage
 {
+    private bool _isInForeground;
     private CommentResponseDto _comment;
     private MediaAttachmentViewModel _attachmentViewModel;
 
@@ -85,6 +87,9 @@ public partial class EditCommentPage : ContentPage
         }
         else
         {
+            string fileName;
+            byte[] bytes;
+#if IOS
             var request = new MediaPickRequest(1, MediaFileType.Image) { Title = "이미지 추가" };
 
             var results = await MediaGallery.PickAsync(request);
@@ -101,8 +106,15 @@ public partial class EditCommentPage : ContentPage
             await stream.CopyToAsync(memoryStream);
             memoryStream.Seek(0, SeekOrigin.Begin);
 
-            var fileName = file.GenerateFileName();
-            var bytes = memoryStream.ToArray();
+            fileName = file.GenerateFileName();
+            bytes = memoryStream.ToArray();
+#elif ANDROID
+            var image = await AndroidMediaPickerHelper.PickMediaAsync(true, false);
+            if (image == null) return;
+
+            fileName = image.FileName;
+            bytes = image.Bytes;
+#endif
 
             _attachmentViewModel = new MediaAttachmentViewModel(fileName, bytes);
             CommentMediaFontImageSource.Glyph = MaterialSharp.Hide_image;
@@ -111,10 +123,27 @@ public partial class EditCommentPage : ContentPage
 
     private void OnMainTextContentLoaded(object sender, EventArgs e) => LoadComment(_comment);
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _isInForeground = true;
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+    }
+
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 }

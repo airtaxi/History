@@ -16,6 +16,7 @@ using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 using History.MobileClient.Pages;
 using Plugin.Firebase.CloudMessaging;
 using System.Runtime.Versioning;
@@ -115,6 +116,8 @@ public class MainActivity : MauiAppCompatActivity
     {
         if (NativeMedia.Platform.CheckCanProcessResult(requestCode, resultCode, data))
             NativeMedia.Platform.OnActivityResult(requestCode, resultCode, data);
+
+        PlatformActivityResultHandler.OnActivityResult(requestCode, resultCode, data);
 
         base.OnActivityResult(requestCode, resultCode, data);
 

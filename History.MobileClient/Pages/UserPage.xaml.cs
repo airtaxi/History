@@ -7,7 +7,6 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
-using Org.Apache.Http.Impl.Client;
 using System.Collections.ObjectModel;
 
 namespace History.MobileClient.Pages;
@@ -16,9 +15,10 @@ public partial class UserPage : ContentPage
 {
     public static bool ShouldRefreshMyProfile { get; set; }
 
+    private bool _isInForeground;
+    private object _lastViewModel;
     private readonly string _userId;
     private readonly ObservableCollection<object> _viewModels = [];
-    private object _lastViewModel;
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public UserPage() : this(Shared.UserId)
@@ -27,6 +27,8 @@ public partial class UserPage : ContentPage
         TitleLabel.Text = "내 프로필";
         SettingsImage.IsVisible = true;
         WritePostImage.IsVisible = true;
+
+        WeakReferenceMessenger.Default.Register<PostPinnedMessage>(this, OnPostPinnedMessageReceived);
     }
 
     public UserPage(string userId)
@@ -54,6 +56,8 @@ public partial class UserPage : ContentPage
     {
         try
         {
+            if (_fetchSemaphore.CurrentCount == 0) return;
+
             await _fetchSemaphore.WaitAsync();
 
             _viewModels.Clear();
@@ -130,6 +134,7 @@ public partial class UserPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        _isInForeground = true;
 
         if (_isFirstLoad || (ShouldRefreshMyProfile && _userId == Shared.UserId))
         {
@@ -137,6 +142,24 @@ public partial class UserPage : ContentPage
             if (_isFirstLoad) _isFirstLoad = false;
             Dispatcher.Dispatch(async () => await RefreshAsync());
         }
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 
     private async void OnRefreshing(object sender, EventArgs e)
@@ -157,25 +180,24 @@ public partial class UserPage : ContentPage
             await LoadMoreAsync();
         }
     }
-
-    private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await DisplayAlert("안내", "제작중입니다.", "확인");
-
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
-
-    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
-    {
-        //var isLoading = message.Value;
-        //MainActivityIndicator.IsRunning = isLoading;
-        //IsEnabled = !isLoading;
-    }
-
-    private void OnTitleLabelTapped(object sender, TappedEventArgs e)
+    private async void OnTitleLabelTapped(object sender, TappedEventArgs e)
     {
         var firstViewModel = _viewModels.FirstOrDefault();
         if (firstViewModel == null) return;
 
         MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+
+        await Task.Delay(100);
+        await RefreshAsync();
     }
 
+    private async void OnPostPinnedMessageReceived(object recipient, PostPinnedMessage message)
+    {
+        if (_isInForeground) await RefreshAsync();
+        else ShouldRefreshMyProfile = true;
+    }
+
+    private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await DisplayAlert("안내", "제작중입니다.", "확인");
     private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
 }

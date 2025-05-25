@@ -13,7 +13,9 @@ namespace History.MobileClient.Pages;
 
 public partial class LoginPage : ContentPage
 {
-	public LoginPage()
+    private bool _isInForeground;
+
+    public LoginPage()
 	{
 		InitializeComponent();
 
@@ -29,6 +31,7 @@ public partial class LoginPage : ContentPage
         {
             var me = meResult.Value;
             Shared.UserId = me.UserId;
+            Shared.MyRank = me.Rank;
             Shared.LastUsedPostDiscoveryOption = me.LastUsedPostDiscoveryOption;
             
             await RefreshFriends();
@@ -41,7 +44,6 @@ public partial class LoginPage : ContentPage
 #endif
 
             var pushData = Preferences.Get("PushData", null);
-            Preferences.Remove("PushData");
             if (!string.IsNullOrEmpty(pushData)) await App.HandlePushNotificationAsync(pushData);
         }
         else if (meResult.Error == ErrorType.Unauthorized) await DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
@@ -103,6 +105,7 @@ public partial class LoginPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _isInForeground = true;
 
         var accessToken = Configuration.GetValue<string>("AccessToken");
         var refreshToken = Configuration.GetValue<string>("RefreshToken");
@@ -114,10 +117,21 @@ public partial class LoginPage : ContentPage
         }
     }
 
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+    }
+
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        var isLoading = message.Value;
-        MainActivityIndicator.IsRunning = isLoading;
-        IsEnabled = !isLoading;
+        if (!_isInForeground) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            var isLoading = message.Value;
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 }

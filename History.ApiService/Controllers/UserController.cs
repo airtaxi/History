@@ -481,6 +481,21 @@ public class UserController(IUserService userService, IFriendshipService friends
         else return StatusCode(500, deleteResult.FullErrorMessage);
     }
 
+    [HttpPut("pinned-post/{pinnedPostId}")]
+    public async Task<IActionResult> UpdatePinnedPost(string pinnedPostId)
+    {
+        // Get the user ID from the authenticated user claim
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        // Call the service to update the pinned post
+        var result = await userService.UpdatePinnedPostAsync(userId, pinnedPostId);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(StatusCodes.Status403Forbidden, result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
     [HttpGet("notifications")]
     [Authorize]
     public async Task<IActionResult> GetNotifications()

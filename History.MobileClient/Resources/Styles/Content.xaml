@@ -119,6 +119,9 @@
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
             </Grid.GestureRecognizers>
+            <Grid.Behaviors>
+                <toolkit:TouchBehavior Command="{x:Binding HandleLongPressCommand}" />
+            </Grid.Behaviors>
 
             <views:DataTemplatePresenter Template="{StaticResource ImageTemplate}" ViewModel="{x:Binding ThumbnailImage}" />
 
