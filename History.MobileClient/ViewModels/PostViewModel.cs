@@ -1,5 +1,4 @@
-﻿using AndroidX.Lifecycle;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -238,7 +237,7 @@ public partial class PostViewModel : ObservableObject
         }
         else if (action == "프로필에 고정")
         {
-            var pin = await App.Page.DisplayAlert("안내", "프로필에 이 게시글을 고정하시겠습니까? 기존에 고정된 게시글은 해제됩니다.", Constants.PromptOk, Constants.PromptCancel);
+            var pin = await App.Page.DisplayAlert("안내", "프로필에 이 게시글을 고정하시겠습니까? 기존에 고정된 게시글은 해제됩니다. 또한, 고정된 게시글을 다시 고정하는 경우, 고정이 해제됩니다.", Constants.PromptOk, Constants.PromptCancel);
             if (!pin) return;
 
             var result = await App.ExecuteRequestAsync(new UpdatePinnedPost(Post.Id));
