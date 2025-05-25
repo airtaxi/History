@@ -38,7 +38,7 @@ public partial class LoginPage : ContentPage
             await Utils.RefreshFirebaseToken();
 
 #if ANDROID
-            App.Page = new MainPage();
+            App.Page = new AppShell();
 #else
             App.Page = new AppShell();
 #endif

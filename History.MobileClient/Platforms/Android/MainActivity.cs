@@ -234,7 +234,7 @@ public class MainActivity : MauiAppCompatActivity
             {
                 var pushData = JsonSerializer.Serialize(data);
 #if ANDROID
-                if (!MainPage.IsLoaded) Preferences.Set("PushData", pushData);
+                if (!AppShell.IsLoaded) Preferences.Set("PushData", pushData);
 #else
                 if (!AppShell.IsLoaded) Preferences.Set("PushData", pushData);
 #endif
