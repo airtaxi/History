@@ -37,6 +37,6 @@ public partial class ExternalUrlContentViewModel(ExternalUrlContent externalUrlC
     {
         HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
         await Clipboard.Default.SetTextAsync(ExternalUrlContent.SourceUrl);
-        await Toast.Make("텍스트가 클립보드에 복사되었습니다.").Show();
+        await Toast.Make("링크가 클립보드에 복사되었습니다.").Show();
     }
 }
