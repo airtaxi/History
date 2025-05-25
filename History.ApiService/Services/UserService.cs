@@ -1,4 +1,5 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using History.ApiService.Helpers;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
@@ -201,14 +202,14 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         }
         else
         {
-            var thumbnailConvertResult = MediaConverter.ConvertAndSave(image, false, 256);
+            var thumbnailConvertResult = MediaEncodingHelper.ConvertImage(image, false, 256);
             var thumbnailBytes = thumbnailConvertResult.Data;
             var thumbnailContentType = thumbnailConvertResult.MimeType;
 
             var thumbnailMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, thumbnailBytes, thumbnailContentType);
             if (thumbnailMediaResult.IsFailure) return thumbnailMediaResult.CastFailure<bool>();
 
-            var convertResult = MediaConverter.ConvertAndSave(image, false, 512);
+            var convertResult = MediaEncodingHelper.ConvertImage(image, false, 512);
             var usesAnimatedProfileMedia = convertResult.IsVideo;
             var bytes = convertResult.Data;
             var contentType = convertResult.MimeType;
@@ -245,14 +246,14 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         }
         else
         {
-            var thumbnailConvertResult = MediaConverter.ConvertAndSave(image, false, 512);
+            var thumbnailConvertResult = MediaEncodingHelper.ConvertImage(image, false, 512);
             var thumbnailBytes = thumbnailConvertResult.Data;
             var thumbnailContentType = thumbnailConvertResult.MimeType;
 
             var thumbnailMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, thumbnailBytes, thumbnailContentType);
             if (thumbnailMediaResult.IsFailure) return thumbnailMediaResult.CastFailure<bool>();
 
-            var convertResult = MediaConverter.ConvertAndSave(image, true, 1000);
+            var convertResult = MediaEncodingHelper.ConvertImage(image, true, 1000);
             var usesAnimatedBackgroundMedia = convertResult.IsVideo;
             var contentType = convertResult.MimeType;
             var bytes = convertResult.Data;
