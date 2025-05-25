@@ -241,7 +241,11 @@ public partial class PostViewModel : ObservableObject
             if (!pin) return;
 
             var result = await App.ExecuteRequestAsync(new UpdatePinnedPost(Post.Id));
-            if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new PostPinnedMessage());
+            if (result.IsSuccess)
+            {
+                await App.Page.DisplayAlert("안내", "게시글이 프로필에 고정되었습니다.", Constants.PromptOk);
+                WeakReferenceMessenger.Default.Send(new PostPinnedMessage());
+            }
         }
         else if (action == "게시글 공유") await HandleShareAsync();
         else if (action.StartsWith("리포스트")) await HandleRepostAsync();
