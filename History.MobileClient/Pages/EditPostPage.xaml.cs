@@ -1,3 +1,10 @@
+#if ANDROID
+using History.MobileClient.Helpers;
+using History.MobileClient.ThirdParty.StaggeredLayout;
+#elif IOS
+using NativeMedia;
+#endif
+
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.Messaging;
@@ -8,13 +15,10 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
-using History.MobileClient.Helpers;
-using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
-using NativeMedia;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 using UraniumUI.Icons.MaterialSymbols;
+
 
 namespace History.MobileClient.Pages;
 
@@ -143,6 +147,7 @@ public partial class EditPostPage : ContentPage
             return;
         }
 
+        var sizeExceed = false;
         var maxCount = 20 - _attachmentViewModels.Count;
 #if IOS
         var request = new MediaPickRequest(maxCount, MediaFileType.Image) { Title = "이미지 추가" };
@@ -153,7 +158,7 @@ public partial class EditPostPage : ContentPage
 
         if (files.Any(x => x.Extension.Equals("webp", StringComparison.OrdinalIgnoreCase)))
             _ = Toast.Make("webp 애니메이션 파일을 선택하신 경우, 업로드를 처리하는 데 시간이 오래 걸릴 수 있습니다.").Show();
-
+            
         foreach (var file in files)
         {
             using var stream = await file.OpenReadAsync();
@@ -163,6 +168,12 @@ public partial class EditPostPage : ContentPage
 
             var fileName = file.GenerateFileName();
             var bytes = memoryStream.ToArray();
+            
+            if(bytes.Length > CommonsConstants.MaxUploadFileSize)
+            {
+                sizeExceed = true;
+                continue;
+            }
 
             _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, bytes));
             file.Dispose();
@@ -175,8 +186,18 @@ public partial class EditPostPage : ContentPage
         if (images.Any(x => x.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) || x.FileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)))
             await Toast.Make("애니메이션 이미지 파일(gif, webp)을 선택하신 경우, 업로드를 처리하는 데 시간이 오래 걸릴 수 있습니다.").Show();
 
-        foreach (var image in images) _attachmentViewModels.Add(new MediaAttachmentViewModel(image.FileName, image.Bytes));
+        foreach (var image in images)
+        {
+            if(image.Bytes.Length > CommonsConstants.MaxUploadFileSize)
+            {
+                sizeExceed = true;
+                continue;
+            }
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(image.FileName, image.Bytes));
+        }
 #endif
+
+        if (sizeExceed) await Toast.Make("15MB 이상의 미디어는 자동으로 제외되었습니다.").Show();
     }
 
     private async void OnInsertVideoTapped(object sender, TappedEventArgs e)
@@ -187,6 +208,7 @@ public partial class EditPostPage : ContentPage
             return;
         }
 
+        var sizeExceed = false;
         var maxCount = 20 - _attachmentViewModels.Count;
 #if IOS
         var request = new MediaPickRequest(maxCount, MediaFileType.Video) { Title = "비디오 추가" };
@@ -204,6 +226,12 @@ public partial class EditPostPage : ContentPage
 
             var fileName = file.GenerateFileName();
             var bytes = memoryStream.ToArray();
+            
+            if(bytes.Length > CommonsConstants.MaxUploadFileSize)
+            {
+                sizeExceed = true;
+                continue;
+            }
 
             _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, bytes, true));
             file.Dispose();
@@ -213,7 +241,17 @@ public partial class EditPostPage : ContentPage
         var videos = await AndroidMediaPickerHelper.PickMediasAsync(maxCount, false, true);
         if (videos == null || videos.Count == 0) return;
 
-        foreach (var image in videos) _attachmentViewModels.Add(new MediaAttachmentViewModel(image.FileName, image.Bytes));
+        foreach (var video in videos)
+        {
+            if (video.Bytes.Length > CommonsConstants.MaxUploadFileSize)
+            {
+                sizeExceed = true;
+                continue;
+            }
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(video.FileName, video.Bytes));
+        }
+
+        if (sizeExceed) await Toast.Make("15MB 이상의 미디어는 자동으로 제외되었습니다.").Show();
 #endif
     }
 
