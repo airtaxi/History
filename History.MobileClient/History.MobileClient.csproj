@@ -22,7 +22,6 @@
 
 		<!-- Display name -->
 		<ApplicationTitle>히스토리</ApplicationTitle>
-
 		<!-- App Identifier -->
 		<!--<ApplicationId>com.airtaxi.history</ApplicationId>-->
 
@@ -105,9 +104,8 @@
 	  <GoogleServicesJson Include="google-services.json" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <ProjectReference Include="..\Dependencies\SpeakLink\SpeakLink\SpeakLink.csproj" />
-	  <ProjectReference Include="..\History.Commons\History.Commons.csproj" />
+	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
+		<BundleResource Include="GoogleService-Info.plist" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -204,6 +202,11 @@
 		<MauiXaml Update="Resources\Styles\SharedPost.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Dependencies\SpeakLink\SpeakLink\SpeakLink.csproj" />
+		<ProjectReference Include="..\History.Commons\History.Commons.csproj" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
