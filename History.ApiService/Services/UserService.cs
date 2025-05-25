@@ -283,8 +283,10 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         else if (postResult == null) return (ErrorType.NotFound, "게시글을 찾을 수 없습니다.");
         else if (postResult.Value.UserId != userId) return (ErrorType.Forbidden, "고정 게시글은 자신의 게시글만 설정할 수 있습니다.");
 
+        var isUnpinning = userResult.Value.PinnedPostId == pinnedPostId;
+
         var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
-        var update = Builders<User>.Update.Set(u => u.PinnedPostId, pinnedPostId);
+        var update = Builders<User>.Update.Set(u => u.PinnedPostId, isUnpinning ? null : pinnedPostId);
         return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "고정 게시글을 변경하는 중 오류가 발생했습니다.");
     }
 
