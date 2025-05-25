@@ -154,6 +154,8 @@ public partial class App : Application
 
     public static async Task HandlePushNotificationAsync(string pushData)
     {
+        Preferences.Remove("PushData");
+
         var data = JsonSerializer.Deserialize<Dictionary<string, string>>(pushData);
 
         if (!data.TryGetValue("Type", out var rawType)) return;

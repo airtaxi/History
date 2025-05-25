@@ -27,6 +27,8 @@ public partial class UserPage : ContentPage
         TitleLabel.Text = "내 프로필";
         SettingsImage.IsVisible = true;
         WritePostImage.IsVisible = true;
+
+        WeakReferenceMessenger.Default.Register<PostPinnedMessage>(this, OnPostPinnedMessageReceived);
     }
 
     public UserPage(string userId)
@@ -187,6 +189,12 @@ public partial class UserPage : ContentPage
 
         await Task.Delay(100);
         await RefreshAsync();
+    }
+
+    private async void OnPostPinnedMessageReceived(object recipient, PostPinnedMessage message)
+    {
+        if (_isInForeground) await RefreshAsync();
+        else ShouldRefreshMyProfile = true;
     }
 
     private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await DisplayAlert("안내", "제작중입니다.", "확인");
