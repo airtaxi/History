@@ -9,9 +9,9 @@ namespace History.MobileClient.Pages;
 public partial class FullScreenMediaViewerPage : ContentPage
 {
     private bool _isInForeground;
-    private readonly IMediaViewModel _viewModel;
+    private readonly FullScreenMediaContentViewModel _viewModel;
 
-	public FullScreenMediaViewerPage(IMediaViewModel viewModel)
+	public FullScreenMediaViewerPage(FullScreenMediaContentViewModel viewModel)
 	{
         _viewModel = viewModel;
 
@@ -30,14 +30,18 @@ public partial class FullScreenMediaViewerPage : ContentPage
 
         IsEnabled = false;
         IsBusy = true;
+
+        var viewModel = _viewModel.CurrentMedia;
+        var isImage = viewModel is ImageViewModel;
+        var fileName = isImage ? $"{viewModel.Uri.GetHashCode()}.webp" : $"{viewModel.Uri.GetHashCode()}.mp4";
+
         var tempPath = Path.GetTempPath();
-        var isImage = _viewModel is ImageViewModel;
-        var fileName = isImage ? $"{_viewModel.Uri.GetHashCode()}.webp" : $"{_viewModel.Uri.GetHashCode()}.mp4";
         var filePath = Path.Combine(tempPath, fileName);
+
         try
         {
-            await Downloader.DownloadFileAsync(_viewModel.Uri, filePath);
-            await MediaGallery.SaveAsync(_viewModel is ImageViewModel ? MediaFileType.Image : MediaFileType.Video, filePath);
+            await Downloader.DownloadFileAsync(viewModel.Uri, filePath);
+            await MediaGallery.SaveAsync(viewModel is ImageViewModel ? MediaFileType.Image : MediaFileType.Video, filePath);
         }
         catch
         {
