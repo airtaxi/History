@@ -43,13 +43,16 @@ public class PanPinchContainer : ContentView
 
         _doubleTapGestureRecognizer.Tapped += DoubleTappedAsync;
         GestureRecognizers.Add(_doubleTapGestureRecognizer);
+
+        BindingContextChanged += OnBindingContextChanged;
     }
+
+    private void OnBindingContextChanged(object sender, EventArgs e) => _mediaViewModel = BindingContext as IMediaViewModel;
 
     protected override void OnChildAdded(Element child)
     {
         base.OnChildAdded(child);
 
-        _mediaViewModel = child.BindingContext as IMediaViewModel;
         if (child is View view)
         {
             view.HorizontalOptions = LayoutOptions.Center;
