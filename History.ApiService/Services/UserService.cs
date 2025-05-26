@@ -246,14 +246,14 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         }
         else
         {
-            var thumbnailConvertResult = MediaEncodingHelper.ConvertImage(image, false, 512);
+            var thumbnailConvertResult = MediaEncodingHelper.ConvertImage(image, false, 1000);
             var thumbnailBytes = thumbnailConvertResult.Data;
             var thumbnailContentType = thumbnailConvertResult.MimeType;
 
             var thumbnailMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, thumbnailBytes, thumbnailContentType);
             if (thumbnailMediaResult.IsFailure) return thumbnailMediaResult.CastFailure<bool>();
 
-            var convertResult = MediaEncodingHelper.ConvertImage(image, true, 1000);
+            var convertResult = MediaEncodingHelper.ConvertImage(image, false, 1000);
             var usesAnimatedBackgroundMedia = convertResult.IsVideo;
             var contentType = convertResult.MimeType;
             var bytes = convertResult.Data;
