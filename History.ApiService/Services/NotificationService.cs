@@ -170,7 +170,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
                 {
                     ChannelId = AndroidChannelId,
                     ImageUrl = imageUrl,
-                    Visibility = NotificationVisibility.PRIVATE,
+                    NotificationCount = 1
                 },
             }
         };
