@@ -246,7 +246,7 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
 
         if (existingFriendships.Count > 0) await notificationService.DeleteNotificationsAsync("AssociatedId", existingFriendships.Select(x => x.Id), NotificationType.FriendRequest);
 
-        return result.DeletedCount > 0 ? (ErrorType.NotFound, "친구 관계를 찾을 수 없습니다.") : null;
+        return result.DeletedCount > 0 ? Result.Success() : (ErrorType.NotFound, "친구 관계를 찾을 수 없습니다.");
     }
 
     /// <inheritdoc/>
@@ -256,7 +256,7 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
             f.UserId == userId && f.FriendId == blockedUserId &&
             f.Status == FriendshipStatus.Blocked);
 
-        return result.DeletedCount > 0 ? (ErrorType.NotFound, "차단한 사용자를 찾을 수 없습니다.") : null;
+        return result.DeletedCount > 0 ? Result.Success() : (ErrorType.NotFound, "차단한 사용자를 찾을 수 없습니다.");
     }
 
     /// <inheritdoc/>
@@ -266,7 +266,7 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
             f.UserId == userId && f.FriendId == ignoredUserId &&
             f.Status == FriendshipStatus.Ignored);
 
-        return result.DeletedCount > 0 ? (ErrorType.NotFound, "무시한 사용자를 찾을 수 없습니다.") : null;
+        return result.DeletedCount > 0 ? Result.Success() : (ErrorType.NotFound, "무시한 사용자를 찾을 수 없습니다.");
     }
 
     /// <inheritdoc/>
