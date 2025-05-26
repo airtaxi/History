@@ -14,15 +14,13 @@
         <views:DataTemplatePresenter x:Name="MainDataTemplatePresenter">
             <views:DataTemplatePresenter.Template>
                 <DataTemplate x:DataType="vm:FullScreenMediaContentViewModel">
-                    <Grid>
-                        <CarouselView
-                            CurrentItem="{x:Binding CurrentMedia,
-                                                    Mode=TwoWay}"
-                            HorizontalScrollBarVisibility="Never"
-                            IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
-                            ItemTemplate="{StaticResource MediaContentTemplate}"
-                            ItemsSource="{x:Binding FullScreenMedias}" />
-                    </Grid>
+                    <CarouselView
+                        CurrentItem="{x:Binding CurrentMedia,
+                                                Mode=TwoWay}"
+                        HorizontalScrollBarVisibility="Never"
+                        IsSwipeEnabled="{x:Binding CurrentMedia.FullScreenSwipeable}"
+                        ItemTemplate="{StaticResource MediaTemplateSelector}"
+                        ItemsSource="{x:Binding FullScreenMedias}" />
                 </DataTemplate>
             </views:DataTemplatePresenter.Template>
         </views:DataTemplatePresenter>

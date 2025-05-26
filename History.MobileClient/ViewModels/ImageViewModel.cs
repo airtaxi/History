@@ -24,5 +24,8 @@ public partial class ImageViewModel(string uri) : ObservableObject, IMediaViewMo
     public partial bool IsFullScreen { get; set; } = false;
 
     public bool IsNotFullScreen => !IsFullScreen;
+
+    [ObservableProperty]
+    public partial bool FullScreenSwipeable { get; set; } = true;
 }
 
