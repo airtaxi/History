@@ -158,6 +158,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             var pinnedPost = await _postCollection.Find(p => p.UserId == userId && p.Id == pinnedPostid).FirstOrDefaultAsync();
             if (pinnedPost != null)
             {
+                var access = await CheckAccessAsync(pinnedPost, requesterId);
+                if (access.IsFailure) return result;
+
                 var existingPinnedPost = result.FirstOrDefault(p => p.Id == pinnedPost.Id);
                 if (existingPinnedPost != null) result.Remove(existingPinnedPost);
                 result.Insert(0, pinnedPost);
@@ -168,23 +171,23 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     }
 
     /// <inheritdoc />
-    public async Task<Result<List<Post>>> GetTimelinePostsAsync(string userId, string fromPostId = null, int limit = 10)
+    public async Task<Result<List<Post>>> GetTimelinePostsAsync(string requesterId, string fromPostId = null, int limit = 10)
     {
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
 
         // Get IDs of user's friends and add the user's own ID
-        var friendIdsResult = await friendshipService.GetFriendIdsAsync(userId);
+        var friendIdsResult = await friendshipService.GetFriendIdsAsync(requesterId);
         var relevantUserIds = friendIdsResult.Value;
 
         var ignoredPostIds = await _ignoredPostCollection
-                .Find(i => i.UserId == userId)
+                .Find(i => i.UserId == requesterId)
                 .Project(i => i.PostId)
                 .ToListAsync();
 
         // Build the filter to get timeline posts
         var filter = Builders<Post>.Filter.Or(
             // Include all posts created by the user (regardless of privacy settings)
-            Builders<Post>.Filter.Eq(p => p.UserId, userId),
+            Builders<Post>.Filter.Eq(p => p.UserId, requesterId),
 
             // Include posts from friends with appropriate privacy settings
             Builders<Post>.Filter.And(
@@ -199,12 +202,12 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             // Include posts where the user is specifically selected as a recipient
             Builders<Post>.Filter.And(
                 Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.SelectedUsers),
-                Builders<Post>.Filter.AnyEq(p => p.DiscoveryOptionSelectedUserIds, userId)
+                Builders<Post>.Filter.AnyEq(p => p.DiscoveryOptionSelectedUserIds, requesterId)
             ),
 
             Builders<Post>.Filter.And(
                 Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.UnselectedUsers),
-                Builders<Post>.Filter.AnyNe(p => p.DiscoveryOptionSelectedUserIds, userId)
+                Builders<Post>.Filter.AnyNe(p => p.DiscoveryOptionSelectedUserIds, requesterId)
             )
         );
 
