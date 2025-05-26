@@ -73,9 +73,7 @@ public partial class ProfileViewModel : ObservableObject
         }
     }
 
-    public IMediaViewModel BackgroundMedia => User.UsesAnimatedBackgroundMedia
-        ? new VideoViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId))
-        : new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId) ?? Constants.DefaultBackgroundImageFileName);
+    public IMediaViewModel BackgroundMedia => new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundThumbnailMediaId) ?? Constants.DefaultBackgroundImageFileName);
 
     public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia
         ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
@@ -255,12 +253,15 @@ public partial class ProfileViewModel : ObservableObject
 
     private async Task HandleChangeProfileVisibilityAsync()
     {
-        var allowSearch = await App.Page.DisplayAlert("프로필 공개 설정", "내 프로필을 검색할 수 있도록 설정하시겠습니까?\n설정하는 경우, 닉네임이나 핸들을 통해 내 프로필을 검색할 수 있습니다.", "공개", "비공개");
+        var action = await App.Page.DisplayActionSheet("프로필 공개 설정", Constants.PromptCancel, null, "공개", "비공개");
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var allowSearch = action == "공개";
         var result = await App.ExecuteRequestAsync(new UpdateAllowSearch(allowSearch));
         if (result.IsSuccess)
         {
-            if (allowSearch) await App.Page.DisplayAlert("안내", "프로필 공개 설정이 완료되었습니다.", Constants.PromptOk);
-            else await App.Page.DisplayAlert("안내", "프로필 비공개 설정이 완료되었습니다.", Constants.PromptOk);
+            if (allowSearch) await App.Page.DisplayAlert("안내", "프로필 공개 설정이 완료되었습니다. 이제부터 다른 사용자가 닉네임이나 핸들을 통해 내 프로필을 검색할 수 있습니다.", Constants.PromptOk);
+            else await App.Page.DisplayAlert("안내", "프로필 비공개 설정이 완료되었습니다. 이제부터 다른 사용자가 닉네임이나 핸들을 통해 내 프로필을 검색할 수 없습니다.", Constants.PromptOk);
             await RefreshAsync();
         }
         else await App.Page.DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
