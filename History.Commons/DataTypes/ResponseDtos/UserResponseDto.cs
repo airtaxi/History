@@ -47,8 +47,8 @@ public class UserResponseDto()
         ProfileThumbnailMediaId = user.ProfileThumbnailMediaId;
         UsesAnimatedProfileMedia = user.UsesAnimatedProfileMedia;
 
-        BackgroundMediaId = user.BackgroundMediaId;
+        BackgroundMediaId = user.BackgroundThumbnailMediaId;
         BackgroundThumbnailMediaId = user.BackgroundThumbnailMediaId;
-        UsesAnimatedBackgroundMedia = user.UsesAnimatedBackgroundMedia;
+        UsesAnimatedBackgroundMedia = false;
     }
 }
