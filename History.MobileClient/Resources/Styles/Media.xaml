@@ -22,7 +22,7 @@
     </DataTemplate>
 
     <DataTemplate x:Key="FullScreenImageTemplate" x:DataType="vm:ImageViewModel">
-        <ppc:PanPinchContainer>
+        <ppc:PanPinchContainer BindingContext="{x:Binding Aspect}">
             <Image
                 Aspect="{x:Binding Aspect}"
                 HorizontalOptions="{x:Binding HorizontalContentOptions}"
