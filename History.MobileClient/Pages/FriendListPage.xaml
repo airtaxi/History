@@ -34,7 +34,7 @@
                     </Image.Source>
                 </Image>
                 <Label
-                    x:Name="FriendListLabel"
+                    x:Name="TitleLabel"
                     FontAttributes="Bold"
                     FontSize="20"
                     Text="친구 목록"
@@ -58,6 +58,7 @@
                     TextChanged="OnMainSearchBarTextChanged" />
 
                 <Label
+                    x:Name="FriendListLabel"
                     Grid.Row="1"
                     Margin="12,0,0,0"
                     FontAttributes="Bold"
