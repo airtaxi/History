@@ -34,6 +34,7 @@
                     </Image.Source>
                 </Image>
                 <Label
+                    x:Name="FriendListLabel"
                     FontAttributes="Bold"
                     FontSize="20"
                     Text="친구 목록"

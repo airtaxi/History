@@ -39,6 +39,7 @@ public partial class FriendListPage : ContentPage
             _viewModels = friendsResult.Value.Select(x => new FriendshipViewModel(x));
             MainSearchBar.Text = string.Empty;
             EmptyLabel.IsVisible = !_viewModels.Any();
+            FriendListLabel.Text = $"친구 목록 (총 {Shared.Friends.Count}명)";
             ApplySort();
         }
         else if (_userId != Shared.UserId) await App.PopModalAsync();
