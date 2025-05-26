@@ -58,7 +58,7 @@ public partial class TimelinePage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
-                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.ParentPost, x.User) : new PostViewModel(x, true));
+                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, true));
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
@@ -74,11 +74,14 @@ public partial class TimelinePage : ContentPage
             await _fetchSemaphore.WaitAsync();
 
             var lastViewModel = _viewModels.OfType<PostViewModel>().LastOrDefault();
-            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts (lastViewModel?.Post.Id));
+            if (lastViewModel == null) return;
+
+            var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
+            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts (lastPostId));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.ParentPost, x.User) : new PostViewModel(x, true));
+                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, true));
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }

@@ -104,7 +104,10 @@ public partial class UserPage : ContentPage
             await _fetchSemaphore.WaitAsync();
 
             var lastViewModel = _viewModels.OfType<PostViewModel>().LastOrDefault();
-            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(_userId, lastViewModel?.Post.Id));
+            if (lastViewModel == null) return;
+
+            var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
+            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(_userId, lastPostId));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;

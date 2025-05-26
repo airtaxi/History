@@ -9,9 +9,10 @@ using System.Threading.Tasks;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class RepostViewModel(PostResponseDto parentPost, UserResponseDto repostedUser) : PostViewModel(parentPost, true)
+public partial class RepostViewModel(string postId, PostResponseDto parentPost, UserResponseDto repostedUser) : PostViewModel(parentPost, true)
 {
     public string RepostedUserNickname => repostedUser?.Nickname;
+    public string RepostId { get; } = postId;
 
     [RelayCommand]
     public async Task HandleRepostedUserTap()
