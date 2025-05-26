@@ -260,7 +260,7 @@ public partial class PostPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    private async void OnSizeChanged(object sender, EventArgs e)
+    private void OnSizeChanged(object sender, EventArgs e)
     {
         _viewModel.IsWideMode = Width > 700;
         if (_viewModel.IsWideMode)
