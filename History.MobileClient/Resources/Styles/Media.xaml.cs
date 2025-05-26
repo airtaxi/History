@@ -2,6 +2,7 @@
 using CommunityToolkit.Maui.Core.Primitives;
 using CommunityToolkit.Maui.Views;
 using FFImageLoading.Maui;
+using FFImageLoading.Maui.Platform;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Handlers;
 using System.Collections.Concurrent;
@@ -62,7 +63,7 @@ public partial class Media : ResourceDictionary
             var imageWidth = 0;
             var imageHeight = 0;
 
-            var handler = image.Handler as ImageHandler;
+            var handler = image.Handler as CachedImageHandler;
             var nativeImageView = handler.PlatformView;
             ImageHandlerMap[image] = true;
 

@@ -264,4 +264,10 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
             await Toast.Make("프리셋이 삭제되었습니다.").Show();
         }
     }
+
+    protected override bool OnBackButtonPressed()
+    {
+        _ = App.PopModalAsync();
+        return true;
+    }
 }

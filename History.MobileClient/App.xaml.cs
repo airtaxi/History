@@ -68,6 +68,21 @@ public partial class App : Application
         }
     }
 
+    public static async Task PushAsync(Page page)
+    {
+        if (NavigationSemaphore.CurrentCount == 0) return;
+
+        await NavigationSemaphore.WaitAsync();
+        try { await Current.Windows[0].Page.Navigation.PushAsync(page); }
+        finally
+        {
+            if(NavigationSemaphore.CurrentCount == 0)
+            {
+                NavigationSemaphore.Release();
+            }
+        }
+    }
+
     public static async Task PopModalAsync()
     {
         if (NavigationSemaphore.CurrentCount == 0) return;

@@ -6,7 +6,8 @@
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
-    xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
+    Shell.NavBarIsVisible="False">
     <ContentPage.Behaviors>
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
         <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
