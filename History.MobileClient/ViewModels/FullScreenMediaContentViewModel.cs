@@ -13,6 +13,4 @@ public partial class FullScreenMediaContentViewModel(List<IMediaViewModel> media
 
     [ObservableProperty]
     public partial IMediaViewModel CurrentMedia { get; set; } = media;
-
-    public bool CarouselSwipeEnabled => FullScreenMedias.Count > 1;
 }
