@@ -268,8 +268,12 @@ public partial class ProfileViewModel : ObservableObject
 
     private static async Task HandleChangeFriendListDiscoveryOptionAsync()
     {
-        var discoveryOptions = Enum.GetValues<DiscoveryOption>().Select(x => x.ToDisplayString()).ToArray();
-        var rawDiscoveryOption = await App.Page.DisplayActionSheet("친구 목록 공개 범위 설정", Constants.PromptCancel, null, discoveryOptions);
+        var discoveryOptions = Enum.GetValues<DiscoveryOption>().ToList();
+        discoveryOptions.Remove(DiscoveryOption.SelectedUsers);
+        discoveryOptions.Remove(DiscoveryOption.UnselectedUsers);
+
+        var rawDiscoveryOptions = discoveryOptions.Select(x => x.ToDisplayString()).ToArray();
+        var rawDiscoveryOption = await App.Page.DisplayActionSheet("친구 목록 공개 범위 설정", Constants.PromptCancel, null, rawDiscoveryOptions);
 
         if (rawDiscoveryOption == null || rawDiscoveryOption == Constants.PromptCancel) return;
 
