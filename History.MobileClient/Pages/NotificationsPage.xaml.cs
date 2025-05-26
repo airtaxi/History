@@ -1,3 +1,4 @@
+using Android.Gms.Common.Apis;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
@@ -11,7 +12,6 @@ namespace History.MobileClient.Pages;
 public partial class NotificationsPage : ContentPage
 {
     private bool _isInForeground;
-    private NotificationViewModel _lastViewModel;
     private readonly ObservableCollection<NotificationViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
@@ -28,6 +28,8 @@ public partial class NotificationsPage : ContentPage
     {
         try
         {
+            if (_fetchSemaphore.CurrentCount == 0) return;
+
             await _fetchSemaphore.WaitAsync();
 
             var notifications = await App.ExecuteRequestAsync(new GetNotifications());
@@ -48,7 +50,6 @@ public partial class NotificationsPage : ContentPage
             {
                 var notifications = notificationsResult.Value;
                 var viewModels = notifications.Select(x => new NotificationViewModel(x));
-                _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
             else return;
@@ -62,26 +63,11 @@ public partial class NotificationsPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    private View _lastView;
-    private void OnChildAdded(object sender, ElementEventArgs e)
+    private async void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e)
     {
-        var view = e.Element as View;
-        var viewModel = view.BindingContext as NotificationViewModel;
-        if (viewModel == _lastViewModel)
-        {
-            if (_lastView != null) _lastView.Loaded -= OnLastItemViewLoaded;
-            view.Loaded += OnLastItemViewLoaded;
-            _lastView = view;
-        }
-    }
+        if (_fetchSemaphore.CurrentCount == 0) return;
 
-    private async void OnLastItemViewLoaded(object sender, EventArgs e)
-    {
-        if (_fetchSemaphore.CurrentCount > 0)
-        {
-            if (_lastView != null) _lastView.Loaded -= OnLastItemViewLoaded;
-            await LoadMoreAsync();
-        }
+        await LoadMoreAsync();
     }
 
     private bool _isInitialized = false;
@@ -109,7 +95,6 @@ public partial class NotificationsPage : ContentPage
 
         _viewModels.Clear();
         var viewModels = notifications.Select(x => new NotificationViewModel(x));
-        _lastViewModel = viewModels.LastOrDefault();
         foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
     }
 
