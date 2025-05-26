@@ -3,7 +3,7 @@ using History.Commons.DataTypes.Contents;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class WrappedMediaContentsViewModel(IEnumerable<MediaContent> mediaContents, IEnumerable<MediaContent> allMediaContents) : ObservableObject, IContentViewModel
+public partial class WrappedMediaContentsViewModel(IEnumerable<MediaContent> mediaContents, IEnumerable<MediaContent> allMediaContents, bool isTimeline) : ObservableObject, IContentViewModel
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CarouselPositionText))]
@@ -13,5 +13,5 @@ public partial class WrappedMediaContentsViewModel(IEnumerable<MediaContent> med
     public bool CarouselSwipeEnabled => mediaContents.Count() > 1;
     public string CarouselPositionText => $"{CarouselPosition + 1} / {mediaContents.Count()}";
 
-    public List<MediaContentViewModel> Medias => [.. mediaContents.Select(m => new MediaContentViewModel(m, allMediaContents, true))];
+    public List<MediaContentViewModel> Medias => [.. mediaContents.Select(m => new MediaContentViewModel(m, allMediaContents, isTimeline))];
 }

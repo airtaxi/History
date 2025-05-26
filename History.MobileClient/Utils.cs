@@ -35,7 +35,7 @@ public static class Utils
         {
             if (mediaContents.Count > 0)
             {
-                contentViewModels.Add(new WrappedMediaContentsViewModel(mediaContents, allMediaContents));
+                contentViewModels.Add(new WrappedMediaContentsViewModel(mediaContents, allMediaContents, isTimeline));
                 mediaContents = [];
             }
         }
@@ -73,8 +73,9 @@ public static class Utils
             else if (content is MediaContent mediaContent)
             {
                 FlushTextAndProfileContents();
-                if (isTimeline) mediaContents.Add(mediaContent);
-                else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents, false));
+                mediaContents.Add(mediaContent);
+                //if (isTimeline) mediaContents.Add(mediaContent);
+                //else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents, false));
             }
         }
 

@@ -171,7 +171,7 @@ public partial class PostPage : ContentPage
         }
         else
         {
-            _commentMediaAttachmentViewModel.Dispose();
+            _commentMediaAttachmentViewModel?.Dispose();
             _commentMediaAttachmentViewModel = null;
             CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
         }
@@ -207,6 +207,10 @@ public partial class PostPage : ContentPage
             if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
             else if (result.IsSuccess)
             {
+                _commentMediaAttachmentViewModel?.Dispose();
+                _commentMediaAttachmentViewModel = null;
+                CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
+
                 CommentMentionEditor.Text = string.Empty;
                 CommentMentionEditor.Unfocus();
 
@@ -228,29 +232,12 @@ public partial class PostPage : ContentPage
     private async void OnCommentScrollViewScrolled(object sender, ScrolledEventArgs e)
     {
         if (_commentUpdating) return;
-        else if (!_viewModel.IsWideMode) return;
 
         var scrollView = sender as ScrollView;
         // If scroll reached the bottom, load more comments
         if (_viewModel.Comments.Count != _viewModel.CommentsCount
             && scrollView.ScrollY >= scrollView.ContentSize.Height - scrollView.Height - 10)
-        {
             await LoadMoreComments();
-        }
-    }
-
-    private async void OnMainScrollViewScrolled(object sender, ScrolledEventArgs e)
-    {
-        if (_commentUpdating) return;
-        else if (_viewModel.IsWideMode) return;
-
-        var scrollView = sender as ScrollView;
-        // If scroll reached the bottom, load more comments
-        if (_viewModel.Comments.Count != _viewModel.CommentsCount
-            && scrollView.ScrollY >= scrollView.ContentSize.Height - scrollView.Height - 10)
-        {
-            await LoadMoreComments();
-        }
     }
 
     private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await _viewModel.DisplayActionSheetAsync(true);
@@ -338,5 +325,11 @@ public partial class PostPage : ContentPage
             MainActivityIndicator.IsRunning = isLoading;
             IsEnabled = !isLoading;
         });
+    }
+
+    protected override bool OnBackButtonPressed()
+    {
+        _ = App.PopModalAsync();
+        return true;
     }
 }

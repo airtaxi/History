@@ -116,10 +116,6 @@
 
     <DataTemplate x:Key="ExternalUrlContentTemplate" x:DataType="vm:ExternalUrlContentViewModel">
         <Grid IsClippedToBounds="True" MinimumHeightRequest="250">
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
-            </Grid.GestureRecognizers>
-
             <Rectangle
                 Margin="-4"
                 Fill="#808080"
@@ -135,6 +131,9 @@
                 HorizontalOptions="Fill"
                 Opacity="0.4"
                 VerticalOptions="Fill">
+                <Rectangle.GestureRecognizers>
+                    <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+                </Rectangle.GestureRecognizers>
                 <Rectangle.Behaviors>
                     <toolkit:TouchBehavior LongPressCompleted="OnExternalUrlContentLongPressCompleted" />
                 </Rectangle.Behaviors>
