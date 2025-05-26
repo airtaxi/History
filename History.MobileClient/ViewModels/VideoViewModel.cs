@@ -33,5 +33,8 @@ public partial class VideoViewModel(string uri) : ObservableObject, IMediaViewMo
 
     [ObservableProperty]
     public partial bool ShouldKeepScreenOn { get; set; } = false;
+
+    [ObservableProperty]
+    public partial bool FullScreenSwipeable { get; set; } = true;
 }
 

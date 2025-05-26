@@ -173,7 +173,10 @@ public class MainActivity : MauiAppCompatActivity
     private void CreateNotificationChannel()
     {
         var channelId = $"{PackageName}.push";
-        var channel = new NotificationChannel(channelId, "푸시 알림", NotificationImportance.Default);
+        var channel = new NotificationChannel(channelId, "푸시 알림", NotificationImportance.Max);
+        channel.EnableLights(true);
+        channel.EnableVibration(true);
+        channel.SetShowBadge(true);
         var notificationManager = (NotificationManager)GetSystemService(NotificationService);
         notificationManager.CreateNotificationChannel(channel);
         FirebaseCloudMessagingImplementation.ChannelId = channelId;
