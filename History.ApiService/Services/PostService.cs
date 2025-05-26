@@ -458,7 +458,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         await _postCollection.ReplaceOneAsync(p => p.Id == postId, post);
 
         // Update user's last used post discovery option if the post is not a shared post
-        if (post.ParentPostId != null)
+        if (post.ParentPostId == null)
         {
             var userFilter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var userUpdate = Builders<User>.Update.Set(u => u.LastUsedPostDiscoveryOption, post.DiscoveryOption);
