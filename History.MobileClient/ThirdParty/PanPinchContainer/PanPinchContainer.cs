@@ -1,4 +1,6 @@
-﻿namespace History.MobileClient.ThirdParty.PanPinchContainer;
+﻿using History.MobileClient.ViewModels;
+
+namespace History.MobileClient.ThirdParty.PanPinchContainer;
 
 /// <summary>
 /// <para><see href="https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/gestures/pan"/></para>
@@ -22,6 +24,8 @@ public class PanPinchContainer : ContentView
 
     private double _startScale = 1;
 
+    private IMediaViewModel _mediaViewModel;
+
     public PanPinchContainer()
     {
         _panGestureRecognizer = new PanGestureRecognizer();
@@ -39,7 +43,11 @@ public class PanPinchContainer : ContentView
 
         _doubleTapGestureRecognizer.Tapped += DoubleTappedAsync;
         GestureRecognizers.Add(_doubleTapGestureRecognizer);
+
+        BindingContextChanged += OnBindingContextChanged;
     }
+
+    private void OnBindingContextChanged(object sender, EventArgs e) => _mediaViewModel = BindingContext as IMediaViewModel;
 
     protected override void OnChildAdded(Element child)
     {
@@ -159,6 +167,8 @@ public class PanPinchContainer : ContentView
 
         _panX = Content.TranslationX;
         _panY = Content.TranslationY;
+
+        _mediaViewModel.FullScreenSwipeable = true;
     }
 
     private async void OnPanUpdatedAsync(object sender, PanUpdatedEventArgs e)
@@ -252,6 +262,8 @@ public class PanPinchContainer : ContentView
 
             _isPanEnabled = true;
         }
+
+        _mediaViewModel.FullScreenSwipeable = _currentScale == 1;
     }
 
     private async Task ScaleToAsync(double scale)
