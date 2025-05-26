@@ -1,16 +1,10 @@
-﻿using Amazon.Runtime.Internal.Transform;
-using FirebaseAdmin.Messaging;
-using History.ApiService.DataTypes;
+﻿using FirebaseAdmin.Messaging;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
-using Microsoft.AspNetCore.Connections.Features;
-using Microsoft.AspNetCore.Identity;
 using MongoDB.Driver;
-using Newtonsoft.Json.Linq;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using Notification = History.Commons.DataTypes.Notification;
 
 namespace History.ApiService.Services;
@@ -29,7 +23,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var fromNotification = await _notificationCollection.Find(f => f.Id == fromNotificationId).FirstOrDefaultAsync();
             if (fromNotification == null) return (ErrorType.NotFound, "알림을 찾을 수 없습니다");
 
-            filter &= Builders<Notification>.Filter.Gt(n => n.CreatedAt, fromNotification.CreatedAt);
+            filter &= Builders<Notification>.Filter.Lt(n => n.CreatedAt, fromNotification.CreatedAt);
         }
 
         var notifications = await _notificationCollection.Find(filter)
@@ -170,7 +164,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
                 {
                     ChannelId = AndroidChannelId,
                     ImageUrl = imageUrl,
-                    Visibility = NotificationVisibility.PRIVATE,
+                    NotificationCount = 1
                 },
             }
         };
