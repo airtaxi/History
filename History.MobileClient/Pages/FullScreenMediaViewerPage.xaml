@@ -11,7 +11,21 @@
     NavigationPage.HasNavigationBar="False">
 
     <Grid>
-        <views:DataTemplatePresenter x:Name="MainDataTemplatePresenter" Template="{StaticResource MediaTemplateSelector}" />
+        <views:DataTemplatePresenter x:Name="MainDataTemplatePresenter">
+            <views:DataTemplatePresenter.Template>
+                <DataTemplate x:DataType="vm:FullScreenMediaContentViewModel">
+                    <Grid>
+                        <CarouselView
+                            CurrentItem="{x:Binding CurrentMedia,
+                                                    Mode=TwoWay}"
+                            HorizontalScrollBarVisibility="Never"
+                            IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
+                            ItemTemplate="{StaticResource MediaContentTemplate}"
+                            ItemsSource="{x:Binding FullScreenMedias}" />
+                    </Grid>
+                </DataTemplate>
+            </views:DataTemplatePresenter.Template>
+        </views:DataTemplatePresenter>
 
         <Grid>
             <BoxView

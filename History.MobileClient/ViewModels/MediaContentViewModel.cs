@@ -11,8 +11,6 @@ namespace History.MobileClient.ViewModels;
 
 public partial class MediaContentViewModel : ObservableObject, IContentViewModel
 {
-    public IEnumerable<MediaContent> AllMediaContents { get; }
-
     public MediaContent MediaContent { get; }
     public bool IsTimeline { get; }
     public bool IsVideo { get; }
@@ -25,15 +23,22 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
     [ObservableProperty]
     public partial IMediaViewModel Media { get; private set; }
 
+    private readonly List<IMediaViewModel> _fullScreenMedias;
+    private readonly IMediaViewModel _currentMedia;
+
     public MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, bool isTimeline)
     {
-        AllMediaContents = allMediaContents;
         MediaContent = mediaContent;
         IsTimeline = isTimeline;
         IsVideo = mediaContent.IsVideo;
         Description = mediaContent.Description ?? string.Empty;
         HasDescription = !string.IsNullOrEmpty(Description);
-        GenerateMedia();
+
+        var index = allMediaContents.ToList().FindIndex(x => x.MediaId == mediaContent.MediaId);
+        _fullScreenMedias = [.. allMediaContents.Select(x => GenerateFullScreenMedia(x))];
+        _currentMedia = _fullScreenMedias[index];
+
+        SetMediaAndOverlay();
     }
 
     [RelayCommand]
@@ -41,7 +46,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
     {
         if (!MediaContent.IsVideo) return;
 
-        GenerateMedia();
+        SetMediaAndOverlay();
 #if IOS
         WeakReferenceMessenger.Default.Send(new AppleVideoUnloadedMessage());
 #endif
@@ -67,24 +72,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
 #elif IOS
         if (IsTimeline)
         {
-            IMediaViewModel viewModel = MediaContent.IsVideo ?
-            new VideoViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
-            {
-                Aspect = Aspect.AspectFit,
-                ShouldAutoPlay = true,
-                ShouldLoopPlayback = true,
-                ShouldMute = false,
-                ShouldShowPlaybackControls = true
-            }
-            : new ImageViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
-            {
-                Aspect = Aspect.AspectFit,
-                HorizontalContentOptions = LayoutOptions.Fill,
-                VerticalContentOptions = LayoutOptions.Fill,
-                IsFullScreen = true
-            };
-
-            var viewerPage = new FullScreenMediaViewerPage(viewModel);
+            var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel(_fullScreenMedias, _currentMedia));
             await App.PushModalAsync(viewerPage);
 
             await Toast.Make("iOS에서는 현재 타임라인에서 영상 재생이 지원되지 않습니다.").Show();
@@ -105,8 +93,24 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
     [RelayCommand]
     public async Task HandleTapAsync()
     {
-        IMediaViewModel viewModel = MediaContent.IsVideo ?
-        new VideoViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
+        var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel(_fullScreenMedias, _currentMedia));
+        await App.PushModalAsync(viewerPage);
+    }
+
+    private void SetMediaAndOverlay()
+    {
+        Media = new ImageViewModel(Utils.GenerateMediaUri((IsTimeline || MediaContent.IsVideo) ? MediaContent.ThumbnailMediaId : MediaContent.MediaId))
+        {
+            Aspect = IsTimeline ? Aspect.AspectFill : Aspect.AspectFit,
+            ResizeParentCarouselViewWhenSizeChanged = !IsTimeline
+        };
+        IsOverlayVisible = MediaContent.IsVideo;
+    }
+
+    private static IMediaViewModel GenerateFullScreenMedia(MediaContent mediaContent)
+    {
+        return mediaContent.IsVideo ?
+        new VideoViewModel(Utils.GenerateMediaUri(mediaContent.MediaId))
         {
             Aspect = Aspect.AspectFit,
             ShouldAutoPlay = true,
@@ -114,27 +118,12 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
             ShouldMute = false,
             ShouldShowPlaybackControls = true
         }
-        : new ImageViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
+        : new ImageViewModel(Utils.GenerateMediaUri(mediaContent.MediaId))
         {
             Aspect = Aspect.AspectFit,
             HorizontalContentOptions = LayoutOptions.Fill,
             VerticalContentOptions = LayoutOptions.Fill,
             IsFullScreen = true
         };
-
-        var viewerPage = new FullScreenMediaViewerPage(viewModel);
-        await App.PushModalAsync(viewerPage);
-    }
-
-    private void GenerateMedia()
-    {
-        Media = new ImageViewModel(Utils.GenerateMediaUri((IsTimeline || MediaContent.IsVideo) ? MediaContent.ThumbnailMediaId : MediaContent.MediaId))
-        {
-            Aspect = IsTimeline ? Aspect.AspectFill : Aspect.AspectFit,
-            ResizeParentCarouselViewWhenSizeChanged = !IsTimeline
-            //HorizontalContentOptions = IsWrapped || MediaContent.IsVideo ? LayoutOptions.Fill : LayoutOptions.Start,
-            //VerticalContentOptions = IsWrapped || MediaContent.IsVideo ? LayoutOptions.Fill : LayoutOptions.Start,
-        };
-        IsOverlayVisible = MediaContent.IsVideo;
     }
 }
