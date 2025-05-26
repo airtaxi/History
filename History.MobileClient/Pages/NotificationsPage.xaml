@@ -36,7 +36,8 @@
             <RefreshView Refreshing="OnRefreshing">
                 <CollectionView
                     x:Name="MainCollectionView"
-                    ChildAdded="OnChildAdded"
+                    RemainingItemsThreshold="0"
+                    RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
                     SelectionMode="None">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="vm:NotificationViewModel">
