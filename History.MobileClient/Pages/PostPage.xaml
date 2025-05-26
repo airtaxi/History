@@ -118,7 +118,7 @@
                     IsVisible="False">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="300" />
+                        <ColumnDefinition Width="350" />
                     </Grid.ColumnDefinitions>
                     <RefreshView Grid.Column="0" Refreshing="OnRefreshing">
                         <ScrollView>
