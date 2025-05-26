@@ -40,8 +40,17 @@ public partial class TimelinePage : ContentPage
         try
         {
             if (_fetchSemaphore.CurrentCount == 0) return;
-
             await _fetchSemaphore.WaitAsync();
+
+            if (_viewModels.Count > 0)
+            {
+                var firstViewModel = _viewModels.FirstOrDefault();
+                if (firstViewModel == null) return;
+
+                MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+
+                await Task.Delay(100);
+            }
 
             _viewModels.Clear();
 
@@ -140,12 +149,6 @@ public partial class TimelinePage : ContentPage
 
     private async void OnLogoImageTapped(object sender, TappedEventArgs e)
     {
-        var firstViewModel = _viewModels.FirstOrDefault();
-        if (firstViewModel == null) return;
-
-        MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
-
-        await Task.Delay(100);
         await RefreshAsync();
     }
 

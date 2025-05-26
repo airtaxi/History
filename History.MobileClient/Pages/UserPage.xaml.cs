@@ -59,8 +59,17 @@ public partial class UserPage : ContentPage
         try
         {
             if (_fetchSemaphore.CurrentCount == 0) return;
-
             await _fetchSemaphore.WaitAsync();
+
+            if (_viewModels.Count > 0)
+            {
+                var firstViewModel = _viewModels.FirstOrDefault();
+                if (firstViewModel == null) return;
+
+                MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+
+                await Task.Delay(100);
+            }
 
             _viewModels.Clear();
 
@@ -186,16 +195,7 @@ public partial class UserPage : ContentPage
             await LoadMoreAsync();
         }
     }
-    private async void OnTitleLabelTapped(object sender, TappedEventArgs e)
-    {
-        var firstViewModel = _viewModels.FirstOrDefault();
-        if (firstViewModel == null) return;
-
-        MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
-
-        await Task.Delay(100);
-        await RefreshAsync();
-    }
+    private async void OnTitleLabelTapped(object sender, TappedEventArgs e) => await RefreshAsync();
 
     private async void OnPostPinnedMessageReceived(object recipient, PostPinnedMessage message)
     {
