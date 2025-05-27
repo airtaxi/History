@@ -307,6 +307,26 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         };
     }
 
+    /// <inheritdoc />
+    public async Task<Result> HandleWithdrawAsync(string userId)
+    {
+        // Delete Comment Likes
+        await _commentLikeCollection.DeleteManyAsync(f => f.UserId == userId);
+
+        var commentIds = await _commentCollection
+            .Find(f => f.UserId == userId)
+            .Project(f => f.Id)
+            .ToListAsync();
+
+        // Delete Medias associated with comments
+        await mediaService.DeleteMediasByAssociatedIdsAsync(commentIds);
+
+        // Delete Comments
+        await _commentCollection.DeleteManyAsync(f => f.UserId == userId);
+
+        return Result.Success();
+    }
+
     private async Task<Result> CheckPermissionAsync(string commentId, string requesterId)
     {
         var postService = serviceProvider.GetRequiredService<IPostService>();

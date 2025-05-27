@@ -163,4 +163,12 @@ public interface IPostService
     /// <param name="requesterId">Identifies the user making the request for the post responses.</param>
     /// <returns>A task that resolves to a result containing a list of post response data transfer objects.</returns>
     public Task<Result<List<PostResponseDto>>> GeneratePostResponseDtosAsync(List<Post> posts, string requesterId);
+
+
+    /// <summary>
+    /// Handles the withdrawal of a user, deleting their posts and reactions.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose posts and reactions are to be deleted.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the withdrawal process.</returns>
+    public Task<Result> HandleWithdrawAsync(string userId);
 }

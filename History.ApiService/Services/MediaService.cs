@@ -288,4 +288,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
 
         return Result.Success();
     }
+
+    /// <inheritdoc />
+    public async Task<Result> HandleWithdraw(string userId) => await DeleteMediasByUserIdAsync(userId);
 }

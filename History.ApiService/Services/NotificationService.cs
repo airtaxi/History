@@ -421,4 +421,19 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
         return core;
     }
+
+    public async Task<Result> HandleWithdrawAsync(string userId)
+    {
+        var filter = Builders<FirebaseToken>.Filter.Eq(f => f.UserId, userId);
+        await _firebaseTokenCollection.DeleteManyAsync(filter);
+
+        var userFilter = Builders<Notification>.Filter.Eq(n => n.UserId, userId);
+        await _notificationCollection.DeleteManyAsync(userFilter);
+
+        var dataFIlter = Builders<Notification>.Filter.Eq("Data.UserId", userId);
+        await _notificationCollection.DeleteManyAsync(dataFIlter);
+
+        return Result.Success();
+    }
+
 }

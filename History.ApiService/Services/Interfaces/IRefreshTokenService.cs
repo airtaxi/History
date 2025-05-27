@@ -9,20 +9,13 @@ public interface IRefreshTokenService
     /// </summary>
     /// <param name="refreshToken">The refresh token to add.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task AddRefreshTokenAsync(string refreshToken);
+    public Task AddRefreshTokenAsync(string refreshToken);
 
     /// <summary>
     /// Adds a new refresh token to the system.
     /// </summary>
     /// <param name="refreshToken">The refresh token to add.</param>
-    void AddRefreshToken(string refreshToken);
-
-    /// <summary>
-    /// Validates the specified refresh token.
-    /// </summary>
-    /// <param name="refreshToken">The refresh token to validate.</param>
-    /// <returns>A task that represents the asynchronous operation, containing the result of the validation.</returns>
-    Task<Result> ValidateRefreshTokenAsync(string refreshToken);
+    public void AddRefreshToken(string refreshToken);
 
     /// <summary>
     /// Revokes the specified refresh token, invalidating it for future use.
@@ -31,5 +24,19 @@ public interface IRefreshTokenService
     /// that the provided token is valid and associated with the current user or session.</remarks>
     /// <param name="refreshToken">The refresh token to be revoked. Cannot be null or empty.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    Task RevokeRefreshTokenAsync(string refreshToken);
+    public Task RevokeRefreshTokenAsync(string refreshToken);
+
+    /// <summary>
+    /// Validates the specified refresh token.
+    /// </summary>
+    /// <param name="refreshToken">The refresh token to validate.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the validation.</returns>
+    public Task<Result> ValidateRefreshTokenAsync(string refreshToken);
+
+    /// <summary>
+    /// Handles the withdrawal of a user, revoking their refresh token and any associated sessions.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose refresh token is to be withdrawn.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the withdrawal.</returns>
+    public Task<Result> HandleWithdrawAsync(string userId);
 }

@@ -156,6 +156,13 @@ public interface IUserService
     public Task<Result> UpdatePinnedPostAsync(string userId, string pinnedPostId);
 
     /// <summary>
+    /// Withdraws a user's account, deleting their data.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose account is to be withdrawn.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the withdrawal.</returns>
+    public Task<Result> WithdrawAsync(string userId);
+
+    /// <summary>
     /// Generate text preview asynchronously based on the provided contents.
     /// </summary>
     /// <param name="contents">The contents of post or comments to generate preview from.</param>

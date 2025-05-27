@@ -188,4 +188,11 @@ public interface IFriendshipService
     /// <param name="requesterId">The ID of the user making the request.</param>
     /// <returns>A task that represents the asynchronous operation, containing a result of a list of friend IDs.</returns>
     public Task<Result<List<string>>> GetUserFriendIdsAsync(string userId, string requesterId);
+
+    /// <summary>
+    /// Handles the withdrawal of a user, revoking their friendships and any associated sessions.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose friendships are to be withdrawn.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the withdrawal.</returns>
+    public Task<Result> HandleWithdrawAsync(string userId);
 }

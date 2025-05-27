@@ -97,4 +97,11 @@ public interface ICommentService
     /// <param name="requesterId">Identifies the user making the request to tailor the response accordingly.</param>
     /// <returns>Returns a Task containing the generated CommentResponseDto with relevant details.</returns>
     public Task<Result<CommentResponseDto>> GenerateCommentResponseDtoAsync(Comment comment, string requesterId);
+
+    /// <summary>
+    /// Handles the withdrawal of a user, revoking their comments and associated likes.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose comments and likes are to be withdrawn.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the withdrawal.</returns>
+    public Task<Result> HandleWithdrawAsync(string userId);
 }

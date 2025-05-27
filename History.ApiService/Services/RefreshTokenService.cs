@@ -78,4 +78,14 @@ public class RefreshTokenService(IMongoDatabase database) : IRefreshTokenService
         if (existingToken == null || DateTime.UtcNow > existingToken.ExpiresAt) return Result.Failure(ErrorType.Unauthorized, "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.");
         return Result.Success();
     }
+
+    /// <inheritdoc />
+    public async Task<Result> HandleWithdrawAsync(string userId)
+    {
+        // Revoke all refresh tokens for the user
+        var filter = Builders<RefreshToken>.Filter.Eq(rt => rt.UserId, userId);
+        await _refreshTokenCollection.DeleteManyAsync(filter);
+
+        return Result.Success();
+    }
 }

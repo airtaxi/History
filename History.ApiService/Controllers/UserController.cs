@@ -547,6 +547,20 @@ public class UserController(IUserService userService, IFriendshipService friends
         return Ok();
     }
 
+    [HttpPost("withdraw")]
+    [Authorize]
+    public async Task<IActionResult> Withdraw()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return BadRequest("로그인이 필요한 서비스입니다.");
+
+        // Call the service to withdraw the user
+        var result = await userService.WithdrawAsync(userId);
+        if (result.IsSuccess) return Ok("회원 탈퇴가 완료되었습니다.");
+        else if (result.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
     /// <summary>
     /// Verify the ID token from the OAuth provider
     /// </summary>

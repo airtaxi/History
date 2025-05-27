@@ -71,4 +71,11 @@ public interface IMediaService
     /// <param name="mediaId">The id of media to delete</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     public Task<Result> DeleteMediaByIdAsync(string mediaId);
+
+    /// <summary>
+    /// Handles the withdrawal of a user, deleting their associated medias.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose medias are to be deleted.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the withdrawal.</returns>
+    public Task<Result> HandleWithdraw(string userId);
 }
