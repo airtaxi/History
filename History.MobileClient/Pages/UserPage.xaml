@@ -78,21 +78,6 @@
                             Color="White" />
                     </Image.Source>
                 </Image>
-                <Image
-                    x:Name="WritePostImage"
-                    HorizontalOptions="End"
-                    IsVisible="False"
-                    VerticalOptions="Center">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnWritePostImageTapped" />
-                    </Image.GestureRecognizers>
-                    <Image.Source>
-                        <FontImageSource
-                            FontFamily="MaterialSharp"
-                            Glyph="{x:Static m:MaterialSharp.Edit_note}"
-                            Color="White" />
-                    </Image.Source>
-                </Image>
             </HorizontalStackLayout>
         </Grid>
 
@@ -108,6 +93,35 @@
                 </CollectionView>
             </RefreshView>
         </Grid>
+
+        <Border
+            x:Name="WritePostBorder"
+            Grid.Row="1"
+            Margin="12"
+            Background="{StaticResource Primary}"
+            HeightRequest="60"
+            HorizontalOptions="End"
+            IsVisible="False"
+            Shadow="1 2 6 Black 1"
+            StrokeThickness="0"
+            VerticalOptions="End"
+            WidthRequest="60">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="30" />
+            </Border.StrokeShape>
+            <Image HeightRequest="44" WidthRequest="44">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnWritePostImageTapped" />
+                </Image.GestureRecognizers>
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Edit_note}"
+                        Size="80"
+                        Color="White" />
+                </Image.Source>
+            </Image>
+        </Border>
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"
