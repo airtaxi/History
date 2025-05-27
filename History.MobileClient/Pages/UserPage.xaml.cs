@@ -17,6 +17,7 @@ public partial class UserPage : ContentPage
 
     private bool _isInForeground;
     private object _lastViewModel;
+    private UserResponseDto _user;
     private readonly bool _isMyProfile;
     private readonly string _userId;
     private readonly ObservableCollection<object> _viewModels = [];
@@ -79,6 +80,7 @@ public partial class UserPage : ContentPage
             var user = await App.ExecuteRequestAsync(new GetUser(_userId));
             if (user.IsSuccess)
             {
+                _user = user.Value;
                 _viewModels.Add(new ProfileViewModel(user.Value));
                 FriendsImage.IsVisible = true;
             }
@@ -206,7 +208,7 @@ public partial class UserPage : ContentPage
         else ShouldRefreshMyProfile = true;
     }
 
-    private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await DisplayAlert("안내", "제작중입니다.", "확인");
+    private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new SettingsPage(_user));
     private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
 
     protected override bool OnBackButtonPressed()
