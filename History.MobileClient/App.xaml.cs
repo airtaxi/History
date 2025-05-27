@@ -49,7 +49,7 @@ public partial class App : Application
                     });
                 }
 #endif
-                Debugger.BreakForUserUnhandledException(exception);\
+                Debugger.BreakForUserUnhandledException(exception);
             }
         };
 #endif
