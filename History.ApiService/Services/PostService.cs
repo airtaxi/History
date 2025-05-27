@@ -772,7 +772,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             var parentPostResult = await GetPostByIdAsync(post.ParentPostId);
             if (parentPostResult.IsFailure) return postResponse;
 
-            var hasAccessResult = await CheckAccessAsync(parentPostResult.Value, requesterId);
+            var requesterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
+            if (requesterBannedFriendIdsResult.IsFailure) return requesterBannedFriendIdsResult.CastFailure<PostResponseDto>();
+
+            var isBanned = requesterBannedFriendIdsResult.Value.Contains(parentPostResult.Value.UserId);
+
             var parentPostUserResult = await userService.GenerateUserResponseDtoAsync(parentPostResult.Value.UserId, requesterId);
             var parentPostSharedAndRepostedUserDtos = await GenerateSharedAndRepostedUserDtosAsync(post.ParentPostId, requesterId);
 
@@ -785,7 +789,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                 parentPostProfileContent.Nickname = (user?.Nickname ?? "탈퇴한 사용자") + ' ';
             }
 
-            if (hasAccessResult.IsSuccess && parentPostUserResult.IsSuccess)
+            if (!isBanned && parentPostUserResult.IsSuccess)
             {
                 postResponse.ParentPost = new PostResponseDto
                 {
