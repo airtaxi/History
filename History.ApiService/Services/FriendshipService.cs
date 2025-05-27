@@ -451,4 +451,13 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
 
         return friendIdsResult;
     }
+
+    /// <inheritdoc/>
+    public async Task<Result> HandleWithdrawAsync(string userId)
+    {
+        // Delete all friendships related to the user
+        await _friendshipCollection.DeleteManyAsync(f => f.UserId == userId || f.FriendId == userId);
+
+        return Result.Success();
+    }
 }

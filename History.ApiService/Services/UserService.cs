@@ -292,6 +292,29 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc/>
+    public async Task<Result> WithdrawAsync(string userId)
+    {
+        var postService = serviceProvider.GetRequiredService<IPostService>();
+        var commentService = serviceProvider.GetRequiredService<ICommentService>();
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+        var refreshTokenService = serviceProvider.GetRequiredService<IRefreshTokenService>();
+        var notificationService = serviceProvider.GetRequiredService<INotificationService>();
+        var mediaService = serviceProvider.GetRequiredService<IMediaService>();
+
+        await postService.HandleWithdrawAsync(userId);
+        await commentService.HandleWithdrawAsync(userId);
+        await friendshipService.HandleWithdrawAsync(userId);
+        await refreshTokenService.HandleWithdrawAsync(userId);
+        await notificationService.HandleWithdrawAsync(userId);
+        await mediaService.DeleteMediasByUserIdAsync(userId);
+
+        var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+        await _userCollection.DeleteOneAsync(filter);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc/>
     public async Task<string> GenerateTextPreviewFromContentsAsync(IEnumerable<BaseContent> contents, string requesterId = null)
     {
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();

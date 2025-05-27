@@ -835,6 +835,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         return sharedUserDtos;
     }
+
+    /// <inheritdoc/>
     public async Task<Result<List<PostResponseDto>>> GeneratePostResponseDtosAsync(List<Post> posts, string requesterId)
     {
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
@@ -846,6 +848,53 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         await Task.WhenAll(tasks);
 
         return tasks.Where(x => x.Result.IsSuccess).Select(x => x.Result.Value).ToList();
+    }
+
+    /// <inheritdoc/>
+    public async Task<Result> HandleWithdrawAsync(string userId)
+    {
+        var notificationService = serviceProvider.GetRequiredService<INotificationService>();
+
+        if (userId == null) return (ErrorType.BadRequest, "유저 ID가 제공되지 않았습니다.");
+
+        var postIds = await _postCollection
+            .Find(p => p.UserId == userId)
+            .Project(p => p.Id)
+            .ToListAsync();
+
+        if (postIds.Count == 0) return Result.Success();
+
+        // Delete comments and comment likes associated with the posts
+        var commentIds = await _commentCollection
+            .Find(c => postIds.Contains(c.PostId))
+            .Project(c => c.Id)
+            .ToListAsync();
+
+        await _commentCollection.DeleteManyAsync(c => postIds.Contains(c.PostId));
+        await _commentLikeCollection.DeleteManyAsync(c => commentIds.Contains(c.CommentId));
+
+        // Delete ignored posts associated with the posts
+        await _ignoredPostCollection.DeleteManyAsync(i => postIds.Contains(i.PostId));
+
+        // Delete post reactions associated with the posts
+        await _postReactionCollection.DeleteManyAsync(r => postIds.Contains(r.PostId));
+
+        // Delete notifications associated with the posts
+        await notificationService.DeleteNotificationsAsync("Data.PostId", postIds);
+
+        // Delete notifications associated with the comments
+        await notificationService.DeleteNotificationsAsync("Data.CommentId", commentIds);
+
+        // Delete media files associated with the posts
+        await mediaService.DeleteMediasByAssociatedIdsAsync(postIds);
+
+        // Delete media files associated with the comments
+        await mediaService.DeleteMediasByAssociatedIdsAsync(commentIds);
+
+        // Delete posts
+        await _postCollection.DeleteManyAsync(p => p.UserId == userId);
+
+        return Result.Success();
     }
 
     private static string GenerateSearchIndexFromContents(IEnumerable<BaseContent> contents) =>
