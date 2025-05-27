@@ -24,6 +24,7 @@ public class PanPinchContainer : ContentView
 
     private double _startScale = 1;
 
+    private bool _moreThanOneMedia;
     private IMediaViewModel _mediaViewModel;
 
     public PanPinchContainer()
@@ -47,7 +48,11 @@ public class PanPinchContainer : ContentView
         BindingContextChanged += OnBindingContextChanged;
     }
 
-    private void OnBindingContextChanged(object sender, EventArgs e) => _mediaViewModel = BindingContext as IMediaViewModel;
+    private void OnBindingContextChanged(object sender, EventArgs e)
+    {
+        _mediaViewModel = BindingContext as IMediaViewModel;
+        _moreThanOneMedia = _mediaViewModel.FullScreenSwipeable;
+    }
 
     protected override void OnChildAdded(Element child)
     {
@@ -168,7 +173,7 @@ public class PanPinchContainer : ContentView
         _panX = Content.TranslationX;
         _panY = Content.TranslationY;
 
-        _mediaViewModel.FullScreenSwipeable = _currentScale == 1;
+        _mediaViewModel.FullScreenSwipeable = _currentScale == 1 && _moreThanOneMedia;
     }
 
     private async void OnPanUpdatedAsync(object sender, PanUpdatedEventArgs e)
@@ -263,7 +268,7 @@ public class PanPinchContainer : ContentView
             _isPanEnabled = true;
         }
 
-        _mediaViewModel.FullScreenSwipeable = _currentScale == 1;
+        _mediaViewModel.FullScreenSwipeable = _currentScale == 1 && _moreThanOneMedia;
     }
 
     private async Task ScaleToAsync(double scale)

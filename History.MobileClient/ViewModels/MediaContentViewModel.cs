@@ -35,7 +35,8 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
         HasDescription = !string.IsNullOrEmpty(Description);
 
         var index = allMediaContents.ToList().FindIndex(x => x.MediaId == mediaContent.MediaId);
-        _fullScreenMedias = [.. allMediaContents.Select(x => GenerateFullScreenMedia(x))];
+        var moreThanOneMedias = allMediaContents.Count() > 1;
+        _fullScreenMedias = [.. allMediaContents.Select(x => GenerateFullScreenMedia(x, moreThanOneMedias))];
         _currentMedia = _fullScreenMedias[index];
 
         SetMediaAndOverlay();
@@ -107,7 +108,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
         IsOverlayVisible = MediaContent.IsVideo;
     }
 
-    private static IMediaViewModel GenerateFullScreenMedia(MediaContent mediaContent)
+    private static IMediaViewModel GenerateFullScreenMedia(MediaContent mediaContent, bool moreThanOneMedias)
     {
         return mediaContent.IsVideo ?
         new VideoViewModel(Utils.GenerateMediaUri(mediaContent.MediaId))
@@ -116,14 +117,16 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
             ShouldAutoPlay = true,
             ShouldLoopPlayback = true,
             ShouldMute = false,
-            ShouldShowPlaybackControls = true
+            ShouldShowPlaybackControls = true,
+            FullScreenSwipeable = moreThanOneMedias,
         }
         : new ImageViewModel(Utils.GenerateMediaUri(mediaContent.MediaId))
         {
             Aspect = Aspect.AspectFit,
             HorizontalContentOptions = LayoutOptions.Fill,
             VerticalContentOptions = LayoutOptions.Fill,
-            IsFullScreen = true
+            FullScreenSwipeable = moreThanOneMedias,
+            IsFullScreen = true,
         };
     }
 }

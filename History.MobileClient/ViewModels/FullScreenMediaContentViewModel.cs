@@ -9,8 +9,14 @@ namespace History.MobileClient.ViewModels;
 
 public partial class FullScreenMediaContentViewModel(List<IMediaViewModel> medias, IMediaViewModel media) : ObservableObject
 {
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CarouselPositionText))]
+    public partial int CarouselPosition { get; set; }
+
     public List<IMediaViewModel> FullScreenMedias { get; } = medias;
 
     [ObservableProperty]
     public partial IMediaViewModel CurrentMedia { get; set; } = media;
+
+    public string CarouselPositionText => $"{CarouselPosition + 1} / {FullScreenMedias.Count}";
 }
