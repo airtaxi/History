@@ -76,6 +76,6 @@ public partial class PostInteractionViewModel
     private async Task HandleTapAsync()
     {
         var userPage = new UserPage(User.UserId);
-        await App.PushModalAsync(userPage);
+        await App.PushAsync(userPage);
     }
 }

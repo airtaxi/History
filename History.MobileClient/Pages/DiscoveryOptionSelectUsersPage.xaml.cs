@@ -132,10 +132,10 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
         }
 
         _taskCompletionSource.TrySetResult(userIds);
-        await App.PopModalAsync();
+        await App.PopAsync();
     }
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 
     private bool _isInitialized = false;
     protected override async void OnAppearing()
@@ -267,7 +267,7 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
 
     protected override bool OnBackButtonPressed()
     {
-        _ = App.PopModalAsync();
+        _ = App.PopAsync();
         return true;
     }
 }

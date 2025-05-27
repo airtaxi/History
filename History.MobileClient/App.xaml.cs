@@ -64,21 +64,6 @@ public partial class App : Application
 
     public static INavigation Navigation => Current.Windows[0].Page.Navigation;
 
-    public static async Task PushModalAsync(Page page)
-    {
-        if (NavigationSemaphore.CurrentCount == 0) return;
-
-        await NavigationSemaphore.WaitAsync();
-        try { await Current.Windows[0].Page.Navigation.PushModalAsync(page); }
-        finally
-        {
-            if(NavigationSemaphore.CurrentCount == 0)
-            {
-                NavigationSemaphore.Release();
-            }
-        }
-    }
-
     public static async Task PushAsync(Page page)
     {
         if (NavigationSemaphore.CurrentCount == 0) return;
@@ -94,12 +79,12 @@ public partial class App : Application
         }
     }
 
-    public static async Task PopModalAsync()
+    public static async Task PopAsync()
     {
         if (NavigationSemaphore.CurrentCount == 0) return;
 
         await NavigationSemaphore.WaitAsync();
-        try { await Current.Windows[0].Page.Navigation.PopModalAsync(); }
+        try { await Current.Windows[0].Page.Navigation.PopAsync(); }
         finally
         {
             if (NavigationSemaphore.CurrentCount == 0)
@@ -192,7 +177,7 @@ public partial class App : Application
             if (!data.TryGetValue("UserId", out var userId)) return;
 
             var page = new UserPage(userId);
-            await PushModalAsync(page);
+            await PushAsync(page);
         }
         else
         {
@@ -203,7 +188,7 @@ public partial class App : Application
 
             var postViewModel = new PostViewModel(postResult.Value, false);
             var page = new PostPage(postViewModel);
-            await PushModalAsync(page);
+            await PushAsync(page);
         }
 
     }

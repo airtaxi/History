@@ -12,6 +12,8 @@
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
     x:DataType="vm:PostViewModel"
     HandlerChanging="OnHandlerChanging"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False"
     SizeChanged="OnSizeChanged">
     <ContentPage.Behaviors>
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />

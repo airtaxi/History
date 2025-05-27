@@ -276,7 +276,7 @@ public partial class ProfileViewModel : ObservableObject
         {
             var block = await App.Page.DisplayAlert("안내", $"정말로 {Nickname}님을 차단하시겠습니까? 차단하는 경우, 해제할 때 까지  히스토리에서 나와 상대방 모두 서로를 볼 수 없게 됩니다.", Constants.PromptYes, Constants.PromptNo);
             if (block) result = await App.ExecuteRequestAsync(new BlockUser(User.UserId));
-            await App.PopModalAsync();
+            await App.PopAsync();
             return;
         }
 
@@ -284,7 +284,7 @@ public partial class ProfileViewModel : ObservableObject
         {
             var block = await App.Page.DisplayAlert("안내", $"정말로 {Nickname}님을 무시하시겠습니까? 무시하는 경우, 해제할 때 까지 히스토리에서 상대방을 볼 수 없습니다. 다만, 상대방은 나를 볼 수 있습니다.", Constants.PromptYes, Constants.PromptNo);
             if (block) result = await App.ExecuteRequestAsync(new IgnoreUser(User.UserId));
-            await App.PopModalAsync();
+            await App.PopAsync();
             return;
         }
 

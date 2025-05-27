@@ -21,7 +21,7 @@ public partial class FullScreenMediaViewerPage : ContentPage
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 
     private async void OnDownloadImageTapped(object sender, TappedEventArgs e)
     {
@@ -82,7 +82,7 @@ public partial class FullScreenMediaViewerPage : ContentPage
 
     protected override bool OnBackButtonPressed()
     {
-        _ = App.PopModalAsync();
+        _ = App.PopAsync();
         return true;
     }
 }

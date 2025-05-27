@@ -30,6 +30,7 @@ public partial class UserPage : ContentPage
         TitleLabel.Text = "내 프로필";
         SettingsImage.IsVisible = true;
         WritePostBorder.IsVisible = true;
+        Shell.SetTabBarIsVisible(this, true);
 
         WeakReferenceMessenger.Default.Register<PostPinnedMessage>(this, OnPostPinnedMessageReceived);
     }
@@ -130,13 +131,13 @@ public partial class UserPage : ContentPage
 #if IOS
             await App.PushAsync(page);
 #else
-            await App.PushModalAsync(page);
+            await App.PushAsync(page);
 #endif
         }
         else
         {
             var page = new FriendListPage(_userId);
-            await App.PushModalAsync(page);
+            await App.PushAsync(page);
         }
     }
 
@@ -208,15 +209,15 @@ public partial class UserPage : ContentPage
         else ShouldRefreshMyProfile = true;
     }
 
-    private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new SettingsPage(_user));
-    private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
+    private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new SettingsPage(_user));
+    private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
 
     protected override bool OnBackButtonPressed()
     {
         if (_isMyProfile) return false;
 
-        _ = App.PopModalAsync();
+        _ = App.PopAsync();
         return true;
     }
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 }

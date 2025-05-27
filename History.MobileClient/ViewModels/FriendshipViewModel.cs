@@ -65,11 +65,11 @@ public partial class FriendshipViewModel(UserResponseDto user, PostInteractionVi
             {
                 var postViewModel = new PostViewModel(postResult.Value, false);
                 var postPage = new PostPage(postViewModel);
-                await App.PushModalAsync(postPage);
+                await App.PushAsync(postPage);
             }
             else if (postResult.Error == ErrorType.Forbidden) await App.Page.DisplayAlert("안내", "해당 게시글을 읽을 수 있는 권한이 없습니다.", Constants.PromptOk);
         }
-        else await App.PushModalAsync(new UserPage(User.UserId));
+        else await App.PushAsync(new UserPage(User.UserId));
     }
 
     [RelayCommand]

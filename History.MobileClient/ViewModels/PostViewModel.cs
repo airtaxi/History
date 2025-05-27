@@ -217,7 +217,7 @@ public partial class PostViewModel : ObservableObject
         else if (action == "게시글 수정")
         {
             var editPostPage = new EditPostPage(Post, false);
-            await App.PushModalAsync(editPostPage);
+            await App.PushAsync(editPostPage);
         }
         else if (action == "공개범위 설정")
         {
@@ -267,7 +267,7 @@ public partial class PostViewModel : ObservableObject
             if (deleteResult.IsSuccess)
             {
                 WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostResponseDto>(Post));
-                if (popModal) await App.PopModalAsync();
+                if (popModal) await App.PopAsync();
             }
         }
     }
@@ -279,14 +279,14 @@ public partial class PostViewModel : ObservableObject
 
         var newViewModel = new PostViewModel(Post, false);
         var postPage = new PostPage(newViewModel);
-        await App.PushModalAsync(postPage);
+        await App.PushAsync(postPage);
     }
 
     [RelayCommand]
     public async Task HandleProfileTapAsync()
     {
         var profilePage = new UserPage(Post.User.UserId);
-        await App.PushModalAsync(profilePage);
+        await App.PushAsync(profilePage);
     }
 
     [RelayCommand]
@@ -328,7 +328,7 @@ public partial class PostViewModel : ObservableObject
         }
 
         var page = new EditPostPage(Post, true);
-        await App.PushModalAsync(page);
+        await App.PushAsync(page);
     }
 
     [RelayCommand]
@@ -354,7 +354,7 @@ public partial class PostViewModel : ObservableObject
 #if IOS
         await App.PushAsync(page);
 #else
-        await App.PushModalAsync(page);
+        await App.PushAsync(page);
 #endif
     }
 
@@ -365,7 +365,7 @@ public partial class PostViewModel : ObservableObject
 #if IOS
         await App.PushAsync(page);
 #else
-        await App.PushModalAsync(page);
+        await App.PushAsync(page);
 #endif
     }
 
@@ -376,7 +376,7 @@ public partial class PostViewModel : ObservableObject
 #if IOS
         await App.PushAsync(page);
 #else
-        await App.PushModalAsync(page);
+        await App.PushAsync(page);
 #endif
     }
 }

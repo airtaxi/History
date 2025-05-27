@@ -73,7 +73,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
         if (IsTimeline)
         {
             var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel(_fullScreenMedias, _currentMedia));
-            await App.PushModalAsync(viewerPage);
+            await App.PushAsync(viewerPage);
 
             await Toast.Make("iOS에서는 현재 타임라인에서 영상 재생이 지원되지 않습니다.").Show();
         }
@@ -94,7 +94,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
     public async Task HandleTapAsync()
     {
         var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel(_fullScreenMedias, _currentMedia));
-        await App.PushModalAsync(viewerPage);
+        await App.PushAsync(viewerPage);
     }
 
     private void SetMediaAndOverlay()

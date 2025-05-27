@@ -8,7 +8,9 @@
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
     Background="Black"
-    NavigationPage.HasNavigationBar="False">
+    NavigationPage.HasNavigationBar="False"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
 
     <Grid>
         <views:DataTemplatePresenter x:Name="MainDataTemplatePresenter">

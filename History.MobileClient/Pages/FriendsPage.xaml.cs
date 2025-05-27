@@ -9,7 +9,7 @@ public partial class FriendsPage : TabbedPage
 
     protected override bool OnBackButtonPressed()
     {
-        _ = App.PopModalAsync();
+        _ = App.PopAsync();
         return true;
     }
 }
