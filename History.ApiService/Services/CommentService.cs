@@ -293,7 +293,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         {
             var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == profileContent.UserId);
             profileContent.UserId = user?.UserId;
-            profileContent.Nickname = (user?.Nickname ?? "차단된 사용자") + ' ';
+            profileContent.Nickname = (user?.Nickname ?? "탈퇴한 사용자") + ' ';
         }
 
         return new CommentResponseDto
