@@ -43,7 +43,7 @@ public partial class FriendListPage : ContentPage
             FriendListLabel.Text = $"친구 목록 (총 {Shared.Friends.Count}명)";
             ApplySort();
         }
-        else if (_userId != Shared.UserId) await App.PopModalAsync();
+        else if (_userId != Shared.UserId) await App.PopAsync();
     }
 
     private void ApplySort()
@@ -125,7 +125,7 @@ public partial class FriendListPage : ContentPage
 
     protected override bool OnBackButtonPressed()
     {
-        _ = App.PopModalAsync();
+        _ = App.PopAsync();
         return true;
     }
 
@@ -135,5 +135,5 @@ public partial class FriendListPage : ContentPage
         ApplySort();
     }
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 }

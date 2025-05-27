@@ -38,7 +38,7 @@ public partial class EditCommentPage : ContentPage
         CommentMediaFontImageSource.Glyph = hasMediaContent ? MaterialSharp.Hide_image : MaterialSharp.Image;
     }
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 
     private async void OnEditButtonClicked(object sender, EventArgs e)
     {
@@ -70,7 +70,7 @@ public partial class EditCommentPage : ContentPage
             else if (result.IsSuccess)
             {
                 WeakReferenceMessenger.Default.Send<ValueChangedMessage<CommentResponseDto>>(new(result.Value));
-                await App.PopModalAsync();
+                await App.PopAsync();
             }
 
         }
@@ -149,7 +149,7 @@ public partial class EditCommentPage : ContentPage
 
     protected override bool OnBackButtonPressed()
     {
-        _ = App.PopModalAsync();
+        _ = App.PopAsync();
         return true;
     }
 }

@@ -39,7 +39,7 @@ public partial class NotificationViewModel(NotificationResponseDto notification)
             if(!Notification.Data.TryGetValue("UserId", out var userId)) return;
 
             var page = new UserPage(userId);
-            await App.PushModalAsync(page);
+            await App.PushAsync(page);
         }
         else
         {
@@ -51,7 +51,7 @@ public partial class NotificationViewModel(NotificationResponseDto notification)
             var post = postResult.Value;
             var viewModel = new PostViewModel(post, false);
             var page = new PostPage(viewModel);
-            await App.PushModalAsync(page);
+            await App.PushAsync(page);
         }
     }
 
@@ -59,6 +59,6 @@ public partial class NotificationViewModel(NotificationResponseDto notification)
     public async Task HandleProfileTapAsync()
     {
         var profilePage = new UserPage(Notification.User.UserId);
-        await App.PushModalAsync(profilePage);
+        await App.PushAsync(profilePage);
     }
 }

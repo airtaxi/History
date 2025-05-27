@@ -11,11 +11,13 @@ public partial class AppShell : Shell
 	{
 		InitializeComponent();
         IsLoaded = true;
-	}
+    }
 
     private static DateTime s_lastBackPressedTime = DateTime.MinValue;
     protected override bool OnBackButtonPressed()
     {
+        if (Navigation.NavigationStack.Count > 1) return base.OnBackButtonPressed();
+
         TimeSpan timeSinceLastBackPressed = DateTime.UtcNow - s_lastBackPressedTime;
         if (timeSinceLastBackPressed.TotalMilliseconds > 2000)
         {

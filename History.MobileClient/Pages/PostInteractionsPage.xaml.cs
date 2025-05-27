@@ -23,7 +23,7 @@ public partial class PostInteractionsPage : TabbedPage
 
     protected override bool OnBackButtonPressed()
     {
-        _ = App.PopModalAsync();
+        _ = App.PopAsync();
         return true;
     }
 }

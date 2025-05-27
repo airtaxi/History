@@ -155,5 +155,5 @@ public partial class TimelinePage : ContentPage
         await RefreshAsync();
     }
 
-    private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushModalAsync(new EditPostPage());
+    private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
 }

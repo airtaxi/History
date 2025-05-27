@@ -54,7 +54,7 @@ public partial class AddFriendsPage : ContentPage
         collectionView.SelectedItem = null;
 
         var viewModel = e.CurrentSelection as FriendshipViewModel;
-        await App.PushModalAsync(new UserPage(viewModel.User.UserId));
+        await App.PushAsync(new UserPage(viewModel.User.UserId));
     }
 
     protected override void OnAppearing()

@@ -242,7 +242,7 @@ public partial class PostPage : ContentPage
 
     private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await _viewModel.DisplayActionSheetAsync(true);
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 
     private async void OnShareImageTapped(object sender, TappedEventArgs e) => await _viewModel.HandleShareAsync();
 
@@ -329,7 +329,7 @@ public partial class PostPage : ContentPage
 
     protected override bool OnBackButtonPressed()
     {
-        _ = App.PopModalAsync();
+        _ = App.PopAsync();
         return true;
     }
 }

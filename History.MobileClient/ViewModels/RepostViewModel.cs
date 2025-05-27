@@ -19,6 +19,6 @@ public partial class RepostViewModel(string postId, PostResponseDto parentPost, 
     {
         if (repostedUser == null) return;
 
-        await App.PushModalAsync(new UserPage(repostedUser.UserId));
+        await App.PushAsync(new UserPage(repostedUser.UserId));
     }
 }

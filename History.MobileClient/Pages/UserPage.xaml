@@ -9,6 +9,7 @@
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
     Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False"
     SizeChanged="OnSizeChanged">
     <ContentPage.Behaviors>
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />

@@ -281,7 +281,7 @@ public partial class EditPostPage : ContentPage
         }
     }
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 
     private async void OnUploadButtonClicked(object sender, EventArgs e)
     {
@@ -329,7 +329,7 @@ public partial class EditPostPage : ContentPage
             if (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers)
             {
                 var selectUserPage = new DiscoveryOptionSelectUsersPage(_post?.DiscoveryOptionSelectedUserIds);
-                await App.PushModalAsync(selectUserPage);
+                await App.PushAsync(selectUserPage);
 
                 var result = await selectUserPage.GetResultAsync();
                 if (result == null || result.Count == 0)
@@ -349,7 +349,7 @@ public partial class EditPostPage : ContentPage
                 else if (result.IsSuccess)
                 {
                     WeakReferenceMessenger.Default.Send<ValueChangedMessage<PostResponseDto>>(new(result.Value));
-                    await App.PopModalAsync();
+                    await App.PopAsync();
                 }
             }
             else
@@ -361,7 +361,7 @@ public partial class EditPostPage : ContentPage
                     if (!_isShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
                     TimelinePage.ShouldRefreshTimeline = true;
                     UserPage.ShouldRefreshMyProfile = true;
-                    await App.PopModalAsync();
+                    await App.PopAsync();
                 }
             }
 		}
@@ -456,7 +456,7 @@ public partial class EditPostPage : ContentPage
 
     protected override bool OnBackButtonPressed()
     {
-        _ = App.PopModalAsync();
+        _ = App.PopAsync();
         return true;
     }
 }

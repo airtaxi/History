@@ -22,7 +22,7 @@ public partial class SettingsPage : ContentPage
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
-	private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+	private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 
     private async void OnLogoutGridTapped(object sender, TappedEventArgs e)
     {
