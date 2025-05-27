@@ -288,7 +288,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             }
 
             // SelectedUsers
-            if (!string.IsNullOrEmpty(requesterId))
+            if (!string.IsNullOrEmpty(requesterId) && areFriends)
             {
                 visibilityFilter.Add(
                     Builders<Post>.Filter.And(
