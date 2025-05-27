@@ -156,6 +156,9 @@
 		<MauiXaml Update="Pages\PostInteractionUsersPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Pages\SettingsPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Pages\TimelinePage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
