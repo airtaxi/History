@@ -29,7 +29,7 @@ public partial class UserPage : ContentPage
         BackImage.IsVisible = false;
         TitleLabel.Text = "내 프로필";
         SettingsImage.IsVisible = true;
-        WritePostImage.IsVisible = true;
+        WritePostBorder.IsVisible = true;
 
         WeakReferenceMessenger.Default.Register<PostPinnedMessage>(this, OnPostPinnedMessageReceived);
     }
