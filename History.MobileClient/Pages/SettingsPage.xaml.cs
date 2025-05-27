@@ -1,4 +1,3 @@
-using AndroidX.Media3.Database;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.User;
@@ -17,6 +16,7 @@ public partial class SettingsPage : ContentPage
         InitializeComponent();
 
         VersionLabel.Text = AppInfo.Current.VersionString;
+        BirthdayLabel.Text = user.Birthday?.ToString("yyyy년 MM월 dd일") ?? "설정되지 않음";
         FriendListDiscovryOptionLabel.Text = user.FriendListDiscoveryOption.ToDisplayString();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
@@ -74,6 +74,8 @@ public partial class SettingsPage : ContentPage
         var result = await App.ExecuteRequestAsync(new UpdateFriendListDiscoveryOption(discoveryOption));
         if (result.IsSuccess) FriendListDiscovryOptionLabel.Text = rawDiscoveryOption;
     }
+
+    private async void OnBirthdayGridTapped(object sender, TappedEventArgs e) => await DisplayAlert("안내", "현재 생일 설정은 지원하지 않습니다. 추후 업데이트를 기대해 주세요.", "확인");
 
     protected override void OnAppearing()
     {
