@@ -78,7 +78,7 @@
                 HorizontalScrollBarVisibility="Never"
                 IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
                 ItemTemplate="{StaticResource MediaContentTemplate}"
-                ItemsSource="{x:Binding Medias}"
+                Loaded="OnWrappedMediaContentsCarouselViewLoaded"
                 Position="{x:Binding CarouselPosition}" />
             <Border
                 Margin="12"
