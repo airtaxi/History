@@ -745,7 +745,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         {
             var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == profileContent.UserId);
             profileContent.UserId = user?.UserId;
-            profileContent.Nickname = (user?.Nickname ?? "차단된 사용자") + ' ';
+            profileContent.Nickname = (user?.Nickname ?? "탈퇴한 사용자") + ' ';
         }
 
         var postReactionDtos = await GeneratePostReactionDtosAsync(post.Id, requesterId);
@@ -782,7 +782,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             {
                 var user = parentPostProfileContentUsersResult.Value.FirstOrDefault(x => x.UserId == parentPostProfileContent.UserId);
                 parentPostProfileContent.UserId = user?.UserId;
-                parentPostProfileContent.Nickname = (user?.Nickname ?? "차단된 사용자") + ' ';
+                parentPostProfileContent.Nickname = (user?.Nickname ?? "탈퇴한 사용자") + ' ';
             }
 
             if (hasAccessResult.IsSuccess && parentPostUserResult.IsSuccess)

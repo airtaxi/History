@@ -337,7 +337,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             else if (textAndProfileContent is ProfileContent profileContent)
             {
                 var user = users.Value.FirstOrDefault(x => x.Id == profileContent.UserId);
-                var nickname = user?.Nickname ?? "차단된 사용자";
+                var nickname = user?.Nickname ?? "탈퇴한 사용자";
                 builder.Append(nickname + ' ');
             }
         }
