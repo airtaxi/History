@@ -59,4 +59,21 @@ public partial class Content : ResourceDictionary
         var viewModel = view?.BindingContext as ExternalUrlContentViewModel;
         await viewModel?.HandleLongPressAsync();
     }
+
+#if ANDROID
+    private async void OnWrappedMediaContentsCarouselViewLoaded(object sender, EventArgs e)
+    {
+        var carouselView = sender as CarouselView;
+        var viewModel = carouselView?.BindingContext as WrappedMediaContentsViewModel;
+        await Task.Delay(100);
+        carouselView.ItemsSource = viewModel.Medias;
+    }
+#else
+    private void OnWrappedMediaContentsCarouselViewLoaded(object sender, EventArgs e)
+    {
+        var carouselView = sender as CarouselView;
+        var viewModel = carouselView?.BindingContext as WrappedMediaContentsViewModel;
+        carouselView.ItemsSource = viewModel.Medias;
+    }
+#endif
 }
