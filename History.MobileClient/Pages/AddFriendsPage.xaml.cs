@@ -71,11 +71,11 @@ public partial class AddFriendsPage : ContentPage
 
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
-        if (!_isInForeground) return;
+        var isLoading = message.Value;
+        if (!_isInForeground && message.Value) return;
 
         Dispatcher.Dispatch(() =>
         {
-            var isLoading = message.Value;
             MainActivityIndicator.IsRunning = isLoading;
             IsEnabled = !isLoading;
         });
