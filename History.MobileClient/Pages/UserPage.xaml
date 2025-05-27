@@ -103,10 +103,16 @@
             HeightRequest="60"
             HorizontalOptions="End"
             IsVisible="False"
-            Shadow="1 2 6 Black 1"
             StrokeThickness="0"
             VerticalOptions="End"
             WidthRequest="60">
+            <Border.Shadow>
+                <Shadow
+                    Brush="Black"
+                    Opacity="1"
+                    Radius="6"
+                    Offset="1,2" />
+            </Border.Shadow>
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="30" />
             </Border.StrokeShape>
