@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Title="SettingsPage"
+    Background="{AppThemeBinding Dark=Black,
+                                 Light=White}">
+    <ContentPage.Resources>
+        <Color x:Key="CategoryDarkForeground">#CFCFCF</Color>
+        <Color x:Key="CategoryLightForeground">#303030</Color>
+        <Color x:Key="CategoryDarkBackground">#303030</Color>
+        <Color x:Key="CategoryLightBackground">#CFCFCF</Color>
+        <Color x:Key="DividerDark">#A0A0A0</Color>
+        <Color x:Key="DividerLight">#5F5F5F</Color>
+    </ContentPage.Resources>
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid
+            x:Name="TitleGrid"
+            Grid.Row="0"
+            Padding="14,0,0,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout>
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    x:Name="TitleLabel"
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="설정"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout>
+                <Grid
+                    Padding="14,0,14,0"
+                    Background="{AppThemeBinding Dark={StaticResource CategoryDarkBackground},
+                                                 Light={StaticResource CategoryLightBackground}}"
+                    HeightRequest="24">
+                    <Label
+                        FontSize="14"
+                        Text="계정 관리"
+                        TextColor="{AppThemeBinding Dark={StaticResource CategoryDarkForeground},
+                                                    Light={StaticResource CategoryLightForeground}}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnFriendListDiscovryOptionGridTapped" />
+                    </Grid.GestureRecognizers>
+
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="친구 목록 공개 범위"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="FriendListDiscovryOptionLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnLogoutGridTapped" />
+                    </Grid.GestureRecognizers>
+
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="로그아웃"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnWithdrawGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="회원 탈퇴"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid
+                    Padding="14,0,14,0"
+                    Background="{AppThemeBinding Dark={StaticResource CategoryDarkBackground},
+                                                 Light={StaticResource CategoryLightBackground}}"
+                    HeightRequest="24">
+                    <Label
+                        FontSize="14"
+                        Text="서비스 정보"
+                        TextColor="{AppThemeBinding Dark={StaticResource CategoryDarkForeground},
+                                                    Light={StaticResource CategoryLightForeground}}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="버전 정보"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="VersionLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="3"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
+    </Grid>
+</ContentPage>
