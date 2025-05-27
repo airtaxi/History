@@ -16,13 +16,32 @@
         <views:DataTemplatePresenter x:Name="MainDataTemplatePresenter">
             <views:DataTemplatePresenter.Template>
                 <DataTemplate x:DataType="vm:FullScreenMediaContentViewModel">
-                    <CarouselView
-                        CurrentItem="{x:Binding CurrentMedia,
-                                                Mode=TwoWay}"
-                        HorizontalScrollBarVisibility="Never"
-                        IsSwipeEnabled="{x:Binding CurrentMedia.FullScreenSwipeable}"
-                        ItemTemplate="{StaticResource MediaTemplateSelector}"
-                        ItemsSource="{x:Binding FullScreenMedias}" />
+                    <Grid>
+                        <CarouselView
+                            CurrentItem="{x:Binding CurrentMedia,
+                                                    Mode=TwoWay}"
+                            HorizontalScrollBarVisibility="Never"
+                            IsSwipeEnabled="{x:Binding CurrentMedia.FullScreenSwipeable}"
+                            ItemTemplate="{StaticResource MediaTemplateSelector}"
+                            ItemsSource="{x:Binding FullScreenMedias}"
+                            Position="{x:Binding CarouselPosition}" />
+                        <Border
+                            Margin="12"
+                            Padding="6,4,6,4"
+                            Background="#80808080"
+                            HorizontalOptions="End"
+                            IsVisible="{x:Binding CurrentMedia.FullScreenSwipeable}"
+                            StrokeThickness="0"
+                            VerticalOptions="End">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="16" />
+                            </Border.StrokeShape>
+                            <Label
+                                FontAttributes="Bold"
+                                Text="{x:Binding CarouselPositionText}"
+                                TextColor="White" />
+                        </Border>
+                    </Grid>
                 </DataTemplate>
             </views:DataTemplatePresenter.Template>
         </views:DataTemplatePresenter>
