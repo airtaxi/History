@@ -129,9 +129,9 @@ public partial class UserPage : ContentPage
         {
             var page = new FriendsPage();
 #if IOS
-            await App.PushAsync(page);
+            await App.PushModalAsync(page);
 #else
-            await App.PushAsync(page);
+            await App.PushModalAsync(page);
 #endif
         }
         else

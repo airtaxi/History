@@ -94,6 +94,36 @@ public partial class App : Application
         }
     }
 
+    public static async Task PushModalAsync(Page page)
+    {
+        if (NavigationSemaphore.CurrentCount == 0) return;
+
+        await NavigationSemaphore.WaitAsync();
+        try { await Current.Windows[0].Page.Navigation.PushModalAsync(page); }
+        finally
+        {
+            if(NavigationSemaphore.CurrentCount == 0)
+            {
+                NavigationSemaphore.Release();
+            }
+        }
+    }
+
+    public static async Task PopModalAsync()
+    {
+        if (NavigationSemaphore.CurrentCount == 0) return;
+
+        await NavigationSemaphore.WaitAsync();
+        try { await Current.Windows[0].Page.Navigation.PopModalAsync(); }
+        finally
+        {
+            if (NavigationSemaphore.CurrentCount == 0)
+            {
+                NavigationSemaphore.Release();
+            }
+        }
+    }
+
     public static async Task<Result> ExecuteRequestAsync(IBaseRequest request, params ErrorType[] hiddenErrorTypes)
     {
         hiddenErrorTypes ??= [];

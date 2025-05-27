@@ -352,9 +352,9 @@ public partial class PostViewModel : ObservableObject
     {
         var page = new PostInteractionsPage(Interactions, Enums.PostInteractionType.Reaction);
 #if IOS
-        await App.PushAsync(page);
+        await App.PushModalAsync(page);
 #else
-        await App.PushAsync(page);
+        await App.PushModalAsync(page);
 #endif
     }
 
@@ -363,9 +363,9 @@ public partial class PostViewModel : ObservableObject
     {
         var page = new PostInteractionsPage(Interactions, Enums.PostInteractionType.Share);
 #if IOS
-        await App.PushAsync(page);
+        await App.PushModalAsync(page);
 #else
-        await App.PushAsync(page);
+        await App.PushModalAsync(page);
 #endif
     }
 
@@ -374,9 +374,9 @@ public partial class PostViewModel : ObservableObject
     {
         var page = new PostInteractionsPage(Interactions, Enums.PostInteractionType.Repost);
 #if IOS
-        await App.PushAsync(page);
+        await App.PushModalAsync(page);
 #else
-        await App.PushAsync(page);
+        await App.PushModalAsync(page);
 #endif
     }
 }
