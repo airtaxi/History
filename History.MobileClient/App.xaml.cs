@@ -37,8 +37,19 @@ public partial class App : Application
                 Android.Util.Log.Error("History", $"History Unhandled Exception: {exception.Message}\n{exception.StackTrace}");
 #if DEBUG
                 Dispatcher.Dispatch(() => Page.DisplayAlert("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk));
+#else
+                if (exception.Message.Contains("CarouselView"))
+                {
+                    Dispatcher.Dispatch(async () =>
+                    {
+                        var result = await Page.DisplayAlert("오류", $"MAUI 코드베이스에서 버그가 발견되었습니다. 애플리케이션을 재시작해주세요.", "확인", "자세히 알아보기");
+                        if (result) return;
+
+                        await Page.DisplayAlert("자세히 알아보기", "이 오류는 MAUI의 CarouselView에서 발생하는 버그로, History 애플리케이션과는 관련이 없습니다.", "확인");
+                    });
+                }
 #endif
-                Debugger.BreakForUserUnhandledException(exception);
+                Debugger.BreakForUserUnhandledException(exception);\
             }
         };
 #endif
