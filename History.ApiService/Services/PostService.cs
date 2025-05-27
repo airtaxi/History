@@ -102,7 +102,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             }
 
             // SelectedUsers
-            if (!string.IsNullOrEmpty(requesterId))
+            if (!string.IsNullOrEmpty(requesterId) && areFriends)
             {
                 visibilityFilter.Add(
                     Builders<Post>.Filter.And(
@@ -206,6 +206,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             ),
 
             Builders<Post>.Filter.And(
+                Builders<Post>.Filter.In(p => p.UserId, relevantUserIds),
                 Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.UnselectedUsers),
                 Builders<Post>.Filter.AnyNe(p => p.DiscoveryOptionSelectedUserIds, requesterId)
             )
@@ -287,7 +288,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             }
 
             // SelectedUsers
-            if (!string.IsNullOrEmpty(requesterId))
+            if (!string.IsNullOrEmpty(requesterId) && areFriends)
             {
                 visibilityFilter.Add(
                     Builders<Post>.Filter.And(
