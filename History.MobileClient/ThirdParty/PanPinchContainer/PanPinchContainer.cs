@@ -168,7 +168,7 @@ public class PanPinchContainer : ContentView
         _panX = Content.TranslationX;
         _panY = Content.TranslationY;
 
-        _mediaViewModel.FullScreenSwipeable = true;
+        _mediaViewModel.FullScreenSwipeable = _currentScale == 1;
     }
 
     private async void OnPanUpdatedAsync(object sender, PanUpdatedEventArgs e)
