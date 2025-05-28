@@ -28,9 +28,11 @@ public class TokenRefreshService : JobService
                 var refreshToken = Configuration.GetValue<string>("RefreshToken");
                 if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken)) return;
 
-                var result = await Shared.ApiHandler.ExecuteRequestAsync(new RefreshToken(refreshToken));
+                var result = await ApiHandler.Public.ExecuteRequestAsync(new RefreshToken(refreshToken));
                 accessToken = result.AccessToken;
                 refreshToken = result.RefreshToken;
+
+                Shared.ApiHandler = new ApiHandler(accessToken, refreshToken);
 
                 Configuration.SetValue("AccessToken", accessToken);
                 Configuration.SetValue("RefreshToken", refreshToken);
