@@ -105,9 +105,7 @@ public partial class TimelinePage : ContentPage
         MainCollectionView.ItemsSource = _viewModels;
         if (_isFirstLoad || ShouldRefresh)
         {
-            _isFirstLoad = false;
-
-            if (ShouldRefresh)
+            if (ShouldRefresh && !_isFirstLoad)
             {
                 ShouldRefresh = false;
                 Dispatcher.Dispatch(async () =>
@@ -117,6 +115,8 @@ public partial class TimelinePage : ContentPage
                 });
             }
             else Dispatcher.Dispatch(async () => await RefreshAsync());
+
+            _isFirstLoad = false;
         }
     }
 
