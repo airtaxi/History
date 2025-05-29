@@ -1,4 +1,3 @@
-using Android.Gms.Common.Apis;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;

@@ -1,6 +1,4 @@
-﻿
-using AndroidX.Lifecycle;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
