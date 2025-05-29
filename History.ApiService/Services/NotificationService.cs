@@ -147,6 +147,49 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
         if (tokens.Count == 0) return Result.Success();
 
+        string collapseKey = null;
+        var rawType = data.ContainsKey("Type") ? data["Type"] : null;
+        if (rawType != null && Enum.TryParse<NotificationType>(rawType, out var type))
+        {
+            if (type == NotificationType.Comment)
+            {
+                var postId = data.ContainsKey("PostId") ? data["PostId"] : null;
+                if (postId != null) collapseKey = "comment_" + postId;
+            }
+            else if (type == NotificationType.CommentMention)
+            {
+                var postid = data.ContainsKey("PostId") ? data["PostId"] : null;
+                if (postid != null) collapseKey = "comment_mention_" + postid;
+            }
+            else if (type == NotificationType.CommentLike)
+            {
+                var postId = data.ContainsKey("PostId") ? data["PostId"] : null;
+                if (postId != null) collapseKey = "comment_like_" + postId;
+            }
+            else if (type == NotificationType.Share)
+            {
+                var postId = data.ContainsKey("PostId") ? data["PostId"] : null;
+                if (postId != null) collapseKey = "share_" + postId;
+            }
+            else if (type == NotificationType.Repost)
+            {
+                var postId = data.ContainsKey("PostId") ? data["PostId"] : null;
+                if (postId != null) collapseKey = "repost_" + postId;
+            }
+            else if (type == NotificationType.PostReaction)
+            {
+                var postId = data.ContainsKey("PostId") ? data["PostId"] : null;
+                if (postId != null) collapseKey = "post_reaction_" + postId;
+            }
+            else if (type == NotificationType.PostMention)
+            {
+                var postId = data.ContainsKey("PostId") ? data["PostId"] : null;
+                if (postId != null) collapseKey = "post_mention_" + postId;
+            }
+
+            if (collapseKey != null) data["notification_id"] = collapseKey; // Use collapse key for Android and iOS to group notifications
+        }
+
         var message = new MulticastMessage
         {
             Tokens = tokensResult.Value,
@@ -168,6 +211,21 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
                 },
             }
         };
+
+        if (collapseKey != null)
+        {
+            message.Android.CollapseKey = collapseKey;
+            if (message.Apns != null)
+            {
+                message.Apns = new ApnsConfig
+                {
+                    Headers = new Dictionary<string, string>
+                    {
+                        { "apns-collapse-id", collapseKey }
+                    }
+                };
+            }
+        }
 
         var response = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(message);
 
