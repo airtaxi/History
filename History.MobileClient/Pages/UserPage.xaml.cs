@@ -28,7 +28,6 @@ public partial class UserPage : ContentPage
     {
         _isMyProfile = true;
         BackImage.IsVisible = false;
-        BanImage.IsVisible = false;
         TitleLabel.Text = "내 프로필";
         SettingsImage.IsVisible = true;
         WritePostBorder.IsVisible = true;
@@ -41,6 +40,8 @@ public partial class UserPage : ContentPage
 	{
 		_userId = userId;
         InitializeComponent();
+
+        if (_userId == Shared.UserId) BanImage.IsVisible = false;
 
         MainCollectionView.ItemsSource = _viewModels;
 #if IOS
