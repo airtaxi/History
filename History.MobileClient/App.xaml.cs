@@ -70,9 +70,14 @@ public partial class App : Application
 
         await NavigationSemaphore.WaitAsync();
         try { await Current.Windows[0].Page.Navigation.PushAsync(page); }
+        catch (Exception)
+        {
+            if (NavigationSemaphore.CurrentCount == 0) NavigationSemaphore.Release();
+            await PushModalAsync(page);
+        }
         finally
         {
-            if(NavigationSemaphore.CurrentCount == 0)
+            if (NavigationSemaphore.CurrentCount == 0)
             {
                 NavigationSemaphore.Release();
             }
