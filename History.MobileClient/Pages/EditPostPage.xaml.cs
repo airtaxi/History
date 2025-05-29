@@ -359,8 +359,8 @@ public partial class EditPostPage : ContentPage
                 else if (result.IsSuccess)
                 {
                     if (!_isShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
-                    TimelinePage.ShouldRefreshTimeline = true;
-                    UserPage.ShouldRefreshMyProfile = true;
+                    TimelinePage.ShouldRefresh = true;
+                    UserPage.ShouldRefresh = true;
                     await App.PopAsync();
                 }
             }

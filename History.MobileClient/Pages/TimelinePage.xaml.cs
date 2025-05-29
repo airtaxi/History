@@ -10,7 +10,7 @@ namespace History.MobileClient.Pages;
 
 public partial class TimelinePage : ContentPage
 {
-    public static bool ShouldRefreshTimeline { get; set; }
+    public static bool ShouldRefresh { get; set; }
 
     private bool _isInForeground;
     private PostViewModel _lastViewModel;
@@ -103,15 +103,20 @@ public partial class TimelinePage : ContentPage
         _isInForeground = true;
 
         MainCollectionView.ItemsSource = _viewModels;
-        if (_isFirstLoad || ShouldRefreshTimeline)
+        if (_isFirstLoad || ShouldRefresh)
         {
-            if (_isFirstLoad) _isFirstLoad = false;
-            if (ShouldRefreshTimeline) ShouldRefreshTimeline = false;
-            Dispatcher.Dispatch(async () =>
+            _isFirstLoad = false;
+
+            if (ShouldRefresh)
             {
-                var shouldRefreshTimeline = await DisplayAlert("안내", "새로운 게시글을 작성하셨군요, 지금 타임라인을 새로고침 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-                if (shouldRefreshTimeline) await RefreshAsync();
-            });
+                ShouldRefresh = false;
+                Dispatcher.Dispatch(async () =>
+                {
+                    var shouldRefresh = await DisplayAlert("안내", "새로운 게시글을 작성하셨군요, 지금 타임라인을 새로고침 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+                    if (shouldRefresh) await RefreshAsync();
+                });
+            }
+            else Dispatcher.Dispatch(async () => await RefreshAsync());
         }
     }
 
