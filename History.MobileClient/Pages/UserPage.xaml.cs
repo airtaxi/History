@@ -1,4 +1,5 @@
 ﻿
+using AndroidX.Lifecycle;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
@@ -17,7 +18,7 @@ public partial class UserPage : ContentPage
 
     private bool _isInForeground;
     private object _lastViewModel;
-    private UserResponseDto _user;
+    private ProfileViewModel _viewModel;
     private readonly bool _isMyProfile;
     private readonly string _userId;
     private readonly ObservableCollection<object> _viewModels = [];
@@ -27,6 +28,7 @@ public partial class UserPage : ContentPage
     {
         _isMyProfile = true;
         BackImage.IsVisible = false;
+        BanImage.IsVisible = false;
         TitleLabel.Text = "내 프로필";
         SettingsImage.IsVisible = true;
         WritePostBorder.IsVisible = true;
@@ -81,8 +83,8 @@ public partial class UserPage : ContentPage
             var user = await App.ExecuteRequestAsync(new GetUser(_userId));
             if (user.IsSuccess)
             {
-                _user = user.Value;
-                _viewModels.Add(new ProfileViewModel(user.Value));
+                _viewModel = new ProfileViewModel(user.Value);
+                _viewModels.Add(_viewModel);
                 FriendsImage.IsVisible = true;
             }
             else return;
@@ -140,6 +142,8 @@ public partial class UserPage : ContentPage
             await App.PushAsync(page);
         }
     }
+
+    private async void OnBanUserImageTapped(object sender, TappedEventArgs e) => await _viewModel.HandleBanAsync();
 
     private void OnSizeChanged(object sender, EventArgs e)
     {
@@ -218,7 +222,7 @@ public partial class UserPage : ContentPage
         else ShouldRefresh = true;
     }
 
-    private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new SettingsPage(_user));
+    private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new SettingsPage(_viewModel.User));
     private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
 
     protected override bool OnBackButtonPressed()
