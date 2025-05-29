@@ -42,7 +42,8 @@ public class UserController(IUserService userService, IFriendshipService friends
             Id = payload.Subject,
             Nickname = payload.Name ?? GenerateDefaultUserName(),
             SocialService = request.Provider,
-            Email = payload.Email
+            Email = payload.Email,
+            AllowSearch = true,
             // Rank will be set in the service based on the number of users
             // (Admin for the first user, User for others)
         };
