@@ -161,7 +161,11 @@ public partial class UserPage : ContentPage
         {
             if (ShouldRefreshMyProfile) ShouldRefreshMyProfile = false;
             if (_isFirstLoad) _isFirstLoad = false;
-            Dispatcher.Dispatch(async () => await RefreshAsync());
+            Dispatcher.Dispatch(async () =>
+            {
+                var shouldRefreshTimeline = await DisplayAlert("안내", "새로운 게시글을 작성하셨군요, 지금 내 프로필을 새로고침 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+                if (shouldRefreshTimeline) await RefreshAsync();
+            });
         }
     }
 
