@@ -23,7 +23,7 @@
 
     <DataTemplate x:Key="FullScreenImageTemplate" x:DataType="vm:ImageViewModel">
         <ppc:PanPinchContainer BindingContext="{x:Binding Aspect}">
-            <Image
+            <ffimageloading:CachedImage
                 Aspect="{x:Binding Aspect}"
                 HorizontalOptions="{x:Binding HorizontalContentOptions}"
                 Source="{x:Binding Uri}"
