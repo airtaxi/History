@@ -169,6 +169,7 @@
             </VerticalStackLayout>
         </VerticalStackLayout>
     </DataTemplate>
+
     <DataTemplate x:Key="PostTemplate" x:DataType="vm:PostViewModel">
         <Border
             Margin="6"
@@ -275,7 +276,10 @@
                     Template="{StaticResource SharedPostTemplate}"
                     ViewModel="{x:Binding ParentPost,
                                           Mode=OneWay}" />
-                <HorizontalStackLayout Margin="0,4,0,0" Spacing="12">
+                <HorizontalStackLayout
+                    Margin="0,4,0,0"
+                    Spacing="10"
+                    VerticalOptions="Center">
                     <HorizontalStackLayout Spacing="8">
                         <Image HeightRequest="24" WidthRequest="24">
                             <Image.GestureRecognizers>
@@ -292,9 +296,9 @@
                             FontAttributes="Bold"
                             FontSize="16"
                             Text="{x:Binding ReactionsCount}"
-                            VerticalOptions="End" />
+                            VerticalOptions="Center" />
                     </HorizontalStackLayout>
-                    <HorizontalStackLayout Spacing="8">
+                    <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                         <Image HeightRequest="24" WidthRequest="24">
                             <Image.Source>
                                 <FontImageSource
@@ -308,7 +312,42 @@
                             FontAttributes="Bold"
                             FontSize="16"
                             Text="{x:Binding CommentsCount}"
-                            VerticalOptions="End" />
+                            VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout
+                        IsVisible="{x:Binding HasSharedUsers}"
+                        Spacing="4"
+                        VerticalOptions="Center">
+                        <Image HeightRequest="24" WidthRequest="24">
+                            <Image.Source>
+                                <FontImageSource
+                                    FontFamily="MaterialSharp"
+                                    Glyph="{x:Static m:MaterialSharp.Share}"
+                                    Color="{AppThemeBinding Dark=White,
+                                                            Light=Black}" />
+                            </Image.Source>
+                        </Image>
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="{x:Binding SharedUsersCount}"
+                            VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout IsVisible="{x:Binding HasRepostedUsers}" Spacing="4">
+                        <Image HeightRequest="24" WidthRequest="24">
+                            <Image.Source>
+                                <FontImageSource
+                                    FontFamily="MaterialSharp"
+                                    Glyph="{x:Static m:MaterialSharp.Shift_lock}"
+                                    Color="{AppThemeBinding Dark=White,
+                                                            Light=Black}" />
+                            </Image.Source>
+                        </Image>
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="{x:Binding RepostedUsersCount}"
+                            VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </HorizontalStackLayout>
                 <Grid Margin="0,4,0,0" IsVisible="{x:Binding HasComments}">
