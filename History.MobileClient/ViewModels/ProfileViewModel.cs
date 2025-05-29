@@ -42,7 +42,7 @@ public partial class ProfileViewModel : ObservableObject
             else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Accepted) return "친구 삭제";
             else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Waiting) return "친구 수락";
             else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Requested) return "친구 요청 취소";
-            else return "친구 신청 / 차단 / 무시";
+            else return "친구 신청";
         }
     }
 
@@ -286,8 +286,8 @@ public partial class ProfileViewModel : ObservableObject
             {
                 var result = await App.ExecuteRequestAsync(new BlockUser(User.UserId));
                 if (result.IsFailure) return;
+                await App.PopAsync();
             }
-            await App.PopAsync();
             return;
         }
 
@@ -298,9 +298,8 @@ public partial class ProfileViewModel : ObservableObject
             {
                 var result = await App.ExecuteRequestAsync(new IgnoreUser(User.UserId));
                 if (result.IsFailure) return;
+                await App.PopAsync();
             }
-
-            await App.PopAsync();
             return;
         }
 
