@@ -338,6 +338,9 @@ public partial class ProfileViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task HandleFavoriteAsync() => await App.Page.DisplayAlert("안내", "이 기능은 현재 개발 중입니다. 곧 업데이트 될 예정이니 조금만 기다려주세요!", Constants.PromptOk);
+
+    [RelayCommand]
     private async Task HandleProfileSettingsAsync()
     {
         var action = await App.Page.DisplayActionSheet("프로필 설정", Constants.PromptCancel, null, "닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정", "핸들 변경", "프로필 공개 설정");
