@@ -12,8 +12,9 @@ public class Register : IBaseRequest<OAuthLoginResponseDto>, IRequestWithBody
     public Method Method => Method.Post;
     public object Body { get; set; }
 
-    public Register(string idToken, SocialService provider) => Body = new OAuthLoginRequestDto
+    public Register(string code, string idToken, SocialService provider) => Body = new OAuthRegisterRequestDto
     {
+        Code = code,
         IdToken = idToken,
         Provider = provider
     };

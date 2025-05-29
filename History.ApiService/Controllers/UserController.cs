@@ -21,15 +21,18 @@ namespace History.ApiService.Controllers;
 public class UserController(IUserService userService, IFriendshipService friendshipService, IRefreshTokenService refreshTokenService, INotificationService notificationService) : ControllerBase
 {
     /// <summary>
-    /// Register with OAuth
+    /// `ter with OAuth
     /// </summary>
     /// <param name="request">The JWT token from OAuth provider</param>
     /// <returns>An action result indicating success or failure</returns>
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] OAuthLoginRequestDto request)
+    public async Task<IActionResult> Register([FromBody] OAuthRegisterRequestDto request)
     {
         var payload = await VerifyIdTokenAsync(request);
         if (payload == null) return Unauthorized("ID 토큰이 유효하지 않습니다.");
+
+        var isCodeValid = request.Code == "alpha" || request.Code == "hypermaxsupersecurestoretesterregistercode3920070831";
+        if (!isCodeValid) return BadRequest("가입 코드가 올바르지 않습니다.");
 
         var existingUserResult = await userService.GetUserByIdAsync(payload.Subject);
         if (existingUserResult.IsSuccess) return Conflict("이미 등록된 사용자입니다.");
