@@ -84,7 +84,11 @@
                     FontAttributes="Bold"
                     FontSize="16"
                     Text="[필수] 서비스 이용 약관에 동의합니다"
-                    VerticalOptions="Center" />
+                    VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnTermsLabelTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
                 <Label
                     Grid.Column="2"
                     Margin="8,0,0,0"
@@ -113,7 +117,11 @@
                     FontAttributes="Bold"
                     FontSize="16"
                     Text="[필수] 개인정보 수집·이용에 동의합니다"
-                    VerticalOptions="Center" />
+                    VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPrivacyAgreementLabelTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
                 <Label
                     Grid.Column="2"
                     Margin="8,0,0,0"
@@ -142,7 +150,11 @@
                     FontAttributes="Bold"
                     FontSize="16"
                     Text="[필수] 만 14세 이상 회원입니다"
-                    VerticalOptions="Center" />
+                    VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAgeLabelTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
                 <Label
                     Grid.Column="2"
                     Margin="8,0,0,0"
