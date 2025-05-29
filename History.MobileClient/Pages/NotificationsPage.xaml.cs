@@ -76,9 +76,6 @@ public partial class NotificationsPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
-        if (_isInitialized) return;
-        _isInitialized = true;
-
         Dispatcher.Dispatch(async () => await RefreshAsync());
     }
 
