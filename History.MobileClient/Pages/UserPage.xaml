@@ -30,8 +30,8 @@
             <HorizontalStackLayout>
                 <Image
                     x:Name="BackImage"
-                    HeightRequest="24"
-                    WidthRequest="24">
+                    HeightRequest="32"
+                    WidthRequest="32">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnBackImageTapped" />
                     </Image.GestureRecognizers>
@@ -54,10 +54,10 @@
             <HorizontalStackLayout HorizontalOptions="End" Spacing="16">
                 <Image
                     x:Name="FriendsImage"
-                    HeightRequest="24"
+                    HeightRequest="32"
                     IsVisible="False"
                     VerticalOptions="Center"
-                    WidthRequest="24">
+                    WidthRequest="32">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnFriendsImageTapped" />
                     </Image.GestureRecognizers>
@@ -70,9 +70,9 @@
                 </Image>
                 <Image
                     x:Name="BanImage"
-                    HeightRequest="20"
+                    HeightRequest="24"
                     VerticalOptions="Center"
-                    WidthRequest="20">
+                    WidthRequest="24">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnBanUserImageTapped" />
                     </Image.GestureRecognizers>
@@ -85,10 +85,10 @@
                 </Image>
                 <Image
                     x:Name="SettingsImage"
-                    HeightRequest="24"
+                    HeightRequest="32"
                     IsVisible="False"
                     VerticalOptions="Center"
-                    WidthRequest="24">
+                    WidthRequest="32">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnSettingsImageTapped" />
                     </Image.GestureRecognizers>

@@ -40,8 +40,8 @@
                     VerticalOptions="Center" />
             </HorizontalStackLayout>
 
-            <HorizontalStackLayout HorizontalOptions="End" Spacing="12">
-                <Image>
+            <HorizontalStackLayout HorizontalOptions="End" Spacing="4">
+                <Image HeightRequest="32" WidthRequest="32">
                     <Image.Source>
                         <FontImageSource
                             x:Name="CommentMediaFontImageSource"
