@@ -169,7 +169,7 @@ public partial class EditPostPage : ContentPage
             var fileName = file.GenerateFileName();
             var bytes = memoryStream.ToArray();
             
-            if(bytes.Length > CommonsConstants.MaxUploadFileSize)
+            if(bytes.Length > CommonsConstants.MaxImageUploadFileSize)
             {
                 sizeExceed = true;
                 continue;
@@ -188,7 +188,7 @@ public partial class EditPostPage : ContentPage
 
         foreach (var image in images)
         {
-            if(image.Bytes.Length > CommonsConstants.MaxUploadFileSize)
+            if(image.Bytes.Length > CommonsConstants.MaxImageUploadFileSize)
             {
                 sizeExceed = true;
                 continue;
