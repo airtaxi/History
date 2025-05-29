@@ -13,7 +13,7 @@ namespace History.MobileClient.Pages;
 
 public partial class UserPage : ContentPage
 {
-    public static bool ShouldRefreshMyProfile { get; set; }
+    public static bool ShouldRefresh { get; set; }
 
     private bool _isInForeground;
     private object _lastViewModel;
@@ -157,15 +157,20 @@ public partial class UserPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
-        if (_isFirstLoad || (ShouldRefreshMyProfile && _userId == Shared.UserId))
+        if (_isFirstLoad || (ShouldRefresh && _userId == Shared.UserId))
         {
-            if (ShouldRefreshMyProfile) ShouldRefreshMyProfile = false;
-            if (_isFirstLoad) _isFirstLoad = false;
-            Dispatcher.Dispatch(async () =>
+            _isFirstLoad = false;
+
+            if (ShouldRefresh)
             {
-                var shouldRefreshTimeline = await DisplayAlert("안내", "새로운 게시글을 작성하셨군요, 지금 내 프로필을 새로고침 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-                if (shouldRefreshTimeline) await RefreshAsync();
-            });
+                ShouldRefresh = false;
+                Dispatcher.Dispatch(async () =>
+                {
+                    var shouldRefresh = await DisplayAlert("안내", "새로운 게시글을 작성하셨군요, 지금 내 프로필을 새로고침 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+                    if (shouldRefresh) await RefreshAsync();
+                });
+            }
+            else Dispatcher.Dispatch(async () => await RefreshAsync());
         }
     }
 
@@ -210,7 +215,7 @@ public partial class UserPage : ContentPage
     private async void OnPostPinnedMessageReceived(object recipient, PostPinnedMessage message)
     {
         if (_isInForeground) await RefreshAsync();
-        else ShouldRefreshMyProfile = true;
+        else ShouldRefresh = true;
     }
 
     private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new SettingsPage(_user));
