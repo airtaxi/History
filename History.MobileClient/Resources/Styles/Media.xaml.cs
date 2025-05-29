@@ -186,4 +186,19 @@ public partial class Media : ResourceDictionary
             ResizeMediaElement(mediaElement);
         }
     }
+
+    private void OnFullScreenImageLoaded(object sender, EventArgs e)
+    {
+        var image = sender as CachedImage;
+        var viewModel = image.BindingContext as ImageViewModel;
+
+#if ANDROID
+        // Disable HW acceleration for the image to prevent issues with large images on Android
+        //if (image.Handler is CachedImageHandler handler && handler.PlatformView is Android.Widget.ImageView androidImageView)
+        //{
+        //    androidImageView.SetLayerType(Android.Views.LayerType.Software, null);
+        //}
+#endif
+        image.Source = ImageSource.FromUri(new Uri(viewModel.Uri));
+    }
 }
