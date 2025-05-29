@@ -19,8 +19,4 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.9.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\History.MobileClient\History.MobileClient.csproj" />
-  </ItemGroup>
-
 </Project>
