@@ -159,9 +159,7 @@ public partial class UserPage : ContentPage
 
         if (_isFirstLoad || (ShouldRefresh && _userId == Shared.UserId))
         {
-            _isFirstLoad = false;
-
-            if (ShouldRefresh)
+            if (ShouldRefresh && !_isFirstLoad)
             {
                 ShouldRefresh = false;
                 Dispatcher.Dispatch(async () =>
@@ -171,6 +169,8 @@ public partial class UserPage : ContentPage
                 });
             }
             else Dispatcher.Dispatch(async () => await RefreshAsync());
+
+            _isFirstLoad = false;
         }
     }
 
