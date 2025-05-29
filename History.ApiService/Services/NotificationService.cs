@@ -36,11 +36,13 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
     public async Task<Result> RegisterFirebaseTokenAsync(string userId, string firebaseToken)
     {
-        var existingToken = await _firebaseTokenCollection.Find(f => f.UserId == userId && f.Token == firebaseToken).FirstOrDefaultAsync();
+        var existingToken = await _firebaseTokenCollection.Find(f => f.Token == firebaseToken).FirstOrDefaultAsync();
         if (existingToken != null)
         {
             var filter = Builders<FirebaseToken>.Filter.Eq(x => x.Id, existingToken.Id);
-            var update = Builders<FirebaseToken>.Update.Set(x => x.CreatedAt, DateTime.UtcNow);
+            var update = Builders<FirebaseToken>.Update
+                .Set(x => x.CreatedAt, DateTime.UtcNow)
+                .Set(x => x.UserId, userId);
             await _firebaseTokenCollection.UpdateOneAsync(filter, update);
 
             return Result.Success();
