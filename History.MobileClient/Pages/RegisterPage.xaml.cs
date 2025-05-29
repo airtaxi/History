@@ -61,5 +61,9 @@ namespace History.MobileClient.Pages
 
             await LoginPage.Login(_idToken, _socialService);
         }
+
+        private void OnTermsLabelTapped(object sender, TappedEventArgs e) => TermsCheckBox.IsChecked = !TermsCheckBox.IsChecked;
+        private void OnPrivacyAgreementLabelTapped(object sender, TappedEventArgs e) => PrivacyAgreementCheckBox.IsChecked = !PrivacyAgreementCheckBox.IsChecked;
+        private void OnAgeLabelTapped(object sender, TappedEventArgs e) => AgeCheckBox.IsChecked = !AgeCheckBox.IsChecked;
     }
 }
