@@ -96,6 +96,7 @@ public partial class ProfileViewModel : ObservableObject
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<UserResponseDto>(result.Value));
     }
 
+    [RelayCommand]
     private async Task HandleChangeNicknameAsync()
     {
         var prompt = await App.Page.DisplayPromptAsync("닉네임 변경", "새로운 닉네임을 입력해주세요", "변경", Constants.PromptCancel, "새로운 닉네임", 40, Keyboard.Plain, User.Nickname);
@@ -119,6 +120,7 @@ public partial class ProfileViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
     private async Task HandleChangeDescriptionAsync()
     {
         var prompt = await App.Page.DisplayPromptAsync("한줄 소개 변경", "새로운 한줄 소개를 입력해주세요 (공백 시 설정 해제)", "변경", Constants.PromptCancel, "새로운 한줄 소개 (공백 시 설정 해제)", 40, Keyboard.Plain, User.Description);
@@ -137,6 +139,7 @@ public partial class ProfileViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
     private async Task HandleChangeProfileMediaAsync()
     {
         bool shouldUpload = true;
@@ -187,6 +190,7 @@ public partial class ProfileViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
     private async Task HandleChangeBackgroundMediaAsync()
     {
         bool shouldUpload = true;
@@ -235,6 +239,7 @@ public partial class ProfileViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
     private async Task HandleChangeHandleAsync()
     {
         var handle = await App.Page.DisplayPromptAsync("핸들 변경", "새로운 핸들을 입력해주세요 (최대 20자, 특수문자 사용 불가)", "변경", Constants.PromptCancel, "새로운 핸들", CommonsConstants.MaxHandleLength, null, User.Handle);
@@ -251,6 +256,7 @@ public partial class ProfileViewModel : ObservableObject
         }
     }
 
+    [RelayCommand]
     private async Task HandleChangeProfileVisibilityAsync()
     {
         var action = await App.Page.DisplayActionSheet("프로필 공개 설정", Constants.PromptCancel, null, "공개", "비공개");
@@ -306,22 +312,6 @@ public partial class ProfileViewModel : ObservableObject
     private async Task HandleFriendshipActionAsync()
     {
         Result result = null;
-
-        async Task Block()
-        {
-            var block = await App.Page.DisplayAlert("안내", $"정말로 {Nickname}님을 차단하시겠습니까? 차단하는 경우, 해제할 때 까지  히스토리에서 나와 상대방 모두 서로를 볼 수 없게 됩니다.", Constants.PromptYes, Constants.PromptNo);
-            if (block) result = await App.ExecuteRequestAsync(new BlockUser(User.UserId));
-            await App.PopAsync();
-            return;
-        }
-
-        async Task Ignore()
-        {
-            var block = await App.Page.DisplayAlert("안내", $"정말로 {Nickname}님을 무시하시겠습니까? 무시하는 경우, 해제할 때 까지 히스토리에서 상대방을 볼 수 없습니다. 다만, 상대방은 나를 볼 수 있습니다.", Constants.PromptYes, Constants.PromptNo);
-            if (block) result = await App.ExecuteRequestAsync(new IgnoreUser(User.UserId));
-            await App.PopAsync();
-            return;
-        }
 
         if (User.Friendship == null)
         {
