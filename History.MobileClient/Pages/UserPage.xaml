@@ -85,8 +85,10 @@
                 </Image>
                 <Image
                     x:Name="SettingsImage"
+                    HeightRequest="24"
                     IsVisible="False"
-                    VerticalOptions="Center">
+                    VerticalOptions="Center"
+                    WidthRequest="24">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnSettingsImageTapped" />
                     </Image.GestureRecognizers>
