@@ -53,7 +53,10 @@
                 HorizontalOptions="End"
                 Spacing="12"
                 VerticalOptions="Center">
-                <Image VerticalOptions="Center">
+                <Image
+                    HeightRequest="32"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnRepostImageTapped" />
                     </Image.GestureRecognizers>
@@ -65,18 +68,24 @@
                             Color="White" />
                     </Image.Source>
                 </Image>
-                <Image VerticalOptions="Center">
+                <Image
+                    HeightRequest="32"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnShareImageTapped" />
                     </Image.GestureRecognizers>
                     <Image.Source>
                         <FontImageSource
                             FontFamily="MaterialSharp"
-                            Glyph="{x:Static m:MaterialSharp.Forward}"
+                            Glyph="{x:Static m:MaterialSharp.Share}"
                             Color="White" />
                     </Image.Source>
                 </Image>
-                <Image VerticalOptions="Center">
+                <Image
+                    HeightRequest="32"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnMoreImageTapped" />
                     </Image.GestureRecognizers>
