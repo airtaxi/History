@@ -51,6 +51,9 @@
                             <Border.StrokeShape>
                                 <RoundRectangle CornerRadius="12.5" />
                             </Border.StrokeShape>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{x:Binding HandleFavoriteCommand}" />
+                            </Border.GestureRecognizers>
                             <Grid>
                                 <Rectangle
                                     Fill="#808080"
