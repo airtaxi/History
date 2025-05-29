@@ -48,8 +48,8 @@ public partial class SettingsPage : ContentPage
         result = await DisplayAlert("경고", "회원 탈퇴는 되돌릴 수 없습니다. 정말로 회원 탈퇴를 하시겠습니까?", "네", "아니오");
         if (!result) return;
 
-        result = await DisplayAlert("경고", "회원 탈퇴를 하시면 이용 약관에 따라 유예 기간 없이 모든 모든 데이터가 삭제됩니다. 이에 동의하십니까?", "네", "아니오");
-        if (!result) return;
+        var prompt = await DisplayPromptAsync("경고", "회원 탈퇴를 하시면 이용 약관에 따라 유예 기간 없이 모든 모든 데이터가 삭제됩니다. 이에 동의하시면 아래 \"탈퇴하겠습니다\"를 따옴표 없이 입력해주세요.", "회원 탈퇴", "취소", "탈퇴하려면 \"탈퇴하겠습니다\"를 따옴표 없이 입력");
+        if (prompt != "탈퇴하겠습니다") return;
 
         var response = await App.ExecuteRequestAsync(new Withdraw());
         if (response.IsSuccess)
