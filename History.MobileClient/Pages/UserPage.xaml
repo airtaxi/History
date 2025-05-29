@@ -54,8 +54,10 @@
             <HorizontalStackLayout HorizontalOptions="End" Spacing="16">
                 <Image
                     x:Name="FriendsImage"
+                    HeightRequest="24"
                     IsVisible="False"
-                    VerticalOptions="Center">
+                    VerticalOptions="Center"
+                    WidthRequest="24">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnFriendsImageTapped" />
                     </Image.GestureRecognizers>
@@ -66,7 +68,11 @@
                             Color="White" />
                     </Image.Source>
                 </Image>
-                <Image x:Name="BanImage" VerticalOptions="Center">
+                <Image
+                    x:Name="BanImage"
+                    HeightRequest="24"
+                    VerticalOptions="Center"
+                    WidthRequest="24">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnBanUserImageTapped" />
                     </Image.GestureRecognizers>
