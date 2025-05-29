@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.InAppBrowserPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols">
+
+    <Grid>
+
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,0,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout>
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    x:Name="TitleLabel"
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+        <WebView
+            x:Name="BrowserWebView"
+            Navigated="OnNavigated"
+            Navigating="OnNavigating"
+            VerticalOptions="Fill" />
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            HorizontalOptions="Center"
+            IsRunning="True"
+            IsVisible="True"
+            VerticalOptions="Center" />
+    </Grid>
+
+</ContentPage>

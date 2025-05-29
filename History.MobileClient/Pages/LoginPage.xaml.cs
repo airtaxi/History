@@ -22,7 +22,7 @@ public partial class LoginPage : ContentPage
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
-    private async Task AfterLogin()
+    private static async Task AfterLogin()
     {
         if (Shared.ApiHandler == null) return;
 
@@ -33,7 +33,7 @@ public partial class LoginPage : ContentPage
             Shared.UserId = me.UserId;
             Shared.MyRank = me.Rank;
             Shared.LastUsedPostDiscoveryOption = me.LastUsedPostDiscoveryOption;
-            
+
             await RefreshFriends();
             await Utils.RefreshFirebaseToken();
 
@@ -46,8 +46,8 @@ public partial class LoginPage : ContentPage
             var pushData = Preferences.Get("PushData", null);
             if (!string.IsNullOrEmpty(pushData)) await App.HandlePushNotificationAsync(pushData);
         }
-        else if (meResult.Error == ErrorType.Unauthorized) await DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
-        else await DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n코드: {meResult.ErrorMessage}", Constants.PromptOk);
+        else if (meResult.Error == ErrorType.Unauthorized) await App.Page.DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
+        else await App.Page.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n코드: {meResult.ErrorMessage}", Constants.PromptOk);
     }
 
     public static async Task RefreshFriends()
@@ -56,7 +56,7 @@ public partial class LoginPage : ContentPage
         Shared.Friends = friendsResult.Value;
     }
 
-    private async Task Login(string idToken, SocialService socialService)
+    public static async Task Login(string idToken, SocialService socialService)
     {
         var result = await App.ExecuteRequestAsync(new Login(idToken, socialService), [ErrorType.NotFound, ErrorType.Forbidden]);
         if (result.IsSuccess)
@@ -72,17 +72,11 @@ public partial class LoginPage : ContentPage
         }
         else if (result.Error == ErrorType.NotFound)
         {
-            var willing = await DisplayAlert("안내", "가입이 필요합니다. 가입하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-            if (willing)
-            {
-                result = await App.ExecuteRequestAsync(new Register(idToken, SocialService.Google));
-                if (result.IsSuccess) await DisplayAlert("안내", "가입이 완료되었습니다.", Constants.PromptOk);
-
-                await Login(idToken, socialService);
-            }
-            else await DisplayAlert("안내", "서비스 이용을 위해서는 가입이 필요합니다.", Constants.PromptOk);
+            var willing = await App.Page.DisplayAlert("안내", "가입이 필요합니다. 가입하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            if (willing) await App.PushAsync(new RegisterPage(idToken, socialService));
+            else await App.Page.DisplayAlert("안내", "서비스 이용을 위해서는 가입이 필요합니다.", Constants.PromptOk);
         }
-        else if (result.Error == ErrorType.Forbidden) await DisplayAlert("안내", "서비스 이용이 제한되었습니다.", Constants.PromptOk);
+        else if (result.Error == ErrorType.Forbidden) await App.Page.DisplayAlert("안내", "서비스 이용이 제한되었습니다.", Constants.PromptOk);
     }
 
     private async void OnGoogleLoginButtonClicked(object sender, EventArgs e)

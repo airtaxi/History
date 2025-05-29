@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.RegisterPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:d="http://schemas.microsoft.com/dotnet/2021/maui/design"
+    xmlns:local="clr-namespace:History.MobileClient.Pages"
+    xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Shell.NavBarHasShadow="False"
+    mc:Ignorable="d">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid RowSpacing="6">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid
+            Grid.Row="0"
+            Padding="8,0,0,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout Spacing="4">
+                <Image
+                    HeightRequest="44"
+                    HorizontalOptions="Start"
+                    Source="icon_nobg_white.png"
+                    WidthRequest="44" />
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="히스토리 회원가입"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+        <VerticalStackLayout Grid.Row="1" Padding="12">
+            <Label
+                FontAttributes="Bold"
+                FontSize="18"
+                LineBreakMode="TailTruncation"
+                MaxLines="1"
+                Text="새로운 보금자리, 히스토리에 오신것을 환영합니다!"
+                TextColor="{StaticResource Primary}" />
+            <Label
+                FontSize="18"
+                LineBreakMode="TailTruncation"
+                MaxLines="1"
+                Text="당신의 소중한 기록을 이제 여기서 자유롭게 시작해보세요!" />
+
+            <Label
+                Margin="0,8,0,0"
+                FontAttributes="Bold"
+                FontSize="22"
+                Text="가입 코드 입력" />
+            <Entry
+                x:Name="CodeEntry"
+                Placeholder="가입 코드를 입력해주세요"
+                ReturnType="Done"
+                TextChanged="OnCodeEntryTextChanged" />
+
+            <Label
+                Margin="0,8,0,0"
+                FontAttributes="Bold"
+                FontSize="22"
+                Text="이용 약관 및 동의" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <CheckBox
+                    x:Name="TermsCheckBox"
+                    Grid.Column="0"
+                    CheckedChanged="OnCheckBoxCheckedChanged" />
+                <Label
+                    Grid.Column="1"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    Text="[필수] 서비스 이용 약관에 동의합니다"
+                    VerticalOptions="Center" />
+                <Label
+                    Grid.Column="2"
+                    Margin="8,0,0,0"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    Text="[보기]"
+                    TextDecorations="Underline"
+                    VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnViewTermsLabelTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </Grid>
+            <Grid Margin="0,-12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <CheckBox
+                    x:Name="PrivacyAgreementCheckBox"
+                    Grid.Column="0"
+                    CheckedChanged="OnCheckBoxCheckedChanged" />
+                <Label
+                    Grid.Column="1"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    Text="[필수] 개인정보 수집·이용에 동의합니다"
+                    VerticalOptions="Center" />
+                <Label
+                    Grid.Column="2"
+                    Margin="8,0,0,0"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    Text="[보기]"
+                    TextDecorations="Underline"
+                    VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnViewPrivacyAgreementTermsLabelTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </Grid>
+            <Grid Margin="0,-12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <CheckBox
+                    x:Name="AgeCheckBox"
+                    Grid.Column="0"
+                    CheckedChanged="OnCheckBoxCheckedChanged" />
+                <Label
+                    Grid.Column="1"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    Text="[필수] 만 14세 이상 회원입니다"
+                    VerticalOptions="Center" />
+                <Label
+                    Grid.Column="2"
+                    Margin="8,0,0,0"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    TextDecorations="Underline"
+                    VerticalOptions="Center" />
+            </Grid>
+        </VerticalStackLayout>
+        <Button
+            x:Name="RegisterButton"
+            Grid.Row="2"
+            Clicked="OnRegisterButtonClicked"
+            CornerRadius="0"
+            FontAttributes="Bold"
+            FontSize="24"
+            HeightRequest="64"
+            IsEnabled="False"
+            Text="가입하기"
+            TextColor="White" />
+    </Grid>
+</ContentPage>
