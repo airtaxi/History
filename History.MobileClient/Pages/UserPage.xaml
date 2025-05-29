@@ -3,6 +3,7 @@
     x:Class="History.MobileClient.Pages.UserPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
@@ -62,6 +63,17 @@
                         <FontImageSource
                             FontFamily="MaterialSharp"
                             Glyph="{x:Static m:MaterialSharp.Group}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image x:Name="BanImage" VerticalOptions="Center">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBanUserImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="FASolid"
+                            Glyph="{x:Static fa:Solid.UserSlash}"
                             Color="White" />
                     </Image.Source>
                 </Image>
