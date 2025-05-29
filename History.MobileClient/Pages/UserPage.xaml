@@ -70,9 +70,9 @@
                 </Image>
                 <Image
                     x:Name="BanImage"
-                    HeightRequest="24"
+                    HeightRequest="20"
                     VerticalOptions="Center"
-                    WidthRequest="24">
+                    WidthRequest="20">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnBanUserImageTapped" />
                     </Image.GestureRecognizers>
