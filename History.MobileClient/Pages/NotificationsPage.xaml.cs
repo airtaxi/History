@@ -69,7 +69,6 @@ public partial class NotificationsPage : ContentPage
         await LoadMoreAsync();
     }
 
-    private bool _isInitialized = false;
     protected override void OnAppearing()
     {
         base.OnAppearing();
