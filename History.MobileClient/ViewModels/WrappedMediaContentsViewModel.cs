@@ -13,5 +13,6 @@ public partial class WrappedMediaContentsViewModel(IEnumerable<MediaContent> med
     public bool CarouselSwipeEnabled => mediaContents.Count() > 1;
     public string CarouselPositionText => $"{CarouselPosition + 1} / {mediaContents.Count()}";
 
-    public List<MediaContentViewModel> Medias => [.. mediaContents.Select(m => new MediaContentViewModel(m, allMediaContents, isTimeline))];
+    public List<MediaContentViewModel> Medias { get; } = [.. mediaContents.Select(m => new MediaContentViewModel(m, allMediaContents, isTimeline))];
+    public MediaContentViewModel FirstMedia => Medias.FirstOrDefault() ?? throw new InvalidOperationException("No media contents available.");
 }
