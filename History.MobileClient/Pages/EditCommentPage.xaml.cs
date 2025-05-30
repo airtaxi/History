@@ -127,8 +127,6 @@ public partial class EditCommentPage : ContentPage
     {
         base.OnAppearing();
         _isInForeground = true;
-
-        MainTextContent.FocusEditor();
     }
 
     protected override void OnDisappearing()
@@ -148,6 +146,8 @@ public partial class EditCommentPage : ContentPage
             IsEnabled = !isLoading;
         });
     }
+
+    private void OnLoaded(object sender, EventArgs e) => MainTextContent.FocusEditor();
 
     protected override bool OnBackButtonPressed()
     {
