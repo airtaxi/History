@@ -36,7 +36,7 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasComments))]
     [NotifyPropertyChangedFor(nameof(CommentsCount))]
     [NotifyPropertyChangedFor(nameof(Comments))]
-    [NotifyPropertyChangedFor(nameof(FirstComment))]
+    [NotifyPropertyChangedFor(nameof(LatestComment))]
     [NotifyPropertyChangedFor(nameof(HasInteractions))]
     [NotifyPropertyChangedFor(nameof(HasReactions))]
     [NotifyPropertyChangedFor(nameof(HasSharedUsers))]
@@ -115,14 +115,14 @@ public partial class PostViewModel : ObservableObject
     public Color ReactionColor => Reaction?.Color ?? (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Colors.White : Colors.Black);
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(FirstComment))]
+    [NotifyPropertyChangedFor(nameof(LatestComment))]
     [NotifyPropertyChangedFor(nameof(HasComments))]
     [NotifyPropertyChangedFor(nameof(HasNoComments))]
     [NotifyPropertyChangedFor(nameof(HasMoreComments))]
     [NotifyPropertyChangedFor(nameof(CommentsCount))]
     public partial ObservableCollection<CommentViewModel> Comments { get; private set; }
 
-    public CommentViewModel FirstComment => Comments.FirstOrDefault();
+    public CommentViewModel LatestComment => Comments.LastOrDefault();
     public bool HasComments => Post.CommentsCount > 0;
     public bool HasNoComments => Post.CommentsCount == 0;
     public int CommentsCount => Post.CommentsCount;
@@ -190,7 +190,7 @@ public partial class PostViewModel : ObservableObject
         Post.CommentsCount -= removedCount;
 
         Comments.Remove(viewModel);
-        OnPropertyChanged(nameof(FirstComment));
+        OnPropertyChanged(nameof(LatestComment));
         OnPropertyChanged(nameof(HasComments));
         OnPropertyChanged(nameof(HasNoComments));
         OnPropertyChanged(nameof(CommentsCount));

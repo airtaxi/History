@@ -374,7 +374,7 @@
                     <views:DataTemplatePresenter
                         Margin="0,12,0,0"
                         Template="{StaticResource CommentTemplate}"
-                        ViewModel="{x:Binding FirstComment,
+                        ViewModel="{x:Binding LatestComment,
                                               Mode=OneWay}" />
                 </Grid>
             </VerticalStackLayout>
