@@ -37,7 +37,7 @@ public partial class CommentViewModel : ObservableObject
         ? new VideoViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
-    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Comment.Contents, false);
+    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Comment.Contents, true );
 
     public bool IsMyComment => Comment.User.UserId == Shared.UserId;
 
