@@ -48,11 +48,6 @@ public partial class Content : ResourceDictionary
         });
     }
 
-    private void Text(object sender, LongPressCompletedEventArgs e)
-    {
-
-    }
-
     private async void OnExternalUrlContentLongPressCompleted(object sender, LongPressCompletedEventArgs e)
     {
         var view = sender as View;
