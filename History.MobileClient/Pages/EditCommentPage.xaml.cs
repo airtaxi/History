@@ -147,7 +147,11 @@ public partial class EditCommentPage : ContentPage
         });
     }
 
-    private void OnLoaded(object sender, EventArgs e) => MainTextContent.FocusEditor();
+    private async void OnLoaded(object sender, EventArgs e)
+    {
+        await Task.Delay(100);
+        MainTextContent.FocusEditor();
+    }
 
     protected override bool OnBackButtonPressed()
     {
