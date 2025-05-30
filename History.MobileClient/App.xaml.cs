@@ -69,7 +69,6 @@ public partial class App : Application
         if (NavigationSemaphore.CurrentCount == 0) return;
 
         GC.Collect(2, GCCollectionMode.Forced);
-        GC.WaitForFullGCComplete();
 
         await NavigationSemaphore.WaitAsync();
         try { await Current.Windows[0].Page.Navigation.PushAsync(page); }
@@ -92,7 +91,6 @@ public partial class App : Application
         if (NavigationSemaphore.CurrentCount == 0) return;
 
         GC.Collect(2, GCCollectionMode.Forced);
-        GC.WaitForFullGCComplete();
 
         await NavigationSemaphore.WaitAsync();
         try { await Current.Windows[0].Page.Navigation.PopAsync(); }
@@ -110,7 +108,6 @@ public partial class App : Application
         if (NavigationSemaphore.CurrentCount == 0) return;
 
         GC.Collect(2, GCCollectionMode.Forced);
-        GC.WaitForFullGCComplete();
 
         await NavigationSemaphore.WaitAsync();
         try { await Current.Windows[0].Page.Navigation.PushModalAsync(page); }
@@ -128,7 +125,6 @@ public partial class App : Application
         if (NavigationSemaphore.CurrentCount == 0) return;
 
         GC.Collect(2, GCCollectionMode.Forced);
-        GC.WaitForFullGCComplete();
 
         await NavigationSemaphore.WaitAsync();
         try { await Current.Windows[0].Page.Navigation.PopModalAsync(); }
