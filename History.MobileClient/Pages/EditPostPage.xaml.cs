@@ -41,8 +41,6 @@ public partial class EditPostPage : ContentPage
 #if IOS
         MediaCollectionView.ItemsLayout = new GridItemsLayout(3, ItemsLayoutOrientation.Vertical);
 #endif
-        var shouldRefreshOnNewPost = Configuration.GetValue<bool?>("ShouldRefreshOnNewPost") ?? true;
-        RefreshSwitch.IsToggled = shouldRefreshOnNewPost;
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
@@ -436,13 +434,16 @@ public partial class EditPostPage : ContentPage
     private void OnRefreshSwitchToggled(object sender, ToggledEventArgs e)
     {
         var @switch = sender as Switch;
-        Configuration.SetValue("ShouldRefreshOnNewPost", @switch.IsToggled);
+        Configuration.SetValue($"ShouldRefreshOnNewPost[{_isShare}]", @switch.IsToggled);
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
         _isInForeground = true;
+
+        var shouldRefreshOnNewPost = Configuration.GetValue<bool?>($"ShouldRefreshOnNewPost[{_isShare}]") ?? !_isShare;
+        RefreshSwitch.IsToggled = shouldRefreshOnNewPost;
     }
 
     protected override void OnDisappearing()
