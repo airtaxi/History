@@ -50,58 +50,6 @@ public partial class Media : ResourceDictionary
         }
     }
 
-    private static async void ResizeImage(CachedImage image)
-    {
-        if (image.BindingContext is not ImageViewModel viewModel) return;
-
-        if (viewModel.ResizeParentCarouselViewWhenSizeChanged)
-        {
-            if (ImageHandlerMap.ContainsKey(image)) return;
-
-            var imageWidth = 0;
-            var imageHeight = 0;
-
-            var handler = image.Handler as CachedImageHandler;
-            var nativeImageView = handler.PlatformView;
-            ImageHandlerMap[image] = true;
-
-#if ANDROID
-            while (nativeImageView.Drawable == null && ImageHandlerMap.ContainsKey(image)) await Task.Delay(13);
-
-            if (nativeImageView.Drawable is Android.Graphics.Drawables.BitmapDrawable bitmapDrawable)
-            {
-                var bitmap = bitmapDrawable.Bitmap;
-                imageWidth = bitmap.Width;
-                imageHeight = bitmap.Height;
-            }
-#elif IOS
-        while (nativeImageView.Image == null && ImageHandlerMap.ContainsKey(image)) await Task.Delay(13);
-
-        var uiImage = nativeImageView.Image;
-        if (uiImage == null) return;
-
-        imageWidth = (int)(uiImage.Size.Width * uiImage.CurrentScale);
-        imageHeight = (int)(uiImage.Size.Height * uiImage.CurrentScale);
-#endif
-
-            if (imageWidth <= 0 || imageHeight <= 0) return;
-
-            var carouselView = FindCarouselView(image);
-            if (carouselView == null) return;
-
-            ResizeCarouselView(carouselView, imageWidth, imageHeight);
-            ImageHandlerMap.TryRemove(image, out var _);
-        }
-    }
-
-    private void OnImageUnloaded(object sender, EventArgs e)
-    {
-        if (sender is not CachedImage image) return;
-
-        var viewModel = image.BindingContext as ImageViewModel;
-        if (viewModel.ResizeParentCarouselViewWhenSizeChanged) ImageHandlerMap.TryRemove(image, out var _);
-    }
-
     private void OnVideoContentViewLoaded(object sender, EventArgs e)
     {
         var contentView = sender as ContentView;
@@ -180,7 +128,6 @@ public partial class Media : ResourceDictionary
     private void OnImageFinished(object sender, CachedImageEvents.FinishEventArgs e)
     {
         var image = sender as CachedImage;
-        if (image.WidthRequest > 0) return;
 
         var nativeImageView = (image?.Handler as CachedImageHandler)?.PlatformView;
         int imageWidth = 0, imageHeight = 0;
@@ -204,56 +151,12 @@ public partial class Media : ResourceDictionary
         var aspectRatio = (double)imageWidth / imageHeight;
 
         var viewModel = image?.BindingContext as ImageViewModel;
-        if (viewModel.IsFullScreen)
-        {
-            if (imageWidth < image.Width)
-            {
-                image.WidthRequest = image.Width;
-                image.HeightRequest = image.Width / aspectRatio;
-            }
-        }
-        else if(viewModel.ResizeParentCarouselViewWhenSizeChanged)
+        if(viewModel.ResizeParentCarouselViewWhenSizeChanged)
         {
             var carouselView = FindCarouselView(image);
             if (carouselView == null) return;
 
             ResizeCarouselView(carouselView, imageWidth, imageHeight);
         }
-    }
-
-    private void OnFullScreenImageSizeChanged(object sender, EventArgs e) => ResizeFullScreenImage(sender);
-
-    private static void ResizeFullScreenImage(object sender)
-    {
-        var image = sender as CachedImage;
-
-        var nativeImageView = (image?.Handler as CachedImageHandler)?.PlatformView;
-        int imageWidth = 0, imageHeight = 0;
-
-#if ANDROID
-        if (nativeImageView.Drawable is Android.Graphics.Drawables.BitmapDrawable bitmapDrawable)
-        {
-            var bitmap = bitmapDrawable.Bitmap;
-            imageWidth = bitmap.Width;
-            imageHeight = bitmap.Height;
-        }
-#elif IOS
-        var uiImage = nativeImageView.Image;
-        if (uiImage == null) return;
-
-        imageWidth = (int)(uiImage.Size.Width * uiImage.CurrentScale);
-        imageHeight = (int)(uiImage.Size.Height * uiImage.CurrentScale);
-#endif
-        if (imageWidth <= 0 || imageHeight <= 0) return;
-
-        var aspectRatio = (double)imageWidth / imageHeight;
-
-        if (imageWidth < image.Width)
-        {
-            image.WidthRequest = image.Width;
-            image.HeightRequest = image.Width / aspectRatio;
-        }
-
-        return;
     }
 }
