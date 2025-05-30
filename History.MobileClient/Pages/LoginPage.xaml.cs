@@ -22,7 +22,7 @@ public partial class LoginPage : ContentPage
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
-    private static async Task AfterLogin()
+    private static async Task<Result> AfterLogin()
     {
         if (Shared.ApiHandler == null) return;
 
@@ -47,7 +47,8 @@ public partial class LoginPage : ContentPage
             if (!string.IsNullOrEmpty(pushData)) await App.HandlePushNotificationAsync(pushData);
         }
         else if (meResult.Error == ErrorType.Unauthorized) await App.Page.DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
-        else await App.Page.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n코드: {meResult.ErrorMessage}", Constants.PromptOk);
+
+        return meResult;
     }
 
     public static async Task RefreshFriends()
@@ -56,7 +57,7 @@ public partial class LoginPage : ContentPage
         Shared.Friends = friendsResult.Value;
     }
 
-    public static async Task Login(string idToken, SocialService socialService)
+    public static async Task<Result> Login(string idToken, SocialService socialService)
     {
         var result = await App.ExecuteRequestAsync(new Login(idToken, socialService), [ErrorType.NotFound, ErrorType.Forbidden]);
         if (result.IsSuccess)
@@ -68,7 +69,7 @@ public partial class LoginPage : ContentPage
             Configuration.SetValue("RefreshToken", refreshToken);
 
             Shared.ApiHandler = new(accessToken, refreshToken);
-            await AfterLogin();
+            return await AfterLogin();
         }
         else if (result.Error == ErrorType.NotFound)
         {
@@ -77,6 +78,8 @@ public partial class LoginPage : ContentPage
             else await App.Page.DisplayAlert("안내", "서비스 이용을 위해서는 가입이 필요합니다.", Constants.PromptOk);
         }
         else if (result.Error == ErrorType.Forbidden) await App.Page.DisplayAlert("안내", "서비스 이용이 제한되었습니다.", Constants.PromptOk);
+
+        return result;
     }
 
     private async void OnGoogleLoginButtonClicked(object sender, EventArgs e)
@@ -107,8 +110,10 @@ public partial class LoginPage : ContentPage
         if (accessToken != null && refreshToken != null)
         {
             Shared.ApiHandler = new(accessToken, refreshToken);
-            await AfterLogin();
+            var result = await AfterLogin();
+            if (result.IsFailure) LoginVerticalStackLayout.IsVisible = true;
         }
+        else LoginVerticalStackLayout.IsVisible = true;
     }
 
     protected override void OnDisappearing()
