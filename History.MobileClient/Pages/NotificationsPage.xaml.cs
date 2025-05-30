@@ -11,6 +11,7 @@ namespace History.MobileClient.Pages;
 public partial class NotificationsPage : ContentPage
 {
     private bool _isInForeground;
+    private bool _areThereNoMoreNotificationsToLoad;
     private readonly ObservableCollection<NotificationViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
@@ -39,6 +40,8 @@ public partial class NotificationsPage : ContentPage
 
     private async Task LoadMoreAsync()
     {
+        if (_areThereNoMoreNotificationsToLoad) return;
+
         try
         {
             await _fetchSemaphore.WaitAsync();
@@ -49,6 +52,7 @@ public partial class NotificationsPage : ContentPage
             {
                 var notifications = notificationsResult.Value;
                 var viewModels = notifications.Select(x => new NotificationViewModel(x));
+                _areThereNoMoreNotificationsToLoad = !viewModels.Any();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
             else return;
