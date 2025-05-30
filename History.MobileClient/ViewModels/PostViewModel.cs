@@ -10,6 +10,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.ContentViews;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Enums;
 using History.MobileClient.Pages;
 using System.Collections.ObjectModel;
 using UraniumUI.Icons.FontAwesome;
@@ -365,7 +366,7 @@ public partial class PostViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleReactionTapAsync()
     {
-        var page = new NavigationPage(new PostInteractionsPage(Interactions, Enums.PostInteractionType.Reaction));
+        var page = new PostInteractionsPage(Interactions.Where(x => x.Type == PostInteractionType.Reaction).Select(x => new FriendshipViewModel(x.User, x)), Enums.PostInteractionType.Reaction);
 #if IOS
         await App.PushAsync(page);
 #else
@@ -376,7 +377,7 @@ public partial class PostViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleSharedTapAsync()
     {
-        var page = new NavigationPage(new PostInteractionsPage(Interactions, Enums.PostInteractionType.Share));
+        var page = new PostInteractionsPage(Interactions.Where(x => x.Type == PostInteractionType.Share).Select(x => new FriendshipViewModel(x.User, x)), Enums.PostInteractionType.Share);
 #if IOS
         await App.PushAsync(page);
 #else
@@ -387,7 +388,7 @@ public partial class PostViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleRepostTapAsync()
     {
-        var page = new NavigationPage(new PostInteractionsPage(Interactions, Enums.PostInteractionType.Repost));
+        var page = new PostInteractionsPage(Interactions.Where(x => x.Type == PostInteractionType.Repost).Select(x => new FriendshipViewModel(x.User, x)), Enums.PostInteractionType.Repost);
 #if IOS
         await App.PushAsync(page);
 #else
