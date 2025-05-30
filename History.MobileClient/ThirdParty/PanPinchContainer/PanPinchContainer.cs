@@ -54,17 +54,6 @@ public class PanPinchContainer : ContentView
         _moreThanOneMedia = _mediaViewModel.FullScreenSwipeable;
     }
 
-    protected override void OnChildAdded(Element child)
-    {
-        base.OnChildAdded(child);
-
-        if (child is View view)
-        {
-            view.HorizontalOptions = LayoutOptions.Center;
-            view.VerticalOptions = LayoutOptions.Center;
-        }
-    }
-
     private async Task ClampTranslationAsync(double transX, double transY, bool animate = false)
     {
         Content.AnchorX = 0;
