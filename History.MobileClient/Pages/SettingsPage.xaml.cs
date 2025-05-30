@@ -22,20 +22,26 @@ public partial class SettingsPage : ContentPage
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
-	private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
+    private static void CleanupSharedVariables()
+    {
+        Configuration.SetValue("AccessToken", null);
+        Configuration.SetValue("RefreshToken", null);
+
+        Shared.ApiHandler = ApiHandler.Public;
+        Shared.UserId = default;
+        Shared.MyRank = default;
+        Shared.LastUsedPostDiscoveryOption = default;
+        Shared.Friends = default;
+    }
+
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 
     private async void OnLogoutGridTapped(object sender, TappedEventArgs e)
     {
         var result = await DisplayAlert("안내", "정말로 로그아웃을 하시겠습니까?", "네", "아니오");
         if (!result) return;
 
-        Configuration.SetValue("AccessToken", null);
-        Configuration.SetValue("RefreshToken", null);
-        Shared.ApiHandler = ApiHandler.Public;
-        Shared.UserId = default;
-        Shared.MyRank = default;
-        Shared.LastUsedPostDiscoveryOption = default;
-        Shared.Friends = default;
+        CleanupSharedVariables();
 
         App.Page = new LoginPage();
     }
@@ -54,6 +60,8 @@ public partial class SettingsPage : ContentPage
         var response = await App.ExecuteRequestAsync(new Withdraw());
         if (response.IsSuccess)
         {
+            CleanupSharedVariables();
+
             await DisplayAlert("안내", "회원 탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.", "확인");
             App.Page = new LoginPage();
         }
