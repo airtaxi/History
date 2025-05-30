@@ -7,7 +7,7 @@ using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.Pages;
-using UraniumUI.Icons.MaterialSymbols;
+using UraniumUI.Icons.FontAwesome;
 
 namespace History.MobileClient.ViewModels;
 
@@ -34,11 +34,11 @@ public partial class FriendshipViewModel(UserResponseDto user, PostInteractionVi
     {
         get
         {
-            if (User.Friendship == null) return MaterialSharp.Person_add;
-            else if (User.Friendship.Status == FriendshipStatus.Accepted) return MaterialSharp.Person_remove;
-            else if (User.Friendship.Status == FriendshipStatus.Requested) return MaterialSharp.Person_cancel;
-            else if (User.Friendship.Status == FriendshipStatus.Waiting) return MaterialSharp.Person_check;
-            else return MaterialSharp.Person_alert;
+            if (User.Friendship == null) return Solid.UserPlus;
+            else if (User.Friendship.Status == FriendshipStatus.Accepted) return Solid.UserMinus;
+            else if (User.Friendship.Status == FriendshipStatus.Requested) return Solid.UserCheck;
+            else if (User.Friendship.Status == FriendshipStatus.Waiting) return Solid.UserClock;
+            else return Solid.UserLock;
         }
     }
 
