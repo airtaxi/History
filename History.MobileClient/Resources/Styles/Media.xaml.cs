@@ -4,7 +4,6 @@ using CommunityToolkit.Maui.Views;
 using FFImageLoading.Maui;
 using FFImageLoading.Maui.Platform;
 using History.MobileClient.ViewModels;
-using Microsoft.Maui.Handlers;
 using System.Collections.Concurrent;
 
 namespace History.MobileClient.Resources.Styles;
@@ -13,7 +12,6 @@ public partial class Media : ResourceDictionary
 {
     private static readonly ConcurrentDictionary<ContentView, IViewHandler> MediaElementHandlerMap = [];
     private static readonly ConcurrentDictionary<object, object> ImageHandlerMap = [];
-    private static readonly ConcurrentDictionary<CarouselView, object> CarouselViewMap = [];
 
     public Media() => InitializeComponent();
 
@@ -94,14 +92,6 @@ public partial class Media : ResourceDictionary
             ResizeCarouselView(carouselView, imageWidth, imageHeight);
             ImageHandlerMap.TryRemove(image, out var _);
         }
-    }
-
-    private void OnImageLoaded(object sender, EventArgs e)
-    {
-        if (sender is not CachedImage image) return;
-        //if (image.BindingContext is not ImageViewModel imageViewModel) return;
-
-        ResizeImage(image);
     }
 
     private void OnImageUnloaded(object sender, EventArgs e)
@@ -187,18 +177,83 @@ public partial class Media : ResourceDictionary
         }
     }
 
-    private void OnFullScreenImageLoaded(object sender, EventArgs e)
+    private void OnImageFinished(object sender, CachedImageEvents.FinishEventArgs e)
     {
         var image = sender as CachedImage;
-        var viewModel = image.BindingContext as ImageViewModel;
+        if (image.WidthRequest > 0) return;
+
+        var nativeImageView = (image?.Handler as CachedImageHandler)?.PlatformView;
+        int imageWidth = 0, imageHeight = 0;
 
 #if ANDROID
-        // Disable HW acceleration for the image to prevent issues with large images on Android
-        //if (image.Handler is CachedImageHandler handler && handler.PlatformView is Android.Widget.ImageView androidImageView)
-        //{
-        //    androidImageView.SetLayerType(Android.Views.LayerType.Software, null);
-        //}
+        if (nativeImageView.Drawable is Android.Graphics.Drawables.BitmapDrawable bitmapDrawable)
+        {
+            var bitmap = bitmapDrawable.Bitmap;
+            imageWidth = bitmap.Width;
+            imageHeight = bitmap.Height;
+        }
+#elif IOS
+        var uiImage = nativeImageView.Image;
+        if (uiImage == null) return;
+
+        imageWidth = (int)(uiImage.Size.Width * uiImage.CurrentScale);
+        imageHeight = (int)(uiImage.Size.Height * uiImage.CurrentScale);
 #endif
-        image.Source = ImageSource.FromUri(new Uri(viewModel.Uri));
+        if (imageWidth <= 0 || imageHeight <= 0) return;
+
+        var aspectRatio = (double)imageWidth / imageHeight;
+
+        var viewModel = image?.BindingContext as ImageViewModel;
+        if (viewModel.IsFullScreen)
+        {
+            if (imageWidth < image.Width)
+            {
+                image.WidthRequest = image.Width;
+                image.HeightRequest = image.Width / aspectRatio;
+            }
+        }
+        else if(viewModel.ResizeParentCarouselViewWhenSizeChanged)
+        {
+            var carouselView = FindCarouselView(image);
+            if (carouselView == null) return;
+
+            ResizeCarouselView(carouselView, imageWidth, imageHeight);
+        }
+    }
+
+    private void OnFullScreenImageSizeChanged(object sender, EventArgs e) => ResizeFullScreenImage(sender);
+
+    private static void ResizeFullScreenImage(object sender)
+    {
+        var image = sender as CachedImage;
+
+        var nativeImageView = (image?.Handler as CachedImageHandler)?.PlatformView;
+        int imageWidth = 0, imageHeight = 0;
+
+#if ANDROID
+        if (nativeImageView.Drawable is Android.Graphics.Drawables.BitmapDrawable bitmapDrawable)
+        {
+            var bitmap = bitmapDrawable.Bitmap;
+            imageWidth = bitmap.Width;
+            imageHeight = bitmap.Height;
+        }
+#elif IOS
+        var uiImage = nativeImageView.Image;
+        if (uiImage == null) return;
+
+        imageWidth = (int)(uiImage.Size.Width * uiImage.CurrentScale);
+        imageHeight = (int)(uiImage.Size.Height * uiImage.CurrentScale);
+#endif
+        if (imageWidth <= 0 || imageHeight <= 0) return;
+
+        var aspectRatio = (double)imageWidth / imageHeight;
+
+        if (imageWidth < image.Width)
+        {
+            image.WidthRequest = image.Width;
+            image.HeightRequest = image.Width / aspectRatio;
+        }
+
+        return;
     }
 }

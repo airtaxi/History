@@ -13,11 +13,10 @@
         <ffimageloading:CachedImage
             Aspect="{x:Binding Aspect}"
             DownsampleToViewSize="True"
+            Finish="OnImageFinished"
             HorizontalOptions="{x:Binding HorizontalContentOptions}"
-            Loaded="OnImageLoaded"
             Source="{x:Binding Uri,
                                Mode=OneTime}"
-            Unloaded="OnImageUnloaded"
             VerticalOptions="{x:Binding VerticalContentOptions}" />
     </DataTemplate>
 
@@ -25,8 +24,11 @@
         <ppc:PanPinchContainer BindingContext="{x:Binding Aspect}">
             <ffimageloading:CachedImage
                 Aspect="{x:Binding Aspect}"
+                Finish="OnImageFinished"
                 HorizontalOptions="{x:Binding HorizontalContentOptions}"
-                Source="{x:Binding Uri}"
+                SizeChanged="OnFullScreenImageSizeChanged"
+                Source="{x:Binding Uri,
+                                   Mode=OneTime}"
                 VerticalOptions="{x:Binding VerticalContentOptions}" />
         </ppc:PanPinchContainer>
     </DataTemplate>
