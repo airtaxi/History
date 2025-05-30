@@ -251,7 +251,6 @@ public partial class PostPage : ContentPage
         await _viewModel.HandleRepostAsync();
 
         UpdateRepostStatus(_viewModel.Post);
-        TimelinePage.ShouldRefresh = true;
     }
 
     private async void OnRefreshing(object sender, EventArgs e)
