@@ -9,6 +9,7 @@ using Android.Util;
 using Android.Views;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
+using AndroidX.Core.View;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.Api.Friendship;
@@ -16,6 +17,7 @@ using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.MobileClient;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.Pages;
@@ -29,8 +31,9 @@ namespace History.MobileClient;
 public class MainActivity : MauiAppCompatActivity
 {
     private const string TAG = "History";
-    private Android.Views.View _rootView;
+    private Android.Views.View _contentView;
     private bool _isKeyboardVisible = false;
+    private int _lastKeyboardHeight = 0;
 
     public static event EventHandler<string> LoginCompleted;
 
@@ -80,9 +83,74 @@ public class MainActivity : MauiAppCompatActivity
 
         NativeMedia.Platform.Init(this, savedInstanceState);
 
-        _rootView = FindViewById(Android.Resource.Id.Content);
+        Window.SetSoftInputMode(SoftInput.AdjustResize | SoftInput.StateHidden);
 
-        if (_rootView != null) _rootView.ViewTreeObserver.GlobalLayout += OnGlobalLayout;
+        SetupKeyboardDetection();
+    }
+
+    private void SetupKeyboardDetection()
+    {
+        _contentView = FindViewById(Android.Resource.Id.Content);
+
+        if (_contentView != null)
+        {
+            ViewCompat.SetOnApplyWindowInsetsListener(_contentView, new WindowInsetsListener(this));
+
+            WindowCompat.SetDecorFitsSystemWindows(Window, false);
+
+            if (Build.VERSION.SdkInt >= BuildVersionCodes.R)
+            {
+                var controller = Window.InsetsController;
+                if (controller != null)
+                {
+                    controller.SystemBarsBehavior = WindowInsetsControllerCompat.BehaviorShowTransientBarsBySwipe;
+                }
+            }
+        }
+    }
+
+    public void OnKeyboardInsetsChanged(int keyboardHeight)
+    {
+        bool isKeyboardVisible = keyboardHeight > 0;
+
+        if (isKeyboardVisible != _isKeyboardVisible || keyboardHeight != _lastKeyboardHeight)
+        {
+            _isKeyboardVisible = isKeyboardVisible;
+            _lastKeyboardHeight = keyboardHeight;
+
+            var density = Resources.DisplayMetrics.Density;
+            double keyboardHeightInDp = keyboardHeight / density;
+
+            WeakReferenceMessenger.Default.Send(new KeyboardSizeMessage(keyboardHeightInDp));
+
+            System.Diagnostics.Debug.WriteLine($"Keyboard: {(isKeyboardVisible ? "Shown" : "Hidden")}, Height: {keyboardHeightInDp}dp");
+        }
+    }
+
+    public override void OnConfigurationChanged(Android.Content.Res.Configuration newConfig)
+    {
+        base.OnConfigurationChanged(newConfig);
+
+        Task.Delay(200).ContinueWith(_ =>
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                _isKeyboardVisible = false;
+                _lastKeyboardHeight = 0;
+                WeakReferenceMessenger.Default.Send(new KeyboardSizeMessage(0));
+            });
+        });
+    }
+
+    protected override void OnPause()
+    {
+        base.OnPause();
+        if (_isKeyboardVisible)
+        {
+            _isKeyboardVisible = false;
+            _lastKeyboardHeight = 0;
+            WeakReferenceMessenger.Default.Send(new KeyboardSizeMessage(0));
+        }
     }
 
     private async void UpdateNotificationContext(IDictionary<string, string> data)
@@ -252,33 +320,24 @@ public class MainActivity : MauiAppCompatActivity
             }
         }
     }
+}
 
-    private void OnGlobalLayout(object sender, EventArgs e)
+public class WindowInsetsListener : Java.Lang.Object, IOnApplyWindowInsetsListener
+{
+    private readonly MainActivity _activity;
+
+    public WindowInsetsListener(MainActivity activity)
     {
-        if (_rootView == null) return;
-
-        var rect = new Android.Graphics.Rect();
-        _rootView.GetWindowVisibleDisplayFrame(rect);
-
-        int screenHeight = _rootView.Context.Resources.DisplayMetrics.HeightPixels;
-        int keypadHeight = screenHeight - rect.Bottom;
-
-        bool isKeyboardVisible = keypadHeight > 100;
-
-        if (isKeyboardVisible != _isKeyboardVisible)
-        {
-            _isKeyboardVisible = isKeyboardVisible;
-
-            var density = Resources.DisplayMetrics.Density;
-            double keyboardHeightInDp = keypadHeight / density;
-
-            WeakReferenceMessenger.Default.Send(new KeyboardSizeMessage(isKeyboardVisible ? keyboardHeightInDp : 0));
-        }
+        _activity = activity;
     }
 
-    protected override void OnDestroy()
+    public WindowInsetsCompat OnApplyWindowInsets(Android.Views.View v, WindowInsetsCompat insets)
     {
-        if (_rootView != null) _rootView.ViewTreeObserver.GlobalLayout -= OnGlobalLayout;
-        base.OnDestroy();
+        var imeInsets = insets.GetInsets(WindowInsetsCompat.Type.Ime());
+        int keyboardHeight = imeInsets.Bottom;
+
+        _activity.OnKeyboardInsetsChanged(keyboardHeight);
+
+        return insets;
     }
 }
