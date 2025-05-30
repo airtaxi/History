@@ -13,8 +13,10 @@
             VerticalOptions="Center"
             WidthRequest="256" />
         <VerticalStackLayout
+            x:Name="LoginVerticalStackLayout"
             Padding="20"
             HorizontalOptions="Center"
+            IsVisible="False"
             Spacing="12"
             VerticalOptions="End">
             <Label
