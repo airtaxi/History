@@ -41,6 +41,8 @@ public partial class EditPostPage : ContentPage
 #if IOS
         MediaCollectionView.ItemsLayout = new GridItemsLayout(3, ItemsLayoutOrientation.Vertical);
 #endif
+        var shouldRefreshOnNewPost = Configuration.GetValue<bool?>("ShouldRefreshOnNewPost") ?? true;
+        RefreshSwitch.IsToggled = shouldRefreshOnNewPost;
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
@@ -359,8 +361,8 @@ public partial class EditPostPage : ContentPage
                 else if (result.IsSuccess)
                 {
                     if (!_isShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
-                    TimelinePage.ShouldRefresh = true;
-                    UserPage.ShouldRefresh = true;
+                    TimelinePage.ShouldRefresh = RefreshSwitch.IsToggled;
+                    UserPage.ShouldRefresh = RefreshSwitch.IsToggled;
                     await App.PopAsync();
                 }
             }
@@ -458,5 +460,11 @@ public partial class EditPostPage : ContentPage
     {
         _ = App.PopAsync();
         return true;
+    }
+
+    private void OnRefreshSwitchToggled(object sender, ToggledEventArgs e)
+    {
+        var @switch = sender as Switch;
+        Configuration.SetValue("ShouldRefreshOnNewPost", @switch.IsToggled);
     }
 }

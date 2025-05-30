@@ -183,7 +183,10 @@
             Grid.Row="2"
             Padding="12"
             HeightRequest="60">
-            <HorizontalStackLayout HorizontalOptions="Start" Spacing="12">
+            <HorizontalStackLayout
+                HorizontalOptions="Start"
+                Spacing="12"
+                VerticalOptions="Center">
                 <Image
                     HeightRequest="40"
                     VerticalOptions="Center"
@@ -231,6 +234,18 @@
                     </Image.Source>
                 </Image>
             </HorizontalStackLayout>
+
+            <HorizontalStackLayout
+                HorizontalOptions="End"
+                Spacing="4"
+                VerticalOptions="Center">
+                <Label
+                    FontAttributes="Bold"
+                    Text="타임라인 새로고침"
+                    VerticalOptions="Center" />
+                <Switch x:Name="RefreshSwitch" Toggled="OnRefreshSwitchToggled" OnColor="{StaticResource Primary}" />
+            </HorizontalStackLayout>
+
             <Rectangle
                 Margin="-12"
                 Fill="#808080"
