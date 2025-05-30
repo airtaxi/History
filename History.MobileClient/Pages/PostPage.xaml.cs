@@ -67,7 +67,7 @@ public partial class PostPage : ContentPage
         else RepostFontImageSource.Glyph = MaterialSharp.Shift_lock;
     }
 
-    private async Task CommentsScrollToEnd(ScrollView scrollView)
+    private static async Task CommentsScrollToEnd(ScrollView scrollView)
     {
         var scrollY = scrollView.ContentSize.Height - scrollView.Height;
         scrollY = Math.Clamp(scrollY, 0, scrollView.ContentSize.Height - scrollView.Height);
