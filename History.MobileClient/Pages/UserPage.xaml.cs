@@ -128,11 +128,11 @@ public partial class UserPage : ContentPage
     {
         if (_userId == Shared.UserId)
         {
-            var page = new FriendsPage();
+            var page = new NavigationPage(new FriendsPage());
 #if IOS
-            await App.PushModalAsync(page);
+            await App.PushAsync(page);
 #else
-            await App.PushModalAsync(page);
+            await App.PushAsync(page);
 #endif
         }
         else

@@ -363,33 +363,33 @@ public partial class PostViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleReactionTapAsync()
     {
-        var page = new PostInteractionsPage(Interactions, Enums.PostInteractionType.Reaction);
+        var page = new NavigationPage(new PostInteractionsPage(Interactions, Enums.PostInteractionType.Reaction));
 #if IOS
-        await App.PushModalAsync(page);
+        await App.PushAsync(page);
 #else
-        await App.PushModalAsync(page);
+        await App.PushAsync(page);
 #endif
     }
 
     [RelayCommand]
     public async Task HandleSharedTapAsync()
     {
-        var page = new PostInteractionsPage(Interactions, Enums.PostInteractionType.Share);
+        var page = new NavigationPage(new PostInteractionsPage(Interactions, Enums.PostInteractionType.Share));
 #if IOS
-        await App.PushModalAsync(page);
+        await App.PushAsync(page);
 #else
-        await App.PushModalAsync(page);
+        await App.PushAsync(page);
 #endif
     }
 
     [RelayCommand]
     public async Task HandleRepostTapAsync()
     {
-        var page = new PostInteractionsPage(Interactions, Enums.PostInteractionType.Repost);
+        var page = new NavigationPage(new PostInteractionsPage(Interactions, Enums.PostInteractionType.Repost));
 #if IOS
-        await App.PushModalAsync(page);
+        await App.PushAsync(page);
 #else
-        await App.PushModalAsync(page);
+        await App.PushAsync(page);
 #endif
     }
 
