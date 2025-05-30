@@ -81,6 +81,8 @@ public partial class App : Application
             {
                 NavigationSemaphore.Release();
             }
+            GC.Collect();
+            GC.Collect(3);
         }
     }
 
@@ -96,6 +98,8 @@ public partial class App : Application
             {
                 NavigationSemaphore.Release();
             }
+            GC.Collect();
+            GC.Collect(3);
         }
     }
 
@@ -111,6 +115,8 @@ public partial class App : Application
             {
                 NavigationSemaphore.Release();
             }
+            GC.Collect();
+            GC.Collect(3);
         }
     }
 
@@ -126,6 +132,8 @@ public partial class App : Application
             {
                 NavigationSemaphore.Release();
             }
+            GC.Collect();
+            GC.Collect(3);
         }
     }
 
