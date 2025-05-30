@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Maui.Alerts;
+﻿using Android.Media;
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -13,6 +14,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
 {
     public MediaContent MediaContent { get; }
     public bool IsTimeline { get; }
+    public bool IsParentPost { get; }
     public bool IsVideo { get; }
     public string Description { get; }
     public bool HasDescription { get; }
@@ -26,10 +28,11 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
     private readonly List<IMediaViewModel> _fullScreenMedias;
     private readonly IMediaViewModel _currentMedia;
 
-    public MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, bool isTimeline)
+    public MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, bool isTimeline, bool isParentPost)
     {
         MediaContent = mediaContent;
         IsTimeline = isTimeline;
+        IsParentPost = isParentPost;
         IsVideo = mediaContent.IsVideo;
         Description = mediaContent.Description ?? string.Empty;
         HasDescription = !string.IsNullOrEmpty(Description);
@@ -54,29 +57,36 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
     }
 
     [RelayCommand]
-#if ANDROID
-    public void HandleOverlayTap()
-#elif IOS
     public async Task HandleOverlayTap()
-#endif
     {
         if (!MediaContent.IsVideo) throw new InvalidOperationException("MediaContent is not a video.");
 
 #if ANDROID
-        IsOverlayVisible = false;
-        Media = new VideoViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
+        // TODO: Check for if this bug is resolved later
+        if (IsParentPost)
         {
-            Aspect = Aspect.AspectFill,
-            HorizontalContentOptions = LayoutOptions.Fill,
-            VerticalContentOptions = LayoutOptions.Fill
-        };
+            var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel(_fullScreenMedias, _currentMedia));
+            await App.PushAsync(viewerPage);
+
+            await Toast.Make("현재 공유글의 영상은 바로 재생할 수 없습니다. 전체화면 보기로 전환합니다.").Show();
+        }
+        else
+        {
+            IsOverlayVisible = false;
+            Media = new VideoViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
+            {
+                Aspect = Aspect.AspectFill,
+                HorizontalContentOptions = LayoutOptions.Fill,
+                VerticalContentOptions = LayoutOptions.Fill
+            };
+        }
 #elif IOS
         if (IsTimeline)
         {
             var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel(_fullScreenMedias, _currentMedia));
             await App.PushAsync(viewerPage);
 
-            await Toast.Make("iOS에서는 현재 타임라인에서 영상 재생이 지원되지 않습니다.").Show();
+            await Toast.Make("iOS에서는 현재 타임라인에서 영상 재생이 지원되지 않습니다. 전체화면 보기로 전환합니다.").Show();
         }
         else
         {

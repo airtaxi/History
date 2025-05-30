@@ -84,7 +84,7 @@ public partial class PostViewModel : ObservableObject
     public bool HasInteractions => Post.PostReactions.Count > 0 || Post.SharedAndRepostedUsers.Count > 0;
 
     public bool IsRepost => Post.IsRepost;
-    public PostViewModel ParentPost => Post.ParentPost != null ? new(Post.ParentPost, true) : null;
+    public PostViewModel ParentPost => Post.ParentPost != null ? new(Post.ParentPost, true, true) : null;
     public bool IsShare => Post.ParentPost != null && !IsRepost;
 
     public bool HasRepostedUsers => Post.SharedAndRepostedUsers.Any(x => x.IsRepost);
@@ -108,6 +108,7 @@ public partial class PostViewModel : ObservableObject
         }
     }
     public bool WrapMedias { get; }
+    public bool IsParentPost { get; }
 
     public PostInteractionViewModel Reaction => Interactions.FirstOrDefault(r => r.User.UserId == Shared.UserId && r.ReactionType != null);
     public string ReactionGlyph => Reaction?.Glyph ?? Solid.Heart;
@@ -135,11 +136,12 @@ public partial class PostViewModel : ObservableObject
 
     public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
 
-    public PostViewModel(PostResponseDto post, bool wrapMedias)
+    public PostViewModel(PostResponseDto post, bool wrapMedias, bool isParentPost = false)
     {
         try
         {
             WrapMedias = wrapMedias;
+            IsParentPost = isParentPost;
 
             if (post == null)
             {

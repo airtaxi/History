@@ -25,7 +25,7 @@ public static class Utils
         return $"https://api.history.cenox.io/api/media/{mediaId}";
     }
 
-    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, bool isTimeline)
+    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, bool isTimeline, bool isParentPost = false)
     {
         var contentViewModels = new List<IContentViewModel>();
 
@@ -35,7 +35,7 @@ public static class Utils
         {
             if (mediaContents.Count > 0)
             {
-                contentViewModels.Add(new WrappedMediaContentsViewModel(mediaContents, allMediaContents, isTimeline));
+                contentViewModels.Add(new WrappedMediaContentsViewModel(mediaContents, allMediaContents, isTimeline, isParentPost));
                 mediaContents = [];
             }
         }
