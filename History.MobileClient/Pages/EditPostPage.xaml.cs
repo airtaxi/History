@@ -45,6 +45,7 @@ public partial class EditPostPage : ContentPage
         RefreshSwitch.IsToggled = shouldRefreshOnNewPost;
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
     }
 
     public EditPostPage(PostResponseDto post, bool isShare) : this()
@@ -432,6 +433,12 @@ public partial class EditPostPage : ContentPage
     private async void OnDeleteExternalUrlContentBorderTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
     private async void OnInsertOrDeleteExternalUrlTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
 
+    private void OnRefreshSwitchToggled(object sender, ToggledEventArgs e)
+    {
+        var @switch = sender as Switch;
+        Configuration.SetValue("ShouldRefreshOnNewPost", @switch.IsToggled);
+    }
+
     protected override void OnAppearing()
     {
         base.OnAppearing();
@@ -462,9 +469,12 @@ public partial class EditPostPage : ContentPage
         return true;
     }
 
-    private void OnRefreshSwitchToggled(object sender, ToggledEventArgs e)
+    private void OnKeyboardSizeMessageReceived(object recipient, KeyboardSizeMessage message)
     {
-        var @switch = sender as Switch;
-        Configuration.SetValue("ShouldRefreshOnNewPost", @switch.IsToggled);
+#if ANDROID
+        MainGrid.Margin = new(0, 0, 0, message.Value);
+#else
+        MainGrid.Margin = new(0, 0, 0, message.Value);
+#endif
     }
 }
