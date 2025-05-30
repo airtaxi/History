@@ -24,7 +24,7 @@ public partial class LoginPage : ContentPage
 
     private static async Task<Result> AfterLogin()
     {
-        if (Shared.ApiHandler == null) return;
+        if (Shared.ApiHandler == null) return (ErrorType.Unauthorized, "API 핸들러가 초기화되지 않았습니다.");
 
         var meResult = await App.ExecuteRequestAsync(new GetMyProfile(), [ErrorType.Unauthorized]);
         if (meResult.IsSuccess)
