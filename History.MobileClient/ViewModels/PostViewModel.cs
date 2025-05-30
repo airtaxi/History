@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
+using History.Commons.Api.Comment;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
@@ -117,6 +118,7 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(FirstComment))]
     [NotifyPropertyChangedFor(nameof(HasComments))]
     [NotifyPropertyChangedFor(nameof(HasNoComments))]
+    [NotifyPropertyChangedFor(nameof(HasMoreComments))]
     [NotifyPropertyChangedFor(nameof(CommentsCount))]
     public partial ObservableCollection<CommentViewModel> Comments { get; private set; }
 
@@ -124,6 +126,9 @@ public partial class PostViewModel : ObservableObject
     public bool HasComments => Post.CommentsCount > 0;
     public bool HasNoComments => Post.CommentsCount == 0;
     public int CommentsCount => Post.CommentsCount;
+
+    [ObservableProperty]
+    public partial bool HasMoreComments { get; private set; }
 
     public DateTime CreatedAt => Post.CreatedAt;
     public DateTime? ModifiedAt => Post.ModifiedAt;
@@ -145,7 +150,11 @@ public partial class PostViewModel : ObservableObject
             User = post?.User;
             if (User == null) throw new Exception("[PostViewModel] USER IS NULL");
             if (Post.Comments == null) throw new Exception("[PostViewModel] COMMENT IS NULL");
-            else Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId))];
+            else
+            {
+                Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId)).OrderBy(x => x.CreatedAt)];
+                HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
+            }
 
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, OnUserChangedMessageReceived);
@@ -162,7 +171,8 @@ public partial class PostViewModel : ObservableObject
         Post = message.Value;
         User = message.Value.User;
 
-        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId))];
+        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId)).OrderBy(x => x.CreatedAt)];
+        HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
     }
 
     private void OnUserChangedMessageReceived(object recipient, ValueChangedMessage<UserResponseDto> message)
@@ -381,5 +391,21 @@ public partial class PostViewModel : ObservableObject
 #else
         await App.PushModalAsync(page);
 #endif
+    }
+
+    [RelayCommand]
+    private async Task HandleLoadMoreComments()
+    {
+        var oldestViewModel = Comments.FirstOrDefault();
+        if (oldestViewModel == null) return;
+
+        var commentsResult = await App.ExecuteRequestAsync(new GetCommentsByPostId(Post.Id, oldestViewModel.Comment.Id, 20));
+        if (commentsResult.IsSuccess)
+        {
+            var comments = commentsResult.Value;
+            var commentViewModels = comments.Select(x => new CommentViewModel(x, User.UserId == Shared.UserId));
+            foreach (var commentViewModel in commentViewModels) Comments.Insert(0, commentViewModel);
+            HasMoreComments = Post.CommentsCount > Comments.Count;
+        }
     }
 }

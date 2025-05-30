@@ -60,35 +60,6 @@ public partial class PostPage : ContentPage
         return result;
     }
 
-    private async Task LoadMoreComments()
-    {
-        var lastViewModel = _viewModel.Comments.LastOrDefault();
-        if (lastViewModel == null) return;
-
-        _commentUpdating = true;
-        IsEnabled = false;
-        MainActivityIndicator.IsRunning = true;
-        try
-        {
-            var commentsResult = await App.ExecuteRequestAsync(new GetCommentsByPostId(_viewModel.Post.Id, lastViewModel.Comment.Id, 20));
-            if (commentsResult.IsSuccess)
-            {
-                var comments = commentsResult.Value;
-                var commentViewModels = comments.Select(x => new CommentViewModel(x, _viewModel.User.UserId == Shared.UserId));
-                foreach (var commentViewModel in commentViewModels) _viewModel.Comments.Add(commentViewModel);
-            }
-            else return;
-        }
-        finally
-        {
-            IsEnabled = true;
-            MainActivityIndicator.IsRunning = false;
-            _commentUpdating = false;
-        }
-
-        return;
-    }
-
     private void UpdateRepostStatus(PostResponseDto post)
     {
         var isReposted = post.SharedAndRepostedUsers.Any(x => x.User.UserId == Shared.UserId && x.IsRepost);
@@ -217,27 +188,13 @@ public partial class PostPage : ContentPage
                 await _viewModel.RefreshAsync();
                 if (!_viewModel.IsWideMode)
                 {
-                    await Task.Delay(350);
-                    var scrollY = PhoneScrollView.ContentSize.Height - PhoneContentDataTemplatePresenter.Height - PhoneCommentDataTemplatePresenter.Height + 150;
-                    scrollY = Math.Clamp(scrollY, 0, PhoneScrollView.ContentSize.Height - PhoneScrollView.Height);
-                    await PhoneScrollView.ScrollToAsync(0, scrollY, false);
+                    await Task.Delay(750);
+                    await PhoneScrollView.ScrollToAsync(0, PhoneScrollView.ContentSize.Height - PhoneScrollView.Height, false);
                 }
-                else await TabletCommentScrollView.ScrollToAsync(0, 0, false);
+                else await TabletCommentScrollView.ScrollToAsync(0, TabletCommentScrollView.ContentSize.Height - TabletCommentScrollView.Height, false);
             }
         }
         finally { MainActivityIndicator.IsRunning = false; }
-    }
-
-    private bool _commentUpdating = false;
-    private async void OnCommentScrollViewScrolled(object sender, ScrolledEventArgs e)
-    {
-        if (_commentUpdating) return;
-
-        var scrollView = sender as ScrollView;
-        // If scroll reached the bottom, load more comments
-        if (_viewModel.Comments.Count != _viewModel.CommentsCount
-            && scrollView.ScrollY >= scrollView.ContentSize.Height - scrollView.Height - 10)
-            await LoadMoreComments();
     }
 
     private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await _viewModel.DisplayActionSheetAsync(true);

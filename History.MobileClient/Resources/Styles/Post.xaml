@@ -14,14 +14,28 @@
                 Padding="16"
                 IsVisible="{x:Binding HasComments}"
                 Spacing="16">
-                <Label FontSize="16">
-                    <Label.FormattedText>
-                        <FormattedString>
-                            <Span Text="댓글 " />
-                            <Span FontAttributes="Bold" Text="{x:Binding CommentsCount}" />
-                        </FormattedString>
-                    </Label.FormattedText>
-                </Label>
+                <Grid>
+                    <Label FontSize="16">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="댓글 " />
+                                <Span FontAttributes="Bold" Text="{x:Binding CommentsCount}" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="12"
+                        HorizontalOptions="End"
+                        IsVisible="{x:Binding HasMoreComments}"
+                        Text="이전 댓글"
+                        TextColor="#808080"
+                        VerticalOptions="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{x:Binding HandleLoadMoreCommentsCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
                 <VerticalStackLayout BindableLayout.ItemTemplate="{StaticResource CommentTemplate}" BindableLayout.ItemsSource="{x:Binding Comments}" />
             </VerticalStackLayout>
             <Label
