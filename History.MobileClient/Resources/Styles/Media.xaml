@@ -24,9 +24,7 @@
         <ppc:PanPinchContainer BindingContext="{x:Binding Aspect}">
             <ffimageloading:CachedImage
                 Aspect="{x:Binding Aspect}"
-                Finish="OnImageFinished"
                 HorizontalOptions="{x:Binding HorizontalContentOptions}"
-                SizeChanged="OnFullScreenImageSizeChanged"
                 Source="{x:Binding Uri,
                                    Mode=OneTime}"
                 VerticalOptions="{x:Binding VerticalContentOptions}" />
