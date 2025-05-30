@@ -126,9 +126,6 @@
 		<MauiXaml Update="Pages\FriendListPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="Pages\FriendsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
 		<MauiXaml Update="Pages\FullScreenMediaViewerPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
@@ -150,13 +147,10 @@
 		<MauiXaml Update="Pages\PendingFriendRequestsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="Pages\PostInteractionsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
 		<MauiXaml Update="Pages\PostPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="Pages\PostInteractionUsersPage.xaml">
+		<MauiXaml Update="Pages\PostInteractionsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\RegisterPage.xaml">
@@ -229,5 +223,11 @@
 		<PackageReference Include="UraniumUI.Material" Version="2.12.1" />
 		<PackageReference Include="Xamarin.Build.Download" Version="0.11.4" />
 		<PackageReference Include="Xamarin.MediaGallery" Version="3.0.0-preview" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Pages\PostInteractionsPage.xaml.cs">
+	    <DependentUpon>PostInteractionsPage.xaml</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 </Project>
