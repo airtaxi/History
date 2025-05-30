@@ -96,16 +96,16 @@
             </HorizontalStackLayout>
             <Image
                 Grid.Column="2"
-                HeightRequest="32"
+                HeightRequest="24"
                 IsVisible="{x:Binding IsFriendshipImageVisible}"
                 VerticalOptions="Center"
-                WidthRequest="32">
+                WidthRequest="24">
                 <Image.GestureRecognizers>
                     <TapGestureRecognizer Command="{x:Binding HandleFriendshipActionCommand}" />
                 </Image.GestureRecognizers>
                 <Image.Source>
                     <FontImageSource
-                        FontFamily="MaterialSharp"
+                        FontFamily="FASolid"
                         Glyph="{x:Binding FriendshipGlyph}"
                         Color="#808080" />
                 </Image.Source>
