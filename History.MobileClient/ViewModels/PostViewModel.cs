@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using History.Commons;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
@@ -252,10 +253,11 @@ public partial class PostViewModel : ObservableObject
         else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
 
-    public async Task RefreshAsync()
+    public async Task<Result> RefreshAsync()
     {
         var result = await App.ExecuteRequestAsync(new GetPost(Post.Id));
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
+        return result;
     }
 
     public async Task DeleteAsync(bool popModal)
@@ -275,7 +277,8 @@ public partial class PostViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleTapAsync()
     {
-        await RefreshAsync();
+        var result = await RefreshAsync();
+        if (result.IsFailure) return;
 
         var newViewModel = new PostViewModel(Post, false);
         var postPage = new PostPage(newViewModel);
