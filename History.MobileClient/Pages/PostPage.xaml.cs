@@ -67,6 +67,13 @@ public partial class PostPage : ContentPage
         else RepostFontImageSource.Glyph = MaterialSharp.Shift_lock;
     }
 
+    private async Task CommentsScrollToEnd(ScrollView scrollView)
+    {
+        var scrollY = scrollView.ContentSize.Height - scrollView.Height;
+        scrollY = Math.Clamp(scrollY, 0, scrollView.ContentSize.Height - scrollView.Height);
+        await scrollView.ScrollToAsync(0, scrollY, false);
+    }
+
     private void OnCommentTappedMessageReceived(object recipient, CommentTappedMessage message)
     {
         var user = message.Value;
@@ -189,9 +196,9 @@ public partial class PostPage : ContentPage
                 if (!_viewModel.IsWideMode)
                 {
                     await Task.Delay(750);
-                    await PhoneScrollView.ScrollToAsync(0, PhoneScrollView.ContentSize.Height - PhoneScrollView.Height, false);
+                    await CommentsScrollToEnd(PhoneScrollView);
                 }
-                else await TabletCommentScrollView.ScrollToAsync(0, TabletCommentScrollView.ContentSize.Height - TabletCommentScrollView.Height, false);
+                else await CommentsScrollToEnd(TabletCommentScrollView);
             }
         }
         finally { MainActivityIndicator.IsRunning = false; }
