@@ -13,7 +13,7 @@
             </Tab.Icon>
             <ShellContent ContentTemplate="{DataTemplate pages:TimelinePage}" />
         </Tab>
-        <!--<Tab Title="친구">
+        <Tab Title="친구">
             <Tab.Icon>
                 <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Group}" />
             </Tab.Icon>
@@ -21,7 +21,9 @@
             <ShellContent Title="친구 추가" ContentTemplate="{DataTemplate pages:AddFriendsPage}" />
             <ShellContent Title="보낸 신청" ContentTemplate="{DataTemplate pages:WaitingFriendRequestsPage}" />
             <ShellContent Title="받은 신청" ContentTemplate="{DataTemplate pages:PendingFriendRequestsPage}" />
-        </Tab>-->
+            <ShellContent Title="무시한 친구" ContentTemplate="{DataTemplate pages:IgnoredFriendsPage}" />
+            <ShellContent Title="차단한 친구" ContentTemplate="{DataTemplate pages:BlockedFriendsPage}" />
+        </Tab>
         <Tab Title="알림">
             <Tab.Icon>
                 <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Notifications}" />
