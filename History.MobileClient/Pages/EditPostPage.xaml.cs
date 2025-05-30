@@ -444,7 +444,6 @@ public partial class EditPostPage : ContentPage
 
         var shouldRefreshOnNewPost = Configuration.GetValue<bool?>($"ShouldRefreshOnNewPost[{_isShare}]") ?? !_isShare;
         RefreshSwitch.IsToggled = shouldRefreshOnNewPost;
-        MainTextContent.FocusEditor();
     }
 
     protected override void OnDisappearing()
@@ -464,6 +463,8 @@ public partial class EditPostPage : ContentPage
             IsEnabled = !isLoading;
         });
     }
+
+    private void OnLoaded(object sender, EventArgs e) => MainTextContent.FocusEditor();
 
     protected override bool OnBackButtonPressed()
     {

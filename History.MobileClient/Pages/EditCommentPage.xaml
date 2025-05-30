@@ -6,6 +6,7 @@
     xmlns:editPost="clr-namespace:History.MobileClient.ContentViews.EditPost"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Loaded="OnLoaded"
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False">
     <ContentPage.Behaviors>
