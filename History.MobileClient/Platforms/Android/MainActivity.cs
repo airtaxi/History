@@ -29,6 +29,8 @@ namespace History.MobileClient;
 public class MainActivity : MauiAppCompatActivity
 {
     private const string TAG = "History";
+    private Android.Views.View _rootView;
+    private bool _isKeyboardVisible = false;
 
     public static event EventHandler<string> LoginCompleted;
 
@@ -77,6 +79,10 @@ public class MainActivity : MauiAppCompatActivity
         };
 
         NativeMedia.Platform.Init(this, savedInstanceState);
+
+        _rootView = FindViewById(Android.Resource.Id.Content);
+
+        if (_rootView != null) _rootView.ViewTreeObserver.GlobalLayout += OnGlobalLayout;
     }
 
     private async void UpdateNotificationContext(IDictionary<string, string> data)
@@ -245,5 +251,34 @@ public class MainActivity : MauiAppCompatActivity
                 else await App.HandlePushNotificationAsync(pushData);
             }
         }
+    }
+
+    private void OnGlobalLayout(object sender, EventArgs e)
+    {
+        if (_rootView == null) return;
+
+        var rect = new Android.Graphics.Rect();
+        _rootView.GetWindowVisibleDisplayFrame(rect);
+
+        int screenHeight = _rootView.Context.Resources.DisplayMetrics.HeightPixels;
+        int keypadHeight = screenHeight - rect.Bottom;
+
+        bool isKeyboardVisible = keypadHeight > 100;
+
+        if (isKeyboardVisible != _isKeyboardVisible)
+        {
+            _isKeyboardVisible = isKeyboardVisible;
+
+            var density = Resources.DisplayMetrics.Density;
+            double keyboardHeightInDp = keypadHeight / density;
+
+            WeakReferenceMessenger.Default.Send(new KeyboardSizeMessage(isKeyboardVisible ? keyboardHeightInDp : 0));
+        }
+    }
+
+    protected override void OnDestroy()
+    {
+        if (_rootView != null) _rootView.ViewTreeObserver.GlobalLayout -= OnGlobalLayout;
+        base.OnDestroy();
     }
 }
