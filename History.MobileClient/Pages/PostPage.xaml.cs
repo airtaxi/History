@@ -296,6 +296,7 @@ public partial class PostPage : ContentPage
             WeakReferenceMessenger.Default.Register<AppleVideoUnloadedMessage>(this, OnAppleVideoUnloadedMessageMessageReceived);
             WeakReferenceMessenger.Default.Register<CommentTappedMessage>(this, OnCommentTappedMessageReceived);
             WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+            WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
             _mentionsViewModel.ImageInputRequested += OnImageInputRequested;
         }
     }
@@ -330,5 +331,14 @@ public partial class PostPage : ContentPage
     {
         _ = App.PopAsync();
         return true;
+    }
+
+    private void OnKeyboardSizeMessageReceived(object recipient, KeyboardSizeMessage message)
+    {
+#if ANDROID
+        MainGrid.Margin = new(0, 0, 0, message.Value);
+#elif IOS
+        MainGrid.Margin = new(0, message.Value, 0, 0);
+#endif
     }
 }
