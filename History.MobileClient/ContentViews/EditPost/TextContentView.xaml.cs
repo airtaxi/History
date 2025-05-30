@@ -55,8 +55,12 @@ public partial class TextContentView : ContentView
             if (content is ProfileContent profileContent) MentionHelper.AppendMention(MainMentionEditor, profileContent.UserId, profileContent.Nickname);
             else if (content is TextContent textContent) MentionHelper.AppendText(MainMentionEditor, textContent.Text);
         }
+    }
 
+    public void FocusEditor()
+    {
         MainMentionEditor.Focus();
+        MainMentionEditor.CursorPosition = MainMentionEditor.Text.Length;
     }
 
     private void OnUnloaded(object sender, EventArgs e)

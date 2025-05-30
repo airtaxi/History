@@ -127,6 +127,8 @@ public partial class EditCommentPage : ContentPage
     {
         base.OnAppearing();
         _isInForeground = true;
+
+        MainTextContent.FocusEditor();
     }
 
     protected override void OnDisappearing()
