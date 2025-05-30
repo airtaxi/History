@@ -55,7 +55,6 @@
                 <Image
                     x:Name="FriendsImage"
                     HeightRequest="32"
-                    IsVisible="False"
                     VerticalOptions="Center"
                     WidthRequest="32">
                     <Image.GestureRecognizers>

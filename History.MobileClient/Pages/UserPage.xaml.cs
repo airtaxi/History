@@ -26,6 +26,7 @@ public partial class UserPage : ContentPage
     {
         _isMyProfile = true;
         BackImage.IsVisible = false;
+        FriendsImage.IsVisible = false;
         TitleLabel.Text = "내 프로필";
         SettingsImage.IsVisible = true;
         WritePostBorder.IsVisible = true;
@@ -84,7 +85,6 @@ public partial class UserPage : ContentPage
             {
                 _viewModel = new ProfileViewModel(user.Value);
                 _viewModels.Add(_viewModel);
-                FriendsImage.IsVisible = true;
             }
             else return;
 
@@ -126,20 +126,8 @@ public partial class UserPage : ContentPage
 
     private async void OnFriendsImageTapped(object sender, TappedEventArgs e)
     {
-        if (_userId == Shared.UserId)
-        {
-            var page = new NavigationPage(new FriendsPage());
-#if IOS
-            await App.PushAsync(page);
-#else
-            await App.PushAsync(page);
-#endif
-        }
-        else
-        {
-            var page = new FriendListPage(_userId);
-            await App.PushAsync(page);
-        }
+        var page = new FriendListPage(_userId);
+        await App.PushAsync(page);
     }
 
     private async void OnBanUserImageTapped(object sender, TappedEventArgs e) => await _viewModel.HandleBanAsync();
