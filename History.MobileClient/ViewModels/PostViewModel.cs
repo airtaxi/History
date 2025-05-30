@@ -80,7 +80,7 @@ public partial class PostViewModel : ObservableObject
     public partial bool IsWideMode { get; set; }
     public bool IsNotWideMode => !IsWideMode;
 
-    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Post.Contents, WrapMedias);
+    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Post.Contents, WrapMedias, IsParentPost);
 
     public bool HasInteractions => Post.PostReactions.Count > 0 || Post.SharedAndRepostedUsers.Count > 0;
 
