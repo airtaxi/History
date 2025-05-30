@@ -162,18 +162,9 @@ public partial class UserPage : ContentPage
 
         if (_isFirstLoad || (ShouldRefresh && _userId == Shared.UserId))
         {
-            if (ShouldRefresh && !_isFirstLoad)
-            {
-                ShouldRefresh = false;
-                Dispatcher.Dispatch(async () =>
-                {
-                    var shouldRefresh = await DisplayAlert("안내", "새로운 게시글을 작성하셨군요, 지금 내 프로필을 새로고침 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-                    if (shouldRefresh) await RefreshAsync();
-                });
-            }
-            else Dispatcher.Dispatch(async () => await RefreshAsync());
-
+            ShouldRefresh = false;
             _isFirstLoad = false;
+            Dispatcher.Dispatch(async () => await RefreshAsync());
         }
     }
 

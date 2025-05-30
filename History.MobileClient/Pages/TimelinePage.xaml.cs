@@ -105,18 +105,9 @@ public partial class TimelinePage : ContentPage
         MainCollectionView.ItemsSource = _viewModels;
         if (_isFirstLoad || ShouldRefresh)
         {
-            if (ShouldRefresh && !_isFirstLoad)
-            {
-                ShouldRefresh = false;
-                Dispatcher.Dispatch(async () =>
-                {
-                    var shouldRefresh = await DisplayAlert("안내", "새로운 게시글을 작성하셨군요, 지금 타임라인을 새로고침 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-                    if (shouldRefresh) await RefreshAsync();
-                });
-            }
-            else Dispatcher.Dispatch(async () => await RefreshAsync());
-
+            ShouldRefresh = false;
             _isFirstLoad = false;
+            Dispatcher.Dispatch(async () => await RefreshAsync());
         }
     }
 
