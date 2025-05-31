@@ -51,6 +51,8 @@ public class PanPinchContainer : ContentView
     private void OnBindingContextChanged(object sender, EventArgs e)
     {
         _mediaViewModel = BindingContext as IMediaViewModel;
+        if (_mediaViewModel == null) return;
+
         _moreThanOneMedia = _mediaViewModel.FullScreenSwipeable;
     }
 
