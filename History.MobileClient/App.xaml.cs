@@ -8,6 +8,7 @@ using History.Commons.Interfaces;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
+using Plugin.Firebase.CloudMessaging;
 using ShimSkiaSharp;
 using System.Diagnostics;
 using System.Net;
@@ -71,11 +72,17 @@ public partial class App : Application
         GC.Collect(2, GCCollectionMode.Forced);
 
         await NavigationSemaphore.WaitAsync();
+#if IOS
+        try { await Current.Windows[0].Page.Navigation.PushModalAsync(page); }
+#else
         try { await Current.Windows[0].Page.Navigation.PushAsync(page); }
+#endif
         catch (Exception)
         {
             if (NavigationSemaphore.CurrentCount == 0) NavigationSemaphore.Release();
+#if !IOS
             await PushModalAsync(page);
+#endif
         }
         finally
         {
@@ -93,7 +100,11 @@ public partial class App : Application
         GC.Collect(2, GCCollectionMode.Forced);
 
         await NavigationSemaphore.WaitAsync();
+#if IOS
+        try { await Current.Windows[0].Page.Navigation.PopModalAsync(); }
+#else
         try { await Current.Windows[0].Page.Navigation.PopAsync(); }
+#endif
         finally
         {
             if (NavigationSemaphore.CurrentCount == 0)

@@ -48,9 +48,9 @@
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
 		<ApplicationId>com.airtaxi.history</ApplicationId>
-		<ProvisioningType>manual</ProvisioningType>
-		<CodesignKey>Apple Distribution: Byeong-Su Kang (UP6EXS2HJJ)</CodesignKey>
-		<CodesignProvision>History iOS (Dist)</CodesignProvision>
+		<ProvisioningType>automatic</ProvisioningType>
+		<CodesignKey>Apple Development: Created via API (VDW7YD8BQC)</CodesignKey>
+		<CodesignProvision>VS: com.airtaxi.history Development</CodesignProvision>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
 		<ApplicationId>com.airtaxi.history</ApplicationId>
@@ -61,6 +61,12 @@
 		<AndroidSigningStorePass>kck4156</AndroidSigningStorePass>
 		<AndroidSigningKeyAlias>hoyo_ftp</AndroidSigningKeyAlias>
 		<AndroidSigningKeyPass>kck4156</AndroidSigningKeyPass>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
+	  <CodesignEntitlements>Platforms\iOS\Entitlements.plist</CodesignEntitlements>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-ios|AnyCPU'">
+	  <CodesignEntitlements>Platforms\iOS\Entitlements.plist</CodesignEntitlements>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -203,7 +209,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
-		<PackageReference Include="AdamE.Google.iOS.SignIn" Version="8.0.0" />
+		<PackageReference Include="AdamE.Google.iOS.SignIn" Version="7.0.0" />
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">

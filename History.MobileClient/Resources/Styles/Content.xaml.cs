@@ -1,7 +1,10 @@
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
+using CommunityToolkit.Mvvm.Messaging;
+using History.MobileClient.DataTypes;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace History.MobileClient.Resources.Styles;
@@ -30,7 +33,7 @@ public partial class Content : ResourceDictionary
         var parent = label.Parent;
 
         if (parent?.BindingContext is CommentViewModel commentViewModel) commentViewModel.HandleTap();
-        else if (parent?.BindingContext is PostViewModel postViewModel && postViewModel.WrapMedias) await postViewModel.HandleTapAsync();
+        else if (parent?.BindingContext is PostViewModel postViewModel && postViewModel.IsTimeline) await postViewModel.HandleTapAsync();
     }
 
     private void OnTextAndProfileContentsLabelSizeChanged(object sender, EventArgs e)
@@ -53,5 +56,37 @@ public partial class Content : ResourceDictionary
         var view = sender as View;
         var viewModel = view?.BindingContext as ExternalUrlContentViewModel;
         await viewModel?.HandleLongPressAsync();
+    }
+
+    private void OnWrappedMediaContentsCarouselViewCurrentItemChanged(object sender, CurrentItemChangedEventArgs e)
+    {
+        var carouselView = sender as CarouselView;
+        if (carouselView.CurrentItem is not MediaContentViewModel mediaContentViewModel) return;
+
+        if (!mediaContentViewModel.IsTimeline)
+        {
+            Debug.WriteLine($"CarouselViewCurrentItemChanged: {carouselView.Position} / {mediaContentViewModel.Media.Uri}");
+            WeakReferenceMessenger.Default.Send(new ResizeMediaCarouselViewMessage(mediaContentViewModel.Media));
+        }
+
+#if IOS
+            carouselView.ScrollTo(carouselView.Position, animate: false);
+#endif
+    }
+
+    private void OnWrappedMediaContentsCarouselViewLoaded(object sender, EventArgs e)
+    {
+        var carouselView = sender as CarouselView;
+        if (carouselView.BindingContext is not WrappedMediaContentsViewModel viewModel) return;
+
+        var firstMedia = viewModel.FirstMedia;
+
+        if (!firstMedia.IsTimeline)
+        {
+            carouselView.Dispatcher.Dispatch(() =>
+            {
+                WeakReferenceMessenger.Default.Send(new ResizeMediaCarouselViewMessage(firstMedia.Media));
+            });
+        }
     }
 }

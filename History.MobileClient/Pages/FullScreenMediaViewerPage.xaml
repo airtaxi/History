@@ -11,42 +11,49 @@
     NavigationPage.HasNavigationBar="False"
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False">
+    <ContentPage.Resources>
+        <DataTemplate x:Key="FullScreenVideoTemplate" x:DataType="vm:FullScreenMediaContentViewModel">
+            <views:DataTemplatePresenter Template="{StaticResource VideoTemplate}" ViewModel="{x:Binding CurrentMedia}" />
+        </DataTemplate>
+
+        <DataTemplate x:Key="FullScreenMediaContentTemplate" x:DataType="vm:FullScreenMediaContentViewModel">
+            <Grid>
+                <CarouselView
+                    CurrentItem="{x:Binding CurrentMedia,
+                                            Mode=TwoWay}"
+                    HorizontalScrollBarVisibility="Never"
+                    IsSwipeEnabled="{x:Binding CurrentMedia.FullScreenSwipeable}"
+                    ItemTemplate="{StaticResource MediaTemplateSelector}"
+                    ItemsSource="{x:Binding FullScreenMedias}"
+                    Position="{x:Binding CarouselPosition}" />
+                <Border
+                    Margin="12"
+                    Padding="6,4,6,4"
+                    Background="#80808080"
+                    HorizontalOptions="End"
+                    IsVisible="{x:Binding CurrentMedia.FullScreenSwipeable}"
+                    StrokeThickness="0"
+                    VerticalOptions="End">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="16" />
+                    </Border.StrokeShape>
+                    <Label
+                        FontAttributes="Bold"
+                        Text="{x:Binding CarouselPositionText}"
+                        TextColor="White" />
+                </Border>
+            </Grid>
+        </DataTemplate>
+    </ContentPage.Resources>
 
     <Grid>
         <views:DataTemplatePresenter x:Name="MainDataTemplatePresenter">
             <views:DataTemplatePresenter.Template>
-                <DataTemplate x:DataType="vm:FullScreenMediaContentViewModel">
-                    <Grid>
-                        <CarouselView
-                            CurrentItem="{x:Binding CurrentMedia,
-                                                    Mode=TwoWay}"
-                            HorizontalScrollBarVisibility="Never"
-                            IsSwipeEnabled="{x:Binding CurrentMedia.FullScreenSwipeable}"
-                            ItemTemplate="{StaticResource MediaTemplateSelector}"
-                            ItemsSource="{x:Binding FullScreenMedias}"
-                            Position="{x:Binding CarouselPosition}" />
-                        <Border
-                            Margin="12"
-                            Padding="6,4,6,4"
-                            Background="#80808080"
-                            HorizontalOptions="End"
-                            IsVisible="{x:Binding CurrentMedia.FullScreenSwipeable}"
-                            StrokeThickness="0"
-                            VerticalOptions="End">
-                            <Border.StrokeShape>
-                                <RoundRectangle CornerRadius="16" />
-                            </Border.StrokeShape>
-                            <Label
-                                FontAttributes="Bold"
-                                Text="{x:Binding CarouselPositionText}"
-                                TextColor="White" />
-                        </Border>
-                    </Grid>
-                </DataTemplate>
+                <vm:FullScreenMediaContentViewModelSelector FullScreenMediaContentTemplate="{StaticResource FullScreenMediaContentTemplate}" FullScreenVideoTemplate="{StaticResource FullScreenVideoTemplate}" />
             </views:DataTemplatePresenter.Template>
         </views:DataTemplatePresenter>
 
-        <Grid>
+        <Grid VerticalOptions="Start">
             <BoxView
                 HeightRequest="72"
                 HorizontalOptions="Fill"
@@ -72,7 +79,7 @@
                         <FontImageSource
                             FontFamily="MaterialSharp"
                             Glyph="{x:Static m:MaterialSharp.Download}"
-                            Color="#808080" />
+                            Color="White" />
                     </Image.Source>
                 </Image>
                 <Image HeightRequest="48" WidthRequest="48">
@@ -83,7 +90,7 @@
                         <FontImageSource
                             FontFamily="MaterialSharp"
                             Glyph="{x:Static m:MaterialSharp.Close}"
-                            Color="#808080" />
+                            Color="White" />
                     </Image.Source>
                 </Image>
             </HorizontalStackLayout>

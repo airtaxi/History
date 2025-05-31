@@ -31,7 +31,9 @@ public class PanPinchContainer : ContentView
     {
         _panGestureRecognizer = new PanGestureRecognizer();
         _panGestureRecognizer.PanUpdated += OnPanUpdatedAsync;
+#if !IOS
         GestureRecognizers.Add(_panGestureRecognizer);
+#endif
 
         _pinchGestureRecognizer = new PinchGestureRecognizer();
         _pinchGestureRecognizer.PinchUpdated += OnPinchUpdatedAsync;
@@ -54,6 +56,9 @@ public class PanPinchContainer : ContentView
         if (_mediaViewModel == null) return;
 
         _moreThanOneMedia = _mediaViewModel.FullScreenSwipeable;
+#if IOS
+        if (!_moreThanOneMedia) GestureRecognizers.Add(_panGestureRecognizer);
+#endif
     }
 
     private async Task ClampTranslationAsync(double transX, double transY, bool animate = false)
@@ -165,6 +170,10 @@ public class PanPinchContainer : ContentView
         _panY = Content.TranslationY;
 
         _mediaViewModel.FullScreenSwipeable = _currentScale == 1 && _moreThanOneMedia;
+#if IOS
+        if (_mediaViewModel.FullScreenSwipeable) GestureRecognizers.Remove(_panGestureRecognizer);
+        else if (!GestureRecognizers.Contains(_panGestureRecognizer)) GestureRecognizers.Add(_panGestureRecognizer);
+#endif
     }
 
     private async void OnPanUpdatedAsync(object sender, PanUpdatedEventArgs e)
@@ -260,6 +269,10 @@ public class PanPinchContainer : ContentView
         }
 
         _mediaViewModel.FullScreenSwipeable = _currentScale == 1 && _moreThanOneMedia;
+#if IOS
+        if (_mediaViewModel.FullScreenSwipeable) GestureRecognizers.Remove(_panGestureRecognizer);
+        else if (!GestureRecognizers.Contains(_panGestureRecognizer)) GestureRecognizers.Add(_panGestureRecognizer);
+#endif
     }
 
     private async Task ScaleToAsync(double scale)
