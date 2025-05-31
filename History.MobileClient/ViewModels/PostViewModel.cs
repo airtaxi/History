@@ -85,7 +85,7 @@ public partial class PostViewModel : ObservableObject
     public bool HasInteractions => Post.PostReactions.Count > 0 || Post.SharedAndRepostedUsers.Count > 0;
 
     public bool IsRepost => Post.IsRepost;
-    public PostViewModel ParentPost => Post.ParentPost != null ? new(Post.ParentPost, true, true) : null;
+    public PostViewModel ParentPost => Post.ParentPost != null ? new(Post.ParentPost, WrapMedias, true) : null;
     public bool IsShare => Post.ParentPost != null && !IsRepost;
 
     public bool HasRepostedUsers => Post.SharedAndRepostedUsers.Any(x => x.IsRepost);
