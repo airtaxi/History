@@ -60,7 +60,7 @@ public partial class TextContentView : ContentView
     public void FocusEditor()
     {
         MainMentionEditor.Focus();
-        MainMentionEditor.CursorPosition = MainMentionEditor.Text.Length;
+        MainMentionEditor.CursorPosition = MainMentionEditor.Text?.Length ?? 0;
     }
 
     private void OnUnloaded(object sender, EventArgs e)

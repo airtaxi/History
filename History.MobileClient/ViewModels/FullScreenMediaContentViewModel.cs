@@ -13,7 +13,11 @@ public partial class FullScreenMediaContentViewModel(List<IMediaViewModel> media
     [NotifyPropertyChangedFor(nameof(CarouselPositionText))]
     public partial int CarouselPosition { get; set; }
 
+#if IOS
+    public List<IMediaViewModel> FullScreenMedias { get; } = medias.OfType<ImageViewModel>().Select(x => (IMediaViewModel)x).ToList();
+#else
     public List<IMediaViewModel> FullScreenMedias { get; } = medias;
+#endif
 
     [ObservableProperty]
     public partial IMediaViewModel CurrentMedia { get; set; } = media;

@@ -311,11 +311,7 @@ public class MainActivity : MauiAppCompatActivity
             if (data.Count > 0)
             {
                 var pushData = JsonSerializer.Serialize(data);
-#if ANDROID
                 if (!AppShell.IsLoaded) Preferences.Set("PushData", pushData);
-#else
-                if (!AppShell.IsLoaded) Preferences.Set("PushData", pushData);
-#endif
                 else await App.HandlePushNotificationAsync(pushData);
             }
         }
