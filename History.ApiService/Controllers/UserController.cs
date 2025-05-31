@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2.Requests;
+using History.ApiService.DataTypes;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
@@ -34,12 +35,12 @@ public class UserController(IUserService userService, IFriendshipService friends
         var isCodeValid = request.Code == "alpha" || request.Code == "hypermaxsupersecurestoretesterregistercode3920070831";
         if (!isCodeValid) return BadRequest("가입 코드가 올바르지 않습니다.");
 
-        var existingUserResult = await userService.GetUserByIdAsync(payload.Subject);
+        var existingUserResult = await userService.GetUserByIdAsync(payload.Id);
         if (existingUserResult.IsSuccess) return Conflict("이미 등록된 사용자입니다.");
 
         var newUser = new User
         {
-            Id = payload.Subject,
+            Id = payload.Id,
             Nickname = payload.Name ?? GenerateDefaultUserName(),
             SocialService = request.Provider,
             Email = payload.Email,
@@ -73,7 +74,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         var payload = await VerifyIdTokenAsync(request);
         if (payload == null) return Unauthorized("ID 토큰이 유효하지 않습니다.");
 
-        var userResult = await userService.GetUserByIdAsync(payload.Subject);
+        var userResult = await userService.GetUserByIdAsync(payload.Id);
         if (userResult.IsFailure) return NotFound("사용자가 존재하지 않습니다.");
 
         if (userResult.Value.Rank == Rank.Unauthorized) return StatusCode(403, "가입 승인 대기 중입니다.");
@@ -570,18 +571,29 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// </summary>
     /// <param name="request">The request containing the ID token</param>
     /// <returns>A task that represents the asynchronous operation. with the payload of the ID token</returns>
-    private static async Task<GoogleJsonWebSignature.Payload> VerifyIdTokenAsync(OAuthLoginRequestDto request)
+    private static async Task<OAuthPayload> VerifyIdTokenAsync(OAuthLoginRequestDto request)
     {
         // Verify the ID token based on the provider
         if (request.Provider == SocialService.Google)
         {
             // Verify the Google ID token
-            try { return await GoogleJsonWebSignature.ValidateAsync(request.IdToken); }
+            try
+            {
+                var googlePayload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken);
+                return googlePayload != null ? new OAuthPayload()
+                {
+                    Id = googlePayload.Subject,
+                    Name = googlePayload.Name,
+                    Email = googlePayload.Email
+                } : null;
+            }
             catch { return null; }
         }
+        // Sign in with Apple
+        else
+        {
 
-        // TODO: Apple ID Token needs to be verified here
-        return null;
+        }
     }
 
     /// <summary>
