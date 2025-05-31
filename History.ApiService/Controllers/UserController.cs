@@ -1,6 +1,7 @@
 ﻿using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2.Requests;
 using History.ApiService.DataTypes;
+using History.ApiService.Helpers;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
@@ -590,10 +591,8 @@ public class UserController(IUserService userService, IFriendshipService friends
             catch { return null; }
         }
         // Sign in with Apple
-        else
-        {
-
-        }
+        else if (request.Provider == SocialService.Apple) return await AppleIdTokenHelper.ValidateAppleIdTokenAsync(request.IdToken);
+        else throw new NotSupportedException($"지원하지 않는 소셜 서비스입니다: {request.Provider}");
     }
 
     /// <summary>
