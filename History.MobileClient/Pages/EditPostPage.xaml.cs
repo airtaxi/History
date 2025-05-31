@@ -198,7 +198,7 @@ public partial class EditPostPage : ContentPage
         }
 #endif
 
-        if (sizeExceed) await Toast.Make("15MB 이상의 미디어는 자동으로 제외되었습니다.").Show();
+        if (sizeExceed) await Toast.Make("25MB 이상의 미디어는 자동으로 제외되었습니다.").Show();
     }
 
     private async void OnInsertVideoTapped(object sender, TappedEventArgs e)
@@ -251,9 +251,9 @@ public partial class EditPostPage : ContentPage
             }
             _attachmentViewModels.Add(new MediaAttachmentViewModel(video.FileName, video.Bytes));
         }
+#endif
 
         if (sizeExceed) await Toast.Make("15MB 이상의 미디어는 자동으로 제외되었습니다.").Show();
-#endif
     }
 
     private async void OnMediaDescriptionGridTapped(object sender, TappedEventArgs e)
