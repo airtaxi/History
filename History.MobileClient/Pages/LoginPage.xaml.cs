@@ -101,7 +101,11 @@ public partial class LoginPage : ContentPage
     {
         if(DeviceInfo.Platform == DevicePlatform.iOS && DeviceInfo.Version.Major >= 13)
         {
-            var result = await AppleSignInAuthenticator.AuthenticateAsync();
+            var result = await AppleSignInAuthenticator.AuthenticateAsync(new AppleSignInAuthenticator.Options
+            {
+                IncludeFullNameScope = true,
+                IncludeEmailScope = true
+            });
             var idToken = result?.IdToken;
             if (idToken == null) return;
 
