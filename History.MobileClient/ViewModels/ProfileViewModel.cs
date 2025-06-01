@@ -286,6 +286,10 @@ public partial class ProfileViewModel : ObservableObject
             {
                 var result = await App.ExecuteRequestAsync(new BlockUser(User.UserId));
                 if (result.IsFailure) return;
+
+                var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
+                if (friendsResult.IsSuccess) Shared.Friends = friendsResult.Value;
+
                 await App.PopAsync();
             }
             return;
@@ -298,6 +302,10 @@ public partial class ProfileViewModel : ObservableObject
             {
                 var result = await App.ExecuteRequestAsync(new IgnoreUser(User.UserId));
                 if (result.IsFailure) return;
+
+                var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
+                if (friendsResult.IsSuccess) Shared.Friends = friendsResult.Value;
+
                 await App.PopAsync();
             }
             return;
@@ -320,7 +328,16 @@ public partial class ProfileViewModel : ObservableObject
         else if (User.Friendship.Status == FriendshipStatus.Accepted)
         {
             var delete = await App.Page.DisplayAlert("안내", $"{Nickname}님와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-            if (delete) result = await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
+            if (delete)
+            {
+                result = await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
+                if (result.IsSuccess)
+                {
+                    var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
+                    if (friendsResult.IsSuccess) Shared.Friends = friendsResult.Value;
+                    result = friendsResult;
+                }
+            }
         }
         else if (User.Friendship.Status == FriendshipStatus.Requested)
         {
@@ -330,7 +347,16 @@ public partial class ProfileViewModel : ObservableObject
         else if (User.Friendship.Status == FriendshipStatus.Waiting)
         {
             var accept = await App.Page.DisplayAlert("안내", $"{Nickname}님의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-            if (accept) result = await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
+            if (accept)
+            {
+                result = await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
+                if (result.IsSuccess)
+                {
+                    var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
+                    if (friendsResult.IsSuccess) Shared.Friends = friendsResult.Value;
+                    result = friendsResult;
+                }
+            }
         }
 
         if (result != null && result.IsSuccess) await RefreshAsync();
