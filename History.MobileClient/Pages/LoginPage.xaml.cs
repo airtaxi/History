@@ -35,7 +35,7 @@ public partial class LoginPage : ContentPage
             Shared.MyRank = me.Rank;
             Shared.LastUsedPostDiscoveryOption = me.LastUsedPostDiscoveryOption;
 
-            await RefreshFriends();
+            await RefreshFriendsAsync();
             await Utils.RefreshFirebaseToken();
 
 #if ANDROID
@@ -52,7 +52,7 @@ public partial class LoginPage : ContentPage
         return meResult;
     }
 
-    public static async Task RefreshFriends()
+    public static async Task RefreshFriendsAsync()
     {
         var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
         Shared.Friends = friendsResult.Value;

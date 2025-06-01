@@ -444,6 +444,8 @@ public partial class EditPostPage : ContentPage
 
         var shouldRefreshOnNewPost = Configuration.GetValue<bool?>($"ShouldRefreshOnNewPost[{_isShare}]") ?? !_isShare;
         RefreshSwitch.IsToggled = shouldRefreshOnNewPost;
+
+        Dispatcher.Dispatch(async () => await LoginPage.RefreshFriendsAsync());
     }
 
     protected override void OnDisappearing()

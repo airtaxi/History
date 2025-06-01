@@ -9,6 +9,7 @@ using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.Helpers;
+using History.MobileClient.Pages;
 using NativeMedia;
 
 namespace History.MobileClient.ViewModels;
@@ -287,9 +288,7 @@ public partial class ProfileViewModel : ObservableObject
                 var result = await App.ExecuteRequestAsync(new BlockUser(User.UserId));
                 if (result.IsFailure) return;
 
-                var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
-                if (friendsResult.IsSuccess) Shared.Friends = friendsResult.Value;
-
+                await LoginPage.RefreshFriendsAsync();
                 await App.PopAsync();
             }
             return;
@@ -303,9 +302,7 @@ public partial class ProfileViewModel : ObservableObject
                 var result = await App.ExecuteRequestAsync(new IgnoreUser(User.UserId));
                 if (result.IsFailure) return;
 
-                var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
-                if (friendsResult.IsSuccess) Shared.Friends = friendsResult.Value;
-
+                await LoginPage.RefreshFriendsAsync();
                 await App.PopAsync();
             }
             return;
@@ -331,12 +328,7 @@ public partial class ProfileViewModel : ObservableObject
             if (delete)
             {
                 result = await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
-                if (result.IsSuccess)
-                {
-                    var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
-                    if (friendsResult.IsSuccess) Shared.Friends = friendsResult.Value;
-                    result = friendsResult;
-                }
+                if (result.IsSuccess) await LoginPage.RefreshFriendsAsync();
             }
         }
         else if (User.Friendship.Status == FriendshipStatus.Requested)
@@ -353,7 +345,7 @@ public partial class ProfileViewModel : ObservableObject
                 if (result.IsSuccess)
                 {
                     var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
-                    if (friendsResult.IsSuccess) Shared.Friends = friendsResult.Value;
+                    if (result.IsSuccess) await LoginPage.RefreshFriendsAsync();
                     result = friendsResult;
                 }
             }
