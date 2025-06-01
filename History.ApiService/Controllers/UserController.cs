@@ -50,6 +50,8 @@ public class UserController(IUserService userService, IFriendshipService friends
             // (Admin for the first user, User for others)
         };
 
+        if (string.IsNullOrEmpty(newUser.Nickname)) newUser.Nickname = GenerateDefaultUserName();
+
         while (true)
         {
             newUser.Handle = Guid.NewGuid().ToString("N")[..8];
