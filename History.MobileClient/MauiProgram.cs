@@ -5,7 +5,6 @@ using SpeakLink;
 using UraniumUI;
 using Microsoft.Maui.LifecycleEvents;
 using Plugin.Firebase.CloudMessaging;
-using Microsoft.Extensions.Logging;
 using Plugin.Firebase.CloudMessaging.EventArgs;
 using System.Text.Json;
 using History.Commons.Enums;
@@ -14,13 +13,8 @@ using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Api.User;
-
 using History.Commons.Api.Friendship;
 using History.MobileClient.DataTypes;
-
-
-
-
 
 
 #if IOS
@@ -74,9 +68,10 @@ public static class MauiProgram
     {
         builder.ConfigureLifecycleEvents(events => {
 #if IOS
-            CrossFirebaseCloudMessaging.Current.NotificationTapped += OnNotificationTapped;
-            CrossFirebaseCloudMessaging.Current.NotificationReceived += OnNotificationReceived;
             events.AddiOS(iOS => iOS.WillFinishLaunching((_,__) => {
+                CrossFirebaseCloudMessaging.Current.NotificationTapped += OnNotificationTapped;
+                CrossFirebaseCloudMessaging.Current.NotificationReceived += OnNotificationReceived;
+
                 CrossFirebase.Initialize();
                 FirebaseCloudMessagingImplementation.Initialize();
                 return false;
