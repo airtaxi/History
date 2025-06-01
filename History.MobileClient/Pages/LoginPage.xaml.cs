@@ -14,6 +14,7 @@ namespace History.MobileClient.Pages;
 public partial class LoginPage : ContentPage
 {
     private bool _isInForeground;
+    private static string s_appleUserFullName;
 
     public LoginPage()
 	{
@@ -74,7 +75,7 @@ public partial class LoginPage : ContentPage
         else if (result.Error == ErrorType.NotFound)
         {
             var willing = await App.Page.DisplayAlert("안내", "가입이 필요합니다. 가입하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-            if (willing) await App.PushAsync(new RegisterPage(idToken, socialService));
+            if (willing) await App.PushAsync(new RegisterPage(idToken, socialService, s_appleUserFullName));
             else await App.Page.DisplayAlert("안내", "서비스 이용을 위해서는 가입이 필요합니다.", Constants.PromptOk);
         }
         else if (result.Error == ErrorType.Forbidden) await App.Page.DisplayAlert("안내", "서비스 이용이 제한되었습니다.", Constants.PromptOk);
@@ -108,6 +109,8 @@ public partial class LoginPage : ContentPage
             });
             var idToken = result?.IdToken;
             if (idToken == null) return;
+
+            result.Properties.TryGetValue("name", out s_appleUserFullName);
 
             await Login(idToken, SocialService.Apple);
         }

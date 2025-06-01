@@ -13,13 +13,15 @@ namespace History.MobileClient.Pages
         private bool _ageCompleted;
 
         private readonly string _idToken;
+        private readonly string _name;
         private readonly SocialService _socialService;
 
-        public RegisterPage(string idToken, SocialService socialService)
+        public RegisterPage(string idToken, SocialService socialService, string name = null)
         {
             InitializeComponent();
             _idToken = idToken;
             _socialService = socialService;
+            _name = name;
         }
 
         private void ValidateStatus() => RegisterButton.IsEnabled = _codeCompleted && _termsCompleted && _privacyAgreementCompleted && _ageCompleted;
@@ -56,7 +58,7 @@ namespace History.MobileClient.Pages
 
         private async void OnRegisterButtonClicked(object sender, EventArgs e)
         {
-            var result = await App.ExecuteRequestAsync(new Register(CodeEntry.Text, _idToken, _socialService));
+            var result = await App.ExecuteRequestAsync(new Register(CodeEntry.Text, _idToken, _socialService, _name));
             if (result.IsSuccess)
             {
                 await App.Page.DisplayAlert("안내", "가입이 완료되었습니다.", Constants.PromptOk);
