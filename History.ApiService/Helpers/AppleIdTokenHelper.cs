@@ -68,7 +68,7 @@ public static class AppleIdTokenHelper
             {
                 Id = sub,
                 Email = email,
-                Name = name ?? email // Apple may not always provide name
+                Name = name // Apple may not always provide name
             };
         }
         catch
