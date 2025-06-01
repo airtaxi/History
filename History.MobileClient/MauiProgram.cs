@@ -15,6 +15,8 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Api.User;
 using History.Commons.Api.Friendship;
 using History.MobileClient.DataTypes;
+using Microsoft.Extensions.Logging;
+
 
 
 #if IOS

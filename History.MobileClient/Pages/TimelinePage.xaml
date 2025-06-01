@@ -40,7 +40,7 @@
                     x:Name="MainCollectionView"
                     ChildAdded="OnChildAdded"
                     ItemTemplate="{StaticResource TimelineTemplateSelector}"
-                    ItemsUpdatingScrollMode="KeepScrollOffset"
+                    ItemsUpdatingScrollMode="KeepItemsInView"
                     RemainingItemsThreshold="0"
                     RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
                     SelectionMode="None">
