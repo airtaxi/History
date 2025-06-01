@@ -292,6 +292,10 @@ public partial class PostViewModel : ObservableObject
 
         var newViewModel = new PostViewModel(Post, false);
 
+#if IOS
+        WeakReferenceMessenger.Default.Send(new ApplePostViewModelTapMessage(this));
+
+#endif
         var postPage = new PostPage(newViewModel);
         await App.PushAsync(postPage);
     }

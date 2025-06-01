@@ -18,18 +18,35 @@ public partial class TimelinePage : ContentPage
     private PostViewModel _lastViewModel;
     private readonly ObservableCollection<PostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
+#if IOS
+    private PostViewModel _tappedViewModel;
+#endif
 
     public TimelinePage()
 	{
 		InitializeComponent();
+        MainCollectionView.ItemsSource = _viewModels;
 #if IOS
         MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
-
+        WeakReferenceMessenger.Default.Register<ApplePostViewModelTapMessage>(this, OnApplePostViewModelTapMessageReceived);
 #endif
+
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
+#if IOS
+    private void OnApplePostViewModelTapMessageReceived(object recipient, ApplePostViewModelTapMessage message)
+    {
+        Debug.WriteLine($"[TL] OnApplePostViewModelTapMessageReceived");
+
+        if (_viewModels.Contains(message.Value))
+        {
+            _tappedViewModel = message.Value;
+        }
+    }
+
+#endif
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {
         var viewModels = _viewModels.Where(x => x.Post.Id == message.Value.Id).ToList(); // ToList is needed (Collection will be modified)
@@ -108,7 +125,18 @@ public partial class TimelinePage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
-        MainCollectionView.ItemsSource = _viewModels;
+#if IOS
+        Debug.WriteLine($"[TL] OnAppearing {_tappedViewModel}");
+        if (_tappedViewModel != null)
+        {
+            Dispatcher.Dispatch(() =>
+            {
+                MainCollectionView.ScrollTo(_tappedViewModel, null, ScrollToPosition.Start, false);
+                _tappedViewModel = null;
+            });
+        }
+
+#endif
         if (_isFirstLoad || ShouldRefresh)
         {
             ShouldRefresh = false;
@@ -123,11 +151,25 @@ public partial class TimelinePage : ContentPage
         _isInForeground = false;
     }
 
+#if IOS
+    protected override void OnNavigatedTo(NavigatedToEventArgs args)
+    {
+        base.OnNavigatedTo(args);
+
+        Debug.WriteLine($"[TL] OnNavigatedTo {_tappedViewModel}");
+        if (_tappedViewModel != null)
+        {
+            MainCollectionView.ScrollTo(_tappedViewModel, null, ScrollToPosition.Start, false);
+            _tappedViewModel = null;
+        }
+    }
+
+#endif
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
         var isLoading = message.Value;
         if (!_isInForeground && message.Value) return;
-
+         
         Dispatcher.Dispatch(() =>
         {
             MainActivityIndicator.IsRunning = isLoading;

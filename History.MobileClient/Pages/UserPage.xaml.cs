@@ -7,6 +7,7 @@ using History.MobileClient.DataTypes;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace History.MobileClient.Pages;
 
@@ -22,6 +23,9 @@ public partial class UserPage : ContentPage
     private readonly string _userId;
     private readonly ObservableCollection<object> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
+#if IOS
+    private PostViewModel _tappedViewModel;
+#endif
 
     public UserPage() : this(Shared.UserId)
     {
@@ -46,12 +50,23 @@ public partial class UserPage : ContentPage
         MainCollectionView.ItemsSource = _viewModels;
 #if IOS
         MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
+        WeakReferenceMessenger.Default.Register<ApplePostViewModelTapMessage>(this, OnApplePostViewModelTapMessageReceived);
 
 #endif
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
+#if IOS
+    private void OnApplePostViewModelTapMessageReceived(object recipient, ApplePostViewModelTapMessage message)
+    {
+        if (_viewModels.Contains(message.Value))
+        {
+            _tappedViewModel = message.Value;
+        }
+    }
+
+#endif
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {
         var viewModels = _viewModels.OfType<PostViewModel>().Where(x => x.Post.Id == message.Value.Id).ToList(); // ToList is needed (Collection will be modified)
@@ -152,6 +167,18 @@ public partial class UserPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
+#if IOS
+        Debug.WriteLine($"[TL] OnAppearing {_tappedViewModel}");
+        if (_tappedViewModel != null)
+        {
+            Dispatcher.Dispatch(() =>
+            {
+                MainCollectionView.ScrollTo(_tappedViewModel, null, ScrollToPosition.Start, false);
+                _tappedViewModel = null;
+            });
+        }
+
+#endif
         if (_isFirstLoad || (ShouldRefresh && _userId == Shared.UserId))
         {
             ShouldRefresh = false;
