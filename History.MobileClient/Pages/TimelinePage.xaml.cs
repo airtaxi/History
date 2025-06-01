@@ -5,6 +5,7 @@ using History.MobileClient.DataTypes;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace History.MobileClient.Pages;
 
@@ -13,6 +14,7 @@ public partial class TimelinePage : ContentPage
     public static bool ShouldRefresh { get; set; }
 
     private bool _isInForeground;
+    private bool _areThereNoMorePostsToLoad;
     private PostViewModel _lastViewModel;
     private readonly ObservableCollection<PostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
@@ -37,9 +39,10 @@ public partial class TimelinePage : ContentPage
 
     public async Task RefreshAsync()
     {
+        if (_fetchSemaphore.CurrentCount == 0) return;
+
         try
         {
-            if (_fetchSemaphore.CurrentCount == 0) return;
             await _fetchSemaphore.WaitAsync();
 
             if (_viewModels.Count > 0)
@@ -62,15 +65,18 @@ public partial class TimelinePage : ContentPage
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
-            else return;
         }
         finally { _fetchSemaphore.Release(); }
     }
 
     private async Task LoadMoreAsync()
     {
+        if (_fetchSemaphore.CurrentCount == 0) return;
+        else if (_areThereNoMorePostsToLoad) return;
+
         try
         {
+
             await _fetchSemaphore.WaitAsync();
 
             var lastViewModel = _viewModels.OfType<PostViewModel>().LastOrDefault();
@@ -83,9 +89,9 @@ public partial class TimelinePage : ContentPage
                 var posts = postsResult.Value;
                 var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, true));
                 _lastViewModel = viewModels.LastOrDefault();
+                _areThereNoMorePostsToLoad = !viewModels.Any();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
-            else return;
         }
         finally { _fetchSemaphore.Release(); }
     }
@@ -143,11 +149,18 @@ public partial class TimelinePage : ContentPage
     {
         var view = e.Element as View;
         var viewModel = view.BindingContext as PostViewModel;
+        Debug.WriteLine($"[TL] Child Added {viewModel.Post.Id == _lastViewModel?.Post.Id}");
+
         if (viewModel.Post.Id == _lastViewModel?.Post.Id)
         {
             _lastViewModel = null;
             await LoadMoreAsync();
         }
+    }
+
+    private async void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e)
+    {
+        await LoadMoreAsync();
     }
 
     private async void OnLogoImageTapped(object sender, TappedEventArgs e)

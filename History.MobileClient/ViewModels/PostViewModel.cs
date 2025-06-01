@@ -8,7 +8,6 @@ using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using History.MobileClient.ContentViews;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Enums;
 using History.MobileClient.Pages;
@@ -36,7 +35,6 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasNoComments))]
     [NotifyPropertyChangedFor(nameof(HasComments))]
     [NotifyPropertyChangedFor(nameof(CommentsCount))]
-    [NotifyPropertyChangedFor(nameof(Comments))]
     [NotifyPropertyChangedFor(nameof(LatestComment))]
     [NotifyPropertyChangedFor(nameof(HasInteractions))]
     [NotifyPropertyChangedFor(nameof(HasReactions))]
@@ -80,12 +78,12 @@ public partial class PostViewModel : ObservableObject
     public partial bool IsWideMode { get; set; }
     public bool IsNotWideMode => !IsWideMode;
 
-    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Post.Contents, WrapMedias, IsParentPost);
+    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Post.Contents, IsTimeline, IsParentPost);
 
     public bool HasInteractions => Post.PostReactions.Count > 0 || Post.SharedAndRepostedUsers.Count > 0;
 
     public bool IsRepost => Post.IsRepost;
-    public PostViewModel ParentPost => Post.ParentPost != null ? new(Post.ParentPost, WrapMedias, true) : null;
+    public PostViewModel ParentPost => Post.ParentPost != null ? new(Post.ParentPost, IsTimeline, true) : null;
     public bool IsShare => Post.ParentPost != null && !IsRepost;
 
     public bool HasRepostedUsers => Post.SharedAndRepostedUsers.Any(x => x.IsRepost);
@@ -108,7 +106,7 @@ public partial class PostViewModel : ObservableObject
             return result;
         }
     }
-    public bool WrapMedias { get; }
+    public bool IsTimeline { get; }
     public bool IsParentPost { get; }
 
     public PostInteractionViewModel Reaction => Interactions.FirstOrDefault(r => r.User.UserId == Shared.UserId && r.ReactionType != null);
@@ -120,7 +118,6 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(LatestComment))]
     [NotifyPropertyChangedFor(nameof(HasComments))]
     [NotifyPropertyChangedFor(nameof(HasNoComments))]
-    [NotifyPropertyChangedFor(nameof(HasMoreComments))]
     [NotifyPropertyChangedFor(nameof(CommentsCount))]
     public partial ObservableCollection<CommentViewModel> Comments { get; private set; }
 
@@ -137,11 +134,11 @@ public partial class PostViewModel : ObservableObject
 
     public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
 
-    public PostViewModel(PostResponseDto post, bool wrapMedias, bool isParentPost = false)
+    public PostViewModel(PostResponseDto post, bool isTimeline, bool isParentPost = false)
     {
         try
         {
-            WrapMedias = wrapMedias;
+            IsTimeline = isTimeline;
             IsParentPost = isParentPost;
 
             if (post == null)
@@ -211,7 +208,7 @@ public partial class PostViewModel : ObservableObject
     {
         var options = new List<string>();
 
-        if (WrapMedias)
+        if (IsTimeline)
         {
             var isReposted = Post.SharedAndRepostedUsers.Any(x => x.IsRepost && x.User.UserId == Shared.UserId);
             options.AddRange(["게시글 공유", isReposted ? "리포스트 해제" : "리포스트"]);
@@ -294,6 +291,7 @@ public partial class PostViewModel : ObservableObject
         if (result.IsFailure) return;
 
         var newViewModel = new PostViewModel(Post, false);
+
         var postPage = new PostPage(newViewModel);
         await App.PushAsync(postPage);
     }

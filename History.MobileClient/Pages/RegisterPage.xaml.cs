@@ -57,9 +57,11 @@ namespace History.MobileClient.Pages
         private async void OnRegisterButtonClicked(object sender, EventArgs e)
         {
             var result = await App.ExecuteRequestAsync(new Register(CodeEntry.Text, _idToken, _socialService));
-            if (result.IsSuccess) await App.Page.DisplayAlert("안내", "가입이 완료되었습니다.", Constants.PromptOk);
-
-            await LoginPage.Login(_idToken, _socialService);
+            if (result.IsSuccess)
+            {
+                await App.Page.DisplayAlert("안내", "가입이 완료되었습니다.", Constants.PromptOk);
+                await LoginPage.Login(_idToken, _socialService);
+            }
         }
 
         private void OnTermsLabelTapped(object sender, TappedEventArgs e) => TermsCheckBox.IsChecked = !TermsCheckBox.IsChecked;

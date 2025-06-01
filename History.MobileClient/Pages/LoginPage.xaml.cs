@@ -97,7 +97,22 @@ public partial class LoginPage : ContentPage
 #endif
     }
 
-    private async void OnAppleLoginButtonClicked(object sender, EventArgs e) => await DisplayAlert("안내", "애플 로그인은 개발 중입니다.", Constants.PromptOk);
+    private async void OnAppleLoginButtonClicked(object sender, EventArgs e)
+    {
+        if(DeviceInfo.Platform == DevicePlatform.iOS && DeviceInfo.Version.Major >= 13)
+        {
+            var result = await AppleSignInAuthenticator.AuthenticateAsync(new AppleSignInAuthenticator.Options
+            {
+                IncludeFullNameScope = true,
+                IncludeEmailScope = true
+            });
+            var idToken = result?.IdToken;
+            if (idToken == null) return;
+
+            await Login(idToken, SocialService.Apple);
+        }
+        else await DisplayAlert("안내", "애플 로그인은 개발 중입니다.", Constants.PromptOk);
+    }
 
     protected override async void OnAppearing()
     {

@@ -10,8 +10,8 @@
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient"
-    Loaded="OnLoaded"
     HandlerChanging="OnHandlerChanging"
+    Loaded="OnLoaded"
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False"
     SizeChanged="OnSizeChanged">
@@ -247,6 +247,7 @@
                 <Switch
                     x:Name="RefreshSwitch"
                     OnColor="{StaticResource Primary}"
+                    ThumbColor="White"
                     Toggled="OnRefreshSwitchToggled" />
             </HorizontalStackLayout>
 

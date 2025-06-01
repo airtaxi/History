@@ -71,15 +71,48 @@
         </Grid>
     </DataTemplate>
 
-    <DataTemplate x:Key="WrappedMediaContentsTemplate" x:DataType="vm:WrappedMediaContentsViewModel">
+    <DataTemplate x:Key="AndroidWrappedMediaContentsTemplate" x:DataType="vm:WrappedMediaContentsViewModel">
         <Grid>
             <CarouselView
                 CurrentItem="{x:Binding FirstMedia}"
+                CurrentItemChanged="OnWrappedMediaContentsCarouselViewCurrentItemChanged"
                 HeightRequest="400"
                 HorizontalScrollBarVisibility="Never"
                 IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
                 ItemTemplate="{StaticResource MediaContentTemplate}"
                 ItemsSource="{x:Binding Medias}"
+                Loaded="OnWrappedMediaContentsCarouselViewLoaded"
+                Position="{x:Binding CarouselPosition,
+                                     Mode=OneWayToSource}" />
+            <Border
+                Margin="12"
+                Padding="6,4,6,4"
+                Background="#80808080"
+                HorizontalOptions="End"
+                IsVisible="{x:Binding CarouselSwipeEnabled}"
+                StrokeThickness="0"
+                VerticalOptions="End">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <Label
+                    FontAttributes="Bold"
+                    Text="{x:Binding CarouselPositionText}"
+                    TextColor="White" />
+            </Border>
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="AppleWrappedMediaContentsTemplate" x:DataType="vm:WrappedMediaContentsViewModel">
+        <Grid>
+            <CarouselView
+                CurrentItemChanged="OnWrappedMediaContentsCarouselViewCurrentItemChanged"
+                HeightRequest="400"
+                HorizontalScrollBarVisibility="Never"
+                IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
+                ItemTemplate="{StaticResource MediaContentTemplate}"
+                ItemsSource="{x:Binding Medias}"
+                Loaded="OnWrappedMediaContentsCarouselViewLoaded"
                 Position="{x:Binding CarouselPosition,
                                      Mode=OneWayToSource}" />
             <Border
@@ -168,9 +201,10 @@
 
     <vm:ContentTemplateSelector
         x:Key="ContentTemplateSelector"
+        AndroidWrappedMediaContentsTemplate="{StaticResource AndroidWrappedMediaContentsTemplate}"
+        AppleWrappedMediaContentsTemplate="{StaticResource AppleWrappedMediaContentsTemplate}"
         ExternalUrlContentTemplate="{StaticResource ExternalUrlContentTemplate}"
         MediaContentTemplate="{StaticResource MediaContentTemplate}"
         StickerContentTemplate="{StaticResource StickerContentTemplate}"
-        TextAndProfileContentsTemplate="{StaticResource TextAndProfileContentsTemplate}"
-        WrappedMediaContentsTemplate="{StaticResource WrappedMediaContentsTemplate}" />
+        TextAndProfileContentsTemplate="{StaticResource TextAndProfileContentsTemplate}" />
 </ResourceDictionary>
