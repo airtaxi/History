@@ -18,7 +18,8 @@ public partial class FriendListPage : ContentPage
 	public FriendListPage()
 	{
         _userId = Shared.UserId;
-		InitializeComponent();
+        _sortByTime = Configuration.GetValue<bool>("FriendsListSortByTime");
+        InitializeComponent();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
@@ -90,19 +91,12 @@ public partial class FriendListPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    private bool _isInitialized = false;
     protected override async void OnAppearing()
     {
         base.OnAppearing();
         _isInForeground = true;
 
-        if (!_isInitialized)
-        {
-            _isInitialized = true;
-            _sortByTime = Configuration.GetValue<bool>("FriendsListSortByTime");
-
-            await RefreshAsync();
-        }
+        await RefreshAsync();
     }
 
     protected override void OnDisappearing()
