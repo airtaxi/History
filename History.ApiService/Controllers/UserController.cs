@@ -42,7 +42,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         var newUser = new User
         {
             Id = payload.Id,
-            Nickname = payload.Name ?? GenerateDefaultUserName(),
+            Nickname = payload.Name ?? request.Name ?? GenerateDefaultUserName(),
             SocialService = request.Provider,
             Email = payload.Email,
             AllowSearch = true,
