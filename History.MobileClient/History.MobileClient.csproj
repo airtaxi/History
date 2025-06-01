@@ -52,6 +52,9 @@
 		<ProvisioningType>manual</ProvisioningType>
 		<CodesignKey>Apple Distribution: Byeong-Su Kang (UP6EXS2HJJ)</CodesignKey>
 		<CodesignProvision>History iOS (Dist)</CodesignProvision>
+		<!--<ProvisioningType>automatic</ProvisioningType>
+		<CodesignKey>Apple Development: Created via API (VDW7YD8BQC)</CodesignKey>
+		<CodesignProvision>VS: com.airtaxi.history Development</CodesignProvision>-->
 	</PropertyGroup>
 	
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios' And '$(RuntimeIdentifier)' == 'iossimulator-arm64'">
