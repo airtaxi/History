@@ -63,7 +63,7 @@
 		<!-- The AndroidKeyStore property is used to specify if the application should be signed with a key store.
       If set to true, the AndroidSigningKeyStore, AndroidSigningStorePass, AndroidSigningKeyAlias and AndroidSigningKeyPass properties must be set.-->
 		<AndroidKeyStore>true</AndroidKeyStore>
-		<AndroidSigningKeyStore>signing.keystore</AndroidSigningKeyStore>
+		<AndroidSigningKeyStore>signing.keystore</AndroidSigningK7,eyStore>
 		<AndroidSigningStorePass>kck4156</AndroidSigningStorePass>
 		<AndroidSigningKeyAlias>hoyo_ftp</AndroidSigningKeyAlias>
 		<AndroidSigningKeyPass>kck4156</AndroidSigningKeyPass>
@@ -209,7 +209,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
-		<PackageReference Include="AdamE.Google.iOS.SignIn" Version="7.0.0" />
+		<PackageReference Include="AdamE.Google.iOS.SignIn" Version="8.0.0" />
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
