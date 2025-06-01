@@ -63,7 +63,7 @@
 		<!-- The AndroidKeyStore property is used to specify if the application should be signed with a key store.
       If set to true, the AndroidSigningKeyStore, AndroidSigningStorePass, AndroidSigningKeyAlias and AndroidSigningKeyPass properties must be set.-->
 		<AndroidKeyStore>true</AndroidKeyStore>
-		<AndroidSigningKeyStore>signing.keystore</AndroidSigningK7,eyStore>
+		<AndroidSigningKeyStore>signing.keystore</AndroidSigningKeyStore>
 		<AndroidSigningStorePass>kck4156</AndroidSigningStorePass>
 		<AndroidSigningKeyAlias>hoyo_ftp</AndroidSigningKeyAlias>
 		<AndroidSigningKeyPass>kck4156</AndroidSigningKeyPass>
