@@ -12,6 +12,7 @@ using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using NativeMedia;
 using SpeakLink.Mention;
+using System.Diagnostics;
 using UraniumUI.Icons.MaterialSymbols;
 
 namespace History.MobileClient.Pages;
@@ -36,6 +37,8 @@ public partial class PostPage : ContentPage
 
     public PostPage(PostViewModel viewModel)
 	{
+        Debug.WriteLine("POST PAGE LOADED");
+
 		_viewModel = viewModel;
         InitializeComponent();
         UpdateRepostStatus(viewModel.Post);
@@ -219,8 +222,14 @@ public partial class PostPage : ContentPage
 
     private async void OnRefreshing(object sender, EventArgs e)
     {
+#if IOS
+        (sender as RefreshView).IsRefreshing = false;
+        await Task.Delay(500);
+        await _viewModel.RefreshAsync();
+#else
         await _viewModel.RefreshAsync();
         (sender as RefreshView).IsRefreshing = false;
+#endif
     }
 
     private void OnSizeChanged(object sender, EventArgs e)

@@ -1,17 +1,21 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core.Primitives;
 using CommunityToolkit.Maui.Views;
+using CommunityToolkit.Mvvm.Messaging;
 using FFImageLoading.Maui;
 using FFImageLoading.Maui.Platform;
+using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace History.MobileClient.Resources.Styles;
 
 public partial class Media : ResourceDictionary
 {
     private static readonly ConcurrentDictionary<ContentView, IViewHandler> MediaElementHandlerMap = [];
-    private static readonly ConcurrentDictionary<object, object> ImageHandlerMap = [];
+    private static readonly ConcurrentDictionary<object, Size> ImageSizeMap = [];
+    private static IMediaViewModel s_lastLoadedMediaViewModel;
 
     public Media() => InitializeComponent();
 
@@ -125,7 +129,61 @@ public partial class Media : ResourceDictionary
         }
     }
 
+    private void OnImageLoaded(object sender, EventArgs e)
+    {
+        if (sender is not CachedImage image) return;
+
+#if IOS
+        image.DownsampleToViewSize = false;
+#endif
+
+        var carouselView = FindCarouselView(image);
+        if (carouselView == null) return;
+
+        var viewModel = image.BindingContext as ImageViewModel;
+        if (viewModel == null) return;
+
+        Debug.WriteLine($"IMAGE Loaded: {viewModel.Uri}");
+
+        WeakReferenceMessenger.Default.UnregisterAll(sender);
+        WeakReferenceMessenger.Default.Register<ResizeMediaCarouselViewMessage>(sender, (s, e) =>
+        {
+            if (e.Value == viewModel && s_lastLoadedMediaViewModel != viewModel)
+            {
+                Debug.WriteLine($"ResizeMediaCarouselViewMessage: {viewModel.Uri}");
+                s_lastLoadedMediaViewModel = viewModel;
+                //await Task.Delay(100);
+                ResizeImage(sender);
+            }
+        });
+    }
+
+    private void OnImageUnloaded(object sender, EventArgs e)
+    {
+        var image = sender as CachedImage;
+        WeakReferenceMessenger.Default.UnregisterAll(image);
+    }
+
     private void OnImageFinished(object sender, CachedImageEvents.FinishEventArgs e)
+    {
+        if (sender is not CachedImage image) return;
+
+        var carouselView = FindCarouselView(image);
+        if (carouselView == null) return;
+
+        var viewModel = image.BindingContext as ImageViewModel;
+        if (viewModel == null) return;
+
+        Debug.WriteLine($"IMAGE Finished: {viewModel.Uri} / {s_lastLoadedMediaViewModel == viewModel}");
+
+        if (s_lastLoadedMediaViewModel == viewModel)
+        {
+            //await Task.Delay(100);
+            ResizeImage(sender);
+        }
+    }
+
+    private static void ResizeImage(object sender)
     {
         var image = sender as CachedImage;
 
@@ -140,23 +198,27 @@ public partial class Media : ResourceDictionary
             imageHeight = bitmap.Height;
         }
 #elif IOS
-        var uiImage = nativeImageView.Image;
-        if (uiImage == null) return;
-
-        imageWidth = (int)(uiImage.Size.Width * uiImage.CurrentScale);
-        imageHeight = (int)(uiImage.Size.Height * uiImage.CurrentScale);
-#endif
-        if (imageWidth <= 0 || imageHeight <= 0) return;
-
-        var aspectRatio = (double)imageWidth / imageHeight;
-
-        var viewModel = image?.BindingContext as ImageViewModel;
-        if(viewModel.ResizeParentCarouselViewWhenSizeChanged)
+        image.Dispatcher.Dispatch(() =>
         {
-            var carouselView = FindCarouselView(image);
-            if (carouselView == null) return;
+            var uiImage = nativeImageView.Image;
+            if (uiImage == null) return;
 
-            ResizeCarouselView(carouselView, imageWidth, imageHeight);
-        }
+            imageWidth = (int)(uiImage.Size.Width * uiImage.CurrentScale);
+            imageHeight = (int)(uiImage.Size.Height * uiImage.CurrentScale);
+            if (imageWidth <= 0 || imageHeight <= 0) return;
+
+            var aspectRatio = (double)imageWidth / imageHeight;
+
+            var viewModel = image?.BindingContext as ImageViewModel;
+            if (viewModel.ResizeParentCarouselViewWhenSizeChanged)
+            {
+                var carouselView = FindCarouselView(image);
+                if (carouselView == null) return;
+
+                ResizeCarouselView(carouselView, imageWidth, imageHeight);
+                image.InvalidateMeasure();
+            }
+        });
+#endif
     }
 }

@@ -167,6 +167,7 @@
         <Button
             x:Name="RegisterButton"
             Grid.Row="2"
+            BackgroundColor="{StaticResource Primary}"
             Clicked="OnRegisterButtonClicked"
             CornerRadius="0"
             FontAttributes="Bold"

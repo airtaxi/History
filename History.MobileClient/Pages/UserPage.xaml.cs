@@ -15,6 +15,7 @@ public partial class UserPage : ContentPage
     public static bool ShouldRefresh { get; set; }
 
     private bool _isInForeground;
+    private bool _areThereNoMorePostsToLoad;
     private object _lastViewModel;
     private ProfileViewModel _viewModel;
     private readonly bool _isMyProfile;
@@ -60,9 +61,10 @@ public partial class UserPage : ContentPage
 
     public async Task RefreshAsync()
     {
+        if (_fetchSemaphore.CurrentCount == 0) return;
+
         try
         {
-            if (_fetchSemaphore.CurrentCount == 0) return;
             await _fetchSemaphore.WaitAsync();
 
             if (_viewModels.Count > 0)
@@ -96,13 +98,15 @@ public partial class UserPage : ContentPage
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
-            else return;
         }
         finally { _fetchSemaphore.Release(); }
     }
 
     private async Task LoadMoreAsync()
     {
+        if (_fetchSemaphore.CurrentCount == 0) return;
+        else if (_areThereNoMorePostsToLoad) return;
+
         try
         {
             await _fetchSemaphore.WaitAsync();
@@ -117,9 +121,9 @@ public partial class UserPage : ContentPage
                 var posts = postsResult.Value;
                 var viewModels = posts.Select(x => new PostViewModel(x, true));
                 _lastViewModel = viewModels.LastOrDefault();
+                _areThereNoMorePostsToLoad = !viewModels.Any();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
-            else return;
         }
         finally { _fetchSemaphore.Release(); }
     }
@@ -180,7 +184,7 @@ public partial class UserPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    private async void OnChildAdded(object sender, ElementEventArgs e)
+    private async void OnMainCollectionViewChildAdded(object sender, ElementEventArgs e)
     {
         var view = e.Element as View;
         var viewModel = view.BindingContext as PostViewModel;
@@ -192,6 +196,12 @@ public partial class UserPage : ContentPage
             await LoadMoreAsync();
         }
     }
+
+    private async void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e)
+    {
+        await LoadMoreAsync();
+    }
+
     private async void OnTitleLabelTapped(object sender, TappedEventArgs e) => await RefreshAsync();
 
     private async void OnPostPinnedMessageReceived(object recipient, PostPinnedMessage message)

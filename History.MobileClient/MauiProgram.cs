@@ -5,7 +5,17 @@ using SpeakLink;
 using UraniumUI;
 using Microsoft.Maui.LifecycleEvents;
 using Plugin.Firebase.CloudMessaging;
-using Microsoft.Extensions.Logging;
+using Plugin.Firebase.CloudMessaging.EventArgs;
+using System.Text.Json;
+using History.Commons.Enums;
+using History.Commons.Api.Post;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
+using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Api.User;
+using History.Commons.Api.Friendship;
+using History.MobileClient.DataTypes;
+
 
 #if IOS
 using Plugin.Firebase.Core.Platforms.iOS;
@@ -47,7 +57,6 @@ public static class MauiProgram
         });
 #endif
 
-
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
@@ -60,6 +69,9 @@ public static class MauiProgram
         builder.ConfigureLifecycleEvents(events => {
 #if IOS
             events.AddiOS(iOS => iOS.WillFinishLaunching((_,__) => {
+                CrossFirebaseCloudMessaging.Current.NotificationTapped += OnNotificationTapped;
+                CrossFirebaseCloudMessaging.Current.NotificationReceived += OnNotificationReceived;
+
                 CrossFirebase.Initialize();
                 FirebaseCloudMessagingImplementation.Initialize();
                 return false;
@@ -72,4 +84,45 @@ public static class MauiProgram
 
         return builder;
     }
+
+#if IOS
+    private static async void OnNotificationTapped(object sender, FCMNotificationTappedEventArgs e)
+    {
+        var data = e.Notification.Data;
+
+        var pushData = JsonSerializer.Serialize(data);
+        if (!AppShell.IsLoaded) Preferences.Set("PushData", pushData);
+        else await App.HandlePushNotificationAsync(pushData);
+    }
+
+    private static void OnNotificationReceived(object sender, FCMNotificationReceivedEventArgs e) => UpdateNotificationContext(e.Notification.Data);
+
+    private static async void UpdateNotificationContext(IDictionary<string, string> data)
+    {
+        if (data == null) return;
+        if (!data.TryGetValue("Type", out var rawType) || !Enum.TryParse<NotificationType>(rawType, out var type)) return;
+        else if (Shared.ApiHandler == null) return;
+
+        try
+        {
+            if (data.TryGetValue("PostId", out var postId))
+            {
+                var post = await Shared.ApiHandler.ExecuteRequestAsync(new GetPost(postId));
+                MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post)));
+            }
+            else if (type == NotificationType.FriendRequest && data.TryGetValue("UserId", out var userId))
+            {
+                var user = await Shared.ApiHandler.ExecuteRequestAsync(new GetUser(userId));
+                MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new ValueChangedMessage<UserResponseDto>(user)));
+            }
+
+            var notifications = await Shared.ApiHandler.ExecuteRequestAsync(new GetNotifications());
+            MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new NotificationsMessage(notifications)));
+
+            var friends = await Shared.ApiHandler.ExecuteRequestAsync(new GetFriends(Shared.UserId));
+            Shared.Friends = friends;
+        }
+        catch { }
+    }
+#endif
 }

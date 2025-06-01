@@ -80,23 +80,10 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
             };
         }
 #elif IOS
-        if (IsTimeline)
-        {
-            var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel(_fullScreenMedias, _currentMedia));
-            await App.PushAsync(viewerPage);
+        var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel(_fullScreenMedias, _currentMedia));
+        await App.PushAsync(viewerPage);
 
-            await Toast.Make("iOS에서는 현재 타임라인에서 영상 재생이 지원되지 않습니다. 전체화면 보기로 전환합니다.").Show();
-        }
-        else
-        {
-            IsOverlayVisible = false;
-            Media = new VideoViewModel(Utils.GenerateMediaUri(MediaContent.MediaId))
-            {
-                Aspect = Aspect.AspectFill,
-                HorizontalContentOptions = LayoutOptions.Fill,
-                VerticalContentOptions = LayoutOptions.Fill
-            };
-        }
+        await Toast.Make("iOS에서는 현재 인라인 영상 재생이 지원되지 않습니다. 전체화면 보기로 전환합니다.").Show();
 #endif
     }
 

@@ -26,10 +26,10 @@ public partial class NotificationsPage : ContentPage
 
     public async Task RefreshAsync()
     {
+        if (_fetchSemaphore.CurrentCount == 0) return;
+
         try
         {
-            if (_fetchSemaphore.CurrentCount == 0) return;
-
             await _fetchSemaphore.WaitAsync();
 
             var notifications = await App.ExecuteRequestAsync(new GetNotifications());
@@ -40,10 +40,12 @@ public partial class NotificationsPage : ContentPage
 
     private async Task LoadMoreAsync()
     {
-        if (_areThereNoMoreNotificationsToLoad) return;
+        if (_fetchSemaphore.CurrentCount == 0) return;
+        else if (_areThereNoMoreNotificationsToLoad) return;
 
         try
         {
+
             await _fetchSemaphore.WaitAsync();
 
             var lastViewModel = _viewModels.OfType<NotificationViewModel>().LastOrDefault();
@@ -55,7 +57,6 @@ public partial class NotificationsPage : ContentPage
                 _areThereNoMoreNotificationsToLoad = !viewModels.Any();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
-            else return;
         }
         finally { _fetchSemaphore.Release(); }
     }
