@@ -15,7 +15,7 @@ public class ReportController(IReportService reportService, IUserService userSer
 {
     [HttpGet("records")]
     [Authorize]
-    public async Task<IActionResult> GetReportRecords([FromQuery] string fromRecordId = null, [FromQuery] int limit = 10)
+    public async Task<IActionResult> GetReportRecords([FromQuery] string from = null, [FromQuery] int limit = 10)
     {
         var moderatorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(moderatorId)) return Unauthorized("로그인이 필요한 서비스입니다.");
@@ -26,7 +26,7 @@ public class ReportController(IReportService reportService, IUserService userSer
             if (moderatorResult.Value.Rank < Rank.Moderator) return StatusCode(403, "괸리자만 신고 내역을 조회할 수 있습니다.");
         }
 
-        var results = await reportService.GetReportRecordsAsync(fromRecordId, limit);
+        var results = await reportService.GetReportRecordsAsync(from, limit);
         var dtosResult = await reportService.GenerateReportRecordResponseDtosAsync(results.Value);
         return Ok(dtosResult.Value);
     }
@@ -42,6 +42,23 @@ public class ReportController(IReportService reportService, IUserService userSer
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpPost("process/{recordId}")]
+    [Authorize]
+    public async Task<IActionResult> ProcessReportRecord(string recordId, [FromQuery] string reason)
+    {
+        var moderatorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(moderatorId)) return Unauthorized("로그인이 필요한 서비스입니다.");
+        if (string.IsNullOrEmpty(reason)) return BadRequest("처리 사유를 입력해주세요.");
+
+        var result = await reportService.ProcessReportAsync(recordId, moderatorId, reason);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
