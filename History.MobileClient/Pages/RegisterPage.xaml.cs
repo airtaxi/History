@@ -7,7 +7,6 @@ namespace History.MobileClient.Pages
 {
     public partial class RegisterPage : ContentPage
     {
-        private bool _codeCompleted;
         private bool _termsCompleted;
         private bool _privacyAgreementCompleted;
         private bool _ageCompleted;
@@ -24,7 +23,7 @@ namespace History.MobileClient.Pages
             _name = name;
         }
 
-        private void ValidateStatus() => RegisterButton.IsEnabled = _codeCompleted && _termsCompleted && _privacyAgreementCompleted && _ageCompleted;
+        private void ValidateStatus() => RegisterButton.IsEnabled = _termsCompleted && _privacyAgreementCompleted && _ageCompleted;
 
         private async void OnViewTermsLabelTapped(object sender, TappedEventArgs e)
         {
@@ -36,14 +35,6 @@ namespace History.MobileClient.Pages
         {
             var page = new InAppBrowserPage("개인정보 수집·이용 동의", "https://history.cenox.io/privacyagreement.html");
             await App.PushModalAsync(page);
-        }
-
-        private void OnCodeEntryTextChanged(object sender, TextChangedEventArgs e)
-        {
-            var entry = sender as Entry;
-            _codeCompleted = !string.IsNullOrWhiteSpace(entry?.Text);
-
-            ValidateStatus();
         }
 
         private void OnCheckBoxCheckedChanged(object sender, CheckedChangedEventArgs e)
