@@ -117,8 +117,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         // Delete previous notifications
         //await _notificationCollection.DeleteManyAsync(x => x.AssociatedId == associatedId && x.Type == type);
 
-        var notifications = notificationResult.Value;
-        foreach(var notification in notifications)
+        foreach(var notification in notificationResult.Value)
         {
             var recipients = notification.Recipients;
             var title = notification.Title;
@@ -140,8 +139,9 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             // Insert new
             await _notificationCollection.InsertOneAsync(notification);
 
-            if (!notification.PushNotificationDisabled) return await SendFirebaseNotificationAsync(recipients, title, body, imageUrl, data);
+            if (!notification.PushNotificationDisabled) await SendFirebaseNotificationAsync(recipients, title, body, imageUrl, data);
         }
+
         return Result.Success();
     }
 
