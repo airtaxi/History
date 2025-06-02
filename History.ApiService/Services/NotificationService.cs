@@ -155,42 +155,16 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         data.TryGetValue("Type", out var rawType);
         if (rawType != null && Enum.TryParse<NotificationType>(rawType, out var type))
         {
-            if (type == NotificationType.Comment)
+            if(data.TryGetValue("PostId", out var postId))
             {
-                var postId = data.ContainsKey("PostId") ? data["PostId"] : null;
-                if (postId != null) collapseKey = "comment_" + postId;
+                if (type == NotificationType.Comment) collapseKey = "comment_" + postId;
+                else if (type == NotificationType.CommentMention) collapseKey = "comment_mention_" + postId;
+                else if (type == NotificationType.CommentLike) collapseKey = "comment_like_" + postId;
+                else if (type == NotificationType.Share) collapseKey = "share_" + postId;
+                else if (type == NotificationType.Repost) collapseKey = "repost_" + postId;
+                else if (type == NotificationType.PostReaction) collapseKey = "post_reaction_" + postId;
+                else if (type == NotificationType.PostMention) collapseKey = "post_mention_" + postId;
             }
-            else if (type == NotificationType.CommentMention)
-            {
-                var postid = data.ContainsKey("PostId") ? data["PostId"] : null;
-                if (postid != null) collapseKey = "comment_mention_" + postid;
-            }
-            else if (type == NotificationType.CommentLike)
-            {
-                var postId = data.ContainsKey("PostId") ? data["PostId"] : null;
-                if (postId != null) collapseKey = "comment_like_" + postId;
-            }
-            else if (type == NotificationType.Share)
-            {
-                var postId = data.ContainsKey("PostId") ? data["PostId"] : null;
-                if (postId != null) collapseKey = "share_" + postId;
-            }
-            else if (type == NotificationType.Repost)
-            {
-                var postId = data.ContainsKey("PostId") ? data["PostId"] : null;
-                if (postId != null) collapseKey = "repost_" + postId;
-            }
-            else if (type == NotificationType.PostReaction)
-            {
-                var postId = data.ContainsKey("PostId") ? data["PostId"] : null;
-                if (postId != null) collapseKey = "post_reaction_" + postId;
-            }
-            else if (type == NotificationType.PostMention)
-            {
-                var postId = data.ContainsKey("PostId") ? data["PostId"] : null;
-                if (postId != null) collapseKey = "post_mention_" + postId;
-            }
-
             if (collapseKey != null) data["notification_id"] = collapseKey; // Use collapse key for Android and iOS to group notifications
         }
 
@@ -504,6 +478,34 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
             core.Data.Add("UserId", userResult.Value.Id);
             core.Data.Add("FriendshipStatus", friendshipResult.Value.Status.ToString());
+        }
+        else if (type == NotificationType.Restriction)
+        {
+            var userService = serviceProvider.GetRequiredService<IUserService>();
+            var moderationService = serviceProvider.GetRequiredService<IModerationService>();
+
+            var recordResult = await moderationService.GetRestrictionRecordByIdAsync(associatedId);
+            if (recordResult.IsFailure) return recordResult.CastFailure<List<Notification>>();
+
+            var moderatorResult = await userService.GetUserByIdAsync(recordResult.Value.ModeratorId);
+            if (moderatorResult.IsFailure) return moderatorResult.CastFailure<List<Notification>>();
+
+            core.Recipients = [recordResult.Value.UserId];
+            core.UserId = recordResult.Value.ModeratorId;
+
+            var target = recordResult.Value.Type switch
+            {
+                RestrictionType.PostDeletion => "게시글",
+                RestrictionType.CommentDeletion => "댓글",
+                _ => throw new ArgumentException("Restriction type is not supported", recordResult.Value.Type.ToString())
+            };
+            core.Title = $"관리자 {moderatorResult.Value.Nickname}님이 회원님의 {target}을 ";
+            core.Body = $"사유: {recordResult.Value.Reason}, 대상 컨텐츠 (글만 제공됨): " + await userService.GenerateTextPreviewFromContentsAsync(recordResult.Value.AssociatedContents);
+            core.ImageUrl = moderatorResult.Value.ProfileThumbnailMediaId != null ? Utils.GenerateMediaUri(moderatorResult.Value.ProfileThumbnailMediaId) : null;
+
+            core.Data.Add("Body", core.Body);
+            core.Data.Add("Reason", recordResult.Value.Reason);
+            core.Data.Add("Type", recordResult.Value.Type.ToString());
         }
         else throw new ArgumentException("Notification Type is not supported", type.ToString());
 

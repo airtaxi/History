@@ -29,6 +29,7 @@ BsonSerializer.RegisterSerializer(new EnumSerializer<MediaBucket>(BsonType.Strin
 BsonSerializer.RegisterSerializer(new EnumSerializer<Rank>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<ErrorType>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<SocialService>(BsonType.String));
+BsonSerializer.RegisterSerializer(new EnumSerializer<RestrictionType>(BsonType.String));
 
 var builder = WebApplication.CreateBuilder(args);
 

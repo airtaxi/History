@@ -67,6 +67,14 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         await notificationCollection.Indexes.CreateOneAsync(new CreateIndexModel<Notification>(Builders<Notification>.IndexKeys.Ascending(x => x.AssociatedId)), cancellationToken: cancellationToken);
         await notificationCollection.Indexes.CreateOneAsync(new CreateIndexModel<Notification>(Builders<Notification>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
 
+        logger.LogInformation("Creating indexes for RestrictionRecord collection...");
+        var restrictionRecordCollection = database.GetCollection<RestrictionRecord>("RestrictionRecords");
+        await restrictionRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<RestrictionRecord>(Builders<RestrictionRecord>.IndexKeys.Ascending(x => x.Type)), cancellationToken: cancellationToken);
+        await restrictionRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<RestrictionRecord>(Builders<RestrictionRecord>.IndexKeys.Ascending(x => x.AssociatedId)), cancellationToken: cancellationToken);
+        await restrictionRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<RestrictionRecord>(Builders<RestrictionRecord>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
+        await restrictionRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<RestrictionRecord>(Builders<RestrictionRecord>.IndexKeys.Ascending(x => x.ModeratorId)), cancellationToken: cancellationToken);
+        await restrictionRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<RestrictionRecord>(Builders<RestrictionRecord>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
+
         logger.LogInformation("Indexes created successfully.");
     }
 

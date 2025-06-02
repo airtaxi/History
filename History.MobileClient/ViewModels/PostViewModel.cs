@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.Api.Comment;
+using History.Commons.Api.Moderation;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
@@ -272,14 +273,35 @@ public partial class PostViewModel : ObservableObject
 
     public async Task DeleteAsync(bool popModal)
     {
-        var confirm = await App.Page.DisplayAlert("게시글 삭제", "정말로 게시글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
-        if (confirm)
+        if (User.UserId != Shared.UserId)
         {
-            var deleteResult = await App.ExecuteRequestAsync(new DeletePost(Post.Id));
+            if (Shared.MyRank < Rank.Moderator)
+            {
+                await App.Page.DisplayAlert("권한 부족", "댓글을 삭제할 권한이 없습니다.", Constants.PromptOk);
+                return;
+            }
+
+            var reason = await App.Page.DisplayPromptAsync("게시글 삭제", "게시글을 삭제하는 이유를 입력해주세요.", "삭제", "취소", "삭제 사유");
+            if (string.IsNullOrWhiteSpace(reason)) return;
+
+            var deleteResult = await App.ExecuteRequestAsync(new RestrictionDeletePost(Post.Id, reason));
             if (deleteResult.IsSuccess)
             {
                 WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostResponseDto>(Post));
                 if (popModal) await App.PopAsync();
+            }
+        }
+        else
+        {
+            var confirm = await App.Page.DisplayAlert("게시글 삭제", "정말로 게시글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+            if (confirm)
+            {
+                var deleteResult = await App.ExecuteRequestAsync(new DeletePost(Post.Id));
+                if (deleteResult.IsSuccess)
+                {
+                    WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostResponseDto>(Post));
+                    if (popModal) await App.PopAsync();
+                }
             }
         }
     }
