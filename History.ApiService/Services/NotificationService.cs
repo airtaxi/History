@@ -113,34 +113,35 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         var notificationResult = await GenerateNotificationAsync(type, associatedId);
         if (notificationResult.IsFailure) notificationResult.CastFailure();
 
-        var notification = notificationResult.Value;
-        if (!notification.Recipients.Any()) return Result.Success();
-
-        var recipients = notification.Recipients;
-        var title = notification.Title;
-        var body = notification.Body;
-        var imageUrl = notification.ImageUrl;
-        var data = notification.Data;
-
-        recipients = recipients.Except([notification.UserId]).Distinct();
-
-        if (!recipients.Any()) return Result.Success();
-
-        while (true)
-        {
-            notification.Id = Guid.NewGuid().ToString("N");
-            var existingNotification = await _notificationCollection.Find(f => f.Id == notification.Id).FirstOrDefaultAsync();
-            if (existingNotification == null) break;
-        }
-
         // Delete previous notifications
-        await _notificationCollection.DeleteManyAsync(x => x.AssociatedId == associatedId && x.Type == type);
+        //await _notificationCollection.DeleteManyAsync(x => x.AssociatedId == associatedId && x.Type == type);
 
-        // Insert new
-        await _notificationCollection.InsertOneAsync(notification);
+        var notifications = notificationResult.Value;
+        foreach(var notification in notifications)
+        {
+            var recipients = notification.Recipients;
+            var title = notification.Title;
+            var body = notification.Body;
+            var imageUrl = notification.ImageUrl;
+            var data = notification.Data;
 
-        if (!notification.PushNotificationDisabled) return await SendFirebaseNotificationAsync(recipients, title, body, imageUrl, data);
-        else return Result.Success();
+            recipients = recipients.Except([notification.UserId]).Distinct();
+
+            if (!recipients.Any()) continue;
+
+            while (true)
+            {
+                notification.Id = Guid.NewGuid().ToString("N");
+                var existingNotification = await _notificationCollection.Find(f => f.Id == notification.Id).FirstOrDefaultAsync();
+                if (existingNotification == null) break;
+            }
+
+            // Insert new
+            await _notificationCollection.InsertOneAsync(notification);
+
+            if (!notification.PushNotificationDisabled) return await SendFirebaseNotificationAsync(recipients, title, body, imageUrl, data);
+        }
+        return Result.Success();
     }
 
     public async Task<Result> SendFirebaseNotificationAsync(IEnumerable<string> recipientUserIds, string title, string body, string imageUrl, Dictionary<string, string> data)
@@ -253,8 +254,9 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         return Result.Success();
     }
 
-    private async Task<Result<Notification>> GenerateNotificationAsync(NotificationType type, string associatedId)
+    private async Task<Result<List<Notification>>> GenerateNotificationAsync(NotificationType type, string associatedId)
     {
+        var notifications = new List<Notification>();
         var core = new Notification()
         {
             AssociatedId = associatedId,
@@ -265,6 +267,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             },
             CreatedAt = DateTime.UtcNow
         };
+        notifications.Add(core);
 
         if (type == NotificationType.Comment)
         {
@@ -274,32 +277,32 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
 
             var commentResult = await commentService.GetCommentByIdAsync(associatedId);
-            if (commentResult.IsFailure) return commentResult.CastFailure<Notification>();
+            if (commentResult.IsFailure) return commentResult.CastFailure<List<Notification>>();
 
             var userResult = await userService.GetUserByIdAsync(commentResult.Value.UserId);
-            if (userResult.IsFailure) return userResult.CastFailure<Notification>();
+            if (userResult.IsFailure) return userResult.CastFailure<List<Notification>>();
 
             var commenterIdsResult = await commentService.GetCommenterUserIdsByPostIdAsync(commentResult.Value.PostId);
-            if (commenterIdsResult.IsFailure) return commenterIdsResult.CastFailure<Notification>();
+            if (commenterIdsResult.IsFailure) return commenterIdsResult.CastFailure<List<Notification>>();
 
             var postResult = await postService.GetPostByIdAsync(commentResult.Value.PostId);
-            if (postResult.IsFailure) return postResult.CastFailure<Notification>();
+            if (postResult.IsFailure) return postResult.CastFailure<List<Notification>>();
 
             var userFriendsIds = await friendshipService.GetUserFriendIdsAsync(commentResult.Value.UserId, commentResult.Value.UserId);
-            if (userFriendsIds.IsFailure) return userFriendsIds.CastFailure<Notification>();
+            if (userFriendsIds.IsFailure) return userFriendsIds.CastFailure<List<Notification>>();
 
-            core.Recipients = [.. commenterIdsResult.Value.Intersect(userFriendsIds.Value), postResult.Value.UserId];
+            core.Recipients = commenterIdsResult.Value.Intersect(userFriendsIds.Value);
             
             var filterResult = await FilterRecipientsByAccessAsync(core.Recipients, postResult.Value);
-            if (filterResult.IsFailure) return filterResult.CastFailure<Notification>();
-            core.Recipients = filterResult.Value.Distinct();
+            if (filterResult.IsFailure) return filterResult.CastFailure<List<Notification>>();
+            core.Recipients = filterResult.Value.Except([postResult.Value.UserId]).Distinct();
 
             core.UserId = userResult.Value.Id;
 
             if (userResult.Value.Id == postResult.Value.UserId) core.Recipients = core.Recipients.Except([userResult.Value.Id]);
 
             var postAuthorResult = await userService.GetUserByIdAsync(postResult.Value.UserId);
-            if (postAuthorResult.IsFailure) return postAuthorResult.CastFailure<Notification>();
+            if (postAuthorResult.IsFailure) return postAuthorResult.CastFailure<List<Notification>>();
 
             core.Title = $"{userResult.Value.Nickname}님이 {postAuthorResult.Value.Nickname}님의 게시글에 댓글을 달았습니다.";
             core.Body = await userService.GenerateTextPreviewFromContentsAsync(commentResult.Value.Contents);
@@ -308,6 +311,10 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             core.Data.Add("UserId", userResult.Value.Id);
             core.Data.Add("PostId", commentResult.Value.PostId);
             core.Data.Add("CommentId", commentResult.Value.Id);
+
+            var authorCore = core.Clone();
+            authorCore.Title = $"{userResult.Value.Nickname}님이 회원님의 게시글에 댓글을 달았습니다.";
+            notifications.Add(authorCore);
         }
         else if (type == NotificationType.CommentMention)
         {
@@ -316,19 +323,19 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var commentService = serviceProvider.GetRequiredService<ICommentService>();
 
             var commentResult = await commentService.GetCommentByIdAsync(associatedId);
-            if (commentResult.IsFailure) return commentResult.CastFailure<Notification>();
+            if (commentResult.IsFailure) return commentResult.CastFailure<List<Notification>>();
 
             var userResult = await userService.GetUserByIdAsync(commentResult.Value.UserId);
-            if (userResult.IsFailure) return userResult.CastFailure<Notification>();
+            if (userResult.IsFailure) return userResult.CastFailure<List<Notification>>();
 
             var postResult = await postService.GetPostByIdAsync(commentResult.Value.PostId);
-            if (postResult.IsFailure) return postResult.CastFailure<Notification>();
+            if (postResult.IsFailure) return postResult.CastFailure<List<Notification>>();
 
 
             core.Recipients = commentResult.Value.Contents.OfType<ProfileContent>().Select(x => x.UserId).Distinct();
             
             var filterResult = await FilterRecipientsByAccessAsync(core.Recipients, postResult.Value);
-            if (filterResult.IsFailure) return filterResult.CastFailure<Notification>();
+            if (filterResult.IsFailure) return filterResult.CastFailure<List<Notification>>();
             core.Recipients = filterResult.Value;
 
             core.UserId = userResult.Value.Id;
@@ -347,13 +354,13 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var commentService = serviceProvider.GetRequiredService<ICommentService>();
 
             var commentLikeResult = await commentService.GetCommentLikeByIdAsync(associatedId);
-            if (commentLikeResult.IsFailure) return commentLikeResult.CastFailure<Notification>();
+            if (commentLikeResult.IsFailure) return commentLikeResult.CastFailure<List<Notification>>();
 
             var userResult = await userService.GetUserByIdAsync(commentLikeResult.Value.UserId);
-            if (userResult.IsFailure) return userResult.CastFailure<Notification>();
+            if (userResult.IsFailure) return userResult.CastFailure<List<Notification>>();
 
             var commentResult = await commentService.GetCommentByIdAsync(commentLikeResult.Value.CommentId);
-            if (commentResult.IsFailure) return commentResult.CastFailure<Notification>();
+            if (commentResult.IsFailure) return commentResult.CastFailure<List<Notification>>();
 
             core.Recipients = [commentResult.Value.UserId];
             core.UserId = userResult.Value.Id;
@@ -372,13 +379,13 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var postService = serviceProvider.GetRequiredService<IPostService>();
 
             var postResult = await postService.GetPostByIdAsync(associatedId);
-            if (postResult.IsFailure) return postResult.CastFailure<Notification>();
+            if (postResult.IsFailure) return postResult.CastFailure<List<Notification>>();
 
             var userResult = await userService.GetUserByIdAsync(postResult.Value.UserId);
-            if (userResult.IsFailure) return userResult.CastFailure<Notification>();
+            if (userResult.IsFailure) return userResult.CastFailure<List<Notification>>();
 
             var parentPostResult = await postService.GetPostByIdAsync(postResult.Value.ParentPostId);
-            if (parentPostResult.IsFailure) return parentPostResult.CastFailure<Notification>();
+            if (parentPostResult.IsFailure) return parentPostResult.CastFailure<List<Notification>>();
 
             core.Recipients = [parentPostResult.Value.UserId];
             core.UserId = userResult.Value.Id;
@@ -397,13 +404,13 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var postService = serviceProvider.GetRequiredService<IPostService>();
 
             var postResult = await postService.GetPostByIdAsync(associatedId);
-            if (postResult.IsFailure) return postResult.CastFailure<Notification>();
+            if (postResult.IsFailure) return postResult.CastFailure<List<Notification>>();
 
             var userResult = await userService.GetUserByIdAsync(postResult.Value.UserId);
-            if (userResult.IsFailure) return userResult.CastFailure<Notification>();
+            if (userResult.IsFailure) return userResult.CastFailure<List<Notification>>();
 
             var parentPostResult = await postService.GetPostByIdAsync(postResult.Value.ParentPostId);
-            if (parentPostResult.IsFailure) return parentPostResult.CastFailure<Notification>();
+            if (parentPostResult.IsFailure) return parentPostResult.CastFailure<List<Notification>>();
 
             core.Recipients = [parentPostResult.Value.UserId];
             core.UserId = userResult.Value.Id;
@@ -421,13 +428,13 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var postService = serviceProvider.GetRequiredService<IPostService>();
 
             var postReactionResult = await postService.GetPostReactionByIdAsync(associatedId);
-            if (postReactionResult.IsFailure) return postReactionResult.CastFailure<Notification>();
+            if (postReactionResult.IsFailure) return postReactionResult.CastFailure<List<Notification>>();
 
             var postResult = await postService.GetPostByIdAsync(postReactionResult.Value.PostId);
-            if (postResult.IsFailure) return postResult.CastFailure<Notification>();
+            if (postResult.IsFailure) return postResult.CastFailure<List<Notification>>();
 
             var userResult = await userService.GetUserByIdAsync(postReactionResult.Value.UserId);
-            if (userResult.IsFailure) return userResult.CastFailure<Notification>();
+            if (userResult.IsFailure) return userResult.CastFailure<List<Notification>>();
 
             core.Recipients = [postResult.Value.UserId];
             core.UserId = userResult.Value.Id;
@@ -446,15 +453,15 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var postService = serviceProvider.GetRequiredService<IPostService>();
 
             var postResult = await postService.GetPostByIdAsync(associatedId);
-            if (postResult.IsFailure) return postResult.CastFailure<Notification>();
+            if (postResult.IsFailure) return postResult.CastFailure<List<Notification>>();
 
             var userResult = await userService.GetUserByIdAsync(postResult.Value.UserId);
-            if (userResult.IsFailure) return userResult.CastFailure<Notification>();
+            if (userResult.IsFailure) return userResult.CastFailure<List<Notification>>();
 
             core.Recipients = postResult.Value.Contents.OfType<ProfileContent>().Select(x => x.UserId).Distinct();
 
             var filterResult = await FilterRecipientsByAccessAsync(core.Recipients, postResult.Value);
-            if (filterResult.IsFailure) return filterResult.CastFailure<Notification>();
+            if (filterResult.IsFailure) return filterResult.CastFailure<List<Notification>>();
             core.Recipients = filterResult.Value;
 
             core.UserId = userResult.Value.Id;
@@ -472,10 +479,10 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
 
             var friendshipResult = await friendshipService.GetFriendshipByIdAsync(associatedId);
-            if (friendshipResult.IsFailure) return friendshipResult.CastFailure<Notification>();
+            if (friendshipResult.IsFailure) return friendshipResult.CastFailure<List<Notification>>();
 
             var userResult = await userService.GetUserByIdAsync(friendshipResult.Value.FriendId);
-            if (userResult.IsFailure) return userResult.CastFailure<Notification>();
+            if (userResult.IsFailure) return userResult.CastFailure<List<Notification>>();
 
             core.Recipients = [friendshipResult.Value.UserId];
             core.UserId = userResult.Value.Id;
@@ -500,9 +507,15 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         }
         else throw new ArgumentException("Notification Type is not supported", type.ToString());
 
-        if (core.Body.Length > 100) core.Body = core.Body[..100] + "...";
+        foreach(var notification in notifications)
+        {
+            if (notification.Body.Length > 100)
+            {
+                notification.Body = notification.Body[..100] + "...";
+            }
+        }
 
-        return core;
+        return notifications;
     }
 
     public async Task<Result> HandleWithdrawAsync(string userId)
