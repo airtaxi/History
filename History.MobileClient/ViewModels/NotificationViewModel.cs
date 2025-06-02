@@ -34,9 +34,10 @@ public partial class NotificationViewModel(NotificationResponseDto notification)
         if(Notification.Data == null) return;
         var type = Notification.Type;
 
-        if (type == NotificationType.FriendRequest)
+        if (type == NotificationType.Restriction) await App.Page.DisplayAlert("제재 내역", Notification.Body, Constants.PromptOk);
+        else if (type == NotificationType.FriendRequest)
         {
-            if(!Notification.Data.TryGetValue("UserId", out var userId)) return;
+            if (!Notification.Data.TryGetValue("UserId", out var userId)) return;
 
             var page = new UserPage(userId);
             await App.PushAsync(page);
