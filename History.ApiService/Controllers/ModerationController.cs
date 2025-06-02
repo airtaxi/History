@@ -3,6 +3,7 @@ using History.Commons;
 using History.Commons.DataTypes.RequestDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace History.ApiService.Controllers;
 
@@ -14,7 +15,7 @@ public class ModerationController(IModerationService moderationService) : Contro
     [Authorize]
     public async Task<IActionResult> DeletePost(string postId, [FromQuery] string reason)
     {
-        var moderatorId = User.FindFirst("id")?.Value;
+        var moderatorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(moderatorId)) return Unauthorized("로그인이 필요한 서비스입니다.");
         if (string.IsNullOrEmpty(reason)) return BadRequest("삭제 사유를 입력해주세요.");
 
@@ -31,7 +32,7 @@ public class ModerationController(IModerationService moderationService) : Contro
     [Authorize]
     public async Task<IActionResult> DeleteComment(string commentId, [FromQuery] string reason)
     {
-        var moderatorId = User.FindFirst("id")?.Value;
+        var moderatorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(moderatorId)) return Unauthorized("로그인이 필요한 서비스입니다.");
         if (string.IsNullOrEmpty(reason)) return BadRequest("삭제 사유를 입력해주세요.");
 
