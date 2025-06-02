@@ -24,4 +24,22 @@ public class Notification
     public Dictionary<string, string> Data { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public Notification Clone()
+    {
+        return new Notification
+        {
+            Id = Id,
+            Recipients = Recipients?.ToList(),
+            Type = Type,
+            AssociatedId = AssociatedId,
+            UserId = UserId,
+            Title = Title,
+            Body = Body,
+            ImageUrl = ImageUrl,
+            PushNotificationDisabled = PushNotificationDisabled,
+            Data = Data != null ? new Dictionary<string, string>(Data) : null,
+            CreatedAt = CreatedAt
+        };
+    }
 }
