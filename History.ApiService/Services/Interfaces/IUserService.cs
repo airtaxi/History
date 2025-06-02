@@ -84,6 +84,12 @@ public interface IUserService
     public Task<Result<List<User>>> GetModeratorsAsync(int limit = 10, string fromUserId = null);
 
     /// <summary>
+    /// Retrieves a list of user IDs for all moderators.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation, containing a list of moderator user IDs.</returns>
+    public Task<Result<List<string>>> GetModeratorUserIdsAsync();
+
+    /// <summary>
     /// Update user's description
     /// </summary>
     /// <param name="userId">The ID of user to update</param>

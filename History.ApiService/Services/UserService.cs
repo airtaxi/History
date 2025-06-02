@@ -109,7 +109,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     /// <inheritdoc />
     public async Task<Result<List<User>>> GetModeratorsAsync(int limit = 10, string fromUserId = null)
     {
-        var filter = Builders<User>.Filter.Eq(u => u.Rank, Rank.Moderator);
+        var filter = Builders<User>.Filter.Gte(u => u.Rank, Rank.Moderator);
 
         if (!string.IsNullOrEmpty(fromUserId))
         {
@@ -124,6 +124,14 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             .SortByDescending(u => u.CreatedAt)
             .Limit(limit)
             .ToListAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<List<string>>> GetModeratorUserIdsAsync()
+    {
+        var filter = Builders<User>.Filter.Gte(u => u.Rank, Rank.Moderator);
+        var users = await _userCollection.Find(filter).Project(u => new { u.Id }).ToListAsync();
+        return users.Select(u => u.Id).ToList();
     }
 
     /// <inheritdoc />
@@ -353,18 +361,23 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
 
         if(requesterId != null)
         {
+            var requesterResult = await GetUserByIdAsync(requesterId);
+            if (requesterResult.IsFailure) return requesterResult.CastFailure<UserResponseDto>();
 
-            var blockedUserIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
-            if (blockedUserIdsResult.IsFailure) return blockedUserIdsResult.CastFailure<UserResponseDto>();
-            else if (blockedUserIdsResult.Value.Contains(user.Id)) return (ErrorType.Forbidden, "차단한 사용자 접근 오류");
+            if (requesterResult.Value.Rank < Rank.Moderator)
+            {
+                var blockedUserIdsResult = await friendshipService.GetBlockedUserIdsAsync(requesterId);
+                if (blockedUserIdsResult.IsFailure) return blockedUserIdsResult.CastFailure<UserResponseDto>();
+                else if (blockedUserIdsResult.Value.Contains(user.Id)) return (ErrorType.Forbidden, "차단한 사용자 접근 오류");
 
-            var ignoredUserIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
-            if (ignoredUserIdsResult.IsFailure) return ignoredUserIdsResult.CastFailure<UserResponseDto>();
-            else if (ignoredUserIdsResult.Value.Contains(user.Id)) return (ErrorType.Forbidden, "무시한 사용자 접근 오류");
+                var ignoredUserIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
+                if (ignoredUserIdsResult.IsFailure) return ignoredUserIdsResult.CastFailure<UserResponseDto>();
+                else if (ignoredUserIdsResult.Value.Contains(user.Id)) return (ErrorType.Forbidden, "무시한 사용자 접근 오류");
 
-            var blockerUserIdsResult = await friendshipService.GetBlockerUserIdsAsync(user.Id);
-            if (blockerUserIdsResult.IsFailure) return blockerUserIdsResult.CastFailure<UserResponseDto>();
-            else if (blockerUserIdsResult.Value.Contains(requesterId)) return (ErrorType.Forbidden, "차단당한 사용자 접근 오류");
+                var blockerUserIdsResult = await friendshipService.GetBlockerUserIdsAsync(user.Id);
+                if (blockerUserIdsResult.IsFailure) return blockerUserIdsResult.CastFailure<UserResponseDto>();
+                else if (blockerUserIdsResult.Value.Contains(requesterId)) return (ErrorType.Forbidden, "차단당한 사용자 접근 오류");
+            }
 
             var friendshipResult = await friendshipService.GetFriendshipAsync(requesterId, user.Id);
             result.Friendship = friendshipResult.Value;
@@ -390,7 +403,14 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         var results = users.Select(x => new UserResponseDto(x)).ToList();
 
         var bannedUserIds = new List<string>();
-        if (requesterId != null) bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
+        if (requesterId != null)
+        {
+            var requesterResult = await GetUserByIdAsync(requesterId);
+            if (requesterResult.IsFailure) return requesterResult.CastFailure<List<UserResponseDto>>();
+
+            if (requesterResult.Value.Rank < Rank.Moderator)
+                bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
+        }
         results.RemoveAll(x => bannedUserIds.Contains(x.UserId));
 
         var friendshipsResult = await friendshipService.GetAllFriendshipsAsync(requesterId);

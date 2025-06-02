@@ -1,6 +1,7 @@
 ﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
+using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using MongoDB.Driver;
 
@@ -8,35 +9,61 @@ namespace History.ApiService.Services;
 
 public class ModerationService(IMongoDatabase database, INotificationService notificationService, IServiceProvider serviceProvider) : IModerationService
 {
-    private readonly IMongoCollection<RestrictionRecord> _restrictionRecordCollection = database.GetCollection<RestrictionRecord>("RestrictionRecords");
+    private readonly IMongoCollection<ModerationRecord> _moderationRecordCollection = database.GetCollection<ModerationRecord>("ModerationRecords");
 
-    public async Task<Result<RestrictionRecord>> GetRestrictionRecordByIdAsync(string recordId)
+    public async Task<Result<ModerationRecord>> GetModerationRecordByIdAsync(string recordId)
     {
-        var record = await _restrictionRecordCollection.Find(r => r.Id == recordId).FirstOrDefaultAsync();
+        var record = await _moderationRecordCollection.Find(r => r.Id == recordId).FirstOrDefaultAsync();
         return record != null ? record : (ErrorType.NotFound, "제재 내역을 찾을 수 없습니다.");
     }
 
-    public async Task<Result> DeleteRestrictionRecordByIdAsync(string recordId)
+    public async Task<Result<List<ModerationRecord>>> GetModerationRecordsAsync(string fromRecordId = null, int limit = 10)
     {
-        var result = await _restrictionRecordCollection.DeleteOneAsync(r => r.Id == recordId);
+        var filter = Builders<ModerationRecord>.Filter.Empty;
+        if (!string.IsNullOrEmpty(fromRecordId))
+        {
+            var fromRecord = _moderationRecordCollection.Find(r => r.Id == fromRecordId).FirstOrDefaultAsync();
+            if (fromRecord == null) return (ErrorType.NotFound, "제재 내역을 찾을 수 없습니다.");
+            filter = Builders<ModerationRecord>.Filter.Gt(r => r.CreatedAt, fromRecord.Result.CreatedAt);
+        }
+
+        var records = await _moderationRecordCollection.Find(filter)
+            .SortByDescending(r => r.CreatedAt)
+            .Limit(limit)
+            .ToListAsync();
+
+        return records;
+    }
+
+    public async Task<Result> DeleteModerationRecordByIdAsync(string recordId)
+    {
+        var result = await _moderationRecordCollection.DeleteOneAsync(r => r.Id == recordId);
         if (result.DeletedCount == 0) return (ErrorType.NotFound, "제재 내역을 찾을 수 없습니다.");
 
         // Delete associated notifications
-        await notificationService.DeleteNotificationsAsync("AssociatedId", recordId);
+        await notificationService.DeleteNotificationsAsync("AssociatedId", recordId, NotificationType.Restriction);
 
         return Result.Success();
     }
 
-    public async Task<Result> DeletePostAsync(string postId, string moderatorId, string reason)
+    public async Task<Result> DeleteModerationRecordByUserIdAsync(string postId)
+    {
+        var result = await _moderationRecordCollection.DeleteManyAsync(r => r.UserId == postId);
+        await notificationService.DeleteNotificationsAsync("RestrictedUserId", postId, NotificationType.Restriction);
+        return Result.Success();
+    }
+
+    public async Task<Result> DeletePostAsync(string postId, string moderatorId, string reason, ReportType reportType)
     {
         var userService = serviceProvider.GetRequiredService<IUserService>();
         var postService = serviceProvider.GetRequiredService<IPostService>();
+        var reportService = serviceProvider.GetRequiredService<IReportService>();
 
         var moderatorResult = await userService.GetUserByIdAsync(moderatorId);
         if (!moderatorResult.IsSuccess) return moderatorResult.CastFailure();
 
         var moderator = moderatorResult.Value;
-        if(moderator.Rank < Rank.Moderator) return (ErrorType.Forbidden, "괸리자만 게시글에 대한 삭제 조치를 할 수 있습니다.");
+        if (moderator.Rank < Rank.Moderator) return (ErrorType.Forbidden, "괸리자만 게시글에 대한 삭제 조치를 할 수 있습니다.");
 
         var postResult = await postService.GetPostByIdAsync(postId);
         if (!postResult.IsSuccess) return postResult.CastFailure();
@@ -46,8 +73,11 @@ public class ModerationService(IMongoDatabase database, INotificationService not
         var result = await postService.DeletePostAsync(postId, moderatorId);
         if (result.IsFailure) return result;
 
+        // Delete associated reports
+        await reportService.DeleteReportRecordByPostIdAsync(postId);
+
         // Create a restriction record for the deleted post
-        var record = new RestrictionRecord
+        var record = new ModerationRecord
         {
             UserId = post.UserId,
             AssociatedId = post.Id,
@@ -56,18 +86,19 @@ public class ModerationService(IMongoDatabase database, INotificationService not
             AssociatedModifiedAt = post.ModifiedAt,
             ModeratorId = moderator.Id,
             Reason = reason,
-            Type = RestrictionType.PostDeletion,
+            ReportType = reportType,
+            RestrictionType = RestrictionType.PostDeletion,
             CreatedAt = DateTime.UtcNow
         };
 
-        while(true)
+        while (true)
         {
             record.Id = Guid.NewGuid().ToString("N");
-            var existingRecord = await _restrictionRecordCollection.Find(r => r.Id == record.Id).FirstOrDefaultAsync();
+            var existingRecord = await _moderationRecordCollection.Find(r => r.Id == record.Id).FirstOrDefaultAsync();
             if (existingRecord == null) break;
         }
 
-        await _restrictionRecordCollection.InsertOneAsync(record);
+        await _moderationRecordCollection.InsertOneAsync(record);
 
         // Send notifications
         await notificationService.SendNotificationsAsync(NotificationType.Restriction, record.Id);
@@ -75,8 +106,10 @@ public class ModerationService(IMongoDatabase database, INotificationService not
         return Result.Success();
     }
 
-    public async Task<Result> DeleteCommentAsync(string commentId, string moderatorId, string reason)
+    public async Task<Result> DeleteCommentAsync(string commentId, string moderatorId, string reason, ReportType reportType)
     {
+        var reportService = serviceProvider.GetRequiredService<IReportService>();
+
         var userService = serviceProvider.GetRequiredService<IUserService>();
         var commentService = serviceProvider.GetRequiredService<ICommentService>();
 
@@ -84,7 +117,7 @@ public class ModerationService(IMongoDatabase database, INotificationService not
         if (!moderatorResult.IsSuccess) return moderatorResult.CastFailure();
 
         var moderator = moderatorResult.Value;
-        if(moderator.Rank < Rank.Moderator) return (ErrorType.Forbidden, "괸리자만 댓글에 대한 삭제 조치를 할 수 있습니다.");
+        if (moderator.Rank < Rank.Moderator) return (ErrorType.Forbidden, "괸리자만 댓글에 대한 삭제 조치를 할 수 있습니다.");
 
         var commentResult = await commentService.GetCommentByIdAsync(commentId);
         if (!commentResult.IsSuccess) return commentResult.CastFailure();
@@ -94,8 +127,11 @@ public class ModerationService(IMongoDatabase database, INotificationService not
         var result = await commentService.DeleteCommentAsync(commentId, moderatorId);
         if (result.IsFailure) return result;
 
+        // Delete associated reports
+        await reportService.DeleteReportRecordByCommentIdAsync(commentId);
+
         // Create a restriction record for the deleted comment
-        var record = new RestrictionRecord
+        var record = new ModerationRecord
         {
             UserId = comment.UserId,
             AssociatedId = comment.Id,
@@ -104,22 +140,66 @@ public class ModerationService(IMongoDatabase database, INotificationService not
             AssociatedModifiedAt = comment.ModifiedAt,
             ModeratorId = moderator.Id,
             Reason = reason,
-            Type = RestrictionType.CommentDeletion,
+            ReportType = reportType,
+            RestrictionType = RestrictionType.CommentDeletion,
             CreatedAt = DateTime.UtcNow
         };
 
-        while(true)
+        while (true)
         {
             record.Id = Guid.NewGuid().ToString("N");
-            var existingRecord = await _restrictionRecordCollection.Find(r => r.Id == record.Id).FirstOrDefaultAsync();
+            var existingRecord = await _moderationRecordCollection.Find(r => r.Id == record.Id).FirstOrDefaultAsync();
             if (existingRecord == null) break;
         }
 
-        await _restrictionRecordCollection.InsertOneAsync(record);
+        await _moderationRecordCollection.InsertOneAsync(record);
 
         // Send notifications
         await notificationService.SendNotificationsAsync(NotificationType.Restriction, record.Id);
 
         return Result.Success();
+    }
+
+    public async Task<Result<ModerationRecordResponseDto>> GenerateModerationRecordResponseDtoAsync(ModerationRecord record)
+    {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+
+        var moderatorResult = await userService.GenerateUserResponseDtoAsync(record.ModeratorId);
+        var userResult = await userService.GenerateUserResponseDtoAsync(record.UserId);
+
+        var responseDto = new ModerationRecordResponseDto(record)
+        {
+            User = userResult.IsSuccess ? userResult.Value : null,
+            Moderator = moderatorResult.IsSuccess ? moderatorResult.Value : null,
+        };
+
+        return responseDto;
+    }
+
+    public async Task<Result<List<ModerationRecordResponseDto>>> GenerateModerationRecordResponseDtosAsync(List<ModerationRecord> records)
+    {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+
+        var moderatorIds = records.Select(r => r.ModeratorId).Distinct().ToList();
+        var userIds = records.Select(r => r.UserId).Distinct().ToList();
+
+        var moderatorResults = await userService.GenerateUserResponseDtosAsync(moderatorIds);
+        var userResults = await userService.GenerateUserResponseDtosAsync(userIds);
+
+        var results = new List<ModerationRecordResponseDto>();
+
+        foreach(var record in records)
+        {
+            var moderator = moderatorResults.Value.FirstOrDefault(m => m.UserId == record.ModeratorId);
+            var user = userResults.Value.FirstOrDefault(u => u.UserId == record.UserId);
+
+            results.Add(new ModerationRecordResponseDto(record)
+            {
+                User = user,
+                Moderator = moderator
+            });
+        }
+
+        return results;
     }
 }

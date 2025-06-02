@@ -472,6 +472,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     /// <inheritdoc/>
     public async Task<Result> DeletePostAsync(string postId, string requesterId)
     {
+        var reportService = serviceProvider.GetRequiredService<IReportService>();
         var userService = serviceProvider.GetRequiredService<IUserService>();
         var userResult = await userService.GetUserByIdAsync(requesterId);
         if (userResult.IsFailure) return userResult.CastFailure();
@@ -510,6 +511,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Delete notifications
         await notificationService.DeleteNotificationsAsync("Data.PostId", postId);
+
+        // Delete reports associated with the post
+        await reportService.DeleteReportRecordByPostIdAsync(postId);
 
         // Delete the post from the database
         await _postCollection.DeleteOneAsync(p => p.Id == postId);
@@ -693,7 +697,14 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
     public async Task<Result> CheckAccessAsync(Post post, string requesterId)
     {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+        var requesterResult = await userService.GetUserByIdAsync(requesterId);
+        if (requesterResult.IsFailure) return requesterResult.CastFailure();
+
+        if (requesterResult.Value.Rank >= Rank.Moderator) return Result.Success(); // Moderators can access all posts
+
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
 
         var postAuthorId = post.UserId;
         if (postAuthorId == requesterId) return Result.Success();
