@@ -6,6 +6,7 @@ using History.Commons;
 using History.Commons.Api.Comment;
 using History.Commons.Api.Moderation;
 using History.Commons.Api.Post;
+using History.Commons.Api.Report;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
@@ -261,6 +262,23 @@ public partial class PostViewModel : ObservableObject
         }
         else if (action == "게시글 공유") await HandleShareAsync();
         else if (action.StartsWith("리포스트")) await HandleRepostAsync();
+        else if (action == "게시글 신고")
+        {
+            var reportTypes = Enum.GetValues<ReportType>().Select(x => x.ToDisplayString()).ToArray();
+
+            var rawReportType = await App.Page.DisplayActionSheet("신고 카테고리", Constants.PromptCancel, null, reportTypes);
+            if (rawReportType == null || rawReportType == Constants.PromptCancel) return;
+            var reportType = ReportTypeExtensions.FromDisplayString(rawReportType);
+
+            var result = await App.ExecuteRequestAsync(new CreateReportRecord(new()
+            {
+                Type = reportType,
+                Target = ReportTarget.Post,
+                AssociatedId = Post.Id
+            }));
+
+            if (result.IsSuccess) await App.Page.DisplayAlert("안내", "게시글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다.", Constants.PromptOk);
+        }
         else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
 
