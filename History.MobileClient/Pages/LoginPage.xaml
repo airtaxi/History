@@ -12,6 +12,7 @@
             WidthRequest="256" />
         <VerticalStackLayout
             x:Name="LoginVerticalStackLayout"
+            Margin="20"
             Padding="20"
             HorizontalOptions="Center"
             IsVisible="False"
