@@ -146,13 +146,13 @@ public partial class Media : ResourceDictionary
         Debug.WriteLine($"IMAGE Loaded: {viewModel.Uri}");
 
         WeakReferenceMessenger.Default.UnregisterAll(sender);
-        WeakReferenceMessenger.Default.Register<ResizeMediaCarouselViewMessage>(sender, (s, e) =>
+        WeakReferenceMessenger.Default.Register<ResizeMediaCarouselViewMessage>(sender, async (s, e) =>
         {
             if (e.Value == viewModel && s_lastLoadedMediaViewModel != viewModel)
             {
                 Debug.WriteLine($"ResizeMediaCarouselViewMessage: {viewModel.Uri}");
                 s_lastLoadedMediaViewModel = viewModel;
-                //await Task.Delay(100);
+                await Task.Delay(100);
                 ResizeImage(sender);
             }
         });
@@ -164,7 +164,7 @@ public partial class Media : ResourceDictionary
         WeakReferenceMessenger.Default.UnregisterAll(image);
     }
 
-    private void OnImageFinished(object sender, CachedImageEvents.FinishEventArgs e)
+    private async void OnImageFinished(object sender, CachedImageEvents.FinishEventArgs e)
     {
         if (sender is not CachedImage image) return;
 
@@ -178,7 +178,7 @@ public partial class Media : ResourceDictionary
 
         if (s_lastLoadedMediaViewModel == viewModel)
         {
-            //await Task.Delay(100);
+            await Task.Delay(100);
             ResizeImage(sender);
         }
     }
@@ -186,27 +186,27 @@ public partial class Media : ResourceDictionary
     private static void ResizeImage(object sender)
     {
         var image = sender as CachedImage;
-
-        var nativeImageView = (image?.Handler as CachedImageHandler)?.PlatformView;
-        int imageWidth = 0, imageHeight = 0;
-
-#if ANDROID
-        if (nativeImageView.Drawable is Android.Graphics.Drawables.BitmapDrawable bitmapDrawable)
-        {
-            var bitmap = bitmapDrawable.Bitmap;
-            imageWidth = bitmap.Width;
-            imageHeight = bitmap.Height;
-        }
-#elif IOS
         image.Dispatcher.Dispatch(() =>
         {
+            var nativeImageView = (image?.Handler as CachedImageHandler)?.PlatformView;
+            int imageWidth = 0, imageHeight = 0;
+
+#if ANDROID
+            if (nativeImageView.Drawable is Android.Graphics.Drawables.BitmapDrawable bitmapDrawable)
+            {
+                var bitmap = bitmapDrawable.Bitmap;
+                imageWidth = bitmap.Width;
+                imageHeight = bitmap.Height;
+            }
+#elif IOS
             var uiImage = nativeImageView.Image;
             if (uiImage == null) return;
 
             imageWidth = (int)(uiImage.Size.Width * uiImage.CurrentScale);
             imageHeight = (int)(uiImage.Size.Height * uiImage.CurrentScale);
-            if (imageWidth <= 0 || imageHeight <= 0) return;
+#endif
 
+            if (imageWidth <= 0 || imageHeight <= 0) return;
             var aspectRatio = (double)imageWidth / imageHeight;
 
             var viewModel = image?.BindingContext as ImageViewModel;
@@ -219,6 +219,5 @@ public partial class Media : ResourceDictionary
                 image.InvalidateMeasure();
             }
         });
-#endif
     }
 }

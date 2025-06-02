@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
@@ -34,7 +35,19 @@ public partial class NotificationViewModel(NotificationResponseDto notification)
         if(Notification.Data == null) return;
         var type = Notification.Type;
 
-        if (type == NotificationType.Restriction) await App.Page.DisplayAlert("제재 내역", Notification.Body, Constants.PromptOk);
+        if (type == NotificationType.Restriction)
+        {
+            var accept = await App.Page.DisplayAlert("제재 내역", Notification.Body, Constants.PromptOk, "소명 신청하기");
+            if (!accept)
+            {
+                var copy = await App.Page.DisplayAlert("알림", "공식 디스코드에서 소명 신청을 받고 있습니다.", "디스코드 초대 URL 복사", "확인");
+                if (copy)
+                {
+                    await Clipboard.SetTextAsync(Constants.DiscordInviteUrl);
+                    await Toast.Make("디스코드 초대 URL이 클립보드에 복사되었습니다.").Show();
+                }
+            }
+        }
         else if (type == NotificationType.FriendRequest)
         {
             if (!Notification.Data.TryGetValue("UserId", out var userId)) return;
