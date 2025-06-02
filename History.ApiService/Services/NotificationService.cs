@@ -517,7 +517,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var reporterResult = await userService.GetUserByIdAsync(recordResult.Value.ReporterId);
             if (reporterResult.IsFailure) return reporterResult.CastFailure<List<Notification>>();
 
-            var moderatorUserIdsResult = await userService.GetModeratorUserIdsAsync();
+            var moderatorUserIdsResult = await userService.GetModeratorIdsAsync();
             if (moderatorUserIdsResult.IsFailure) return moderatorUserIdsResult.CastFailure<List<Notification>>();
 
             core.Recipients = moderatorUserIdsResult.Value;

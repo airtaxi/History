@@ -87,7 +87,7 @@ public interface IUserService
     /// Retrieves a list of user IDs for all moderators.
     /// </summary>
     /// <returns>A task that represents the asynchronous operation, containing a list of moderator user IDs.</returns>
-    public Task<Result<List<string>>> GetModeratorUserIdsAsync();
+    public Task<Result<List<string>>> GetModeratorIdsAsync();
 
     /// <summary>
     /// Update user's description

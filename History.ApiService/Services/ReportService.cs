@@ -8,7 +8,7 @@ using MongoDB.Driver;
 
 namespace History.ApiService.Services;
 
-public class ReportService(IMongoDatabase database, IServiceProvider serviceProvider, IModerationService moderationService) : IReportService
+public class ReportService(IMongoDatabase database, IServiceProvider serviceProvider, IModerationService moderationService, INotificationService notificationService) : IReportService
 {
     private readonly IMongoCollection<ReportRecord> _reportRecordCollection = database.GetCollection<ReportRecord>("ReportRecords");
 
@@ -40,7 +40,7 @@ public class ReportService(IMongoDatabase database, IServiceProvider serviceProv
         var postService = serviceProvider.GetRequiredService<IPostService>();
         var commentService = serviceProvider.GetRequiredService<ICommentService>();
 
-        var newRecord = new ReportRecord
+        var record = new ReportRecord
         {
             Target = target,
             Type = type,
@@ -56,26 +56,30 @@ public class ReportService(IMongoDatabase database, IServiceProvider serviceProv
         {
             var postResult = await postService.GetPostByIdAsync(associatedId);
             if (postResult.IsFailure) return postResult.CastFailure();
-            newRecord.UserId = postResult.Value.UserId;
-            newRecord.AssociatedContents = postResult.Value.Contents;
+            record.UserId = postResult.Value.UserId;
+            record.AssociatedContents = postResult.Value.Contents;
         }
         else if (target == ReportTarget.Comment)
         {
             var commentResult = await commentService.GetCommentByIdAsync(associatedId);
             if (commentResult.IsFailure) return commentResult.CastFailure();
-            newRecord.UserId = commentResult.Value.UserId;
-            newRecord.AssociatedContents = commentResult.Value.Contents;
+            record.UserId = commentResult.Value.UserId;
+            record.AssociatedContents = commentResult.Value.Contents;
         }
         else return (ErrorType.BadRequest, "잘못된 신고 대상입니다.");
 
         while (true)
         {
-            newRecord.Id = Guid.NewGuid().ToString("N");
-            existingRecord = await _reportRecordCollection.Find(r => r.Id == newRecord.Id).FirstOrDefaultAsync();
+            record.Id = Guid.NewGuid().ToString("N");
+            existingRecord = await _reportRecordCollection.Find(r => r.Id == record.Id).FirstOrDefaultAsync();
             if (existingRecord == null) break;
         }
 
-        await _reportRecordCollection.InsertOneAsync(newRecord);
+        await _reportRecordCollection.InsertOneAsync(record);
+
+        // Send notifications to moderators
+        await notificationService.SendNotificationsAsync(NotificationType.Report, record.Id);
+
         return Result.Success();
     }
 
