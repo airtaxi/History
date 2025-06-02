@@ -20,4 +20,5 @@ public enum NotificationType
     FriendRequest,
     FavoriteFriendNewPost,
     Birthday,
+    Restriction,
 }
