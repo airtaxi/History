@@ -75,6 +75,15 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         await moderationRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<ModerationRecord>(Builders<ModerationRecord>.IndexKeys.Ascending(x => x.ModeratorId)), cancellationToken: cancellationToken);
         await moderationRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<ModerationRecord>(Builders<ModerationRecord>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
 
+        logger.LogInformation("Creating indexes for ReportRecord collection...");
+        var reportRecordCollection = database.GetCollection<ReportRecord>("ReportRecords");
+        await reportRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<ReportRecord>(Builders<ReportRecord>.IndexKeys.Ascending(x => x.Target)), cancellationToken: cancellationToken);
+        await reportRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<ReportRecord>(Builders<ReportRecord>.IndexKeys.Ascending(x => x.Type)), cancellationToken: cancellationToken);
+        await reportRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<ReportRecord>(Builders<ReportRecord>.IndexKeys.Ascending(x => x.AssociatedId)), cancellationToken: cancellationToken);
+        await reportRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<ReportRecord>(Builders<ReportRecord>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
+        await reportRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<ReportRecord>(Builders<ReportRecord>.IndexKeys.Ascending(x => x.ReporterId)), cancellationToken: cancellationToken);
+        await reportRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<ReportRecord>(Builders<ReportRecord>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
+
         logger.LogInformation("Indexes created successfully.");
     }
 
