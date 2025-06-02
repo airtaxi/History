@@ -42,6 +42,7 @@ public class ReportController(IReportService reportService, IUserService userSer
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Conflict) return Conflict(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 

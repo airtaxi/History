@@ -40,7 +40,6 @@ public class ReportService(IMongoDatabase database, IServiceProvider serviceProv
         var postService = serviceProvider.GetRequiredService<IPostService>();
         var commentService = serviceProvider.GetRequiredService<ICommentService>();
 
-
         var newRecord = new ReportRecord
         {
             Target = target,
@@ -49,6 +48,9 @@ public class ReportService(IMongoDatabase database, IServiceProvider serviceProv
             ReporterId = reporterId,
             CreatedAt = DateTime.UtcNow
         };
+
+        var existingRecord = await _reportRecordCollection.Find(r => r.AssociatedId == associatedId && r.Target == target && r.ReporterId == reporterId).FirstOrDefaultAsync();
+        if (existingRecord != null) return (ErrorType.Conflict, $"이미 신고한 {target.ToDisplayString()}입니다.");
 
         if (target == ReportTarget.Post)
         {
