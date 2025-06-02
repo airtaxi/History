@@ -79,6 +79,13 @@ public class ReportService(IMongoDatabase database, IServiceProvider serviceProv
 
     public async Task<Result> ProcessReportAsync(string recordId, string moderatorId, string reason)
     {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+        var moderatorResult = await userService.GetUserByIdAsync(moderatorId);
+        if (moderatorResult.IsFailure) return moderatorResult.CastFailure();
+
+        var moderator = moderatorResult.Value;
+        if (moderator.Rank < Rank.Moderator) return (ErrorType.Forbidden, "괸리자만 신고를 처리할 수 있습니다.");
+
         var record = await _reportRecordCollection.Find(r => r.Id == recordId).FirstOrDefaultAsync();
         if (record == null) return (ErrorType.NotFound, "신고 내역을 찾을 수 없습니다.");
 
