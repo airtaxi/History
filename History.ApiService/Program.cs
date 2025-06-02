@@ -52,6 +52,7 @@ builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IModerationService, ModerationService>();
 builder.Services.AddHostedService<DatabaseInitService>();
 
 // Unlock the file upload size limit.
