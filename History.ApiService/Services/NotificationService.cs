@@ -4,6 +4,7 @@ using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
+using Microsoft.AspNetCore.Http.HttpResults;
 using MongoDB.Driver;
 using Notification = History.Commons.DataTypes.Notification;
 
@@ -266,7 +267,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (userFriendsIds.IsFailure) return userFriendsIds.CastFailure<List<Notification>>();
 
             core.Recipients = commenterIdsResult.Value.Intersect(userFriendsIds.Value);
-            
+
             var filterResult = await FilterRecipientsByAccessAsync(core.Recipients, postResult.Value);
             if (filterResult.IsFailure) return filterResult.CastFailure<List<Notification>>();
             core.Recipients = filterResult.Value.Except([postResult.Value.UserId]).Distinct();
@@ -307,7 +308,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
 
             core.Recipients = commentResult.Value.Contents.OfType<ProfileContent>().Select(x => x.UserId).Distinct();
-            
+
             var filterResult = await FilterRecipientsByAccessAsync(core.Recipients, postResult.Value);
             if (filterResult.IsFailure) return filterResult.CastFailure<List<Notification>>();
             core.Recipients = filterResult.Value;
@@ -484,7 +485,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var userService = serviceProvider.GetRequiredService<IUserService>();
             var moderationService = serviceProvider.GetRequiredService<IModerationService>();
 
-            var recordResult = await moderationService.GetRestrictionRecordByIdAsync(associatedId);
+            var recordResult = await moderationService.GetModerationRecordByIdAsync(associatedId);
             if (recordResult.IsFailure) return recordResult.CastFailure<List<Notification>>();
 
             var moderatorResult = await userService.GetUserByIdAsync(recordResult.Value.ModeratorId);
@@ -493,23 +494,71 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             core.Recipients = [recordResult.Value.UserId];
             core.UserId = recordResult.Value.ModeratorId;
 
-            var target = recordResult.Value.Type switch
-            {
-                RestrictionType.PostDeletion => "게시글",
-                RestrictionType.CommentDeletion => "댓글",
-                _ => throw new ArgumentException("Restriction type is not supported", recordResult.Value.Type.ToString())
-            };
-            core.Title = $"관리자 {moderatorResult.Value.Nickname}님이 회원님의 {target}을 삭제 조치하였습니다. ";
+            core.Title = $"관리자 {moderatorResult.Value.Nickname}님이 회원님의 컨텐츠에 대해 [{recordResult.Value.ReportType.ToDisplayString()}]의 이유로 {recordResult.Value.RestrictionType.ToDisplayString()} 조치하였습니다.";
             core.Body = $"사유: {recordResult.Value.Reason}, 대상 컨텐츠 (글만 제공됨): " + await userService.GenerateTextPreviewFromContentsAsync(recordResult.Value.AssociatedContents);
             core.ImageUrl = moderatorResult.Value.ProfileThumbnailMediaId != null ? Utils.GenerateMediaUri(moderatorResult.Value.ProfileThumbnailMediaId) : null;
 
+            core.Data.Add("RestrictedUserId", recordResult.Value.UserId);
             core.Data.Add("Body", core.Body);
             core.Data.Add("Reason", recordResult.Value.Reason);
-            core.Data.Add("RestrictionType", recordResult.Value.Type.ToString());
+            core.Data.Add("RestrictionType", recordResult.Value.RestrictionType.ToString());
+            core.Data.Add("ReportType", recordResult.Value.ReportType.ToString());
         }
-        else throw new ArgumentException("Notification Type is not supported", type.ToString());
+        else if (type == NotificationType.Report)
+        {
+            var userService = serviceProvider.GetRequiredService<IUserService>();
+            var reportService = serviceProvider.GetRequiredService<IReportService>();
+            var postService = serviceProvider.GetRequiredService<IPostService>();
+            var commentService = serviceProvider.GetRequiredService<ICommentService>();
 
-        foreach(var notification in notifications)
+            var recordResult = await reportService.GetReportRecordByIdAsync(associatedId);
+            if (recordResult.IsFailure) return recordResult.CastFailure<List<Notification>>();
+
+            var reporterResult = await userService.GetUserByIdAsync(recordResult.Value.ReporterId);
+            if (reporterResult.IsFailure) return reporterResult.CastFailure<List<Notification>>();
+
+            var moderatorUserIdsResult = await userService.GetModeratorUserIdsAsync();
+            if (moderatorUserIdsResult.IsFailure) return moderatorUserIdsResult.CastFailure<List<Notification>>();
+
+            core.Recipients = moderatorUserIdsResult.Value;
+            core.UserId = recordResult.Value.ReporterId;
+
+			core.Data.Add("UserId", reporterResult.Value.Id);
+
+            if (recordResult.Value.Target == ReportTarget.Post)
+            {
+                var postResult = await postService.GetPostByIdAsync(recordResult.Value.AssociatedId);
+                if (postResult.IsFailure) return postResult.CastFailure<List<Notification>>();
+
+                var reportedUserResult = await userService.GetUserByIdAsync(postResult.Value.UserId);
+                if (reportedUserResult.IsFailure) return reportedUserResult.CastFailure<List<Notification>>();
+
+                core.Title = $"{reporterResult.Value.Nickname}님이 {reportedUserResult.Value.Nickname}님의 {recordResult.Value.Target.ToDisplayString()}을 [{recordResult.Value.Type.ToDisplayString()}]의 이유로 신고하였습니다.";
+                core.Body = await userService.GenerateTextPreviewFromContentsAsync(recordResult.Value.AssociatedContents, reportedUserResult.Value.Id);
+                core.ImageUrl = Utils.GenerateThumbnailUrlFromContents(recordResult.Value.AssociatedContents);
+
+                core.Data.Add("PostId", postResult.Value.Id);
+            }
+            else if (recordResult.Value.Target == ReportTarget.Comment)
+            {
+                var commentResult = await commentService.GetCommentByIdAsync(recordResult.Value.AssociatedId);
+                if (commentResult.IsFailure) return commentResult.CastFailure<List<Notification>>();
+
+                var reportedUserResult = await userService.GetUserByIdAsync(commentResult.Value.UserId);
+                if (reportedUserResult.IsFailure) return reportedUserResult.CastFailure<List<Notification>>();
+
+                core.Title = $"{reporterResult.Value.Nickname}님이 {reportedUserResult.Value.Nickname}님의 {recordResult.Value.Target.ToDisplayString()}을 [{recordResult.Value.Type.ToDisplayString()}]의 이유로 신고하였습니다.";
+                core.Body = await userService.GenerateTextPreviewFromContentsAsync(commentResult.Value.Contents, reportedUserResult.Value.Id);
+                core.ImageUrl = Utils.GenerateThumbnailUrlFromContents(commentResult.Value.Contents);
+
+                core.Data.Add("PostId", commentResult.Value.PostId);
+                core.Data.Add("CommentId", commentResult.Value.Id);
+            }
+            else return (ErrorType.BadRequest, "지원되지 않는 신고 대상입니다.");
+		}
+        else return (ErrorType.BadRequest, "지원되지 않는 알림 유형입니다.");
+
+		foreach (var notification in notifications)
         {
             if (notification.Body.Length > 100)
             {

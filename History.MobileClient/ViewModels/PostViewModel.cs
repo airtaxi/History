@@ -284,7 +284,7 @@ public partial class PostViewModel : ObservableObject
             var reason = await App.Page.DisplayPromptAsync("게시글 삭제", "게시글을 삭제하는 이유를 입력해주세요.", "삭제", "취소", "삭제 사유");
             if (string.IsNullOrWhiteSpace(reason)) return;
 
-            var deleteResult = await App.ExecuteRequestAsync(new RestrictionDeletePost(Post.Id, reason));
+            var deleteResult = await App.ExecuteRequestAsync(new ModerationDeletePost(Post.Id, reason));
             if (deleteResult.IsSuccess)
             {
                 WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostResponseDto>(Post));

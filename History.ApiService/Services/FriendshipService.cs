@@ -164,6 +164,13 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
     /// <inheritdoc/>
     public async Task<Result> BlockUserAsync(string userId, string userToBlockId)
     {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+        var userToBlockResult = await userService.GetUserByIdAsync(userToBlockId);
+        if (userToBlockResult.IsFailure) return userToBlockResult.CastFailure<Result>();
+
+        if (userToBlockResult.Value.Rank >= Rank.Moderator)
+            return (ErrorType.BadRequest, "관리자 또는 운영진을 차단할 수 없습니다.");
+
         var existingFriendships = await _friendshipCollection.Find(f =>
             (f.UserId == userId && f.FriendId == userToBlockId) ||
             (f.UserId == userToBlockId && f.FriendId == userId)).ToListAsync();
@@ -200,6 +207,13 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
     /// <inheritdoc/>
     public async Task<Result> IgnoreUserAsync(string userId, string userToIgnoreId)
     {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+        var userToIgnoreResult = await userService.GetUserByIdAsync(userToIgnoreId);
+        if (userToIgnoreResult.IsFailure) return userToIgnoreResult.CastFailure<Result>();
+
+        if (userToIgnoreResult.Value.Rank >= Rank.Moderator)
+            return (ErrorType.BadRequest, "관리자 또는 운영진을 무시할 수 없습니다.");
+
         var existingFriendships = await _friendshipCollection.Find(f =>
             (f.UserId == userId && f.FriendId == userToIgnoreId) ||
             (f.UserId == userToIgnoreId && f.FriendId == userId)).ToListAsync();

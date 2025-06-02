@@ -73,6 +73,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var result = await friendshipService.BlockUserAsync(userId, userIdToBlock);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -86,6 +87,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var result = await friendshipService.IgnoreUserAsync(userId, userIdToIgnore);
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 

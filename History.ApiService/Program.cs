@@ -30,6 +30,8 @@ BsonSerializer.RegisterSerializer(new EnumSerializer<Rank>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<ErrorType>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<SocialService>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<RestrictionType>(BsonType.String));
+BsonSerializer.RegisterSerializer(new EnumSerializer<ReportType>(BsonType.String));
+BsonSerializer.RegisterSerializer(new EnumSerializer<ReportTarget>(BsonType.String));
 
 var builder = WebApplication.CreateBuilder(args);
 
