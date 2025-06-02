@@ -499,7 +499,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
                 RestrictionType.CommentDeletion => "댓글",
                 _ => throw new ArgumentException("Restriction type is not supported", recordResult.Value.Type.ToString())
             };
-            core.Title = $"관리자 {moderatorResult.Value.Nickname}님이 회원님의 {target}을 ";
+            core.Title = $"관리자 {moderatorResult.Value.Nickname}님이 회원님의 {target}을 삭제 조치하였습니다. ";
             core.Body = $"사유: {recordResult.Value.Reason}, 대상 컨텐츠 (글만 제공됨): " + await userService.GenerateTextPreviewFromContentsAsync(recordResult.Value.AssociatedContents);
             core.ImageUrl = moderatorResult.Value.ProfileThumbnailMediaId != null ? Utils.GenerateMediaUri(moderatorResult.Value.ProfileThumbnailMediaId) : null;
 
