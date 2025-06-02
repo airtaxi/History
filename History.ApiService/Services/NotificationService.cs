@@ -114,6 +114,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         if (notificationResult.IsFailure) notificationResult.CastFailure();
 
         var notification = notificationResult.Value;
+        if (!notification.Recipients.Any()) return Result.Success();
 
         var recipients = notification.Recipients;
         var title = notification.Title;
