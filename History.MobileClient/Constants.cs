@@ -14,4 +14,6 @@ public static class Constants
     public const string PromptYes = "예";
     public const string PromptNo = "아니요";
 
+    public const string DiscordInviteUrl = "https://discord.com/invite/g9jk3GR3vD";
+
 }
