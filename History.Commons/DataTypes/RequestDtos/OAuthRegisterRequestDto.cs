@@ -8,6 +8,5 @@ namespace History.Commons.DataTypes.RequestDtos;
 
 public class OAuthRegisterRequestDto : OAuthLoginRequestDto
 {
-    public string Code { get; set; }
     public string Name { get; set; }
 }

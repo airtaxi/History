@@ -57,17 +57,6 @@
                 Margin="0,8,0,0"
                 FontAttributes="Bold"
                 FontSize="22"
-                Text="가입 코드 입력" />
-            <Entry
-                x:Name="CodeEntry"
-                Placeholder="가입 코드를 입력해주세요"
-                ReturnType="Done"
-                TextChanged="OnCodeEntryTextChanged" />
-
-            <Label
-                Margin="0,8,0,0"
-                FontAttributes="Bold"
-                FontSize="22"
                 Text="이용 약관 및 동의" />
             <Grid>
                 <Grid.ColumnDefinitions>
