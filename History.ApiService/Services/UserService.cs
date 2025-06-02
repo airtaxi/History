@@ -109,7 +109,8 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     /// <inheritdoc />
     public async Task<Result<List<User>>> GetModeratorsAsync(int limit = 10, string fromUserId = null)
     {
-        var filter = Builders<User>.Filter.Gte(u => u.Rank, Rank.Moderator);
+        var filter = Builders<User>.Filter.Eq(u => u.Rank, Rank.Moderator) | 
+                     Builders<User>.Filter.Eq(u => u.Rank, Rank.Admin);
 
         if (!string.IsNullOrEmpty(fromUserId))
         {
@@ -127,9 +128,10 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
-    public async Task<Result<List<string>>> GetModeratorUserIdsAsync()
+    public async Task<Result<List<string>>> GetModeratorIdsAsync()
     {
-        var filter = Builders<User>.Filter.Gte(u => u.Rank, Rank.Moderator);
+        var filter = Builders<User>.Filter.Eq(u => u.Rank, Rank.Moderator) |
+            Builders<User>.Filter.Eq(u => u.Rank, Rank.Admin);
         var users = await _userCollection.Find(filter).Project(u => new { u.Id }).ToListAsync();
         return users.Select(u => u.Id).ToList();
     }
