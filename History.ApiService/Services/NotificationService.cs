@@ -288,6 +288,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             core.Data.Add("CommentId", commentResult.Value.Id);
 
             var authorCore = core.Clone();
+            authorCore.Recipients = [postResult.Value.UserId];
             authorCore.Title = $"{userResult.Value.Nickname}님이 회원님의 게시글에 댓글을 달았습니다.";
             notifications.Add(authorCore);
         }
