@@ -90,13 +90,13 @@
             Grid.Row="1"
             Margin="12"
             Background="#808080"
-            HeightRequest="40"
+            HeightRequest="48"
             HorizontalOptions="Start"
             IsVisible="False"
             Opacity="0.8"
             StrokeThickness="0"
             VerticalOptions="End"
-            WidthRequest="40">
+            WidthRequest="48">
             <Border.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnScrollToTopBorderTapped" />
             </Border.GestureRecognizers>
@@ -110,7 +110,7 @@
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="30" />
             </Border.StrokeShape>
-            <Image HeightRequest="44" WidthRequest="44">
+            <Image HeightRequest="52" WidthRequest="52">
                 <Image.Source>
                     <FontImageSource
                         FontFamily="MaterialSharp"
