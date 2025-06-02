@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.Api.Comment;
 using History.Commons.Api.Moderation;
+using History.Commons.Api.Report;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
@@ -87,11 +88,23 @@ public partial class CommentViewModel : ObservableObject
         if (action.StartsWith("좋아요")) await HandleLikeAsync();
         else if (action == "댓글 수정") await App.PushAsync(new EditCommentPage(Comment));
         else if (action == "댓글 삭제") await DeleteAsync();
-        //else if (action == "댓글 신고")
-        //{
-            //var result = await App.ExecuteRequestAsync(new ReportComment(Comment.Id));
-            //if (result.IsSuccess) await App.Page.DisplayAlert("신고 완료", "댓글이 신고되었습니다.", Constants.PromptOk);
-        //}
+        else if (action == "댓글 신고")
+        {
+            var reportTypes = Enum.GetValues<ReportType>().Select(x => x.ToDisplayString()).ToArray();
+
+            var rawReportType = await App.Page.DisplayActionSheet("신고 카테고리", Constants.PromptCancel, null, reportTypes);
+            if (rawReportType == null || rawReportType == Constants.PromptCancel) return;
+            var reportType = ReportTypeExtensions.FromDisplayString(rawReportType);
+
+            var result = await App.ExecuteRequestAsync(new CreateReportRecord(new()
+            {
+                Type = reportType,
+                Target = ReportTarget.Comment,
+                AssociatedId = Comment.Id
+            }));
+
+            if (result.IsSuccess) await App.Page.DisplayAlert("안내", "댓글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다.", Constants.PromptOk);
+        }
         else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
 
