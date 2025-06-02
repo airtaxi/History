@@ -49,6 +49,10 @@ public class MainActivity : MauiAppCompatActivity
         FirebaseCloudMessagingImplementation.ShowLocalNotificationAction = notification => {
             var notificationId = Guid.NewGuid().GetHashCode();
 
+            // Raw notificationId is string (e.g. post_mention_12345), so we need to convert it to unique integer.
+            if (notification.Data.TryGetValue("NotificationId", out var rawNotificationId)) 
+                notificationId = rawNotificationId.GetHashCode();
+
             var intent = PackageManager.GetLaunchIntentForPackage(PackageName);
             intent.SetFlags(ActivityFlags.SingleTop);
             foreach (var entry in notification.Data) intent.PutExtra(entry.Key, entry.Value);
