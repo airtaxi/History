@@ -284,7 +284,12 @@ public partial class PostViewModel : ObservableObject
             var reason = await App.Page.DisplayPromptAsync("게시글 삭제", "게시글을 삭제하는 이유를 입력해주세요.", "삭제", "취소", "삭제 사유");
             if (string.IsNullOrWhiteSpace(reason)) return;
 
-            var deleteResult = await App.ExecuteRequestAsync(new ModerationDeletePost(Post.Id, reason));
+            var reportTypes = Enum.GetValues<ReportType>().Select(x => x.ToDisplayString()).ToArray();
+            var action = await App.Page.DisplayActionSheet("제재 카테고리 선택", Constants.PromptCancel, null, reportTypes);
+            if (action == null || action == Constants.PromptCancel) return;
+            var reportType = ReportTypeExtensions.FromDisplayString(action);
+
+            var deleteResult = await App.ExecuteRequestAsync(new ModerationDeletePost(Post.Id, reason, reportType));
             if (deleteResult.IsSuccess)
             {
                 WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostResponseDto>(Post));
