@@ -14,7 +14,7 @@ public class ModerationController(IModerationService moderationService, IUserSer
 {
     [HttpGet("records")]
     [Authorize]
-    public async Task<IActionResult> GetModerationRecords([FromQuery] string fromRecordId = null, [FromQuery] int limit = 10)
+    public async Task<IActionResult> GetModerationRecords([FromQuery] string from = null, [FromQuery] int limit = 10)
     {
         var moderatorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(moderatorId)) return Unauthorized("로그인이 필요한 서비스입니다.");
@@ -25,7 +25,7 @@ public class ModerationController(IModerationService moderationService, IUserSer
             if (moderatorResult.Value.Rank < Rank.Moderator) return StatusCode(403, "괸리자만 제재 내역을 조회할 수 있습니다.");
         }
 
-        var results = await moderationService.GetModerationRecordsAsync(fromRecordId, limit);
+        var results = await moderationService.GetModerationRecordsAsync(from, limit);
         var dtosResult = await moderationService.GenerateModerationRecordResponseDtosAsync(results.Value);
         return Ok(dtosResult.Value);
     }
