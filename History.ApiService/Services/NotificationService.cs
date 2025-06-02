@@ -505,6 +505,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
             core.Data.Add("Body", core.Body);
             core.Data.Add("Reason", recordResult.Value.Reason);
+            core.Data.Add("RestrictionType", recordResult.Value.Type.ToString());
         }
         else throw new ArgumentException("Notification Type is not supported", type.ToString());
 
