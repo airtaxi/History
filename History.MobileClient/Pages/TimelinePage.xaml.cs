@@ -211,4 +211,20 @@ public partial class TimelinePage : ContentPage
     }
 
     private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
+
+    private double _lastVerticalOffset = 0;
+    private double _topVerticalOffset = 0;
+    private void OnMainCollectionViewScrolled(object sender, ItemsViewScrolledEventArgs e)
+    {
+        if (e.VerticalOffset > _topVerticalOffset) ScrollToTopBorder.IsVisible = true;
+        else ScrollToTopBorder.IsVisible = false;
+        _lastVerticalOffset = e.VerticalOffset;
+    }
+
+    private void OnScrollToTopBorderTapped(object sender, TappedEventArgs e)
+    {
+        var firstViewModel = _viewModels.FirstOrDefault();
+        if (firstViewModel != null) MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+        _topVerticalOffset = _lastVerticalOffset;
+    }
 }

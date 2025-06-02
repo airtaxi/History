@@ -43,6 +43,7 @@
                     ItemsUpdatingScrollMode="KeepItemsInView"
                     RemainingItemsThreshold="0"
                     RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
+                    Scrolled="OnMainCollectionViewScrolled"
                     SelectionMode="None">
                     <CollectionView.ItemsLayout>
                         <staggered:StaggeredItemsLayout Span="0" />
@@ -78,6 +79,42 @@
                     <FontImageSource
                         FontFamily="MaterialSharp"
                         Glyph="{x:Static m:MaterialSharp.Edit_note}"
+                        Size="80"
+                        Color="White" />
+                </Image.Source>
+            </Image>
+        </Border>
+
+        <Border
+            x:Name="ScrollToTopBorder"
+            Grid.Row="1"
+            Margin="12"
+            Background="#808080"
+            HeightRequest="40"
+            HorizontalOptions="Start"
+            IsVisible="False"
+            Opacity="0.8"
+            StrokeThickness="0"
+            VerticalOptions="End"
+            WidthRequest="40">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnScrollToTopBorderTapped" />
+            </Border.GestureRecognizers>
+            <Border.Shadow>
+                <Shadow
+                    Brush="Black"
+                    Opacity="0.4"
+                    Radius="3"
+                    Offset="1,2" />
+            </Border.Shadow>
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="30" />
+            </Border.StrokeShape>
+            <Image HeightRequest="44" WidthRequest="44">
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Keyboard_arrow_up}"
                         Size="80"
                         Color="White" />
                 </Image.Source>
