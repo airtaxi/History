@@ -308,10 +308,6 @@ public partial class PostPage : ContentPage
 
     private void OnKeyboardSizeMessageReceived(object recipient, KeyboardSizeMessage message)
     {
-#if ANDROID
         MainGrid.Margin = new(0, 0, 0, message.Value);
-#elif IOS
-        MainGrid.Margin = new(0, message.Value, 0, 0);
-#endif
     }
 }
