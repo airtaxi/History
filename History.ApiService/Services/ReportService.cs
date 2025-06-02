@@ -71,7 +71,7 @@ public class ReportService(IMongoDatabase database, IServiceProvider serviceProv
         while (true)
         {
             newRecord.Id = Guid.NewGuid().ToString("N");
-            var existingRecord = await _reportRecordCollection.Find(r => r.Id == newRecord.Id).FirstOrDefaultAsync();
+            existingRecord = await _reportRecordCollection.Find(r => r.Id == newRecord.Id).FirstOrDefaultAsync();
             if (existingRecord == null) break;
         }
 
