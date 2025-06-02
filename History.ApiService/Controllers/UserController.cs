@@ -33,8 +33,8 @@ public class UserController(IUserService userService, IFriendshipService friends
         var payload = await VerifyIdTokenAsync(request);
         if (payload == null) return Unauthorized("ID 토큰이 유효하지 않습니다.");
 
-        var isCodeValid = request.Code == "alpha" || request.Code == "hypermaxsupersecurestoretesterregistercode3920070831";
-        if (!isCodeValid) return BadRequest("가입 코드가 올바르지 않습니다.");
+        //var isCodeValid = request.Code == "alpha" || request.Code == "hypermaxsupersecurestoretesterregistercode3920070831";
+        //if (!isCodeValid) return BadRequest("가입 코드가 올바르지 않습니다.");
 
         var existingUserResult = await userService.GetUserByIdAsync(payload.Id);
         if (existingUserResult.IsSuccess) return Conflict("이미 등록된 사용자입니다.");
