@@ -1,7 +1,9 @@
 ﻿using History.ApiService.Services;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
+using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.RequestDtos;
+using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +17,11 @@ public class ReportController(IReportService reportService, IUserService userSer
 {
     [HttpGet("records")]
     [Authorize]
+    [ProducesResponseType<List<ReportRecordResponseDto>>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetReportRecords([FromQuery] string from = null, [FromQuery] int limit = 10)
     {
         var moderatorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -33,6 +40,11 @@ public class ReportController(IReportService reportService, IUserService userSer
 
     [HttpPost]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(409)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> CreateReportRecord([FromBody] CreateReportRecordRequestDto request)
     {
         var reporterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -48,6 +60,12 @@ public class ReportController(IReportService reportService, IUserService userSer
 
     [HttpPost("process/{recordId}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(409)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> ProcessReportRecord(string recordId, [FromQuery] string reason)
     {
         var moderatorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -65,6 +83,11 @@ public class ReportController(IReportService reportService, IUserService userSer
 
     [HttpDelete("{recordId}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeleteReportRecord(string recordId)
     {
         var moderatorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

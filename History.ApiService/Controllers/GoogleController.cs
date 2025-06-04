@@ -12,6 +12,7 @@ public class GoogleController(ILogger<GoogleController> logger) : ControllerBase
 {
     private const string ClientId = "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com";
     private const string ClientSecret = "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"; // Replace with your actual client secret
+
     [HttpGet("login")]
     public IActionResult Login([FromQuery] string redirectUrl)
     {

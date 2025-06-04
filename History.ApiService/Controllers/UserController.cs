@@ -28,6 +28,10 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <param name="request">The JWT token from OAuth provider</param>
     /// <returns>An action result indicating success or failure</returns>
     [HttpPost("register")]
+    [ProducesResponseType<OAuthLoginResponseDto>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(409)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> Register([FromBody] OAuthRegisterRequestDto request)
     {
         var payload = await VerifyIdTokenAsync(request);
@@ -72,6 +76,11 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <param name="request">The DTO containing the JWT token from OAuth provider</param>
     /// <returns>An action result indicating success or failure</returns>
     [HttpPost("login")]
+    [ProducesResponseType<OAuthLoginResponseDto>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> Login([FromBody] OAuthLoginRequestDto request)
     {
         var payload = await VerifyIdTokenAsync(request);
@@ -88,6 +97,10 @@ public class UserController(IUserService userService, IFriendshipService friends
     }
 
     [HttpPost("refresh-token")]
+    [ProducesResponseType<OAuthLoginResponseDto>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest model)
     {
         var validationResult = await refreshTokenService.ValidateRefreshTokenAsync(model.RefreshToken);
@@ -117,6 +130,10 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <param name="userId">The ID of user to get</param>
     /// <returns>A task that represents the asynchronous operation. with result of user profile</returns>
     [HttpGet("{userId}")]
+    [ProducesResponseType<UserResponseDto>(200)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetUser(string userId)
     {
         var userResult = await userService.GetUserByIdAsync(userId);
@@ -129,9 +146,9 @@ public class UserController(IUserService userService, IFriendshipService friends
             var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
             var requesterBlockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
 
-            if (requesterBlockedFriendIdsResult.Value.Contains(userId)) return Unauthorized("차단한 사용자의 피드를 볼 수 없습니다.");
-            else if (requesterIgnoredFriendIdsResult.Value.Contains(userId)) return Unauthorized("무시한 사용자의 피드를 볼 수 없습니다.");
-            else if (requesterBlockerFriendIdsResult.Value.Contains(userId)) return Unauthorized("이 사용자의 피드를 볼 수 없습니다.");
+            if (requesterBlockedFriendIdsResult.Value.Contains(userId)) return StatusCode(403, "차단한 사용자의 피드를 볼 수 없습니다.");
+            else if (requesterIgnoredFriendIdsResult.Value.Contains(userId)) return StatusCode(403, "무시한 사용자의 피드를 볼 수 없습니다.");
+            else if (requesterBlockerFriendIdsResult.Value.Contains(userId)) return StatusCode(403, "이 사용자의 피드를 볼 수 없습니다.");
         }
 
         var result = await userService.GenerateUserResponseDtoAsync(userResult, requesterId);
@@ -141,6 +158,10 @@ public class UserController(IUserService userService, IFriendshipService friends
     }
 
     [HttpGet("handle/{handle}")]
+    [ProducesResponseType<UserResponseDto>(200)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetUserByHandle(string handle)
     {
         var userResult = await userService.GetUserByHandleAsync(handle, true);
@@ -153,9 +174,9 @@ public class UserController(IUserService userService, IFriendshipService friends
             var requesterIgnoredFriendIdsResult = await friendshipService.GetIgnoredUserIdsAsync(requesterId);
             var requesterBlockerFriendIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
 
-            if (requesterBlockedFriendIdsResult.Value.Contains(userResult.Value.Id)) return Unauthorized("차단한 사용자의 피드를 볼 수 없습니다.");
-            else if (requesterIgnoredFriendIdsResult.Value.Contains(userResult.Value.Id)) return Unauthorized("무시한 사용자의 피드를 볼 수 없습니다.");
-            else if (requesterBlockerFriendIdsResult.Value.Contains(userResult.Value.Id)) return Unauthorized("이 사용자의 피드를 볼 수 없습니다.");
+            if (requesterBlockedFriendIdsResult.Value.Contains(userResult.Value.Id)) return StatusCode(403, "차단한 사용자의 피드를 볼 수 없습니다.");
+            else if (requesterIgnoredFriendIdsResult.Value.Contains(userResult.Value.Id)) return StatusCode(403, "무시한 사용자의 피드를 볼 수 없습니다.");
+            else if (requesterBlockerFriendIdsResult.Value.Contains(userResult.Value.Id)) return StatusCode(403, "이 사용자의 피드를 볼 수 없습니다.");
         }
 
         var result = await userService.GenerateUserResponseDtoAsync(userResult, requesterId);
@@ -165,6 +186,8 @@ public class UserController(IUserService userService, IFriendshipService friends
     }
 
     [HttpGet("nickname-search/{query}")]
+    [ProducesResponseType<List<UserResponseDto>>(200)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> FindUsersByNickname(string query)
     {
         var usersResult = await userService.FindUsersByNicknameAsync(query, true, 15);
@@ -177,6 +200,10 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpGet("me")]
     [Authorize]
+    [ProducesResponseType<UserResponseDto>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetMyProfile()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -193,11 +220,16 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpPost("approve/{userId}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> ApproveUnauthorizedUser(string userId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var requester = await userService.GetUserByIdAsync(requesterId);
-        if (requester?.Value.Rank < Rank.Moderator) return Unauthorized("권한이 없습니다.");
+        if (requester?.Value.Rank < Rank.Moderator) return StatusCode(403, "권한이 없습니다.");
 
         var result = await userService.ApproveUnauthorizedUserAsync(userId);
         if (result.IsSuccess) return Ok();
@@ -207,11 +239,16 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpPost("unapprove/{userId}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UnapproveUnauthorizedUser(string userId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var requester = await userService.GetUserByIdAsync(requesterId);
-        if (requester?.Value.Rank < Rank.Moderator) return Unauthorized("권한이 없습니다.");
+        if (requester?.Value.Rank < Rank.Moderator) return StatusCode(403, "권한이 없습니다.");
 
         var result = await userService.UnapproveUnauthorizedUserAsync(userId);
         if (result.IsSuccess) return Ok();
@@ -221,11 +258,16 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpPost("make-moderator/{userId}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> MakeUserModerator(string userId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var requester = await userService.GetUserByIdAsync(requesterId);
-        if (requester?.Value.Rank != Rank.Admin) return Unauthorized("권한이 없습니다.");
+        if (requester?.Value.Rank != Rank.Admin) return StatusCode(403, "권한이 없습니다.");
 
         var result = await userService.MakeUserModeratorAsync(userId);
         if (result.IsSuccess) return Ok();
@@ -235,11 +277,15 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpGet("unauthorized-users")]
     [Authorize]
+    [ProducesResponseType<List<UserResponseDto>>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetUnauthorizedUsers()
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var requester = await userService.GetUserByIdAsync(requesterId);
-        if (requester?.Value.Rank < Rank.Moderator) return Unauthorized("권한이 없습니다.");
+        if (requester?.Value.Rank < Rank.Moderator) return StatusCode(403, "권한이 없습니다.");
 
         var result = await userService.GetUnauthorizedUsersAsync();
         if (result.IsFailure) return StatusCode(500, result.FullErrorMessage);
@@ -252,11 +298,15 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpGet("moderators")]
     [Authorize]
+    [ProducesResponseType<List<UserResponseDto>>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetModerators()
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var requester = await userService.GetUserByIdAsync(requesterId);
-        if (requester?.Value.Rank != Rank.Admin) return Unauthorized("권한이 없습니다.");
+        if (requester?.Value.Rank != Rank.Admin) return StatusCode(403, "권한이 없습니다.");
 
         var result = await userService.GetModeratorsAsync();
         if (result.IsFailure) return StatusCode(500, result.FullErrorMessage);
@@ -274,6 +324,10 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <returns>An action result indicating success or failure</returns>
     [HttpPut("description")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateDescription([FromBody] UpdateUserDescriptionRequestDto request)
     {
         // Get the user ID from the authenticated user claim
@@ -295,6 +349,10 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <returns>An action result indicating success or failure</returns>
     [HttpPut("birthday")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateBirthday([FromBody] UpdateUserBirthdayRequestDto request)
     {
         // Get the user ID from the authenticated user claim
@@ -316,6 +374,10 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <returns>An action result indicating success or failure</returns>
     [HttpPut("nickname")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateNickname([FromBody] UpdateUserNicknameRequestDto request)
     {
         // Get the user ID from the authenticated user claim
@@ -332,6 +394,10 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpPut("allowSearch/{allowSearch}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateAllowSearch(bool allowSearch)
     {
         // Get the user ID from the authenticated user claim
@@ -347,6 +413,10 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpPut("friend-list-discovery-option/{discoveryOption}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateFriendListDiscoveryOption(DiscoveryOption discoveryOption)
     {
         // Get the user ID from the authenticated user claim
@@ -362,6 +432,11 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpPut("handle")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(409)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateHandle([FromBody] UpdateUserHandleRequestDto request)
     {
         // Get the user ID from the authenticated user claim
@@ -383,6 +458,11 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <returns>An action result indicating success or failure</returns>
     [HttpPut("profile-media")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateProfileMedia(IFormFile file)
     {
         // Get the user ID from the authenticated user claim
@@ -420,6 +500,10 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <returns>An action result indicating success or failure</returns>
     [HttpDelete("profile-media")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeleteProfileMedia()
     {
         // Get the user ID from the authenticated user claim
@@ -440,6 +524,11 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <returns>An action result indicating success or failure</returns>
     [HttpPut("background-media")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateBackgroundMedia(IFormFile file)
     {
         // Get the user ID from the authenticated user claim
@@ -476,6 +565,10 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <returns>An action result indicating success or failure</returns>
     [HttpDelete("background-media")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeleteBackgroundMedia()
     {
         // Get the user ID from the authenticated user claim
@@ -490,6 +583,11 @@ public class UserController(IUserService userService, IFriendshipService friends
     }
 
     [HttpPut("pinned-post/{pinnedPostId}")]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdatePinnedPost(string pinnedPostId)
     {
         // Get the user ID from the authenticated user claim
@@ -506,14 +604,14 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpGet("notifications")]
     [Authorize]
-    public async Task<IActionResult> GetNotifications()
+    [ProducesResponseType<List<NotificationResponseDto>>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> GetNotifications([FromQuery] int limit, [FromQuery] string from)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
 
-        var from = Request.Query["from"];
-        var rawLimit = Request.Query["limit"];
-        if (!int.TryParse(rawLimit, out var limit)) limit = 30;
         limit = Math.Clamp(limit, 1, 100);
 
         var notificationsResult = await notificationService.GetNotificationsAsync(requesterId, from, limit);
@@ -538,13 +636,14 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpPost("register-firebase-token")]
     [Authorize]
-    public async Task<IActionResult> RegisterToken()
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> RegisterToken([FromQuery] string token)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return BadRequest("로그인이 필요한 서비스입니다.");
-
-        var token = Request.Query["token"];
-        if (string.IsNullOrEmpty(token)) return BadRequest("토큰은 필수입니다.");
+        if (string.IsNullOrEmpty(userId)) return Unauthorized("로그인이 필요한 서비스입니다.");
 
         var userResult = await userService.GetUserByIdAsync(userId);
         if (userResult.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
@@ -557,10 +656,14 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpPost("withdraw")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> Withdraw()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return BadRequest("로그인이 필요한 서비스입니다.");
+        if (string.IsNullOrEmpty(userId)) return Unauthorized("로그인이 필요한 서비스입니다.");
 
         // Call the service to withdraw the user
         var result = await userService.WithdrawAsync(userId);

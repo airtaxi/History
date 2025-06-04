@@ -3,6 +3,7 @@ using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.RequestDtos;
+using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,39 +17,47 @@ namespace History.ApiService.Controllers;
 public class PostController(IPostService postService, IFriendshipService friendshipService) : ControllerBase
 {
     [HttpGet("user/{userId}")]
-    public async Task<IActionResult> GetUserPosts(string userId)
+    [ProducesResponseType<List<PostResponseDto>>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> GetUserPosts(string userId, [FromQuery] int limit, [FromQuery] string from)
     {
-        var rawLimit = HttpContext.Request.Query["limit"];
-        var fromPostId = HttpContext.Request.Query["from"];
-        var limit = int.TryParse(rawLimit, out var parsedLimit) ? parsedLimit : 10;
-        if (limit > 100) limit = 100;
+        limit = Math.Clamp(limit, 1, 100);
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
-        var postsResult = await postService.GetUserPostsAsync(userId, requesterId, fromPostId, limit);
+        var postsResult = await postService.GetUserPostsAsync(userId, requesterId, from, limit);
         var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
         return Ok(postResponses.Value);
     }
 
     [HttpGet("timeline")]
     [Authorize]
-    public async Task<IActionResult> GetTimelinePosts()
+    [ProducesResponseType<List<PostResponseDto>>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> GetTimelinePosts([FromQuery] int limit, [FromQuery] string from)
     {
-        var rawLimit = HttpContext.Request.Query["limit"];
-        var fromPostId = HttpContext.Request.Query["from"];
-        var limit = int.TryParse(rawLimit, out var parsedLimit) ? parsedLimit : 10;
-        if (limit > 100) limit = 100;
+        limit = Math.Clamp(limit, 1, 100);
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
 
-        var postsResult = await postService.GetTimelinePostsAsync(requesterId, fromPostId, limit);
+        var postsResult = await postService.GetTimelinePostsAsync(requesterId, from, limit);
         var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
         return Ok(postResponses.Value);
     }
 
     [HttpGet("user/{userId}/count")]
+    [ProducesResponseType<GetUserPostsCountResponseDto>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetUserPostsCount(string userId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -75,6 +84,12 @@ public class PostController(IPostService postService, IFriendshipService friends
     
     [HttpPost("ignore/{postId}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> IgnorePost(string postId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -91,6 +106,12 @@ public class PostController(IPostService postService, IFriendshipService friends
 
     [HttpPost]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> WritePost([FromForm] DataWithFilesForm request)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -107,6 +128,12 @@ public class PostController(IPostService postService, IFriendshipService friends
     }
 
     [HttpGet("{postId}")]
+    [ProducesResponseType<PostResponseDto>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetPost(string postId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -135,6 +162,12 @@ public class PostController(IPostService postService, IFriendshipService friends
 
     [HttpPut("{postId}")]
     [Authorize]
+    [ProducesResponseType<PostResponseDto>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> ModifyPost(string postId, [FromForm] DataWithFilesForm request)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -157,6 +190,12 @@ public class PostController(IPostService postService, IFriendshipService friends
 
     [HttpDelete("{postId}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeletePost(string postId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -173,6 +212,12 @@ public class PostController(IPostService postService, IFriendshipService friends
 
     [HttpPost("{postId}/repost")]
     [Authorize]
+    [ProducesResponseType<PostResponseDto>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> HandleRepost(string postId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -194,6 +239,12 @@ public class PostController(IPostService postService, IFriendshipService friends
 
     [HttpPost("{postId}/reaction/{type}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> HandlePostReaction(string postId, PostReactionType type)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -209,25 +260,28 @@ public class PostController(IPostService postService, IFriendshipService friends
     }
 
     [HttpGet("search")]
-    public async Task<IActionResult> SearchPosts()
+    [ProducesResponseType<List<PostResponseDto>>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> SearchPosts([FromQuery] int limit, [FromQuery] string from, [FromQuery] string keyword)
     {
-        var rawLimit = HttpContext.Request.Query["limit"];
-        var fromPostId = HttpContext.Request.Query["from"];
-        var limit = int.TryParse(rawLimit, out var parsedLimit) ? parsedLimit : 10;
-        if (limit > 100) limit = 100;
+        limit = Math.Clamp(limit, 1, 100);
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var keyword = HttpContext.Request.Query["keyword"].ToString();
-        if (string.IsNullOrEmpty(keyword)) return BadRequest("검색어를 입력해주세요.");
-
-        var postsResult = await postService.SearchPostsAsync(requesterId, keyword, fromPostId, limit);
+        var postsResult = await postService.SearchPostsAsync(requesterId, keyword, from, limit);
         var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
         return Ok(postResponses);
     }
 
     [HttpPut("{postId}/discovery-option")]
     [Authorize]
+    [ProducesResponseType<List<PostResponseDto>>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> ChangeDiscoveryOption(string postId, [FromBody] ChangeDiscoveryOptionRequestDto request)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -249,6 +303,12 @@ public class PostController(IPostService postService, IFriendshipService friends
 
     [HttpPost("fill-external-url-content")]
     [Authorize]
+    [ProducesResponseType<ExternalUrlContent>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> FillExternalUrlContent([FromBody] ExternalUrlContent externalUrlContent)
     {
         var result = await postService.FillExternalUrlContentAsync(externalUrlContent);
