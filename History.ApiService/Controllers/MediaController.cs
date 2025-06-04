@@ -14,6 +14,9 @@ public class MediaController(IMediaService mediaService) : ControllerBase
     /// <param name="mediaId">The id of media to get content</param>
     /// <returns>A task that represents the asynchronous operation. with media content in byte array</returns>
     [HttpGet("{mediaId}")]
+    [ProducesResponseType<byte[]>(200)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetMediaContent(string mediaId)
     {
         if(mediaId.Contains('.')) mediaId = mediaId.Split(".")[0]; // Remove file extension if exists

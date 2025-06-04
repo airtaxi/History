@@ -2,8 +2,10 @@
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
+using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Polly;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -14,15 +16,17 @@ namespace History.ApiService.Controllers;
 public class CommentController(ICommentService commentService) : ControllerBase
 {
     [HttpGet("{postId}")]
-    public async Task<IActionResult> GetCommentsByPostId(string postId)
+    [ProducesResponseType<List<CommentResponseDto>>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> GetCommentsByPostId(string postId, [FromQuery] int limit, [FromQuery] string from)
     {
-        var rawLimit = HttpContext.Request.Query["limit"];
-        var fromCommentId = HttpContext.Request.Query["from"];
-        var limit = int.TryParse(rawLimit, out var parsedLimit) ? parsedLimit : 10;
-        if (limit > 100) limit = 100;
+        limit = Math.Clamp(limit, 1, 100);
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var result = await commentService.GetCommentsByPostIdAsync(postId, requesterId, fromCommentId, limit);
+        var result = await commentService.GetCommentsByPostIdAsync(postId, requesterId, from, limit);
         if (result.IsFailure)
         {
             if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
@@ -38,13 +42,20 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
     [HttpPost("{postId}")]
     [Authorize]
+    [ProducesResponseType<CommentResponseDto>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> CreateComment(string postId, [FromForm] DataWithFilesForm request)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var contents = JsonSerializer.Deserialize<List<BaseContent>>(request.JsonData);
         var result = await commentService.WriteCommentAsync(postId, contents, requesterId, request.Files);
-        if (result.IsSuccess) return Ok(result.Value);
+        var dtoResut = await commentService.GenerateCommentResponseDtoAsync(result.Value, requesterId);
+        if (result.IsSuccess) return Ok(dtoResut.Value);
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
@@ -54,6 +65,11 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
     [HttpPut("{commentId}")]
     [Authorize]
+    [ProducesResponseType<CommentResponseDto>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> ModifyComment(string commentId, [FromForm] DataWithFilesForm request)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -74,6 +90,11 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
     [HttpDelete("{commentId}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeleteComment(string commentId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -88,6 +109,11 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
     [HttpPost("{commentId}/like")]
     [Authorize]
+    [ProducesResponseType<CommentResponseDto>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> HandleCommentLike(string commentId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

@@ -1,5 +1,6 @@
 ﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
+using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -12,6 +13,12 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 {
     [HttpPost("request/{receiverId}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(409)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> SendFriendRequest(string receiverId)
     {
         // Get the user ID from the authenticated user claim
@@ -26,6 +33,10 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 
     [HttpPost("request/{userIdToAccept}/accept")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> AcceptFriendRequest(string userIdToAccept)
     {
         // Get the user ID from the authenticated user claim
@@ -39,6 +50,10 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 
     [HttpPost("request/{userIdToDecline}/decline")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeclineFriendRequest(string userIdToDecline)
     {
         // Get the user ID from the authenticated user claim
@@ -52,6 +67,10 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 
     [HttpPost("request/{userIdToCancel}/cancel")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> CancelFriendRequest(string userIdToCancel)
     {
         // Get the user ID from the authenticated user claim
@@ -65,6 +84,11 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 
     [HttpPost("block/{userIdToBlock}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> BlockUser(string userIdToBlock)
     {
         // Get the user ID from the authenticated user claim
@@ -79,6 +103,11 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 
     [HttpPost("ignore/{userIdToIgnore}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> IgnoreUser(string userIdToIgnore)
     {
         // Get the user ID from the authenticated user claim
@@ -93,39 +122,60 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 
     [HttpPost("remove/{userIdToRemove}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> RemoveFriend(string userIdToRemove)
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var result = await friendshipService.RemoveFriendAsync(userId, userIdToRemove);
-        return result.IsSuccess ? Ok() : StatusCode(500, result.FullErrorMessage);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
     }
 
     [HttpDelete("block/{blockedUserId}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UnblockUser(string blockedUserId)
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var result = await friendshipService.UnblockUserAsync(userId, blockedUserId);
-        return result.IsSuccess ? Ok() : StatusCode(500, result.FullErrorMessage);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
     }
 
     [HttpDelete("ignore/{ignoredUserId}")]
     [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UnignoreUser(string ignoredUserId)
     {
         // Get the user ID from the authenticated user claim
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         var result = await friendshipService.UnignoreUserAsync(userId, ignoredUserId);
-        return result.IsSuccess ? Ok() : StatusCode(500, result.FullErrorMessage);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
     }
 
     [HttpGet("pending")]
     [Authorize]
+    [ProducesResponseType<List<UserResponseDto>>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetPendingRequests()
     {
         // Get the user ID from the authenticated user claim
@@ -140,6 +190,9 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 
     [HttpGet("waiting")]
     [Authorize]
+    [ProducesResponseType<List<UserResponseDto>>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetWaitingRequests()
     {
         // Get the user ID from the authenticated user claim
@@ -154,6 +207,9 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 
     [HttpGet("blocked")]
     [Authorize]
+    [ProducesResponseType<List<UserResponseDto>>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetBlockedUsers()
     {
         // Get the user ID from the authenticated user claim
@@ -168,6 +224,9 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 
     [HttpGet("ignored")]
     [Authorize]
+    [ProducesResponseType<List<UserResponseDto>>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetIgnoredUsers()
     {
         // Get the user ID from the authenticated user claim
@@ -182,6 +241,11 @@ public class FriendshipController(IUserService userService, IFriendshipService f
 
     [HttpGet("{userId}")]
     [Authorize]
+    [ProducesResponseType<List<UserResponseDto>>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetFriends(string userId)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
