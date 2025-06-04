@@ -131,6 +131,9 @@ if (app.Environment.IsDevelopment())
 
 app.MapDefaultEndpoints();
 
+// Should be called before UseAuthentication
+app.UseSession();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
