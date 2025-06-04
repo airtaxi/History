@@ -31,7 +31,7 @@ public class GoogleController(ILogger<GoogleController> logger) : ControllerBase
     {
         try
         {
-            var authenticateResult = await HttpContext.AuthenticateAsync("Google");
+            var authenticateResult = await HttpContext.AuthenticateAsync("GoogleAuth");
 
             if (!authenticateResult.Succeeded)
             {
