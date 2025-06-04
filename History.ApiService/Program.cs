@@ -70,6 +70,7 @@ builder.Services.Configure<KestrelServerOptions>(options =>
     options.Limits.MaxRequestBodySize = int.MaxValue;
 });
 
+builder.Services.AddProblemDetails();
 
 // Add controllers to the container.
 builder.Services.AddControllers();
@@ -107,6 +108,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     })
+    .AddCookie("GoogleAuth")
     .AddGoogle("Google", options =>
     {
         options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
@@ -117,6 +119,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
         options.CallbackPath = "/api/auth/google/callback";
         options.SaveTokens = true;
+
+        options.SignInScheme = "GoogleAuth";
     });
 
 var app = builder.Build();
