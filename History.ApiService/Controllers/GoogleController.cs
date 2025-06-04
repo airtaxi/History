@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
+using System.Web;
 
 namespace History.ApiService.Controllers;
 
@@ -7,71 +10,58 @@ namespace History.ApiService.Controllers;
 [Route("api/auth/google")]
 public class GoogleController(ILogger<GoogleController> logger) : ControllerBase
 {
+    private const string ClientId = "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com";
+    private const string ClientSecret = "***REMOVED***"; // Replace with your actual client secret
     [HttpGet("login")]
     public IActionResult Login([FromQuery] string redirectUrl)
     {
-        if (string.IsNullOrEmpty(redirectUrl))
-        {
-            return BadRequest("RedirectUrl is required");
-        }
+        string clientId = "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com";
+        string redirectUri = "https://api.history.cenox.io/api/auth/google/callback";
 
-        HttpContext.Session.SetString("RedirectUrl", redirectUrl);
+        string authorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
 
-        var properties = new AuthenticationProperties
-        {
-            RedirectUri = Url.Action("Callback", "Google"),
-            Items = { { "scheme", "Google" } }
-        };
+        var url = $"{authorizationEndpoint}?response_type=code" +
+                  $"&client_id={HttpUtility.UrlEncode(clientId)}" +
+                  $"&redirect_uri={HttpUtility.UrlEncode(redirectUri)}" +
+                  $"&scope={HttpUtility.UrlEncode("openid email profile")}" +
+                  $"&state={HttpUtility.UrlEncode(redirectUrl)}";
 
-        return Challenge(properties, "Google");
+        return Redirect(url);
     }
 
     [HttpGet("callback")]
-    public async Task<IActionResult> Callback()
+    public async Task<IActionResult> Callback([FromQuery] string code, [FromQuery] string state)
     {
-        try
+        if (string.IsNullOrEmpty(code))
+            return RedirectToAction("Login", "Google");
+
+        string redirectUri = "https://api.history.cenox.io/api/auth/google/callback";
+
+        using var httpClient = new HttpClient();
+        var tokenRequestParams = new Dictionary<string, string>
+            {
+                { "code", code },
+                { "client_id", ClientId },
+                { "client_secret", ClientSecret },
+                { "redirect_uri", redirectUri },
+                { "grant_type", "authorization_code" }
+            };
+
+        var tokenRequest = new HttpRequestMessage(HttpMethod.Post, "https://oauth2.googleapis.com/token")
         {
-            var authenticateResult = await HttpContext.AuthenticateAsync("GoogleAuth");
+            Content = new FormUrlEncodedContent(tokenRequestParams)
+        };
 
-            if (!authenticateResult.Succeeded)
-            {
-                return BadRequest("Google authentication failed");
-            }
+        var response = await httpClient.SendAsync(tokenRequest);
+        var responseString = await response.Content.ReadAsStringAsync();
+        var tokenData = JsonNode.Parse(responseString);
 
-            var claims = authenticateResult.Principal.Claims;
-            var googleIdToken = claims.FirstOrDefault(c => c.Type == "id_token")?.Value;
+        string idToken = tokenData["id_token"]?.ToString();
 
-            if (string.IsNullOrEmpty(googleIdToken))
-            {
-                var tokens = authenticateResult.Properties.GetTokens();
-                googleIdToken = tokens.FirstOrDefault(t => t.Name == "id_token")?.Value;
-            }
+        if (idToken == null) return StatusCode(500, "Failed to retrieve ID token from Google.");
 
-            if (string.IsNullOrEmpty(googleIdToken)) return BadRequest("Google ID Token not found");
-
-            var redirectUrl = HttpContext.Session.GetString("RedirectUrl");
-            if (string.IsNullOrEmpty(redirectUrl)) return BadRequest("RedirectUrl not found");
-
-            var separator = redirectUrl.Contains('?') ? "&" : "?";
-            var finalRedirectUrl = $"{redirectUrl}{separator}idToken={googleIdToken}&login=success";
-
-            HttpContext.Session.Remove("RedirectUrl");
-
-            return Redirect(finalRedirectUrl);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError("Google OAuth callback error: {Message}", ex.Message);
-
-            var redirectUrl = HttpContext.Session.GetString("RedirectUrl");
-            if (!string.IsNullOrEmpty(redirectUrl))
-            {
-                var separator = redirectUrl.Contains('?') ? "&" : "?";
-                var errorRedirectUrl = $"{redirectUrl}{separator}login=error&message={Uri.EscapeDataString("Authentication failed")}";
-                return Redirect(errorRedirectUrl);
-            }
-
-            return BadRequest("Authentication failed");
-        }
+        // state에 원래 요청된 callback URL이 있다면 거기로 redirect
+        var redirectUrl = $"{state}?id_token={HttpUtility.UrlEncode(idToken)}";
+        return Redirect(redirectUrl);
     }
 }

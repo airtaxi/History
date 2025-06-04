@@ -6,9 +6,11 @@ using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.Enums;
 using History.ServiceDefaults;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -40,12 +42,6 @@ builder.AddServiceDefaults();
 
 builder.AddMongoDBClient(connectionName: "History");
 
-// Add services to the container.
-builder.Services.AddProblemDetails();
-
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
 // Services
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IPostService, PostService>();
@@ -65,23 +61,18 @@ builder.Services.Configure<FormOptions>(options =>
     options.MultipartBodyLengthLimit = int.MaxValue;
     options.MultipartHeadersLengthLimit = int.MaxValue;
 });
+
+// Unlock the request body size limit for Kestrel server.
 builder.Services.Configure<KestrelServerOptions>(options =>
 {
     options.Limits.MaxRequestBodySize = int.MaxValue;
 });
 
-builder.Services.AddProblemDetails();
-
 // Add controllers to the container.
 builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
+builder.Services.AddOpenApiDocument();
 
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -107,36 +98,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 return Task.CompletedTask;
             }
         };
-    })
-    .AddCookie("GoogleAuth")
-    .AddGoogle("Google", options =>
-    {
-        options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
-        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
-
-        options.Scope.Add("email");
-        options.Scope.Add("profile");
-
-        options.CallbackPath = "/api/auth/google/callback";
-        options.SaveTokens = true;
-
-        options.SignInScheme = "GoogleAuth";
     });
 
 var app = builder.Build();
 
+// Must be called first
+app.UseForwardedHeaders();
+
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
 app.MapDefaultEndpoints();
 
-// Should be called before UseAuthentication
-app.UseSession();
+app.UseOpenApi();
+app.UseSwaggerUi();
 
 app.UseAuthentication();
 app.UseAuthorization();
