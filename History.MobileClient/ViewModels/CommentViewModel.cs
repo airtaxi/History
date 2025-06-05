@@ -116,14 +116,8 @@ public partial class CommentViewModel : ObservableObject
 
     public async Task DeleteAsync()
     {
-        if(Comment.User.UserId != Shared.UserId)
+        if (Comment.User.UserId != Shared.UserId && Shared.MyRank >= Rank.Moderator)
         {
-            if (Shared.MyRank < Rank.Moderator)
-            {
-                await App.Page.DisplayAlert("권한 부족", "댓글을 삭제할 권한이 없습니다.", Constants.PromptOk);
-                return;
-            }
-
             var reportTypes = Enum.GetValues<ReportType>().Select(x => x.ToDisplayString()).ToArray();
             var action = await App.Page.DisplayActionSheet("제재 카테고리 선택", Constants.PromptCancel, null, reportTypes);
             if (action == null || action == Constants.PromptCancel) return;
@@ -135,13 +129,18 @@ public partial class CommentViewModel : ObservableObject
             var deleteResult = await App.ExecuteRequestAsync(new ModerationDeleteComment(Comment.Id, reason, reportType));
             if (deleteResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<CommentResponseDto>(Comment));
         }
-        else
+        else if(_isMyPost || Comment.User.UserId == Shared.UserId)
         {
             var result = await App.Page.DisplayAlert("댓글 삭제", "정말로 댓글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
             if (!result) return;
 
             var deleteResult = await App.ExecuteRequestAsync(new DeleteComment(Comment.Id));
             if (deleteResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<CommentResponseDto>(Comment));
+        }
+        else
+        {
+            await App.Page.DisplayAlert("권한 부족", "댓글을 삭제할 권한이 없습니다.", Constants.PromptOk);
+            return;
         }
     }
 
