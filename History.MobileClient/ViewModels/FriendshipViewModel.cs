@@ -30,14 +30,25 @@ public partial class FriendshipViewModel(UserResponseDto user, PostInteractionVi
     public DateTime CreatedAt => User.Friendship.CreatedAt;
     public IMediaViewModel ProfileMedia => new ImageViewModel(Utils.GenerateMediaUri(User.ProfileThumbnailMediaId) ?? Constants.DefaultProfileImageFileName);
 
+    public Color FriendshipColor
+    {
+        get
+        {
+            if (User.Friendship == null) return Colors.RoyalBlue;
+            else if (User.Friendship.Status == FriendshipStatus.Accepted) return Color.FromRgb(0xbd, 0x00, 0x00);
+            else if (User.Friendship.Status == FriendshipStatus.Requested) return Colors.ForestGreen;
+            else if (User.Friendship.Status == FriendshipStatus.Waiting) return Colors.ForestGreen;
+            else return Color.FromRgb(0x80, 0x80, 0x80);
+        }
+    }
     public string FriendshipGlyph
     {
         get
         {
             if (User.Friendship == null) return Solid.UserPlus;
             else if (User.Friendship.Status == FriendshipStatus.Accepted) return Solid.UserMinus;
-            else if (User.Friendship.Status == FriendshipStatus.Requested) return Solid.UserCheck;
-            else if (User.Friendship.Status == FriendshipStatus.Waiting) return Solid.UserClock;
+            else if (User.Friendship.Status == FriendshipStatus.Requested) return Solid.UserClock;
+            else if (User.Friendship.Status == FriendshipStatus.Waiting) return Solid.UserCheck;
             else return Solid.UserLock;
         }
     }

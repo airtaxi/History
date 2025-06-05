@@ -107,7 +107,7 @@
                     <FontImageSource
                         FontFamily="FASolid"
                         Glyph="{x:Binding FriendshipGlyph}"
-                        Color="#808080" />
+                        Color="{x:Binding FriendshipColor}" />
                 </Image.Source>
             </Image>
             <Rectangle
