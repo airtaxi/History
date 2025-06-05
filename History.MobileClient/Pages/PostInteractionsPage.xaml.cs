@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Enums;
+using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using System.ComponentModel;
 
@@ -43,6 +44,13 @@ public partial class PostInteractionsPage : ContentPage, INotifyPropertyChanged
     {
         base.OnAppearing();
         _isInForeground = true;
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+        }
     }
 
     protected override void OnDisappearing()
@@ -64,4 +72,11 @@ public partial class PostInteractionsPage : ContentPage, INotifyPropertyChanged
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+#if IOS
+        AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
+    }
 }

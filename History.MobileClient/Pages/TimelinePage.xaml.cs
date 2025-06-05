@@ -119,6 +119,13 @@ public partial class TimelinePage : ContentPage
             _isFirstLoad = false;
             Dispatcher.Dispatch(async () => await RefreshAsync());
         }
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+        }
     }
 
     protected override void OnDisappearing()
@@ -132,6 +139,7 @@ public partial class TimelinePage : ContentPage
     {
         base.OnNavigatedTo(args);
 
+        Debug.WriteLine($"[TL] Scroll Recovery: {_lastScrollOffsetY}");
         MainCollectionView.SetScrollOffsetY(_lastScrollOffsetY, false);
     }
 
@@ -140,6 +148,7 @@ public partial class TimelinePage : ContentPage
         base.OnNavigatingFrom(args);
 
         _lastScrollOffsetY = MainCollectionView.GetScrollOffsetY();
+        Debug.WriteLine($"[TL] _lastScrollOffsetY: {_lastScrollOffsetY}");
     }
 
 #endif
@@ -198,7 +207,9 @@ public partial class TimelinePage : ContentPage
     private void OnMainCollectionViewScrolled(object sender, ItemsViewScrolledEventArgs e)
     {
         var collectionView = sender as CollectionView;
-        if (collectionView.GetScrollOffsetY() > 0) ScrollToTopBorder.IsVisible = true;
+        var scrollOffsetY = collectionView.GetScrollOffsetY();
+        Debug.WriteLine($"[TL] Scrolled to {scrollOffsetY}");
+        if (scrollOffsetY > 0) ScrollToTopBorder.IsVisible = true;
         else ScrollToTopBorder.IsVisible = false;
     }
 

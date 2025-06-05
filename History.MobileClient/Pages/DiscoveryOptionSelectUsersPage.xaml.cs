@@ -6,6 +6,7 @@ using History.Commons.Api.Friendship;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -149,6 +150,13 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
 
             await RefreshAsync();
         }
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+        }
     }
 
     protected override void OnDisappearing()
@@ -272,5 +280,12 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
     {
         base.OnNavigatedFrom(args);
         WeakReferenceMessenger.Default.UnregisterAll(this);
+    }
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+#if IOS
+        AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
     }
 }

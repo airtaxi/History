@@ -4,6 +4,7 @@ using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 
 namespace History.MobileClient.Pages;
 
@@ -89,6 +90,13 @@ public partial class SettingsPage : ContentPage
     {
         base.OnAppearing();
         _isInForeground = true;
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+        }
     }
 
     protected override void OnDisappearing()
@@ -107,5 +115,12 @@ public partial class SettingsPage : ContentPage
             MainActivityIndicator.IsRunning = isLoading;
             IsEnabled = !isLoading;
         });
+    }
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+#if IOS
+        AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
     }
 }
