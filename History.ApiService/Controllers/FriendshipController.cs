@@ -281,7 +281,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var isFavoriteResult = await friendshipService.IsFavoriteFriendAsync(requesterId, userId);
         if (isFavoriteResult.IsFailure) return StatusCode(500, isFavoriteResult.FullErrorMessage);
 
-        if (isFavoriteResult.Value)
+        if (!isFavoriteResult.Value)
         {
             var result = await friendshipService.AddFavoriteFriendAsync(requesterId, userId);
             if (result.IsSuccess) return Ok();
