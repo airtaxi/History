@@ -28,7 +28,7 @@ public partial class FriendshipViewModel(UserResponseDto user, PostInteractionVi
     public bool IsModerator => User.Rank == Rank.Moderator;
     public bool IsAdmin => User.Rank == Rank.Admin;
     public DateTime CreatedAt => User.Friendship.CreatedAt;
-    public IMediaViewModel ProfileMedia => new ImageViewModel(Utils.GenerateMediaUri(User.ProfileThumbnailMediaId ?? Constants.DefaultProfileImageFileName));
+    public IMediaViewModel ProfileMedia => new ImageViewModel(Utils.GenerateMediaUri(User.ProfileThumbnailMediaId) ?? Constants.DefaultProfileImageFileName);
 
     public string FriendshipGlyph
     {
