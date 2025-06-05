@@ -87,14 +87,18 @@ public partial class PostPage : ContentPage
 
     private void OnAppleVideoUnloadedMessageMessageReceived(object recipient, AppleVideoUnloadedMessage message)
     {
+#if IOS
         (PhoneContentDataTemplatePresenter as IView)?.InvalidateMeasure();
         (TabletContentDataTemplatePresenter as IView)?.InvalidateMeasure();
+#endif
     }
 
     private void OnPostChangedMessageReceived(object recipient, ValueChangedMessage<PostResponseDto> message)
     {
+#if IOS
         (PhoneContentDataTemplatePresenter as IView)?.InvalidateMeasure();
         (TabletContentDataTemplatePresenter as IView)?.InvalidateMeasure();
+#endif
     }
 
     private void OnImageInputRequested(object sender, string path)
@@ -198,7 +202,7 @@ public partial class PostPage : ContentPage
                 await _viewModel.RefreshAsync();
                 if (!_viewModel.IsWideMode)
                 {
-                    await Task.Delay(750);
+                    await Task.Delay(400);
                     await CommentsScrollToEnd(PhoneScrollView);
                 }
                 else await CommentsScrollToEnd(TabletCommentScrollView);
