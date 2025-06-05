@@ -24,30 +24,30 @@ public static class CollectionViewHelper
             return 0;
 
 #if ANDROID
-            if (handler.PlatformView is RecyclerView recyclerView)
+        if (handler.PlatformView is RecyclerView recyclerView)
+        {
+            var layoutManager = recyclerView.GetLayoutManager();
+                
+            if (layoutManager is LinearLayoutManager linearLayoutManager)
             {
-                var layoutManager = recyclerView.GetLayoutManager();
-                
-                if (layoutManager is LinearLayoutManager linearLayoutManager)
-                {
-                    var firstVisibleItemPosition = linearLayoutManager.FindFirstVisibleItemPosition();
-                    var firstVisibleView = layoutManager.FindViewByPosition(firstVisibleItemPosition);
+                var firstVisibleItemPosition = linearLayoutManager.FindFirstVisibleItemPosition();
+                var firstVisibleView = layoutManager.FindViewByPosition(firstVisibleItemPosition);
                     
-                    if (firstVisibleView != null)
-                    {
-                        var offset = firstVisibleView.Top;
-                        var itemHeight = firstVisibleView.Height;
-                        return (firstVisibleItemPosition * itemHeight) - offset;
-                    }
-                }
-                else if (layoutManager is GridLayoutManager || layoutManager is StaggeredGridLayoutManager)
+                if (firstVisibleView != null)
                 {
-                    // Use ComputeVerticalScrollOffset for Grid and StaggeredGrid layouts
-                    return recyclerView.ComputeVerticalScrollOffset();
+                    var offset = firstVisibleView.Top;
+                    var itemHeight = firstVisibleView.Height;
+                    return (firstVisibleItemPosition * itemHeight) - offset;
                 }
-                
+            }
+            else if (layoutManager is GridLayoutManager || layoutManager is StaggeredGridLayoutManager)
+            {
+                // Use ComputeVerticalScrollOffset for Grid and StaggeredGrid layouts
                 return recyclerView.ComputeVerticalScrollOffset();
             }
+                
+            return recyclerView.ComputeVerticalScrollOffset();
+        }
 
 #elif IOS
         if (handler.PlatformView is UICollectionView uiCollectionView)
@@ -70,23 +70,34 @@ public static class CollectionViewHelper
             return;
 
 #if ANDROID
-            if (handler.PlatformView is RecyclerView recyclerView)
+        if (handler.PlatformView is RecyclerView recyclerView)
+        {
+            // Stop any ongoing scroll animation to prevent momentum interference
+            recyclerView.StopScroll();
+
+            if (isAnimated)
             {
-                if (isAnimated)
-                {
-                    var currentY = recyclerView.ComputeVerticalScrollOffset();
-                    var deltaY = offsetY - currentY;
-                    recyclerView.SmoothScrollBy(0, (int)deltaY);
-                }
-                else
-                {
-                    recyclerView.ScrollTo(0, (int)offsetY);
-                }
+                var currentY = recyclerView.ComputeVerticalScrollOffset();
+                var deltaY = offsetY - currentY;
+                recyclerView.SmoothScrollBy(0, (int)deltaY);
             }
+            else
+            {
+                var currentY = recyclerView.ComputeVerticalScrollOffset();
+                var deltaY = offsetY - currentY;
+                recyclerView.ScrollBy(0, (int)deltaY);
+            }
+        }
 
 #elif IOS
         if (handler.PlatformView is UICollectionView uiCollectionView)
         {
+            // Stop any ongoing scroll animation to prevent momentum interference
+            if (uiCollectionView.Dragging || uiCollectionView.Decelerating)
+            {
+                uiCollectionView.SetContentOffset(uiCollectionView.ContentOffset, false);
+            }
+                
             var currentOffset = uiCollectionView.ContentOffset;
             var newOffset = new CoreGraphics.CGPoint(currentOffset.X, offsetY);
             uiCollectionView.SetContentOffset(newOffset, isAnimated);
@@ -105,11 +116,11 @@ public static class CollectionViewHelper
             return 0;
 
 #if ANDROID
-            if (handler.PlatformView is RecyclerView recyclerView)
-            {
-                return Math.Max(0, recyclerView.ComputeVerticalScrollRange() - 
-                               recyclerView.ComputeVerticalScrollExtent());
-            }
+        if (handler.PlatformView is RecyclerView recyclerView)
+        {
+            return Math.Max(0, recyclerView.ComputeVerticalScrollRange() - 
+                            recyclerView.ComputeVerticalScrollExtent());
+        }
 
 #elif IOS
         if (handler.PlatformView is UICollectionView uiCollectionView)
@@ -119,7 +130,7 @@ public static class CollectionViewHelper
             var contentInset = uiCollectionView.ContentInset;
 
             return Math.Max(0, contentSize.Height - frameSize.Height +
-                           contentInset.Top + contentInset.Bottom);
+                            contentInset.Top + contentInset.Bottom);
         }
 #endif
         return 0;
@@ -136,10 +147,10 @@ public static class CollectionViewHelper
             return false;
 
 #if ANDROID
-            if (handler.PlatformView is RecyclerView recyclerView)
-            {
-                return recyclerView.CanScrollVertically(1) || recyclerView.CanScrollVertically(-1);
-            }
+        if (handler.PlatformView is RecyclerView recyclerView)
+        {
+            return recyclerView.CanScrollVertically(1) || recyclerView.CanScrollVertically(-1);
+        }
 
 #elif IOS
         if (handler.PlatformView is UICollectionView uiCollectionView)
@@ -159,27 +170,30 @@ public static class CollectionViewHelper
     /// <param name="collectionView">Target CollectionView</param>
     /// <param name="deltaY">Y-axis movement amount</param>
     /// <param name="isAnimated">Whether to animate (default: true)</param>
-    public static void ScrollByY(this CollectionView collectionView, double deltaY, bool isAnimated = true)
+    public static void ScrollByY(CollectionView collectionView, double deltaY, bool isAnimated = true)
     {
         if (collectionView?.Handler is not StructuredItemsViewHandler<CollectionView> handler)
             return;
 
 #if ANDROID
-            if (handler.PlatformView is RecyclerView recyclerView)
-            {
-                if (isAnimated)
-                {
-                    recyclerView.SmoothScrollBy(0, (int)deltaY);
-                }
-                else
-                {
-                    recyclerView.ScrollBy(0, (int)deltaY);
-                }
-            }
+        if (handler.PlatformView is RecyclerView recyclerView)
+        {
+            // Stop any ongoing scroll animation to prevent momentum interference
+            recyclerView.StopScroll();
+
+            if (isAnimated) recyclerView.SmoothScrollBy(0, (int)deltaY);
+            else recyclerView.ScrollBy(0, (int)deltaY);
+        }
 
 #elif IOS
         if (handler.PlatformView is UICollectionView uiCollectionView)
         {
+            // Stop any ongoing scroll animation to prevent momentum interference
+            if (uiCollectionView.Dragging || uiCollectionView.Decelerating)
+            {
+                uiCollectionView.SetContentOffset(uiCollectionView.ContentOffset, false);
+            }
+        
             var currentOffset = uiCollectionView.ContentOffset;
             var newOffset = new CoreGraphics.CGPoint(currentOffset.X, currentOffset.Y + deltaY);
             uiCollectionView.SetContentOffset(newOffset, isAnimated);

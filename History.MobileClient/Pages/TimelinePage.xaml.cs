@@ -19,7 +19,6 @@ public partial class TimelinePage : ContentPage
 #if IOS
     private double _lastScrollOffsetY;
 #endif
-
     private PostViewModel _lastViewModel;
     private readonly ObservableCollection<PostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
@@ -158,12 +157,17 @@ public partial class TimelinePage : ContentPage
 
     private void OnSizeChanged(object sender, EventArgs e)
     {
+#if ANDROID
         var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
-        if (staggeredItemsLayout == null) return;
 
-        var previousSpan = staggeredItemsLayout.Span;
+        var previousSpan = staggeredItemsLayout?.Span ?? 1;
         var newSpan = ((int)Width / 700) + 1;
-        if (newSpan != previousSpan) MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
+        if (newSpan != previousSpan)
+        {
+            if (newSpan == 1) MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
+            else MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
+        }
+#endif
     }
 
     private async void OnChildAdded(object sender, ElementEventArgs e)
@@ -194,15 +198,9 @@ public partial class TimelinePage : ContentPage
     private void OnMainCollectionViewScrolled(object sender, ItemsViewScrolledEventArgs e)
     {
         var collectionView = sender as CollectionView;
-        var offsetY = collectionView.GetScrollOffsetY();
-        Console.WriteLine($"[TL] Scrolled to {offsetY}");
-        if (offsetY > 0) ScrollToTopBorder.IsVisible = true;
+        if (collectionView.GetScrollOffsetY() > 0) ScrollToTopBorder.IsVisible = true;
         else ScrollToTopBorder.IsVisible = false;
     }
 
-    private void OnScrollToTopBorderTapped(object sender, TappedEventArgs e)
-    {
-        var firstViewModel = _viewModels.FirstOrDefault();
-        if (firstViewModel != null) MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
-    }
+    private void OnScrollToTopBorderTapped(object sender, TappedEventArgs e) => MainCollectionView.SetScrollOffsetY(0, false);
 }
