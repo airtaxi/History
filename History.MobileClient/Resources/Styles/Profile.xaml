@@ -59,13 +59,13 @@
                                     Fill="#808080"
                                     HorizontalOptions="Fill"
                                     VerticalOptions="Fill" />
-                                <Image>
+                                <Image HeightRequest="16" WidthRequest="16">
                                     <Image.Source>
                                         <FontImageSource
-                                            FontFamily="MaterialSharp"
-                                            Glyph="{x:Static m:MaterialSharp.Star}"
+                                            FontFamily="FASolid"
+                                            Glyph="{x:Static fa:Solid.Star}"
                                             Size="15"
-                                            Color="#303030" />
+                                            Color="{x:Binding FavoriteColor}" />
                                     </Image.Source>
                                 </Image>
                             </Grid>
