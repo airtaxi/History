@@ -116,13 +116,13 @@ public static class Utils
         }
         FlushTextContentBuffer();
 
-        var textContents = contents.OfType<TextContent>();
+        var textAndProfileContent = contents.Where(x => x is TextContent || x is ProfileContent);
 
-        var firstTextContent = textContents.FirstOrDefault();
-        if (firstTextContent != null) firstTextContent.Text = firstTextContent.Text.TrimStart();
+        var firstContent = textAndProfileContent.FirstOrDefault();
+        if (firstContent is TextContent firstTextContent) firstTextContent.Text = firstTextContent.Text.TrimStart();
 
-        var lastTextContent = textContents.LastOrDefault();
-        if (lastTextContent != null) lastTextContent.Text = lastTextContent.Text.TrimEnd();
+        var lastContent = textAndProfileContent.LastOrDefault();
+        if (lastContent is TextContent lastTextContent) lastTextContent.Text = lastTextContent.Text.TrimEnd();
 
         contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrEmpty(textContent.Text));
     }

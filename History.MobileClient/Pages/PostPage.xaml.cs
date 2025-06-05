@@ -173,10 +173,6 @@ public partial class PostPage : ContentPage
         var contents = GetCommentContents();
         Utils.TrimContents(contents);
 
-        var textContents = contents.OfType<TextContent>();
-        textContents.FirstOrDefault()?.Text.TrimStart();
-        textContents.LastOrDefault()?.Text.TrimEnd();
-
         var files = new Dictionary<string, byte[]>();
         if (_commentMediaAttachmentViewModel != null)
         {
