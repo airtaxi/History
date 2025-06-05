@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
@@ -15,12 +16,13 @@ public partial class TimelinePage : ContentPage
 
     private bool _isInForeground;
     private bool _areThereNoMorePostsToLoad;
+#if IOS
+    private double _lastScrollOffsetY;
+#endif
+
     private PostViewModel _lastViewModel;
     private readonly ObservableCollection<PostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
-#if IOS
-    private PostViewModel _tappedViewModel;
-#endif
 
     public TimelinePage()
 	{
@@ -28,25 +30,12 @@ public partial class TimelinePage : ContentPage
         MainCollectionView.ItemsSource = _viewModels;
 #if IOS
         MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
-        WeakReferenceMessenger.Default.Register<ApplePostViewModelTapMessage>(this, OnApplePostViewModelTapMessageReceived);
 #endif
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
-#if IOS
-    private void OnApplePostViewModelTapMessageReceived(object recipient, ApplePostViewModelTapMessage message)
-    {
-        Debug.WriteLine($"[TL] OnApplePostViewModelTapMessageReceived");
-
-        if (_viewModels.Contains(message.Value))
-        {
-            _tappedViewModel = message.Value;
-        }
-    }
-
-#endif
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {
         var viewModels = _viewModels.Where(x => x.Post.Id == message.Value.Id).ToList(); // ToList is needed (Collection will be modified)
@@ -125,18 +114,6 @@ public partial class TimelinePage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
-#if IOS
-        Debug.WriteLine($"[TL] OnAppearing {_tappedViewModel}");
-        if (_tappedViewModel != null)
-        {
-            Dispatcher.Dispatch(() =>
-            {
-                MainCollectionView.ScrollTo(_tappedViewModel, null, ScrollToPosition.Start, false);
-                _tappedViewModel = null;
-            });
-        }
-
-#endif
         if (_isFirstLoad || ShouldRefresh)
         {
             ShouldRefresh = false;
@@ -156,12 +133,14 @@ public partial class TimelinePage : ContentPage
     {
         base.OnNavigatedTo(args);
 
-        Debug.WriteLine($"[TL] OnNavigatedTo {_tappedViewModel}");
-        if (_tappedViewModel != null)
-        {
-            MainCollectionView.ScrollTo(_tappedViewModel, null, ScrollToPosition.Start, false);
-            _tappedViewModel = null;
-        }
+        MainCollectionView.SetScrollOffsetY(_lastScrollOffsetY, false);
+    }
+
+    protected override void OnNavigatingFrom(NavigatingFromEventArgs args)
+    {
+        base.OnNavigatingFrom(args);
+
+        _lastScrollOffsetY = MainCollectionView.GetScrollOffsetY();
     }
 
 #endif
@@ -212,19 +191,18 @@ public partial class TimelinePage : ContentPage
 
     private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
 
-    private double _lastVerticalOffset = 0;
-    private double _topVerticalOffset = 0;
     private void OnMainCollectionViewScrolled(object sender, ItemsViewScrolledEventArgs e)
     {
-        if (e.VerticalOffset > _topVerticalOffset) ScrollToTopBorder.IsVisible = true;
+        var collectionView = sender as CollectionView;
+        var offsetY = collectionView.GetScrollOffsetY();
+        Console.WriteLine($"[TL] Scrolled to {offsetY}");
+        if (offsetY > 0) ScrollToTopBorder.IsVisible = true;
         else ScrollToTopBorder.IsVisible = false;
-        _lastVerticalOffset = e.VerticalOffset;
     }
 
     private void OnScrollToTopBorderTapped(object sender, TappedEventArgs e)
     {
         var firstViewModel = _viewModels.FirstOrDefault();
         if (firstViewModel != null) MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
-        _topVerticalOffset = _lastVerticalOffset;
     }
 }
