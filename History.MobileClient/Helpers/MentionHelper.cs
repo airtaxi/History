@@ -70,11 +70,11 @@ public static class MentionHelper
             imm.ShowSoftInput(editText, Android.Views.InputMethods.ShowFlags.Forced);
         }
 #elif IOS
-            if (handler.PlatformView is UIKit.UITextView nativeView)
-            {
-                nativeView.SelectedRange = new Foundation.NSRange(nativeView.Text.Length, 0);
-                if (showKeyboard) nativeView.BecomeFirstResponder();
-            }
+        if (handler.PlatformView is UIKit.UITextView nativeView)
+        {
+            nativeView.SelectedRange = new Foundation.NSRange(nativeView.Text.Length, 0);
+            if (showKeyboard) nativeView.BecomeFirstResponder();
+        }
 #endif
     }
 }
