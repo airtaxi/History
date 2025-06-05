@@ -255,23 +255,27 @@ public partial class PostPage : ContentPage
         }
     }
 
-    private void OnHandlerChanging(object sender, HandlerChangingEventArgs e)
+    protected override void OnNavigatedTo(NavigatedToEventArgs args)
     {
-        if (e.NewHandler == null)
-        {
-            _commentMediaAttachmentViewModel?.Dispose();
-            WeakReferenceMessenger.Default.UnregisterAll(this);
-            _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
-        }
-        else
-        {
-            WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
-            WeakReferenceMessenger.Default.Register<AppleVideoUnloadedMessage>(this, OnAppleVideoUnloadedMessageMessageReceived);
-            WeakReferenceMessenger.Default.Register<CommentTappedMessage>(this, OnCommentTappedMessageReceived);
-            WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
-            WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
-            _mentionsViewModel.ImageInputRequested += OnImageInputRequested;
-        }
+        base.OnNavigatedTo(args);
+
+        WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<AppleVideoUnloadedMessage>(this, OnAppleVideoUnloadedMessageMessageReceived);
+        WeakReferenceMessenger.Default.Register<CommentTappedMessage>(this, OnCommentTappedMessageReceived);
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
+        _mentionsViewModel.ImageInputRequested += OnImageInputRequested;
+    }
+
+    protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
+    {
+        base.OnNavigatedFrom(args);
+        _commentMediaAttachmentViewModel?.Dispose();
+        _commentMediaAttachmentViewModel = null;
+        CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
+
+        WeakReferenceMessenger.Default.UnregisterAll(this);
+        _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
     }
 
     protected override void OnAppearing()

@@ -174,16 +174,6 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
         });
     }
 
-    private void OnHandlerChanging(object sender, HandlerChangingEventArgs e)
-    {
-        if (e.NewHandler == null) WeakReferenceMessenger.Default.UnregisterAll(this);
-        else
-        {
-            WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
-            WeakReferenceMessenger.Default.Register<SelectUserSelectionMessage>(this, OnSelectUserSelectionMessageReceived);
-        }
-    }
-
     private async void OnPresetButtonClicked(object sender, EventArgs e)
     {
         var action = await DisplayActionSheet("프리셋", Constants.PromptCancel, null, "이 설정으로 프리셋 저장", "프리셋 불러오기", "프리셋 삭제");
@@ -269,5 +259,18 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
     {
         _ = App.PopAsync();
         return true;
+    }
+
+    protected override void OnNavigatedTo(NavigatedToEventArgs args)
+    {
+        base.OnNavigatedTo(args);
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<SelectUserSelectionMessage>(this, OnSelectUserSelectionMessageReceived);
+    }
+
+    protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
+    {
+        base.OnNavigatedFrom(args);
+        WeakReferenceMessenger.Default.UnregisterAll(this);
     }
 }
