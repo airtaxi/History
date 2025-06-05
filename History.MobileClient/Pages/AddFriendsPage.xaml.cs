@@ -3,6 +3,7 @@ using History.Commons;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 
 namespace History.MobileClient.Pages;
@@ -61,6 +62,13 @@ public partial class AddFriendsPage : ContentPage
     {
         base.OnAppearing();
         _isInForeground = true;
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+        }
     }
 
     protected override void OnDisappearing()

@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -80,6 +81,13 @@ public partial class NotificationsPage : ContentPage
         _isInForeground = true;
 
         Dispatcher.Dispatch(async () => await RefreshAsync());
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+        }
     }
 
     protected override void OnDisappearing()

@@ -50,9 +50,11 @@ public static class CollectionViewHelper
         }
 
 #elif IOS
-        if (handler.PlatformView is UICollectionView uiCollectionView)
+        if (handler.PlatformView is UIView platformView)
         {
-            return uiCollectionView.ContentOffset.Y;
+            // Find UICollectionView in the view hierarchy
+            var uiCollectionView = FindUICollectionView(platformView);
+            if (uiCollectionView != null) return uiCollectionView.ContentOffset.Y;
         }
 #endif
         return 0;
@@ -90,8 +92,11 @@ public static class CollectionViewHelper
         }
 
 #elif IOS
-        if (handler.PlatformView is UICollectionView uiCollectionView)
+        if (handler.PlatformView is UIView uiVIew)
         {
+            var uiCollectionView = FindUICollectionView(uiVIew);
+            if (uiCollectionView == null) return;
+
             // Stop any ongoing scroll animation to prevent momentum interference
             if (uiCollectionView.Dragging || uiCollectionView.Decelerating)
             {
@@ -123,8 +128,11 @@ public static class CollectionViewHelper
         }
 
 #elif IOS
-        if (handler.PlatformView is UICollectionView uiCollectionView)
+        if (handler.PlatformView is UIView uiView)
         {
+            var uiCollectionView = FindUICollectionView(uiView);
+            if (uiCollectionView == null) return 0;
+
             var contentSize = uiCollectionView.ContentSize;
             var frameSize = uiCollectionView.Frame.Size;
             var contentInset = uiCollectionView.ContentInset;
@@ -153,8 +161,11 @@ public static class CollectionViewHelper
         }
 
 #elif IOS
-        if (handler.PlatformView is UICollectionView uiCollectionView)
+        if (handler.PlatformView is UIView uiView)
         {
+            var uiCollectionView = FindUICollectionView(uiView);
+            if (uiCollectionView == null) return false;
+
             var contentSize = uiCollectionView.ContentSize;
             var frameSize = uiCollectionView.Frame.Size;
 
@@ -186,8 +197,11 @@ public static class CollectionViewHelper
         }
 
 #elif IOS
-        if (handler.PlatformView is UICollectionView uiCollectionView)
+        if (handler.PlatformView is UIView uiView)
         {
+            var uiCollectionView = FindUICollectionView(uiView);
+            if (uiCollectionView == null) return;
+
             // Stop any ongoing scroll animation to prevent momentum interference
             if (uiCollectionView.Dragging || uiCollectionView.Decelerating)
             {
@@ -200,4 +214,26 @@ public static class CollectionViewHelper
         }
 #endif
     }
+
+#if IOS
+    /// <summary>
+    /// Finds UICollectionView in the view hierarchy.
+    /// </summary>
+    /// <param name="view">Root view to search from</param>
+    /// <returns>Found UICollectionView or null</returns>
+    private static UICollectionView FindUICollectionView(UIView view)
+    {
+        if (view is UICollectionView collectionView)
+            return collectionView;
+
+        foreach (UIView subView in view.Subviews)
+        {
+            var found = FindUICollectionView(subView);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+#endif
 }

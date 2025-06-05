@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using UraniumUI.Icons.FontAwesome;
 
@@ -15,10 +16,13 @@ public partial class FriendListPage : ContentPage
 
     private readonly string _userId;
 
+    private readonly bool _isTabbedPage;
+
 	public FriendListPage()
 	{
         _userId = Shared.UserId;
         _sortByTime = Configuration.GetValue<bool>("FriendsListSortByTime");
+        _isTabbedPage = true;
         InitializeComponent();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
@@ -97,6 +101,13 @@ public partial class FriendListPage : ContentPage
         _isInForeground = true;
 
         await RefreshAsync();
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+        }
     }
 
     protected override void OnDisappearing()
@@ -130,4 +141,14 @@ public partial class FriendListPage : ContentPage
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+#if IOS
+        if (!_isTabbedPage)
+        {
+            AppleSwipeGestureHelper.ApplyToPage(this);
+        }
+#endif
+    }
 }

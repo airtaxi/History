@@ -18,6 +18,7 @@ using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 using UraniumUI.Icons.MaterialSymbols;
+using History.MobileClient.Helpers;
 
 
 namespace History.MobileClient.Pages;
@@ -460,6 +461,13 @@ public partial class EditPostPage : ContentPage
         RefreshSwitch.IsToggled = shouldRefreshOnNewPost;
 
         Dispatcher.Dispatch(async () => await LoginPage.RefreshFriendsAsync());
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+        }
     }
 
     protected override void OnDisappearing()
@@ -482,6 +490,9 @@ public partial class EditPostPage : ContentPage
 
     private async void OnLoaded(object sender, EventArgs e)
     {
+#if IOS
+        AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
         await Task.Delay(100);
         MainTextContent.FocusEditor();
     }

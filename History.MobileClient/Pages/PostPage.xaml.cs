@@ -10,6 +10,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Controls.Platform.Compatibility;
 using NativeMedia;
 using SpeakLink.Mention;
 using System.Diagnostics;
@@ -36,10 +37,10 @@ public partial class PostPage : ContentPage
     private bool IsCommentAvailable => _commentMediaAttachmentViewModel != null || !IsCommentEmpty;
 
     public PostPage(PostViewModel viewModel)
-	{
+    {
         Debug.WriteLine("POST PAGE LOADED");
 
-		_viewModel = viewModel;
+        _viewModel = viewModel;
         InitializeComponent();
         UpdateRepostStatus(viewModel.Post);
 
@@ -284,6 +285,13 @@ public partial class PostPage : ContentPage
         _isInForeground = true;
 
         BindingContext = _viewModel;
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+        }
     }
 
     protected override void OnDisappearing()
@@ -313,5 +321,12 @@ public partial class PostPage : ContentPage
     private void OnKeyboardSizeMessageReceived(object recipient, KeyboardSizeMessage message)
     {
         MainGrid.Margin = new(0, 0, 0, message.Value);
+    }
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+#if IOS
+        AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
     }
 }

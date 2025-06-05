@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Friendship;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 
 namespace History.MobileClient.Pages;
@@ -43,6 +44,13 @@ public partial class PendingFriendRequestsPage : ContentPage
         {
             _isInitialized = true;
             await RefreshAsync();
+        }
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
         }
     }
 

@@ -129,6 +129,13 @@ public partial class EditCommentPage : ContentPage
     {
         base.OnAppearing();
         _isInForeground = true;
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+        }
     }
 
     protected override void OnDisappearing()
@@ -151,6 +158,9 @@ public partial class EditCommentPage : ContentPage
 
     private async void OnLoaded(object sender, EventArgs e)
     {
+#if IOS
+        AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
         await Task.Delay(100);
         MainTextContent.FocusEditor();
     }

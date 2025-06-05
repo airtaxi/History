@@ -1,6 +1,7 @@
 ﻿using History.Commons;
 using History.Commons.Api.User;
 using History.Commons.Enums;
+using History.MobileClient.Helpers;
 using System.Threading.Tasks;
 
 namespace History.MobileClient.Pages
@@ -60,5 +61,24 @@ namespace History.MobileClient.Pages
         private void OnTermsLabelTapped(object sender, TappedEventArgs e) => TermsCheckBox.IsChecked = !TermsCheckBox.IsChecked;
         private void OnPrivacyAgreementLabelTapped(object sender, TappedEventArgs e) => PrivacyAgreementCheckBox.IsChecked = !PrivacyAgreementCheckBox.IsChecked;
         private void OnAgeLabelTapped(object sender, TappedEventArgs e) => AgeCheckBox.IsChecked = !AgeCheckBox.IsChecked;
+
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+
+            var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+            if (safeAreaTopHeight != 0)
+            {
+                var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+                Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+            }
+        }
+
+        private void OnLoaded(object sender, EventArgs e)
+        {
+#if IOS
+            AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
+        }
     }
 }
