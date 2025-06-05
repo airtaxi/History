@@ -112,7 +112,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
     public async Task<Result> SendNotificationsAsync(NotificationType type, string associatedId)
     {
         var notificationResult = await GenerateNotificationAsync(type, associatedId);
-        if (notificationResult.IsFailure) notificationResult.CastFailure();
+        if (notificationResult.IsFailure) return notificationResult.CastFailure();
 
         // Delete previous notifications
         //await _notificationCollection.DeleteManyAsync(x => x.AssociatedId == associatedId && x.Type == type);
@@ -566,7 +566,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var postResult = await postService.GetPostByIdAsync(associatedId);
             if (postResult.IsFailure) return postResult.CastFailure<List<Notification>>();
 
-            var favoritedFriendIdsResult = await friendshipService.GetFavoriteFriendIdsAsync(postResult.Value.UserId);
+            var favoritedFriendIdsResult = await friendshipService.GetFavoritedFriendIdsAsync(postResult.Value.UserId);
             if (favoritedFriendIdsResult.IsFailure) return favoritedFriendIdsResult.CastFailure<List<Notification>>();
             if (favoritedFriendIdsResult.Value.Count == 0) return (ErrorType.NotFound, "이 사용자를 관심 친구로 등록한 사용자가 없습니다.");
 
