@@ -85,18 +85,7 @@ public partial class TextContentView : ContentView
         }
 
 #elif IOS
-        if (MainMentionEditor.Handler.PlatformView is UITextView textView)
-        {
-            // Set content inset to align text to top
-            textView.ContentInset = new UIEdgeInsets(0, 0, 0, 0);
-            textView.TextContainerInset = new UIEdgeInsets(8, 0, 8, 0);
-                
-            // Disable automatic content inset adjustment
-            if (Foundation.NSProcessInfo.ProcessInfo.IsOperatingSystemAtLeastVersion(new Foundation.NSOperatingSystemVersion(11, 0, 0)))
-            {
-                textView.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Never;
-            }
-        }
+        MainMentionEditor.MinimumHeightRequest = -1;
 #endif
     }
 
