@@ -10,7 +10,7 @@ namespace History.Commons.Api.Friendship;
 
 public class ToggleFavorite : IAuthRequiredRequest, IRequestWithUrlParameters
 {
-    public string Path => "/api/friendship/toggle-favorite";
+    public string Path => "/api/friendship/toggle-favorite/{userId}";
     public Method Method => Method.Post;
     public Dictionary<string, string> UrlParameters { get; set; } = [];
 
