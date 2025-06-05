@@ -20,6 +20,8 @@ public partial class ProfileViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsMe))]
     [NotifyPropertyChangedFor(nameof(IsNotMe))]
     [NotifyPropertyChangedFor(nameof(IsFriend))]
+    [NotifyPropertyChangedFor(nameof(IsFavorite))]
+    [NotifyPropertyChangedFor(nameof(FavoriteColor))]
     [NotifyPropertyChangedFor(nameof(FriendButtonText))]
     [NotifyPropertyChangedFor(nameof(Nickname))]
     [NotifyPropertyChangedFor(nameof(Description))]
