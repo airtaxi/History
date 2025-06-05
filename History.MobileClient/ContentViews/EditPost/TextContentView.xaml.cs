@@ -3,6 +3,13 @@ using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using SpeakLink.Mention;
 
+#if ANDROID
+using Android.Views;
+using AndroidX.AppCompat.Widget;
+#elif IOS
+using UIKit;
+#endif
+
 namespace History.MobileClient.ContentViews.EditPost;
 
 public partial class TextContentView : ContentView
@@ -61,6 +68,36 @@ public partial class TextContentView : ContentView
     {
         MainMentionEditor.Focus();
         MainMentionEditor.CursorPosition = MainMentionEditor.Text?.Length ?? 0;
+    }
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+#if ANDROID
+        if (MainMentionEditor.Handler.PlatformView is AppCompatEditText editText)
+        {
+            // Set gravity to top|start to align text and cursor to top-left
+            editText.Gravity = GravityFlags.Top | GravityFlags.Start;
+
+            // Ensure the EditText takes full height
+            editText.LayoutParameters = new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent,
+                ViewGroup.LayoutParams.MatchParent);
+        }
+
+#elif IOS
+        if (MainMentionEditor.Handler.PlatformView is UITextView textView)
+        {
+            // Set content inset to align text to top
+            textView.ContentInset = new UIEdgeInsets(0, 0, 0, 0);
+            textView.TextContainerInset = new UIEdgeInsets(8, 0, 8, 0);
+                
+            // Disable automatic content inset adjustment
+            if (Foundation.NSProcessInfo.ProcessInfo.IsOperatingSystemAtLeastVersion(new Foundation.NSOperatingSystemVersion(11, 0, 0)))
+            {
+                textView.ContentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentBehavior.Never;
+            }
+        }
+#endif
     }
 
     private void OnUnloaded(object sender, EventArgs e)
