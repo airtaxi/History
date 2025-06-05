@@ -6,7 +6,7 @@ namespace History.ApiService.Helpers;
 
 public static class MediaEncodingHelper
 {
-    public static MediaConvertResult ConvertImage(byte[] imageBytes, bool convertAnimatedImageToMp4, uint? maxWidth = null)
+    public static MediaConvertResult ConvertImage(byte[] imageBytes, bool convertAnimatedImageToMp4, uint? maxWidth = null, bool noAlpha = false)
     {
         using var images = new MagickImageCollection();
         images.Read(imageBytes);
@@ -30,6 +30,7 @@ public static class MediaEncodingHelper
                 Parallel.ForEach(images, frame =>
                 {
                     var i = images.IndexOf(frame);
+                    frame.Alpha(AlphaOption.Off);
 
                     // Adjust resolution to even numbers if odd (h264, h265 requirement)
                     uint newWidth = frame.Width;
@@ -114,6 +115,7 @@ public static class MediaEncodingHelper
             image.Format = MagickFormat.WebP;
             image.Quality = 50;
             image.AutoOrient(); // Pre-apply rotation
+            if (noAlpha) image.Alpha(AlphaOption.Off); // Disable alpha channel for WebP
 
 
             if (maxWidth.HasValue && image.Width > maxWidth.Value)

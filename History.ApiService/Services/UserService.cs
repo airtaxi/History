@@ -212,14 +212,14 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         }
         else
         {
-            var thumbnailConvertResult = MediaEncodingHelper.ConvertImage(image, false, 256);
+            var thumbnailConvertResult = MediaEncodingHelper.ConvertImage(image, false, 256, true);
             var thumbnailBytes = thumbnailConvertResult.Data;
             var thumbnailContentType = thumbnailConvertResult.MimeType;
 
             var thumbnailMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, thumbnailBytes, thumbnailContentType);
             if (thumbnailMediaResult.IsFailure) return thumbnailMediaResult.CastFailure<bool>();
 
-            var convertResult = MediaEncodingHelper.ConvertImage(image, false, 512);
+            var convertResult = MediaEncodingHelper.ConvertImage(image, false, 512, true);
             var usesAnimatedProfileMedia = convertResult.IsVideo;
             var bytes = convertResult.Data;
             var contentType = convertResult.MimeType;
@@ -256,14 +256,14 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         }
         else
         {
-            var thumbnailConvertResult = MediaEncodingHelper.ConvertImage(image, false, 1000);
+            var thumbnailConvertResult = MediaEncodingHelper.ConvertImage(image, false, 1000, true);
             var thumbnailBytes = thumbnailConvertResult.Data;
             var thumbnailContentType = thumbnailConvertResult.MimeType;
 
             var thumbnailMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, thumbnailBytes, thumbnailContentType);
             if (thumbnailMediaResult.IsFailure) return thumbnailMediaResult.CastFailure<bool>();
 
-            var convertResult = MediaEncodingHelper.ConvertImage(image, false, 1000);
+            var convertResult = MediaEncodingHelper.ConvertImage(image, false, 1000, true);
             var usesAnimatedBackgroundMedia = convertResult.IsVideo;
             var contentType = convertResult.MimeType;
             var bytes = convertResult.Data;
