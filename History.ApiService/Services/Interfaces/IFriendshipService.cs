@@ -195,4 +195,43 @@ public interface IFriendshipService
     /// <param name="userId">The ID of the user whose friendships are to be withdrawn.</param>
     /// <returns>A task that represents the asynchronous operation, containing the result of the withdrawal.</returns>
     public Task<Result> HandleWithdrawAsync(string userId);
+
+    /// <summary>
+    /// Adds a user to the favorite friends list.
+    /// </summary>
+    /// <param name="userId">The ID of the user adding a favorite friend.</param>
+    /// <param name="friendId">The ID of the friend to be added to the favorites.</param>
+    /// <returns>A task representing the asynchronous operation, with a result indicating success or failure.</returns>
+    public Task<Result> AddFavoriteFriendAsync(string userId, string friendId);
+
+    /// <summary>
+    /// Removes a user from the favorite friends list.
+    /// </summary>
+    /// <param name="userId">The ID of the user removing a favorite friend.</param>
+    /// <param name="friendId">The ID of the friend to be removed from the favorites.</param>
+    /// <returns>A task representing the asynchronous operation, with a result indicating success or failure.</returns>
+    public Task<Result> RemoveFavoriteFriendAsync(string userId, string friendId);
+
+    /// <summary>
+    /// Retrieves a list of user IDs that are marked as favorite friends for the specified user.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose favorite friends are being retrieved.</param>
+    /// <returns>A task representing the asynchronous operation, with a result containing a list of favorite friend IDs.</returns>
+    public Task<Result<List<string>>> GetFavoriteFriendIdsAsync(string userId);
+
+
+    /// <summary>
+    /// Retrieves a list of user IDs who have added the specified user as a favorite friend.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose favorite friends are being retrieved.</param>
+    /// <returns>A task representing the asynchronous operation, with a result containing a list of user IDs who have favorited the user.</returns>
+    public Task<Result<List<string>>> GetFavoritedFriendIdsAsync(string userId);
+
+    /// <summary>
+    /// Checks if a user is marked as a favorite friend by another user.
+    /// </summary>
+    /// <param name="userId">The ID of the user checking for a favorite friend.</param>
+    /// <param name="friendId">The ID of the friend to check if they are a favorite.</param>
+    /// <returns>A task representing the asynchronous operation, with a result indicating if the friend is a favorite.</returns>
+    public Task<Result<bool>> IsFavoriteFriendAsync(string userId, string friendId);
 }

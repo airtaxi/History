@@ -557,6 +557,29 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             }
             else return (ErrorType.BadRequest, "지원되지 않는 신고 대상입니다.");
 		}
+        else if (type == NotificationType.FavoriteFriendNewPost)
+        {
+            var userService = serviceProvider.GetRequiredService<IUserService>();
+            var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+            var postService = serviceProvider.GetRequiredService<IPostService>();
+
+            var postResult = await postService.GetPostByIdAsync(associatedId);
+            if (postResult.IsFailure) return postResult.CastFailure<List<Notification>>();
+
+            var favoritedFriendIdsResult = await friendshipService.GetFavoriteFriendIdsAsync(postResult.Value.UserId);
+            if (favoritedFriendIdsResult.IsFailure) return favoritedFriendIdsResult.CastFailure<List<Notification>>();
+            if (favoritedFriendIdsResult.Value.Count == 0) return (ErrorType.NotFound, "이 사용자를 관심 친구로 등록한 사용자가 없습니다.");
+
+            core.Recipients = favoritedFriendIdsResult.Value;
+            core.UserId = postResult.Value.UserId;
+
+            core.Title = $"관심 친구 {postResult.Value.UserId}님이 새 게시글을 작성했습니다.";
+            core.Body = await userService.GenerateTextPreviewFromContentsAsync(postResult.Value.Contents);
+            core.ImageUrl = Utils.GenerateThumbnailUrlFromContents(postResult.Value.Contents);
+
+            core.Data.Add("PostId", postResult.Value.Id);
+            core.Data.Add("UserId", postResult.Value.UserId);
+        }
         else return (ErrorType.BadRequest, "지원되지 않는 알림 유형입니다.");
 
 		foreach (var notification in notifications)

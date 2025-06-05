@@ -260,4 +260,40 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         else if (friendIdsResult.Error == ErrorType.Forbidden) return StatusCode(403, friendIdsResult.ErrorMessage);
         else return StatusCode(500, friendIdsResult.FullErrorMessage);
     }
+
+    [HttpPost("toggle-favorite/{userId}")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(409)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> ToggleFavorite(string userId)
+    {
+        // Get the user ID from the authenticated user claim
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        var areFriendsResult = await friendshipService.AreFriendsAsync(requesterId, userId);
+        if (areFriendsResult.IsFailure) return StatusCode(500, areFriendsResult.FullErrorMessage);
+
+        if (!areFriendsResult.Value) return BadRequest("친구만 관심 친구로 설정할 수 있습니다.");
+
+        var isFavoriteResult = await friendshipService.IsFavoriteFriendAsync(requesterId, userId);
+        if (isFavoriteResult.IsFailure) return StatusCode(500, isFavoriteResult.FullErrorMessage);
+
+        if (isFavoriteResult.Value)
+        {
+            var result = await friendshipService.AddFavoriteFriendAsync(requesterId, userId);
+            if (result.IsSuccess) return Ok();
+            else if (result.Error == ErrorType.Conflict) return Conflict(result.ErrorMessage);
+            else return StatusCode(500, result.FullErrorMessage);
+        }
+        else
+        {
+            var result = await friendshipService.RemoveFavoriteFriendAsync(requesterId, userId);
+            if (result.IsSuccess) return Ok();
+            else if (result.Error == ErrorType.Conflict) return Conflict(result.ErrorMessage);
+            else return StatusCode(500, result.FullErrorMessage);
+        }
+    }
 }
