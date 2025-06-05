@@ -16,6 +16,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Serializers;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var firebaseServiceAccountKeyJsonPath = Path.Combine(AppContext.BaseDirectory, "firebaseServiceAccountKey.json");
 FirebaseApp.Create(new AppOptions()
@@ -71,8 +72,13 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 // Add controllers to the container.
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
-builder.Services.AddOpenApiDocument();
+builder.Services.AddOpenApiDocument(config =>
+{
+    config.SchemaSettings.GenerateEnumMappingDescription = true;
+});
 
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
