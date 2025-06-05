@@ -25,6 +25,7 @@ public class UserResponseDto()
     public string BackgroundThumbnailMediaId { get; set; }
     public bool UsesAnimatedBackgroundMedia { get; set; }
 
+    public bool IsFavorite { get; set; }
 
     public Friendship Friendship { get; set; }
 

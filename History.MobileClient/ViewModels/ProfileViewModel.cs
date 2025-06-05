@@ -35,6 +35,9 @@ public partial class ProfileViewModel : ObservableObject
     public bool IsModerator => User.Rank == Rank.Moderator;
     public bool IsAdmin => User.Rank == Rank.Admin;
 
+    public bool IsFavorite => User.IsFavorite;
+    public Color FavoriteColor => IsFavorite ? Application.Current.Resources["Primary"] as Color : Color.FromRgb(0x30, 0x30, 0x30);
+
     public string FriendButtonText
     {
         get
@@ -355,7 +358,11 @@ public partial class ProfileViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task HandleFavoriteAsync() => await App.Page.DisplayAlert("안내", "이 기능은 현재 개발 중입니다. 곧 업데이트 될 예정이니 조금만 기다려주세요!", Constants.PromptOk);
+    private async Task HandleFavoriteAsync()
+    {
+        var result = await App.ExecuteRequestAsync(new ToggleFavorite(User.UserId));
+        if (result.IsSuccess) await RefreshAsync();
+    }
 
     [RelayCommand]
     private async Task HandleProfileSettingsAsync()

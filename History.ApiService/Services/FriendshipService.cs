@@ -16,6 +16,7 @@ namespace History.ApiService.Services;
 public class FriendshipService(IMongoDatabase database, INotificationService notificationService, IServiceProvider serviceProvider) : IFriendshipService
 {
     private readonly IMongoCollection<Friendship> _friendshipCollection = database.GetCollection<Friendship>("Friendships");
+    private readonly IMongoCollection<FavoriteFriend> _favoriteFriendCollection = database.GetCollection<FavoriteFriend>("FavoriteFriends");
 
     /// <inheritdoc/>
     public async Task<Result<Friendship>> GetFriendshipByIdAsync(string friendshipId)
@@ -180,6 +181,11 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
             (f.UserId == userId && f.FriendId == userToBlockId) ||
             (f.UserId == userToBlockId && f.FriendId == userId));
 
+        // Second, remove any existing favorite friendship
+        await _favoriteFriendCollection.DeleteManyAsync(f =>
+            (f.UserId == userId && f.FriendId == userToBlockId) ||
+            (f.UserId == userToBlockId && f.FriendId == userId));
+
         // Create blocked relationship
         var blockFriendship = new Friendship
         {
@@ -223,6 +229,11 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
             (f.UserId == userId && f.FriendId == userToIgnoreId) ||
             (f.UserId == userToIgnoreId && f.FriendId == userId));
 
+        // Second, remove any existing favorite friendship
+        await _favoriteFriendCollection.DeleteManyAsync(f =>
+            (f.UserId == userId && f.FriendId == userToIgnoreId) ||
+            (f.UserId == userToIgnoreId && f.FriendId == userId));
+
         // Create blocked relationship
         var blockFriendship = new Friendship
         {
@@ -254,9 +265,15 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
             (f.UserId == userId && f.FriendId == friendId && f.Status == FriendshipStatus.Accepted) ||
             (f.UserId == friendId && f.FriendId == userId && f.Status == FriendshipStatus.Accepted)).ToListAsync();
 
+        // First, remove any existing friendship
         var result = await _friendshipCollection.DeleteManyAsync(f =>
             (f.UserId == userId && f.FriendId == friendId && f.Status == FriendshipStatus.Accepted) ||
             (f.UserId == friendId && f.FriendId == userId && f.Status == FriendshipStatus.Accepted));
+
+        // Second, remove any existing favorite friendship
+        await _favoriteFriendCollection.DeleteManyAsync(f =>
+            (f.UserId == userId && f.FriendId == friendId) ||
+            (f.UserId == friendId && f.FriendId == userId));
 
         if (existingFriendships.Count > 0) await notificationService.DeleteNotificationsAsync("AssociatedId", existingFriendships.Select(x => x.Id), NotificationType.FriendRequest);
 
@@ -473,5 +490,59 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
         await _friendshipCollection.DeleteManyAsync(f => f.UserId == userId || f.FriendId == userId);
 
         return Result.Success();
+    }
+
+    /// <inheritdoc/>
+    public async Task<Result<List<string>>> GetFavoriteFriendIdsAsync(string userId)
+    {
+        var favoriteFriends = await _favoriteFriendCollection.Find(f => f.UserId == userId).ToListAsync();
+        var friendIds = favoriteFriends.Select(f => f.FriendId).ToList();
+        return friendIds;
+    }
+
+    /// <inheritdoc/>
+    public async Task<Result<List<string>>> GetFavoritedFriendIdsAsync(string userId)
+    {
+        var favoritedFriends = await _favoriteFriendCollection.Find(f => f.FriendId == userId).ToListAsync();
+        var userIds = favoritedFriends.Select(f => f.UserId).ToList();
+        return userIds;
+    }
+
+    /// <inheritdoc/>
+    public async Task<Result> AddFavoriteFriendAsync(string userId, string friendId)
+    {
+        var existingFavorite = await _favoriteFriendCollection.Find(f => f.UserId == userId && f.FriendId == friendId).FirstOrDefaultAsync();
+        if (existingFavorite != null) return Result.Failure(ErrorType.Conflict, "이미 관심 친구에 추가된 친구입니다.");
+
+        var favoriteFriend = new FavoriteFriend
+        {
+            UserId = userId,
+            FriendId = friendId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        while (true)
+        {
+            favoriteFriend.Id = Guid.NewGuid().ToString("N");
+            var existingFriendship = await _favoriteFriendCollection.Find(f => f.Id == favoriteFriend.Id).FirstOrDefaultAsync();
+            if (existingFriendship == null) break;
+        }
+        await _favoriteFriendCollection.InsertOneAsync(favoriteFriend);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc/>
+    public async Task<Result> RemoveFavoriteFriendAsync(string userId, string friendId)
+    {
+        var result = await _favoriteFriendCollection.DeleteOneAsync(f => f.UserId == userId && f.FriendId == friendId);
+        return result.DeletedCount > 0 ? Result.Success() : (ErrorType.NotFound, "관심 친구를 찾을 수 없습니다.");
+    }
+
+    /// <inheritdoc/>
+    public async Task<Result<bool>> IsFavoriteFriendAsync(string userId, string friendId)
+    {
+        var favoriteFriend = await _favoriteFriendCollection.Find(f => f.UserId == userId && f.FriendId == friendId).FirstOrDefaultAsync();
+        return favoriteFriend != null;
     }
 }

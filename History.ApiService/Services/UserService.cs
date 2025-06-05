@@ -382,7 +382,10 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             }
 
             var friendshipResult = await friendshipService.GetFriendshipAsync(requesterId, user.Id);
+            var IsFavoriteFriendResult = await friendshipService.IsFavoriteFriendAsync(requesterId, user.Id);
+
             result.Friendship = friendshipResult.Value;
+            result.IsFavorite = IsFavoriteFriendResult.Value;
         }
 
         return result;
@@ -416,7 +419,12 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         results.RemoveAll(x => bannedUserIds.Contains(x.UserId));
 
         var friendshipsResult = await friendshipService.GetAllFriendshipsAsync(requesterId);
-        foreach (var result in results) result.Friendship = friendshipsResult.Value.FirstOrDefault(x => x.FriendId == result.UserId);
+        var favoriteFriendIdsResult = await friendshipService.GetFavoriteFriendIdsAsync(requesterId);
+        foreach (var result in results)
+        {
+            result.IsFavorite = favoriteFriendIdsResult.Value.Contains(result.UserId);
+            result.Friendship = friendshipsResult.Value.FirstOrDefault(x => x.FriendId == result.UserId);
+        }
 
         return results;
     }
