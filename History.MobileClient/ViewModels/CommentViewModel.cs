@@ -39,7 +39,7 @@ public partial class CommentViewModel : ObservableObject
         ? new VideoViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
-    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Comment.Contents, true );
+    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Comment.Contents, _isTimeline);
 
     public bool IsMyComment => Comment.User.UserId == Shared.UserId;
 
@@ -51,10 +51,12 @@ public partial class CommentViewModel : ObservableObject
     public string CommentLikeFontFamily => Liked ? "FASolid" : "FARegular";
 
     private readonly bool _isMyPost;
+    private readonly bool _isTimeline;
 
-    public CommentViewModel(CommentResponseDto comment, bool isMyPost)
+    public CommentViewModel(CommentResponseDto comment, bool isMyPost, bool isTimeline)
     {
         _isMyPost = isMyPost;
+        _isTimeline = isTimeline;
         Comment = comment;
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, (r, m) =>
         {
