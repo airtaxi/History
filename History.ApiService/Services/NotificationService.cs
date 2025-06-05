@@ -570,6 +570,9 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (favoritedFriendIdsResult.IsFailure) return favoritedFriendIdsResult.CastFailure<List<Notification>>();
             if (favoritedFriendIdsResult.Value.Count == 0) return (ErrorType.NotFound, "이 사용자를 관심 친구로 등록한 사용자가 없습니다.");
 
+            var userResult = await userService.GetUserByIdAsync(postResult.Value.UserId);
+            if (userResult.IsFailure) return userResult.CastFailure<List<Notification>>();
+
             core.Recipients = favoritedFriendIdsResult.Value;
 
             var filterResult = await FilterRecipientsByAccessAsync(core.Recipients, postResult.Value);
@@ -578,7 +581,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
             core.UserId = postResult.Value.UserId;
 
-            core.Title = $"관심 친구 {postResult.Value.UserId}님이 새 게시글을 작성했습니다.";
+            core.Title = $"관심 친구 {userResult.Value.Nickname}님이 새 게시글을 작성했습니다.";
             core.Body = await userService.GenerateTextPreviewFromContentsAsync(postResult.Value.Contents);
             core.ImageUrl = Utils.GenerateThumbnailUrlFromContents(postResult.Value.Contents);
 
