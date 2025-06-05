@@ -662,6 +662,13 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         var post = postResult.Value;
 
+        if (post.ParentPostId != null)
+        {
+            var parentPostResult = await GetPostByIdAsync(post.ParentPostId);
+            if (parentPostResult.IsSuccess && discoveryOption > parentPostResult.Value.DiscoveryOption)
+                return (ErrorType.BadRequest, "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다.");
+        }
+
         // Check if the user is the author of the post
         if (post.UserId != userId) return (ErrorType.Forbidden, "게시글을 수정할 수 있는 권한이 없습니다.");
 
