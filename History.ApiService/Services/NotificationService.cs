@@ -571,6 +571,11 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (favoritedFriendIdsResult.Value.Count == 0) return (ErrorType.NotFound, "이 사용자를 관심 친구로 등록한 사용자가 없습니다.");
 
             core.Recipients = favoritedFriendIdsResult.Value;
+
+            var filterResult = await FilterRecipientsByAccessAsync(core.Recipients, postResult.Value);
+            if (filterResult.IsFailure) return filterResult.CastFailure<List<Notification>>();
+            core.Recipients = filterResult.Value.Distinct();
+
             core.UserId = postResult.Value.UserId;
 
             core.Title = $"관심 친구 {postResult.Value.UserId}님이 새 게시글을 작성했습니다.";
