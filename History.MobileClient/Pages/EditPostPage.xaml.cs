@@ -27,6 +27,7 @@ public partial class EditPostPage : ContentPage
     public ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
 
     private bool _isInForeground;
+    private bool _isUploading;
 
     private readonly bool _isShare;
     private readonly PostResponseDto _post;
@@ -286,92 +287,100 @@ public partial class EditPostPage : ContentPage
 
     private async void OnUploadButtonClicked(object sender, EventArgs e)
     {
-        var editorContents = MainTextContent.GetContents();
-        Utils.TrimContents(editorContents);
-
-        var files = new Dictionary<string, byte[]>();
-        var mediaAndUploadContents = new List<BaseContent>();
-        foreach(var viewModel in _attachmentViewModels)
-        {
-            if (viewModel.IsUpload)
-            {
-                var uploadContent = new UploadContent
-                {
-                    Description = string.IsNullOrEmpty(viewModel.Description) ? null : viewModel.Description,
-                    FileName = viewModel.FileName
-                };
-                mediaAndUploadContents.Add(uploadContent);
-                files.Add(viewModel.FileName, viewModel.Data);
-            }
-            else
-            {
-                var mediaContent = viewModel.ServerContent;
-                mediaContent.Description = viewModel.Description;
-                mediaAndUploadContents.Add(mediaContent);
-            }
-        }
-
-        var contents = editorContents.Concat(mediaAndUploadContents).ToList();
-
-        if (_externalUrlContentViewModel != null) contents.Add(_externalUrlContentViewModel.ExternalUrlContent);
-
-        if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && !_isShare)
-        {
-            await DisplayAlert("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
-            return;
-        }
-
+        if (_isUploading) return;
+        _isUploading = true;
         try
-		{
-			MainActivityIndicator.IsRunning = true;
+        {
+            var editorContents = MainTextContent.GetContents();
+            Utils.TrimContents(editorContents);
 
-            List<string> discoveryOptionSelectedUserIds = null;
-            var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
-            if (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers)
+            var files = new Dictionary<string, byte[]>();
+            var mediaAndUploadContents = new List<BaseContent>();
+            foreach(var viewModel in _attachmentViewModels)
             {
-                var selectUserPage = new DiscoveryOptionSelectUsersPage(_post?.DiscoveryOptionSelectedUserIds);
-                await App.PushAsync(selectUserPage);
-
-                var result = await selectUserPage.GetResultAsync();
-                if (result == null || result.Count == 0)
+                if (viewModel.IsUpload)
                 {
-                    await DisplayAlert("오류", "선택된 친구가 없습니다.", Constants.PromptOk);
-                    return;
+                    var uploadContent = new UploadContent
+                    {
+                        Description = string.IsNullOrEmpty(viewModel.Description) ? null : viewModel.Description,
+                        FileName = viewModel.FileName
+                    };
+                    mediaAndUploadContents.Add(uploadContent);
+                    files.Add(viewModel.FileName, viewModel.Data);
                 }
-
-                discoveryOptionSelectedUserIds = result;
-                await Task.Delay(1000);
-            }
-
-            if (_post != null && !_isShare)
-            {
-                var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
-                if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
-                else if (result.IsSuccess)
+                else
                 {
-                    WeakReferenceMessenger.Default.Send<ValueChangedMessage<PostResponseDto>>(new(result.Value));
-                    await App.PopAsync();
+                    var mediaContent = viewModel.ServerContent;
+                    mediaContent.Description = viewModel.Description;
+                    mediaAndUploadContents.Add(mediaContent);
                 }
             }
-            else
+
+            var contents = editorContents.Concat(mediaAndUploadContents).ToList();
+
+            if (_externalUrlContentViewModel != null) contents.Add(_externalUrlContentViewModel.ExternalUrlContent);
+
+            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && !_isShare)
             {
-                var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
-                if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
-                else if (result.IsSuccess)
-                {
-                    if (!_isShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
-                    TimelinePage.ShouldRefresh = RefreshSwitch.IsToggled;
-                    UserPage.ShouldRefresh = RefreshSwitch.IsToggled;
-                    await App.PopAsync();
-                }
+                await DisplayAlert("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
+                return;
             }
-		}
-        finally { MainActivityIndicator.IsRunning = false; }
+
+            try
+		    {
+			    MainActivityIndicator.IsRunning = true;
+
+                List<string> discoveryOptionSelectedUserIds = null;
+                var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
+                if (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers)
+                {
+                    var selectUserPage = new DiscoveryOptionSelectUsersPage(_post?.DiscoveryOptionSelectedUserIds);
+                    await App.PushAsync(selectUserPage);
+
+                    var result = await selectUserPage.GetResultAsync();
+                    if (result == null || result.Count == 0)
+                    {
+                        await DisplayAlert("오류", "선택된 친구가 없습니다.", Constants.PromptOk);
+                        return;
+                    }
+
+                    discoveryOptionSelectedUserIds = result;
+                    await Task.Delay(1000);
+                }
+
+                if (_post != null && !_isShare)
+                {
+                    var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
+                    if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+                    else if (result.IsSuccess)
+                    {
+                        _isUploading = false;
+                        WeakReferenceMessenger.Default.Send<ValueChangedMessage<PostResponseDto>>(new(result.Value));
+                        await App.PopAsync();
+                    }
+                }
+                else
+                {
+                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
+                    if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+                    else if (result.IsSuccess)
+                    {
+                        if (!_isShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
+                        TimelinePage.ShouldRefresh = RefreshSwitch.IsToggled;
+                        UserPage.ShouldRefresh = RefreshSwitch.IsToggled;
+                        await App.PopAsync();
+                    }
+                }
+		    }
+            finally { MainActivityIndicator.IsRunning = false; }
+        }
+        finally { _isUploading = false; }
     }
 
-    private void OnHandlerChanging(object sender, HandlerChangingEventArgs e)
+    protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
     {
-        if (e.NewHandler != null) return;
+        base.OnNavigatedFrom(args);
+        if (_isUploading) return;
 
         foreach (var viewModel in _attachmentViewModels) viewModel.Dispose();
     }
