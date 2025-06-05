@@ -68,6 +68,11 @@ public partial class EditPostPage : ContentPage
                 ExternalUrlContentBorder.IsVisible = true;
                 ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
             }
+            if(_post.ParentPost != null)
+            {
+                ShareTargetPostDataTemplatePresenter.ViewModel = new PostViewModel(_post.ParentPost, true);
+                ShareTargetPostDataTemplatePresenter.IsVisible = true;
+            }
         }
         else
         {
