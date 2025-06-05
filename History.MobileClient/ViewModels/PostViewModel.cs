@@ -295,7 +295,7 @@ public partial class PostViewModel : ObservableObject
         {
             if (Shared.MyRank < Rank.Moderator)
             {
-                await App.Page.DisplayAlert("권한 부족", "댓글을 삭제할 권한이 없습니다.", Constants.PromptOk);
+                await App.Page.DisplayAlert("권한 부족", "게시글을 삭제할 권한이 없습니다.", Constants.PromptOk);
                 return;
             }
 
