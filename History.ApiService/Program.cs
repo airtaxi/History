@@ -41,6 +41,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173/")
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+    });
+});
+
 builder.AddMongoDBClient(connectionName: "History");
 
 // Services
@@ -110,6 +120,8 @@ var app = builder.Build();
 
 // Must be called first
 app.UseForwardedHeaders();
+
+app.UseCors();
 
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
