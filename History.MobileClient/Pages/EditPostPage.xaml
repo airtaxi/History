@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:editPost="clr-namespace:History.MobileClient.ContentViews.EditPost"
     xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
+    xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:mention="clr-namespace:SpeakLink.Mention;assembly=SpeakLink"
     xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
@@ -89,10 +90,12 @@
                                             <RowDefinition Height="150" />
                                             <RowDefinition Height="*" />
                                         </Grid.RowDefinitions>
-                                        <Image
+                                        <ffimageloading:CachedImage
                                             Grid.Row="0"
                                             Aspect="AspectFill"
-                                            Source="{x:Binding ImageSource}" />
+                                            DownsampleToViewSize="True"
+                                            Source="{x:Binding ImageSource,
+                                                               Mode=OneTime}" />
                                         <Rectangle
                                             Grid.Row="0"
                                             Fill="#808080"
