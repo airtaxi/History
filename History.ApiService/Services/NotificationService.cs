@@ -194,6 +194,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         if (collapseKey != null)
         {
             message.Android.CollapseKey = collapseKey;
+            message.Android.Notification.Tag = collapseKey;
             if (message.Apns != null)
             {
                 message.Apns = new ApnsConfig
