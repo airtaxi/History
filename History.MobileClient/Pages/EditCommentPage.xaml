@@ -4,8 +4,10 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:editPost="clr-namespace:History.MobileClient.ContentViews.EditPost"
+    xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
     Loaded="OnLoaded"
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False">
@@ -64,11 +66,54 @@
             </HorizontalStackLayout>
         </Grid>
 
-        <editPost:TextContentView
-            x:Name="MainTextContent"
+        <VerticalStackLayout
             Grid.Row="1"
-            Loaded="OnMainTextContentLoaded"
-            Placeholder="수정할 내용을 입력해주세요" />
+            Padding="6"
+            Spacing="12">
+            <editPost:TextContentView
+                x:Name="MainTextContent"
+                Loaded="OnMainTextContentLoaded"
+                Placeholder="수정할 내용을 입력해주세요" />
+            <Grid
+                x:Name="AttachmentGrid"
+                Margin="6"
+                HeightRequest="100"
+                HorizontalOptions="Start"
+                IsVisible="False"
+                VerticalOptions="Center"
+                WidthRequest="100">
+                <ffimageloading:CachedImage
+                    x:Name="AttachmentImage"
+                    x:DataType="vm:MediaAttachmentViewModel"
+                    Aspect="AspectFill"
+                    DownsampleToViewSize="True"
+                    Source="{x:Binding ImageSource,
+                                       Mode=OneTime}" />
+                <Border
+                    Margin="0,-10,-10,0"
+                    BackgroundColor="#808080"
+                    HeightRequest="20"
+                    HorizontalOptions="End"
+                    StrokeThickness="0"
+                    VerticalOptions="Start"
+                    WidthRequest="20">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnDeleteAttachmentBorderTapped" />
+                    </Border.GestureRecognizers>
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="10" />
+                    </Border.StrokeShape>
+                    <Image>
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Close}"
+                                Color="White" />
+                        </Image.Source>
+                    </Image>
+                </Border>
+            </Grid>
+        </VerticalStackLayout>
 
         <editPost:UserCollectionView
             x:Name="UserCollectionView"
