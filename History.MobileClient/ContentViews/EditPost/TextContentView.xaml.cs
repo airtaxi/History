@@ -14,7 +14,6 @@ namespace History.MobileClient.ContentViews.EditPost;
 
 public partial class TextContentView : ContentView
 {
-    public MentionsViewModel MentionsViewModel => MainMentionEditor;
     public MentionEditor MentionEditor => MainMentionEditor;
 
     public string Text => MainMentionEditor.Text;

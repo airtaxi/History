@@ -8,7 +8,6 @@
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient"
     x:DataType="vm:MentionsViewModel"
-    Loaded="OnLoaded"
     Unloaded="OnUnloaded">
 
     <ContentView.BindingContext>
@@ -25,6 +24,6 @@
         MentionSelectedBackgroundColor="{StaticResource Primary}"
         MentionSelectedTextColor="White"
         MentionTextColor="{StaticResource Primary}"
-        MinimumHeightRequest="150"
-        Placeholder="무슨 일이 일어나고 있나요?" />
+        Placeholder="무슨 일이 일어나고 있나요?"
+        VerticalOptions="Start" />
 </ContentView>

@@ -7,7 +7,7 @@
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient">
     <CollectionView
-        x:Name="UserCollectionView"
+        x:Name="CollectionView"
         x:DataType="vm:MentionsViewModel"
         BackgroundColor="{AppThemeBinding Light=#EEEEEE,
                                           Dark=#222222}"
