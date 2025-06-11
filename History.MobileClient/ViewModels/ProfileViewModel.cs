@@ -6,6 +6,7 @@ using FFImageLoading.Maui;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
+using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.Helpers;
@@ -103,6 +104,57 @@ public partial class ProfileViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task HandleProfileTapAsync()
+    {
+        IMediaViewModel media = User.UsesAnimatedProfileMedia ?
+        new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
+        {
+            Aspect = Aspect.AspectFit,
+            ShouldAutoPlay = true,
+            ShouldLoopPlayback = true,
+            ShouldMute = false,
+            ShouldShowPlaybackControls = true,
+            FullScreenSwipeable = false,
+        }
+        : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
+        {
+            Aspect = Aspect.AspectFit,
+            HorizontalContentOptions = LayoutOptions.Fill,
+            VerticalContentOptions = LayoutOptions.Fill,
+            FullScreenSwipeable = false,
+            IsFullScreen = true,
+        };
+
+        var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel([media], media));
+        await App.PushAsync(viewerPage);
+    }
+
+    [RelayCommand]
+    private async Task HandleBackgroundTapAsync()
+    {
+        IMediaViewModel media = User.UsesAnimatedBackgroundMedia ?
+        new VideoViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId))
+        {
+            Aspect = Aspect.AspectFit,
+            ShouldAutoPlay = true,
+            ShouldLoopPlayback = true,
+            ShouldMute = false,
+            ShouldShowPlaybackControls = true,
+            FullScreenSwipeable = false,
+        }
+        : new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId))
+        {
+            Aspect = Aspect.AspectFit,
+            HorizontalContentOptions = LayoutOptions.Fill,
+            VerticalContentOptions = LayoutOptions.Fill,
+            FullScreenSwipeable = false,
+            IsFullScreen = true,
+        };
+
+        var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel([media], media));
+        await App.PushAsync(viewerPage);
+    }
+
     private async Task HandleChangeNicknameAsync()
     {
         var prompt = await App.Page.DisplayPromptAsync("닉네임 변경", "새로운 닉네임을 입력해주세요", "변경", Constants.PromptCancel, "새로운 닉네임", 40, Keyboard.Plain, User.Nickname);
