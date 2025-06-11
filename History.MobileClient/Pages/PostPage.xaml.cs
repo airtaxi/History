@@ -275,7 +275,11 @@ public partial class PostPage : ContentPage
         _commentMediaAttachmentViewModel = null;
         CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
 
-        WeakReferenceMessenger.Default.UnregisterAll(this);
+        WeakReferenceMessenger.Default.Unregister<ValueChangedMessage<PostResponseDto>>(this);
+        WeakReferenceMessenger.Default.Unregister<AppleVideoUnloadedMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<CommentTappedMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<LoadingStateChangedMessage>(this);
+        // Do not unregister KeyboardSizeMessage, if keyboard is still open, page layout will be broken
         _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
     }
 
