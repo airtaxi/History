@@ -22,14 +22,13 @@ public partial class PostPage : ContentPage
 {
     private bool _isInForeground;
     private PostViewModel _viewModel;
-    private MentionsViewModel _mentionsViewModel = new();
     private MediaAttachmentViewModel _commentMediaAttachmentViewModel;
 
     private bool IsCommentEmpty
     {
         get
         {
-            var text = CommentMentionEditor.Text?.Trim();
+            var text = CommentTextContentView.Text?.Trim();
             return string.IsNullOrEmpty(text);
         }
     }
@@ -44,24 +43,7 @@ public partial class PostPage : ContentPage
         InitializeComponent();
         UpdateRepostStatus(viewModel.Post);
 
-        CommentMentionEditor.BindingContext = _mentionsViewModel;
-        CommentUserCollectionView.SetMentionEditor(CommentMentionEditor);
-    }
-
-    public List<BaseContent> GetCommentContents()
-    {
-        var result = new List<BaseContent>();
-
-        var spans = CommentMentionEditor?.FormattedText?.Spans;
-        if (spans != null)
-        {
-            foreach (var span in spans)
-            {
-                if (span is MentionSpan mentionSpan) result.Add(new ProfileContent() { UserId = MentionHelper.MentionIdMap[int.Parse(mentionSpan.MentionId)] });
-                else result.Add(new TextContent() { Text = span.Text });
-            }
-        }
-        return result;
+        CommentUserCollectionView.SetTextContentView(CommentTextContentView);
     }
 
     private void UpdateRepostStatus(PostResponseDto post)
@@ -83,7 +65,7 @@ public partial class PostPage : ContentPage
         var user = message.Value;
         if (user.UserId == Shared.UserId) return;
 
-        MentionHelper.AppendMention(CommentMentionEditor, user.UserId, user.Nickname, true);
+        MentionHelper.AppendMention(CommentTextContentView.MentionEditor, user.UserId, user.Nickname, true);
     }
 
     private void OnAppleVideoUnloadedMessageMessageReceived(object recipient, AppleVideoUnloadedMessage message)
@@ -163,7 +145,7 @@ public partial class PostPage : ContentPage
             return;
         }
 
-        var contents = GetCommentContents();
+        var contents = CommentTextContentView.GetContents();
         Utils.TrimContents(contents);
 
         var files = new Dictionary<string, byte[]>();
@@ -185,8 +167,8 @@ public partial class PostPage : ContentPage
                 _commentMediaAttachmentViewModel = null;
                 CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
 
-                CommentMentionEditor.Text = string.Empty;
-                CommentMentionEditor.Unfocus();
+                CommentTextContentView.Text = string.Empty;
+                CommentTextContentView.UnfocusEditor();
 
                 await _viewModel.RefreshAsync();
                 if (!_viewModel.IsWideMode)
@@ -257,7 +239,7 @@ public partial class PostPage : ContentPage
         WeakReferenceMessenger.Default.Register<CommentTappedMessage>(this, OnCommentTappedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
-        _mentionsViewModel.ImageInputRequested += OnImageInputRequested;
+        CommentTextContentView.MentionsViewModel.ImageInputRequested += OnImageInputRequested;
     }
 
     protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
@@ -272,7 +254,7 @@ public partial class PostPage : ContentPage
         WeakReferenceMessenger.Default.Unregister<CommentTappedMessage>(this);
         WeakReferenceMessenger.Default.Unregister<LoadingStateChangedMessage>(this);
         // Do not unregister KeyboardSizeMessage, if keyboard is still open, page layout will be broken
-        _mentionsViewModel.ImageInputRequested -= OnImageInputRequested;
+        CommentTextContentView.MentionsViewModel.ImageInputRequested -= OnImageInputRequested;
     }
 
     protected override void OnAppearing()

@@ -176,18 +176,10 @@
                 </Image.Source>
             </Image>
 
-            <mention:MentionEditor
-                x:Name="CommentMentionEditor"
+            <editPost:TextContentView
+                x:Name="CommentTextContentView"
                 Grid.Column="1"
-                x:DataType="vm:MentionsViewModel"
-                AutoSize="TextChanges"
                 HorizontalOptions="Fill"
-                ImageInputCommand="{x:Binding ImageInputCommand}"
-                IsSuggestionsPopupVisible="{x:Binding IsDisplayingMentions}"
-                MentionSearchCommand="{x:Binding MentionSearchCommand}"
-                MentionSelectedBackgroundColor="{StaticResource Primary}"
-                MentionSelectedTextColor="White"
-                MentionTextColor="{StaticResource Primary}"
                 Placeholder="댓글을 달아보세요." />
 
             <Image Grid.Column="2" VerticalOptions="End">

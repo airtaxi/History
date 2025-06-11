@@ -6,14 +6,14 @@ namespace History.MobileClient.ContentViews.EditPost;
 
 public partial class UserCollectionView : ContentView
 {
-    private MentionEditor _mentionEditor;
+    private TextContentView _textContentView;
 
     public UserCollectionView() => InitializeComponent();
 
-    public void SetMentionEditor(MentionEditor mentionEditor)
+    public void SetTextContentView(TextContentView textContentView)
     {
-        _mentionEditor = mentionEditor;
-        CollectionView.BindingContext = mentionEditor.BindingContext as MentionsViewModel;
+        _textContentView = textContentView;
+        CollectionView.BindingContext = _textContentView.MentionsViewModel;
     }
 
     private void OnUserGridTapped(object sender, TappedEventArgs e)
@@ -22,6 +22,6 @@ public partial class UserCollectionView : ContentView
         var viewModel = element.BindingContext as MentionViewModel;
         if (viewModel == null) return;
 
-        MentionHelper.InsertMention(_mentionEditor, viewModel.UserId, viewModel.Nickname);
+        _textContentView.InsertMention(viewModel.UserId, viewModel.Nickname);
     }
 }

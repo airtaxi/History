@@ -25,7 +25,6 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid
@@ -181,14 +180,6 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <editPost:UserCollectionView
-            x:Name="UserCollectionView"
-            Grid.Row="1"
-            HorizontalOptions="Fill"
-            VerticalOptions="End" />
-
-
-
         <Grid
             Grid.Row="2"
             Padding="12"
@@ -269,9 +260,16 @@
                 VerticalOptions="Start" />
         </Grid>
 
+        <editPost:UserCollectionView
+            x:Name="UserCollectionView"
+            Grid.Row="1"
+            Grid.RowSpan="2"
+            HorizontalOptions="Fill"
+            VerticalOptions="End" />
+
         <ActivityIndicator
             x:Name="MainActivityIndicator"
-            Grid.RowSpan="4"
+            Grid.RowSpan="3"
             HeightRequest="100"
             HorizontalOptions="Center"
             IsRunning="False"
