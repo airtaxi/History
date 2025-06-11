@@ -8,17 +8,17 @@
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient">
     <Border
         Padding="0"
+        x:DataType="vm:MentionsViewModel"
         BackgroundColor="{AppThemeBinding Light=#EEEEEE,
                                           Dark=#222222}"
+        IsVisible="{x:Binding IsDisplayingMentions}"
         StrokeThickness="0">
         <Border.StrokeShape>
             <RoundRectangle CornerRadius="8,8,0,0" />
         </Border.StrokeShape>
         <CollectionView
             x:Name="CollectionView"
-            x:DataType="vm:MentionsViewModel"
             HorizontalOptions="Fill"
-            IsVisible="{x:Binding IsDisplayingMentions}"
             ItemsSource="{x:Binding ViewModels}"
             MaximumHeightRequest="200"
             SelectionMode="None"
