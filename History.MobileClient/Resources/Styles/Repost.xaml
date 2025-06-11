@@ -12,43 +12,45 @@
         <Border
             Margin="6"
             Padding="12"
+            BackgroundColor="{AppThemeBinding Dark=Black,
+                                              Light=White}"
             StrokeThickness="1.5">
             <Border.StrokeShape>
-                <RoundRectangle CornerRadius="12" />
+                <RoundRectangle CornerRadius="8" />
             </Border.StrokeShape>
             <Border.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
             </Border.GestureRecognizers>
             <VerticalStackLayout Spacing="8">
-                <Grid Grid.Row="0" HeightRequest="48">
+                <Grid Grid.Row="0" HeightRequest="36">
                     <HorizontalStackLayout Spacing="6">
                         <views:DataTemplatePresenter
-                            HeightRequest="48"
+                            HeightRequest="36"
                             Template="{StaticResource MediaTemplateSelector}"
                             ViewModel="{x:Binding ProfileMedia,
                                                   Mode=OneWay}"
-                            WidthRequest="48">
+                            WidthRequest="36">
                             <views:DataTemplatePresenter.GestureRecognizers>
                                 <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
                             </views:DataTemplatePresenter.GestureRecognizers>
                             <views:DataTemplatePresenter.Clip>
                                 <EllipseGeometry
-                                    Center="24,24"
-                                    RadiusX="24"
-                                    RadiusY="24" />
+                                    Center="18,18"
+                                    RadiusX="18"
+                                    RadiusY="18" />
                             </views:DataTemplatePresenter.Clip>
                         </views:DataTemplatePresenter>
                         <VerticalStackLayout VerticalOptions="Center">
                             <HorizontalStackLayout Spacing="4">
                                 <Label
                                     FontAttributes="Bold"
-                                    FontSize="16"
+                                    FontSize="14"
                                     LineBreakMode="TailTruncation"
                                     Text="{x:Binding Nickname}" />
                                 <Image
-                                    HeightRequest="16"
+                                    HeightRequest="14"
                                     IsVisible="{x:Binding IsAdmin}"
-                                    WidthRequest="16">
+                                    WidthRequest="14">
                                     <Image.Source>
                                         <FontImageSource
                                             FontFamily="FASolid"
@@ -57,9 +59,9 @@
                                     </Image.Source>
                                 </Image>
                                 <Image
-                                    HeightRequest="16"
+                                    HeightRequest="14"
                                     IsVisible="{x:Binding IsModerator}"
-                                    WidthRequest="16">
+                                    WidthRequest="14">
                                     <Image.Source>
                                         <FontImageSource
                                             FontFamily="FASolid"
@@ -69,7 +71,7 @@
                                 </Image>
                             </HorizontalStackLayout>
                             <HorizontalStackLayout>
-                                <Label FontSize="14" TextColor="#808080">
+                                <Label FontSize="12" TextColor="#808080">
                                     <Label.FormattedText>
                                         <FormattedString>
                                             <Span Text="{x:Binding TimestampText}" />
@@ -77,7 +79,7 @@
                                         </FormattedString>
                                     </Label.FormattedText>
                                 </Label>
-                                <Image HeightRequest="14" WidthRequest="14">
+                                <Image HeightRequest="12" WidthRequest="12">
                                     <Image.Source>
                                         <FontImageSource
                                             FontFamily="FASolid"

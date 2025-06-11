@@ -14,7 +14,7 @@
             Stroke="{StaticResource Primary}"
             StrokeThickness="2">
             <Border.StrokeShape>
-                <RoundRectangle CornerRadius="12" />
+                <RoundRectangle CornerRadius="8" />
             </Border.StrokeShape>
             <Grid>
                 <views:DataTemplatePresenter Template="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding BackgroundMedia}" />

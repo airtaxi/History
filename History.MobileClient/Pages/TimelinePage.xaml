@@ -23,15 +23,14 @@
             Padding="0,0,12,0"
             BackgroundColor="{StaticResource Primary}"
             HeightRequest="48">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnTitleGridTapped" />
+            </Grid.GestureRecognizers>
             <Image
                 HeightRequest="48"
                 HorizontalOptions="Start"
                 Source="icon_nobg_white.png"
-                WidthRequest="48">
-                <Image.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnLogoImageTapped" />
-                </Image.GestureRecognizers>
-            </Image>
+                WidthRequest="48" />
         </Grid>
 
         <Grid Grid.Row="1">

@@ -192,15 +192,14 @@ public partial class TimelinePage : ContentPage
         }
     }
 
-    private async void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e)
-    {
-        await LoadMoreAsync();
-    }
+#if IOS
+    private async void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e) => await LoadMoreAsync();
+#else
+    // Not used on Android, but required for compatibility
+    private void OnMainCollectionViewRemainingItemsThresholdReached(object sender, TappedEventArgs e) { }
+#endif
 
-    private async void OnLogoImageTapped(object sender, TappedEventArgs e)
-    {
-        await RefreshAsync();
-    }
+    private async void OnTitleGridTapped(object sender, TappedEventArgs e) => await RefreshAsync();
 
     private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
 
@@ -214,4 +213,5 @@ public partial class TimelinePage : ContentPage
     }
 
     private void OnScrollToTopBorderTapped(object sender, TappedEventArgs e) => MainCollectionView.SetScrollOffsetY(0, false);
+
 }

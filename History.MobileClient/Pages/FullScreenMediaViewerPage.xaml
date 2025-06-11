@@ -68,21 +68,10 @@
             </BoxView>
             <HorizontalStackLayout
                 Margin="12"
-                HorizontalOptions="End"
+                HorizontalOptions="Start"
                 Spacing="12"
                 VerticalOptions="Start">
-                <Image HeightRequest="48" WidthRequest="48">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnDownloadImageTapped" />
-                    </Image.GestureRecognizers>
-                    <Image.Source>
-                        <FontImageSource
-                            FontFamily="MaterialSharp"
-                            Glyph="{x:Static m:MaterialSharp.Download}"
-                            Color="White" />
-                    </Image.Source>
-                </Image>
-                <Image HeightRequest="48" WidthRequest="48">
+                <Image HeightRequest="36" WidthRequest="36">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnBackImageTapped" />
                     </Image.GestureRecognizers>
@@ -90,6 +79,23 @@
                         <FontImageSource
                             FontFamily="MaterialSharp"
                             Glyph="{x:Static m:MaterialSharp.Close}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+            </HorizontalStackLayout>
+            <HorizontalStackLayout
+                Margin="12"
+                HorizontalOptions="End"
+                Spacing="12"
+                VerticalOptions="Start">
+                <Image HeightRequest="36" WidthRequest="36">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnDownloadImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Download}"
                             Color="White" />
                     </Image.Source>
                 </Image>
