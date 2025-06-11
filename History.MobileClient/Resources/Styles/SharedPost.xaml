@@ -12,32 +12,32 @@
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient"
     mc:Ignorable="d">
     <DataTemplate x:Key="SharedPostTemplate" x:DataType="vm:PostViewModel">
-        <Border
-            Margin="6"
-            Padding="12"
-            StrokeThickness="1.5">
-            <Border.StrokeShape>
-                <RoundRectangle CornerRadius="12" />
-            </Border.StrokeShape>
-            <Border.GestureRecognizers>
+        <Grid Margin="6">
+            <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
-            </Border.GestureRecognizers>
-            <VerticalStackLayout Spacing="8">
+            </Grid.GestureRecognizers>
+            <Rectangle
+                Fill="#808080"
+                HeightRequest="{OnPlatform iOS=1.5,
+                                           Android=1}"
+                HorizontalOptions="Fill"
+                VerticalOptions="Start" />
+            <VerticalStackLayout Margin="0,10,0,0" Spacing="8">
                 <Grid>
                     <HorizontalStackLayout Spacing="6">
                         <views:DataTemplatePresenter
-                            HeightRequest="32"
+                            HeightRequest="28"
                             Template="{StaticResource MediaTemplateSelector}"
                             ViewModel="{x:Binding ProfileMedia}"
-                            WidthRequest="32">
+                            WidthRequest="28">
                             <views:DataTemplatePresenter.GestureRecognizers>
                                 <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
                             </views:DataTemplatePresenter.GestureRecognizers>
                             <views:DataTemplatePresenter.Clip>
                                 <EllipseGeometry
-                                    Center="16,16"
-                                    RadiusX="16"
-                                    RadiusY="16" />
+                                    Center="14,14"
+                                    RadiusX="14"
+                                    RadiusY="14" />
                             </views:DataTemplatePresenter.Clip>
                         </views:DataTemplatePresenter>
                         <HorizontalStackLayout Spacing="4" VerticalOptions="Center">
@@ -98,6 +98,6 @@
                     BindableLayout.ItemsSource="{x:Binding Contents}"
                     Spacing="8" />
             </VerticalStackLayout>
-        </Border>
+        </Grid>
     </DataTemplate>
 </ResourceDictionary>

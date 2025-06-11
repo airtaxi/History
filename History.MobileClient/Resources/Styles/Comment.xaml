@@ -25,16 +25,16 @@
                 </Grid.GestureRecognizers>
                 <views:DataTemplatePresenter
                     Grid.Column="0"
-                    HeightRequest="36"
+                    HeightRequest="32"
                     Template="{StaticResource MediaTemplateSelector}"
                     VerticalOptions="Start"
                     ViewModel="{x:Binding ProfileMedia}"
-                    WidthRequest="36">
+                    WidthRequest="32">
                     <views:DataTemplatePresenter.Clip>
                         <EllipseGeometry
-                            Center="18,18"
-                            RadiusX="18"
-                            RadiusY="18" />
+                            Center="16,16"
+                            RadiusX="16"
+                            RadiusY="16" />
                     </views:DataTemplatePresenter.Clip>
                 </views:DataTemplatePresenter>
             </Grid>

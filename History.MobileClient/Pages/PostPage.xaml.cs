@@ -44,6 +44,9 @@ public partial class PostPage : ContentPage
         UpdateRepostStatus(viewModel.Post);
 
         CommentUserCollectionView.SetTextContentView(CommentTextContentView);
+
+        // Should be registered once. Do not register in OnAppearing / OnNavigatedTo since it won't be unregistered in OnDisappearing / OnNavigatedFrom
+        WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
     }
 
     private void UpdateRepostStatus(PostResponseDto post)
@@ -238,7 +241,6 @@ public partial class PostPage : ContentPage
         WeakReferenceMessenger.Default.Register<AppleVideoUnloadedMessage>(this, OnAppleVideoUnloadedMessageMessageReceived);
         WeakReferenceMessenger.Default.Register<CommentTappedMessage>(this, OnCommentTappedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
-        WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
         CommentTextContentView.MentionsViewModel.ImageInputRequested += OnImageInputRequested;
     }
 
