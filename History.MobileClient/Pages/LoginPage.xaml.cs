@@ -1,13 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
-using History.Commons.Api.PushNotification;
 using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.MobileClient.Auth;
 using History.MobileClient.DataTypes;
-using Plugin.Firebase.CloudMessaging;
-using System.Text.Json;
 
 namespace History.MobileClient.Pages;
 
@@ -44,8 +41,11 @@ public partial class LoginPage : ContentPage
             App.Page = new AppShell();
 #endif
 
-            var pushData = Preferences.Get("PushData", null);
-            if (!string.IsNullOrEmpty(pushData)) await App.HandlePushNotificationAsync(pushData);
+            App.Page.Dispatcher.Dispatch(async () =>
+            {
+                var pushData = Preferences.Get("PushData", null);
+                if (!string.IsNullOrEmpty(pushData)) await App.HandlePushNotificationAsync(pushData);
+            });
         }
         else if (meResult.Error == ErrorType.Unauthorized) await App.Page.DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
 
