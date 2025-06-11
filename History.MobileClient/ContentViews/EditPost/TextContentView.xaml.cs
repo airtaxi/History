@@ -14,6 +14,9 @@ namespace History.MobileClient.ContentViews.EditPost;
 
 public partial class TextContentView : ContentView
 {
+    public MentionsViewModel MentionsViewModel => MainMentionEditor;
+    public MentionEditor MentionEditor => MainMentionEditor;
+
     public string Text => MainMentionEditor.Text;
 
     public string Placeholder
@@ -70,24 +73,14 @@ public partial class TextContentView : ContentView
         MainMentionEditor.CursorPosition = MainMentionEditor.Text?.Length ?? 0;
     }
 
-    private void OnLoaded(object sender, EventArgs e)
+    public void InsertMention(MentionViewModel viewModel)
     {
-#if ANDROID
-        if (MainMentionEditor.Handler.PlatformView is AppCompatEditText editText)
-        {
-            // Set gravity to top|start to align text and cursor to top-left
-            editText.Gravity = GravityFlags.Top | GravityFlags.Start;
+        if (viewModel == null) return;
 
-            // Ensure the EditText takes full height
-            editText.LayoutParameters = new ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MatchParent,
-                ViewGroup.LayoutParams.MatchParent);
-        }
-
-#elif IOS
-        MainMentionEditor.MinimumHeightRequest = -1;
-#endif
+        MentionHelper.InsertMention(MainMentionEditor, viewModel.UserId, viewModel.Nickname);
     }
+
+    public void InsertMention(string userId, string nickname) => MentionHelper.InsertMention(MainMentionEditor, userId, nickname);
 
     private void OnUnloaded(object sender, EventArgs e)
     {

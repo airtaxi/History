@@ -64,15 +64,17 @@
             </HorizontalStackLayout>
         </Grid>
 
+        <editPost:TextContentView
+            x:Name="MainTextContent"
+            Grid.Row="1"
+            Loaded="OnMainTextContentLoaded"
+            Placeholder="수정할 내용을 입력해주세요" />
 
-        <ScrollView Grid.Row="1" Orientation="Vertical">
-            <VerticalStackLayout Padding="6" Spacing="8">
-                <editPost:TextContentView
-                    x:Name="MainTextContent"
-                    Loaded="OnMainTextContentLoaded"
-                    Placeholder="수정할 내용을 입력해주세요" />
-            </VerticalStackLayout>
-        </ScrollView>
+        <editPost:UserCollectionView
+            x:Name="UserCollectionView"
+            Grid.Row="1"
+            HorizontalOptions="Fill"
+            VerticalOptions="End" />
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"

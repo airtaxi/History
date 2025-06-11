@@ -6,6 +6,7 @@
     xmlns:editPost="clr-namespace:History.MobileClient.ContentViews.EditPost"
     xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:mention="clr-namespace:SpeakLink.Mention;assembly=SpeakLink"
     xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
@@ -14,6 +15,7 @@
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False"
     SizeChanged="OnSizeChanged">
+
     <ContentPage.Behaviors>
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
         <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
@@ -178,6 +180,14 @@
                 </Border>
             </VerticalStackLayout>
         </ScrollView>
+
+        <editPost:UserCollectionView
+            x:Name="UserCollectionView"
+            Grid.Row="1"
+            HorizontalOptions="Fill"
+            VerticalOptions="End" />
+
+
 
         <Grid
             Grid.Row="2"
