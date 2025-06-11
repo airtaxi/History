@@ -196,7 +196,7 @@ public partial class TimelinePage : ContentPage
     private async void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e) => await LoadMoreAsync();
 #else
     // Not used on Android, but required for compatibility
-    private void OnMainCollectionViewRemainingItemsThresholdReached(object sender, TappedEventArgs e) { }
+    private void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e) { }
 #endif
 
     private async void OnTitleGridTapped(object sender, TappedEventArgs e) => await RefreshAsync();
@@ -213,5 +213,4 @@ public partial class TimelinePage : ContentPage
     }
 
     private void OnScrollToTopBorderTapped(object sender, TappedEventArgs e) => MainCollectionView.SetScrollOffsetY(0, false);
-
 }
