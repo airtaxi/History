@@ -17,7 +17,11 @@
                 <RoundRectangle CornerRadius="8" />
             </Border.StrokeShape>
             <Grid>
-                <views:DataTemplatePresenter Template="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding BackgroundMedia}" />
+                <views:DataTemplatePresenter Template="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding BackgroundMedia}">
+                    <views:DataTemplatePresenter.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Binding HandleBackgroundTapCommand}" />
+                    </views:DataTemplatePresenter.GestureRecognizers>
+                </views:DataTemplatePresenter>
                 <Rectangle
                     Fill="Black"
                     HorizontalOptions="Fill"
@@ -33,6 +37,9 @@
                             Template="{StaticResource MediaTemplateSelector}"
                             ViewModel="{x:Binding ProfileMedia}"
                             WidthRequest="72">
+                            <views:DataTemplatePresenter.GestureRecognizers>
+                                <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
+                            </views:DataTemplatePresenter.GestureRecognizers>
                             <views:DataTemplatePresenter.Clip>
                                 <EllipseGeometry
                                     Center="36,36"
