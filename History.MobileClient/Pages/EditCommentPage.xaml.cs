@@ -34,7 +34,12 @@ public partial class EditCommentPage : ContentPage
         var mediaContent = comment.Contents.OfType<MediaContent>().FirstOrDefault();
 
         var hasMediaContent = mediaContent != null;
-        if (hasMediaContent) _attachmentViewModel = new(mediaContent);
+        if (hasMediaContent)
+        {
+            _attachmentViewModel = new(mediaContent);
+            AttachmentImage.BindingContext = _attachmentViewModel;
+            AttachmentGrid.IsVisible = true;
+        }
 
         CommentMediaFontImageSource.Glyph = hasMediaContent ? MaterialSharp.Hide_image : MaterialSharp.Image;
     }
@@ -84,9 +89,11 @@ public partial class EditCommentPage : ContentPage
     {
         if (_attachmentViewModel != null)
         {
-            _attachmentViewModel.Dispose();
+            _attachmentViewModel?.Dispose();
             _attachmentViewModel = null;
             CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
+            AttachmentImage.BindingContext = null;
+            AttachmentGrid.IsVisible = false;
         }
         else
         {
@@ -121,6 +128,8 @@ public partial class EditCommentPage : ContentPage
 
             _attachmentViewModel = new MediaAttachmentViewModel(fileName, bytes);
             CommentMediaFontImageSource.Glyph = MaterialSharp.Hide_image;
+            AttachmentImage.BindingContext = _attachmentViewModel;
+            AttachmentGrid.IsVisible = true;
         }
     }
 
@@ -170,5 +179,14 @@ public partial class EditCommentPage : ContentPage
     {
         _ = App.PopAsync();
         return true;
+    }
+
+    private void OnDeleteAttachmentBorderTapped(object sender, TappedEventArgs e)
+    {
+        _attachmentViewModel?.Dispose();
+        _attachmentViewModel = null;
+        CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
+        AttachmentImage.BindingContext = null;
+        AttachmentGrid.IsVisible = false;
     }
 }

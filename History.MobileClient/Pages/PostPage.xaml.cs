@@ -131,12 +131,16 @@ public partial class PostPage : ContentPage
             _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(image.FileName, image.Bytes);
 #endif
             CommentMediaFontImageSource.Glyph = MaterialSharp.Hide_image;
+            AttachmentImage.BindingContext = _commentMediaAttachmentViewModel;
+            AttachmentGrid.IsVisible = true;
         }
         else
         {
             _commentMediaAttachmentViewModel?.Dispose();
             _commentMediaAttachmentViewModel = null;
             CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
+            AttachmentImage.BindingContext = null;
+            AttachmentGrid.IsVisible = false;
         }
     }
 
@@ -169,6 +173,8 @@ public partial class PostPage : ContentPage
                 _commentMediaAttachmentViewModel?.Dispose();
                 _commentMediaAttachmentViewModel = null;
                 CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
+                AttachmentImage.BindingContext = null;
+                AttachmentGrid.IsVisible = false;
 
                 CommentTextContentView.Text = string.Empty;
                 CommentTextContentView.UnfocusEditor();
@@ -250,6 +256,8 @@ public partial class PostPage : ContentPage
         _commentMediaAttachmentViewModel?.Dispose();
         _commentMediaAttachmentViewModel = null;
         CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
+        AttachmentImage.BindingContext = null;
+        AttachmentGrid.IsVisible = false;
 
         WeakReferenceMessenger.Default.Unregister<ValueChangedMessage<PostResponseDto>>(this);
         WeakReferenceMessenger.Default.Unregister<AppleVideoUnloadedMessage>(this);
@@ -312,5 +320,14 @@ public partial class PostPage : ContentPage
 #if IOS
         AppleSwipeGestureHelper.ApplyToPage(this);
 #endif
+    }
+
+    private void OnDeleteAttachmentBorderTapped(object sender, TappedEventArgs e)
+    {
+        _commentMediaAttachmentViewModel?.Dispose();
+        _commentMediaAttachmentViewModel = null;
+        CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
+        AttachmentImage.BindingContext = null;
+        AttachmentGrid.IsVisible = false;
     }
 }
