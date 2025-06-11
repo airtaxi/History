@@ -18,7 +18,6 @@ using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 using UraniumUI.Icons.MaterialSymbols;
-using History.MobileClient.Helpers;
 
 
 namespace History.MobileClient.Pages;
@@ -46,6 +45,7 @@ public partial class EditPostPage : ContentPage
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
+        UserCollectionView.SetMentionEditor(MainTextContent.MentionEditor);
     }
 
     public EditPostPage(PostResponseDto post, bool isShare) : this()

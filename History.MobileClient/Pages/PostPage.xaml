@@ -143,83 +143,10 @@
                     </RefreshView>
                 </Grid>
             </Grid>
-            <CollectionView
+            <editPost:UserCollectionView
                 x:Name="CommentUserCollectionView"
-                x:DataType="vm:MentionsViewModel"
-                BackgroundColor="{AppThemeBinding Light=#EEEEEE,
-                                                  Dark=#222222}"
                 HorizontalOptions="Fill"
-                IsVisible="{x:Binding IsDisplayingMentions}"
-                ItemsSource="{x:Binding ViewModels}"
-                MaximumHeightRequest="200"
-                SelectionMode="None"
-                VerticalOptions="End">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:MentionViewModel">
-                        <Grid HeightRequest="44">
-                            <HorizontalStackLayout
-                                Padding="8"
-                                HeightRequest="44"
-                                Spacing="8">
-                                <views:DataTemplatePresenter
-                                    HeightRequest="32"
-                                    Template="{StaticResource MediaTemplateSelector}"
-                                    VerticalOptions="Center"
-                                    ViewModel="{x:Binding ProfileMedia}"
-                                    WidthRequest="32">
-                                    <views:DataTemplatePresenter.Clip>
-                                        <EllipseGeometry
-                                            Center="16,16"
-                                            RadiusX="16"
-                                            RadiusY="16" />
-                                    </views:DataTemplatePresenter.Clip>
-                                </views:DataTemplatePresenter>
-                                <HorizontalStackLayout
-                                    HorizontalOptions="Start"
-                                    Spacing="4"
-                                    VerticalOptions="Center">
-                                    <Label
-                                        FontAttributes="Bold"
-                                        FontSize="20"
-                                        LineBreakMode="TailTruncation"
-                                        Text="{x:Binding Nickname}" />
-                                    <Image
-                                        HeightRequest="20"
-                                        IsVisible="{x:Binding IsAdmin}"
-                                        WidthRequest="20">
-                                        <Image.Source>
-                                            <FontImageSource
-                                                FontFamily="FASolid"
-                                                Glyph="{x:Static fa:Solid.Crown}"
-                                                Color="#f78501" />
-                                        </Image.Source>
-                                    </Image>
-                                    <Image
-                                        HeightRequest="20"
-                                        IsVisible="{x:Binding IsModerator}"
-                                        WidthRequest="20">
-                                        <Image.Source>
-                                            <FontImageSource
-                                                FontFamily="FASolid"
-                                                Glyph="{x:Static fa:Solid.Gavel}"
-                                                Color="#1a5bf3" />
-                                        </Image.Source>
-                                    </Image>
-                                </HorizontalStackLayout>
-                            </HorizontalStackLayout>
-                            <Grid
-                                BackgroundColor="#808080"
-                                HeightRequest="{OnPlatform iOS=1.5,
-                                                           Android=1}"
-                                HorizontalOptions="Fill"
-                                VerticalOptions="End" />
-                            <Grid.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnUserGridTapped" />
-                            </Grid.GestureRecognizers>
-                        </Grid>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                VerticalOptions="End" />
         </Grid>
         <Grid
             Grid.Row="2"

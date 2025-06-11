@@ -45,7 +45,7 @@ public partial class PostPage : ContentPage
         UpdateRepostStatus(viewModel.Post);
 
         CommentMentionEditor.BindingContext = _mentionsViewModel;
-        CommentUserCollectionView.BindingContext = _mentionsViewModel;
+        CommentUserCollectionView.SetMentionEditor(CommentMentionEditor);
     }
 
     public List<BaseContent> GetCommentContents()
@@ -110,14 +110,6 @@ public partial class PostPage : ContentPage
         _commentMediaAttachmentViewModel?.Dispose();
         _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(fileName, bytes);
         CommentMediaFontImageSource.Glyph = MaterialSharp.Hide_image;
-    }
-
-    private void OnUserGridTapped(object sender, TappedEventArgs e)
-    {
-        var element = sender as Element;
-        var viewModel = element.BindingContext as MentionViewModel;
-
-        MentionHelper.InsertMention(CommentMentionEditor, viewModel.UserId, viewModel.Nickname);
     }
 
     private async void OnCommentAttachmentImageTapped(object sender, TappedEventArgs e)

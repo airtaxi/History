@@ -25,6 +25,7 @@ public partial class EditCommentPage : ContentPage
         InitializeComponent();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        UserCollectionView.SetMentionEditor(MainTextContent.MentionEditor);
     }
 
     private void LoadComment(CommentResponseDto comment)
