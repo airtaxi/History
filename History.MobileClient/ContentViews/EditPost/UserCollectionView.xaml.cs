@@ -13,7 +13,7 @@ public partial class UserCollectionView : ContentView
     public void SetMentionEditor(MentionEditor mentionEditor)
     {
         _mentionEditor = mentionEditor;
-        UserCollectionView.BindingContext = mentionEditor.BindingContext as MentionsViewModel;
+        CollectionView.BindingContext = mentionEditor.BindingContext as MentionsViewModel;
     }
 
     private void OnUserGridTapped(object sender, TappedEventArgs e)
