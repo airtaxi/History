@@ -152,7 +152,11 @@ public partial class MentionEditorHandler : ViewHandler<MentionEditor, SpeakLink
 
     protected override SpeakLinkMentionEditText CreatePlatformView()
     {
-        return new SpeakLinkMentionEditText(Context);
+        var view = new SpeakLinkMentionEditText(Context)
+        {
+            BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Colors.Transparent.ToPlatform())
+        };
+        return view;
     }
 
     public override void PlatformArrange(Rect frame)

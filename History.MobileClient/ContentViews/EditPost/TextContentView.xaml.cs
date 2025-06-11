@@ -14,9 +14,14 @@ namespace History.MobileClient.ContentViews.EditPost;
 
 public partial class TextContentView : ContentView
 {
+    public MentionsViewModel MentionsViewModel => ViewModel;
     public MentionEditor MentionEditor => MainMentionEditor;
 
-    public string Text => MainMentionEditor.Text;
+    public string Text
+    {
+        get => MainMentionEditor.Text;
+        set => MainMentionEditor.Text = value;
+    }
 
     public string Placeholder
     {
@@ -71,6 +76,8 @@ public partial class TextContentView : ContentView
         MainMentionEditor.Focus();
         MainMentionEditor.CursorPosition = MainMentionEditor.Text?.Length ?? 0;
     }
+
+    public void UnfocusEditor() => MainMentionEditor.Unfocus();
 
     public void InsertMention(MentionViewModel viewModel)
     {

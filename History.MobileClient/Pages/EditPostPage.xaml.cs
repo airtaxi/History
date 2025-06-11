@@ -45,7 +45,7 @@ public partial class EditPostPage : ContentPage
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
-        UserCollectionView.SetMentionEditor(MainTextContent.MentionEditor);
+        UserCollectionView.SetTextContentView(MainTextContent);
     }
 
     public EditPostPage(PostResponseDto post, bool isShare) : this()
