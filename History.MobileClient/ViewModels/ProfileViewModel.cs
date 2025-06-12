@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -104,6 +105,22 @@ public partial class ProfileViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task HandleProfileLongPressAsync()
+    {
+        HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
+
+        var shouldCopy = await App.Page.DisplayAlert("프로필 핸들", User.Handle, "복사", "닫기");
+        if (!shouldCopy) return;
+
+        try
+        {
+            await Clipboard.SetTextAsync(User.Handle);
+            await Toast.Make("핸들이 클립보드에 복사되었습니다.").Show();
+        }
+        catch { await Toast.Make("핸들 복사에 실패했습니다.").Show(); }
+    }
+
+    [RelayCommand]
     private async Task HandleProfileTapAsync()
     {
         IMediaViewModel media = User.UsesAnimatedProfileMedia ?
@@ -124,6 +141,9 @@ public partial class ProfileViewModel : ObservableObject
             FullScreenSwipeable = false,
             IsFullScreen = true,
         };
+
+        // Show a toast message to inform the user about the long press gesture
+        await Toast.Make("프로필 이미지를 길게 누르면 핸들을 볼 수 있습니다.").Show();
 
         var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel([media], media));
         await App.PushAsync(viewerPage);
