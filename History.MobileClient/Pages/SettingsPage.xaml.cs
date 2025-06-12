@@ -86,6 +86,26 @@ public partial class SettingsPage : ContentPage
 
     private async void OnBirthdayGridTapped(object sender, TappedEventArgs e) => await DisplayAlert("안내", "현재 생일 설정은 지원하지 않습니다. 추후 업데이트를 기대해 주세요.", "확인");
 
+    private async void OnTermsGridTapped(object sender, TappedEventArgs e)
+    {
+#if IOS
+        await Browser.Default.OpenAsync("https://history.cenox.io/terms.html", BrowserLaunchMode.SystemPreferred);
+#else
+        var page = new InAppBrowserPage("서비스 이용 약관", "https://history.cenox.io/terms.html");
+        await App.PushModalAsync(page);
+#endif
+    }
+
+    private async void OnPrivacyPolicyGridTapped(object sender, TappedEventArgs e)
+    {
+#if IOS
+        await Browser.Default.OpenAsync("https://history.cenox.io/privacypolicy.html", BrowserLaunchMode.SystemPreferred);
+#else
+        var page = new InAppBrowserPage("개인정보처리방침", "https://history.cenox.io/privacypolicy.html");
+        await App.PushModalAsync(page);
+#endif
+    }
+
     protected override void OnAppearing()
     {
         base.OnAppearing();
