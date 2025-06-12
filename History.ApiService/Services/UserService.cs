@@ -206,7 +206,8 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update
                 .Unset(u => u.ProfileMediaId)
-                .Set(u => u.UsesAnimatedProfileMedia, false);
+                .Unset(u => u.ProfileThumbnailMediaId)
+                .Unset(u => u.UsesAnimatedProfileMedia);
 
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "프로필 이미지를 삭제하는 중 오류가 발생했습니다.");
         }
@@ -250,7 +251,8 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
             var update = Builders<User>.Update
                 .Unset(u => u.BackgroundMediaId)
-                .Set(u => u.UsesAnimatedBackgroundMedia, false);
+                .Unset(u => u.BackgroundThumbnailMediaId)
+                .Unset(u => u.UsesAnimatedBackgroundMedia);
 
             return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "배경 이미지를 삭제하는 중 오류가 발생했습니다.");
         }
