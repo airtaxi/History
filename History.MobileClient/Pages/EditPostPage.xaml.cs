@@ -433,14 +433,22 @@ public partial class EditPostPage : ContentPage
 
     private async void OnDiscoveryOptionPickerSelectedIndexChanged(object sender, EventArgs e)
     {
-        if (!_isShare) return;
-
         var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
+
+        if (!_isShare)
+        {
+            DiscoveryOptionFontImageSource.Glyph = Utils.GetDiscoveryOptionGlyph(discoveryOption);
+            return;
+        }
+
         if (discoveryOption > _post.DiscoveryOption)
         {
             await DisplayAlert("오류", "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다.", Constants.PromptOk);
             DiscoveryOptionPicker.SelectedIndex = (int)_post.DiscoveryOption;
+            return;
         }
+
+        DiscoveryOptionFontImageSource.Glyph = Utils.GetDiscoveryOptionGlyph(discoveryOption);
     }
 
     private async void OnDeleteExternalUrlContentBorderTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
