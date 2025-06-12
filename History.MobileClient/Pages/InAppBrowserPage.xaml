@@ -6,7 +6,6 @@
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols">
 
     <Grid>
-
         <Grid
             Grid.Row="0"
             Padding="12,0,0,0"
