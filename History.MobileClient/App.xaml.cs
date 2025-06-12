@@ -60,7 +60,12 @@ public partial class App : Application
         get => Current.Windows[0].Page;
         set => Current.Windows[0].Page = value;
     }
+
+#if IOS
     public static Page TopPage => Navigation.ModalStack.Count > 0 ? Navigation.ModalStack[Navigation.ModalStack.Count - 1] : Page;
+#else
+    public static Page TopPage => Navigation.ModalStack.Count > 0 ? Navigation.NavigationStack[Navigation.NavigationStack.Count - 1] : Page;
+#endif
 
     public static INavigation Navigation => Current.Windows[0].Page.Navigation;
 
@@ -71,6 +76,27 @@ public partial class App : Application
         GC.Collect(2, GCCollectionMode.Forced);
 
         await NavigationSemaphore.WaitAsync();
+
+        Page duplicatePage = null;
+        if (page is PostPage postPage)
+        {
+#if IOS
+            var navigationStack = Navigation.ModalStack;
+#else
+            var navigationStack = Navigation.NavigationStack;
+#endif
+            duplicatePage = navigationStack.FirstOrDefault(p => p is PostPage existingPostPage && existingPostPage.ViewModel.Post.Id == postPage.ViewModel.Post.Id);
+        }
+        else if (page is UserPage userPage)
+        {
+#if IOS
+            var navigationStack = Navigation.ModalStack;
+#else
+            var navigationStack = Navigation.NavigationStack;
+#endif
+            duplicatePage = navigationStack.FirstOrDefault(p => p is UserPage existingUserPage && existingUserPage.UserId == userPage.UserId);
+        }
+
 #if IOS
         try { await Current.Windows[0].Page.Navigation.PushModalAsync(page); }
 #else
@@ -85,6 +111,8 @@ public partial class App : Application
         }
         finally
         {
+            if (duplicatePage != null) Navigation.RemovePage(duplicatePage);
+
             if (NavigationSemaphore.CurrentCount == 0)
             {
                 NavigationSemaphore.Release();

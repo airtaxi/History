@@ -20,10 +20,10 @@ namespace History.MobileClient.Pages;
 
 public partial class PostPage : ContentPage
 {
-    private bool _isInForeground;
-    private PostViewModel _viewModel;
-    private MediaAttachmentViewModel _commentMediaAttachmentViewModel;
+    public PostViewModel ViewModel { get; set; }
 
+    private bool _isInForeground;
+    private MediaAttachmentViewModel _commentMediaAttachmentViewModel;
     private bool IsCommentEmpty
     {
         get
@@ -39,7 +39,7 @@ public partial class PostPage : ContentPage
     {
         Debug.WriteLine("POST PAGE LOADED");
 
-        _viewModel = viewModel;
+        ViewModel = viewModel;
         InitializeComponent();
         UpdateRepostStatus(viewModel.Post);
 
@@ -166,7 +166,7 @@ public partial class PostPage : ContentPage
         try
         {
             MainActivityIndicator.IsRunning = true;
-            var result = await App.ExecuteRequestAsync(new CreateComment(_viewModel.Post.Id, contents, files), ErrorType.BadRequest);
+            var result = await App.ExecuteRequestAsync(new CreateComment(ViewModel.Post.Id, contents, files), ErrorType.BadRequest);
             if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
             else if (result.IsSuccess)
             {
@@ -179,8 +179,8 @@ public partial class PostPage : ContentPage
                 CommentTextContentView.Text = string.Empty;
                 CommentTextContentView.UnfocusEditor();
 
-                await _viewModel.RefreshAsync();
-                if (!_viewModel.IsWideMode)
+                await ViewModel.RefreshAsync();
+                if (!ViewModel.IsWideMode)
                 {
                     await Task.Delay(400);
                     await CommentsScrollToEnd(PhoneScrollView);
@@ -191,17 +191,17 @@ public partial class PostPage : ContentPage
         finally { MainActivityIndicator.IsRunning = false; }
     }
 
-    private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await _viewModel.DisplayActionSheetAsync(true);
+    private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await ViewModel.DisplayActionSheetAsync(true);
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 
-    private async void OnShareImageTapped(object sender, TappedEventArgs e) => await _viewModel.HandleShareAsync();
+    private async void OnShareImageTapped(object sender, TappedEventArgs e) => await ViewModel.HandleShareAsync();
 
     private async void OnRepostImageTapped(object sender, TappedEventArgs e)
     {
-        await _viewModel.HandleRepostAsync();
+        await ViewModel.HandleRepostAsync();
 
-        UpdateRepostStatus(_viewModel.Post);
+        UpdateRepostStatus(ViewModel.Post);
     }
 
     private async void OnRefreshing(object sender, EventArgs e)
@@ -209,29 +209,29 @@ public partial class PostPage : ContentPage
 #if IOS
         (sender as RefreshView).IsRefreshing = false;
         await Task.Delay(500);
-        await _viewModel.RefreshAsync();
+        await ViewModel.RefreshAsync();
 #else
-        await _viewModel.RefreshAsync();
+        await ViewModel.RefreshAsync();
         (sender as RefreshView).IsRefreshing = false;
 #endif
     }
 
     private void OnSizeChanged(object sender, EventArgs e)
     {
-        _viewModel.IsWideMode = Width > 700;
-        if (_viewModel.IsWideMode)
+        ViewModel.IsWideMode = Width > 700;
+        if (ViewModel.IsWideMode)
         {
             PhoneContentDataTemplatePresenter.ViewModel = null;
             PhoneCommentDataTemplatePresenter.ViewModel = null;
-            TabletContentDataTemplatePresenter.ViewModel = _viewModel;
-            TabletCommentDataTemplatePresenter.ViewModel = _viewModel;
+            TabletContentDataTemplatePresenter.ViewModel = ViewModel;
+            TabletCommentDataTemplatePresenter.ViewModel = ViewModel;
             PhoneRefreshView.IsVisible = false;
             TabletGrid.IsVisible = true;
         }
         else
         {
-            PhoneContentDataTemplatePresenter.ViewModel = _viewModel;
-            PhoneCommentDataTemplatePresenter.ViewModel = _viewModel;
+            PhoneContentDataTemplatePresenter.ViewModel = ViewModel;
+            PhoneCommentDataTemplatePresenter.ViewModel = ViewModel;
             TabletContentDataTemplatePresenter.ViewModel = null;
             TabletCommentDataTemplatePresenter.ViewModel = null;
             PhoneRefreshView.IsVisible = true;
@@ -272,7 +272,7 @@ public partial class PostPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
-        BindingContext = _viewModel;
+        BindingContext = ViewModel;
 
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
         if (safeAreaTopHeight != 0)
