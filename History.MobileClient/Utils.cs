@@ -1,13 +1,15 @@
-﻿using History.Commons;
+﻿using System;
+using System.Text.RegularExpressions;
+using History.Commons;
 using History.Commons.Api.PushNotification;
 using History.Commons.DataTypes.Contents;
+using History.Commons.Enums;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Animations;
 using Microsoft.Maui.Controls;
 using Plugin.Firebase.CloudMessaging;
-using System;
-using System.Text.RegularExpressions;
+using UraniumUI.Icons.FontAwesome;
 
 namespace History.MobileClient;
 
@@ -313,5 +315,19 @@ public static class Utils
 
         try { await Shared.ApiHandler.ExecuteRequestAsync(new RegisterFirebaseToken(firebaseToken)); }
         catch { }
+    }
+
+    public static string GetDiscoveryOptionGlyph(DiscoveryOption option)
+    {
+        return option switch
+        {
+            DiscoveryOption.OnlyMe => Solid.Lock,
+            DiscoveryOption.SelectedUsers => Solid.UserPlus,
+            DiscoveryOption.UnselectedUsers => Solid.UserMinus,
+            DiscoveryOption.Friends => Solid.Users,
+            DiscoveryOption.FriendsOfFriends => Solid.UsersBetweenLines,
+            DiscoveryOption.Everyone => Solid.Globe,
+            _ => Solid.Question
+        };
     }
 }

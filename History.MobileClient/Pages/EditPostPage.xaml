@@ -42,10 +42,25 @@
                         <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
                     </Image.Source>
                 </Image>
+                <Image
+                    Margin="0,0,6,0"
+                    HeightRequest="16"
+                    VerticalOptions="Center"
+                    WidthRequest="16">
+                    <Image.Source>
+                        <FontImageSource
+                            x:Name="DiscoveryOptionFontImageSource"
+                            FontFamily="FASolid"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
                 <Picker
                     x:Name="DiscoveryOptionPicker"
+                    Margin="0"
+                    FontSize="16"
                     SelectedIndexChanged="OnDiscoveryOptionPickerSelectedIndexChanged"
-                    TextColor="White" />
+                    TextColor="White"
+                    VerticalOptions="Center" />
             </HorizontalStackLayout>
 
             <Button
