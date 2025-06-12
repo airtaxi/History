@@ -1,3 +1,5 @@
+using CommunityToolkit.Maui.Behaviors;
+using CommunityToolkit.Maui.Core.Platform;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
@@ -118,6 +120,12 @@ public partial class FriendListPage : ContentPage
     {
         base.OnDisappearing();
         _isInForeground = false;
+    }
+
+    protected override void OnNavigatedTo(NavigatedToEventArgs args)
+    {
+        base.OnNavigatedTo(args);
+        if (_userId != Shared.UserId) StatusBar.SetColor(Application.Current.Resources["Primary"] as Color);
     }
 
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
