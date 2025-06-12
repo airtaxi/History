@@ -341,21 +341,31 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
     /// <returns>A list of strings representing the IDs of banned or ignored users.</returns>
     public async Task<Result<List<string>>> GetBannedUserIdsAsync(string userId)
     {
-        // Get all blocked users
+        // Get blocked users
         var filter = Builders<Friendship>.Filter.Eq(f => f.UserId, userId) &
-                     Builders<Friendship>.Filter.Eq(f => f.Status, FriendshipStatus.Blocked);
-
-        // Add blocker users
-        filter |= Builders<Friendship>.Filter.Eq(f => f.FriendId, userId) &
                      Builders<Friendship>.Filter.Eq(f => f.Status, FriendshipStatus.Blocked);
 
         // Add ignored users
         filter |= Builders<Friendship>.Filter.Eq(f => f.UserId, userId) &
                      Builders<Friendship>.Filter.Eq(f => f.Status, FriendshipStatus.Ignored);
 
-        return await _friendshipCollection.Find(filter)
+        var userBlockedIds = await _friendshipCollection.Find(filter)
+            .Project(f => f.FriendId)
+            .ToListAsync();
+
+        // Add blocker users
+        filter = Builders<Friendship>.Filter.Eq(f => f.FriendId, userId) &
+                     Builders<Friendship>.Filter.Eq(f => f.Status, FriendshipStatus.Blocked);
+
+        var userBlockerIds = await _friendshipCollection.Find(filter)
             .Project(f => f.UserId)
             .ToListAsync();
+
+        // Combine both results and remove duplicates
+        var allBannedUserIds = userBlockedIds.Union(userBlockerIds).Distinct().ToList();
+
+        // return the combined list of banned user IDs
+        return allBannedUserIds;
     }
 
     /// <inheritdoc/>
