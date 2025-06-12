@@ -15,6 +15,7 @@ namespace History.MobileClient.Pages;
 public partial class UserPage : ContentPage
 {
     public static bool ShouldRefresh { get; set; }
+    public string UserId { get; }
 
     private bool _isInForeground;
     private bool _areThereNoMorePostsToLoad;
@@ -24,7 +25,6 @@ public partial class UserPage : ContentPage
     private object _lastViewModel;
     private ProfileViewModel _viewModel;
     private readonly bool _isMyProfile;
-    private readonly string _userId;
     private readonly ObservableCollection<object> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
@@ -43,10 +43,10 @@ public partial class UserPage : ContentPage
 
     public UserPage(string userId)
 	{
-		_userId = userId;
+		UserId = userId;
         InitializeComponent();
 
-        if (_userId == Shared.UserId) BanImage.IsVisible = false;
+        if (UserId == Shared.UserId) BanImage.IsVisible = false;
 
         MainCollectionView.ItemsSource = _viewModels;
 #if IOS
@@ -87,7 +87,7 @@ public partial class UserPage : ContentPage
             var friends = await Shared.ApiHandler.ExecuteRequestAsync(new GetFriends(Shared.UserId));
             Shared.Friends = friends;
 
-            var user = await App.ExecuteRequestAsync(new GetUser(_userId));
+            var user = await App.ExecuteRequestAsync(new GetUser(UserId));
             if (user.IsSuccess)
             {
                 _viewModel = new ProfileViewModel(user.Value);
@@ -95,7 +95,7 @@ public partial class UserPage : ContentPage
             }
             else return;
 
-            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(_userId));
+            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
@@ -120,7 +120,7 @@ public partial class UserPage : ContentPage
             if (lastViewModel == null) return;
 
             var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
-            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(_userId, lastPostId));
+            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, lastPostId));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
@@ -135,7 +135,7 @@ public partial class UserPage : ContentPage
 
     private async void OnFriendsImageTapped(object sender, TappedEventArgs e)
     {
-        var page = new FriendListPage(_userId);
+        var page = new FriendListPage(UserId);
         await App.PushAsync(page);
     }
 
@@ -162,7 +162,7 @@ public partial class UserPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
-        if (_isFirstLoad || (ShouldRefresh && _userId == Shared.UserId))
+        if (_isFirstLoad || (ShouldRefresh && UserId == Shared.UserId))
         {
             ShouldRefresh = false;
             _isFirstLoad = false;
