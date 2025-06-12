@@ -64,16 +64,7 @@ public partial class PostViewModel : ObservableObject
         ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
-    public string DiscoveryOptionGlyph => Post.DiscoveryOption switch
-    {
-        DiscoveryOption.OnlyMe => Solid.Lock,
-        DiscoveryOption.SelectedUsers => Solid.UserPlus,
-        DiscoveryOption.UnselectedUsers => Solid.UserMinus,
-        DiscoveryOption.Friends => Solid.Users,
-        DiscoveryOption.FriendsOfFriends => Solid.UsersBetweenLines,
-        DiscoveryOption.Everyone => Solid.Globe,
-        _ => Solid.Question
-    };
+    public string DiscoveryOptionGlyph => Utils.GetDiscoveryOptionGlyph(Post.DiscoveryOption);
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotWideMode))]
