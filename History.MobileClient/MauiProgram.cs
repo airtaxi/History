@@ -16,6 +16,8 @@ using History.Commons.Api.User;
 using History.Commons.Api.Friendship;
 using History.MobileClient.DataTypes;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Platform;
+
 
 
 
@@ -56,6 +58,17 @@ public static class MauiProgram
         Microsoft.Maui.Handlers.SearchBarHandler.Mapper.AppendToMapping("NoBackground", (h, v) =>
         {
             h.PlatformView.SearchBarStyle = UIKit.UISearchBarStyle.Minimal;
+        });
+        Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping("NoOutline", (h, v) =>
+        {
+            h.PlatformView.BorderStyle = UIKit.UITextBorderStyle.None;
+            h.PlatformView.BackgroundColor = UIKit.UIColor.Clear;
+            h.PlatformView.Layer.BorderWidth = 0;
+        });
+#elif ANDROID
+        Microsoft.Maui.Handlers.PickerHandler.Mapper.AppendToMapping("NoUnderline", (h, v) =>
+        {
+            h.PlatformView.BackgroundTintList = Android.Content.Res.ColorStateList.ValueOf(Colors.Transparent.ToPlatform());
         });
 #endif
 
