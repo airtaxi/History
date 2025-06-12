@@ -107,7 +107,7 @@ public partial class ProfileViewModel : ObservableObject
     private async Task HandleProfileTapAsync()
     {
         IMediaViewModel media = User.UsesAnimatedProfileMedia ?
-        new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
+        new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName)
         {
             Aspect = Aspect.AspectFit,
             ShouldAutoPlay = true,
@@ -116,7 +116,7 @@ public partial class ProfileViewModel : ObservableObject
             ShouldShowPlaybackControls = true,
             FullScreenSwipeable = false,
         }
-        : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
+        : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName)
         {
             Aspect = Aspect.AspectFit,
             HorizontalContentOptions = LayoutOptions.Fill,
@@ -133,7 +133,7 @@ public partial class ProfileViewModel : ObservableObject
     private async Task HandleBackgroundTapAsync()
     {
         IMediaViewModel media = User.UsesAnimatedBackgroundMedia ?
-        new VideoViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId))
+        new VideoViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId) ?? Constants.DefaultBackgroundImageFileName)
         {
             Aspect = Aspect.AspectFit,
             ShouldAutoPlay = true,
@@ -142,7 +142,7 @@ public partial class ProfileViewModel : ObservableObject
             ShouldShowPlaybackControls = true,
             FullScreenSwipeable = false,
         }
-        : new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId))
+        : new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId) ?? Constants.DefaultBackgroundImageFileName)
         {
             Aspect = Aspect.AspectFit,
             HorizontalContentOptions = LayoutOptions.Fill,
