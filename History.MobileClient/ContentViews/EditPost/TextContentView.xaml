@@ -33,6 +33,7 @@
             MentionSelectedTextColor="White"
             MentionTextColor="{StaticResource Primary}"
             Placeholder="무슨 일이 일어나고 있나요?"
+            TextChanged="OnMainMentionEditorTextChanged"
             VerticalOptions="Start" />
     </Border>
 </ContentView>

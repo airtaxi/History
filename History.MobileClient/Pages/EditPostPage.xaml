@@ -74,7 +74,10 @@
                 VerticalOptions="Center" />
         </Grid>
 
-        <ScrollView Grid.Row="1" Orientation="Vertical">
+        <ScrollView
+            x:Name="MainScrollView"
+            Grid.Row="1"
+            Orientation="Vertical">
             <VerticalStackLayout Padding="6" Spacing="8">
                 <editPost:TextContentView x:Name="MainTextContent" Loaded="OnMainTextContentLoaded" />
                 <views:DataTemplatePresenter
