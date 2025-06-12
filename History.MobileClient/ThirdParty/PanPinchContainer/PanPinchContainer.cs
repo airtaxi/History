@@ -1,4 +1,6 @@
-﻿using History.MobileClient.ViewModels;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using History.MobileClient.DataTypes;
+using History.MobileClient.ViewModels;
 
 namespace History.MobileClient.ThirdParty.PanPinchContainer;
 
@@ -9,6 +11,8 @@ namespace History.MobileClient.ThirdParty.PanPinchContainer;
 public class PanPinchContainer : ContentView
 {
     private readonly TapGestureRecognizer _doubleTapGestureRecognizer;
+
+    private readonly TapGestureRecognizer _tapGestureRecognizer;
 
     private readonly PanGestureRecognizer _panGestureRecognizer;
 
@@ -39,6 +43,14 @@ public class PanPinchContainer : ContentView
         _pinchGestureRecognizer.PinchUpdated += OnPinchUpdatedAsync;
         GestureRecognizers.Add(_pinchGestureRecognizer);
 
+        _tapGestureRecognizer = new TapGestureRecognizer
+        {
+            NumberOfTapsRequired = 1
+        };
+
+        _tapGestureRecognizer.Tapped += OnTapped;
+        GestureRecognizers.Add(_tapGestureRecognizer);
+
         _doubleTapGestureRecognizer = new TapGestureRecognizer
         {
             NumberOfTapsRequired = 2
@@ -49,6 +61,8 @@ public class PanPinchContainer : ContentView
 
         BindingContextChanged += OnBindingContextChanged;
     }
+
+    private void OnTapped(object sender, TappedEventArgs e) => WeakReferenceMessenger.Default.Send(new FullScreenMediaTappedMessage());
 
     private void OnBindingContextChanged(object sender, EventArgs e)
     {

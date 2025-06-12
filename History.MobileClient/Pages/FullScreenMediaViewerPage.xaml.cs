@@ -20,7 +20,10 @@ public partial class FullScreenMediaViewerPage : ContentPage
         MainDataTemplatePresenter.ViewModel = _viewModel;
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<FullScreenMediaTappedMessage>(this, OnFullScreenMediaTappedMessageReceived);
     }
+
+    private void OnFullScreenMediaTappedMessageReceived(object recipient, FullScreenMediaTappedMessage message) => TopBarGrid.IsVisible = !TopBarGrid.IsVisible;
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 
