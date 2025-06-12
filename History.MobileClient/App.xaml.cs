@@ -46,7 +46,7 @@ public partial class App : Application
                         await Page.DisplayAlert("자세히 알아보기", "이 오류는 MAUI의 CarouselView에서 발생하는 버그로, History 애플리케이션과는 관련이 없습니다.", "확인");
                     });
                 }
-                else if (!exception.Message.Contains("ObjectDisposed_Generic") && !exception.StackTrace.Contains("FFImageLoading"))
+                else if (!exception.StackTrace.Contains("FFImageLoading"))
                     Dispatcher.Dispatch(() => Page.DisplayAlert("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk));
 
                 Debugger.BreakForUserUnhandledException(exception);
