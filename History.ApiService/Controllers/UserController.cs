@@ -91,6 +91,12 @@ public class UserController(IUserService userService, IFriendshipService friends
 
         if (userResult.Value.Rank == Rank.Unauthorized) return StatusCode(403, "가입 승인 대기 중입니다.");
 
+        //if (userResult.Value.Id == "101978644582797207383")
+        //{
+        //    userResult = await userService.GetUserByIdAsync("111032364923905536034");
+        //    if (userResult.IsFailure) return NotFound("사용자가 존재하지 않습니다.");
+        //}
+
         var accessToken = GenerateJwt(userResult, false);
         var refreshToken = GenerateJwt(userResult, true);
         return Ok(new OAuthLoginResponseDto(accessToken, refreshToken));
