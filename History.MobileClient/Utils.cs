@@ -137,7 +137,7 @@ public static class Utils
             result = $"{time.TotalMinutes:N0}분 전";
         else if (time.TotalHours < 24)
             result = $"{time.TotalHours:N0}시간 전";
-        else if (createdAt.Year == DateTime.UtcNow.Year) result = $"{createdAt:MM월 dd일 HH:mm}";
+        else if (createdAt.Year == DateTime.UtcNow.Year) result = $"{createdAt.ToLocalTime():MM월 dd일 HH:mm}";
         else result = $"{createdAt.ToLocalTime():yyyy년 MM월dd일 HH:mm:ss}";
 
         if (modifiedAt != null) result += $" (수정됨)";
