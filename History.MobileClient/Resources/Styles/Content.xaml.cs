@@ -52,13 +52,6 @@ public partial class Content : ResourceDictionary
         });
     }
 
-    private async void OnExternalUrlContentLongPressCompleted(object sender, LongPressCompletedEventArgs e)
-    {
-        var view = sender as View;
-        var viewModel = view?.BindingContext as ExternalUrlContentViewModel;
-        await viewModel?.HandleLongPressAsync();
-    }
-
     private void OnWrappedMediaContentsCarouselViewCurrentItemChanged(object sender, CurrentItemChangedEventArgs e)
     {
         var carouselView = sender as CarouselView;

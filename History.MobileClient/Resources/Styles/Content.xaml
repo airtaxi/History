@@ -168,16 +168,17 @@
             <views:DataTemplatePresenter Template="{StaticResource ImageTemplate}" ViewModel="{x:Binding ThumbnailImage}" />
 
             <Rectangle
+                x:Name="ExternalUrlOverlayRectangle"
                 Margin="-4"
                 Fill="Black"
                 HorizontalOptions="Fill"
                 Opacity="0.4"
                 VerticalOptions="Fill">
-                <Rectangle.GestureRecognizers>
-                    <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
-                </Rectangle.GestureRecognizers>
                 <Rectangle.Behaviors>
-                    <toolkit:TouchBehavior LongPressCompleted="OnExternalUrlContentLongPressCompleted" />
+                    <toolkit:TouchBehavior
+                        BindingContext="{Binding Path=BindingContext, Source={x:Reference ExternalUrlOverlayRectangle}, x:DataType=Rectangle}"
+                        Command="{x:Binding HandleTapCommand}"
+                        LongPressCommand="{x:Binding HandleLongPressCommand}" />
                 </Rectangle.Behaviors>
             </Rectangle>
 
