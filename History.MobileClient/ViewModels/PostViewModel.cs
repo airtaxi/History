@@ -154,7 +154,7 @@ public partial class PostViewModel : ObservableObject
             if (Post.Comments == null) throw new Exception("[PostViewModel] COMMENT IS NULL");
             else
             {
-                Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, isTimeline)).OrderBy(x => x.CreatedAt)];
+                Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, isTimeline, this)).OrderBy(x => x.CreatedAt)];
                 HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
             }
 
@@ -173,7 +173,7 @@ public partial class PostViewModel : ObservableObject
         Post = message.Value;
         User = message.Value.User;
 
-        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, IsTimeline)).OrderBy(x => x.CreatedAt)];
+        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, IsTimeline, this)).OrderBy(x => x.CreatedAt)];
         HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
     }
 
@@ -453,7 +453,7 @@ public partial class PostViewModel : ObservableObject
         if (commentsResult.IsSuccess)
         {
             var comments = commentsResult.Value;
-            var commentViewModels = comments.Select(x => new CommentViewModel(x, User.UserId == Shared.UserId, IsTimeline));
+            var commentViewModels = comments.Select(x => new CommentViewModel(x, Post.User.UserId == Shared.UserId, IsTimeline, this));
             foreach (var commentViewModel in commentViewModels) Comments.Insert(0, commentViewModel);
             HasMoreComments = Post.CommentsCount > Comments.Count;
         }
