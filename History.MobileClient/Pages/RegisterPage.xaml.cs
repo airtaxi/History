@@ -28,14 +28,22 @@ namespace History.MobileClient.Pages
 
         private async void OnViewTermsLabelTapped(object sender, TappedEventArgs e)
         {
+#if IOS
+            await Browser.Default.OpenAsync("https://history.cenox.io/terms.html", BrowserLaunchMode.SystemPreferred);
+#else
             var page = new InAppBrowserPage("서비스 이용 약관", "https://history.cenox.io/terms.html");
             await App.PushModalAsync(page);
+#endif
         }
 
         private async void OnViewPrivacyAgreementTermsLabelTapped(object sender, TappedEventArgs e)
         {
+#if IOS
+            await Browser.Default.OpenAsync("https://history.cenox.io/privacyagreement.html", BrowserLaunchMode.SystemPreferred);
+#else
             var page = new InAppBrowserPage("개인정보 수집·이용 동의", "https://history.cenox.io/privacyagreement.html");
             await App.PushModalAsync(page);
+#endif
         }
 
         private void OnCheckBoxCheckedChanged(object sender, CheckedChangedEventArgs e)
