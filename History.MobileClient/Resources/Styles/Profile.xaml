@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
     <DataTemplate x:Key="ProfileTemplate" x:DataType="vm:ProfileViewModel">
@@ -33,13 +34,19 @@
                     VerticalOptions="Start">
                     <Grid>
                         <views:DataTemplatePresenter
+                            x:Name="ProfileMediaDataTemplatePresenter"
                             HeightRequest="72"
                             Template="{StaticResource MediaTemplateSelector}"
                             ViewModel="{x:Binding ProfileMedia}"
                             WidthRequest="72">
-                            <views:DataTemplatePresenter.GestureRecognizers>
-                                <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
-                            </views:DataTemplatePresenter.GestureRecognizers>
+                            <views:DataTemplatePresenter.Behaviors>
+                                <toolkit:TouchBehavior
+                                    BindingContext="{x:Binding Source={x:Reference ProfileMediaDataTemplatePresenter},
+                                                               Path=BindingContext,
+                                                               x:DataType=views:DataTemplatePresenter}"
+                                    Command="{x:Binding HandleProfileTapCommand}"
+                                    LongPressCommand="{x:Binding HandleProfileLongPressCommand}" />
+                            </views:DataTemplatePresenter.Behaviors>
                             <views:DataTemplatePresenter.Clip>
                                 <EllipseGeometry
                                     Center="36,36"
