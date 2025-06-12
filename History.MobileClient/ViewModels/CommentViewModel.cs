@@ -52,11 +52,14 @@ public partial class CommentViewModel : ObservableObject
 
     private readonly bool _isMyPost;
     private readonly bool _isTimeline;
+    private readonly PostViewModel _parentViewModel;
 
-    public CommentViewModel(CommentResponseDto comment, bool isMyPost, bool isTimeline)
+    public CommentViewModel(CommentResponseDto comment, bool isMyPost, bool isTimeline, PostViewModel parentViewModel)
     {
         _isMyPost = isMyPost;
         _isTimeline = isTimeline;
+        _parentViewModel = parentViewModel;
+
         Comment = comment;
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, (r, m) =>
         {
@@ -147,7 +150,11 @@ public partial class CommentViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void HandleTap() => WeakReferenceMessenger.Default.Send<CommentTappedMessage>(new(Comment.User));
+    public async Task HandleTapAsync()
+    {
+        if (!_isTimeline) WeakReferenceMessenger.Default.Send<CommentTappedMessage>(new(Comment.User));
+        else await _parentViewModel.HandleTapAsync();
+    }
 
     [RelayCommand]
     public async Task HandleProfileTap()
