@@ -45,6 +45,7 @@ public partial class EditPostPage : ContentPage
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
+        WeakReferenceMessenger.Default.Register<MentionEditorNewLineMessage>(this, OnMentionEditorNewLineMessageReceived);
         UserCollectionView.SetTextContentView(MainTextContent);
     }
 
@@ -518,5 +519,18 @@ public partial class EditPostPage : ContentPage
 #else
         MainGrid.Margin = new(0, 0, 0, message.Value);
 #endif
+    }
+
+    private void OnMentionEditorNewLineMessageReceived(object recipient, MentionEditorNewLineMessage message)
+    {
+        // Ensure the editor is scrolled to the bottom when a new line is added
+        // (At least on iOS, the editor does not scroll automatically)
+        var textContentViewHeight = MainTextContent.Height;
+        var targetScrollOffsetY = textContentViewHeight - MainScrollView.Height;
+        targetScrollOffsetY = Math.Max(targetScrollOffsetY, 0); // Ensure it's not negative
+        if (MainScrollView.ScrollY < targetScrollOffsetY)
+        {
+            MainScrollView.ScrollToAsync(0, targetScrollOffsetY, false);
+        }
     }
 }

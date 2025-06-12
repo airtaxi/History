@@ -2,6 +2,10 @@ using History.Commons.DataTypes.Contents;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using SpeakLink.Mention;
+using History.MobileClient.DataTypes;
+using CommunityToolkit.Mvvm.Messaging;
+
+
 
 #if ANDROID
 using Android.Views;
@@ -92,5 +96,14 @@ public partial class TextContentView : ContentView
     {
         ViewModel.ImageInputRequested -= OnImageInputRequested;
         ImageInputRequested = null;
+    }
+
+    private string _lastTextValue;
+    private void OnMainMentionEditorTextChanged(object sender, TextChangedEventArgs e)
+    {
+        var newTextValue = e.NewTextValue;
+        if (_lastTextValue != null && newTextValue.Length > 0 &&  newTextValue.Last() == '\n' && newTextValue[..(newTextValue.Length - 1)] == _lastTextValue)
+            WeakReferenceMessenger.Default.Send(new MentionEditorNewLineMessage());
+        _lastTextValue = e.NewTextValue;
     }
 }
