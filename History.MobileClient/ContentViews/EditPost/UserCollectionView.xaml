@@ -9,6 +9,8 @@
     x:DataType="vm:MentionsViewModel">
     <CollectionView
         x:Name="CollectionView"
+        BackgroundColor="{AppThemeBinding Light=#EEEEEE,
+                                          Dark=#222222}"
         HorizontalOptions="Fill"
         IsVisible="{x:Binding IsDisplayingMentions}"
         ItemsSource="{x:Binding ViewModels}"
