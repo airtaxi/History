@@ -73,23 +73,21 @@
 
     <DataTemplate x:Key="AndroidWrappedMediaContentsTemplate" x:DataType="vm:WrappedMediaContentsViewModel">
         <Grid>
-            <Border Padding="0" StrokeThickness="0">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="6" />
-                </Border.StrokeShape>
-
-                <CarouselView
-                    CurrentItem="{x:Binding FirstMedia}"
-                    CurrentItemChanged="OnWrappedMediaContentsCarouselViewCurrentItemChanged"
-                    HeightRequest="400"
-                    HorizontalScrollBarVisibility="Never"
-                    IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
-                    ItemTemplate="{StaticResource MediaContentTemplate}"
-                    ItemsSource="{x:Binding Medias}"
-                    Loaded="OnWrappedMediaContentsCarouselViewLoaded"
-                    Position="{x:Binding CarouselPosition,
-                                         Mode=OneWayToSource}" />
-            </Border>
+            <CarouselView
+                CurrentItem="{x:Binding FirstMedia}"
+                CurrentItemChanged="OnWrappedMediaContentsCarouselViewCurrentItemChanged"
+                HeightRequest="400"
+                HorizontalScrollBarVisibility="Never"
+                IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
+                ItemTemplate="{StaticResource MediaContentTemplate}"
+                ItemsSource="{x:Binding Medias}"
+                Loaded="OnWrappedMediaContentsCarouselViewLoaded"
+                Position="{x:Binding CarouselPosition,
+                                     Mode=OneWayToSource}">
+                <CarouselView.Clip>
+                    <RoundRectangleGeometry CornerRadius="6" />
+                </CarouselView.Clip>
+            </CarouselView>
 
             <Border
                 Margin="12"
