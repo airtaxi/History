@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Controls.Shapes;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -82,5 +83,13 @@ public partial class Content : ResourceDictionary
                 WeakReferenceMessenger.Default.Send(new ResizeMediaCarouselViewMessage(firstMedia.Media));
             });
         }
+    }
+
+    private void OnWrappedMediaContentsCarouselViewSizeChanged(object sender, EventArgs e)
+    {
+        var carouselView = sender as CarouselView;
+        if (carouselView.Clip is not RoundRectangleGeometry clip) return;
+
+        clip.Rect = new Rect(0, 0, carouselView.Width, carouselView.Height);
     }
 }

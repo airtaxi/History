@@ -83,7 +83,8 @@
                 ItemsSource="{x:Binding Medias}"
                 Loaded="OnWrappedMediaContentsCarouselViewLoaded"
                 Position="{x:Binding CarouselPosition,
-                                     Mode=OneWayToSource}">
+                                     Mode=OneWayToSource}"
+                SizeChanged="OnWrappedMediaContentsCarouselViewSizeChanged">
                 <CarouselView.Clip>
                     <RoundRectangleGeometry CornerRadius="6" />
                 </CarouselView.Clip>
@@ -119,7 +120,12 @@
                 ItemsSource="{x:Binding Medias}"
                 Loaded="OnWrappedMediaContentsCarouselViewLoaded"
                 Position="{x:Binding CarouselPosition,
-                                     Mode=OneWayToSource}" />
+                                     Mode=OneWayToSource}"
+                SizeChanged="OnWrappedMediaContentsCarouselViewSizeChanged">
+                <CarouselView.Clip>
+                    <RoundRectangleGeometry CornerRadius="6" />
+                </CarouselView.Clip>
+            </CarouselView>
             <Border
                 Margin="12"
                 Padding="6,4,6,4"
