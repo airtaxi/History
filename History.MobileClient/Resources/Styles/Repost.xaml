@@ -9,18 +9,18 @@
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
 
     <DataTemplate x:Key="RepostTemplate" x:DataType="vm:RepostViewModel">
-        <Border
-            Margin="6"
-            Padding="12"
-            BackgroundColor="{AppThemeBinding Dark=Black,
-                                              Light=White}"
-            StrokeThickness="1.5">
-            <Border.StrokeShape>
-                <RoundRectangle CornerRadius="8" />
-            </Border.StrokeShape>
-            <Border.GestureRecognizers>
+        <Grid Padding="18">
+            <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
-            </Border.GestureRecognizers>
+            </Grid.GestureRecognizers>
+            <RoundRectangle
+                Margin="-12"
+                CornerRadius="8"
+                Fill="{AppThemeBinding Dark=Black,
+                                       Light=White}"
+                Stroke="#808080"
+                StrokeThickness="1.5" />
+
             <VerticalStackLayout Spacing="8">
                 <Grid Grid.Row="0" HeightRequest="36">
                     <HorizontalStackLayout Spacing="6">
@@ -143,6 +143,6 @@
                     </Grid>
                 </Grid>
             </VerticalStackLayout>
-        </Border>
+        </Grid>
     </DataTemplate>
 </ResourceDictionary>
