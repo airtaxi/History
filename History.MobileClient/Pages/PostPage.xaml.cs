@@ -102,6 +102,7 @@ public partial class PostPage : ContentPage
         if (_commentMediaAttachmentViewModel == null)
         {
 #if IOS
+            CommentTextContentView.UnfocusEditor();
             var request = new MediaPickRequest(1, MediaFileType.Image) { Title = "이미지 추가" };
 
             var results = await MediaGallery.PickAsync(request);
@@ -322,7 +323,7 @@ public partial class PostPage : ContentPage
 #endif
     }
 
-    private void OnDeleteAttachmentBorderTapped(object sender, TappedEventArgs e)
+    private void OnDeleteAttachmentGridTapped(object sender, TappedEventArgs e)
     {
         _commentMediaAttachmentViewModel?.Dispose();
         _commentMediaAttachmentViewModel = null;

@@ -526,7 +526,11 @@ public partial class EditPostPage : ContentPage
         // Ensure the editor is scrolled to the bottom when a new line is added
         // (At least on iOS, the editor does not scroll automatically)
         var textContentViewHeight = MainTextContent.Height;
+#if IOS
+        var targetScrollOffsetY = textContentViewHeight - MainScrollView.Height + 40;
+#else
         var targetScrollOffsetY = textContentViewHeight - MainScrollView.Height;
+#endif
         targetScrollOffsetY = Math.Max(targetScrollOffsetY, 0); // Ensure it's not negative
         if (MainScrollView.ScrollY < targetScrollOffsetY)
         {
