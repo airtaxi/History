@@ -62,7 +62,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
 
 #if ANDROID
         // TODO: Check for if this bug is resolved later
-        if (IsParentPost)
+        if (IsParentPost && false)
         {
             var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel(_fullScreenMedias, _currentMedia));
             await App.PushAsync(viewerPage);
