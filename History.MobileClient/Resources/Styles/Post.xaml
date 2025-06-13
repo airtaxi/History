@@ -189,16 +189,13 @@
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
             </Grid.GestureRecognizers>
-            <Rectangle
+            <RoundRectangle
                 Margin="-12"
+                CornerRadius="8"
                 Fill="{AppThemeBinding Dark=Black,
                                        Light=White}"
                 Stroke="#808080"
-                StrokeThickness="1.5">
-                <Rectangle.Clip>
-                    <RoundRectangleGeometry CornerRadius="8" />
-                </Rectangle.Clip>
-            </Rectangle>
+                StrokeThickness="1.5" />
 
             <VerticalStackLayout Spacing="8">
                 <Grid Grid.Row="0" HeightRequest="48">
