@@ -1,0 +1,2 @@
+dotnet publish -f net9.0-ios -c Release -p:ArchiveOnBuild=true -p:RuntimeIdentifier=ios-arm64 -p:ServerAddress=suwon.teamarcstar.com -p:ServerUser=airtaxi -p:ServerPassword=kck4156 -p:TcpPort=58181 -p:_DotNetRootRemoteDirectory=/Users/airtaxi/Library/Caches/Xamarin/XMA/SDKs/dotnet/ -o ./publish
+pause
