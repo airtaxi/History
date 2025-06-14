@@ -201,7 +201,7 @@ public partial class TimelinePage : ContentPage
 
     private async void OnTitleGridTapped(object sender, TappedEventArgs e) => await RefreshAsync();
 
-    private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
+    private async void OnWritePostBorderTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
 
     private void OnMainCollectionViewScrolled(object sender, ItemsViewScrolledEventArgs e)
     {
