@@ -1028,7 +1028,7 @@ public partial class KakaoStoryApiHandler
 
         request.AutomaticDecompression = DecompressionMethods.GZip;
         request.Headers["authority"] = "story.kakao.com";
-        request.Referer = "https://story.kakao.com/apitestfelis";
+        request.Referer = "https://story.kakao.com/";
         request.KeepAlive = true;
         request.UseDefaultCredentials = true;
         request.Host = "story.kakao.com";
