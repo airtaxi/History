@@ -39,7 +39,7 @@ public partial class CommentViewModel : ObservableObject
         ? new VideoViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
-    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Comment.Contents, _isTimeline);
+    public List<IContentViewModel> Contents { get; private set; }
 
     public bool IsMyComment => Comment.User.UserId == Shared.UserId;
 
@@ -60,14 +60,21 @@ public partial class CommentViewModel : ObservableObject
         _isTimeline = isTimeline;
         _parentViewModel = parentViewModel;
 
-        Comment = comment;
+        UpdateComment(comment);
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, (r, m) =>
         {
             if (m.Value.Id != Comment.Id) return;
 
-            Comment = m.Value;
+            UpdateComment(m.Value);
         });
     }
+
+    private void UpdateComment(CommentResponseDto comment)
+    {
+        Comment = comment;
+        Contents = Utils.GenerateContentViewModels(Comment.Contents, _isTimeline);
+    }
+
     public Color CommentLikeColor => Liked ? Color.FromRgb(0xeb, 0x55, 0x27) : Color.FromRgb(0x80, 0x80, 0x80);
 
     public DateTime CreatedAt => Comment.CreatedAt;

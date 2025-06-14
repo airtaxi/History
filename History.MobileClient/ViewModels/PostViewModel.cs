@@ -71,12 +71,12 @@ public partial class PostViewModel : ObservableObject
     public partial bool IsWideMode { get; set; }
     public bool IsNotWideMode => !IsWideMode;
 
-    public List<IContentViewModel> Contents => Utils.GenerateContentViewModels(Post.Contents, IsTimeline, IsParentPost);
+    public List<IContentViewModel> Contents { get; private set; }
 
     public bool HasInteractions => Post.PostReactions.Count > 0 || Post.SharedAndRepostedUsers.Count > 0;
 
+    public PostViewModel ParentPost { get; private  set; }
     public bool IsRepost => Post.IsRepost;
-    public PostViewModel ParentPost => Post.ParentPost != null ? new(Post.ParentPost, IsTimeline, true) : null;
     public bool IsShare => Post.ParentPost != null && !IsRepost;
 
     public bool HasRepostedUsers => Post.SharedAndRepostedUsers.Any(x => x.IsRepost);
@@ -133,39 +133,32 @@ public partial class PostViewModel : ObservableObject
         {
             IsTimeline = isTimeline;
             IsParentPost = isParentPost;
-
-            if (post == null)
-            {
-                throw new Exception("[PostViewModel] POST IS NULL");
-            }
-
-            Post = post;
-            User = post?.User;
-            if (User == null) throw new Exception("[PostViewModel] USER IS NULL");
-            if (Post.Comments == null) throw new Exception("[PostViewModel] COMMENT IS NULL");
-            else
-            {
-                Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, isTimeline, this)).OrderBy(x => x.CreatedAt)];
-                HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
-            }
+            UpdatePost(post ?? throw new Exception("[PostViewModel] POST IS NULL"));
 
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, OnUserChangedMessageReceived);
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, OnCommentChangedMessageReceived);
             WeakReferenceMessenger.Default.Register<ValueDeletedMessage<CommentResponseDto>>(this, OnCommentDeletedMessageReceived);
         }
-        catch(Exception exception) { App.Page.DisplayAlert("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk); }
+        catch (Exception exception) { App.Page.DisplayAlert("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk); }
+    }
+
+    private void UpdatePost(PostResponseDto post)
+    {
+        Post = post;
+        Contents = Utils.GenerateContentViewModels(Post.Contents, IsTimeline, IsParentPost);
+        ParentPost = Post.ParentPost != null ? new(Post.ParentPost, IsTimeline, true) : null;
+        User = post?.User;
+
+        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, IsTimeline, this)).OrderBy(x => x.CreatedAt)];
+        HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
     }
 
     private void OnPostChangedMessageReceived(object sender, ValueChangedMessage<PostResponseDto> message)
     {
         if (message.Value.Id != Post.Id) return;
 
-        Post = message.Value;
-        User = message.Value.User;
-
-        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, IsTimeline, this)).OrderBy(x => x.CreatedAt)];
-        HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
+        UpdatePost(message.Value);
     }
 
     private void OnUserChangedMessageReceived(object recipient, ValueChangedMessage<UserResponseDto> message)
