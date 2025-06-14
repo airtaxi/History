@@ -152,6 +152,7 @@ public partial class EditPostPage : ContentPage
 
     private async void OnInsertImageTapped(object sender, TappedEventArgs e)
     {
+        MainTextContent.UnfocusEditor();
         if (_attachmentViewModels.Count == 20)
         {
             await Toast.Make("미디어는 최대 20개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
@@ -213,6 +214,8 @@ public partial class EditPostPage : ContentPage
 
     private async void OnInsertVideoTapped(object sender, TappedEventArgs e)
     {
+        MainTextContent.UnfocusEditor();
+
         if (_attachmentViewModels.Count == 20)
         {
             await Toast.Make("미디어는 최대 20개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
