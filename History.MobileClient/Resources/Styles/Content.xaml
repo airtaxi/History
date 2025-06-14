@@ -75,16 +75,13 @@
         <Grid>
             <CarouselView
                 CurrentItem="{x:Binding FirstMedia}"
-                CurrentItemChanged="OnWrappedMediaContentsCarouselViewCurrentItemChanged"
                 HeightRequest="{x:Binding CarouselViewHeight,
                                           Mode=OneWay}"
                 HorizontalScrollBarVisibility="Never"
                 IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
                 ItemTemplate="{StaticResource MediaContentTemplate}"
                 ItemsSource="{x:Binding Medias}"
-                Loaded="OnWrappedMediaContentsCarouselViewLoaded"
-                MaximumHeightRequest="{x:Binding MaxCarouselViewHeight,
-                                                 Mode=OneWay}"
+                MaximumHeightRequest="{x:Binding MaxCarouselViewHeight}"
                 Position="{x:Binding CarouselPosition,
                                      Mode=OneWayToSource}"
                 SizeChanged="OnWrappedMediaContentsCarouselViewSizeChanged">
@@ -115,18 +112,19 @@
     <DataTemplate x:Key="AppleWrappedMediaContentsTemplate" x:DataType="vm:WrappedMediaContentsViewModel">
         <Grid>
             <CarouselView
-                CurrentItemChanged="OnWrappedMediaContentsCarouselViewCurrentItemChanged"
                 HeightRequest="{x:Binding CarouselViewHeight,
                                           Mode=OneWay}"
                 HorizontalScrollBarVisibility="Never"
                 IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
                 ItemTemplate="{StaticResource MediaContentTemplate}"
                 ItemsSource="{x:Binding Medias}"
-                Loaded="OnWrappedMediaContentsCarouselViewLoaded"
                 MaximumHeightRequest="{x:Binding MaxCarouselViewHeight,
+                                                 Mode=OneWay}"
+                MinimumHeightRequest="{x:Binding MinCarouselViewHeight,
                                                  Mode=OneWay}"
                 Position="{x:Binding CarouselPosition,
                                      Mode=OneWayToSource}"
+                PositionChanged="OnWrappedMediaContentsCarouselViewPositionChanged"
                 SizeChanged="OnWrappedMediaContentsCarouselViewSizeChanged">
                 <CarouselView.Clip>
                     <RoundRectangleGeometry CornerRadius="6" />

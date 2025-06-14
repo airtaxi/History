@@ -53,38 +53,6 @@ public partial class Content : ResourceDictionary
         });
     }
 
-    private void OnWrappedMediaContentsCarouselViewCurrentItemChanged(object sender, CurrentItemChangedEventArgs e)
-    {
-        var carouselView = sender as CarouselView;
-        if (carouselView.CurrentItem is not MediaContentViewModel mediaContentViewModel) return;
-
-        if (!mediaContentViewModel.IsTimeline)
-        {
-            Debug.WriteLine($"CarouselViewCurrentItemChanged: {carouselView.Position} / {mediaContentViewModel.Media.Uri}");
-            WeakReferenceMessenger.Default.Send(new ResizeMediaCarouselViewMessage(mediaContentViewModel.Media));
-        }
-
-#if IOS
-            carouselView.ScrollTo(carouselView.Position, animate: false);
-#endif
-    }
-
-    private void OnWrappedMediaContentsCarouselViewLoaded(object sender, EventArgs e)
-    {
-        var carouselView = sender as CarouselView;
-        if (carouselView.BindingContext is not WrappedMediaContentsViewModel viewModel) return;
-
-        var firstMedia = viewModel.FirstMedia;
-
-        if (!firstMedia.IsTimeline)
-        {
-            carouselView.Dispatcher.Dispatch(() =>
-            {
-                WeakReferenceMessenger.Default.Send(new ResizeMediaCarouselViewMessage(firstMedia.Media));
-            });
-        }
-    }
-
     private void OnWrappedMediaContentsCarouselViewSizeChanged(object sender, EventArgs e)
     {
         var carouselView = sender as CarouselView;
@@ -94,5 +62,11 @@ public partial class Content : ResourceDictionary
 
         var viewModel = carouselView.BindingContext as WrappedMediaContentsViewModel;
         viewModel.UpdateCarouselViewHeight();
+    }
+
+    private void OnWrappedMediaContentsCarouselViewPositionChanged(object sender, PositionChangedEventArgs e)
+    {
+        var carouselView = sender as CarouselView;
+        carouselView.ScrollTo(carouselView.Position, animate: false);
     }
 }

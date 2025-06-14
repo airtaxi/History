@@ -18,7 +18,15 @@
             Loaded="OnImageLoaded"
             Source="{x:Binding Uri,
                                Mode=OneTime}"
-            Unloaded="OnImageUnloaded"
+            VerticalOptions="{x:Binding VerticalContentOptions}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="AppleImageTemplate" x:DataType="vm:ImageViewModel">
+        <Image
+            Aspect="{x:Binding Aspect}"
+            HorizontalOptions="{x:Binding HorizontalContentOptions}"
+            Source="{x:Binding Uri,
+                               Mode=OneTime}"
             VerticalOptions="{x:Binding VerticalContentOptions}" />
     </DataTemplate>
 
@@ -39,6 +47,7 @@
 
     <vm:MediaTemplateSelector
         x:Key="MediaTemplateSelector"
+        AppleImageTemplate="{StaticResource AppleImageTemplate}"
         FullScreenImageTemplate="{StaticResource FullScreenImageTemplate}"
         ImageTemplate="{StaticResource ImageTemplate}"
         VideoTemplate="{StaticResource VideoTemplate}" />

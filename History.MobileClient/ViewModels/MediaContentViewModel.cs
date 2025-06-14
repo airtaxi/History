@@ -98,10 +98,9 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
 
     private void SetMediaAndOverlay()
     {
-        Media = new ImageViewModel(Utils.GenerateMediaUri((IsTimeline || MediaContent.IsVideo) ? MediaContent.ThumbnailMediaId : MediaContent.MediaId))
+        Media = new ImageViewModel(Utils.GenerateMediaUri((IsTimeline || MediaContent.IsVideo) ? MediaContent.ThumbnailMediaId : MediaContent.MediaId), IsTimeline)
         {
-            Aspect = IsTimeline ? Aspect.AspectFill : Aspect.AspectFit,
-            ResizeParentCarouselViewWhenSizeChanged = !IsTimeline
+            Aspect = IsTimeline ? Aspect.AspectFill : Aspect.AspectFit
         };
         ImageMedia = Media;
         IsOverlayVisible = MediaContent.IsVideo;

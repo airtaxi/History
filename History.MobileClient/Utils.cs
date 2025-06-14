@@ -75,9 +75,12 @@ public static class Utils
             else if (content is MediaContent mediaContent)
             {
                 FlushTextAndProfileContents();
+#if ANDROID
                 mediaContents.Add(mediaContent);
-                //if (isTimeline) mediaContents.Add(mediaContent);
-                //else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents, false));
+#else
+                if (isTimeline) mediaContents.Add(mediaContent);
+                else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents, isTimeline, isParentPost));
+#endif
             }
         }
 

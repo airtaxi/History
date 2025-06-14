@@ -8,6 +8,7 @@ using FFImageLoading.Maui;
 using FFImageLoading.Maui.Platform;
 using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Handlers;
 
 namespace History.MobileClient.Resources.Styles;
 
@@ -15,7 +16,6 @@ public partial class Media : ResourceDictionary
 {
     private static readonly ConcurrentDictionary<ContentView, IViewHandler> MediaElementHandlerMap = [];
     private static readonly ConcurrentDictionary<object, Size> ImageSizeMap = [];
-    private static IMediaViewModel s_lastLoadedMediaViewModel;
 
     public Media() => InitializeComponent();
 
@@ -27,9 +27,9 @@ public partial class Media : ResourceDictionary
         carouselView.HeightRequest = newHeight;
     }
 
-    private static CarouselView FindCarouselView(Element element)
+    private static CarouselView FindCarouselView(View view)
     {
-        var parent = element.Parent;
+        var parent = view.Parent;
         while (parent != null && parent is not CarouselView) parent = parent.Parent;
 
         return parent as CarouselView;
@@ -142,25 +142,7 @@ public partial class Media : ResourceDictionary
         var viewModel = image.BindingContext as ImageViewModel;
         if (viewModel == null) return;
 
-        Debug.WriteLine($"IMAGE Loaded: {viewModel.Uri}");
-
-        WeakReferenceMessenger.Default.UnregisterAll(sender);
-        WeakReferenceMessenger.Default.Register<ResizeMediaCarouselViewMessage>(sender, async (s, e) =>
-        {
-            if (e.Value == viewModel && s_lastLoadedMediaViewModel != viewModel)
-            {
-                Debug.WriteLine($"ResizeMediaCarouselViewMessage: {viewModel.Uri}");
-                s_lastLoadedMediaViewModel = viewModel;
-                await Task.Delay(100);
-                ResizeImage(sender);
-            }
-        });
-    }
-
-    private void OnImageUnloaded(object sender, EventArgs e)
-    {
-        var image = sender as CachedImage;
-        WeakReferenceMessenger.Default.UnregisterAll(image);
+        ResizeImage(sender);
     }
 
     private void OnImageFinished(object sender, CachedImageEvents.FinishEventArgs e)
@@ -173,8 +155,6 @@ public partial class Media : ResourceDictionary
         var viewModel = image.BindingContext as ImageViewModel;
         if (viewModel == null) return;
 
-        Debug.WriteLine($"IMAGE Finished: {viewModel.Uri} / {s_lastLoadedMediaViewModel == viewModel}");
-
         ResizeImage(sender);
     }
 
@@ -184,6 +164,7 @@ public partial class Media : ResourceDictionary
         image.Dispatcher.Dispatch(() =>
         {
             var nativeImageView = (image?.Handler as CachedImageHandler)?.PlatformView;
+
             int imageWidth = 0, imageHeight = 0;
 
 #if ANDROID
@@ -193,6 +174,7 @@ public partial class Media : ResourceDictionary
                 imageWidth = bitmap.Width;
                 imageHeight = bitmap.Height;
             }
+
 #elif IOS
             var uiImage = nativeImageView.Image;
             if (uiImage == null) return;
@@ -200,22 +182,21 @@ public partial class Media : ResourceDictionary
             imageWidth = (int)(uiImage.Size.Width * uiImage.CurrentScale);
             imageHeight = (int)(uiImage.Size.Height * uiImage.CurrentScale);
 #endif
-
             if (imageWidth <= 0 || imageHeight <= 0) return;
+
             var aspectRatio = (double)imageWidth / imageHeight;
 
             var viewModel = image?.BindingContext as ImageViewModel;
 
-            var carouselView = FindCarouselView(image);
-            if (carouselView == null) return;
+            if(viewModel.CarouselView == null)
+            {
+                var carouselView = FindCarouselView(image);
+                if (carouselView == null) return;
 
-            var parentWidth = carouselView.Width;
-            var newHeight = parentWidth / aspectRatio;
-            viewModel.ImageWidth = imageWidth;
-            viewModel.ImageHeight = imageHeight;
-            viewModel.ResizeCarouselView(carouselView, imageWidth, imageHeight);
+                viewModel.ResizeCarouselView(carouselView, image, imageWidth, imageHeight);
 
-            image.InvalidateMeasure();
+                image.InvalidateMeasure();
+            }
         });
     }
 }

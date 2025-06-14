@@ -207,7 +207,6 @@ public partial class TimelinePage : ContentPage
     {
         var collectionView = sender as CollectionView;
         var scrollOffsetY = collectionView.GetScrollOffsetY();
-        Debug.WriteLine($"[TL] Scrolled to {scrollOffsetY}");
         if (scrollOffsetY > 0) ScrollToTopBorder.IsVisible = true;
         else ScrollToTopBorder.IsVisible = false;
     }
