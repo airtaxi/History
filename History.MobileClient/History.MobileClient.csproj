@@ -143,6 +143,9 @@
 		<MauiXaml Update="Pages\FullScreenMediaViewerPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Pages\KakaoStoryLoginPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Pages\InAppBrowserPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
@@ -240,6 +243,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Update="Pages\KakaoStoryLoginPage.xaml.cs">
+	    <DependentUpon>KakaoStoryLoginPage.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Pages\PostInteractionsPage.xaml.cs">
 	    <DependentUpon>PostInteractionsPage.xaml</DependentUpon>
 	  </Compile>
