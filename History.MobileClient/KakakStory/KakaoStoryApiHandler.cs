@@ -1,7 +1,6 @@
 ﻿#pragma warning disable SYSLIB0014 // Type or member is obsolete
 using System.Net;
 using System.Text;
-using Android.Gms.Common.Apis;
 using History.Commons;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
