@@ -244,7 +244,7 @@ public partial class UserPage : ContentPage
     }
 
     private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new SettingsPage(_viewModel.User));
-    private async void OnWritePostImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
+    private async void OnWritePostBorderTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
 
     private void OnMainCollectionViewScrolled(object sender, ItemsViewScrolledEventArgs e)
     {

@@ -130,6 +130,9 @@
             StrokeThickness="0"
             VerticalOptions="End"
             WidthRequest="60">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnWritePostBorderTapped" />
+            </Border.GestureRecognizers>
             <Border.Shadow>
                 <Shadow
                     Brush="Black"
@@ -141,9 +144,6 @@
                 <RoundRectangle CornerRadius="30" />
             </Border.StrokeShape>
             <Image HeightRequest="44" WidthRequest="44">
-                <Image.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnWritePostImageTapped" />
-                </Image.GestureRecognizers>
                 <Image.Source>
                     <FontImageSource
                         FontFamily="MaterialSharp"
