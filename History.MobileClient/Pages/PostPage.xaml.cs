@@ -183,6 +183,7 @@ public partial class PostPage : ContentPage
                 await ViewModel.RefreshAsync();
                 Dispatcher.Dispatch(async () =>
                 {
+                    await Task.Delay(100);
                     if (ViewModel.IsWideMode) await CommentsScrollToEnd(TabletCommentScrollView);
                     else await CommentsScrollToEnd(PhoneScrollView);
                 });
