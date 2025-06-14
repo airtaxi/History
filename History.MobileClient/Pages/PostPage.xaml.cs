@@ -181,12 +181,11 @@ public partial class PostPage : ContentPage
                 CommentTextContentView.UnfocusEditor();
 
                 await ViewModel.RefreshAsync();
-                if (!ViewModel.IsWideMode)
+                Dispatcher.Dispatch(async () =>
                 {
-                    await Task.Delay(400);
-                    await CommentsScrollToEnd(PhoneScrollView);
-                }
-                else await CommentsScrollToEnd(TabletCommentScrollView);
+                    if (ViewModel.IsWideMode) await CommentsScrollToEnd(TabletCommentScrollView);
+                    else await CommentsScrollToEnd(PhoneScrollView);
+                });
             }
         }
         finally { MainActivityIndicator.IsRunning = false; }
