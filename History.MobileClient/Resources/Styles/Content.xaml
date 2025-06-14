@@ -76,12 +76,15 @@
             <CarouselView
                 CurrentItem="{x:Binding FirstMedia}"
                 CurrentItemChanged="OnWrappedMediaContentsCarouselViewCurrentItemChanged"
-                HeightRequest="400"
+                HeightRequest="{x:Binding CarouselViewHeight,
+                                          Mode=OneWay}"
                 HorizontalScrollBarVisibility="Never"
                 IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
                 ItemTemplate="{StaticResource MediaContentTemplate}"
                 ItemsSource="{x:Binding Medias}"
                 Loaded="OnWrappedMediaContentsCarouselViewLoaded"
+                MaximumHeightRequest="{x:Binding MaxCarouselViewHeight,
+                                                 Mode=OneWay}"
                 Position="{x:Binding CarouselPosition,
                                      Mode=OneWayToSource}"
                 SizeChanged="OnWrappedMediaContentsCarouselViewSizeChanged">
@@ -113,12 +116,15 @@
         <Grid>
             <CarouselView
                 CurrentItemChanged="OnWrappedMediaContentsCarouselViewCurrentItemChanged"
-                HeightRequest="400"
+                HeightRequest="{x:Binding CarouselViewHeight,
+                                          Mode=OneWay}"
                 HorizontalScrollBarVisibility="Never"
                 IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
                 ItemTemplate="{StaticResource MediaContentTemplate}"
                 ItemsSource="{x:Binding Medias}"
                 Loaded="OnWrappedMediaContentsCarouselViewLoaded"
+                MaximumHeightRequest="{x:Binding MaxCarouselViewHeight,
+                                                 Mode=OneWay}"
                 Position="{x:Binding CarouselPosition,
                                      Mode=OneWayToSource}"
                 SizeChanged="OnWrappedMediaContentsCarouselViewSizeChanged">

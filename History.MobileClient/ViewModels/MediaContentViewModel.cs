@@ -24,6 +24,8 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
     [ObservableProperty]
     public partial IMediaViewModel Media { get; private set; }
 
+    public IMediaViewModel ImageMedia { get; private set; }
+
     private readonly List<IMediaViewModel> _fullScreenMedias;
     private readonly IMediaViewModel _currentMedia;
 
@@ -101,6 +103,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
             Aspect = IsTimeline ? Aspect.AspectFill : Aspect.AspectFit,
             ResizeParentCarouselViewWhenSizeChanged = !IsTimeline
         };
+        ImageMedia = Media;
         IsOverlayVisible = MediaContent.IsVideo;
     }
 

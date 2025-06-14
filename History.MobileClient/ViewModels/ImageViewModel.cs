@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using History.MobileClient.DataTypes;
 
 namespace History.MobileClient.ViewModels;
 
@@ -27,5 +29,18 @@ public partial class ImageViewModel(string uri) : ObservableObject, IMediaViewMo
 
     [ObservableProperty]
     public partial bool FullScreenSwipeable { get; set; } = true;
+
+    public CarouselView CarouselView;
+    public int ImageWidth { get; set; }
+    public int ImageHeight { get; set; }
+
+    public void ResizeCarouselView(CarouselView carouselView, int imageWidth, int imageHeight)
+    {
+        CarouselView = carouselView;
+        ImageWidth = imageWidth;
+        ImageHeight = imageHeight;
+
+        WeakReferenceMessenger.Default.Send(new ResizeCarouselViewMessage(this));
+    }
 }
 
