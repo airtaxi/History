@@ -91,5 +91,8 @@ public partial class Content : ResourceDictionary
         if (carouselView.Clip is not RoundRectangleGeometry clip) return;
 
         clip.Rect = new Rect(0, 0, carouselView.Width, carouselView.Height);
+
+        var viewModel = carouselView.BindingContext as WrappedMediaContentsViewModel;
+        viewModel.UpdateCarouselViewHeight();
     }
 }
