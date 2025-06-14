@@ -12,8 +12,9 @@ internal class MediaTemplateSelector : DataTemplateSelector
 #if IOS
         if (item is ImageViewModel imageViewModel)
         {
-            if (!imageViewModel.IsTimeline) return AppleImageTemplate;
-            else return imageViewModel.IsFullScreen ? FullScreenImageTemplate : ImageTemplate;
+            if (imageViewModel.IsFullScreen) return FullScreenImageTemplate;
+            else if (imageViewModel.IsTimeline) return ImageTemplate;
+            else return AppleImageTemplate;
         }
 #else
         if (item is ImageViewModel imageViewModel) return imageViewModel.IsFullScreen ? FullScreenImageTemplate : ImageTemplate;
