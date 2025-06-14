@@ -14,19 +14,20 @@
         <vm:MentionsViewModel x:Name="ViewModel" />
     </ContentView.BindingContext>
 
-    <mention:MentionEditor
-        x:Name="MainMentionEditor"
-        AutoSize="TextChanges"
-        BackgroundColor="{AppThemeBinding Light=#FFFFFF,
-                                          Dark=#000000}"
-        HorizontalOptions="Fill"
-        ImageInputCommand="{x:Binding ImageInputCommand}"
-        IsSuggestionsPopupVisible="{x:Binding IsDisplayingMentions}"
-        MentionSearchCommand="{x:Binding MentionSearchCommand}"
-        MentionSelectedBackgroundColor="{StaticResource Primary}"
-        MentionSelectedTextColor="White"
-        MentionTextColor="{StaticResource Primary}"
-        Placeholder="무슨 일이 일어나고 있나요?"
-        TextChanged="OnMainMentionEditorTextChanged"
-        VerticalOptions="Start" />
+    <Grid Padding="4,0,4,0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#000000}">
+        <mention:MentionEditor
+            x:Name="MainMentionEditor"
+            AutoSize="TextChanges"
+            BackgroundColor="Transparent"
+            HorizontalOptions="Fill"
+            ImageInputCommand="{x:Binding ImageInputCommand}"
+            IsSuggestionsPopupVisible="{x:Binding IsDisplayingMentions}"
+            MentionSearchCommand="{x:Binding MentionSearchCommand}"
+            MentionSelectedBackgroundColor="{StaticResource Primary}"
+            MentionSelectedTextColor="White"
+            MentionTextColor="{StaticResource Primary}"
+            Placeholder="무슨 일이 일어나고 있나요?"
+            TextChanged="OnMainMentionEditorTextChanged"
+            VerticalOptions="Start" />
+    </Grid>
 </ContentView>
