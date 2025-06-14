@@ -257,7 +257,7 @@ public partial class EditPostPage : ContentPage
                 sizeExceed = true;
                 continue;
             }
-            _attachmentViewModels.Add(new MediaAttachmentViewModel(video.FileName, video.Bytes));
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(video.FileName, video.Bytes, true));
         }
 #endif
 
