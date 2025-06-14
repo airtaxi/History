@@ -18,6 +18,8 @@ using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 using UraniumUI.Icons.MaterialSymbols;
+using System.Net;
+using History.MobileClient.KakaoStory;
 
 
 namespace History.MobileClient.Pages;
@@ -372,10 +374,140 @@ public partial class EditPostPage : ContentPage
                     if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
-                        if (!_isShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
-                        TimelinePage.ShouldRefresh = RefreshSwitch.IsToggled;
-                        UserPage.ShouldRefresh = RefreshSwitch.IsToggled;
-                        await App.PopAsync();
+                        void Pop()
+                        {
+                            Dispatcher.Dispatch(async () =>
+                            {
+                                TimelinePage.ShouldRefresh = RefreshSwitch.IsToggled;
+                                UserPage.ShouldRefresh = RefreshSwitch.IsToggled;
+                                await App.PopAsync();
+                            });
+                        }
+
+                        if (!_isShare)
+                        {
+                            Shared.LastUsedPostDiscoveryOption = discoveryOption;
+
+                            var shouldUpload = await DisplayAlert("안내", "게시글을 카카오스토리에도 게시하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+                            if (!shouldUpload)
+                            {
+                                Pop();
+                                return;
+                            }
+
+                            MainActivityIndicator.IsRunning = true;
+                            bool loginNeeded = true;
+                            var cookies = Configuration.GetValue<List<Cookie>>("KakaoStoryCookies");
+                            if (cookies != null)
+                            {
+                                var cookieContainer = new CookieContainer();
+                                foreach (var cookie in cookies) cookieContainer.Add(cookie);
+
+                                KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
+                                try
+                                {
+                                    await KakaoStoryApiHandler.GetFriends();
+                                    loginNeeded = false;
+                                }
+                                catch (Exception) { }
+                            }
+
+                            if (loginNeeded)
+                            {
+                                var shouldLogin = await DisplayAlert("안내", "카카오스토리 로그인이 필요합니다. 로그인하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+                                if (!shouldLogin)
+                                {
+                                    Pop();
+                                    return;
+                                }
+
+                                var kakaoStoryLoginPage = new KakaoStoryLoginPage();
+                                await App.PushModalAsync(kakaoStoryLoginPage);
+
+                                cookies = await kakaoStoryLoginPage.GetResultAsync();
+
+                                if (cookies == null)
+                                {
+                                    await DisplayAlert("오류", "카카오스토리 로그인에 실패하였습니다.", Constants.PromptOk);
+                                    Pop();
+                                    return;
+                                }
+
+                                var cookieContainer = new CookieContainer();
+                                foreach (var cookie in cookies) cookieContainer.Add(cookie);
+
+                                KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
+                                Configuration.SetValue("KakaoStoryCookies", cookies);
+                            }
+
+                            try
+                            {
+                                var text = MainTextContent.MentionEditor.Text;
+                                text += $"\n\n\n이 게시글은 대체 SNS인 히스토리를 통하여 작성되었습니다.\n히스토리 디스코드 채널에 참여하여 히스토리 베타에 참여해보세요.\n베타 참여 디스코드: {Constants.DiscordInviteUrl}";
+                                var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
+
+                                KakaoStoryApiHandler.DataType.MediaData mediaData;
+                                if (_attachmentViewModels.Count > 0)
+                                {
+                                    mediaData = new();
+                                    var medias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
+                                    foreach (var attachment in _attachmentViewModels)
+                                    {
+                                        var media = new KakaoStoryApiHandler.DataType.MediaData.MediaObject();
+                                        if (!attachment.IsVideo)
+                                        {
+                                            try
+                                            {
+                                                var key = await KakaoStoryApiHandler.UploadImage(attachment.FilePath);
+                                                media.media_path = key;
+                                                media.media_type = "image";
+                                            }
+                                            catch(Exception exception)
+                                            {
+                                                var message = exception.Message;
+                                                var stackTrace = exception.StackTrace;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            File.WriteAllBytes(attachment.FilePath, attachment.Data);
+                                            var key = await KakaoStoryApiHandler.UploadVideo(attachment.FilePath);
+                                            media.media_path = key;
+                                            await KakaoStoryApiHandler.WaitForVideoUploadFinish(key);
+                                            media.media_type = "video";
+                                        }
+                                        medias.Add(media);
+                                    }
+                                    mediaData.media = medias;
+
+                                    string mediaType = null;
+                                    var imageExists = _attachmentViewModels.Any(x => !x.IsVideo);
+                                    var videoExists = _attachmentViewModels.Any(x => x.IsVideo);
+                                    if (imageExists && videoExists)
+                                        mediaType = "mixed";
+                                    else if (imageExists)
+                                        mediaType = "image";
+                                    else if (videoExists)
+                                        mediaType = "video";
+                                    mediaData.media_type = mediaType;
+                                }
+                                else mediaData = null;
+
+                                string permission = "F";
+                                if (discoveryOption == DiscoveryOption.Everyone) permission = "A";
+                                else if (discoveryOption == DiscoveryOption.OnlyMe) permission = "M";
+
+                                string scrap = null;
+                                if (mediaData == null && _externalUrlContentViewModel != null) scrap = await KakaoStoryApiHandler.GetScrapData(_externalUrlContentViewModel.ExternalUrlContent.SourceUrl);
+
+                                await KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, true, true, null, null, scrap, false, null, null);
+                            }
+                            catch (Exception)
+                            {
+                                await DisplayAlert("오류", "카카오스토리 API 오류가 발생하였습니다.", Constants.PromptOk);
+                            }
+                        }
+                        Pop();
                     }
                 }
 		    }

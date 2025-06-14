@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using History.Commons.DataTypes.Contents;
+using SharpCompress.Common;
 
 namespace History.MobileClient.ViewModels;
 
@@ -7,6 +8,7 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
 {
     public byte[] Data { get; }
     public MediaContent ServerContent { get; }
+    public bool IsVideo { get; }
     public bool IsUpload => ServerContent == null;
     public string FileName { get; }
     public ImageSource ImageSource { get; }
@@ -17,7 +19,7 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
 
     public bool IsDescriptionEmpty => string.IsNullOrEmpty(Description);
 
-    private readonly string _filePath = Path.GetTempFileName();
+    public string FilePath { get; }
 
     public MediaAttachmentViewModel(MediaContent serverContent)
     {
@@ -32,19 +34,21 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
 
     public MediaAttachmentViewModel(string fileName, byte[] imageBytes, bool isVideo = false)
     {
+        FilePath = Path.GetTempPath() + "_" + fileName;
         Data = imageBytes;
+        IsVideo = isVideo;
         FileName = fileName;
         if (!isVideo)
         {
-            File.WriteAllBytes(_filePath, imageBytes);
-            ImageSource = ImageSource.FromFile(_filePath);
+            File.WriteAllBytes(FilePath, imageBytes);
+            ImageSource = ImageSource.FromFile(FilePath);
         }
         else ImageSource = ImageSource.FromFile("video.png");
     }
 
     public void Dispose()
     {
-        File.Delete(_filePath);
+        if (File.Exists(FilePath)) File.Delete(FilePath);
         GC.SuppressFinalize(this);
     }
 }

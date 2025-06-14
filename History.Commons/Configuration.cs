@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Nodes;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Net;
 
 namespace History.Commons;
 
@@ -189,6 +190,7 @@ public class Configuration
 [JsonSerializable(typeof(nint?))]
 [JsonSerializable(typeof(short?))]
 [JsonSerializable(typeof(ushort?))]
+[JsonSerializable(typeof(List<Cookie>))]
 [JsonSerializable(typeof(List<bool>))]
 [JsonSerializable(typeof(List<int>))]
 [JsonSerializable(typeof(List<string>))]
