@@ -144,8 +144,9 @@ public partial class SettingsPage : ContentPage
 #endif
     }
 
-    private void OnKakaoStoryLoginGridTapped(object sender, TappedEventArgs e)
+    private async void OnKakaoStoryLoginGridTapped(object sender, TappedEventArgs e)
     {
         var page = new KakaoStoryLoginPage();
+        await App.PushModalAsync(page);
     }
 }

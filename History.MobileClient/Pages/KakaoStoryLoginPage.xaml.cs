@@ -1,4 +1,5 @@
-using System.Net;
+﻿using System.Net;
+using CommunityToolkit.Maui.Alerts;
 using History.MobileClient.Helpers;
 using History.MobileClient.KakaoStory;
 
@@ -15,7 +16,8 @@ public partial class KakaoStoryLoginPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        BrowserWebView.Source = "https://accounts.kakao.com/logout?continue=https://story.kakao.com/";
+        BrowserWebView.Source = "https://accounts.kakao.com/logout?continue=https%3A%2F%2Faccounts.kakao.com%2Flogin%2F%3Fcontinue%3Dhttps%253A%252F%252Fstory.kakao.com";
+        Toast.Make("간편 로그인은 지원하지 않습니다. 계정을 입력하여 로그인해주세요").Show();
     }
 
     protected override void OnDisappearing()
@@ -56,7 +58,6 @@ public partial class KakaoStoryLoginPage : ContentPage
                 if (setResult) await App.PopModalAsync();
             }
             catch { }
-
         }
     }
 
