@@ -115,9 +115,12 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         if (notificationResult.IsFailure) return notificationResult.CastFailure();
 
         // Delete previous notifications
-        //await _notificationCollection.DeleteManyAsync(x => x.AssociatedId == associatedId && x.Type == type);
+        var firstNotification = notificationResult.Value.FirstOrDefault();
+        if (firstNotification == null || !firstNotification.Recipients.Any()) return Result.Success();
 
-        foreach(var notification in notificationResult.Value)
+        await _notificationCollection.DeleteManyAsync(x => x.AssociatedId == associatedId && x.Type == type);
+
+        foreach (var notification in notificationResult.Value)
         {
             var recipients = notification.Recipients;
             var title = notification.Title;
