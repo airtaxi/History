@@ -143,4 +143,9 @@ public partial class SettingsPage : ContentPage
         AppleSwipeGestureHelper.ApplyToPage(this);
 #endif
     }
+
+    private void OnKakaoStoryLoginGridTapped(object sender, TappedEventArgs e)
+    {
+        var page = new KakaoStoryLoginPage();
+    }
 }
