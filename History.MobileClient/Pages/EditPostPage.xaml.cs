@@ -489,11 +489,6 @@ public partial class EditPostPage : ContentPage
                                                 media.media_path = key;
                                                 media.media_type = "image";
                                             }
-                                            catch(Exception exception)
-                                            {
-                                                var message = exception.Message;
-                                                var stackTrace = exception.StackTrace;
-                                            }
                                             finally
                                             {
                                                 if (filePath != attachment.FilePath)
