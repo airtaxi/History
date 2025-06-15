@@ -98,7 +98,7 @@
 	</ItemGroup>
 		
 	<ItemGroup>
-	  <AndroidEnvironment Include="Platforms\Android\GarbageCollector.config" />
+	  <AndroidEnvironment Include="Platforms\Android\GarbageCollector.txt" />
 	</ItemGroup>
 
 	<ItemGroup>
