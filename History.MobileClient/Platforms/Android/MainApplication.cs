@@ -11,6 +11,11 @@ using Android.Runtime;
 // Needed for Picking photo/video
 [assembly: UsesPermission(Android.Manifest.Permission.WriteExternalStorage)]
 
+// Neeed for self-update
+[assembly: UsesPermission(Android.Manifest.Permission.InstallPackages)]
+[assembly: UsesPermission(Android.Manifest.Permission.RequestInstallPackages)]
+[assembly: UsesPermission(Android.Manifest.Permission.RequestDeletePackages)]
+[assembly: UsesPermission(Android.Manifest.Permission.DeletePackages)]
 
 namespace History.MobileClient;
 [Application]
