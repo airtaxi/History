@@ -52,6 +52,11 @@ public class Post
     public DateTime? ModifiedAt { get; set; }
 
     /// <summary>
+    /// If true, the post will be displayed on the seperate menu
+    /// </summary>
+    public bool IsPublicPost { get; set; }
+
+    /// <summary>
     /// The data used when searching for this post.
     /// </summary>
     public string SearchIndex { get; set; } = string.Empty;
