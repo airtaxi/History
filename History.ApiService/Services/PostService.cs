@@ -755,7 +755,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         {
             UserId = requesterId,
             Contents = originalPost.Contents,
-            CreatedAt = originalPost.CreatedAt,
+            CreatedAt = DateTime.UtcNow,
             DiscoveryOption = DiscoveryOption.Everyone,
             DiscoveryOptionSelectedUserIds = [],
             ParentPostId = postId,
