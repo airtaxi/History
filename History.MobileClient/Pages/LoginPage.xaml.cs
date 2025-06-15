@@ -1,11 +1,4 @@
-﻿#if ANDROID
-using System.Diagnostics;
-using Android.App;
-using Android.Content;
-using Android.Content.PM;
-using CommunityToolkit.Maui.Alerts;
-#endif
-
+﻿using System.Diagnostics;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
@@ -14,6 +7,13 @@ using History.Commons.Enums;
 using History.MobileClient.Auth;
 using History.MobileClient.DataTypes;
 using Result = History.Commons.Result;
+
+#if ANDROID
+using Android.App;
+using Android.Content;
+using Android.Content.PM;
+using CommunityToolkit.Maui.Alerts;
+#endif
 
 namespace History.MobileClient.Pages;
 
