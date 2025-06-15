@@ -191,7 +191,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         // Add pagination filter if a reference post ID is provided
         if (!string.IsNullOrEmpty(fromPostId))
         {
-            var fromPost = await _publicPostCollection.Find(p => p.Id == fromPostId).FirstOrDefaultAsync();
+            var fromPost = await _publicPostCollection.Find(p => p.ParentPostId == fromPostId).FirstOrDefaultAsync();
             if (fromPost != null)
             {
                 filter &= Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
