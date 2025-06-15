@@ -468,8 +468,8 @@ public partial class EditPostPage : ContentPage
                                                 var fileName = Path.GetFileNameWithoutExtension(filePath) + ".png";
                                                 filePath = Path.GetTempPath() + "c_" + fileName;
                                                 using var stream = File.OpenRead(attachment.FilePath);
+                                                using var image = PlatformImage.FromStream(stream);
                                                 var saveStream = File.Create(filePath);
-                                                var image = PlatformImage.FromStream(stream);
                                                 if (image == null) continue;
                                                 else
                                                 {
