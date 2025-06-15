@@ -117,20 +117,25 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         var firstNotification = notificationResult.Value.FirstOrDefault();
         if (firstNotification == null) return Result.Success();
 
-        if ((firstNotification.Type == NotificationType.Comment
-            || firstNotification.Type == NotificationType.CommentMention
-            || firstNotification.Type == NotificationType.Share
-            || firstNotification.Type == NotificationType.Repost
-            || firstNotification.Type == NotificationType.PostReaction)
+        if ((type == NotificationType.Comment
+            || type == NotificationType.CommentMention
+            || type == NotificationType.Share
+            || type == NotificationType.Repost
+            || type == NotificationType.PostReaction)
             && firstNotification.Data.TryGetValue("PostId", out var postId))
         {
-            var filter = Builders<Notification>.Filter.Eq("Data.PostId", postId)
-                & Builders<Notification>.Filter.Eq(n => n.Type, type);
+            var filter = Builders<Notification>.Filter.Eq("Data.PostId", postId);
+            if (type == NotificationType.CommentMention || type == NotificationType.CommentMention)
+            {
+                filter &= Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.CommentMention)
+                    | Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.Comment);
+            }
+            else filter &= Builders<Notification>.Filter.Eq(n => n.Type, type);
             var update = Builders<Notification>.Update.PullAll(x => x.Recipients, firstNotification.Recipients);
             await _notificationCollection.UpdateManyAsync(filter, update);
         }
 
-        if (firstNotification.Type == NotificationType.CommentLike && firstNotification.Data.TryGetValue("CommentId", out var commentId))
+        if (type == NotificationType.CommentLike && firstNotification.Data.TryGetValue("CommentId", out var commentId))
         {
             var filter = Builders<Notification>.Filter.Eq("Data.CommentId", commentId)
                 & Builders<Notification>.Filter.Eq(n => n.Type, type);
