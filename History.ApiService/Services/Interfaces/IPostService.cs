@@ -24,6 +24,15 @@ public interface IPostService
     public Task<Result<PostReaction>> GetPostReactionByIdAsync(string postReactionId);
 
     /// <summary>
+    /// Get public posts of user
+    /// </summary>
+    /// <param name="userId">The id of user to get public posts</param>
+    /// <param name="fromPostId">The id of post to start from</param>
+    /// <param name="limit">The limit of posts to get</param>
+    /// <returns>A task that represents the asynchronous operation. with result of posts</returns>
+    public Task<Result<List<Post>>> GetPublicPostsAsync(string userId, string fromPostId = null, int limit = 10);
+
+    /// <summary>
     /// Get timeline posts of user.
     /// </summary>
     /// <param name="userId">The id of user to get timeline posts</param>
@@ -133,6 +142,14 @@ public interface IPostService
     public Task<Result> FillExternalUrlContentAsync(ExternalUrlContent externalUrlContent);
 
     /// <summary>
+    /// Create public post from existing post
+    /// </summary>
+    /// <param name="postId">The id of the post to create public post from</param>
+    /// <param name="requesterId">The id of the user who requests to create public post</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the public post creation.</returns>
+    public Task<Result> WritePublicPostAsync(string postId, string requesterId);
+
+    /// <summary>
     /// Checks if a user has access to a specific post asynchronously.
     /// </summary>
     /// <param name="postId">Identifies the post for which access is being verified.</param>
@@ -163,7 +180,6 @@ public interface IPostService
     /// <param name="requesterId">Identifies the user making the request for the post responses.</param>
     /// <returns>A task that resolves to a result containing a list of post response data transfer objects.</returns>
     public Task<Result<List<PostResponseDto>>> GeneratePostResponseDtosAsync(List<Post> posts, string requesterId);
-
 
     /// <summary>
     /// Handles the withdrawal of a user, deleting their posts and reactions.

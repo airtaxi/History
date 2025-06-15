@@ -17,6 +17,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     private readonly IMongoCollection<CommentLike> _commentLikeCollection = database.GetCollection<CommentLike>("CommentLikes");
 
     private readonly IMongoCollection<Post> _postCollection = database.GetCollection<Post>("Posts");
+    private readonly IMongoCollection<Post> _publicPostCollection = database.GetCollection<Post>("PublicPosts");
     private readonly IMongoCollection<IgnoredPost> _ignoredPostCollection = database.GetCollection<IgnoredPost>("IgnoredPosts");
     private readonly IMongoCollection<PostReaction> _postReactionCollection = database.GetCollection<PostReaction>("PostReactions");
 
@@ -168,6 +169,41 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         }
 
         return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<List<Post>>> GetPublicPostsAsync(string requesterId, string fromPostId = null, int limit = 10)
+    {
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
+        // Get IDs of user's friends and add the user's own ID
+        var bannedUserIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
+        var bannedUserIds = bannedUserIdsResult.Value;
+
+        var ignoredPostIds = await _ignoredPostCollection
+                .Find(i => i.UserId == requesterId)
+                .Project(i => i.PostId)
+                .ToListAsync();
+
+        // Build the filter to get timeline posts
+        var filter = Builders<Post>.Filter.Nin(p => p.UserId, bannedUserIds) & Builders<Post>.Filter.Nin(p => p.Id, ignoredPostIds);
+
+        // Add pagination filter if a reference post ID is provided
+        if (!string.IsNullOrEmpty(fromPostId))
+        {
+            var fromPost = await _publicPostCollection.Find(p => p.Id == fromPostId).FirstOrDefaultAsync();
+            if (fromPost != null)
+            {
+                filter &= Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
+            }
+        }
+
+        // Retrieve and return posts sorted by creation time (newest first)
+        return await _publicPostCollection
+            .Find(filter)
+            .Sort(Builders<Post>.Sort.Descending(p => p.CreatedAt))
+            .Limit(limit)
+            .ToListAsync();
     }
 
     /// <inheritdoc />
@@ -519,6 +555,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Delete the post from the database
         await _postCollection.DeleteOneAsync(p => p.Id == postId);
+        await _publicPostCollection.DeleteOneAsync(p => p.ParentPostId == postId);
 
         // Delete reposts of this post from the database
         await _postCollection.DeleteManyAsync(p => p.ParentPostId == postId && p.IsRepost);
@@ -696,6 +733,50 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     }
 
     /// <inheritdoc />
+    public async Task<Result> WritePublicPostAsync(string postId, string requesterId)
+    {
+        var originalPostResult = await GetPostByIdAsync(postId);
+        if (originalPostResult.IsFailure) return originalPostResult.CastFailure();
+
+        var originalPost = originalPostResult.Value;
+        if (originalPost.UserId != requesterId) return (ErrorType.Forbidden, "게시글을 작성한 사용자가 아닙니다.");
+        else if (originalPost.IsRepost) return (ErrorType.BadRequest, "리포스트된 게시글은 홍보 게시글로 만들 수 없습니다.");
+        else if (originalPost.ParentPostId != null) return (ErrorType.BadRequest, "공유된 게시글은 홍보 게시글로 만들 수 없습니다.");
+
+        var recentPublicPost = await _publicPostCollection
+            .Find(p => p.UserId == requesterId)
+            .SortByDescending(p => p.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (recentPublicPost != null && (DateTime.UtcNow - recentPublicPost.CreatedAt).TotalDays < 1)
+            return (ErrorType.BadRequest, "홍보 게시글은 하루에 하나만 작성할 수 있습니다.");
+
+        var publicPost = new Post
+        {
+            UserId = requesterId,
+            Contents = originalPost.Contents,
+            CreatedAt = originalPost.CreatedAt,
+            DiscoveryOption = DiscoveryOption.Everyone,
+            DiscoveryOptionSelectedUserIds = [],
+            ParentPostId = postId,
+            SearchIndex = originalPost.SearchIndex,
+            IsRepost = false,
+            IsPublicPost = true
+        };
+
+        while (true)
+        {
+            publicPost.Id = Guid.NewGuid().ToString("N");
+            var existingPost = await GetPostByIdAsync(publicPost.Id);
+            if (existingPost.IsFailure) break;
+        }
+
+        await _publicPostCollection.InsertOneAsync(publicPost);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
     public async Task<Result> CheckAccessAsync(string postId, string requesterId)
     {
         var postResult = await GetPostByIdAsync(postId);
@@ -751,6 +832,25 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         var userResult = await userService.GenerateUserResponseDtoAsync(post.UserId, requesterId);
         if (userResult.IsFailure) return userResult.CastFailure<Result<PostResponseDto>>();
+
+        if (post.IsPublicPost)
+        {
+            return new PostResponseDto
+            {
+                Id = post.Id,
+                User = userResult.Value,
+                DiscoveryOption = DiscoveryOption.Everyone,
+                DiscoveryOptionSelectedUserIds = [],
+                Contents = post.Contents,
+                Comments = [],
+                CommentsCount = 0,
+                PostReactions = [],
+                SharedAndRepostedUsers = [],
+                IsRepost = false,
+                CreatedAt = post.CreatedAt,
+                ModifiedAt = null
+            };
+        }
 
         var commentsResult = await commentService.GetCommentsByPostIdAsync(post.Id, requesterId, null, 20);
         if (commentsResult.IsFailure) return commentsResult.CastFailure<Result<PostResponseDto>>();
@@ -917,6 +1017,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Delete posts
         await _postCollection.DeleteManyAsync(p => p.UserId == userId);
+        await _publicPostCollection.DeleteManyAsync(p => p.UserId == userId);
 
         return Result.Success();
     }
