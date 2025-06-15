@@ -207,7 +207,6 @@ public partial class PostViewModel : ObservableObject
         else options.AddRange("게시글 신고");
 
         var action = await App.Page.DisplayActionSheet("게시물 옵션", Constants.PromptCancel, null, [.. options]);
-
         if (action == null || action == Constants.PromptCancel) return;
 
         if (action == "게시글 삭제") await DeleteAsync(popModal);
