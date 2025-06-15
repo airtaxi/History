@@ -838,7 +838,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         {
             return new PostResponseDto
             {
-                Id = post.Id,
+                Id = post.ParentPostId,
                 User = userResult.Value,
                 DiscoveryOption = DiscoveryOption.Everyone,
                 DiscoveryOptionSelectedUserIds = [],
