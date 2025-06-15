@@ -834,6 +834,15 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var userResult = await userService.GenerateUserResponseDtoAsync(post.UserId, requesterId);
         if (userResult.IsFailure) return userResult.CastFailure<Result<PostResponseDto>>();
 
+        var profileContents = post.Contents.OfType<ProfileContent>();
+        var profileContentUsersResult = await userService.GenerateUserResponseDtosAsync(profileContents.Select(x => x.UserId), requesterId);
+        foreach (var profileContent in profileContents)
+        {
+            var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == profileContent.UserId);
+            profileContent.UserId = user?.UserId;
+            profileContent.Nickname = (user?.Nickname ?? "탈퇴한 사용자") + ' ';
+        }
+
         if (post.IsPublicPost)
         {
             return new PostResponseDto
@@ -859,15 +868,6 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         var commentsCountResult = await commentService.GetCommentsCountByPostIdAsync(post.Id, requesterId);
         if (commentsCountResult.IsFailure) return commentsCountResult.CastFailure<Result<PostResponseDto>>();
-
-        var profileContents = post.Contents.OfType<ProfileContent>();
-        var profileContentUsersResult = await userService.GenerateUserResponseDtosAsync(profileContents.Select(x => x.UserId), requesterId);
-        foreach (var profileContent in profileContents)
-        {
-            var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == profileContent.UserId);
-            profileContent.UserId = user?.UserId;
-            profileContent.Nickname = (user?.Nickname ?? "탈퇴한 사용자") + ' ';
-        }
 
         var postReactionDtos = await GeneratePostReactionDtosAsync(post.Id, requesterId);
         var sharedAndRepostedUserDtos = await GenerateSharedAndRepostedUserDtosAsync(post.Id, requesterId);
