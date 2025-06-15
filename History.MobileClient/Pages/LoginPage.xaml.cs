@@ -1,10 +1,19 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿#if ANDROID
+using System.Diagnostics;
+using Android.App;
+using Android.Content;
+using Android.Content.PM;
+using CommunityToolkit.Maui.Alerts;
+#endif
+
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.MobileClient.Auth;
 using History.MobileClient.DataTypes;
+using Result = History.Commons.Result;
 
 namespace History.MobileClient.Pages;
 
@@ -116,16 +125,62 @@ public partial class LoginPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
-        var accessToken = Configuration.GetValue<string>("AccessToken");
-        var refreshToken = Configuration.GetValue<string>("RefreshToken");
-
-        if (accessToken != null && refreshToken != null)
+        try
         {
-            Shared.ApiHandler = new(accessToken, refreshToken);
-            var result = await AfterLogin();
-            if (result.IsFailure) LoginVerticalStackLayout.IsVisible = true;
+#if ANDROID
+            var versionUrl = "https://kagamine-rin.com/History/version_android";
+#else
+            var versionUrl = "https://kagamine-rin.com/History/version_ios";
+#endif
+            var remoteVersionString = await Downloader.DownloadString(versionUrl);
+            var localVersionString = AppInfo.Current.VersionString;
+
+            var remoteVersion = Version.Parse(remoteVersionString);
+            var localVersion = Version.Parse(localVersionString);
+            if (remoteVersion <= localVersion) return;
+#if ANDROID
+            var shouldDownload = await DisplayAlert("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})\n업데이트 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            if (!shouldDownload) return;
+            var downloadUrl = "https://kagamine-rin.com/History/com.airtaxi.history-Signed.apk";
+            var apkFilePath = Path.Combine(FileSystem.CacheDirectory, "History.apk");
+
+            await Toast.Make("업데이트를 다운로드 중입니다. 잠시만 기다려 주세요.").Show();
+            await Downloader.DownloadFileAsync(downloadUrl, apkFilePath);
+
+            var context = Platform.CurrentActivity ?? Android.App.Application.Context;
+
+            var file = new Java.IO.File(apkFilePath);
+            var uri = AndroidX.Core.Content.FileProvider.GetUriForFile(context, context.PackageName + ".fileprovider", file);
+
+#pragma warning disable CA1422 // Validate platform compatibility
+            var intent = new Intent(Intent.ActionInstallPackage);
+#pragma warning restore CA1422 // Validate platform compatibility
+            intent.SetData(uri);
+            intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.GrantReadUriPermission);
+
+            context.StartActivity(intent);
+#else
+            await DisplayAlert("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})", Constants.PromptOk);
+#endif
         }
-        else LoginVerticalStackLayout.IsVisible = true;
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"History Update Error: {ex.Message}");
+            await DisplayAlert("오류", $"업데이트 중 문제가 발생했습니다: {ex.Message}", "확인");
+        }
+        finally
+        {
+            var accessToken = Configuration.GetValue<string>("AccessToken");
+            var refreshToken = Configuration.GetValue<string>("RefreshToken");
+
+            if (accessToken != null && refreshToken != null)
+            {
+                Shared.ApiHandler = new(accessToken, refreshToken);
+                var result = await AfterLogin();
+                if (result.IsFailure) LoginVerticalStackLayout.IsVisible = true;
+            }
+            else LoginVerticalStackLayout.IsVisible = true;
+        }
     }
 
     protected override void OnDisappearing()
