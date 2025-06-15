@@ -1,4 +1,4 @@
-#if ANDROID
+﻿#if ANDROID
 using History.MobileClient.ThirdParty.StaggeredLayout;
 #elif IOS
 using NativeMedia;
@@ -210,7 +210,7 @@ public partial class EditPostPage : ContentPage
         }
 #endif
 
-        if (sizeExceed) await Toast.Make("25MB 이상의 미디어는 자동으로 제외되었습니다.").Show();
+        if (sizeExceed) await Toast.Make("30MB 이상의 미디어는 자동으로 제외되었습니다.").Show();
     }
 
     private async void OnInsertVideoTapped(object sender, TappedEventArgs e)
@@ -267,7 +267,7 @@ public partial class EditPostPage : ContentPage
         }
 #endif
 
-        if (sizeExceed) await Toast.Make("15MB 이상의 미디어는 자동으로 제외되었습니다.").Show();
+        if (sizeExceed) await Toast.Make("25MB 이상의 미디어는 자동으로 제외되었습니다.").Show();
     }
 
     private async void OnMediaDescriptionGridTapped(object sender, TappedEventArgs e)
