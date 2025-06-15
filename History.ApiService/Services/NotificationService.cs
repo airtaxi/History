@@ -118,6 +118,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         if (firstNotification == null) return Result.Success();
 
         if ((firstNotification.Type == NotificationType.Comment
+            || firstNotification.Type == NotificationType.CommentMention
             || firstNotification.Type == NotificationType.Share
             || firstNotification.Type == NotificationType.Repost
             || firstNotification.Type == NotificationType.PostReaction)
@@ -181,6 +182,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if(data.TryGetValue("PostId", out var postId))
             {
                 if (type == NotificationType.Comment) collapseKey = "comment_" + postId;
+                else if (type == NotificationType.CommentMention) collapseKey = "comment_mention_" + postId;
                 else if (type == NotificationType.CommentLike && data.TryGetValue("CommentId", out var commentId)) collapseKey = "comment_like_" + commentId;
                 else if (type == NotificationType.Share) collapseKey = "share_" + postId;
                 else if (type == NotificationType.Repost) collapseKey = "repost_" + postId;
