@@ -9,9 +9,7 @@ using History.MobileClient.DataTypes;
 using Result = History.Commons.Result;
 
 #if ANDROID
-using Android.App;
 using Android.Content;
-using Android.Content.PM;
 using CommunityToolkit.Maui.Alerts;
 #endif
 
