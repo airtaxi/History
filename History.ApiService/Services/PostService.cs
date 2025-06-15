@@ -771,6 +771,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             if (existingPost.IsFailure) break;
         }
 
+        await _publicPostCollection.DeleteManyAsync(x => x.UserId == requesterId);
         await _publicPostCollection.InsertOneAsync(publicPost);
 
         return Result.Success();
