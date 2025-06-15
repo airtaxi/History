@@ -115,7 +115,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
         // Delete previous notifications
         var firstNotification = notificationResult.Value.FirstOrDefault();
-        if (firstNotification == null || !firstNotification.Recipients.Any()) return Result.Success();
+        if (firstNotification == null) return Result.Success();
 
         if ((firstNotification.Type == NotificationType.Comment
             || firstNotification.Type == NotificationType.Share
