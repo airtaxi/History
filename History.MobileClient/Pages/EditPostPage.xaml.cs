@@ -480,7 +480,7 @@ public partial class EditPostPage : ContentPage
 
                                             try
                                             {
-                                                var key = await KakaoStoryApiHandler.UploadImage(attachment.FilePath);
+                                                var key = await KakaoStoryApiHandler.UploadImage(filePath);
                                                 media.media_path = key;
                                                 media.media_type = "image";
                                             }
