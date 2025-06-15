@@ -20,6 +20,7 @@ using System.Collections.ObjectModel;
 using UraniumUI.Icons.MaterialSymbols;
 using System.Net;
 using History.MobileClient.KakaoStory;
+using Microsoft.Maui.Graphics.Platform;
 
 
 namespace History.MobileClient.Pages;
@@ -460,6 +461,23 @@ public partial class EditPostPage : ContentPage
                                         var media = new KakaoStoryApiHandler.DataType.MediaData.MediaObject();
                                         if (!attachment.IsVideo)
                                         {
+                                            string filePath = attachment.FilePath;
+                                            var isWebp = attachment.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase);
+                                            if (isWebp)
+                                            {
+                                                var fileName = Path.GetFileNameWithoutExtension(filePath) + ".png";
+                                                filePath = Path.GetTempPath() + "c_" + fileName;
+                                                using var stream = File.OpenRead(attachment.FilePath);
+                                                var saveStream = File.Create(filePath);
+                                                var image = PlatformImage.FromStream(stream);
+                                                if (image == null) continue;
+                                                else
+                                                {
+                                                    await image.SaveAsync(saveStream, ImageFormat.Png);
+                                                    saveStream.Dispose();
+                                                }
+                                            }
+
                                             try
                                             {
                                                 var key = await KakaoStoryApiHandler.UploadImage(attachment.FilePath);
@@ -470,6 +488,13 @@ public partial class EditPostPage : ContentPage
                                             {
                                                 var message = exception.Message;
                                                 var stackTrace = exception.StackTrace;
+                                            }
+                                            finally
+                                            {
+                                                if (filePath != attachment.FilePath)
+                                                {
+                                                    try { File.Delete(filePath); } catch { }
+                                                }
                                             }
                                         }
                                         else
