@@ -28,8 +28,7 @@
             </Grid.GestureRecognizers>
             <Label
                 FontAttributes="Bold"
-                FontSize="18"
-                HorizontalOptions="Center"
+                FontSize="20"
                 Text="발견"
                 TextColor="White"
                 VerticalOptions="Center" />
