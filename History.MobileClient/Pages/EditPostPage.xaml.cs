@@ -451,6 +451,7 @@ public partial class EditPostPage : ContentPage
                                 text = text.Trim();
                                 var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
 
+                                var conversionFailedCount = 0;
                                 KakaoStoryApiHandler.DataType.MediaData mediaData;
                                 if (_attachmentViewModels.Count > 0)
                                 {
@@ -470,7 +471,11 @@ public partial class EditPostPage : ContentPage
                                                 using var stream = File.OpenRead(attachment.FilePath);
                                                 using var image = PlatformImage.FromStream(stream);
                                                 var saveStream = File.Create(filePath);
-                                                if (image == null) continue;
+                                                if (image == null)
+                                                {
+                                                    conversionFailedCount++;
+                                                    continue;
+                                                }
                                                 else
                                                 {
                                                     await image.SaveAsync(saveStream, ImageFormat.Png);
@@ -530,6 +535,7 @@ public partial class EditPostPage : ContentPage
                                 if (mediaData == null && _externalUrlContentViewModel != null) scrap = await KakaoStoryApiHandler.GetScrapData(_externalUrlContentViewModel.ExternalUrlContent.SourceUrl);
 
                                 await KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, true, true, null, null, scrap, false, null, null);
+                                if (conversionFailedCount > 0) await DisplayAlert("오류", $"카키오스토리 업로드 도중 일부 webp 이미지를 png로 변환하는 데 실패하여 {conversionFailedCount}개의 이미지가 제외되었습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
                             }
                             catch (Exception)
                             {
