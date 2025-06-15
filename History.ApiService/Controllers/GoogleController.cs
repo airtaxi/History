@@ -8,7 +8,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/auth/google")]
-public class GoogleController(ILogger<GoogleController> logger) : ControllerBase
+public class GoogleController : ControllerBase
 {
     private const string ClientId = "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com";
     private const string ClientSecret = "***REMOVED***"; // Replace with your actual client secret
