@@ -202,7 +202,7 @@ public partial class PostViewModel : ObservableObject
 
         options.AddRange(["관심글로 저장", "이 글 알림 끄기"]);
 
-        if (User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제", "프로필에 고정"]);
+        if (User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제", "프로필에 고정", "게시글 홍보"]);
         else if (Shared.MyRank >= Rank.Moderator) options.AddRange("게시글 삭제");
         else options.AddRange("게시글 신고");
 
@@ -262,6 +262,18 @@ public partial class PostViewModel : ObservableObject
             }));
 
             if (result.IsSuccess) await App.Page.DisplayAlert("안내", "게시글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다.", Constants.PromptOk);
+        }
+        else if (action == "게시글 홍보")
+        {
+            var shouldWritePublicPost = await App.Page.DisplayAlert("안내", "게시글을 홍보하시겠습니까? 게시글을 홍보하면 발견탭에서 모든 사용자가 확인할 수 있습니다. 단, 하루에 한 번만 홍보할 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
+            if (!shouldWritePublicPost) return;
+
+            var success = await App.ExecuteRequestAsync(new WritePublicPost(Post.Id));
+            if (success.IsSuccess)
+            {
+                PublicPostPage.ShouldRefresh = true;
+                await App.Page.DisplayAlert("안내", "게시글 홍보가 성공적으로 전송되었습니다. 발견탭에서 확인할 수 있습니다.", Constants.PromptOk);
+            }
         }
         else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }

@@ -13,6 +13,12 @@
             </Tab.Icon>
             <ShellContent ContentTemplate="{DataTemplate pages:TimelinePage}" />
         </Tab>
+        <Tab Title="발견">
+            <Tab.Icon>
+                <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Explore}" />
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate pages:PublicPostPage}" />
+        </Tab>
         <Tab Title="친구">
             <Tab.Icon>
                 <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Group}" />
@@ -37,4 +43,4 @@
             <ShellContent ContentTemplate="{DataTemplate pages:UserPage}" />
         </Tab>
     </TabBar>
-</Shell> 
+</Shell>

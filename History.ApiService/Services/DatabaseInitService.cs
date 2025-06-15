@@ -12,6 +12,7 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
 
         var userCollection = database.GetCollection<User>("Users");
         var postCollection = database.GetCollection<Post>("Posts");
+        var publicPostCollection = database.GetCollection<Post>("PublicPosts");
         var friendshipCollection = database.GetCollection<Friendship>("Friendships");
         var commentCollection = database.GetCollection<Comment>("Comments");
         var mediaCollection = database.GetCollection<Media>("Medias");
@@ -31,6 +32,12 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.SearchIndex)), cancellationToken: cancellationToken);
         await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.DiscoveryOption)), cancellationToken: cancellationToken);
         await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.DiscoveryOptionSelectedUserIds)), cancellationToken: cancellationToken);
+        await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
+
+        logger.LogInformation("Creating indexes for PublicPost collection...");
+        await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
+        await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.ParentPostId)), cancellationToken: cancellationToken);
+        await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.SearchIndex)), cancellationToken: cancellationToken);
         await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
 
         logger.LogInformation("Creating indexes for Friendship collection...");

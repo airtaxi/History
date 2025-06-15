@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    x:Class="History.MobileClient.Resources.Styles.PublicPost"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:views="clr-namespace:History.MobileClient.ContentViews"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
+
+    <DataTemplate x:Key="PublicPostContentTemplate" x:DataType="vm:PostViewModel">
+        <VerticalStackLayout
+            Padding="16"
+            BackgroundColor="{AppThemeBinding Dark=Black,
+                                              Light=White}"
+            Spacing="8">
+            <HorizontalStackLayout HeightRequest="48" Spacing="6">
+                <views:DataTemplatePresenter
+                    HeightRequest="48"
+                    Template="{StaticResource MediaTemplateSelector}"
+                    ViewModel="{x:Binding ProfileMedia}"
+                    WidthRequest="48">
+                    <views:DataTemplatePresenter.GestureRecognizers>
+                        <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
+                    </views:DataTemplatePresenter.GestureRecognizers>
+                    <views:DataTemplatePresenter.Clip>
+                        <EllipseGeometry
+                            Center="24,24"
+                            RadiusX="24"
+                            RadiusY="24" />
+                    </views:DataTemplatePresenter.Clip>
+                </views:DataTemplatePresenter>
+                <VerticalStackLayout VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="4">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            LineBreakMode="TailTruncation"
+                            Text="{x:Binding Nickname}" />
+                        <Image
+                            HeightRequest="16"
+                            IsVisible="{x:Binding IsAdmin}"
+                            WidthRequest="16">
+                            <Image.Source>
+                                <FontImageSource
+                                    FontFamily="FASolid"
+                                    Glyph="{x:Static fa:Solid.Crown}"
+                                    Color="#f78501" />
+                            </Image.Source>
+                        </Image>
+                        <Image
+                            HeightRequest="16"
+                            IsVisible="{x:Binding IsModerator}"
+                            WidthRequest="16">
+                            <Image.Source>
+                                <FontImageSource
+                                    FontFamily="FASolid"
+                                    Glyph="{x:Static fa:Solid.Gavel}"
+                                    Color="#1a5bf3" />
+                            </Image.Source>
+                        </Image>
+                    </HorizontalStackLayout>
+                    <Label FontSize="14" TextColor="#808080" Text="{x:Binding TimestampText}" />
+                </VerticalStackLayout>
+            </HorizontalStackLayout>
+            <VerticalStackLayout
+                BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
+                BindableLayout.ItemsSource="{x:Binding Contents}"
+                Spacing="8" />
+            <views:DataTemplatePresenter
+                IsVisible="{x:Binding IsShare}"
+                Template="{StaticResource SharedPostTemplate}"
+                ViewModel="{x:Binding ParentPost}" />
+        </VerticalStackLayout>
+    </DataTemplate>
+
+    <DataTemplate x:Key="PublicPostTemplate" x:DataType="vm:PostViewModel">
+        <Grid Padding="6">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+            </Grid.GestureRecognizers>
+
+            <Border
+                Padding="12"
+                Background="{AppThemeBinding Dark=Black,
+                                             Light=White}"
+                Stroke="#808080"
+                StrokeThickness="1.5">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="8">
+                    <Grid Grid.Row="0" HeightRequest="48">
+                        <HorizontalStackLayout Spacing="6">
+                            <views:DataTemplatePresenter
+                                HeightRequest="36"
+                                Template="{StaticResource MediaTemplateSelector}"
+                                ViewModel="{x:Binding ProfileMedia,
+                                                      Mode=OneWay}"
+                                WidthRequest="36">
+                                <views:DataTemplatePresenter.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
+                                </views:DataTemplatePresenter.GestureRecognizers>
+                                <views:DataTemplatePresenter.Clip>
+                                    <EllipseGeometry
+                                        Center="18,18"
+                                        RadiusX="18"
+                                        RadiusY="18" />
+                                </views:DataTemplatePresenter.Clip>
+                            </views:DataTemplatePresenter>
+                            <VerticalStackLayout VerticalOptions="Center">
+                                <HorizontalStackLayout Spacing="4">
+                                    <Label
+                                        FontAttributes="Bold"
+                                        FontSize="14"
+                                        LineBreakMode="TailTruncation"
+                                        Text="{x:Binding Nickname}" />
+                                    <Image
+                                        HeightRequest="14"
+                                        IsVisible="{x:Binding IsAdmin}"
+                                        WidthRequest="14">
+                                        <Image.Source>
+                                            <FontImageSource
+                                                FontFamily="FASolid"
+                                                Glyph="{x:Static fa:Solid.Crown}"
+                                                Color="#f78501" />
+                                        </Image.Source>
+                                    </Image>
+                                    <Image
+                                        HeightRequest="14"
+                                        IsVisible="{x:Binding IsModerator}"
+                                        WidthRequest="14">
+                                        <Image.Source>
+                                            <FontImageSource
+                                                FontFamily="FASolid"
+                                                Glyph="{x:Static fa:Solid.Gavel}"
+                                                Color="#1a5bf3" />
+                                        </Image.Source>
+                                    </Image>
+                                </HorizontalStackLayout>
+                                <Label FontSize="12" TextColor="#808080" Text="{x:Binding TimestampText}" />
+                            </VerticalStackLayout>
+                        </HorizontalStackLayout>
+                    </Grid>
+                    <VerticalStackLayout
+                        BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
+                        BindableLayout.ItemsSource="{x:Binding Contents}"
+                        Spacing="8" />
+                    <views:DataTemplatePresenter
+                        IsVisible="{x:Binding IsShare}"
+                        Template="{StaticResource SharedPostTemplate}"
+                        ViewModel="{x:Binding ParentPost,
+                                              Mode=OneWay}" />
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+    </DataTemplate>
+
+    <vm:TimelineTemplateSelector
+        x:Key="PublicPostTemplateSelector"
+        PostTemplate="{StaticResource PublicPostTemplate}" />
+</ResourceDictionary>

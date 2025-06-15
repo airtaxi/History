@@ -13,6 +13,7 @@
                 <ResourceDictionary Source="Resources/Styles/Profile.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Repost.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Post.xaml" />
+                <ResourceDictionary Source="Resources/Styles/PublicPost.xaml" />
                 <ResourceDictionary Source="Resources/Styles/SharedPost.xaml" />
                 <ResourceDictionary Source="Resources/Styles/PostInteraction.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Comment.xaml" />
