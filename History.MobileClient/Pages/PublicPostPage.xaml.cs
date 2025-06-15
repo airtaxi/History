@@ -66,7 +66,7 @@ public partial class PublicPostPage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
-                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, true));
+                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, false));
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
