@@ -4,7 +4,6 @@ using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
-using Microsoft.AspNetCore.Http.HttpResults;
 using MongoDB.Driver;
 using Notification = History.Commons.DataTypes.Notification;
 
@@ -115,9 +114,32 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         if (notificationResult.IsFailure) return notificationResult.CastFailure();
 
         // Delete previous notifications
-        //await _notificationCollection.DeleteManyAsync(x => x.AssociatedId == associatedId && x.Type == type);
+        var firstNotification = notificationResult.Value.FirstOrDefault();
+        if (firstNotification == null || !firstNotification.Recipients.Any()) return Result.Success();
 
-        foreach(var notification in notificationResult.Value)
+        if ((firstNotification.Type == NotificationType.Comment
+            || firstNotification.Type == NotificationType.Share
+            || firstNotification.Type == NotificationType.Repost
+            || firstNotification.Type == NotificationType.PostReaction)
+            && firstNotification.Data.TryGetValue("PostId", out var postId))
+        {
+            var filter = Builders<Notification>.Filter.Eq("Data.PostId", postId)
+                & Builders<Notification>.Filter.Eq(n => n.Type, type);
+            var update = Builders<Notification>.Update.PullAll(x => x.Recipients, firstNotification.Recipients);
+            await _notificationCollection.UpdateManyAsync(filter, update);
+        }
+
+        if (firstNotification.Type == NotificationType.CommentLike && firstNotification.Data.TryGetValue("CommentId", out var commentId))
+        {
+            var filter = Builders<Notification>.Filter.Eq("Data.CommentId", commentId)
+                & Builders<Notification>.Filter.Eq(n => n.Type, type);
+            await _notificationCollection.DeleteManyAsync(filter);
+        }
+
+        await _notificationCollection.DeleteManyAsync(x => x.AssociatedId == associatedId && x.Type == type);
+
+        // Send notifications
+        foreach (var notification in notificationResult.Value)
         {
             var recipients = notification.Recipients;
             var title = notification.Title;
@@ -159,12 +181,10 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if(data.TryGetValue("PostId", out var postId))
             {
                 if (type == NotificationType.Comment) collapseKey = "comment_" + postId;
-                else if (type == NotificationType.CommentMention) collapseKey = "comment_mention_" + postId;
-                else if (type == NotificationType.CommentLike) collapseKey = "comment_like_" + postId;
+                else if (type == NotificationType.CommentLike && data.TryGetValue("CommentId", out var commentId)) collapseKey = "comment_like_" + commentId;
                 else if (type == NotificationType.Share) collapseKey = "share_" + postId;
                 else if (type == NotificationType.Repost) collapseKey = "repost_" + postId;
                 else if (type == NotificationType.PostReaction) collapseKey = "post_reaction_" + postId;
-                else if (type == NotificationType.PostMention) collapseKey = "post_mention_" + postId;
             }
             if (collapseKey != null) data["notification_id"] = collapseKey; // Use collapse key for Android and iOS to group notifications
         }
