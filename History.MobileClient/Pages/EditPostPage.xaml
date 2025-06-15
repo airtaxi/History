@@ -202,6 +202,52 @@
         </ScrollView>
 
         <Grid
+            x:Name="SettingsGrid"
+            Grid.Row="1"
+            Padding="12"
+            HorizontalOptions="Fill"
+            IsVisible="False"
+            VerticalOptions="End">
+            <VerticalStackLayout Spacing="8">
+                <Grid>
+                    <Label
+                        FontAttributes="Bold"
+                        HorizontalOptions="Start"
+                        Text="타임라인 새로고침"
+                        VerticalOptions="Center" />
+                    <Switch
+                        x:Name="RefreshSwitch"
+                        HorizontalOptions="End"
+                        OnColor="{StaticResource Primary}"
+                        ThumbColor="#EEEEEE"
+                        Toggled="OnRefreshSwitchToggled"
+                        VerticalOptions="Center" />
+                </Grid>
+                <Grid x:Name="WritePostToKakaoStoryGrid" IsVisible="False">
+                    <Label
+                        FontAttributes="Bold"
+                        HorizontalOptions="Start"
+                        Text="카카오스토리에도 게시글 작성"
+                        VerticalOptions="Center" />
+                    <Switch
+                        x:Name="WritePostToKakaoStorySwitch"
+                        HorizontalOptions="End"
+                        OnColor="{StaticResource Primary}"
+                        ThumbColor="#EEEEEE"
+                        Toggled="OnRefreshSwitchToggled"
+                        VerticalOptions="Center" />
+                </Grid>
+            </VerticalStackLayout>
+
+            <Rectangle
+                Margin="-12"
+                Fill="#808080"
+                HeightRequest="{OnPlatform iOS=1.5,
+                                           Android=1}"
+                HorizontalOptions="Fill"
+                VerticalOptions="Start" />
+        </Grid>
+        <Grid
             Grid.Row="2"
             Padding="12"
             HeightRequest="60">
@@ -257,21 +303,23 @@
                 </Image>
             </HorizontalStackLayout>
 
-            <HorizontalStackLayout
+            <Image
+                HeightRequest="40"
                 HorizontalOptions="End"
-                Spacing="4"
-                VerticalOptions="Center">
-                <Label
-                    FontAttributes="Bold"
-                    Text="타임라인 새로고침"
-                    VerticalOptions="Center" />
-                <Switch
-                    x:Name="RefreshSwitch"
-                    OnColor="{StaticResource Primary}"
-                    ThumbColor="White"
-                    Toggled="OnRefreshSwitchToggled" />
-            </HorizontalStackLayout>
-
+                VerticalOptions="Center"
+                WidthRequest="40">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnExpandCollapseSettingsImageTapped" />
+                </Image.GestureRecognizers>
+                <Image.Source>
+                    <FontImageSource
+                        x:Name="ExpandCollapseSettingsFontImageSource"
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Keyboard_arrow_up}"
+                        Color="{AppThemeBinding Light=Black,
+                                                Dark=White}" />
+                </Image.Source>
+            </Image>
             <Rectangle
                 Margin="-12"
                 Fill="#808080"

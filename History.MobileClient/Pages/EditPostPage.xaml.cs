@@ -392,8 +392,14 @@ public partial class EditPostPage : ContentPage
                         {
                             Shared.LastUsedPostDiscoveryOption = discoveryOption;
 
-                            var shouldUpload = await DisplayAlert("안내", "게시글을 카카오스토리에도 게시하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
-                            if (!shouldUpload)
+                            var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("WritePostToKakaoStory");
+                            if (!shouldWritePostToKakaoStory.HasValue)
+                            {
+                                shouldWritePostToKakaoStory = await DisplayAlert("안내", "카카오스토리에도 게시글을 작성하는 옵션을 활성화하시겠습니까? 이 옵션은 글쓰기 하단의 설정을 펼쳐 언제든지 변경할 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
+                                Configuration.SetValue("WritePostToKakaoStory", shouldWritePostToKakaoStory.Value);
+                            }
+
+                            if (!shouldWritePostToKakaoStory.Value)
                             {
                                 Pop();
                                 return;
@@ -624,6 +630,12 @@ public partial class EditPostPage : ContentPage
         Configuration.SetValue($"ShouldRefreshOnNewPost[{_isShare}]", @switch.IsToggled);
     }
 
+    private void OnWritePostToKakaoStorySwitchToggled(object sender, ToggledEventArgs e)
+    {
+        var @switch = sender as Switch;
+        Configuration.SetValue("ShouldWritePostToKakaoStory", @switch.IsToggled);
+    }
+
     protected override void OnAppearing()
     {
         base.OnAppearing();
@@ -631,6 +643,10 @@ public partial class EditPostPage : ContentPage
 
         var shouldRefreshOnNewPost = Configuration.GetValue<bool?>($"ShouldRefreshOnNewPost[{_isShare}]") ?? !_isShare;
         RefreshSwitch.IsToggled = shouldRefreshOnNewPost;
+
+        var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("WritePostToKakaoStory");
+        if (shouldWritePostToKakaoStory.HasValue) WritePostToKakaoStorySwitch.IsToggled = shouldWritePostToKakaoStory.Value;
+        WritePostToKakaoStoryGrid.IsVisible = !_isShare && _post == null;
 
         Dispatcher.Dispatch(async () => await LoginPage.RefreshFriendsAsync());
 
@@ -699,5 +715,12 @@ public partial class EditPostPage : ContentPage
         {
             MainScrollView.ScrollToAsync(0, targetScrollOffsetY, false);
         }
+    }
+
+    private void OnExpandCollapseSettingsImageTapped(object sender, TappedEventArgs e)
+    {
+        SettingsGrid.IsVisible = !SettingsGrid.IsVisible;
+        if (SettingsGrid.IsVisible) ExpandCollapseSettingsFontImageSource.Glyph = MaterialSharp.Keyboard_arrow_down;
+        else ExpandCollapseSettingsFontImageSource.Glyph = MaterialSharp.Keyboard_arrow_up;
     }
 }
