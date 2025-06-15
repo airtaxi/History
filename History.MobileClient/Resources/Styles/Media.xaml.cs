@@ -164,6 +164,7 @@ public partial class Media : ResourceDictionary
         image.Dispatcher.Dispatch(() =>
         {
             var nativeImageView = (image?.Handler as CachedImageHandler)?.PlatformView;
+            if (nativeImageView == null) return;
 
             int imageWidth = 0, imageHeight = 0;
 
@@ -186,9 +187,9 @@ public partial class Media : ResourceDictionary
 
             var aspectRatio = (double)imageWidth / imageHeight;
 
-            var viewModel = image?.BindingContext as ImageViewModel;
+            if (image?.BindingContext is not ImageViewModel viewModel) return;
 
-            if(viewModel.CarouselView == null)
+            if (viewModel.CarouselView == null)
             {
                 var carouselView = FindCarouselView(image);
                 if (carouselView == null) return;
