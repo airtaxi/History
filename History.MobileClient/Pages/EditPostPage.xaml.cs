@@ -446,7 +446,7 @@ public partial class EditPostPage : ContentPage
                             try
                             {
                                 var text = MainTextContent.MentionEditor.Text;
-                                text += $"\n\n\n이 게시글은 대체 SNS인 히스토리를 통하여 작성되었습니다.\n히스토리 디스코드 채널에 참여하여 히스토리 베타에 참여해보세요.\n베타 참여 디스코드: {Constants.DiscordInviteUrl}";
+                                text += $"\n----------------------\n이 게시글은 대체 SNS인 히스토리를 통하여 작성되었습니다.\n히스토리 디스코드 채널에 참여하여 히스토리 베타에 참여해보세요.\n베타 참여 디스코드: {Constants.DiscordInviteUrl}";
                                 text = text.Trim();
                                 var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
 
