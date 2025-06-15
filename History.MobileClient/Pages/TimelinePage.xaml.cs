@@ -116,7 +116,6 @@ public partial class TimelinePage : ContentPage
         if (_isFirstLoad || ShouldRefresh)
         {
             ShouldRefresh = false;
-            _isFirstLoad = false;
             Dispatcher.Dispatch(async () => await RefreshAsync());
         }
 
@@ -134,6 +133,7 @@ public partial class TimelinePage : ContentPage
                 var pushData = Preferences.Get("PushData", null);
                 if (!string.IsNullOrEmpty(pushData)) await App.HandlePushNotificationAsync(pushData);
             });
+            _isFirstLoad = false;
         }
     }
 
