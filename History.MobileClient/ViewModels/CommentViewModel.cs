@@ -19,7 +19,6 @@ public partial class CommentViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsModerator))]
     [NotifyPropertyChangedFor(nameof(IsAdmin))]
     [NotifyPropertyChangedFor(nameof(ProfileMedia))]
-    [NotifyPropertyChangedFor(nameof(Contents))]
     [NotifyPropertyChangedFor(nameof(IsMyComment))]
     [NotifyPropertyChangedFor(nameof(HasLikes))]
     [NotifyPropertyChangedFor(nameof(LikesCount))]
@@ -39,7 +38,8 @@ public partial class CommentViewModel : ObservableObject
         ? new VideoViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
-    public List<IContentViewModel> Contents { get; private set; }
+    [ObservableProperty]
+    public partial List<IContentViewModel> Contents { get; private set; }
 
     public bool IsMyComment => Comment.User.UserId == Shared.UserId;
 
