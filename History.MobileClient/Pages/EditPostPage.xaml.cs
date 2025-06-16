@@ -456,6 +456,16 @@ public partial class EditPostPage : ContentPage
                                 text = text.Trim();
                                 if (!string.IsNullOrWhiteSpace(text)) text += "\n----------------------\n";
                                 text += $"이 게시글은 대체 SNS인 히스토리를 통하여 작성되었습니다.\n히스토리 디스코드 채널에 참여하여 히스토리 베타에 참여해보세요.\n베타 참여 디스코드: {Constants.DiscordInviteUrl}";
+                                if (text.Length > 4000)
+                                {
+                                    await DisplayAlert("오류", $"카카오스토리에도 업로드 기능이 활성화되어 있으나, 카카오스토리의 글자 수 제한은 4,000자입니다. 현재 작성하신 게시글은 {text.Length}자로 제한을 초과하여 업로드하실 수 없습니다. 게시글 내용을 수정하신 후 다시 시도해 주세요.", Constants.PromptOk);
+                                    return;
+                                }
+                                if (_attachmentViewModels.Count > 0 && _externalUrlContentViewModel != null)
+                                {
+                                    var proceed = await DisplayAlert("경고", "카카오스토리 업로드 시, 외부 URL이 포함된 사진 및 동영상은 히스토리에서는 지원되지만, 카카오스토리에서는 지원되지 않습니다. 따라서 외부 URL은 카카오스토리에 게시되지 않습니다. 계속 진행하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+                                    if (!proceed) return;
+                                }
                                 var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
 
                                 var conversionFailedCount = 0;
