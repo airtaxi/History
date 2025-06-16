@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using CommunityToolkit.Maui.Alerts;
+using History.Commons;
 using History.MobileClient.Helpers;
 using History.MobileClient.KakaoStory;
 
@@ -77,7 +78,11 @@ public partial class KakaoStoryLoginPage : ContentPage
             {
                 var friends = await KakaoStoryApiHandler.GetFriends();
                 var setResult = _taskCompletionSource.TrySetResult(cookies);
-                if (setResult) await App.PopModalAsync();
+                if (setResult)
+                {
+                    Configuration.SetValue("KakaoStoryCookies", cookies);
+                    await App.PopModalAsync();
+                }
             }
             catch { }
         }
