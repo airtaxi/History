@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="History.MobileClient.Pages.PostPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -221,6 +221,7 @@
                 x:Name="CommentTextContentView"
                 Grid.Column="1"
                 HorizontalOptions="Fill"
+                MaximumHeightRequest="400"
                 Placeholder="댓글을 달아보세요." />
 
             <Image Grid.Column="2" VerticalOptions="End">
