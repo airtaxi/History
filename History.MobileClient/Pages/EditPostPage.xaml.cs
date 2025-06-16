@@ -375,169 +375,173 @@ public partial class EditPostPage : ContentPage
                 }
                 else
                 {
-                    var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory");
-                    if (!shouldWritePostToKakaoStory.HasValue)
+                    if (_post == null)
                     {
-                        shouldWritePostToKakaoStory = await DisplayAlert("안내", "카카오스토리에도 게시글을 작성하는 옵션을 활성화하시겠습니까? 이 옵션은 글쓰기 하단의 설정을 펼쳐 언제든지 변경할 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
-                        Configuration.SetValue("ShouldWritePostToKakaoStory", shouldWritePostToKakaoStory.Value);
-                    }
 
-                    if (shouldWritePostToKakaoStory.Value)
-                    {
-                        MainActivityIndicator.IsRunning = true;
-                        IsEnabled = false;
-
-                        // Samsung pass will overwrite the text content, fetch the text content before logging in to KakaoStory
-                        var text = MainTextContent.MentionEditor.Text;
-                        text = text.Trim();
-                        if (!string.IsNullOrWhiteSpace(text)) text += "\n----------------------\n";
-                        text += $"이 게시글은 대체 SNS인 히스토리를 통하여 작성되었습니다.\n히스토리 디스코드 채널에 참여하여 히스토리 베타에 참여해보세요.\n베타 참여 디스코드: {Constants.DiscordInviteUrl}";
-
-                        bool loginNeeded = true;
-                        var cookies = Configuration.GetValue<List<Cookie>>("KakaoStoryCookies");
-                        if (cookies != null)
+                        var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory");
+                        if (!shouldWritePostToKakaoStory.HasValue)
                         {
-                            var cookieContainer = new CookieContainer();
-                            foreach (var cookie in cookies) cookieContainer.Add(cookie);
+                            shouldWritePostToKakaoStory = await DisplayAlert("안내", "카카오스토리에도 게시글을 작성하는 옵션을 활성화하시겠습니까? 이 옵션은 글쓰기 하단의 설정을 펼쳐 언제든지 변경할 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
+                            Configuration.SetValue("ShouldWritePostToKakaoStory", shouldWritePostToKakaoStory.Value);
+                        }
 
-                            KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
+                        if (shouldWritePostToKakaoStory.Value)
+                        {
+                            MainActivityIndicator.IsRunning = true;
+                            IsEnabled = false;
+
+                            // Samsung pass will overwrite the text content, fetch the text content before logging in to KakaoStory
+                            var text = MainTextContent.MentionEditor.Text;
+                            text = text.Trim();
+                            if (!string.IsNullOrWhiteSpace(text)) text += "\n----------------------\n";
+                            text += $"이 게시글은 대체 SNS인 히스토리를 통하여 작성되었습니다.\n히스토리 디스코드 채널에 참여하여 히스토리 베타에 참여해보세요.\n베타 참여 디스코드: {Constants.DiscordInviteUrl}";
+
+                            bool loginNeeded = true;
+                            var cookies = Configuration.GetValue<List<Cookie>>("KakaoStoryCookies");
+                            if (cookies != null)
+                            {
+                                var cookieContainer = new CookieContainer();
+                                foreach (var cookie in cookies) cookieContainer.Add(cookie);
+
+                                KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
+                                try
+                                {
+                                    await KakaoStoryApiHandler.GetFriends();
+                                    loginNeeded = false;
+                                }
+                                catch { }
+                            }
+
+                            if (loginNeeded)
+                            {
+                                var shouldLogin = await DisplayAlert("안내", "카카오스토리 로그인이 필요합니다. 로그인하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+                                if (!shouldLogin)
+                                {
+                                    return;
+                                }
+
+                                var kakaoStoryLoginPage = new KakaoStoryLoginPage();
+                                await App.PushModalAsync(kakaoStoryLoginPage);
+
+                                cookies = await kakaoStoryLoginPage.GetResultAsync();
+
+                                if (cookies == null)
+                                {
+                                    await DisplayAlert("오류", "카카오스토리 로그인에 실패하였습니다.", Constants.PromptOk);
+                                    return;
+                                }
+
+                                var cookieContainer = new CookieContainer();
+                                foreach (var cookie in cookies) cookieContainer.Add(cookie);
+
+                                KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
+                                Configuration.SetValue("KakaoStoryCookies", cookies);
+                            }
+
                             try
                             {
-                                await KakaoStoryApiHandler.GetFriends();
-                                loginNeeded = false;
-                            }
-                            catch { }
-                        }
-
-                        if (loginNeeded)
-                        {
-                            var shouldLogin = await DisplayAlert("안내", "카카오스토리 로그인이 필요합니다. 로그인하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
-                            if (!shouldLogin)
-                            {
-                                return;
-                            }
-
-                            var kakaoStoryLoginPage = new KakaoStoryLoginPage();
-                            await App.PushModalAsync(kakaoStoryLoginPage);
-
-                            cookies = await kakaoStoryLoginPage.GetResultAsync();
-
-                            if (cookies == null)
-                            {
-                                await DisplayAlert("오류", "카카오스토리 로그인에 실패하였습니다.", Constants.PromptOk);
-                                return;
-                            }
-
-                            var cookieContainer = new CookieContainer();
-                            foreach (var cookie in cookies) cookieContainer.Add(cookie);
-
-                            KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
-                            Configuration.SetValue("KakaoStoryCookies", cookies);
-                        }
-
-                        try
-                        {
-                            if (text.Length > 4000)
-                            {
-                                await DisplayAlert("오류", $"카카오스토리에도 업로드 기능이 활성화되어 있으나, 카카오스토리의 글자 수 제한은 4,000자입니다. 현재 작성하신 게시글은 {text.Length}자로 제한을 초과하여 업로드하실 수 없습니다. 게시글 내용을 수정하신 후 다시 시도해 주세요.", Constants.PromptOk);
-                                return;
-                            }
-
-                            if (_attachmentViewModels.Count > 0 && _externalUrlContentViewModel != null)
-                            {
-                                var proceed = await DisplayAlert("경고", "카카오스토리 업로드 시, 외부 URL이 포함된 사진 및 동영상은 히스토리에서는 지원되지만, 카카오스토리에서는 지원되지 않습니다. 따라서 외부 URL은 카카오스토리에 게시되지 않습니다. 계속 진행하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
-                                if (!proceed) return;
-                            }
-                            var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
-
-                            var conversionFailedCount = 0;
-                            KakaoStoryApiHandler.DataType.MediaData mediaData;
-                            if (_attachmentViewModels.Count > 0)
-                            {
-                                mediaData = new();
-                                var medias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
-                                foreach (var attachment in _attachmentViewModels)
+                                if (text.Length > 4000)
                                 {
-                                    var media = new KakaoStoryApiHandler.DataType.MediaData.MediaObject();
-                                    if (!attachment.IsVideo)
-                                    {
-                                        string filePath = attachment.FilePath;
-                                        var isWebp = attachment.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase);
-                                        if (isWebp)
-                                        {
-                                            var fileName = Path.GetFileNameWithoutExtension(filePath) + ".png";
-                                            filePath = Path.GetTempPath() + "c_" + fileName;
-                                            using var stream = File.OpenRead(attachment.FilePath);
-                                            using var image = PlatformImage.FromStream(stream);
-                                            var saveStream = File.Create(filePath);
-                                            if (image == null)
-                                            {
-                                                conversionFailedCount++;
-                                                continue;
-                                            }
-                                            else
-                                            {
-                                                await image.SaveAsync(saveStream, ImageFormat.Png);
-                                                saveStream.Dispose();
-                                            }
-                                        }
-
-                                        try
-                                        {
-                                            var key = await KakaoStoryApiHandler.UploadImage(filePath);
-                                            media.media_path = key;
-                                            media.media_type = "image";
-                                        }
-                                        finally
-                                        {
-                                            if (filePath != attachment.FilePath)
-                                            {
-                                                try { File.Delete(filePath); } catch { }
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        File.WriteAllBytes(attachment.FilePath, attachment.Data);
-                                        var key = await KakaoStoryApiHandler.UploadVideo(attachment.FilePath);
-                                        media.media_path = key;
-                                        await KakaoStoryApiHandler.WaitForVideoUploadFinish(key);
-                                        media.media_type = "video";
-                                    }
-                                    medias.Add(media);
+                                    await DisplayAlert("오류", $"카카오스토리에도 업로드 기능이 활성화되어 있으나, 카카오스토리의 글자 수 제한은 4,000자입니다. 현재 작성하신 게시글은 {text.Length}자로 제한을 초과하여 업로드하실 수 없습니다. 게시글 내용을 수정하신 후 다시 시도해 주세요.", Constants.PromptOk);
+                                    return;
                                 }
-                                mediaData.media = medias;
 
-                                string mediaType = null;
-                                var imageExists = _attachmentViewModels.Any(x => !x.IsVideo);
-                                var videoExists = _attachmentViewModels.Any(x => x.IsVideo);
-                                if (imageExists && videoExists)
-                                    mediaType = "mixed";
-                                else if (imageExists)
-                                    mediaType = "image";
-                                else if (videoExists)
-                                    mediaType = "video";
-                                mediaData.media_type = mediaType;
+                                if (_attachmentViewModels.Count > 0 && _externalUrlContentViewModel != null)
+                                {
+                                    var proceed = await DisplayAlert("경고", "카카오스토리 업로드 시, 외부 URL이 포함된 사진 및 동영상은 히스토리에서는 지원되지만, 카카오스토리에서는 지원되지 않습니다. 따라서 외부 URL은 카카오스토리에 게시되지 않습니다. 계속 진행하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+                                    if (!proceed) return;
+                                }
+                                var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
+
+                                var conversionFailedCount = 0;
+                                KakaoStoryApiHandler.DataType.MediaData mediaData;
+                                if (_attachmentViewModels.Count > 0)
+                                {
+                                    mediaData = new();
+                                    var medias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
+                                    foreach (var attachment in _attachmentViewModels)
+                                    {
+                                        var media = new KakaoStoryApiHandler.DataType.MediaData.MediaObject();
+                                        if (!attachment.IsVideo)
+                                        {
+                                            string filePath = attachment.FilePath;
+                                            var isWebp = attachment.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase);
+                                            if (isWebp)
+                                            {
+                                                var fileName = Path.GetFileNameWithoutExtension(filePath) + ".png";
+                                                filePath = Path.GetTempPath() + "c_" + fileName;
+                                                using var stream = File.OpenRead(attachment.FilePath);
+                                                using var image = PlatformImage.FromStream(stream);
+                                                var saveStream = File.Create(filePath);
+                                                if (image == null)
+                                                {
+                                                    conversionFailedCount++;
+                                                    continue;
+                                                }
+                                                else
+                                                {
+                                                    await image.SaveAsync(saveStream, ImageFormat.Png);
+                                                    saveStream.Dispose();
+                                                }
+                                            }
+
+                                            try
+                                            {
+                                                var key = await KakaoStoryApiHandler.UploadImage(filePath);
+                                                media.media_path = key;
+                                                media.media_type = "image";
+                                            }
+                                            finally
+                                            {
+                                                if (filePath != attachment.FilePath)
+                                                {
+                                                    try { File.Delete(filePath); } catch { }
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            File.WriteAllBytes(attachment.FilePath, attachment.Data);
+                                            var key = await KakaoStoryApiHandler.UploadVideo(attachment.FilePath);
+                                            media.media_path = key;
+                                            await KakaoStoryApiHandler.WaitForVideoUploadFinish(key);
+                                            media.media_type = "video";
+                                        }
+                                        medias.Add(media);
+                                    }
+                                    mediaData.media = medias;
+
+                                    string mediaType = null;
+                                    var imageExists = _attachmentViewModels.Any(x => !x.IsVideo);
+                                    var videoExists = _attachmentViewModels.Any(x => x.IsVideo);
+                                    if (imageExists && videoExists)
+                                        mediaType = "mixed";
+                                    else if (imageExists)
+                                        mediaType = "image";
+                                    else if (videoExists)
+                                        mediaType = "video";
+                                    mediaData.media_type = mediaType;
+                                }
+                                else mediaData = null;
+
+                                string permission = "F";
+                                if (discoveryOption == DiscoveryOption.Everyone) permission = "A";
+                                else if (discoveryOption == DiscoveryOption.OnlyMe) permission = "M";
+
+                                string scrap = null;
+                                if (mediaData == null && _externalUrlContentViewModel != null) scrap = await KakaoStoryApiHandler.GetScrapData(_externalUrlContentViewModel.ExternalUrlContent.SourceUrl);
+
+                                await KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, true, true, null, null, scrap, false, null, null);
+                                if (conversionFailedCount > 0) await DisplayAlert("오류", $"카키오스토리 업로드 도중 일부 webp 이미지를 png로 변환하는 데 실패하여 {conversionFailedCount}개의 이미지가 제외되었습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
                             }
-                            else mediaData = null;
-
-                            string permission = "F";
-                            if (discoveryOption == DiscoveryOption.Everyone) permission = "A";
-                            else if (discoveryOption == DiscoveryOption.OnlyMe) permission = "M";
-
-                            string scrap = null;
-                            if (mediaData == null && _externalUrlContentViewModel != null) scrap = await KakaoStoryApiHandler.GetScrapData(_externalUrlContentViewModel.ExternalUrlContent.SourceUrl);
-
-                            await KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, true, true, null, null, scrap, false, null, null);
-                            if (conversionFailedCount > 0) await DisplayAlert("오류", $"카키오스토리 업로드 도중 일부 webp 이미지를 png로 변환하는 데 실패하여 {conversionFailedCount}개의 이미지가 제외되었습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
-                        }
-                        catch (WebException exception)
-                        {
-                            var response = exception.Response as HttpWebResponse;
-                            using var respReader = response.GetResponseStream();
-                            using var reader = new StreamReader(respReader, Encoding.UTF8);
-                            var message = await reader.ReadToEndAsync();
-                            await DisplayAlert("오류", $"카카오스토리 API 오류가 발생하였습니다: [{response.StatusCode}] {message}", Constants.PromptOk);
+                            catch (WebException exception)
+                            {
+                                var response = exception.Response as HttpWebResponse;
+                                using var respReader = response.GetResponseStream();
+                                using var reader = new StreamReader(respReader, Encoding.UTF8);
+                                var message = await reader.ReadToEndAsync();
+                                await DisplayAlert("오류", $"카카오스토리 API 오류가 발생하였습니다: [{response.StatusCode}] {message}", Constants.PromptOk);
+                            }
                         }
                     }
 
