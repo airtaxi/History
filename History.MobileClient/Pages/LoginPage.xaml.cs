@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
@@ -10,7 +11,6 @@ using Result = History.Commons.Result;
 
 #if ANDROID
 using Android.Content;
-using CommunityToolkit.Maui.Alerts;
 #endif
 
 namespace History.MobileClient.Pages;
@@ -135,7 +135,11 @@ public partial class LoginPage : ContentPage
 
             var remoteVersion = Version.Parse(remoteVersionString);
             var localVersion = Version.Parse(localVersionString);
-            if (remoteVersion <= localVersion) return;
+            if (remoteVersion <= localVersion)
+            {
+                await Toast.Make("최신 버전을 사용중입니다.").Show();
+                return;
+            }
 #if ANDROID
             var shouldDownload = await DisplayAlert("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})\n업데이트 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (!shouldDownload) return;
