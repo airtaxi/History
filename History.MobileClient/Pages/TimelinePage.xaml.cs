@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
@@ -220,5 +220,12 @@ public partial class TimelinePage : ContentPage
         else ScrollToTopBorder.IsVisible = false;
     }
 
-    private void OnScrollToTopBorderTapped(object sender, TappedEventArgs e) => MainCollectionView.SetScrollOffsetY(0, false);
+    private void OnScrollToTopBorderTapped(object sender, TappedEventArgs e)
+    {
+        var firstViewModel = _viewModels.FirstOrDefault();
+        if (firstViewModel == null) return;
+
+        MainCollectionView.SetScrollOffsetY(0, false); // Cancel scroll animation
+        MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+    }
 }
