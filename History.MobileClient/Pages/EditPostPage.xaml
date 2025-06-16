@@ -204,6 +204,7 @@
         <Grid
             x:Name="SettingsGrid"
             Grid.Row="1"
+            Margin="0,0,0,-8"
             Padding="12"
             BackgroundColor="{AppThemeBinding Light=#FFFFFF,
                                               Dark=#000000}"
