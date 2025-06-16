@@ -234,7 +234,7 @@
                         HorizontalOptions="End"
                         OnColor="{StaticResource Primary}"
                         ThumbColor="#EEEEEE"
-                        Toggled="OnRefreshSwitchToggled"
+                        Toggled="OnWritePostToKakaoStorySwitchToggled"
                         VerticalOptions="Center" />
                 </Grid>
             </VerticalStackLayout>
