@@ -27,7 +27,6 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(DiscoveryOptionGlyph))]
     [NotifyPropertyChangedFor(nameof(ProfileMedia))]
     [NotifyPropertyChangedFor(nameof(IsRepost))]
-    [NotifyPropertyChangedFor(nameof(Contents))]
     [NotifyPropertyChangedFor(nameof(ParentPost))]
     [NotifyPropertyChangedFor(nameof(IsShare))]
     [NotifyPropertyChangedFor(nameof(HasRepostedUsers))]
@@ -71,7 +70,8 @@ public partial class PostViewModel : ObservableObject
     public partial bool IsWideMode { get; set; }
     public bool IsNotWideMode => !IsWideMode;
 
-    public List<IContentViewModel> Contents { get; private set; }
+    [ObservableProperty]
+    public partial List<IContentViewModel> Contents { get; private set; }
 
     public bool HasInteractions => Post.PostReactions.Count > 0 || Post.SharedAndRepostedUsers.Count > 0;
 
