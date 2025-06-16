@@ -392,11 +392,11 @@ public partial class EditPostPage : ContentPage
                         {
                             Shared.LastUsedPostDiscoveryOption = discoveryOption;
 
-                            var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("WritePostToKakaoStory");
+                            var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory");
                             if (!shouldWritePostToKakaoStory.HasValue)
                             {
                                 shouldWritePostToKakaoStory = await DisplayAlert("안내", "카카오스토리에도 게시글을 작성하는 옵션을 활성화하시겠습니까? 이 옵션은 글쓰기 하단의 설정을 펼쳐 언제든지 변경할 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
-                                Configuration.SetValue("WritePostToKakaoStory", shouldWritePostToKakaoStory.Value);
+                                Configuration.SetValue("ShouldWritePostToKakaoStory", shouldWritePostToKakaoStory.Value);
                             }
 
                             if (!shouldWritePostToKakaoStory.Value)
@@ -644,7 +644,7 @@ public partial class EditPostPage : ContentPage
         var shouldRefreshOnNewPost = Configuration.GetValue<bool?>($"ShouldRefreshOnNewPost[{_isShare}]") ?? !_isShare;
         RefreshSwitch.IsToggled = shouldRefreshOnNewPost;
 
-        var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("WritePostToKakaoStory");
+        var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory");
         if (shouldWritePostToKakaoStory.HasValue) WritePostToKakaoStorySwitch.IsToggled = shouldWritePostToKakaoStory.Value;
         WritePostToKakaoStoryGrid.IsVisible = !_isShare && _post == null;
 
