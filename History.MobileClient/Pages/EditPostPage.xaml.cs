@@ -21,6 +21,7 @@ using UraniumUI.Icons.MaterialSymbols;
 using System.Net;
 using History.MobileClient.KakaoStory;
 using Microsoft.Maui.Graphics.Platform;
+using System.Text;
 
 
 namespace History.MobileClient.Pages;
@@ -528,9 +529,13 @@ public partial class EditPostPage : ContentPage
                             await KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, true, true, null, null, scrap, false, null, null);
                             if (conversionFailedCount > 0) await DisplayAlert("오류", $"카키오스토리 업로드 도중 일부 webp 이미지를 png로 변환하는 데 실패하여 {conversionFailedCount}개의 이미지가 제외되었습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
                         }
-                        catch (Exception)
+                        catch (WebException exception)
                         {
-                            await DisplayAlert("오류", "카카오스토리 API 오류가 발생하였습니다.", Constants.PromptOk);
+                            var response = exception.Response as HttpWebResponse;
+                            using var respReader = response.GetResponseStream();
+                            using var reader = new StreamReader(respReader, Encoding.UTF8);
+                            var message = await reader.ReadToEndAsync();
+                            await DisplayAlert("오류", $"카카오스토리 API 오류가 발생하였습니다: [{response.StatusCode}] {message}", Constants.PromptOk);
                         }
                     }
 
