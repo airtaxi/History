@@ -340,8 +340,8 @@ public partial class EditPostPage : ContentPage
             }
 
             try
-		    {
-			    MainActivityIndicator.IsRunning = true;
+            {
+                MainActivityIndicator.IsRunning = true;
 
                 List<string> discoveryOptionSelectedUserIds = null;
                 var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
@@ -384,6 +384,7 @@ public partial class EditPostPage : ContentPage
                     if (shouldWritePostToKakaoStory.Value)
                     {
                         MainActivityIndicator.IsRunning = true;
+                        IsEnabled = false;
 
                         bool loginNeeded = true;
                         var cookies = Configuration.GetValue<List<Cookie>>("KakaoStoryCookies");
@@ -543,8 +544,12 @@ public partial class EditPostPage : ContentPage
                         await App.PopAsync();
                     }
                 }
-		    }
-            finally { MainActivityIndicator.IsRunning = false; }
+            }
+            finally
+            {
+                MainActivityIndicator.IsRunning = false;
+                IsEnabled = true;
+            }
         }
         finally { _isUploading = false; }
     }
