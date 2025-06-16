@@ -125,7 +125,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             && firstNotification.Data.TryGetValue("PostId", out var postId))
         {
             var filter = Builders<Notification>.Filter.Eq("Data.PostId", postId);
-            if (type == NotificationType.CommentMention || type == NotificationType.CommentMention)
+            if (type == NotificationType.Comment || type == NotificationType.CommentMention)
             {
                 filter &= Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.CommentMention)
                     | Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.Comment);
