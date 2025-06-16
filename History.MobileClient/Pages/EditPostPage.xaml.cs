@@ -384,6 +384,7 @@ public partial class EditPostPage : ContentPage
                     if (shouldWritePostToKakaoStory.Value)
                     {
                         MainActivityIndicator.IsRunning = true;
+
                         bool loginNeeded = true;
                         var cookies = Configuration.GetValue<List<Cookie>>("KakaoStoryCookies");
                         if (cookies != null)
