@@ -195,7 +195,7 @@
                 Background="{AppThemeBinding Dark=Black,
                                              Light=White}"
                 Stroke="#808080"
-                StrokeThickness="1.5">
+                StrokeThickness="1">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="8" />
                 </Border.StrokeShape>
