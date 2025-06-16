@@ -5,6 +5,7 @@ using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using MongoDB.Driver;
+using System.Text.Json;
 using Notification = History.Commons.DataTypes.Notification;
 
 namespace History.ApiService.Services;
@@ -651,13 +652,17 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         {
             var result = await friendshipService.GetFriendsOfFriendIdsAsync(post.UserId);
             if (result.IsFailure) return result.CastFailure<List<string>>();
-            return recipients.Intersect(result.Value).ToList();
+
+            result.Value.Add(post.UserId); // Include the post author
+            return recipients.Intersect(result.Value).Distinct().ToList();
         }
         else if (post.DiscoveryOption == DiscoveryOption.Friends)
         {
             var result = await friendshipService.GetUserFriendIdsAsync(post.UserId, post.UserId);
             if (result.IsFailure) return result;
-            return recipients.Intersect(result.Value).ToList();
+
+            result.Value.Add(post.UserId); // Include the post author
+            return recipients.Intersect(result.Value).Distinct().ToList();
         }
         else if (post.DiscoveryOption == DiscoveryOption.SelectedUsers)
         {
