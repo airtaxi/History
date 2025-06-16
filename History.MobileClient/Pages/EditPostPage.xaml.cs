@@ -377,7 +377,6 @@ public partial class EditPostPage : ContentPage
                 {
                     if (_post == null)
                     {
-
                         var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory");
                         if (!shouldWritePostToKakaoStory.HasValue)
                         {
