@@ -400,7 +400,7 @@ public partial class EditPostPage : ContentPage
                                 await KakaoStoryApiHandler.GetFriends();
                                 loginNeeded = false;
                             }
-                            catch (Exception) { }
+                            catch { }
                         }
 
                         if (loginNeeded)
