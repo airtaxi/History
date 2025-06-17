@@ -13,7 +13,7 @@ public class AppleController : ControllerBase
 {
     private const string KeyId = "DGK52ABR8V";
     private const string TeamId = "UP6EXS2HJJ";
-    private const string ClientId = "com.airtaxi.history";
+    private const string ClientId = "com.airtaxi.history.as";
     private readonly static string PrivateKeyPath = Path.Combine(AppContext.BaseDirectory, "AuthKey_DGK52ABR8V.p8");
     private const string AuthorizationEndpoint = "https://appleid.apple.com/auth/authorize";
     private const string RedirectUri = "https://api.history.cenox.io/api/auth/apple/callback";
