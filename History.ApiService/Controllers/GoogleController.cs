@@ -51,7 +51,7 @@ public class GoogleController : ControllerBase
 
         if (idToken == null) return StatusCode(500, "Failed to retrieve ID token from Google.");
 
-        // state에 원래 요청된 callback URL이 있다면 거기로 redirect
+        // state has redirect URL to return to after successful login
         var redirectUrl = $"{state}?id_token={HttpUtility.UrlEncode(idToken)}";
         return Redirect(redirectUrl);
     }
