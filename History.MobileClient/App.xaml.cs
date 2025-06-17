@@ -73,8 +73,6 @@ public partial class App : Application
     {
         if (NavigationSemaphore.CurrentCount == 0) return;
 
-        GC.Collect(2, GCCollectionMode.Forced);
-
         await NavigationSemaphore.WaitAsync();
 
         Page duplicatePage = null;
@@ -124,8 +122,6 @@ public partial class App : Application
     {
         if (NavigationSemaphore.CurrentCount == 0) return;
 
-        GC.Collect(2, GCCollectionMode.Forced);
-
         await NavigationSemaphore.WaitAsync();
 #if IOS
         try { await Current.Windows[0].Page.Navigation.PopModalAsync(); }
@@ -145,8 +141,6 @@ public partial class App : Application
     {
         if (NavigationSemaphore.CurrentCount == 0) return;
 
-        GC.Collect(2, GCCollectionMode.Forced);
-
         await NavigationSemaphore.WaitAsync();
         try { await Current.Windows[0].Page.Navigation.PushModalAsync(page); }
         finally
@@ -161,8 +155,6 @@ public partial class App : Application
     public static async Task PopModalAsync()
     {
         if (NavigationSemaphore.CurrentCount == 0) return;
-
-        GC.Collect(2, GCCollectionMode.Forced);
 
         await NavigationSemaphore.WaitAsync();
         try { await Current.Windows[0].Page.Navigation.PopModalAsync(); }
