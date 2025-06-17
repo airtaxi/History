@@ -37,11 +37,7 @@ public class MediaController(IMediaService mediaService) : ControllerBase
         var etag = $"\"{mediaId}\"";
         Response.Headers.Append("ETag", etag);
 
-        if (Request.Headers.ContainsKey("If-None-Match") &&
-            Request.Headers["If-None-Match"].ToString() == etag)
-        {
-            return StatusCode(304);
-        }
+        if (Request.Headers.TryGetValue("If-None-Match", out var value) && value.ToString() == etag) return StatusCode(304);
 
         return File(mediaContent, mediaResult.Value.MimeType, true);
     }
