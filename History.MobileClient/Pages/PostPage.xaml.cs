@@ -1,4 +1,4 @@
-
+﻿
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -154,7 +154,7 @@ public partial class PostPage : ContentPage
         }
 
         var contents = CommentTextContentView.GetContents();
-        Utils.TrimContents(contents);
+        Utils.SanitizeContents(contents);
 
         var files = new Dictionary<string, byte[]>();
         if (_commentMediaAttachmentViewModel != null)

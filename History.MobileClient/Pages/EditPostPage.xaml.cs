@@ -306,7 +306,6 @@ public partial class EditPostPage : ContentPage
         try
         {
             var editorContents = MainTextContent.GetContents();
-            Utils.TrimContents(editorContents);
 
             var files = new Dictionary<string, byte[]>();
             var mediaAndUploadContents = new List<BaseContent>();

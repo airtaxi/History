@@ -91,8 +91,11 @@ public static class Utils
         return contentViewModels;
     }
 
-    public static void TrimContents(List<BaseContent> contents)
+    public static void SanitizeContents(List<BaseContent> contents)
     {
+        contents.RemoveAll(x => x is null);
+        contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrEmpty(textContent.Text));
+
         var cloned = contents.ToList();
         contents.Clear();
         var textContentBuffer = new List<TextContent>();
