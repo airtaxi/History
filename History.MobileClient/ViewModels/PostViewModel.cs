@@ -264,7 +264,7 @@ public partial class PostViewModel : ObservableObject
         }
         else if (action == "게시글 홍보")
         {
-            var shouldWritePublicPost = await App.Page.DisplayAlert("안내", "게시글을 홍보하시겠습니까? 게시글을 홍보하면 발견탭에서 모든 사용자가 확인할 수 있습니다. 단, 하루에 한 번만 홍보할 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
+            var shouldWritePublicPost = await App.Page.DisplayAlert("안내", "게시글을 홍보하면 '발견' 탭에서 모든 사용자에게 노출됩니다. 단, 홍보는 24시간에 한 번만 가능합니다.", Constants.PromptOk, Constants.PromptCancel);
             if (!shouldWritePublicPost) return;
 
             var success = await App.ExecuteRequestAsync(new WritePublicPost(Post.Id));
