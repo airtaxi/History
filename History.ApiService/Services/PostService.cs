@@ -375,9 +375,12 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         if (user.IsFailure) return user.CastFailure();
 
         // Sanitize contents
-        Utils.SanitizeContents(requestDto.Contents);
+        var contents = requestDto.Contents ?? [];
+        Utils.SanitizeContents(contents);
+        if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
+            return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
 
-        var mediaCount = requestDto.Contents.Count(x => x is UploadContent || x is MediaContent);
+        var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
         if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
 
         if ((requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers)
@@ -413,26 +416,26 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         }
 
         // Upload medias
-        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Post, postId, userId, requestDto.Contents, files);
+        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Post, postId, userId, contents, files);
         if (uploadResult.IsFailure) return uploadResult;
 
-        var externalUrlContents = requestDto.Contents.OfType<ExternalUrlContent>();
+        var externalUrlContents = contents.OfType<ExternalUrlContent>();
         foreach (var externalUrlContent in externalUrlContents.ToList())
         {
             var fillResult = await FillExternalUrlContentAsync(externalUrlContent);
-            if (fillResult.IsFailure) requestDto.Contents.Remove(externalUrlContent);
+            if (fillResult.IsFailure) contents.Remove(externalUrlContent);
         }
 
         var post = new Post
         {
             Id = postId,
             UserId = userId,
-            Contents = requestDto.Contents,
+            Contents = contents,
             CreatedAt = DateTime.UtcNow,
             DiscoveryOption = requestDto.DiscoveryOption,
             DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? (requestDto.DiscoveryOptionSelectedUserIds ?? []) : null,
             ParentPostId = requestDto.ParentPostId,
-            SearchIndex = GenerateSearchIndexFromContents(requestDto.Contents),
+            SearchIndex = GenerateSearchIndexFromContents(contents),
             IsRepost = false
         };
 
@@ -462,9 +465,12 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         if (postResult.IsFailure) return postResult.CastFailure();
 
         // Sanitize contents
-        Utils.SanitizeContents(requestDto.Contents);
+        var contents = requestDto.Contents ?? [];
+        Utils.SanitizeContents(contents);
+        if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
+            return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
 
-        var mediaCount = requestDto.Contents.Count(x => x is UploadContent || x is MediaContent);
+        var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
         if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
 
         var post = postResult.Value;
@@ -473,7 +479,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Delete Media
         var originalPostMediaIds = post.Contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
-        var mediaIds = requestDto.Contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
+        var mediaIds = contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
 
         var deletedMediaIds = originalPostMediaIds.Except(mediaIds).ToList();
         foreach (var mediaId in deletedMediaIds) await mediaService.DeleteMediaByIdAsync(mediaId);
@@ -483,19 +489,19 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         post.DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? (requestDto.DiscoveryOptionSelectedUserIds ?? []) : null;
 
         // Upload medias
-        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Post, postId, userId, requestDto.Contents, files);
+        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Post, postId, userId, contents, files);
         if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
-        var externalUrlContents = requestDto.Contents.OfType<ExternalUrlContent>();
+        var externalUrlContents = contents.OfType<ExternalUrlContent>();
         foreach (var externalUrlContent in externalUrlContents.ToList())
         {
             var fillResult = await FillExternalUrlContentAsync(externalUrlContent);
-            if (fillResult.IsFailure) requestDto.Contents.Remove(externalUrlContent);
+            if (fillResult.IsFailure) contents.Remove(externalUrlContent);
         }
 
         // Update the post contents
-        post.Contents = requestDto.Contents;
-        post.SearchIndex = GenerateSearchIndexFromContents(requestDto.Contents);
+        post.Contents = contents;
+        post.SearchIndex = GenerateSearchIndexFromContents(contents);
 
         post.ModifiedAt = DateTime.UtcNow;
 
@@ -758,12 +764,15 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             return (ErrorType.BadRequest, "홍보 게시글은 하루에 하나만 작성할 수 있습니다.");
 
         // Sanitize contents
-        Utils.SanitizeContents(originalPost.Contents);
+        var contents = originalPost.Contents ?? [];
+        Utils.SanitizeContents(contents);
+        if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
+            return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
 
         var publicPost = new Post
         {
             UserId = requesterId,
-            Contents = originalPost.Contents,
+            Contents = contents,
             CreatedAt = DateTime.UtcNow,
             DiscoveryOption = DiscoveryOption.Everyone,
             DiscoveryOptionSelectedUserIds = [],
