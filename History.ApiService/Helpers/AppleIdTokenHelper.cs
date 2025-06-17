@@ -1,9 +1,13 @@
-﻿using History.ApiService.DataTypes;
-using Microsoft.IdentityModel.Tokens;
-using RestSharp;
+﻿using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.OpenSsl;
+
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json;
+using History.ApiService.DataTypes;
+using Microsoft.IdentityModel.Tokens;
+using RestSharp;
 
 namespace History.ApiService.Helpers;
 
@@ -124,4 +128,53 @@ public static class AppleIdTokenHelper
         public string E { get; set; }
     }
 
+
+    public static string GenerateJwtToken(string keyId, string teamId, string clientId, string privateKeyFilePath)
+    {
+        var currentTime = DateTime.UtcNow;
+        var expirationTime = currentTime.AddMinutes(30);
+
+        var privateKey = File.ReadAllText(privateKeyFilePath);
+        ECDsaSecurityKey securityKey = new(LoadPrivateKey(privateKey))
+        {
+            KeyId = keyId
+        };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Issuer = teamId,
+            Audience = "https://appleid.apple.com",
+            IssuedAt = currentTime,
+            NotBefore = currentTime,
+            Expires = expirationTime,
+            SigningCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.EcdsaSha256),
+            Subject = new ClaimsIdentity(new[]
+            {
+                    new Claim("sub", clientId)
+                })
+        };
+
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
+    }
+
+    private static ECDsa LoadPrivateKey(string privateKey)
+    {
+        using var reader = new StringReader(privateKey);
+        var pemReader = new PemReader(reader);
+        var keyPair = (ECPrivateKeyParameters)pemReader.ReadObject();
+        var q = keyPair.Parameters.G.Multiply(keyPair.D).Normalize();
+
+        return ECDsa.Create(new ECParameters
+        {
+            Curve = ECCurve.NamedCurves.nistP256,
+            D = keyPair.D.ToByteArrayUnsigned(),
+            Q = new ECPoint
+            {
+                X = q.XCoord.GetEncoded(),
+                Y = q.YCoord.GetEncoded()
+            }
+        });
+    }
 }
