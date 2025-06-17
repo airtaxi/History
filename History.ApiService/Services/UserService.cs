@@ -327,6 +327,15 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc/>
+    public async Task<Result<List<string>>> FilterAllowSearch(List<string> userIds)
+    {
+        if (userIds == null || !userIds.Any()) return new List<string>();
+        var filter = Builders<User>.Filter.In(u => u.Id, userIds) & Builders<User>.Filter.Eq(u => u.AllowSearch, true);
+        var ids = await _userCollection.Find(filter).Project(u => u.Id).ToListAsync();
+        return ids;
+    }
+
+    /// <inheritdoc/>
     public async Task<string> GenerateTextPreviewFromContentsAsync(IEnumerable<BaseContent> contents, string requesterId = null)
     {
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
