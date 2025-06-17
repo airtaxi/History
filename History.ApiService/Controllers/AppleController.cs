@@ -25,6 +25,7 @@ public class AppleController : ControllerBase
         $"&client_id={HttpUtility.UrlEncode(ClientId)}" +
         $"&redirect_uri={HttpUtility.UrlEncode(RedirectUri)}" +
         $"&scope={HttpUtility.UrlEncode("name email")}" +
+        $"&response_mode=form_post" +
         $"&state={HttpUtility.UrlEncode(redirectUrl)}");
 
     [HttpPost("callback")]
