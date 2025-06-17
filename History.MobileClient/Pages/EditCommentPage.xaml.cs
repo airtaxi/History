@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
@@ -49,7 +49,7 @@ public partial class EditCommentPage : ContentPage
     private async void OnEditButtonClicked(object sender, EventArgs e)
     {
         var contents = MainTextContent.GetContents();
-        Utils.TrimContents(contents);
+        Utils.SanitizeContents(contents);
 
         var files = new Dictionary<string, byte[]>();
 
