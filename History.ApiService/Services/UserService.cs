@@ -5,6 +5,7 @@ using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
 using System.Text;
 
@@ -155,6 +156,9 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     /// <inheritdoc />
     public async Task<Result> UpdateNicknameAsync(string userId, string nickname)
     {
+        nickname = Utils.SanitizeText(nickname);
+        if (string.IsNullOrEmpty(nickname)) return (ErrorType.BadRequest, "닉네임은 비워둘 수 없습니다.");
+
         var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
         var update = Builders<User>.Update.Set(u => u.Nickname, nickname);
         return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "닉네임을 변경하는 중 오류가 발생했습니다.");
@@ -179,7 +183,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     /// <inheritdoc />
     public async Task<Result> UpdateHandleAsync(string userId, string handle)
     {
-        handle = handle.Trim().ToLower();
+        handle = Utils.SanitizeText(handle.Trim().ToLower());
 
         if (handle.Contains(' ') || handle.Contains('@') || handle.Contains('#') || handle.Contains('!') || handle.Contains('$') || handle.Contains('%') || handle.Contains('^') || handle.Contains('&') || handle.Contains('*') || handle.Contains('(') || handle.Contains(')') || handle.Contains('+'))
             return (ErrorType.BadRequest, "허용되지 않는 문자가 포함되어 있습니다.\n공백이나 특수 문자(@, #, !, $, %, ^, &, *, (, ), +)는 사용할 수 없습니다.");

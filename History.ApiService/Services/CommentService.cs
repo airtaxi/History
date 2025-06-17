@@ -100,6 +100,9 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         var postService = serviceProvider.GetRequiredService<IPostService>();
         var userService = serviceProvider.GetRequiredService<IUserService>();
 
+        // Sanitize contents
+        Utils.SanitizeContents(contents);
+
         if (requesterId == null) Result<Comment>.Failure(ErrorType.Unauthorized, "로그인이 필요합니다.");
 
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
@@ -153,6 +156,9 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
     public async Task<Result> ModifyCommentAsync(string commentId, List<BaseContent> contents, string requesterId, IEnumerable<IFormFile> files)
     {
         var postService = serviceProvider.GetRequiredService<IPostService>();
+
+        // Sanitize contents
+        Utils.SanitizeContents(contents);
 
         var permissionResult = await CheckPermissionAsync(commentId, requesterId);
         if (permissionResult.IsFailure) return permissionResult;

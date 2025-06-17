@@ -374,6 +374,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var user = await userService.GetUserByIdAsync(userId);
         if (user.IsFailure) return user.CastFailure();
 
+        // Sanitize contents
+        Utils.SanitizeContents(requestDto.Contents);
+
         var mediaCount = requestDto.Contents.Count(x => x is UploadContent || x is MediaContent);
         if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
 
@@ -457,6 +460,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     {
         var postResult = await GetPostByIdAsync(postId);
         if (postResult.IsFailure) return postResult.CastFailure();
+
+        // Sanitize contents
+        Utils.SanitizeContents(requestDto.Contents);
 
         var mediaCount = requestDto.Contents.Count(x => x is UploadContent || x is MediaContent);
         if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
@@ -750,6 +756,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         if (recentPublicPost != null && (DateTime.UtcNow - recentPublicPost.CreatedAt).TotalDays < 1)
             return (ErrorType.BadRequest, "홍보 게시글은 하루에 하나만 작성할 수 있습니다.");
+
+        // Sanitize contents
+        Utils.SanitizeContents(originalPost.Contents);
 
         var publicPost = new Post
         {

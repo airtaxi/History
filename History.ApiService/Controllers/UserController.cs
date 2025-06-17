@@ -381,6 +381,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [HttpPut("nickname")]
     [Authorize]
     [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(500)]
@@ -395,6 +396,7 @@ public class UserController(IUserService userService, IFriendshipService friends
 
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
