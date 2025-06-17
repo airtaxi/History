@@ -7,6 +7,8 @@ using RestSharp;
 
 namespace History.ApiService.Controllers;
 
+[ApiController]
+[Route("api/auth/apple")]
 public class AppleController : ControllerBase
 {
     private const string KeyId = "DGK52ABR8V";
@@ -25,8 +27,8 @@ public class AppleController : ControllerBase
         $"&scope={HttpUtility.UrlEncode("name email")}" +
         $"&state={HttpUtility.UrlEncode(redirectUrl)}");
 
-    [HttpGet("callback")]
-    public async Task<IActionResult> Callback([FromQuery] string code, [FromQuery] string state)
+    [HttpPost("callback")]
+    public async Task<IActionResult> Callback([FromForm] string code, [FromForm] string state, [FromForm] string user)
     {
         if (string.IsNullOrEmpty(code))
             return RedirectToAction("Login", "Apple");
@@ -35,7 +37,6 @@ public class AppleController : ControllerBase
         using (var client = new RestClient("https://appleid.apple.com/auth/token"))
         {
             var request = new RestRequest() { Method = Method.Post };
-
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
             request.AddParameter("client_id", ClientId, ParameterType.GetOrPost);
             request.AddParameter("client_secret", GenerateJwtToken(), ParameterType.GetOrPost);
@@ -45,15 +46,20 @@ public class AppleController : ControllerBase
 
             var response = await client.ExecuteAsync(request);
             var content = response.Content;
-
             var data = JsonNode.Parse(response.Content).AsObject();
             idToken = (string)data["id_token"];
         }
 
         if (idToken == null) return StatusCode(500, "Failed to retrieve ID token from Apple.");
 
-        // state has redirect URL to return to after successful login
+        JsonNode userInfo = null;
+        if (!string.IsNullOrEmpty(user)) userInfo = JsonNode.Parse(user);
+
         var redirectUrl = $"{state}?id_token={HttpUtility.UrlEncode(idToken)}";
+
+        if (userInfo != null) redirectUrl += $"&user={HttpUtility.UrlEncode(user)}";
+
         return Redirect(redirectUrl);
     }
+
 }
