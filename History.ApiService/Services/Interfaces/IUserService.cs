@@ -169,6 +169,13 @@ public interface IUserService
     public Task<Result> WithdrawAsync(string userId);
 
     /// <summary>
+    /// Filters a list of user IDs to only include those that are allowed to be searched by the user.
+    /// </summary>
+    /// <param name="userIds">The list of user IDs to filter.</param>
+    /// <returns>A task representing the asynchronous operation, with a result containing a list of user IDs that are allowed to be searched.</returns>
+    public Task<Result<List<string>>> FilterAllowSearch(List<string> userIds);
+
+    /// <summary>
     /// Generate text preview asynchronously based on the provided contents.
     /// </summary>
     /// <param name="contents">The contents of post or comments to generate preview from.</param>

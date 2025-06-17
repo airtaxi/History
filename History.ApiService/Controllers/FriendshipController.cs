@@ -253,6 +253,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var friendIdsResult = await friendshipService.GetUserFriendIdsAsync(userId, requesterId);
         if (friendIdsResult.IsSuccess)
         {
+            if (userId != requesterId) friendIdsResult = await userService.FilterAllowSearch(friendIdsResult.Value);
             var dtosResult = await userService.GenerateUserResponseDtosAsync(friendIdsResult.Value, requesterId);
             return Ok(dtosResult.Value);
         }
