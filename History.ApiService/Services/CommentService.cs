@@ -7,6 +7,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using Microsoft.OpenApi.Validations;
 using MongoDB.Driver;
+using Namotion.Reflection;
 
 namespace History.ApiService.Services;
 
@@ -102,6 +103,8 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
 
         // Sanitize contents
         Utils.SanitizeContents(contents);
+        if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
+            return (ErrorType.BadRequest, "댓글 내용이 비어있습니다.");
 
         if (requesterId == null) Result<Comment>.Failure(ErrorType.Unauthorized, "로그인이 필요합니다.");
 
@@ -159,6 +162,8 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
 
         // Sanitize contents
         Utils.SanitizeContents(contents);
+        if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
+            return (ErrorType.BadRequest, "댓글 내용이 비어있습니다.");
 
         var permissionResult = await CheckPermissionAsync(commentId, requesterId);
         if (permissionResult.IsFailure) return permissionResult;
