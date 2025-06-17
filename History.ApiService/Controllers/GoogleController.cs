@@ -11,7 +11,7 @@ namespace History.ApiService.Controllers;
 public class GoogleController : ControllerBase
 {
     private const string ClientId = "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com";
-    private const string ClientSecret = "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"; // Replace with your actual client secret
+    private const string ClientSecret = "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";
     private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
     private const string RedirectUri = "https://api.history.cenox.io/api/auth/google/callback";
 
