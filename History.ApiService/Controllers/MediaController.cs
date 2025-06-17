@@ -29,6 +29,20 @@ public class MediaController(IMediaService mediaService) : ControllerBase
         if (mediaContent.Error == ErrorType.NotFound) return NotFound(mediaContent.ErrorMessage);
         else if (mediaContent.IsFailure) return StatusCode(500, mediaContent.FullErrorMessage);
 
+        
+        Response.Headers.Append("Cache-Control", "public, max-age=604800");
+        Response.Headers.Append("Expires", DateTime.UtcNow.AddDays(1).ToString("R"));
+        Response.Headers.Append("Last-Modified", DateTime.UtcNow.ToString("R"));
+
+        var etag = $"\"{mediaId}\"";
+        Response.Headers.Append("ETag", etag);
+
+        if (Request.Headers.ContainsKey("If-None-Match") &&
+            Request.Headers["If-None-Match"].ToString() == etag)
+        {
+            return StatusCode(304);
+        }
+
         return File(mediaContent, mediaResult.Value.MimeType, true);
     }
 }
