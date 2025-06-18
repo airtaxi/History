@@ -19,7 +19,7 @@ namespace History.MobileClient.Behaviors
         private DateTime _startTime;
         private View _associatedObject;
         private bool _isPanning;
-        private bool? _wasFullscreenSwipeable;
+        private bool _wasFullscreenSwipeable;
         private FullScreenMediaContentViewModel _fullScreenMediaContentViewModel;
         private const double SwipeThreshold = 150;
 
@@ -58,7 +58,15 @@ namespace History.MobileClient.Behaviors
                     _totalY = 0;
                     _startTime = DateTime.Now;
                     _isPanning = true;
-                    _wasFullscreenSwipeable = null;
+
+                    if (_fullScreenMediaContentViewModel != null)
+                    {
+                        if (_fullScreenMediaContentViewModel.CurrentMedia.IsInZoomMode) return;
+
+                        _wasFullscreenSwipeable = _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable;
+                        _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable = false;
+                    }
+
                     Debug.WriteLine($"STARTED: TotalX: {e.TotalX}, TotalY: {e.TotalY}");
                     break;
 
@@ -72,20 +80,12 @@ namespace History.MobileClient.Behaviors
                     if (Math.Abs(_totalX) > Math.Abs(_totalY) * 1.5)
                     {
                         _isPanning = false;
-                        if (_fullScreenMediaContentViewModel != null && _wasFullscreenSwipeable.HasValue) _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable = _wasFullscreenSwipeable.Value;
+                        if (_fullScreenMediaContentViewModel != null) _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable = _wasFullscreenSwipeable;
                         return;
                     }
 
                     if (Math.Abs(_totalY) > 20 && Math.Abs(_totalY) > Math.Abs(_totalX))
                     {
-                        if (_fullScreenMediaContentViewModel != null && !_wasFullscreenSwipeable.HasValue)
-                        {
-                            if (_fullScreenMediaContentViewModel.CurrentMedia.IsInZoomMode) return;
-
-                            _wasFullscreenSwipeable = _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable;
-                            _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable = false;
-                        }
-
                         var root = GetRootContent();
                         if (root != null)
                         {
@@ -118,7 +118,7 @@ namespace History.MobileClient.Behaviors
                     }
 
                     _isPanning = false;
-                    if (_fullScreenMediaContentViewModel != null && _wasFullscreenSwipeable.HasValue) _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable = _wasFullscreenSwipeable.Value;
+                    if (_fullScreenMediaContentViewModel != null) _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable = _wasFullscreenSwipeable;
                     break;
             }
         }
