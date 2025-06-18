@@ -18,17 +18,12 @@ public partial class FriendListPage : ContentPage
 
     private readonly string _userId;
 
-#if IOS
-    private readonly bool _isTabbedPage;
-#endif
 
 	public FriendListPage()
 	{
         _userId = Shared.UserId;
         _sortByTime = Configuration.GetValue<bool>("FriendsListSortByTime");
-#if IOS
-        _isTabbedPage = true;
-#endif
+
         InitializeComponent();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
@@ -157,7 +152,7 @@ public partial class FriendListPage : ContentPage
     private void OnLoaded(object sender, EventArgs e)
     {
 #if IOS
-        if (!_isTabbedPage)
+        if (TitleGrid.IsVisible)
         {
             AppleSwipeGestureHelper.ApplyToPage(this);
         }

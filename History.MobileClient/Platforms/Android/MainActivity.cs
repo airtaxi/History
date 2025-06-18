@@ -73,7 +73,6 @@ public class MainActivity : MauiAppCompatActivity
                 var image = BitmapFactory.DecodeStream(url.OpenConnection().InputStream);
 
                 builder = builder
-                .SetLargeIcon(image)
                 .SetStyle(new NotificationCompat.BigPictureStyle()
                     .BigPicture(image)
                     .SetSummaryText(notification.Body));

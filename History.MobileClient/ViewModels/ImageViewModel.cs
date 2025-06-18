@@ -26,10 +26,10 @@ public partial class ImageViewModel(string uri, PostType postType = PostType.Unw
     public partial LayoutOptions VerticalContentOptions { get; set; } = LayoutOptions.Fill;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsNotFullScreen))]
     public partial bool IsFullScreen { get; set; } = false;
 
-    public bool IsNotFullScreen => !IsFullScreen;
+    [ObservableProperty]
+    public partial bool IsInZoomMode { get; set; } = false;
 
     [ObservableProperty]
     public partial bool FullScreenSwipeable { get; set; } = true;

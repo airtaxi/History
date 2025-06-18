@@ -6,6 +6,7 @@ using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.MobileClient.Enums;
 using History.MobileClient.Pages;
 using UraniumUI.Icons.FontAwesome;
 
@@ -74,7 +75,7 @@ public partial class FriendshipViewModel(UserResponseDto user, PostInteractionVi
             var postResult = await App.ExecuteRequestAsync(new GetPost(PostInteractionViewModel.TargetPostId), ErrorType.Forbidden);
             if (postResult.IsSuccess)
             {
-                var postViewModel = new PostViewModel(postResult.Value, false);
+                var postViewModel = new PostViewModel(postResult.Value, PostType.Unwrapped);
                 var postPage = new PostPage(postViewModel);
                 await App.PushAsync(postPage);
             }

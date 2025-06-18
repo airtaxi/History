@@ -8,6 +8,7 @@ internal class MediaTemplateSelector : DataTemplateSelector
     public DataTemplate ImageTemplate { get; set; }
     public DataTemplate AppleImageTemplate { get; set; }
     public DataTemplate FullScreenImageTemplate { get; set; }
+    public DataTemplate FullScreenVideoTemplate { get; set; }
 
     protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
     {
@@ -21,7 +22,7 @@ internal class MediaTemplateSelector : DataTemplateSelector
 #else
         if (item is ImageViewModel imageViewModel) return imageViewModel.IsFullScreen ? FullScreenImageTemplate : ImageTemplate;
 #endif
-        else if (item is VideoViewModel) return VideoTemplate;
+        else if (item is VideoViewModel videoViewModel) return videoViewModel.IsFullScreen ? FullScreenVideoTemplate : VideoTemplate;
         else throw new ArgumentException("Unknown item type", nameof(item));
     }
 }
