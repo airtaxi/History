@@ -27,7 +27,7 @@ public partial class Media : ResourceDictionary
         carouselView.HeightRequest = newHeight;
     }
 
-    private static CarouselView FindCarouselView(View view)
+    public static CarouselView FindCarouselView(View view)
     {
         var parent = view.Parent;
         while (parent != null && parent is not CarouselView) parent = parent.Parent;
