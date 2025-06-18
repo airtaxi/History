@@ -145,13 +145,17 @@ public partial class PostViewModel : ObservableObject
 
     private void UpdatePost(PostResponseDto post)
     {
-        Post = post;
-        Contents = Utils.GenerateContentViewModels(Post.Contents, IsTimeline, IsParentPost);
-        ParentPost = Post.ParentPost != null ? new(Post.ParentPost, IsTimeline, true) : null;
-        User = post?.User;
+        try
+        {
+            Post = post;
+            Contents = Utils.GenerateContentViewModels(Post.Contents, IsTimeline, IsParentPost);
+            ParentPost = Post.ParentPost != null ? new(Post.ParentPost, IsTimeline, true) : null;
+            User = post?.User;
 
-        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, IsTimeline, this)).OrderBy(x => x.CreatedAt)];
-        HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
+            Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, IsTimeline, this)).OrderBy(x => x.CreatedAt)];
+            HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
+        }
+        catch (ObjectDisposedException) { } // The view is disposed. this view model also will be removed on next GC
     }
 
     private void OnPostChangedMessageReceived(object sender, ValueChangedMessage<PostResponseDto> message)
