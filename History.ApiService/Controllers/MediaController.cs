@@ -1,4 +1,5 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using DotNet.RateLimiter.ActionFilters;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,6 +18,7 @@ public class MediaController(IMediaService mediaService) : ControllerBase
     [ProducesResponseType<byte[]>(200)]
     [ProducesResponseType<string>(404)]
     [ProducesResponseType<string>(500)]
+    [RateLimit(Limit = 60, PeriodInSec = 1)]
     public async Task<IActionResult> GetMediaContent(string mediaId)
     {
         if(mediaId.Contains('.')) mediaId = mediaId.Split(".")[0]; // Remove file extension if exists

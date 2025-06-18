@@ -1,4 +1,5 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using DotNet.RateLimiter.ActionFilters;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +10,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[RateLimit(Limit = 6, PeriodInSec = 1)]
 public class FriendshipController(IUserService userService, IFriendshipService friendshipService) : ControllerBase
 {
     [HttpPost("request/{receiverId}")]

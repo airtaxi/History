@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using DotNet.RateLimiter.ActionFilters;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using System.Text.Json.Nodes;
@@ -8,6 +9,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/auth/google")]
+[RateLimit(Limit = 1, PeriodInSec = 1)]
 public class GoogleController : ControllerBase
 {
     private const string ClientId = "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com";

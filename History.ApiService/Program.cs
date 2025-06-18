@@ -1,4 +1,5 @@
-﻿using FirebaseAdmin;
+﻿using DotNet.RateLimiter;
+using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using History.ApiService;
 using History.ApiService.Services;
@@ -53,6 +54,7 @@ builder.Services.AddCors(options =>
 
 builder.AddMongoDBClient(connectionName: "History");
 
+
 // Services
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IPostService, PostService>();
@@ -64,6 +66,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IModerationService, ModerationService>();
 builder.Services.AddHostedService<DatabaseInitService>();
+builder.Services.AddRateLimitService(builder.Configuration);
 
 // Unlock the file upload size limit.
 builder.Services.Configure<FormOptions>(options =>

@@ -1,14 +1,17 @@
-﻿using System.Text.Json.Nodes;
-using System.Web;
+﻿using DotNet.RateLimiter;
+using DotNet.RateLimiter.ActionFilters;
 using Google.Apis.Auth.OAuth2;
 using History.ApiService.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using RestSharp;
+using System.Text.Json.Nodes;
+using System.Web;
 
 namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/auth/apple")]
+[RateLimit(Limit = 1, PeriodInSec = 1)]
 public class AppleController : ControllerBase
 {
     private const string KeyId = "DGK52ABR8V";
