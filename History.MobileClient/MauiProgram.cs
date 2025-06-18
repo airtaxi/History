@@ -17,6 +17,8 @@ using History.Commons.Api.Friendship;
 using History.MobileClient.DataTypes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Platform;
+using History.Commons;
+
 
 
 
@@ -33,6 +35,9 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        ApiHandler.ApplicationVersion = AppInfo.Current.VersionString;
+        ApiHandler.Platform = DeviceInfo.Platform.ToString();
+
         var builder = MauiApp.CreateBuilder()
             .UseMauiApp<App>()
             .UseMauiCommunityToolkitMediaElement()
