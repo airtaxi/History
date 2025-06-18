@@ -13,6 +13,7 @@ namespace History.MobileClient.Pages;
 public partial class FriendListPage : ContentPage
 {
     private bool _isInForeground;
+    private bool _isFirstLoad;
     private bool _sortByTime;
     private IEnumerable<FriendshipViewModel> _viewModels;
 
@@ -96,10 +97,16 @@ public partial class FriendListPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
         _isInForeground = true;
+
+        if (!_isFirstLoad)
+        {
+            _isFirstLoad = true;
+            await RefreshAsync();
+        }
 
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
         if (safeAreaTopHeight != 0)
