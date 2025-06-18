@@ -41,6 +41,9 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
 
         var index = allMediaContents.ToList().FindIndex(x => x.MediaId == mediaContent.MediaId);
         var moreThanOneMedias = allMediaContents.Count() > 1;
+#if IOS
+        moreThanOneMedias = allMediaContents.Count(x => !x.IsVideo) > 1;
+#endif
         _fullScreenMedias = [.. allMediaContents.Select(x => GenerateFullScreenMedia(x, moreThanOneMedias))];
         _currentMedia = _fullScreenMedias[index];
 
