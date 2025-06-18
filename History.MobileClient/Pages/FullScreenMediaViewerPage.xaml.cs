@@ -25,7 +25,7 @@ public partial class FullScreenMediaViewerPage : ContentPage
         WeakReferenceMessenger.Default.Register<FullScreenMediaTappedMessage>(this, OnFullScreenMediaTappedMessageReceived);
 #if IOS
         var carouselView = MainDataTemplatePresenter.FindInChildrenHierarchy<CarouselView>();
-        carouselView.Behaviors.Add(new SwipeToCloseBehavior());
+        carouselView?.Behaviors.Add(new SwipeToCloseBehavior());
 #endif
     }
 
