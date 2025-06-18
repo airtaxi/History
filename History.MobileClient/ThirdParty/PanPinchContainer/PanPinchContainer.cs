@@ -197,61 +197,11 @@ public class PanPinchContainer : ContentView
             return;
         }
 
-        // Handle vertical swipe for PopAsync when scale is 1
-        if (Content.Scale == 1)
+        if (Content.Scale <= 1)
         {
-            if (e.StatusType == GestureStatus.Started)
-            {
-                _panX = Content.TranslationX;
-                _panY = Content.TranslationY;
-            }
-            else if (e.StatusType == GestureStatus.Running)
-            {
-                // Only handle if vertical movement is greater than horizontal
-                if (Math.Abs(e.TotalY) > Math.Abs(e.TotalX))
-                {
-                    Content.TranslationY = _panY + e.TotalY;
-
-                    // Adjust opacity for visual feedback (optional)
-                    double opacity = 1 - Math.Min(Math.Abs(e.TotalY) / 200, 0.5);
-                    Content.Opacity = opacity;
-                }
-            }
-            else if (e.StatusType == GestureStatus.Completed)
-            {
-                // Set threshold (e.g., 100 pixels)
-                const double threshold = 100;
-
-                if (Math.Abs(e.TotalY) > threshold && Math.Abs(e.TotalY) > Math.Abs(e.TotalX))
-                {
-                    // Call PopAsync when swiped up or down sufficiently
-                    await App.PopAsync();
-                }
-                else
-                {
-                    // Return to original position if threshold not reached
-                    await Task.WhenAll(
-                        Content.TranslateTo(0, 0, 250, Easing.CubicOut),
-                        Content.FadeTo(1, 250)
-                    );
-                }
-
-                _panX = Content.TranslationX;
-                _panY = Content.TranslationY;
-            }
-            else if (e.StatusType == GestureStatus.Canceled)
-            {
-                // Return to original position if canceled
-                await Task.WhenAll(
-                    Content.TranslateTo(0, 0, 250, Easing.CubicOut),
-                    Content.FadeTo(1, 250)
-                );
-            }
-
             return;
         }
 
-        // Execute existing logic when scale is greater than 1
         if (e.StatusType == GestureStatus.Started)
         {
             _panX = Content.TranslationX;
