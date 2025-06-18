@@ -35,8 +35,13 @@ namespace History.MobileClient.Behaviors
 #else
             if (bindable is CarouselView carouselView) return;
 
-            var parentCarousel = Media.FindCarouselView(bindable);
-            if (parentCarousel != null) _fullScreenMediaContentViewModel = parentCarousel.BindingContext as FullScreenMediaContentViewModel;
+            // CarouselView is not yet attached.
+            // Fetch carousel view on next frame using Dispatcher
+            Dispatcher.Dispatch(() =>
+            {
+                var parentCarousel = Media.FindCarouselView(bindable);
+                if (parentCarousel != null) _fullScreenMediaContentViewModel = parentCarousel.BindingContext as FullScreenMediaContentViewModel;
+            });
 #endif
             bindable.GestureRecognizers.Add(CreatePanGesture());
         }
