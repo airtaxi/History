@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.MobileClient.Enums;
 using History.MobileClient.Pages;
 
 namespace History.MobileClient.ViewModels;
@@ -63,7 +64,7 @@ public partial class NotificationViewModel(NotificationResponseDto notification)
             if (!postResult.IsSuccess) return;
 
             var post = postResult.Value;
-            var viewModel = new PostViewModel(post, false);
+            var viewModel = new PostViewModel(post, PostType.Unwrapped);
             var page = new PostPage(viewModel);
             await App.PushAsync(page);
         }
