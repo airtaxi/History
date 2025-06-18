@@ -22,6 +22,7 @@ using System.Net;
 using History.MobileClient.KakaoStory;
 using Microsoft.Maui.Graphics.Platform;
 using System.Text;
+using History.MobileClient.Enums;
 
 
 namespace History.MobileClient.Pages;
@@ -76,14 +77,14 @@ public partial class EditPostPage : ContentPage
             }
             if(_post.ParentPost != null)
             {
-                ShareTargetPostDataTemplatePresenter.ViewModel = new PostViewModel(_post.ParentPost, true);
+                ShareTargetPostDataTemplatePresenter.ViewModel = new PostViewModel(_post.ParentPost, PostType.Timeline);
                 ShareTargetPostDataTemplatePresenter.IsVisible = true;
             }
         }
         else
         {
             ButtonUpload.Text = "공유";
-            ShareTargetPostDataTemplatePresenter.ViewModel = new PostViewModel(_post, true);
+            ShareTargetPostDataTemplatePresenter.ViewModel = new PostViewModel(_post, PostType.Timeline);
             ShareTargetPostDataTemplatePresenter.IsVisible = true;
         }
 

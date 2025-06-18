@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Enums;
 using History.MobileClient.Pages;
 using Newtonsoft.Json.Converters;
 
@@ -12,7 +13,7 @@ namespace History.MobileClient.ViewModels;
 public partial class MediaContentViewModel : ObservableObject, IContentViewModel
 {
     public MediaContent MediaContent { get; }
-    public bool IsTimeline { get; }
+    public PostType PostType { get; }
     public bool IsParentPost { get; }
     public bool IsVideo { get; }
     public string Description { get; }
@@ -29,10 +30,10 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
     private readonly List<IMediaViewModel> _fullScreenMedias;
     private readonly IMediaViewModel _currentMedia;
 
-    public MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, bool isTimeline, bool isParentPost)
+    public MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, PostType postType, bool isParentPost)
     {
         MediaContent = mediaContent;
-        IsTimeline = isTimeline;
+        PostType = postType;
         IsParentPost = isParentPost;
         IsVideo = mediaContent.IsVideo;
         Description = mediaContent.Description ?? string.Empty;
@@ -98,9 +99,9 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
 
     private void SetMediaAndOverlay()
     {
-        Media = new ImageViewModel(Utils.GenerateMediaUri((IsTimeline || MediaContent.IsVideo) ? MediaContent.ThumbnailMediaId : MediaContent.MediaId), IsTimeline)
+        Media = new ImageViewModel(Utils.GenerateMediaUri((PostType != PostType.Unwrapped || MediaContent.IsVideo) ? MediaContent.ThumbnailMediaId : MediaContent.MediaId), PostType)
         {
-            Aspect = IsTimeline ? Aspect.AspectFill : Aspect.AspectFit
+            Aspect = PostType != PostType.Unwrapped ? Aspect.AspectFill : Aspect.AspectFit
         };
         ImageMedia = Media;
         IsOverlayVisible = MediaContent.IsVideo;

@@ -1,4 +1,6 @@
-﻿namespace History.MobileClient.ViewModels;
+﻿using History.MobileClient.Enums;
+
+namespace History.MobileClient.ViewModels;
 
 internal class MediaTemplateSelector : DataTemplateSelector
 {
@@ -13,7 +15,7 @@ internal class MediaTemplateSelector : DataTemplateSelector
         if (item is ImageViewModel imageViewModel)
         {
             if (imageViewModel.IsFullScreen) return FullScreenImageTemplate;
-            else if (imageViewModel.IsTimeline) return ImageTemplate;
+            else if (imageViewModel.PostType == PostType.Unwrapped) return ImageTemplate;
             else return AppleImageTemplate;
         }
 #else
