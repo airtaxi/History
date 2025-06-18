@@ -799,7 +799,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     public async Task<Result> CheckAccessAsync(string postId, string requesterId)
     {
         var postResult = await GetPostByIdAsync(postId);
-        if (postResult.IsFailure) postResult.CastFailure();
+        if (postResult.IsFailure) return postResult.CastFailure();
 
         return await CheckAccessAsync(postResult, requesterId);
     }
