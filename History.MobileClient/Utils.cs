@@ -11,6 +11,10 @@ using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
 using UraniumUI.Icons.FontAwesome;
 
+#if ANDROID
+using Android.Content;
+#endif
+
 namespace History.MobileClient;
 
 public static partial class Utils
