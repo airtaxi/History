@@ -1,4 +1,5 @@
-﻿using Google.Apis.Auth;
+﻿using DotNet.RateLimiter.ActionFilters;
+using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2.Requests;
 using History.ApiService.DataTypes;
 using History.ApiService.Helpers;
@@ -20,6 +21,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[RateLimit(Limit = 6, PeriodInSec = 1)]
 public class UserController(IUserService userService, IFriendshipService friendshipService, IRefreshTokenService refreshTokenService, INotificationService notificationService) : ControllerBase
 {
     /// <summary>

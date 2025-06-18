@@ -1,4 +1,5 @@
-﻿using History.ApiService.DataTypes;
+﻿using DotNet.RateLimiter.ActionFilters;
+using History.ApiService.DataTypes;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
@@ -13,6 +14,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[RateLimit(Limit = 6, PeriodInSec = 1)]
 public class CommentController(ICommentService commentService) : ControllerBase
 {
     [HttpGet("{postId}")]

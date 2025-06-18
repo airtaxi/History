@@ -1,4 +1,5 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using DotNet.RateLimiter.ActionFilters;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.ResponseDtos;
@@ -11,6 +12,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[RateLimit(Limit = 6, PeriodInSec = 1)]
 public class ModerationController(IModerationService moderationService, IUserService userService) : ControllerBase
 {
     [HttpGet("records")]
