@@ -505,7 +505,6 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
                 core.Title = $"{userResult.Value.Nickname}님과 친구가 되었습니다.";
                 core.Body = string.Empty;
                 core.ImageUrl = userResult.Value.ProfileThumbnailMediaId != null ? Utils.GenerateMediaUri(userResult.Value.ProfileThumbnailMediaId) : null;
-                core.PushNotificationDisabled = true;
             }
             else throw new ArgumentException("Friendship status is not supported", friendshipResult.Value.Status.ToString());
 
