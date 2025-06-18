@@ -30,8 +30,11 @@ namespace History.MobileClient.Behaviors
 
 #if IOS
             if (bindable is not CarouselView carouselView) return;
+
             _fullScreenMediaContentViewModel = carouselView.BindingContext as FullScreenMediaContentViewModel;
 #else
+            if (bindable is CarouselView carouselView) return;
+
             var parentCarousel = Media.FindCarouselView(bindable);
             if (parentCarousel != null) _fullScreenMediaContentViewModel = parentCarousel.BindingContext as FullScreenMediaContentViewModel;
 #endif
