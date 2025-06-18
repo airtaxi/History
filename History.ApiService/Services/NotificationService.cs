@@ -132,7 +132,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
                     | Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.Comment);
             }
             else filter &= Builders<Notification>.Filter.Eq(n => n.Type, type);
-            var update = Builders<Notification>.Update.PullAll(x => x.Recipients, firstNotification.Recipients);
+            var update = Builders<Notification>.Update.PullFilter(x => x.Recipients, Builders<string>.Filter.Where(s => firstNotification.Recipients.Contains(s)));
             await _notificationCollection.UpdateManyAsync(filter, update);
         }
 
