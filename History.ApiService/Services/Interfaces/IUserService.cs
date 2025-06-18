@@ -176,6 +176,15 @@ public interface IUserService
     public Task<Result<List<string>>> FilterAllowSearch(List<string> userIds);
 
     /// <summary>
+    /// Adds a memo for a user, which can be used to store additional information about the user.
+    /// </summary>
+    /// <param name="userId">The ID of the user for whom the memo is being added.</param>
+    /// <param name="registerId">The ID of the user who is adding the memo</param>
+    /// <param name="memo">The content of the memo to be added.</param>
+    /// <returns>A task that represents the asynchronous operation, with a result indicating the success or failure of the memo addition.</returns>
+    public Task<Result> UpdateMemoAsync(string userId, string requesterId, string memo);
+
+    /// <summary>
     /// Generate text preview asynchronously based on the provided contents.
     /// </summary>
     /// <param name="contents">The contents of post or comments to generate preview from.</param>

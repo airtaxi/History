@@ -7,6 +7,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
+using NJsonSchema.Validation;
 using System.Text;
 
 namespace History.ApiService.Services;
@@ -14,6 +15,7 @@ namespace History.ApiService.Services;
 public class UserService(IMongoDatabase database, IMediaService mediaService, IServiceProvider serviceProvider) : IUserService
 {
     private readonly IMongoCollection<User> _userCollection = database.GetCollection<User>("Users");
+    private readonly IMongoCollection<UserMemo> _userMemoCollection = database.GetCollection<UserMemo>("UserMemos");
 
     /// <inheritdoc />
     public async Task<Result> CreateUserAsync(User user)
@@ -340,6 +342,43 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc/>
+    public async Task<Result> UpdateMemoAsync(string userId, string requesterId, string memo)
+    {
+        if (userId == requesterId) return (ErrorType.BadRequest, "자신에게 메모를 작성할 수 없습니다.");
+
+        var userResult = await GetUserByIdAsync(userId);
+        if (userResult.IsFailure) return userResult.CastFailure();
+
+        var requesterResult = await GetUserByIdAsync(requesterId);
+        if (requesterResult.IsFailure) return requesterResult.CastFailure();
+
+        await _userMemoCollection.DeleteManyAsync(m => m.UserId == userId && m.RegisteredBy == requesterId);
+
+        memo = Utils.SanitizeText(memo);
+
+        if (string.IsNullOrEmpty(memo)) return Result.Success();
+        if (memo.Length > CommonsConstants.MaxMemoLength) return (ErrorType.BadRequest, $"메모는 {CommonsConstants.MaxMemoLength}자 이하로 작성해야 합니다.");
+
+        var userMemo = new UserMemo
+        {
+            UserId = userId,
+            RegisteredBy = requesterId,
+            Memo = memo
+        };
+
+        while (true)
+        {
+            userMemo.Id = Guid.NewGuid().ToString("N");
+            var existingMemo = await _userMemoCollection.Find(m => m.Id == userMemo.Id).FirstOrDefaultAsync();
+            if (existingMemo == null) break;
+        }
+
+        await _userMemoCollection.InsertOneAsync(userMemo);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc/>
     public async Task<string> GenerateTextPreviewFromContentsAsync(IEnumerable<BaseContent> contents, string requesterId = null)
     {
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
@@ -401,6 +440,9 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
 
             result.Friendship = friendshipResult.Value;
             result.IsFavorite = IsFavoriteFriendResult.Value;
+
+            var userMemo = await _userMemoCollection.Find(m => m.UserId == user.Id && m.RegisteredBy == requesterId).FirstOrDefaultAsync();
+            if (userMemo != null) result.Nickname += $" ({userMemo.Memo})";
         }
 
         return result;
@@ -435,8 +477,11 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
 
         var friendshipsResult = await friendshipService.GetAllFriendshipsAsync(requesterId);
         var favoriteFriendIdsResult = await friendshipService.GetFavoriteFriendIdsAsync(requesterId);
+        var userMemos = await _userMemoCollection.Find(m => m.RegisteredBy == requesterId).ToListAsync();
         foreach (var result in results)
         {
+            var userMemo = userMemos.FirstOrDefault(m => m.UserId == result.UserId && m.RegisteredBy == requesterId);
+            if (userMemo != null) result.Nickname += $" ({userMemo.Memo})";
             result.IsFavorite = favoriteFriendIdsResult.Value.Contains(result.UserId);
             result.Friendship = friendshipsResult.Value.FirstOrDefault(x => x.FriendId == result.UserId);
         }

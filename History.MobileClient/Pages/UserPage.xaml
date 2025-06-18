@@ -54,6 +54,21 @@
             </HorizontalStackLayout>
             <HorizontalStackLayout HorizontalOptions="End" Spacing="16">
                 <Image
+                    x:Name="MemoImage"
+                    HeightRequest="32"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMemoImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Edit_square}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image
                     x:Name="FriendsImage"
                     HeightRequest="32"
                     VerticalOptions="Center"

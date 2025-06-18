@@ -680,6 +680,25 @@ public class UserController(IUserService userService, IFriendshipService friends
         else return StatusCode(500, result.FullErrorMessage);
     }
 
+    [HttpPut("memo/{userId}")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> UpdateMemo(string userId, [FromBody] UpdateMemoRequestDto request)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var result = await userService.UpdateMemoAsync(userId, requesterId, request.Memo);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
     /// <summary>
     /// Verify the ID token from the OAuth provider
     /// </summary>

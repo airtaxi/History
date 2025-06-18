@@ -98,7 +98,7 @@ public partial class ProfileViewModel : ObservableObject
         });
     }
 
-    private async Task RefreshAsync()
+    public async Task RefreshAsync()
     {
         var result = await App.ExecuteRequestAsync(new GetUser(User.UserId));
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<UserResponseDto>(result.Value));
