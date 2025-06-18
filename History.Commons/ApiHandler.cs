@@ -12,12 +12,18 @@ public class ApiHandler(string accessToken = null, string refreshToken = null)
     public static ApiHandler Public { get; } = new();
     private static readonly RestClient Client = new(CommonsConstants.ApiBaseUrl);
 
+    public static string ApplicationVersion { get; set; } = "unknown";
+    public static string Platform { get; set; } = "unknown";
+
     private readonly bool _initialized = accessToken != null && refreshToken != null;
     private ApiHandler() : this(null, null) => _initialized = false;
 
     private RestRequest GenerateRestRequest(IBaseRequest request)
     {
         var restRequest = new RestRequest(request.Path, request.Method);
+
+        restRequest.AddHeader("User-Agent", $"history-client/official/{Platform}/{ApplicationVersion}");
+
 
         if (request is IAuthRequiredRequest)
         {
