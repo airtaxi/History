@@ -478,7 +478,7 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
             }
         }
 
-        if (!hasAccess) return (ErrorType.Forbidden, "해당 사용자의 친구 목록을 볼 수 없습니다.");
+        if (!hasAccess) return (ErrorType.Forbidden, "해당 사용자의 친구 목록 공개 범위 설정에 따라 친구 목록을 볼 수 없습니다.");
 
         var friendIdsResult = await GetFriendIdsAsync(userId);
 
