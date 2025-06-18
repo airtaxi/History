@@ -32,8 +32,6 @@ namespace History.MobileClient.Behaviors
             if (carouselView != null) _fullScreenMediaContentViewModel = carouselView.BindingContext as FullScreenMediaContentViewModel;
             else if (bindable is not DataTemplatePresenter) return;
 #else
-            if (bindable is CarouselView carouselView) return;
-
             // CarouselView is not yet attached.
             // Fetch carousel view on next frame using Dispatcher
             Dispatcher.Dispatch(() =>
