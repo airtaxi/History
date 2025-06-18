@@ -46,43 +46,12 @@ public class MainActivity : MauiAppCompatActivity
         CreateNotificationChannelIfNeeded();
         HandleIntent(Intent);
 
-        FirebaseCloudMessagingImplementation.ShowLocalNotificationAction = notification => {
-            var notificationId = Guid.NewGuid().GetHashCode();
-
-            // Raw notificationId is string (e.g. post_mention_12345), so we need to convert it to unique integer.
-            if (notification.Data.TryGetValue("NotificationId", out var rawNotificationId)) 
-                notificationId = rawNotificationId.GetHashCode();
-
-            var intent = PackageManager.GetLaunchIntentForPackage(PackageName);
-            intent.SetFlags(ActivityFlags.SingleTop);
-            foreach (var entry in notification.Data) intent.PutExtra(entry.Key, entry.Value);
-
-            var pendingIntent = PendingIntent.GetActivity(this, notificationId, intent, PendingIntentFlags.OneShot | PendingIntentFlags.Immutable);
-
-            var builder = new NotificationCompat.Builder(this, $"{PackageName}.push")
+        FirebaseCloudMessagingImplementation.NotificationBuilderProvider = notification => new NotificationCompat.Builder(this, $"{PackageName}.push")
             .SetSmallIcon(Resource.Mipmap.appicon)
             .SetContentTitle(notification.Title)
             .SetContentText(notification.Body)
-            .SetContentIntent(pendingIntent)
             .SetPriority(NotificationCompat.PriorityDefault)
             .SetAutoCancel(true);
-
-            if (notification.ImageUrl != null)
-            {
-                var url = new Java.Net.URL(notification.ImageUrl);
-                var image = BitmapFactory.DecodeStream(url.OpenConnection().InputStream);
-
-                builder = builder
-                .SetStyle(new NotificationCompat.BigPictureStyle()
-                    .BigPicture(image)
-                    .SetSummaryText(notification.Body));
-            }
-
-            var notificationManager = (NotificationManager)GetSystemService(NotificationService);
-            notificationManager.Notify(notificationId, builder.Build());
-
-            UpdateNotificationContext(notification.Data);
-        };
 
         NativeMedia.Platform.Init(this, savedInstanceState);
 
@@ -305,24 +274,7 @@ public class MainActivity : MauiAppCompatActivity
     [SupportedOSPlatform("android33.0")]
     private static bool CheckNotificationPermissionGranted() => ContextCompat.CheckSelfPermission(Platform.AppContext, Manifest.Permission.PostNotifications) == Permission.Granted;
 
-    private static async void HandleIntent(Intent intent)
-    {
-        FirebaseCloudMessagingImplementation.OnNewIntent(intent);
-
-        if (intent?.Extras != null)
-        {
-            var data = new Dictionary<string, string>();
-
-            foreach (var key in intent.Extras.KeySet()) data.Add(key, intent.Extras.GetString(key));
-
-            if (data.Count > 0)
-            {
-                var pushData = JsonSerializer.Serialize(data);
-                if (!AppShell.IsLoaded) Preferences.Set("PushData", pushData);
-                else await App.HandlePushNotificationAsync(pushData);
-            }
-        }
-    }
+    private static void HandleIntent(Intent intent) => FirebaseCloudMessagingImplementation.OnNewIntent(intent);
 }
 
 public class WindowInsetsListener : Java.Lang.Object, IOnApplyWindowInsetsListener

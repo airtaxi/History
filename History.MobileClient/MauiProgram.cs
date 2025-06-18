@@ -93,21 +93,27 @@ public static class MauiProgram
             }));
 #elif ANDROID
             events.AddAndroid(android => android.OnCreate((activity, _) =>
-                CrossFirebase.Initialize(activity)));
+            {
+                CrossFirebaseCloudMessaging.Current.NotificationTapped += OnNotificationTapped;
+                CrossFirebaseCloudMessaging.Current.NotificationReceived += OnNotificationReceived;
+                CrossFirebase.Initialize(activity);
+            }));
 #endif
         });
 
         return builder;
     }
 
-#if IOS
-    private static async void OnNotificationTapped(object sender, FCMNotificationTappedEventArgs e)
+    private static void OnNotificationTapped(object sender, FCMNotificationTappedEventArgs e)
     {
         var data = e.Notification.Data;
 
-        var pushData = JsonSerializer.Serialize(data);
-        if (!AppShell.IsLoaded) Preferences.Set("PushData", pushData);
-        else await App.HandlePushNotificationAsync(pushData);
+        Application.Current.Dispatcher.Dispatch(async () =>
+        {
+            var pushData = JsonSerializer.Serialize(data);
+            if (!AppShell.IsLoaded) Preferences.Set("PushData", pushData);
+            else await App.HandlePushNotificationAsync(pushData);
+        });
     }
 
     private static void OnNotificationReceived(object sender, FCMNotificationReceivedEventArgs e) => UpdateNotificationContext(e.Notification.Data);
@@ -139,5 +145,4 @@ public static class MauiProgram
         }
         catch { }
     }
-#endif
 }
