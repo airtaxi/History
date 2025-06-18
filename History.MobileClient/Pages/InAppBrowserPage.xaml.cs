@@ -1,4 +1,4 @@
-namespace History.MobileClient.Pages;
+﻿namespace History.MobileClient.Pages;
 
 public partial class InAppBrowserPage : ContentPage
 {
@@ -10,6 +10,7 @@ public partial class InAppBrowserPage : ContentPage
 		InitializeComponent();
         _url = url;
         Title = title;
+        TitleLabel.Text = title;
     }
 
     protected override void OnAppearing()

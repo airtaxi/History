@@ -149,4 +149,6 @@ public partial class SettingsPage : ContentPage
         var page = new KakaoStoryLoginPage();
         await App.PushModalAsync(page);
     }
+
+    private async void OnCheckForUpdateGridTapped(object sender, TappedEventArgs e) => await Utils.CheckForUpdateAsync();
 }

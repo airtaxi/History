@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
-    x:Class="History.MobileClient.Pages.InAppBrowserPage"
+    x:Class="History.MobileClient.Pages.AppleLoginPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols">
@@ -25,9 +25,9 @@
                     </Image.Source>
                 </Image>
                 <Label
-                    x:Name="TitleLabel"
                     FontAttributes="Bold"
                     FontSize="20"
+                    Text="애플 계정 로그인"
                     TextColor="White"
                     VerticalOptions="Center" />
             </HorizontalStackLayout>

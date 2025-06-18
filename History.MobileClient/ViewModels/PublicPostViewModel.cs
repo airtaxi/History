@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using History.Commons.Api.Friendship;
 using History.Commons.Api.Moderation;
 using History.Commons.Api.Post;
 using History.Commons.Api.Report;
@@ -21,6 +22,9 @@ public partial class PublicPostViewModel(PostResponseDto post) : PostViewModel(p
         else if (Shared.MyRank >= Rank.Moderator) options.Add("게시글 삭제");
         else options.AddRange("게시글 신고");
 
+        var canSendFriendRequest = User.UserId != Shared.UserId && User.Friendship == null;
+        if (canSendFriendRequest) options.Add("친구 요청 보내기");
+
         var action = await App.Page.DisplayActionSheet("홍보 게시글 옵션", Constants.PromptCancel, null, [.. options]);
         if (action == null || action == Constants.PromptCancel) return;
 
@@ -41,6 +45,15 @@ public partial class PublicPostViewModel(PostResponseDto post) : PostViewModel(p
             }));
 
             if (result.IsSuccess) await App.Page.DisplayAlert("안내", "게시글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다.", Constants.PromptOk);
+        }
+        else if (action == "친구 요청 보내기")
+        {
+            var result = await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
+            if (result.IsSuccess)
+            {
+                await RefreshAsync();
+                await App.Page.DisplayAlert("안내", "친구 요청이 성공적으로 전송되었습니다.", Constants.PromptOk);
+            }
         }
     }
 
