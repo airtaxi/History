@@ -4,6 +4,7 @@ using CommunityToolkit.Maui.Core.Primitives;
 using CommunityToolkit.Maui.Views;
 using FFImageLoading.Maui;
 using FFImageLoading.Maui.Platform;
+using History.MobileClient.Behaviors;
 using History.MobileClient.ViewModels;
 
 namespace History.MobileClient.Resources.Styles;
@@ -79,6 +80,8 @@ public partial class Media : ResourceDictionary
 
         mediaElement.Source = MediaSource.FromUri(viewModel.Uri);
         mediaElement.MediaFailed += OnMediaFailed;
+
+        if (viewModel.IsFullScreen) mediaElement.Behaviors.Add(new SwipeToCloseBehavior());
     }
 
     private void OnAppleMediaStateChanged(object sender, MediaStateChangedEventArgs e)

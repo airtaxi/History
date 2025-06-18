@@ -121,6 +121,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
             ShouldMute = false,
             ShouldShowPlaybackControls = true,
             FullScreenSwipeable = moreThanOneMedias,
+            IsFullScreen = true
         }
         : new ImageViewModel(Utils.GenerateMediaUri(mediaContent.MediaId))
         {
@@ -128,7 +129,7 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
             HorizontalContentOptions = LayoutOptions.Fill,
             VerticalContentOptions = LayoutOptions.Fill,
             FullScreenSwipeable = moreThanOneMedias,
-            IsFullScreen = true,
+            IsFullScreen = true
         };
     }
 }
