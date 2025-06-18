@@ -28,16 +28,21 @@ public partial class AppleLoginPage : ContentPage
         if (!_taskCompletionSource.Task.IsCompleted) _taskCompletionSource.TrySetResult(null);
     }
 
-    private void OnNavigating(object sender, WebNavigatingEventArgs e)
+    private async void OnNavigating(object sender, WebNavigatingEventArgs e)
     {
         MainActivityIndicator.IsVisible = true;
         MainActivityIndicator.IsRunning = true;
         if (e.Url.StartsWith("http://localhost"))
         {
-            var queryParams = HttpUtility.ParseQueryString(e.Url);
+            var uri = new Uri(e.Url);
+            var queryParams = HttpUtility.ParseQueryString(uri.Query);
 
             var idToken = queryParams["id_token"];
-            if (idToken == null) _taskCompletionSource.TrySetResult(null);
+            if (idToken == null)
+            {
+                _taskCompletionSource.TrySetResult(null);
+                await App.PopModalAsync();
+            }
             else
             {
                 var result = new OAuthRegisterRequestDto
@@ -47,14 +52,16 @@ public partial class AppleLoginPage : ContentPage
                 };
 
                 var userJson = queryParams["user"];
-                if(userJson != null)
+                if (userJson != null)
                 {
                     var user = JsonNode.Parse(userJson);
                     var name = user["name"]?.AsObject();
                     // Korean names are typically in the format "성(Last Name) + 이름(First Name)"
                     if (name != null) result.Name = name["lastName"]?.ToString() + name["firstName"]?.ToString();
                 }
+
                 _taskCompletionSource.TrySetResult(result);
+                await App.PopModalAsync();
             }
         }
     }
