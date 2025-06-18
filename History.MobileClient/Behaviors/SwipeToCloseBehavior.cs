@@ -59,6 +59,14 @@ namespace History.MobileClient.Behaviors
                 case GestureStatus.Started:
                     if (_isPanning) return;
 
+                    if (_fullScreenMediaContentViewModel != null)
+                    {
+                        if (_fullScreenMediaContentViewModel.CurrentMedia.IsInZoomMode) return;
+
+                        _wasFullscreenSwipeable = _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable;
+                        _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable = false;
+                    }
+
                     _startY = e.TotalY;
                     _startX = e.TotalX;
                     _totalX = 0;
@@ -67,14 +75,6 @@ namespace History.MobileClient.Behaviors
                     _isPanning = true;
 
                     Debug.WriteLine($"STARTED: TotalX: {e.TotalX}, TotalY: {e.TotalY}");
-
-                    if (_fullScreenMediaContentViewModel != null)
-                    {
-                        if (_fullScreenMediaContentViewModel.CurrentMedia.IsInZoomMode) return;
-
-                        _wasFullscreenSwipeable = _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable;
-                        _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable = false;
-                    }
                     break;
 
                 case GestureStatus.Running:
