@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using History.MobileClient.Resources.Styles;
+﻿using System.Diagnostics;
 using History.MobileClient.ViewModels;
+
+#if IOS
+using History.MobileClient.ContentViews;
+#else
+using History.MobileClient.Resources.Styles;
+#endif
 
 namespace History.MobileClient.Behaviors
 {
@@ -29,9 +28,9 @@ namespace History.MobileClient.Behaviors
             _associatedObject = bindable;
 
 #if IOS
-            if (bindable is not CarouselView carouselView) return;
-
-            _fullScreenMediaContentViewModel = carouselView.BindingContext as FullScreenMediaContentViewModel;
+            var carouselView = bindable as CarouselView;
+            if (carouselView != null) _fullScreenMediaContentViewModel = carouselView.BindingContext as FullScreenMediaContentViewModel;
+            else if (bindable is not DataTemplatePresenter) return;
 #else
             if (bindable is CarouselView carouselView) return;
 
@@ -67,6 +66,8 @@ namespace History.MobileClient.Behaviors
                     _startTime = DateTime.Now;
                     _isPanning = true;
 
+                    Debug.WriteLine($"STARTED: TotalX: {e.TotalX}, TotalY: {e.TotalY}");
+
                     if (_fullScreenMediaContentViewModel != null)
                     {
                         if (_fullScreenMediaContentViewModel.CurrentMedia.IsInZoomMode) return;
@@ -74,8 +75,6 @@ namespace History.MobileClient.Behaviors
                         _wasFullscreenSwipeable = _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable;
                         _fullScreenMediaContentViewModel.CurrentMedia.FullScreenSwipeable = false;
                     }
-
-                    Debug.WriteLine($"STARTED: TotalX: {e.TotalX}, TotalY: {e.TotalY}");
                     break;
 
                 case GestureStatus.Running:
