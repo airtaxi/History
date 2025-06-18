@@ -9,6 +9,10 @@ using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 
+#if ANDROID
+using History.MobileClient.ThirdParty.StaggeredLayout;
+#endif
+
 namespace History.MobileClient.Pages;
 
 public partial class UserPage : ContentPage
