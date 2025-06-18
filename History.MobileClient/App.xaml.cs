@@ -6,6 +6,7 @@ using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.Commons.Interfaces;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Enums;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
@@ -259,7 +260,7 @@ public partial class App : Application
             var postResult = await ExecuteRequestAsync(new GetPost(postId));
             if (postResult.IsFailure) return;
 
-            var postViewModel = new PostViewModel(postResult.Value, false);
+            var postViewModel = new PostViewModel(postResult.Value, PostType.Unwrapped);
             var page = new PostPage(postViewModel);
             await PushAsync(page);
         }

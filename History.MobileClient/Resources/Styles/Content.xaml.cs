@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.Messaging;
 using History.MobileClient.DataTypes;
@@ -36,7 +36,7 @@ public partial class Content : ResourceDictionary
 
         if (parent.BindingContext is CommentViewModel commentViewModel) await commentViewModel.HandleTapAsync();
         else if (parent.BindingContext is PublicPostViewModel publicPostViewModel) await publicPostViewModel.HandleProfileTapAsync();
-        else if (parent.BindingContext is PostViewModel postViewModel && (postViewModel.IsTimeline || postViewModel.IsParentPost)) await postViewModel.HandleTapAsync();
+        else if (parent.BindingContext is PostViewModel postViewModel && (postViewModel.PostType != Enums.PostType.Unwrapped || postViewModel.IsParentPost)) await postViewModel.HandleTapAsync();
     }
 
     private void OnTextAndProfileContentsLabelSizeChanged(object sender, EventArgs e)

@@ -8,6 +8,7 @@ using History.Commons.Api.Report;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Enums;
 using History.MobileClient.Pages;
 
 namespace History.MobileClient.ViewModels;
@@ -51,13 +52,13 @@ public partial class CommentViewModel : ObservableObject
     public string CommentLikeFontFamily => Liked ? "FASolid" : "FARegular";
 
     private readonly bool _isMyPost;
-    private readonly bool _isTimeline;
+    private readonly PostType _postType;
     private readonly PostViewModel _parentViewModel;
 
-    public CommentViewModel(CommentResponseDto comment, bool isMyPost, bool isTimeline, PostViewModel parentViewModel)
+    public CommentViewModel(CommentResponseDto comment, bool isMyPost, PostType postType, PostViewModel parentViewModel)
     {
         _isMyPost = isMyPost;
-        _isTimeline = isTimeline;
+        _postType = postType;
         _parentViewModel = parentViewModel;
 
         UpdateComment(comment);
@@ -74,7 +75,7 @@ public partial class CommentViewModel : ObservableObject
         try
         {
             Comment = comment;
-            Contents = Utils.GenerateContentViewModels(Comment.Contents, _isTimeline);
+            Contents = Utils.GenerateContentViewModels(Comment.Contents, _postType);
         }
         catch (ObjectDisposedException) { } // The view is disposed. this view model also will be removed on next GC
     }
@@ -163,7 +164,7 @@ public partial class CommentViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleTapAsync()
     {
-        if (!_isTimeline) WeakReferenceMessenger.Default.Send<CommentTappedMessage>(new(Comment.User));
+        if (_postType == PostType.Unwrapped) WeakReferenceMessenger.Default.Send<CommentTappedMessage>(new(Comment.User));
         else await _parentViewModel.HandleTapAsync();
     }
 

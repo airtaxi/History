@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.ResponseDtos;
+using History.MobileClient.Enums;
 using History.MobileClient.Pages;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class RepostViewModel(string postId, PostResponseDto parentPost, UserResponseDto repostedUser) : PostViewModel(parentPost, true)
+public partial class RepostViewModel(string postId, PostResponseDto parentPost, UserResponseDto repostedUser) : PostViewModel(parentPost, PostType.Timeline)
 {
     public string RepostedUserNickname => repostedUser?.Nickname;
     public string RepostId { get; } = postId;

@@ -4,21 +4,25 @@ using History.Commons;
 using History.Commons.Api.PushNotification;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
+using History.MobileClient.Enums;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Animations;
 using Microsoft.Maui.Controls;
+using Microsoft.Maui.Layouts;
 using Plugin.Firebase.CloudMessaging;
 using UraniumUI.Icons.FontAwesome;
 
 namespace History.MobileClient;
 
-public static class Utils
+public static partial class Utils
 {
     private const int TimelineMaxTextLengthWithoutMedias = 400;
     private const int TimelineMaxTextLengthWithMedias = 80;
     private const int TimelineMaxTextLinesWithoutMedias = 12;
     private const int TimelineMaxTextLinesWithMedias = 8;
+    private const int DiscoveryMaxTextLength = 1600;
+    private const int DiscoveryMaxTextLines = 27;
 
     public static string GenerateMediaUri(string mediaId)
     {
@@ -27,7 +31,7 @@ public static class Utils
         return $"https://api.history.cenox.io/api/media/{mediaId}";
     }
 
-    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, bool isTimeline, bool isParentPost = false)
+    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, PostType postType, bool isParentPost = false)
     {
         var contentViewModels = new List<IContentViewModel>();
 
@@ -37,7 +41,7 @@ public static class Utils
         {
             if (mediaContents.Count > 0)
             {
-                contentViewModels.Add(new WrappedMediaContentsViewModel(mediaContents, allMediaContents, isTimeline, isParentPost));
+                contentViewModels.Add(new WrappedMediaContentsViewModel(mediaContents, allMediaContents, postType, isParentPost));
                 mediaContents = [];
             }
         }
@@ -47,7 +51,7 @@ public static class Utils
         {
             if (textAndProfileContents.Count > 0)
             {
-                contentViewModels.Add(new TextAndProfileContentsViewModel(textAndProfileContents, isTimeline, contents.OfType<MediaContent>().Any() || contents.OfType<ExternalUrlContent>().Any()));
+                contentViewModels.Add(new TextAndProfileContentsViewModel(textAndProfileContents, postType, contents.OfType<MediaContent>().Any() || contents.OfType<ExternalUrlContent>().Any()));
                 textAndProfileContents = [];
             }
         }
@@ -78,8 +82,8 @@ public static class Utils
 #if ANDROID
                 mediaContents.Add(mediaContent);
 #else
-                if (isTimeline) mediaContents.Add(mediaContent);
-                else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents, isTimeline, isParentPost));
+                if (postType != PostType.Unwrapped) mediaContents.Add(mediaContent);
+                else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents, postType, isParentPost));
 #endif
             }
         }
@@ -153,15 +157,13 @@ public static class Utils
         return result;
     }
 
-    public static FormattedString GenerateSpanFromTextAndProfileContents(List<BaseContent> contents, bool isTimeline, bool hasMedias)
+    public static FormattedString GenerateSpanFromTextAndProfileContents(List<BaseContent> contents, PostType postType, bool hasMedias)
     {
         var formattedString = new FormattedString();
-        var maxLength = hasMedias ? TimelineMaxTextLengthWithMedias : TimelineMaxTextLengthWithoutMedias;
-        var maxLines = hasMedias ? TimelineMaxTextLinesWithMedias : TimelineMaxTextLinesWithoutMedias;
+        var maxLength = postType == PostType.Timeline ? (hasMedias ? TimelineMaxTextLengthWithMedias : TimelineMaxTextLengthWithoutMedias) : DiscoveryMaxTextLength;
+        var maxLines = postType == PostType.Timeline ? (hasMedias ? TimelineMaxTextLinesWithMedias : TimelineMaxTextLinesWithoutMedias) : DiscoveryMaxTextLines;
         var currentLength = 0;
         var currentLines = 0;
-
-        var urlRegex = new Regex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled);
 
         foreach (var content in contents)
         {
@@ -195,8 +197,9 @@ public static class Utils
 
             if (content is TextContent textContent)
             {
-                var matches = urlRegex.Matches(textContent.Text);
+                var matches = UrlRegex().Matches(textContent.Text);
                 int lastIndex = 0;
+                var breaked = false;
                 foreach (Match match in matches)
                 {
                     if (match.Index > lastIndex)
@@ -207,10 +210,11 @@ public static class Utils
 
                         currentLength += span.Text.Length;
                         currentLines += span.Text.Count(x => x == '\n');
-                        if (isTimeline && (currentLength > maxLength || currentLines > maxLines))
+                        if (postType != PostType.Unwrapped && (currentLength > maxLength || currentLines > maxLines))
                         {
                             TrimSpan(span);
                             AddMoreSpan(span);
+                            breaked = true;
                             break;
                         }
                         else formattedString.Spans.Add(span);
@@ -229,14 +233,16 @@ public static class Utils
 
                     currentLength += linkSpan.Text.Length;
                     currentLines += linkSpan.Text.Count(x => x == '\n');
-                    if (isTimeline && (currentLength > maxLength || currentLines > maxLines))
+                    if (postType != PostType.Unwrapped && (currentLength > maxLength || currentLines > maxLines))
                     {
                         TrimSpan(linkSpan);
                         AddMoreSpan(linkSpan);
+                        breaked = true;
                         break;
                     }
                     else formattedString.Spans.Add(linkSpan);
                 }
+                if (breaked) break;
 
                 if (lastIndex < textContent.Text.Length)
                 {
@@ -246,7 +252,7 @@ public static class Utils
 
                     currentLength += span.Text.Length;
                     currentLines += span.Text.Count(x => x == '\n');
-                    if (isTimeline && (currentLength > maxLength || currentLines > maxLines))
+                    if (postType != PostType.Unwrapped && (currentLength > maxLength || currentLines > maxLines))
                     {
                         TrimSpan(span);
                         AddMoreSpan(span);
@@ -268,7 +274,7 @@ public static class Utils
 
                 currentLength += span.Text.Length;
                 currentLines += span.Text.Count(x => x == '\n');
-                if (isTimeline && (currentLength > maxLength || currentLines > maxLines))
+                if (postType != PostType.Unwrapped && (currentLength > maxLength || currentLines > maxLines))
                 {
                     TrimSpan(span);
                     AddMoreSpan(span);
@@ -336,4 +342,7 @@ public static class Utils
             _ => Solid.Question
         };
     }
+
+    [GeneratedRegex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled)]
+    private static partial Regex UrlRegex();
 }

@@ -2,6 +2,7 @@
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
@@ -66,7 +67,7 @@ public partial class TimelinePage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
-                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, true));
+                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, PostType.Timeline));
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
@@ -92,7 +93,7 @@ public partial class TimelinePage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, true));
+                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, PostType.Timeline));
                 _lastViewModel = viewModels.LastOrDefault();
                 _areThereNoMorePostsToLoad = !viewModels.Any();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);

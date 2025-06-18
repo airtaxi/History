@@ -104,11 +104,13 @@ public class MainActivity : MauiAppCompatActivity
 
             if (Build.VERSION.SdkInt >= BuildVersionCodes.R)
             {
+#pragma warning disable CA1416 // Validate platform compatibility
                 var controller = Window.InsetsController;
                 if (controller != null)
                 {
                     controller.SystemBarsBehavior = WindowInsetsControllerCompat.BehaviorShowTransientBarsBySwipe;
                 }
+#pragma warning restore CA1416 // Validate platform compatibility
             }
         }
     }
@@ -219,6 +221,7 @@ public class MainActivity : MauiAppCompatActivity
     {
         if ((int)Build.VERSION.SdkInt < 33) return;
 
+#pragma warning disable CA1416 // Validate platform compatibility
         bool isNotificationPermissionGranted = CheckNotificationPermissionGranted();
         if (!isNotificationPermissionGranted)
         {
@@ -240,6 +243,7 @@ public class MainActivity : MauiAppCompatActivity
             });
             alert.Show();
         }
+#pragma warning restore CA1416 // Validate platform compatibility
     }
 
     private void CreateNotificationChannelIfNeeded()
