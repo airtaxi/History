@@ -35,10 +35,7 @@ public partial class KakaoStoryLoginPage : ContentPage
     {
         base.OnDisappearing();
 
-        if (!_taskCompletionSource.Task.IsCompleted)
-        {
-            _taskCompletionSource.TrySetResult(null);
-        }
+        if (!_taskCompletionSource.Task.IsCompleted) _taskCompletionSource.TrySetResult(null);
 
         if (_timer != null)
         {

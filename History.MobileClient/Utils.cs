@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using Android.Content;
+using CommunityToolkit.Maui.Alerts;
 using History.Commons;
 using History.Commons.Api.PushNotification;
 using History.Commons.DataTypes.Contents;
@@ -345,4 +349,55 @@ public static partial class Utils
 
     [GeneratedRegex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled)]
     private static partial Regex UrlRegex();
+
+    public static async Task CheckForUpdateAsync()
+    {
+        try
+        {
+#if ANDROID
+            var versionUrl = "https://kagamine-rin.com/History/version_android";
+#else
+            var versionUrl = "https://kagamine-rin.com/History/version_ios";
+#endif
+            var remoteVersionString = await Downloader.DownloadString(versionUrl);
+            var localVersionString = AppInfo.Current.VersionString;
+
+            var remoteVersion = Version.Parse(remoteVersionString);
+            var localVersion = Version.Parse(localVersionString);
+            if (remoteVersion <= localVersion)
+            {
+                await Toast.Make("최신 버전을 사용중입니다.").Show();
+                return;
+            }
+#if ANDROID
+            var shouldDownload = await App.Page.DisplayAlert("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})\n업데이트 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            if (!shouldDownload) return;
+            var downloadUrl = "https://kagamine-rin.com/History/com.airtaxi.history-Signed.apk";
+            var apkFilePath = Path.Combine(FileSystem.CacheDirectory, "History.apk");
+
+            await Toast.Make("업데이트를 다운로드 중입니다. 잠시만 기다려 주세요.").Show();
+            await Downloader.DownloadFileAsync(downloadUrl, apkFilePath);
+
+            var context = Platform.CurrentActivity ?? Android.App.Application.Context;
+
+            var file = new Java.IO.File(apkFilePath);
+            var uri = AndroidX.Core.Content.FileProvider.GetUriForFile(context, context.PackageName + ".fileprovider", file);
+
+#pragma warning disable CA1422 // Validate platform compatibility
+            var intent = new Intent(Intent.ActionInstallPackage);
+#pragma warning restore CA1422 // Validate platform compatibility
+            intent.SetData(uri);
+            intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.GrantReadUriPermission);
+
+            context.StartActivity(intent);
+#else
+            await App.Page.DisplayAlert("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})", Constants.PromptOk);
+#endif
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"History Update Error: {ex.Message}");
+            await App.Page.DisplayAlert("오류", $"업데이트 중 문제가 발생했습니다: {ex.Message}", "확인");
+        }
+    }
 }

@@ -8,6 +8,8 @@ using History.Commons.Enums;
 using History.MobileClient.Auth;
 using History.MobileClient.DataTypes;
 using Result = History.Commons.Result;
+using History.Commons.DataTypes.RequestDtos;
+
 
 #if ANDROID
 using Android.Content;
@@ -86,7 +88,6 @@ public partial class LoginPage : ContentPage
 
     private async void OnGoogleLoginButtonClicked(object sender, EventArgs e)
     {
-#if ANDROID || IOS
         var service = new GoogleAuthService();
         var idToken = await service.AuthenticateAsync();
         if (idToken != null)
@@ -94,14 +95,11 @@ public partial class LoginPage : ContentPage
             await service.SignOutAsync();
             await Login(idToken, SocialService.Google);
         }
-#else
-        await DisplayAlert("안내", "구현되지 않은 플랫폼입니다.", Constants.PromptOk);
-#endif
     }
 
     private async void OnAppleLoginButtonClicked(object sender, EventArgs e)
     {
-        if(DeviceInfo.Platform == DevicePlatform.iOS && DeviceInfo.Version.Major >= 13)
+        if (DeviceInfo.Platform == DevicePlatform.iOS && DeviceInfo.Version.Major >= 13)
         {
             var result = await AppleSignInAuthenticator.AuthenticateAsync(new AppleSignInAuthenticator.Options
             {
@@ -115,7 +113,21 @@ public partial class LoginPage : ContentPage
 
             await Login(idToken, SocialService.Apple);
         }
-        else await DisplayAlert("안내", "애플 로그인은 개발 중입니다.", Constants.PromptOk);
+        else
+        {
+            var page = new AppleLoginPage();
+            await App.PushModalAsync(page);
+
+            var result = await page.GetResultAsync();
+            if (result == null)
+            {
+                await DisplayAlert("오류", "애플 로그인에 실패했습니다. 다시 시도해주세요.", Constants.PromptOk);
+                return;
+            }
+
+            s_appleUserFullName = result.Name;
+            await Login(result.IdToken, SocialService.Apple);
+        }
     }
 
     protected override async void OnAppearing()
@@ -123,66 +135,18 @@ public partial class LoginPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
-        try
+        await Utils.CheckForUpdateAsync();
+
+        var accessToken = Configuration.GetValue<string>("AccessToken");
+        var refreshToken = Configuration.GetValue<string>("RefreshToken");
+
+        if (accessToken != null && refreshToken != null)
         {
-#if ANDROID
-            var versionUrl = "https://kagamine-rin.com/History/version_android";
-#else
-            var versionUrl = "https://kagamine-rin.com/History/version_ios";
-#endif
-            var remoteVersionString = await Downloader.DownloadString(versionUrl);
-            var localVersionString = AppInfo.Current.VersionString;
-
-            var remoteVersion = Version.Parse(remoteVersionString);
-            var localVersion = Version.Parse(localVersionString);
-            if (remoteVersion <= localVersion)
-            {
-                await Toast.Make("최신 버전을 사용중입니다.").Show();
-                return;
-            }
-#if ANDROID
-            var shouldDownload = await DisplayAlert("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})\n업데이트 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-            if (!shouldDownload) return;
-            var downloadUrl = "https://kagamine-rin.com/History/com.airtaxi.history-Signed.apk";
-            var apkFilePath = Path.Combine(FileSystem.CacheDirectory, "History.apk");
-
-            await Toast.Make("업데이트를 다운로드 중입니다. 잠시만 기다려 주세요.").Show();
-            await Downloader.DownloadFileAsync(downloadUrl, apkFilePath);
-
-            var context = Platform.CurrentActivity ?? Android.App.Application.Context;
-
-            var file = new Java.IO.File(apkFilePath);
-            var uri = AndroidX.Core.Content.FileProvider.GetUriForFile(context, context.PackageName + ".fileprovider", file);
-
-#pragma warning disable CA1422 // Validate platform compatibility
-            var intent = new Intent(Intent.ActionInstallPackage);
-#pragma warning restore CA1422 // Validate platform compatibility
-            intent.SetData(uri);
-            intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.GrantReadUriPermission);
-
-            context.StartActivity(intent);
-#else
-            await DisplayAlert("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})", Constants.PromptOk);
-#endif
+            Shared.ApiHandler = new(accessToken, refreshToken);
+            var result = await AfterLogin();
+            if (result.IsFailure) LoginVerticalStackLayout.IsVisible = true;
         }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"History Update Error: {ex.Message}");
-            await DisplayAlert("오류", $"업데이트 중 문제가 발생했습니다: {ex.Message}", "확인");
-        }
-        finally
-        {
-            var accessToken = Configuration.GetValue<string>("AccessToken");
-            var refreshToken = Configuration.GetValue<string>("RefreshToken");
-
-            if (accessToken != null && refreshToken != null)
-            {
-                Shared.ApiHandler = new(accessToken, refreshToken);
-                var result = await AfterLogin();
-                if (result.IsFailure) LoginVerticalStackLayout.IsVisible = true;
-            }
-            else LoginVerticalStackLayout.IsVisible = true;
-        }
+        else LoginVerticalStackLayout.IsVisible = true;
     }
 
     protected override void OnDisappearing()
