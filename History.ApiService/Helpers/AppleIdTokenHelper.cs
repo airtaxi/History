@@ -33,6 +33,7 @@ public static class AppleIdTokenHelper
             // Get key ID from JWT header
             var keyId = jwt.Header.Kid;
             var appleKey = appleKeys.Keys.FirstOrDefault(k => k.Kid == keyId);
+            var audience = jwt.Audiences.FirstOrDefault();
 
             if (appleKey == null)
                 return null;
@@ -53,7 +54,7 @@ public static class AppleIdTokenHelper
                 ValidateIssuer = true,
                 ValidIssuer = "https://appleid.apple.com",
                 ValidateAudience = true,
-                ValidAudience = "com.airtaxi.history", // Replace with your app's Bundle ID
+                ValidAudience = audience ?? "com.airtaxi.history", // Replace with your app's Bundle ID
                 ValidateLifetime = true,
                 IssuerSigningKey = securityKey,
                 ValidateIssuerSigningKey = true,
