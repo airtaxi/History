@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Enums;
 using Microsoft.Maui.Handlers;
 using Microsoft.Maui.Platform;
 using ZstdSharp.Unsafe;
@@ -77,26 +78,26 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
     private ImageViewModel CurrentPositionMediaImageViewModel => Medias[CarouselPosition].ImageMedia as ImageViewModel;
 
     private readonly int _mediaContentsCount;
-    private readonly bool _isTimeline;
+    private readonly PostType _postType;
 
-    public WrappedMediaContentsViewModel(IEnumerable<MediaContent> mediaContents, IEnumerable<MediaContent> allMediaContents, bool isTimeline, bool isParentPost = false)
+    public WrappedMediaContentsViewModel(IEnumerable<MediaContent> mediaContents, IEnumerable<MediaContent> allMediaContents, PostType postType, bool isParentPost = false)
     {
-        _isTimeline = isTimeline;
+        _postType = postType;
         _mediaContentsCount = mediaContents.Count();
         CarouselSwipeEnabled = _mediaContentsCount > 1;
 
-        if (_isTimeline)
-        {
-            MinCarouselViewHeight = 400;
-            MaxCarouselViewHeight = 400;
-        }
-        else
+        if (_postType == PostType.Unwrapped)
         {
             MinCarouselViewHeight = 10;
             MaxCarouselViewHeight = double.PositiveInfinity;
         }
+        else
+        {
+            MinCarouselViewHeight = 400;
+            MaxCarouselViewHeight = 400;
+        }
 
-        var medias = mediaContents.Select(m => new MediaContentViewModel(m, allMediaContents, isTimeline, isParentPost)).ToList();
+        var medias = mediaContents.Select(m => new MediaContentViewModel(m, allMediaContents, postType, isParentPost)).ToList();
         FirstMedia = medias.FirstOrDefault() ?? throw new InvalidOperationException("No media contents available.");
         Debug.WriteLine($"FIRST MEDIA: {FirstMedia.Media.Uri}");
         Medias = medias;
@@ -128,7 +129,7 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
 
         var newHeight = carouselView.Width / aspectRatio;
 
-        if (_isTimeline)
+        if (_postType != PostType.Unwrapped)
         {
             var targetMaxAspectRatio = 1; // 1:1 aspect ratio for timeline
             var carouselViewWidth = carouselView.Width;

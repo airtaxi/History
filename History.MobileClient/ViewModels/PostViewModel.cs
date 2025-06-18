@@ -99,7 +99,7 @@ public partial class PostViewModel : ObservableObject
             return result;
         }
     }
-    public bool IsTimeline { get; }
+    public PostType PostType { get; }
     public bool IsParentPost { get; }
 
     public PostInteractionViewModel Reaction => Interactions.FirstOrDefault(r => r.User.UserId == Shared.UserId && r.ReactionType != null);
@@ -127,11 +127,11 @@ public partial class PostViewModel : ObservableObject
 
     public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
 
-    public PostViewModel(PostResponseDto post, bool isTimeline, bool isParentPost = false)
+    public PostViewModel(PostResponseDto post, PostType postType, bool isParentPost = false)
     {
         try
         {
-            IsTimeline = isTimeline;
+            PostType = postType;
             IsParentPost = isParentPost;
             UpdatePost(post ?? throw new Exception("[PostViewModel] POST IS NULL"));
 
@@ -145,13 +145,17 @@ public partial class PostViewModel : ObservableObject
 
     private void UpdatePost(PostResponseDto post)
     {
-        Post = post;
-        Contents = Utils.GenerateContentViewModels(Post.Contents, IsTimeline, IsParentPost);
-        ParentPost = Post.ParentPost != null ? new(Post.ParentPost, IsTimeline, true) : null;
-        User = post?.User;
+        try
+        {
+            Post = post;
+            Contents = Utils.GenerateContentViewModels(Post.Contents, PostType, IsParentPost);
+            ParentPost = Post.ParentPost != null ? new(Post.ParentPost, PostType, true) : null;
+            User = post?.User;
 
-        Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, IsTimeline, this)).OrderBy(x => x.CreatedAt)];
-        HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
+            Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, PostType, this)).OrderBy(x => x.CreatedAt)];
+            HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
+        }
+        catch (ObjectDisposedException) { } // The view is disposed. this view model also will be removed on next GC
     }
 
     private void OnPostChangedMessageReceived(object sender, ValueChangedMessage<PostResponseDto> message)
@@ -194,7 +198,7 @@ public partial class PostViewModel : ObservableObject
     {
         var options = new List<string>();
 
-        if (IsTimeline)
+        if (PostType != PostType.Unwrapped)
         {
             var isReposted = Post.SharedAndRepostedUsers.Any(x => x.IsRepost && x.User.UserId == Shared.UserId);
             options.AddRange(["게시글 공유", isReposted ? "리포스트 해제" : "리포스트"]);
@@ -330,7 +334,7 @@ public partial class PostViewModel : ObservableObject
         var result = await RefreshAsync();
         if (result.IsFailure) return;
 
-        var newViewModel = new PostViewModel(Post, false);
+        var newViewModel = new PostViewModel(Post, PostType.Unwrapped);
 
 #if IOS
         WeakReferenceMessenger.Default.Send(new ApplePostViewModelTapMessage(this));
@@ -448,7 +452,7 @@ public partial class PostViewModel : ObservableObject
         if (commentsResult.IsSuccess)
         {
             var comments = commentsResult.Value;
-            var commentViewModels = comments.Select(x => new CommentViewModel(x, Post.User.UserId == Shared.UserId, IsTimeline, this));
+            var commentViewModels = comments.Select(x => new CommentViewModel(x, Post.User.UserId == Shared.UserId, PostType, this));
             foreach (var commentViewModel in commentViewModels) Comments.Insert(0, commentViewModel);
             HasMoreComments = Post.CommentsCount > Comments.Count;
         }
