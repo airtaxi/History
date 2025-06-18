@@ -88,7 +88,8 @@ public partial class EditPostPage : ContentPage
             ShareTargetPostDataTemplatePresenter.IsVisible = true;
         }
 
-        DiscoveryOptionPicker.SelectedIndex = (int)_post.DiscoveryOption;
+        var discoveryOption = Math.Min((int)Shared.LastUsedPostDiscoveryOption, (int)_post.DiscoveryOption);
+        DiscoveryOptionPicker.SelectedIndex = discoveryOption;
     }
 
     private void Initialize()
