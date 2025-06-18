@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using DotNet.RateLimiter.ActionFilters;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using System.Text.Json.Nodes;
@@ -8,6 +9,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/auth/google")]
+[RateLimit(Limit = 1, PeriodInSec = 1)]
 public class GoogleController : ControllerBase
 {
     private const string ClientId = "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com";
@@ -16,6 +18,8 @@ public class GoogleController : ControllerBase
     private const string RedirectUri = "https://api.history.cenox.io/api/auth/google/callback";
 
     [HttpGet("login")]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(429)]
     public IActionResult Login([FromQuery] string redirectUrl) => Redirect($"{AuthorizationEndpoint}?response_type=code" +
         $"&client_id={HttpUtility.UrlEncode(ClientId)}" +
         $"&redirect_uri={HttpUtility.UrlEncode(RedirectUri)}" +
@@ -23,6 +27,8 @@ public class GoogleController : ControllerBase
         $"&state={HttpUtility.UrlEncode(redirectUrl)}");
 
     [HttpGet("callback")]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(429)]
     public async Task<IActionResult> Callback([FromQuery] string code, [FromQuery] string state)
     {
         if (string.IsNullOrEmpty(code))

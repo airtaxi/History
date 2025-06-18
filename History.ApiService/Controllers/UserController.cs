@@ -1,4 +1,5 @@
-﻿using Google.Apis.Auth;
+﻿using DotNet.RateLimiter.ActionFilters;
+using Google.Apis.Auth;
 using Google.Apis.Auth.OAuth2.Requests;
 using History.ApiService.DataTypes;
 using History.ApiService.Helpers;
@@ -20,6 +21,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[RateLimit(Limit = 6, PeriodInSec = 1)]
 public class UserController(IUserService userService, IFriendshipService friendshipService, IRefreshTokenService refreshTokenService, INotificationService notificationService) : ControllerBase
 {
     /// <summary>
@@ -31,7 +33,9 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<OAuthLoginResponseDto>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(409)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
+    [RateLimit(Limit = 1, PeriodInSec = 1)]
     public async Task<IActionResult> Register([FromBody] OAuthRegisterRequestDto request)
     {
         var payload = await VerifyIdTokenAsync(request);
@@ -80,7 +84,9 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
+    [RateLimit(Limit = 1, PeriodInSec = 1)]
     public async Task<IActionResult> Login([FromBody] OAuthLoginRequestDto request)
     {
         var payload = await VerifyIdTokenAsync(request);
@@ -106,6 +112,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<OAuthLoginResponseDto>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest model)
     {
@@ -139,6 +146,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<UserResponseDto>(200)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetUser(string userId)
     {
@@ -167,6 +175,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<UserResponseDto>(200)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetUserByHandle(string handle)
     {
@@ -193,6 +202,7 @@ public class UserController(IUserService userService, IFriendshipService friends
 
     [HttpGet("nickname-search/{query}")]
     [ProducesResponseType<List<UserResponseDto>>(200)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> FindUsersByNickname(string query)
     {
@@ -209,6 +219,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<UserResponseDto>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetMyProfile()
     {
@@ -230,6 +241,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> ApproveUnauthorizedUser(string userId)
     {
@@ -249,6 +261,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UnapproveUnauthorizedUser(string userId)
     {
@@ -268,6 +281,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> MakeUserModerator(string userId)
     {
@@ -286,6 +300,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<List<UserResponseDto>>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetUnauthorizedUsers()
     {
@@ -307,6 +322,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<List<UserResponseDto>>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetModerators()
     {
@@ -333,6 +349,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateDescription([FromBody] UpdateUserDescriptionRequestDto request)
     {
@@ -358,6 +375,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateBirthday([FromBody] UpdateUserBirthdayRequestDto request)
     {
@@ -384,6 +402,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateNickname([FromBody] UpdateUserNicknameRequestDto request)
     {
@@ -405,6 +424,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateAllowSearch(bool allowSearch)
     {
@@ -424,6 +444,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateFriendListDiscoveryOption(DiscoveryOption discoveryOption)
     {
@@ -444,6 +465,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(409)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateHandle([FromBody] UpdateUserHandleRequestDto request)
     {
@@ -470,6 +492,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateProfileMedia(IFormFile file)
     {
@@ -511,6 +534,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeleteProfileMedia()
     {
@@ -536,6 +560,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateBackgroundMedia(IFormFile file)
     {
@@ -576,6 +601,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeleteBackgroundMedia()
     {
@@ -595,6 +621,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdatePinnedPost(string pinnedPostId)
     {
@@ -614,6 +641,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [Authorize]
     [ProducesResponseType<List<NotificationResponseDto>>(200)]
     [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetNotifications([FromQuery] int limit, [FromQuery] string from)
     {
@@ -647,6 +675,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> RegisterToken([FromQuery] string token)
     {
@@ -667,6 +696,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> Withdraw()
     {
@@ -686,6 +716,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UpdateMemo(string userId, [FromBody] UpdateMemoRequestDto request)
     {
