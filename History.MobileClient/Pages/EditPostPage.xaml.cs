@@ -529,7 +529,21 @@ public partial class EditPostPage : ContentPage
                                 else if (discoveryOption == DiscoveryOption.OnlyMe) permission = "M";
 
                                 string scrap = null;
-                                if (mediaData == null && _externalUrlContentViewModel != null) scrap = await KakaoStoryApiHandler.GetScrapData(_externalUrlContentViewModel.ExternalUrlContent.SourceUrl);
+                                var scrapTryCount = 0;
+                                if (mediaData == null && _externalUrlContentViewModel != null)
+                                {
+                                    async Task DoScrap()
+                                    {
+                                        try { scrap = await KakaoStoryApiHandler.GetScrapData(_externalUrlContentViewModel.ExternalUrlContent.SourceUrl); }
+                                        catch (WebException)
+                                        {
+                                            scrapTryCount++;
+                                            if (scrapTryCount > 3) throw;
+                                            else await DoScrap();
+                                        }
+                                    }
+                                    await DoScrap();
+                                }
 
                                 await KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, true, true, null, null, scrap, false, null, null);
                                 if (conversionFailedCount > 0) await DisplayAlert("오류", $"카키오스토리 업로드 도중 일부 webp 이미지를 png로 변환하는 데 실패하여 {conversionFailedCount}개의 이미지가 제외되었습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
