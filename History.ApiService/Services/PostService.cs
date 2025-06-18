@@ -377,7 +377,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         // Sanitize contents
         var contents = requestDto.Contents ?? [];
         Utils.SanitizeContents(contents);
-        if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
+        if (requestDto.ParentPostId == null && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
             return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
 
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
