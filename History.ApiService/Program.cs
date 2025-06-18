@@ -1,4 +1,5 @@
 ﻿using DotNet.RateLimiter;
+using DotNet.RateLimiter.Extensions;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using History.ApiService;
@@ -138,7 +139,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapGet("/", MainPageHandler);
+app.MapGet("/", MainPageHandler)
+.WithRateLimiter(options =>
+{
+    options.PeriodInSec = 1;
+    options.Limit = 1;
+});
+
 
 app.Run();
 
