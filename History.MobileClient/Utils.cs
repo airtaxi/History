@@ -1,8 +1,5 @@
-﻿using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
-using Android.Content;
 using CommunityToolkit.Maui.Alerts;
 using History.Commons;
 using History.Commons.Api.PushNotification;
@@ -11,9 +8,6 @@ using History.Commons.Enums;
 using History.MobileClient.Enums;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
-using Microsoft.Maui.Animations;
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Layouts;
 using Plugin.Firebase.CloudMessaging;
 using UraniumUI.Icons.FontAwesome;
 
