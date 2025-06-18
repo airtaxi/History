@@ -1,14 +1,10 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core.Primitives;
 using CommunityToolkit.Maui.Views;
-using CommunityToolkit.Mvvm.Messaging;
 using FFImageLoading.Maui;
 using FFImageLoading.Maui.Platform;
-using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
-using Microsoft.Maui.Handlers;
 
 namespace History.MobileClient.Resources.Styles;
 
