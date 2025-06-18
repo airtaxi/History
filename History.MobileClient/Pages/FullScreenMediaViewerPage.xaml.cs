@@ -24,10 +24,10 @@ public partial class FullScreenMediaViewerPage : ContentPage
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<FullScreenMediaTappedMessage>(this, OnFullScreenMediaTappedMessageReceived);
 #if IOS
+#endif
         var carouselView = MainDataTemplatePresenter.FindInChildrenHierarchy<CarouselView>();
         if (carouselView != null) carouselView.Behaviors.Add(new SwipeToCloseBehavior());
         else MainDataTemplatePresenter.Behaviors.Add(new SwipeToCloseBehavior());
-#endif
     }
 
     private void OnFullScreenMediaTappedMessageReceived(object recipient, FullScreenMediaTappedMessage message) => TopBarGrid.IsVisible = !TopBarGrid.IsVisible;
