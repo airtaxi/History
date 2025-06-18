@@ -1,4 +1,5 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using DotNet.RateLimiter.ActionFilters;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +10,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[RateLimit(Limit = 6, PeriodInSec = 1)]
 public class FriendshipController(IUserService userService, IFriendshipService friendshipService) : ControllerBase
 {
     [HttpPost("request/{receiverId}")]
@@ -18,6 +20,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(409)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> SendFriendRequest(string receiverId)
     {
@@ -36,6 +39,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> AcceptFriendRequest(string userIdToAccept)
     {
@@ -53,6 +57,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeclineFriendRequest(string userIdToDecline)
     {
@@ -70,6 +75,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> CancelFriendRequest(string userIdToCancel)
     {
@@ -88,6 +94,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> BlockUser(string userIdToBlock)
     {
@@ -107,6 +114,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> IgnoreUser(string userIdToIgnore)
     {
@@ -125,6 +133,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> RemoveFriend(string userIdToRemove)
     {
@@ -142,6 +151,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UnblockUser(string blockedUserId)
     {
@@ -159,6 +169,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> UnignoreUser(string ignoredUserId)
     {
@@ -175,6 +186,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [Authorize]
     [ProducesResponseType<List<UserResponseDto>>(200)]
     [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetPendingRequests()
     {
@@ -192,6 +204,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [Authorize]
     [ProducesResponseType<List<UserResponseDto>>(200)]
     [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetWaitingRequests()
     {
@@ -209,6 +222,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [Authorize]
     [ProducesResponseType<List<UserResponseDto>>(200)]
     [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetBlockedUsers()
     {
@@ -226,6 +240,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [Authorize]
     [ProducesResponseType<List<UserResponseDto>>(200)]
     [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetIgnoredUsers()
     {
@@ -245,6 +260,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
     [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetFriends(string userId)
     {
@@ -268,6 +284,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(409)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> ToggleFavorite(string userId)
     {

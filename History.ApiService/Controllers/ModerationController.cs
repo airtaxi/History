@@ -1,4 +1,5 @@
-﻿using History.ApiService.Services.Interfaces;
+﻿using DotNet.RateLimiter.ActionFilters;
+using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.ResponseDtos;
@@ -11,12 +12,14 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[RateLimit(Limit = 6, PeriodInSec = 1)]
 public class ModerationController(IModerationService moderationService, IUserService userService) : ControllerBase
 {
     [HttpGet("records")]
     [Authorize]
     [ProducesResponseType<List<ModerationRecordResponseDto>>(200)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetModerationRecords([FromQuery] string from = null, [FromQuery] int limit = 10)
     {
@@ -41,6 +44,7 @@ public class ModerationController(IModerationService moderationService, IUserSer
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeletePost(string postId, [FromQuery] string reason, [FromQuery] ReportType reportType)
     {
@@ -64,6 +68,7 @@ public class ModerationController(IModerationService moderationService, IUserSer
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeleteComment(string commentId, [FromQuery] string reason, [FromQuery] ReportType reportType)
     {

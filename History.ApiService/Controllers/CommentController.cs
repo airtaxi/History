@@ -1,4 +1,5 @@
-﻿using History.ApiService.DataTypes;
+﻿using DotNet.RateLimiter.ActionFilters;
+using History.ApiService.DataTypes;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
@@ -13,6 +14,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[RateLimit(Limit = 6, PeriodInSec = 1)]
 public class CommentController(ICommentService commentService) : ControllerBase
 {
     [HttpGet("{postId}")]
@@ -20,6 +22,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetCommentsByPostId(string postId, [FromQuery] int limit, [FromQuery] string from)
     {
@@ -47,6 +50,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> CreateComment(string postId, [FromForm] DataWithFilesForm request)
     {
@@ -69,6 +73,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> ModifyComment(string commentId, [FromForm] DataWithFilesForm request)
     {
@@ -94,6 +99,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeleteComment(string commentId)
     {
@@ -113,6 +119,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> HandleCommentLike(string commentId)
     {

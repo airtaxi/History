@@ -1,14 +1,17 @@
-﻿using System.Text.Json.Nodes;
-using System.Web;
+﻿using DotNet.RateLimiter;
+using DotNet.RateLimiter.ActionFilters;
 using Google.Apis.Auth.OAuth2;
 using History.ApiService.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using RestSharp;
+using System.Text.Json.Nodes;
+using System.Web;
 
 namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/auth/apple")]
+[RateLimit(Limit = 1, PeriodInSec = 1)]
 public class AppleController : ControllerBase
 {
     private const string KeyId = "DGK52ABR8V";
@@ -21,6 +24,8 @@ public class AppleController : ControllerBase
     public static string GenerateJwtToken() => AppleIdTokenHelper.GenerateJwtToken(KeyId, TeamId, ClientId, PrivateKeyPath);
 
     [HttpGet("login")]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(429)]
     public IActionResult Login([FromQuery] string redirectUrl) => Redirect($"{AuthorizationEndpoint}?response_type=code" +
         $"&client_id={HttpUtility.UrlEncode(ClientId)}" +
         $"&redirect_uri={HttpUtility.UrlEncode(RedirectUri)}" +
@@ -29,6 +34,8 @@ public class AppleController : ControllerBase
         $"&state={HttpUtility.UrlEncode(redirectUrl)}");
 
     [HttpPost("callback")]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(429)]
     public async Task<IActionResult> Callback([FromForm] string code, [FromForm] string state, [FromForm] string user)
     {
         if (string.IsNullOrEmpty(code))
