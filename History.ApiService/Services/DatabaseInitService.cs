@@ -11,6 +11,7 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         logger.LogInformation("Initializing database...");
 
         var userCollection = database.GetCollection<User>("Users");
+        var userMemoCollection = database.GetCollection<UserMemo>("UserMemos");
         var postCollection = database.GetCollection<Post>("Posts");
         var publicPostCollection = database.GetCollection<Post>("PublicPosts");
         var friendshipCollection = database.GetCollection<Friendship>("Friendships");
@@ -34,6 +35,10 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.AllowSearch)), cancellationToken: cancellationToken);
         await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.PinnedPostId)), cancellationToken: cancellationToken);
         await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
+
+        logger.LogInformation("Creating indexes for UserMemo collection...");
+        await userMemoCollection.Indexes.CreateOneAsync(new CreateIndexModel<UserMemo>(Builders<UserMemo>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
+        await userMemoCollection.Indexes.CreateOneAsync(new CreateIndexModel<UserMemo>(Builders<UserMemo>.IndexKeys.Ascending(x => x.RegisteredBy)), cancellationToken: cancellationToken);
 
         logger.LogInformation("Creating indexes for Post collection...");
         await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);

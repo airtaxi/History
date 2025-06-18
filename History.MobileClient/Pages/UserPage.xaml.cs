@@ -8,6 +8,8 @@ using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
+using History.Commons;
+
 
 #if ANDROID
 using History.MobileClient.ThirdParty.StaggeredLayout;
@@ -49,7 +51,11 @@ public partial class UserPage : ContentPage
 		UserId = userId;
         InitializeComponent();
 
-        if (UserId == Shared.UserId) BanImage.IsVisible = false;
+        if (UserId == Shared.UserId)
+        {
+            BanImage.IsVisible = false;
+            MemoImage.IsVisible = false;
+        }
 
         MainCollectionView.ItemsSource = _viewModels;
 #if IOS
@@ -282,5 +288,14 @@ public partial class UserPage : ContentPage
             AppleSwipeGestureHelper.ApplyToPage(this);
         }
 #endif
+    }
+
+    private async void OnMemoImageTapped(object sender, TappedEventArgs e)
+    {
+        var memo = await DisplayPromptAsync("메모 작성", "사용자 메모를 작성해주세요. 공란으로 설정 시 메모가 삭제됩니다.", Constants.PromptOk, Constants.PromptCancel, "최대 10자까지 입력 가능. 공란 시 삭제", CommonsConstants.MaxMemoLength, keyboard: Keyboard.Text);
+        if (memo == null) return;
+
+        var response = await App.ExecuteRequestAsync(new UpdateMemo(UserId, memo.Trim()));
+        if (response.IsSuccess) await _viewModel.RefreshAsync();
     }
 }
