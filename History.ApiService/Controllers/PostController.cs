@@ -20,6 +20,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<List<PostResponseDto>>(200)]
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetUserPosts(string userId, [FromQuery] int limit, [FromQuery] string from)
     {
@@ -38,6 +39,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<List<PostResponseDto>>(200)]
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetTimelinePosts([FromQuery] int limit, [FromQuery] string from)
     {
@@ -57,6 +59,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetUserPostsCount(string userId)
     {
@@ -89,6 +92,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> IgnorePost(string postId)
     {
@@ -111,6 +115,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> WritePost([FromForm] DataWithFilesForm request)
     {
@@ -133,6 +138,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetPost(string postId)
     {
@@ -167,6 +173,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> ModifyPost(string postId, [FromForm] DataWithFilesForm request)
     {
@@ -195,6 +202,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeletePost(string postId)
     {
@@ -217,6 +225,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> HandleRepost(string postId)
     {
@@ -244,6 +253,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> HandlePostReaction(string postId, PostReactionType type)
     {
@@ -262,6 +272,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [HttpGet("search")]
     [ProducesResponseType<List<PostResponseDto>>(200)]
     [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> SearchPosts([FromQuery] int limit, [FromQuery] string from, [FromQuery] string keyword)
     {
@@ -281,6 +292,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> ChangeDiscoveryOption(string postId, [FromBody] ChangeDiscoveryOptionRequestDto request)
     {
@@ -308,6 +320,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> FillExternalUrlContent([FromBody] ExternalUrlContent externalUrlContent)
     {
@@ -324,6 +337,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<List<PostResponseDto>>(200)]
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetPublicPosts([FromQuery] int limit, [FromQuery] string from)
     {
@@ -350,6 +364,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> WritePublicPost(string postId)
     {

@@ -19,6 +19,7 @@ public class ModerationController(IModerationService moderationService, IUserSer
     [Authorize]
     [ProducesResponseType<List<ModerationRecordResponseDto>>(200)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetModerationRecords([FromQuery] string from = null, [FromQuery] int limit = 10)
     {
@@ -43,6 +44,7 @@ public class ModerationController(IModerationService moderationService, IUserSer
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeletePost(string postId, [FromQuery] string reason, [FromQuery] ReportType reportType)
     {
@@ -66,6 +68,7 @@ public class ModerationController(IModerationService moderationService, IUserSer
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeleteComment(string commentId, [FromQuery] string reason, [FromQuery] ReportType reportType)
     {

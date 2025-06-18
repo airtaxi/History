@@ -23,6 +23,7 @@ public class ReportController(IReportService reportService, IUserService userSer
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> GetReportRecords([FromQuery] string from = null, [FromQuery] int limit = 10)
     {
@@ -46,6 +47,7 @@ public class ReportController(IReportService reportService, IUserService userSer
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(409)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> CreateReportRecord([FromBody] CreateReportRecordRequestDto request)
     {
@@ -67,6 +69,7 @@ public class ReportController(IReportService reportService, IUserService userSer
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
     [ProducesResponseType<string>(409)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> ProcessReportRecord(string recordId, [FromQuery] string reason)
     {
@@ -89,6 +92,7 @@ public class ReportController(IReportService reportService, IUserService userSer
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> DeleteReportRecord(string recordId)
     {
