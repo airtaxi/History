@@ -6,10 +6,11 @@ using History.Commons.Api.Report;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Enums;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class PublicPostViewModel(PostResponseDto post) : PostViewModel(post, false)
+public partial class PublicPostViewModel(PostResponseDto post) : PostViewModel(post, PostType.Discovery)
 {
     [RelayCommand]
     public async Task HandlePublicPostMoreTapAsync()

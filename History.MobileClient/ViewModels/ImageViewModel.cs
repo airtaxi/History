@@ -2,12 +2,13 @@
 using CommunityToolkit.Mvvm.Messaging;
 using FFImageLoading.Maui;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Enums;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class ImageViewModel(string uri, bool isTimeline = false) : ObservableObject, IMediaViewModel
+public partial class ImageViewModel(string uri, PostType postType = PostType.Unwrapped) : ObservableObject, IMediaViewModel
 {
-    public bool IsTimeline { get; } = isTimeline;
+    public PostType PostType { get; } = postType;
 
     [ObservableProperty]
     public partial string Uri { get; set; } = uri;
