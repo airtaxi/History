@@ -8,6 +8,8 @@ using History.Commons.Enums;
 using History.MobileClient.Auth;
 using History.MobileClient.DataTypes;
 using Result = History.Commons.Result;
+using History.Commons.DataTypes.RequestDtos;
+
 
 #if ANDROID
 using Android.Content;
@@ -86,7 +88,6 @@ public partial class LoginPage : ContentPage
 
     private async void OnGoogleLoginButtonClicked(object sender, EventArgs e)
     {
-#if ANDROID || IOS
         var service = new GoogleAuthService();
         var idToken = await service.AuthenticateAsync();
         if (idToken != null)
@@ -94,14 +95,11 @@ public partial class LoginPage : ContentPage
             await service.SignOutAsync();
             await Login(idToken, SocialService.Google);
         }
-#else
-        await DisplayAlert("안내", "구현되지 않은 플랫폼입니다.", Constants.PromptOk);
-#endif
     }
 
     private async void OnAppleLoginButtonClicked(object sender, EventArgs e)
     {
-        if(DeviceInfo.Platform == DevicePlatform.iOS && DeviceInfo.Version.Major >= 13)
+        if (DeviceInfo.Platform == DevicePlatform.iOS && DeviceInfo.Version.Major >= 13)
         {
             var result = await AppleSignInAuthenticator.AuthenticateAsync(new AppleSignInAuthenticator.Options
             {
@@ -115,7 +113,21 @@ public partial class LoginPage : ContentPage
 
             await Login(idToken, SocialService.Apple);
         }
-        else await DisplayAlert("안내", "애플 로그인은 개발 중입니다.", Constants.PromptOk);
+        else
+        {
+            var page = new AppleLoginPage();
+            await App.PushModalAsync(page);
+
+            var result = await page.GetResultAsync();
+            if (result == null)
+            {
+                await DisplayAlert("오류", "애플 로그인에 실패했습니다. 다시 시도해주세요.", Constants.PromptOk);
+                return;
+            }
+
+            s_appleUserFullName = result.Name;
+            await Login(result.IdToken, SocialService.Apple);
+        }
     }
 
     protected override async void OnAppearing()
