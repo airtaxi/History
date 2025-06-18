@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
@@ -197,7 +197,7 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
 
             var userIds = _selectedViewModels.Select(x => x.User.UserId).ToList();
             var key = await DisplayPromptAsync("프리셋 이름", "프리셋의 이름을 입력해주세요.", maxLength: 20, accept: "저장", cancel: Constants.PromptCancel, placeholder: "프리셋 이름");
-            if (key == null || key == Constants.PromptCancel) return;
+            if (key == null) return;
 
             if (key.Length < 1 || key.Length > 20)
             {

@@ -6,10 +6,8 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
-using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 
 namespace History.MobileClient.Pages;
 
