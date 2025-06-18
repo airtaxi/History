@@ -44,7 +44,8 @@ public static partial class Utils
             {
                 var texts = textContentBuffer.SelectMany(x => x.Text);
                 var text = string.Concat(texts);
-                var textContent = new TextContent() { Text = SanitizeText(text) };
+                Console.WriteLine("TC:" + text);
+                var textContent = new TextContent() { Text = text };
                 contents.Add(textContent);
             }
             else if (textContentBuffer.Count == 1) contents.Add(textContentBuffer.First());
