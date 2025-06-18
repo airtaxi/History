@@ -17,6 +17,7 @@ public class MediaController(IMediaService mediaService) : ControllerBase
     [HttpGet("{mediaId}")]
     [ProducesResponseType<byte[]>(200)]
     [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
     [RateLimit(Limit = 60, PeriodInSec = 1)]
     public async Task<IActionResult> GetMediaContent(string mediaId)
