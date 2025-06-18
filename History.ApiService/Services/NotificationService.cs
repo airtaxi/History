@@ -132,7 +132,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
                     | Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.Comment);
             }
             else filter &= Builders<Notification>.Filter.Eq(n => n.Type, type);
-            var update = Builders<Notification>.Update.PullFilter(x => x.Recipients, Builders<string>.Filter.Where(s => firstNotification.Recipients.Contains(s)));
+            var update = Builders<Notification>.Update.PullFilter(x => x.Recipients, r => firstNotification.Recipients.Contains(r));
             await _notificationCollection.UpdateManyAsync(filter, update);
         }
 
@@ -221,7 +221,6 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
         if (collapseKey != null)
         {
-            message.Android.CollapseKey = collapseKey;
             message.Android.Notification.Tag = collapseKey;
             if (message.Apns != null)
             {
