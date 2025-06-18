@@ -96,12 +96,10 @@ public partial class FriendListPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
         _isInForeground = true;
-
-        await RefreshAsync();
 
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
         if (safeAreaTopHeight != 0)
