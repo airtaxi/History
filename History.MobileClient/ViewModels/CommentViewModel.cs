@@ -71,8 +71,12 @@ public partial class CommentViewModel : ObservableObject
 
     private void UpdateComment(CommentResponseDto comment)
     {
-        Comment = comment;
-        Contents = Utils.GenerateContentViewModels(Comment.Contents, _isTimeline);
+        try
+        {
+            Comment = comment;
+            Contents = Utils.GenerateContentViewModels(Comment.Contents, _isTimeline);
+        }
+        catch (ObjectDisposedException) { } // The view is disposed. this view model also will be removed on next GC
     }
 
     public Color CommentLikeColor => Liked ? Color.FromRgb(0xeb, 0x55, 0x27) : Color.FromRgb(0x80, 0x80, 0x80);
