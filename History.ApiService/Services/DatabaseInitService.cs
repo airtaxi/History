@@ -25,6 +25,15 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
 
         logger.LogInformation("Creating indexes for User collection...");
         await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.Nickname)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.Handle)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.Email)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.Rank)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.SocialService)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.FriendListDiscoveryOption)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.LastUsedPostDiscoveryOption)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.AllowSearch)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.PinnedPostId)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
 
         logger.LogInformation("Creating indexes for Post collection...");
         await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
