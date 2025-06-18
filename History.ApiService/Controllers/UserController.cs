@@ -35,7 +35,6 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(409)]
     [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
-    [RateLimit(Limit = 1, PeriodInSec = 1)]
     public async Task<IActionResult> Register([FromBody] OAuthRegisterRequestDto request)
     {
         var payload = await VerifyIdTokenAsync(request);
@@ -86,7 +85,6 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(404)]
     [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
-    [RateLimit(Limit = 1, PeriodInSec = 1)]
     public async Task<IActionResult> Login([FromBody] OAuthLoginRequestDto request)
     {
         var payload = await VerifyIdTokenAsync(request);
