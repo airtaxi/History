@@ -1,9 +1,11 @@
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
+using History.MobileClient.Behaviors;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using NativeMedia;
+using UraniumUI.Extensions;
 
 namespace History.MobileClient.Pages;
 
@@ -21,6 +23,10 @@ public partial class FullScreenMediaViewerPage : ContentPage
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<FullScreenMediaTappedMessage>(this, OnFullScreenMediaTappedMessageReceived);
+#if IOS
+        var carouselView = MainDataTemplatePresenter.FindInChildrenHierarchy<CarouselView>();
+        carouselView.Behaviors.Add(new SwipeToCloseBehavior());
+#endif
     }
 
     private void OnFullScreenMediaTappedMessageReceived(object recipient, FullScreenMediaTappedMessage message) => TopBarGrid.IsVisible = !TopBarGrid.IsVisible;
