@@ -179,7 +179,7 @@ public class PanPinchContainer : ContentView
 
         _mediaViewModel.FullScreenSwipeable = _currentScale == 1 && _moreThanOneMedia;
         _mediaViewModel.IsInZoomMode = _currentScale != 1;
-        if (_mediaViewModel.FullScreenSwipeable) GestureRecognizers.Remove(_panGestureRecognizer);
+        if (!_mediaViewModel.IsInZoomMode) GestureRecognizers.Remove(_panGestureRecognizer);
         else if (!GestureRecognizers.Contains(_panGestureRecognizer)) GestureRecognizers.Add(_panGestureRecognizer);
     }
 
@@ -277,7 +277,7 @@ public class PanPinchContainer : ContentView
 
         _mediaViewModel.FullScreenSwipeable = _currentScale == 1 && _moreThanOneMedia;
         _mediaViewModel.IsInZoomMode = _currentScale != 1;
-        if (_mediaViewModel.FullScreenSwipeable) GestureRecognizers.Remove(_panGestureRecognizer);
+        if (!_mediaViewModel.IsInZoomMode) GestureRecognizers.Remove(_panGestureRecognizer);
         else if (!GestureRecognizers.Contains(_panGestureRecognizer)) GestureRecognizers.Add(_panGestureRecognizer);
     }
 
