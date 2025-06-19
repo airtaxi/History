@@ -765,7 +765,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             .FirstOrDefaultAsync();
 
         if (recentPublicPost != null && (DateTime.UtcNow - recentPublicPost.CreatedAt).TotalDays < 1)
-            return (ErrorType.BadRequest, "홍보 게시글은 하루에 하나만 작성할 수 있습니다.");
+        {
+            var remainingTime = TimeSpan.FromDays(1) - (DateTime.UtcNow - recentPublicPost.CreatedAt);
+            return (ErrorType.BadRequest, $"홍보 게시글은 24시간마다 한번 씩 작성할 수 있습니다. 남은 시간: {remainingTime.TotalMinutes:N0}분");
+        }
 
         // Sanitize contents
         var contents = originalPost.Contents ?? [];
