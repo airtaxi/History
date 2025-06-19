@@ -116,6 +116,7 @@ public partial class TimelinePage : ContentPage
 
         if (_isFirstLoad || ShouldRefresh)
         {
+            _isFirstLoad = false;
             ShouldRefresh = false;
             Dispatcher.Dispatch(async () => await RefreshAsync());
         }
@@ -125,16 +126,6 @@ public partial class TimelinePage : ContentPage
         {
             var statusBarHeight = LayoutHelper.GetStatusBarHeight();
             Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
-        }
-
-        if (_isFirstLoad)
-        {
-            App.Page.Dispatcher.Dispatch(async () =>
-            {
-                var pushData = Preferences.Get("PushData", null);
-                if (!string.IsNullOrEmpty(pushData)) await App.HandlePushNotificationAsync(pushData);
-            });
-            _isFirstLoad = false;
         }
     }
 
