@@ -1,4 +1,6 @@
-﻿using History.ApiService.Helpers;
+﻿using System.Text;
+using Google.Protobuf.WellKnownTypes;
+using History.ApiService.Helpers;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
@@ -8,7 +10,6 @@ using History.Commons.Enums;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
 using NJsonSchema.Validation;
-using System.Text;
 
 namespace History.ApiService.Services;
 
@@ -42,6 +43,18 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
 
     /// <inheritdoc />
     public async Task<Result<List<User>>> GetUsersByIdsAsync(IEnumerable<string> userIds) => await _userCollection.Find(u => userIds.Contains(u.Id)).ToListAsync();
+
+    /// <inheritdoc />
+    public async Task<Result<List<User>>> GetUsersByBirthdayAsync(DateTime timestamp)
+    {
+        var month = timestamp.Month;
+        var day = timestamp.Day;
+        var birthday = timestamp.ToString("MM-dd");
+        var filter = Builders<User>.Filter.Eq(u => u.Birthday, birthday);
+        var users = await _userCollection.Find(filter).ToListAsync();
+        if (users == null || users.Count == 0) return (ErrorType.NotFound, "해당 생일을 가진 사용자를 찾을 수 없습니다.");
+        return users;
+    }
 
     /// <inheritdoc />
     public async Task<Result<User>> GetUserByHandleAsync(string handle, bool applyPermission)
@@ -148,8 +161,10 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
-    public async Task<Result> UpdateBirthdayAsync(string userId, DateTime? birthday)
+    public async Task<Result> UpdateBirthdayAsync(string userId, DateTime? timestamp)
     {
+        var birthday = timestamp?.ToString("MM-dd");
+
         var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
         var update = Builders<User>.Update.Set(u => u.Birthday, birthday);
         return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "생일을 변경하는 중 오류가 발생했습니다.");
