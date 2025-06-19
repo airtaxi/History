@@ -14,6 +14,11 @@ namespace History.ApiService.Services
         {
             _lastTaskRun = Configuration.GetValue<DateTime>("LastBirthdayServiceRun");
             _timer = new Timer(ExecuteTask, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
+
+            var currentTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(DateTime.UtcNow, "Asia/Seoul");
+            logger.LogInformation("Birthday service started at {Time} / Last run: {LastRun} / Current time: {CurrentTime} / Started : {Started}",
+                DateTime.UtcNow, _lastTaskRun, currentTime, IsStartTime(currentTime));
+
             return Task.CompletedTask;
         }
 
@@ -48,7 +53,7 @@ namespace History.ApiService.Services
                         new ProfileContent() { UserId = user.Id, Nickname = user.Nickname },
                         new TextContent() { Text = "님께 감사드리며, \n앞으로의 날들에도 건강과 행운이 함께하길 기원합니다.\n다시 한 번 생일 축하드립니다 🎁🎈\n행복한 하루 되세요!\n따뜻한 마음을 담아,\n히스토리 개발자 " },
                         new ProfileContent() { UserId = "101978644582797207383", Nickname = "이호원" },
-                        new TextContent() { Text = " 드림" },
+                        new TextContent() { Text = "드림" },
                         new MediaContent()
                         {
                             Description = "생일 축하합니다! 🎉",
@@ -67,7 +72,7 @@ namespace History.ApiService.Services
             });
         }
 
-        private static bool IsStartTime(DateTime currentTime) => currentTime.Hour == 11 && currentTime.Minute == 39;
+        private static bool IsStartTime(DateTime currentTime) => currentTime.Hour >= 12;
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
