@@ -554,7 +554,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             core.Recipients = moderatorUserIdsResult.Value;
             core.UserId = recordResult.Value.ReporterId;
 
-			core.Data.Add("UserId", reporterResult.Value.Id);
+            core.Data.Add("UserId", reporterResult.Value.Id);
 
             if (recordResult.Value.Target == ReportTarget.Post)
             {
@@ -586,7 +586,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
                 core.Data.Add("CommentId", commentResult.Value.Id);
             }
             else return (ErrorType.BadRequest, "지원되지 않는 신고 대상입니다.");
-		}
+        }
         else if (type == NotificationType.FavoriteFriendNewPost)
         {
             var userService = serviceProvider.GetRequiredService<IUserService>();
@@ -617,6 +617,39 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
             core.Data.Add("PostId", postResult.Value.Id);
             core.Data.Add("UserId", postResult.Value.UserId);
+        }
+        else if (type == NotificationType.Birthday)
+        {
+            var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+            var userService = serviceProvider.GetRequiredService<IUserService>();
+            var postService = serviceProvider.GetRequiredService<IPostService>();
+
+            var postResult = await postService.GetPostByIdAsync(associatedId);
+            if (postResult.IsFailure) return postResult.CastFailure<List<Notification>>();
+
+            var postAuthorResult = await userService.GetUserByIdAsync(postResult.Value.UserId);
+            if (postAuthorResult.IsFailure) return postAuthorResult.CastFailure<List<Notification>>();
+
+            var postAuthorFriendsResult = await friendshipService.GetUserFriendIdsAsync(postResult.Value.UserId, postResult.Value.UserId);
+            if (postAuthorFriendsResult.IsFailure) return postAuthorFriendsResult.CastFailure<List<Notification>>();
+
+            core.Recipients = postAuthorFriendsResult.Value.Except([postResult.Value.UserId]).Distinct();
+
+            core.UserId = postResult.Value.UserId;
+
+            core.Title = $"오늘은 회원님의 친구 {postAuthorResult.Value.Nickname}님의 생일입니다!";
+            core.Body = $"생일 축하 메시지를 남겨주세요!";
+            core.ImageUrl = "https://api.history.cenox.io/api/media/birthday";
+
+            core.Data.Add("PostId", postResult.Value.Id);
+            core.Data.Add("UserId", postResult.Value.UserId);
+            core.PushNotificationDisabled = true;
+
+            var authorCore = core.Clone();
+            authorCore.Recipients = [postResult.Value.UserId];
+            authorCore.Title = $"오늘은 회원님의 생일입니다! 🎉";
+            authorCore.Body = $"회원님의 생일을 진심으로 축하드립니다! 다른 친구들이 남긴 축하 메시지를 확인해보세요!";
+            notifications.Add(authorCore);
         }
         else return (ErrorType.BadRequest, "지원되지 않는 알림 유형입니다.");
 
