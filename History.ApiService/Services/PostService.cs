@@ -451,7 +451,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Send notification
         if (post.ParentPostId != null) await notificationService.SendNotificationsAsync(NotificationType.Share, post.Id);
-        else if (post.Contents.OfType<ProfileContent>().Any()) await notificationService.SendNotificationsAsync(NotificationType.PostMention, post.Id);
+        else if (post.Contents.OfType<ProfileContent>().Any() && !post.Contents.OfType<MediaContent>().Any(x => x.MediaId == "birthday")) await notificationService.SendNotificationsAsync(NotificationType.PostMention, post.Id);
 
         await notificationService.SendNotificationsAsync(NotificationType.FavoriteFriendNewPost, post.Id);
 
