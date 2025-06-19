@@ -38,7 +38,7 @@ public class User
     /// <summary>
     /// User's birthday. Null if user did not set or don't want to.
     /// </summary>
-    public DateTime? Birthday { get; set; }
+    public string Birthday { get; set; }
 
     /// <summary>
     /// User profile description set by user.

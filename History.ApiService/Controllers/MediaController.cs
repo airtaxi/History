@@ -44,4 +44,28 @@ public class MediaController(IMediaService mediaService) : ControllerBase
 
         return File(mediaContent, mediaResult.Value.MimeType, true);
     }
+
+    [HttpGet("birthday")]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
+    [RateLimit(Limit = 10, PeriodInSec = 1)]
+    public async Task<IActionResult> GetBirthdayMediaContent()
+    {
+        var filePath = Path.Combine(AppContext.BaseDirectory, "Assets", "birthday.webp");
+        if (!System.IO.File.Exists(filePath)) return NotFound("Birthday media content not found.");
+
+        var mediaContent = await System.IO.File.ReadAllBytesAsync(filePath);
+
+        Response.Headers.Append("Cache-Control", "public, max-age=604800");
+        Response.Headers.Append("Expires", DateTime.UtcNow.AddDays(1).ToString("R"));
+        Response.Headers.Append("Last-Modified", DateTime.UtcNow.ToString("R"));
+
+        var etag = "\"birthday\"";
+        Response.Headers.Append("ETag", etag);
+
+        if (Request.Headers.TryGetValue("If-None-Match", out var value) && value.ToString() == etag) return StatusCode(304);
+
+        return File(mediaContent, "image/webp", true);
+    }
 }

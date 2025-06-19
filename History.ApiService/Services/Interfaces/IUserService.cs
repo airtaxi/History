@@ -30,6 +30,13 @@ public interface IUserService
     public Task<Result<List<User>>> GetUsersByIdsAsync(IEnumerable<string> userIds);
 
     /// <summary>
+    /// Get users by birthday
+    /// </summary>
+    /// <param name="birthday">The birthday to search for</param>
+    /// <returns>A task that represents the asynchronous operation, containing a list of users with the specified birthday</returns>
+    public Task<Result<List<User>>> GetUsersByBirthdayAsync(DateTime birthday);
+
+    /// <summary>
     /// Get user by handle
     /// </summary>
     /// <param name="handle">The handle of the user to retrieve</param>

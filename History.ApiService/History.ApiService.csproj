@@ -26,6 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Assets\birthday.webp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="AuthKey_DGK52ABR8V.p8">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
