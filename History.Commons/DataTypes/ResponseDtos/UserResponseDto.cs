@@ -14,7 +14,7 @@ public class UserResponseDto()
     public DiscoveryOption LastUsedPostDiscoveryOption { get; set; }
 
     public string Nickname { get; set; }
-    public DateTime? Birthday { get; set; }
+    public string Birthday { get; set; }
     public string Description { get; set; }
 
     public string ProfileMediaId { get; set; }
@@ -41,7 +41,7 @@ public class UserResponseDto()
         LastUsedPostDiscoveryOption = user.LastUsedPostDiscoveryOption;
 
         Nickname = user.Nickname;
-        Birthday = user.Birthday;
+        //Birthday = user.Birthday;
         Description = user.Description;
 
         ProfileMediaId = user.ProfileMediaId;
