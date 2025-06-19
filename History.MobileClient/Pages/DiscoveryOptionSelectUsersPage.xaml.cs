@@ -101,7 +101,7 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
         }
         else
         {
-            var viewModels = _viewModels.Where(x => x.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase) || x.User.Handle.Equals(query, StringComparison.OrdinalIgnoreCase));
+            var viewModels = _viewModels.Where(x => x.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(x.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase) || x.User.Handle.Equals(query, StringComparison.OrdinalIgnoreCase));
             MainCollectionView.ItemsSource = viewModels;
             EmptyLabel.IsVisible = !viewModels.Any();
         }

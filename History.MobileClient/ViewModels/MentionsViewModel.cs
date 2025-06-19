@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using History.MobileClient.Helpers;
 using SpeakLink.Mention;
 
 namespace History.MobileClient.ViewModels;
@@ -36,7 +37,8 @@ public partial class MentionsViewModel : ObservableObject
         if (string.IsNullOrEmpty(query)) viewModels = [.. Shared.Friends.Select(x => new MentionViewModel(x))];
         else viewModels = [.. Shared.Friends
                 .Where(x => x.Handle.Contains(query, StringComparison.InvariantCultureIgnoreCase)
-                    || x.Nickname.Contains(query, StringComparison.InvariantCultureIgnoreCase))
+                    || x.Nickname.Contains(query, StringComparison.InvariantCultureIgnoreCase)
+                    || KoreanHelper.SplitToChosung(x.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase))
                 .Select(x => new MentionViewModel(x))];
         ViewModels = viewModels;
         IsDisplayingMentions = viewModels.Count > 0;
