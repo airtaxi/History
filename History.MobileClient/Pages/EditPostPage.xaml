@@ -377,6 +377,9 @@
                         Mode="Dialog"
                         OkButtonClicked="OnReservationDateTimePickerOkButtonClicked"
                         Opacity="0">
+                        <sf:SfDateTimePicker.HeaderView>
+                            <sf:DateTimePickerHeaderView DateFormat="yyyy년 MM월 dd일" TimeFormat="HH시 mm분 ss초" />
+                        </sf:SfDateTimePicker.HeaderView>
                         <sf:SfDateTimePicker.FooterView>
                             <sf:PickerFooterView Height="40" OkButtonText="확인" />
                         </sf:SfDateTimePicker.FooterView>
