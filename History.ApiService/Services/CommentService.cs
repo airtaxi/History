@@ -112,7 +112,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
 
         // Check access
-        var accessResult = await postService.CheckAccessAsync(postId, requesterId);
+        var accessResult = await postService.CheckCommentAccessAsync(postId, requesterId);
         if (accessResult.IsFailure) return accessResult.CastFailure<Comment>();
 
         // Create comment

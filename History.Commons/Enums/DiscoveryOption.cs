@@ -29,6 +29,18 @@ public static class DiscoveryOptionExtensions
         };
     }
 
+    public static AccessPermission? ToAccessPermission(this DiscoveryOption option)
+    {
+        return option switch
+        {
+            DiscoveryOption.OnlyMe => AccessPermission.OnlyMe,
+            DiscoveryOption.Friends => AccessPermission.Friends,
+            DiscoveryOption.FriendsOfFriends => AccessPermission.FriendsOfFriends,
+            DiscoveryOption.Everyone => AccessPermission.Everyone,
+            _ => null,
+        };
+    }
+
     public static DiscoveryOption FromDisplayString(string displayString)
     {
         return displayString switch

@@ -60,4 +60,14 @@ public class Post
     /// The data used when searching for this post.
     /// </summary>
     public string SearchIndex { get; set; } = string.Empty;
+
+    /// <summary>
+    /// If true, this post cannot be shared by other users.
+    /// </summary>
+    public bool DisallowShare { get; set; }
+
+    /// <summary>
+    /// Comment permission for this post.
+    /// </summary>
+    public AccessPermission? CommentPermission { get; set; }
 }
