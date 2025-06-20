@@ -1,4 +1,9 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using System.Diagnostics;
+using System.Net;
+using System.Reflection;
+using System.Resources;
+using System.Text.Json;
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
@@ -11,10 +16,9 @@ using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
 using ShimSkiaSharp;
-using System.Diagnostics;
-using System.Net;
-using System.Reflection;
-using System.Text.Json;
+using Syncfusion.Maui.Toolkit.Localization;
+using Syncfusion.Maui.Toolkit.Picker;
+using Syncfusion.Maui.Toolkit.Themes;
 
 namespace History.MobileClient;
 
@@ -54,6 +58,9 @@ public partial class App : Application
             }
         };
 #endif
+        UpdateSyncFusionTheme();
+
+        RequestedThemeChanged += (_, __) => UpdateSyncFusionTheme();
     }
 
     public static Page Page
@@ -235,6 +242,22 @@ public partial class App : Application
     {
         MainWindow = new Window(new LoginPage());
         return MainWindow;
+    }
+
+    private static void UpdateSyncFusionTheme()
+    {
+        ICollection<ResourceDictionary> mergedDictionaries = Current.Resources.MergedDictionaries;
+        if (mergedDictionaries != null)
+        {
+            var theme = mergedDictionaries.OfType<SyncfusionThemeResourceDictionary>().FirstOrDefault();
+            if (theme != null)
+            {
+                var appTheme = Utils.GetGlobalAppTheme();
+                if (appTheme == AppTheme.Light) theme.VisualTheme = SfVisuals.MaterialLight;
+                else theme.VisualTheme = SfVisuals.MaterialDark;
+                SfPickerResources.ResourceManager = new ResourceManager("History.MobileClient.Resources.SfDateTimePicker", Application.Current.GetType().Assembly);
+            }
+        }
     }
 
     public static async Task HandlePushNotificationAsync(string pushData)
