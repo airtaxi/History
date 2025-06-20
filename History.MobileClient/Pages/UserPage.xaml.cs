@@ -102,7 +102,11 @@ public partial class UserPage : ContentPage
                 _viewModel = new ProfileViewModel(user.Value);
                 _viewModels.Add(_viewModel);
             }
-            else return;
+            else
+            {
+                await App.PopAsync();
+                return;
+            }
 
             var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId));
             if (postsResult.IsSuccess)
