@@ -389,6 +389,11 @@ public partial class PostViewModel : ObservableObject
             await App.Page.DisplayAlert("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 공유할 수 없습니다.", Constants.PromptOk);
             return;
         }
+        else if (Post.DisallowShare)
+        {
+            await App.Page.DisplayAlert("안내", "이 게시글은 작성자가 공유를 허용하지 않은 관계로 공유할 수 없습니다.", Constants.PromptOk);
+            return;
+        }
 
         var page = new EditPostPage(Post, true);
         await App.PushAsync(page);
