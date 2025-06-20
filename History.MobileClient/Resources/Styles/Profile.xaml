@@ -28,11 +28,12 @@
                     HorizontalOptions="Fill"
                     Opacity="0.4"
                     VerticalOptions="Fill" />
-                <HorizontalStackLayout
-                    Margin="20"
-                    HorizontalOptions="Start"
-                    VerticalOptions="Start">
-                    <Grid>
+                <Grid Margin="20" VerticalOptions="Start">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0">
                         <views:DataTemplatePresenter
                             x:Name="ProfileMediaDataTemplatePresenter"
                             HeightRequest="72"
@@ -85,7 +86,10 @@
                             </Grid>
                         </Border>
                     </Grid>
-                    <VerticalStackLayout Margin="8" VerticalOptions="Center">
+                    <VerticalStackLayout
+                        Grid.Column="1"
+                        Margin="8"
+                        VerticalOptions="Center">
                         <HorizontalStackLayout Spacing="4">
                             <Label
                                 FontAttributes="Bold"
@@ -150,7 +154,7 @@
                             </Label.Margin>
                         </Label>
                     </VerticalStackLayout>
-                </HorizontalStackLayout>
+                </Grid>
                 <HorizontalStackLayout
                     Margin="20"
                     HorizontalOptions="End"
