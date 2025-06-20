@@ -207,7 +207,7 @@
             Grid.Row="1"
             Margin="0,0,0,-8"
             Padding="12"
-            BackgroundColor="{AppThemeBinding Light=#FFFFFF,
+            BackgroundColor="{AppThemeBinding Light=#DDDDDD,
                                               Dark=#000000}"
             HorizontalOptions="Fill"
             IsVisible="False"
@@ -223,7 +223,7 @@
                         x:Name="DisallowShareSwitch"
                         HorizontalOptions="End"
                         OnColor="{StaticResource Primary}"
-                        ThumbColor="#EEEEEE"
+                        ThumbColor="#FFFFFF"
                         Toggled="OnDisallowShareSwitchSwitchToggled"
                         VerticalOptions="Center" />
                 </Grid>
@@ -238,7 +238,7 @@
                             x:Name="CommentPermissionSwitch"
                             HorizontalOptions="End"
                             OnColor="{StaticResource Primary}"
-                            ThumbColor="#EEEEEE"
+                            ThumbColor="#FFFFFF"
                             Toggled="OnCommentPermissionSwitchSwitchToggled"
                             VerticalOptions="Center" />
                     </Grid>
@@ -281,7 +281,7 @@
                         x:Name="RefreshSwitch"
                         HorizontalOptions="End"
                         OnColor="{StaticResource Primary}"
-                        ThumbColor="#EEEEEE"
+                        ThumbColor="#FFFFFF"
                         Toggled="OnRefreshSwitchToggled"
                         VerticalOptions="Center" />
                 </Grid>
@@ -295,7 +295,7 @@
                         x:Name="WritePostToKakaoStorySwitch"
                         HorizontalOptions="End"
                         OnColor="{StaticResource Primary}"
-                        ThumbColor="#EEEEEE"
+                        ThumbColor="#FFFFFF"
                         Toggled="OnWritePostToKakaoStorySwitchToggled"
                         VerticalOptions="Center" />
                 </Grid>
