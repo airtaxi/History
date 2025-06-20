@@ -1,12 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Runtime.Versioning;
+﻿using System.Runtime.Versioning;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Android;
 using Android.App;
 using Android.App.Job;
 using Android.Content;
 using Android.Content.PM;
-using Android.Graphics;
 using Android.OS;
 using Android.Util;
 using Android.Views;
@@ -20,11 +19,9 @@ using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using History.MobileClient;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.Pages;
-using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
 
 namespace History.MobileClient;
@@ -306,6 +303,18 @@ public class MainActivity : MauiAppCompatActivity
 
     private static void HandleSingleMedia(Intent intent)
     {
+        var sharedText = intent.GetStringExtra(Intent.ExtraText);
+        if (!string.IsNullOrEmpty(sharedText))
+        {
+            var extractedUrl = ExtractUrlFromText(sharedText);
+            if (!string.IsNullOrEmpty(extractedUrl))
+            {
+                Log.Debug(TAG, $"Extracted URL from text: {extractedUrl}");
+                HandleExternalUrl(extractedUrl);
+                return;
+            }
+        }
+
         var mediaUri = GetParcelableExtraSafe<Android.Net.Uri>(intent, Intent.ExtraStream);
         if (mediaUri == null) return;
 
@@ -390,7 +399,17 @@ public class MainActivity : MauiAppCompatActivity
 
         return list;
     }
-#pragma warning restore CA1422, CA1416=
+
+    private static string ExtractUrlFromText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return null;
+
+        var match = Utils.UrlRegex().Match(text);
+        if (match.Success) return match.Value;
+
+        return null;
+    }
+#pragma warning restore CA1422, CA1416
 }
 
 public class WindowInsetsListener : Java.Lang.Object, IOnApplyWindowInsetsListener
