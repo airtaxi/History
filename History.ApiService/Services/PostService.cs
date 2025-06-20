@@ -798,6 +798,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     /// <inheritdoc />
     public async Task<Result> WritePublicPostAsync(string postId, string requesterId)
     {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+
         var originalPostResult = await GetPostByIdAsync(postId);
         if (originalPostResult.IsFailure) return originalPostResult.CastFailure();
 
@@ -811,7 +813,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             .SortByDescending(p => p.CreatedAt)
             .FirstOrDefaultAsync();
 
-        if (recentPublicPost != null && (DateTime.UtcNow - recentPublicPost.CreatedAt).TotalDays < 1)
+        var userResult = await userService.GetUserByIdAsync(requesterId);
+        if (userResult.IsFailure) return userResult.CastFailure();
+
+        if (userResult.Value.Rank < Rank.Moderator && recentPublicPost != null && (DateTime.UtcNow - recentPublicPost.CreatedAt).TotalDays < 1)
         {
             var remainingTime = TimeSpan.FromDays(1) - (DateTime.UtcNow - recentPublicPost.CreatedAt);
             return (ErrorType.BadRequest, $"홍보 게시글은 24시간마다 한번 씩 작성할 수 있습니다. 남은 시간: {remainingTime.TotalMinutes:N0}분");
