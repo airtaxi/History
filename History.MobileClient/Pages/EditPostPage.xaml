@@ -222,8 +222,7 @@
                     <Switch
                         x:Name="DisallowShareSwitch"
                         HorizontalOptions="End"
-                        OnColor="{StaticResource Primary}"
-                        ThumbColor="#EEEEEE"
+                        ThumbColor="{StaticResource Primary}"
                         Toggled="OnDisallowShareSwitchSwitchToggled"
                         VerticalOptions="Center" />
                 </Grid>
@@ -237,8 +236,7 @@
                         <Switch
                             x:Name="CommentPermissionSwitch"
                             HorizontalOptions="End"
-                            OnColor="{StaticResource Primary}"
-                            ThumbColor="#EEEEEE"
+                            ThumbColor="{StaticResource Primary}"
                             Toggled="OnCommentPermissionSwitchSwitchToggled"
                             VerticalOptions="Center" />
                     </Grid>
@@ -280,8 +278,7 @@
                     <Switch
                         x:Name="RefreshSwitch"
                         HorizontalOptions="End"
-                        OnColor="{StaticResource Primary}"
-                        ThumbColor="#EEEEEE"
+                        ThumbColor="{StaticResource Primary}"
                         Toggled="OnRefreshSwitchToggled"
                         VerticalOptions="Center" />
                 </Grid>
@@ -294,8 +291,7 @@
                     <Switch
                         x:Name="WritePostToKakaoStorySwitch"
                         HorizontalOptions="End"
-                        OnColor="{StaticResource Primary}"
-                        ThumbColor="#EEEEEE"
+                        ThumbColor="{StaticResource Primary}"
                         Toggled="OnWritePostToKakaoStorySwitchToggled"
                         VerticalOptions="Center" />
                 </Grid>
