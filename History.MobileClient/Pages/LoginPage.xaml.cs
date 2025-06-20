@@ -56,6 +56,14 @@ public partial class LoginPage : ContentPage
                     var page = new EditPostPage(mediaFiles);
                     await App.PushAsync(page);
                 }
+
+                var externalUrl = Preferences.Get("ExternalUrl", null);
+                if (!string.IsNullOrEmpty(externalUrl))
+                {
+                    Preferences.Set("ExternalUrl", null);
+                    var page = new EditPostPage(externalUrl);
+                    await App.PushAsync(page);
+                }
             });
         }
         else if (meResult.Error == ErrorType.Unauthorized) await App.Page.DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);

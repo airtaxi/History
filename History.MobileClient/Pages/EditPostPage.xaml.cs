@@ -86,6 +86,8 @@ public partial class EditPostPage : ContentPage
         if (sizeExceed) Toast.Make("용량을 초과하는 미디어는 자동으로 제외되었습니다.").Show();
     }
 
+    public EditPostPage(string externalUrl) : this() => Dispatcher.Dispatch(async () => await HandleExternalUrl(externalUrl));
+
     private void LoadPost()
     {
         if (!_isShare)
@@ -140,30 +142,7 @@ public partial class EditPostPage : ContentPage
             var url = await DisplayPromptAsync("URL 입력", "URL을 입력해주세요", Constants.PromptOk, Constants.PromptCancel, "URL 입력", -1, Keyboard.Url, string.Empty);
             if (url == null) return;
 
-            var externalUrlContent = new ExternalUrlContent { SourceUrl = url };
-
-            IsEnabled = false;
-            MainActivityIndicator.IsRunning = true;
-            try
-            {
-                var fillResult = await App.ExecuteRequestAsync(new FillExternalUrlContent(externalUrlContent), ErrorType.BadRequest);
-                if(fillResult.IsFailure)
-                {
-                    if (fillResult.Error == ErrorType.BadRequest) await DisplayAlert("오류", fillResult.ErrorMessage, Constants.PromptOk);
-                    return;
-                }
-
-                externalUrlContent = fillResult.Value;
-                _externalUrlContentViewModel = new ExternalUrlContentViewModel(externalUrlContent);
-                ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
-                ExternalUrlContentBorder.IsVisible = true;
-                ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
-            }
-            finally
-            {
-                IsEnabled = true;
-                MainActivityIndicator.IsRunning = false;
-            }
+            await HandleExternalUrl(url);
         }
         else
         {
@@ -172,6 +151,36 @@ public partial class EditPostPage : ContentPage
             _externalUrlContentViewModel = null;
             ExternalUrlFontImageSource.Glyph = MaterialSharp.Link;
         }
+    }
+
+    private async Task HandleExternalUrl(string url)
+    {
+        var externalUrlContent = new ExternalUrlContent { SourceUrl = url };
+
+        IsEnabled = false;
+        MainActivityIndicator.IsRunning = true;
+        try
+        {
+            var fillResult = await App.ExecuteRequestAsync(new FillExternalUrlContent(externalUrlContent), ErrorType.BadRequest);
+            if (fillResult.IsFailure)
+            {
+                if (fillResult.Error == ErrorType.BadRequest) await DisplayAlert("오류", fillResult.ErrorMessage, Constants.PromptOk);
+                return;
+            }
+
+            externalUrlContent = fillResult.Value;
+            _externalUrlContentViewModel = new ExternalUrlContentViewModel(externalUrlContent);
+            ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
+            ExternalUrlContentBorder.IsVisible = true;
+            ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
+        }
+        finally
+        {
+            IsEnabled = true;
+            MainActivityIndicator.IsRunning = false;
+        }
+
+        return;
     }
 
     private async void OnImageInputRequested(object sender, string path)
