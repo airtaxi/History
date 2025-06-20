@@ -306,7 +306,7 @@ public class MainActivity : MauiAppCompatActivity
 
     private static void HandleSingleMedia(Intent intent)
     {
-        var mediaUri = intent.GetParcelableExtra(Intent.ExtraStream, Java.Lang.Class.FromType(typeof(Android.Net.Uri))) as Android.Net.Uri;
+        var mediaUri = GetParcelableExtraSafe<Android.Net.Uri>(intent, Intent.ExtraStream);
         if (mediaUri == null) return;
 
         var mediaInfo = AndroidMediaPickerHelper.GetMediaFile(mediaUri);
