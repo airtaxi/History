@@ -119,6 +119,7 @@ public partial class EditPostPage : ContentPage
     private void Initialize()
     {
         MediaCollectionView.ItemsSource = _attachmentViewModels;
+        CommentPermissionPicker.ItemsSource = Enum.GetValues<AccessPermission>().Select(x => x.ToDisplayString()).ToList();
         DiscoveryOptionPicker.ItemsSource = Enum.GetValues<DiscoveryOption>().Select(x => x.ToDisplayString()).ToList();
         DiscoveryOptionPicker.SelectedIndex = (int)Shared.LastUsedPostDiscoveryOption;
         MainTextContent.ImageInputRequested += OnImageInputRequested;
