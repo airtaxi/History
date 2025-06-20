@@ -693,6 +693,8 @@ public partial class EditPostPage : ContentPage
 
     private async void OnCommentPermissionPickerSelectedIndexChanged(object sender, EventArgs e)
     {
+        if (CommentPermissionPicker.SelectedIndex < 0) return; // No selection
+
         var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
         var commentPermission = (AccessPermission)CommentPermissionPicker.SelectedIndex;
         var convertedCommentPermission = commentPermission.ToDiscoveryOption();
