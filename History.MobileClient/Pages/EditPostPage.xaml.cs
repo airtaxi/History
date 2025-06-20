@@ -116,6 +116,12 @@ public partial class EditPostPage : ContentPage
 
         var discoveryOption = Math.Min((int)Shared.LastUsedPostDiscoveryOption, (int)_post.DiscoveryOption);
         DiscoveryOptionPicker.SelectedIndex = discoveryOption;
+
+        _commentPermission = _post.CommentPermission;
+        CommentPermissionSwitch.IsToggled = _commentPermission.HasValue;
+        CommentPermissionPicker.SelectedIndex = _commentPermission.HasValue ? (int)_commentPermission.Value : -1;
+
+        DisallowShareSwitch.IsToggled = _post.DisallowShare;
     }
 
     private void Initialize()
@@ -334,7 +340,7 @@ public partial class EditPostPage : ContentPage
         _isUploading = true;
         try
         {
-            var disallowShare = Configuration.GetValue<bool?>("DisallowShare") ?? false;
+            var disallowShare = DisallowShareSwitch.IsToggled;
             var editorContents = MainTextContent.GetContents();
 
             var files = new Dictionary<string, byte[]>();
@@ -715,6 +721,8 @@ public partial class EditPostPage : ContentPage
 
     private void OnDisallowShareSwitchSwitchToggled(object sender, ToggledEventArgs e)
     {
+        if (_post != null) return;
+
         var @switch = sender as Switch;
         Configuration.SetValue("DisallowShare", @switch.IsToggled);
     }
