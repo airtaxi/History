@@ -874,7 +874,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                 else hasAccess = true;
             }
 
-            if (!hasAccess) return (ErrorType.Forbidden, "이 게시물에 대한 댓글 작성 권한이 없습니다.");
+            if (!hasAccess)
+            {
+                if (post.CommentPermission.HasValue) return (ErrorType.Forbidden, $"이 게시물에 대한 댓글 작성 권한이 없습니다.\n설정된 권한: {post.CommentPermission.Value.ToDisplayString()}");
+                else return (ErrorType.Forbidden, "이 게시물에 대한 댓글 작성 권한이 없습니다.");
+            }
         }
 
         return Result.Success();
