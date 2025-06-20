@@ -253,7 +253,11 @@
                             VerticalOptions="Center"
                             WidthRequest="16">
                             <Image.Source>
-                                <FontImageSource x:Name="CommentPermissionFontImageSource" FontFamily="FASolid" />
+                                <FontImageSource
+                                    x:Name="CommentPermissionFontImageSource"
+                                    FontFamily="FASolid"
+                                    Color="{AppThemeBinding Light=Black,
+                                                            Dark=White}" />
                             </Image.Source>
                         </Image>
                         <Picker
@@ -262,6 +266,8 @@
                             Margin="0"
                             HorizontalOptions="Center"
                             SelectedIndexChanged="OnCommentPermissionPickerSelectedIndexChanged"
+                            TextColor="{AppThemeBinding Light=Black,
+                                                        Dark=White}"
                             VerticalOptions="Center" />
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
