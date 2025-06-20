@@ -960,9 +960,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                 PostReactions = [],
                 SharedAndRepostedUsers = [],
                 CommentPermission = post.CommentPermission,
+                DisallowShare = post.DisallowShare,
                 IsRepost = false,
-                CreatedAt = post.CreatedAt,
-                ModifiedAt = null
+                ModifiedAt = null,
+                CreatedAt = post.CreatedAt
             };
         }
 
@@ -988,6 +989,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             PostReactions = postReactionDtos.Value,
             SharedAndRepostedUsers = sharedAndRepostedUserDtos.Value,
             CommentPermission = post.CommentPermission,
+            DisallowShare = post.DisallowShare,
             IsRepost = post.IsRepost,
             CreatedAt = post.CreatedAt,
             ModifiedAt = post.ModifiedAt
@@ -1026,6 +1028,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                     Contents = parentPostResult.Value.Contents,
                     SharedAndRepostedUsers = parentPostSharedAndRepostedUserDtos,
                     CommentPermission = parentPostResult.Value.CommentPermission,
+                    DisallowShare = parentPostResult.Value.DisallowShare,
                     IsRepost = parentPostResult.Value.IsRepost,
                     CreatedAt = parentPostResult.Value.CreatedAt,
                     ModifiedAt = parentPostResult.Value.ModifiedAt
