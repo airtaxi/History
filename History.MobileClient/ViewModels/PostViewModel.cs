@@ -156,6 +156,7 @@ public partial class PostViewModel : ObservableObject
             HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
         }
         catch (ObjectDisposedException) { } // The view is disposed. this view model also will be removed on next GC
+        catch (Exception) { } // Ignore any exceptions during update, as the view might be in the foreground.
     }
 
     private void OnPostChangedMessageReceived(object sender, ValueChangedMessage<PostResponseDto> message)

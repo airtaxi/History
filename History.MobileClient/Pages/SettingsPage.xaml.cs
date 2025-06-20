@@ -17,7 +17,16 @@ public partial class SettingsPage : ContentPage
         InitializeComponent();
 
         VersionLabel.Text = AppInfo.Current.VersionString;
-        BirthdayLabel.Text = user.Birthday?.ToString("yyyy년 MM월 dd일") ?? "설정되지 않음";
+
+        var splittedBirthday = user.Birthday?.Split('-') ?? [];
+        if (splittedBirthday.Length == 2)
+        {
+            var month = splittedBirthday[0];
+            var day = splittedBirthday[1];
+            BirthdayLabel.Text = $"{month}월 {day}일";
+        }
+        else BirthdayLabel.Text = "설정되지 않음";
+
         FriendListDiscovryOptionLabel.Text = user.FriendListDiscoveryOption.ToDisplayString();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);

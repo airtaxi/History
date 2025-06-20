@@ -26,8 +26,8 @@
 		<ApplicationId>com.airtaxi.history</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0.37</ApplicationDisplayVersion>
-		<ApplicationVersion>48</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0.38</ApplicationDisplayVersion>
+		<ApplicationVersion>49</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
@@ -245,7 +245,7 @@
 		<PackageReference Include="CommunityToolkit.Maui" Version="12.0.0" />
 		<PackageReference Include="CommunityToolkit.Maui.MediaElement" Version="6.0.2" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-		<PackageReference Include="FFImageLoading.Maui" Version="1.2.7" />
+		<PackageReference Include="FFImageLoading.Maui" Version="1.2.9" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.80" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.6" />
 		<PackageReference Include="Plugin.Firebase.CloudMessaging" Version="3.1.2" />

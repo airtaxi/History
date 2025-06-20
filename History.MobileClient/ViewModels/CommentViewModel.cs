@@ -78,6 +78,7 @@ public partial class CommentViewModel : ObservableObject
             Contents = Utils.GenerateContentViewModels(Comment.Contents, _postType);
         }
         catch (ObjectDisposedException) { } // The view is disposed. this view model also will be removed on next GC
+        catch (Exception) { } // Ignore any exceptions during update, as the view might be in the foreground.
     }
 
     public Color CommentLikeColor => Liked ? Color.FromRgb(0xeb, 0x55, 0x27) : Color.FromRgb(0x80, 0x80, 0x80);
