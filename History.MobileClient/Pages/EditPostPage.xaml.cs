@@ -60,6 +60,29 @@ public partial class EditPostPage : ContentPage
         _post = post;
     }
 
+    public EditPostPage(List<MediaFile> mediaFiles) : this()
+    {
+        var sizeExceed = false;
+        foreach (var mediaFile in mediaFiles)
+        {
+            var fileName = mediaFile.FileName;
+            var mimeType = MimeTypes.GetMimeType(fileName);
+
+            var isVideo = mimeType.StartsWith("video/");
+            var maxSize = isVideo ? CommonsConstants.MaxUploadFileSize : CommonsConstants.MaxImageUploadFileSize;
+
+            if (mediaFile.Bytes.Length > maxSize)
+            {
+                sizeExceed = true;
+                continue;
+            }
+
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, mediaFile.Bytes, isVideo));
+        }
+
+        if (sizeExceed) Toast.Make("용량을 초과하는 미디어는 자동으로 제외되었습니다.").Show();
+    }
+
     private void LoadPost()
     {
         if (!_isShare)
@@ -213,7 +236,7 @@ public partial class EditPostPage : ContentPage
         }
 #endif
 
-        if (sizeExceed) await Toast.Make("30MB 이상의 미디어는 자동으로 제외되었습니다.").Show();
+        if (sizeExceed) await Toast.Make("용량을 초과하는 미디어는 자동으로 제외되었습니다.").Show();
     }
 
     private async void OnInsertVideoTapped(object sender, TappedEventArgs e)
@@ -270,7 +293,7 @@ public partial class EditPostPage : ContentPage
         }
 #endif
 
-        if (sizeExceed) await Toast.Make("25MB 이상의 미디어는 자동으로 제외되었습니다.").Show();
+        if (sizeExceed) await Toast.Make("용량을 초과하는 미디어는 자동으로 제외되었습니다.").Show();
     }
 
     private async void OnMediaDescriptionGridTapped(object sender, TappedEventArgs e)

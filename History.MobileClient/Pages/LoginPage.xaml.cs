@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using System.Text.Json;
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
@@ -46,6 +47,14 @@ public partial class LoginPage : ContentPage
             {
                 var pushData = Preferences.Get("PushData", null);
                 if (!string.IsNullOrEmpty(pushData)) await App.HandlePushNotificationAsync(pushData);
+
+                var mediaData = Preferences.Get("MediaData", null);
+                if (!string.IsNullOrEmpty(mediaData))
+                {
+                    var mediaFiles = JsonSerializer.Deserialize<List<MediaFile>>(mediaData);
+                    var page = new EditPostPage(mediaFiles);
+                    await App.PushAsync(page);
+                }
             });
         }
         else if (meResult.Error == ErrorType.Unauthorized) await App.Page.DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
