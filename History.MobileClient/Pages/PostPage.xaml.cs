@@ -167,8 +167,8 @@ public partial class PostPage : ContentPage
         try
         {
             MainActivityIndicator.IsRunning = true;
-            var result = await App.ExecuteRequestAsync(new CreateComment(ViewModel.Post.Id, contents, files), ErrorType.BadRequest);
-            if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+            var result = await App.ExecuteRequestAsync(new CreateComment(ViewModel.Post.Id, contents, files), ErrorType.BadRequest, ErrorType.Forbidden);
+            if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Forbidden) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
             else if (result.IsSuccess)
             {
                 _commentMediaAttachmentViewModel?.Dispose();
