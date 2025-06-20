@@ -1,7 +1,9 @@
 ﻿using DotNet.RateLimiter.ActionFilters;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
+using History.Commons.DataTypes;
 using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -233,6 +235,18 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         if (blockedUserIdsResult.IsFailure) return StatusCode(500, blockedUserIdsResult.FullErrorMessage);
 
         var dtosResult = await userService.GenerateUserResponseDtosAsync(blockedUserIdsResult.Value);
+        foreach (var dto in dtosResult.Value)
+        {
+            if(dto.Friendship == null)
+            {
+                dto.Friendship = new Friendship
+                {
+                    Status = FriendshipStatus.Blocked,
+                    UserId = userId,
+                    FriendId = dto.UserId
+                };
+            }
+        }
         return Ok(dtosResult.Value);
     }
 
@@ -251,6 +265,18 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         if (ignoredUserIdsResult.IsFailure) return StatusCode(500, ignoredUserIdsResult.FullErrorMessage);
 
         var dtosResult = await userService.GenerateUserResponseDtosAsync(ignoredUserIdsResult.Value);
+        foreach (var dto in dtosResult.Value)
+        {
+            if (dto.Friendship == null)
+            {
+                dto.Friendship = new Friendship
+                {
+                    Status = FriendshipStatus.Ignored,
+                    UserId = userId,
+                    FriendId = dto.UserId
+                };
+            }
+        }
         return Ok(dtosResult.Value);
     }
 
