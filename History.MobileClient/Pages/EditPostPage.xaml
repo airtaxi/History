@@ -226,7 +226,7 @@
                         Toggled="OnDisallowShareSwitchSwitchToggled"
                         VerticalOptions="Center" />
                 </Grid>
-                <VerticalStackLayout HorizontalOptions="Fill" Spacing="4">
+                <VerticalStackLayout HorizontalOptions="Fill" Spacing="0">
                     <Grid>
                         <Label
                             FontAttributes="Bold"
@@ -244,7 +244,7 @@
                     <HorizontalStackLayout
                         x:Name="DiscoveryOptionPickerParent"
                         Grid.Row="1"
-                        HorizontalOptions="Center"
+                        HorizontalOptions="End"
                         IsVisible="False">
                         <Image
                             Margin="0,0,6,0"
