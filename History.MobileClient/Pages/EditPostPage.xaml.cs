@@ -23,6 +23,7 @@ using History.MobileClient.KakaoStory;
 using Microsoft.Maui.Graphics.Platform;
 using System.Text;
 using History.MobileClient.Enums;
+using Syncfusion.Maui.Toolkit.Picker;
 
 
 namespace History.MobileClient.Pages;
@@ -37,6 +38,7 @@ public partial class EditPostPage : ContentPage
     private readonly bool _isShare;
     private readonly PostResponseDto _post;
 
+    private DateTime? _reservationTime;
     private AccessPermission? _commentPermission;
     private MediaAttachmentViewModel _attachmentViewModelBeingDragged;
     private ExternalUrlContentViewModel _externalUrlContentViewModel;
@@ -585,13 +587,16 @@ public partial class EditPostPage : ContentPage
                         }
                     }
 
-                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
+                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null), ErrorType.BadRequest);
                     if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
                         if (!_isShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
-                        TimelinePage.ShouldRefresh = RefreshSwitch.IsToggled;
-                        UserPage.ShouldRefresh = RefreshSwitch.IsToggled;
+                        if (_reservationTime == null)
+                        {
+                            TimelinePage.ShouldRefresh = RefreshSwitch.IsToggled;
+                            UserPage.ShouldRefresh = RefreshSwitch.IsToggled;
+                        }
                         await App.PopAsync();
                     }
                 }
@@ -837,4 +842,36 @@ public partial class EditPostPage : ContentPage
         if (SettingsGrid.IsVisible) ExpandCollapseSettingsFontImageSource.Glyph = MaterialSharp.Keyboard_arrow_down;
         else ExpandCollapseSettingsFontImageSource.Glyph = MaterialSharp.Keyboard_arrow_up;
     }
+
+    private void OnReservationImageTapped(object sender, TappedEventArgs e)
+    {
+        if (_reservationTime.HasValue)
+        {
+            _reservationTime = null;
+            ReservationFontImageSource.Glyph = MaterialSharp.Alarm_off;
+        }
+        else
+        {
+            ReservationDateTimePicker.MinimumDate = DateTime.Now.AddMinutes(1);
+            ReservationDateTimePicker.IsOpen = true;
+        }
+    }
+
+    private void OnReservationDateTimePickerOkButtonClicked(object sender, EventArgs e)
+    {
+        var dateTime = ReservationDateTimePicker.SelectedDate;
+        if (dateTime.HasValue)
+        {
+            _reservationTime = dateTime.Value;
+            ReservationFontImageSource.Glyph = MaterialSharp.Alarm_on;
+        }
+        else
+        {
+            _reservationTime = null;
+            ReservationFontImageSource.Glyph = MaterialSharp.Alarm_off;
+        }
+        ReservationDateTimePicker.IsOpen = false;
+    }
+
+    private void OnReservationDateTimePickerCancelButtonClicked(object sender, EventArgs e) => ReservationDateTimePicker.IsOpen = false;
 }
