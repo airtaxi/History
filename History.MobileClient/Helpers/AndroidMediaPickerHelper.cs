@@ -103,7 +103,7 @@ public static class AndroidMediaPickerHelper
         _completionSource.SetResult(medias);
     }
 
-    private static MediaFile GetMediaFile(Android.Net.Uri uri)
+    public static MediaFile GetMediaFile(Android.Net.Uri uri)
     {
         var context = Application.Context;
         var resolver = context.ContentResolver;

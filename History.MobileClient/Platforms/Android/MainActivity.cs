@@ -1,4 +1,7 @@
-﻿using Android;
+﻿using System.Collections.Generic;
+using System.Runtime.Versioning;
+using System.Text.Json;
+using Android;
 using Android.App;
 using Android.App.Job;
 using Android.Content;
@@ -21,13 +24,18 @@ using History.MobileClient;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.Pages;
+using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
-using System.Runtime.Versioning;
-using System.Text.Json;
 
 namespace History.MobileClient;
 
 [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, ResizeableActivity = true, WindowSoftInputMode = SoftInput.AdjustResize, LaunchMode = LaunchMode.SingleTask, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+[IntentFilter(new[] { Intent.ActionSend },
+        Categories = new[] { Intent.CategoryDefault },
+        DataMimeType = "*/*")]
+[IntentFilter(new[] { Intent.ActionSendMultiple },
+        Categories = new[] { Intent.CategoryDefault },
+        DataMimeType = "*/*")]
 public class MainActivity : MauiAppCompatActivity
 {
     private const string TAG = "History";
@@ -58,6 +66,12 @@ public class MainActivity : MauiAppCompatActivity
         Window.SetSoftInputMode(SoftInput.AdjustResize | SoftInput.StateHidden);
 
         SetupKeyboardDetection();
+    }
+
+    protected override void OnNewIntent(Intent intent)
+    {
+        base.OnNewIntent(intent);
+        HandleIntent(intent);
     }
 
     private void SetupKeyboardDetection()
@@ -153,12 +167,6 @@ public class MainActivity : MauiAppCompatActivity
             Shared.Friends = friends;
         }
         catch { }
-    }
-
-    protected override void OnNewIntent(Intent intent)
-    {
-        base.OnNewIntent(intent);
-        HandleIntent(intent);
     }
 
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)
@@ -274,7 +282,92 @@ public class MainActivity : MauiAppCompatActivity
     [SupportedOSPlatform("android33.0")]
     private static bool CheckNotificationPermissionGranted() => ContextCompat.CheckSelfPermission(Platform.AppContext, Manifest.Permission.PostNotifications) == Permission.Granted;
 
-    private static void HandleIntent(Intent intent) => FirebaseCloudMessagingImplementation.OnNewIntent(intent);
+
+#pragma warning disable CA1422, CA1416
+    private void HandleIntent(Intent intent)
+    {
+        FirebaseCloudMessagingImplementation.OnNewIntent(intent);
+
+        var action = intent.Action;
+        var type = intent.Type;
+
+        if (!string.IsNullOrEmpty(type))
+        {
+            if (Intent.ActionSend.Equals(action))
+            {
+                HandleSingleMedia(intent);
+            }
+            else if (Intent.ActionSendMultiple.Equals(action))
+            {
+                HandleMultipleMedia(intent);
+            }
+        }
+    }
+
+    private static void HandleSingleMedia(Intent intent)
+    {
+        var mediaUri = intent.GetParcelableExtra(Intent.ExtraStream, Java.Lang.Class.FromType(typeof(Android.Net.Uri))) as Android.Net.Uri;
+        if (mediaUri == null) return;
+
+        var mediaInfo = AndroidMediaPickerHelper.GetMediaFile(mediaUri);
+        var mediaFiles = new List<MediaFile> { mediaInfo };
+
+        HandleMediaFiles(mediaFiles);
+    }
+
+    private static void HandleMultipleMedia(Intent intent)
+    {
+        var mediaUris = GetParcelableListSafe<Android.Net.Uri>(intent, Intent.ExtraStream);
+        var mediaFiles = mediaUris.Select(AndroidMediaPickerHelper.GetMediaFile).ToList();
+
+        HandleMediaFiles(mediaFiles);
+    }
+
+    private static void HandleMediaFiles(List<MediaFile> mediaFiles)
+    {
+        if (AppShell.IsLoaded)
+        {
+            App.Page.Dispatcher.Dispatch(async () =>
+            {
+                var page = new EditPostPage(mediaFiles);
+                await App.PushAsync(page);
+            });
+        }
+        else
+        {
+            var mediaData = JsonSerializer.Serialize(mediaFiles);
+            Preferences.Set("MediaData", mediaData);
+        }
+    }
+
+    private static T GetParcelableExtraSafe<T>(Intent intent, string key) where T : Java.Lang.Object
+    {
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu) return intent.GetParcelableExtra(key, Java.Lang.Class.FromType(typeof(T))) as T;
+        else return intent.GetParcelableExtra(key) as T;
+    }
+
+    private static List<T> GetParcelableListSafe<T>(Intent intent, string key) where T : Java.Lang.Object
+    {
+        var list = new List<T>();
+        System.Collections.IList items = null;
+
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu) items = intent.GetParcelableArrayListExtra(key, Java.Lang.Class.FromType(typeof(T)));
+        else items = intent.GetParcelableArrayListExtra(key);
+
+        if (items != null)
+        {
+            foreach (var item in items)
+            {
+                if (item is T typedItem)
+                {
+                    list.Add(typedItem);
+                }
+            }
+        }
+
+        return list;
+    }
+#pragma warning restore CA1422, CA1416=
 }
 
 public class WindowInsetsListener : Java.Lang.Object, IOnApplyWindowInsetsListener
