@@ -24,6 +24,8 @@ using Microsoft.Maui.Graphics.Platform;
 using System.Text;
 using History.MobileClient.Enums;
 using Syncfusion.Maui.Toolkit.Picker;
+using MongoDB.Bson.Serialization.Serializers;
+using Svg;
 
 
 namespace History.MobileClient.Pages;
@@ -37,6 +39,7 @@ public partial class EditPostPage : ContentPage
 
     private readonly bool _isShare;
     private readonly PostResponseDto _post;
+    private readonly TextContent _sharedTextContent;
 
     private DateTime? _reservationTime;
     private AccessPermission? _commentPermission;
@@ -86,7 +89,12 @@ public partial class EditPostPage : ContentPage
         if (sizeExceed) Toast.Make("용량을 초과하는 미디어는 자동으로 제외되었습니다.").Show();
     }
 
-    public EditPostPage(string externalUrl) : this() => Dispatcher.Dispatch(async () => await HandleExternalUrl(externalUrl));
+    public EditPostPage(string sharedText) : this()
+    {
+        var url = ExtractUrlFromText(sharedText);
+        if (url != null) Dispatcher.Dispatch(async () => await HandleExternalUrl(url));
+        if (url != sharedText) _sharedTextContent = new() { Text = sharedText };
+    }
 
     private void LoadPost()
     {
@@ -662,6 +670,11 @@ public partial class EditPostPage : ContentPage
             _loaded = true;
             LoadPost();
         }
+        else if(_sharedTextContent != null && !_loaded)
+        {
+            _loaded = true;
+            MainTextContent.SetContents([_sharedTextContent]);
+        }
     }
 
     private void OnDeleteAttachmentBorderTapped(object sender, TappedEventArgs e)
@@ -897,4 +910,14 @@ public partial class EditPostPage : ContentPage
     }
 
     private void OnReservationDateTimePickerCancelButtonClicked(object sender, EventArgs e) => ReservationDateTimePicker.IsOpen = false;
+
+    private static string ExtractUrlFromText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return null;
+
+        var match = Utils.UrlRegex().Match(text);
+        if (match.Success) return match.Value;
+
+        return null;
+    }
 }
