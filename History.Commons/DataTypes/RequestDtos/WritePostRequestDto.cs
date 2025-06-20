@@ -15,4 +15,6 @@ public class WritePostRequestDto
     public bool DisallowShare { get; set; }
 
     public AccessPermission? CommentPermission { get; set; }
+
+    public DateTime? ReservationTime { get; set; }
 }

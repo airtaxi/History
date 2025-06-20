@@ -391,6 +391,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             if (convertedCommentPermission > requestDto.DiscoveryOption) return (ErrorType.BadRequest, "댓글 작성 권한은 게시글의 공개 범위보다 클 수 없습니다.");
         }
 
+        if (requestDto.ReservationTime.HasValue && requestDto.ReservationTime.Value < DateTime.UtcNow)
+            return (ErrorType.BadRequest, "예약 시간이 현재 시간보다 이전일 수 없습니다.");
+
         var userService = serviceProvider.GetRequiredService<IUserService>();
 
         var user = await userService.GetUserByIdAsync(userId);
@@ -456,7 +459,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             Id = postId,
             UserId = userId,
             Contents = contents,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = requestDto.ReservationTime ?? DateTime.UtcNow,
             DiscoveryOption = requestDto.DiscoveryOption,
             DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? (requestDto.DiscoveryOptionSelectedUserIds ?? []) : null,
             ParentPostId = requestDto.ParentPostId,
