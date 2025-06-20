@@ -22,6 +22,7 @@ public class PostResponseDto
     public List<SharedAndRepostedUserDto> SharedAndRepostedUsers { get; set; } = [];
     public List<PostReactionDto> PostReactions { get; set; } = [];
 
+    public bool DisallowShare { get; set; }
     public AccessPermission? CommentPermission { get; set; }
 
     public DateTime CreatedAt { get; set; }
