@@ -232,7 +232,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var blockedUserIdsResult = await friendshipService.GetBlockedUserIdsAsync(userId);
         if (blockedUserIdsResult.IsFailure) return StatusCode(500, blockedUserIdsResult.FullErrorMessage);
 
-        var dtosResult = await userService.GenerateUserResponseDtosAsync(blockedUserIdsResult.Value, userId);
+        var dtosResult = await userService.GenerateUserResponseDtosAsync(blockedUserIdsResult.Value);
         return Ok(dtosResult.Value);
     }
 
@@ -250,7 +250,7 @@ public class FriendshipController(IUserService userService, IFriendshipService f
         var ignoredUserIdsResult = await friendshipService.GetIgnoredUserIdsAsync(userId);
         if (ignoredUserIdsResult.IsFailure) return StatusCode(500, ignoredUserIdsResult.FullErrorMessage);
 
-        var dtosResult = await userService.GenerateUserResponseDtosAsync(ignoredUserIdsResult.Value, userId);
+        var dtosResult = await userService.GenerateUserResponseDtosAsync(ignoredUserIdsResult.Value);
         return Ok(dtosResult.Value);
     }
 
