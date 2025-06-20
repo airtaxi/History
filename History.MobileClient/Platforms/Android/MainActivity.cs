@@ -309,6 +309,16 @@ public class MainActivity : MauiAppCompatActivity
         var mediaUri = GetParcelableExtraSafe<Android.Net.Uri>(intent, Intent.ExtraStream);
         if (mediaUri == null) return;
 
+        // Check if the URI is http or https
+        if (mediaUri.Scheme == "http" || mediaUri.Scheme == "https")
+        {
+            // Handle web URLs if needed
+            Log.Debug(TAG, $"Received web URL: {mediaUri}");
+
+            HandleExternalUrl(mediaUri.ToString());
+            return;
+        }
+
         var mediaInfo = AndroidMediaPickerHelper.GetMediaFile(mediaUri);
         var mediaFiles = new List<MediaFile> { mediaInfo };
 
@@ -338,6 +348,19 @@ public class MainActivity : MauiAppCompatActivity
             var mediaData = JsonSerializer.Serialize(mediaFiles);
             Preferences.Set("MediaData", mediaData);
         }
+    }
+
+    private static void HandleExternalUrl(string url)
+    {
+        if (AppShell.IsLoaded)
+        {
+            App.Page.Dispatcher.Dispatch(async () =>
+            {
+                var page = new EditPostPage(url);
+                await App.PushAsync(page);
+            });
+        }
+        else Preferences.Set("ExteralUrl", url);
     }
 
     private static T GetParcelableExtraSafe<T>(Intent intent, string key) where T : Java.Lang.Object
