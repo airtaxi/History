@@ -253,7 +253,7 @@
                             WidthRequest="16">
                             <Image.Source>
                                 <FontImageSource
-                                    x:Name="DiscoveryOptionFontImageSource"
+                                    x:Name="CommentPermissionFontImageSource"
                                     FontFamily="FASolid"
                                     Color="White" />
                             </Image.Source>
