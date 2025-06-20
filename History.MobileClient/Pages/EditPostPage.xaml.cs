@@ -452,7 +452,7 @@ public partial class EditPostPage : ContentPage
 
                             if (loginNeeded)
                             {
-                                var shouldLogin = await DisplayAlert("안내", "'카카오스토리에도 게시글 작성' 옵션을 활성화 하였으나, 카카오스토리 쿠키가 만료되어 카카오스토리 로그인이 필요합니다. 로그인하시겠습니까? '카카오스토리에도 게시글 작성' 옵션은 언제든지 우측 하단의 펼침 메뉴를 이용하여 비활성화 할 수 있습니다", Constants.PromptOk, Constants.PromptCancel);
+                                var shouldLogin = await DisplayAlert("안내", "'카카오스토리에도 게시글 작성' 옵션을 활성화 하였으나, 카카오스토리 쿠키가 만료되어 카카오스토리 로그인이 필요합니다. 로그인하시겠습니까?\n'카카오스토리에도 게시글 작성' 옵션은 언제든지 우측 하단의 펼침 메뉴를 이용하여 비활성화 할 수 있습니다", Constants.PromptOk, Constants.PromptCancel);
                                 if (!shouldLogin)
                                 {
                                     return;
