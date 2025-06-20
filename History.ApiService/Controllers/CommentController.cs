@@ -58,8 +58,11 @@ public class CommentController(ICommentService commentService) : ControllerBase
 
         var contents = JsonSerializer.Deserialize<List<BaseContent>>(request.JsonData);
         var result = await commentService.WriteCommentAsync(postId, contents, requesterId, request.Files);
-        var dtoResut = await commentService.GenerateCommentResponseDtoAsync(result.Value, requesterId);
-        if (result.IsSuccess) return Ok(dtoResut.Value);
+        if (result.IsSuccess)
+        {
+            var dtoResut = await commentService.GenerateCommentResponseDtoAsync(result.Value, requesterId);
+            return Ok(dtoResut.Value);
+        }
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
