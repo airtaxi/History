@@ -347,7 +347,7 @@ public static partial class Utils
     }
 
     [GeneratedRegex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled)]
-    private static partial Regex UrlRegex();
+    public static partial Regex UrlRegex();
 
     public static async Task CheckForUpdateAsync()
     {
