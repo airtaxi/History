@@ -138,7 +138,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             }
         }
 
+        // Ensure the post is not a repost
         filter &= Builders<Post>.Filter.Eq(p => p.IsRepost, false);
+
+        // For reservation posts.
+        filter &= Builders<Post>.Filter.Lte(p => p.CreatedAt, DateTime.UtcNow);
 
         // Retrieve and return posts sorted by creation time (newest first)
         var result = await _postCollection
@@ -197,6 +201,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                 filter &= Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
             }
         }
+
+        // For reservation posts.
+        filter &= Builders<Post>.Filter.Lte(p => p.CreatedAt, DateTime.UtcNow);
 
         // Retrieve and return posts sorted by creation time (newest first)
         return await _publicPostCollection
@@ -262,6 +269,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         {
             filter &= Builders<Post>.Filter.Nin(p => p.Id, ignoredPostIds);
         }
+
+        // For reservation posts.
+        filter &= Builders<Post>.Filter.Lte(p => p.CreatedAt, DateTime.UtcNow);
 
         // Retrieve and return posts sorted by creation time (newest first)
         return await _postCollection
@@ -345,6 +355,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             // Combine all filters
             filter &= Builders<Post>.Filter.Or(visibilityFilter);
         }
+
+        // For reservation posts.
+        filter &= Builders<Post>.Filter.Lte(p => p.CreatedAt, DateTime.UtcNow);
 
         // Count the number of posts that match the filter
         return await _postCollection.CountDocumentsAsync(filter);
@@ -729,6 +742,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             var requesterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
             filter &= Builders<Post>.Filter.Nin(p => p.UserId, requesterBannedFriendIdsResult.Value);
         }
+
+        // For reservation posts.
+        filter &= Builders<Post>.Filter.Lte(p => p.CreatedAt, DateTime.UtcNow);
 
         return await _postCollection
             .Find(filter)
