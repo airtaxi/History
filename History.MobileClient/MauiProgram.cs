@@ -18,10 +18,7 @@ using History.MobileClient.DataTypes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Platform;
 using History.Commons;
-
-
-
-
+using Syncfusion.Maui.Toolkit.Hosting;
 
 #if IOS
 using Plugin.Firebase.Core.Platforms.iOS;
@@ -46,6 +43,7 @@ public static class MauiProgram
             .UseUraniumUI()
             .UseUraniumUIMaterial()
             .UseSpeakLink()
+            .ConfigureSyncfusionToolkit()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
