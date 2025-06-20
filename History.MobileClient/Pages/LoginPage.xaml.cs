@@ -57,11 +57,11 @@ public partial class LoginPage : ContentPage
                     await App.PushAsync(page);
                 }
 
-                var externalUrl = Preferences.Get("ExternalUrl", null);
-                if (!string.IsNullOrEmpty(externalUrl))
+                var sharedText = Preferences.Get("SharedText", null);
+                if (!string.IsNullOrEmpty(sharedText))
                 {
-                    Preferences.Set("ExternalUrl", null);
-                    var page = new EditPostPage(externalUrl);
+                    Preferences.Set("SharedText", null);
+                    var page = new EditPostPage(sharedText);
                     await App.PushAsync(page);
                 }
             });

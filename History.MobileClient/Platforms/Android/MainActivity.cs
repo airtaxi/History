@@ -306,27 +306,12 @@ public class MainActivity : MauiAppCompatActivity
         var sharedText = intent.GetStringExtra(Intent.ExtraText);
         if (!string.IsNullOrEmpty(sharedText))
         {
-            var extractedUrl = ExtractUrlFromText(sharedText);
-            if (!string.IsNullOrEmpty(extractedUrl))
-            {
-                Log.Debug(TAG, $"Extracted URL from text: {extractedUrl}");
-                HandleExternalUrl(extractedUrl);
-                return;
-            }
-        }
-
-        var mediaUri = GetParcelableExtraSafe<Android.Net.Uri>(intent, Intent.ExtraStream);
-        if (mediaUri == null) return;
-
-        // Check if the URI is http or https
-        if (mediaUri.Scheme == "http" || mediaUri.Scheme == "https")
-        {
-            // Handle web URLs if needed
-            Log.Debug(TAG, $"Received web URL: {mediaUri}");
-
-            HandleExternalUrl(mediaUri.ToString());
+            HandleSharedText(sharedText);
             return;
         }
+
+            var mediaUri = GetParcelableExtraSafe<Android.Net.Uri>(intent, Intent.ExtraStream);
+        if (mediaUri == null) return;
 
         var mediaInfo = AndroidMediaPickerHelper.GetMediaFile(mediaUri);
         var mediaFiles = new List<MediaFile> { mediaInfo };
@@ -359,17 +344,17 @@ public class MainActivity : MauiAppCompatActivity
         }
     }
 
-    private static void HandleExternalUrl(string url)
+    private static void HandleSharedText(string sharedText)
     {
         if (AppShell.IsLoaded)
         {
             App.Page.Dispatcher.Dispatch(async () =>
             {
-                var page = new EditPostPage(url);
+                var page = new EditPostPage(sharedText);
                 await App.PushAsync(page);
             });
         }
-        else Preferences.Set("ExteralUrl", url);
+        else Preferences.Set("SharedText", sharedText);
     }
 
     private static T GetParcelableExtraSafe<T>(Intent intent, string key) where T : Java.Lang.Object
@@ -398,16 +383,6 @@ public class MainActivity : MauiAppCompatActivity
         }
 
         return list;
-    }
-
-    private static string ExtractUrlFromText(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return null;
-
-        var match = Utils.UrlRegex().Match(text);
-        if (match.Success) return match.Value;
-
-        return null;
     }
 #pragma warning restore CA1422, CA1416
 }
