@@ -625,6 +625,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         if (existingRepost == null)
         {
+            if (parentPostResult.Value.DisallowShare)
+                return (ErrorType.BadRequest, "원본 게시글이 공유를 비허용하고 있는 관계로 이 게시글을 공유할 수 없습니다.");
+
             var post = new Post
             {
                 UserId = requesterId,
