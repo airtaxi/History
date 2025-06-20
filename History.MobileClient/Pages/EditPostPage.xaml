@@ -207,7 +207,7 @@
             Grid.Row="1"
             Margin="0,0,0,-8"
             Padding="12"
-            BackgroundColor="{AppThemeBinding Light=#DDDDDD,
+            BackgroundColor="{AppThemeBinding Light=#EEEEEE,
                                               Dark=#000000}"
             HorizontalOptions="Fill"
             IsVisible="False"
