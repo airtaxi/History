@@ -51,6 +51,7 @@ public partial class LoginPage : ContentPage
                 var mediaData = Preferences.Get("MediaData", null);
                 if (!string.IsNullOrEmpty(mediaData))
                 {
+                    Preferences.Set("MediaData", null);
                     var mediaFiles = JsonSerializer.Deserialize<List<MediaFile>>(mediaData);
                     var page = new EditPostPage(mediaFiles);
                     await App.PushAsync(page);
