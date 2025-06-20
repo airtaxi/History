@@ -369,6 +369,15 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     /// <inheritdoc/>
     public async Task<Result> WritePostAsync(string userId, WritePostRequestDto requestDto, IEnumerable<IFormFile> files)
     {
+        if (requestDto.CommentPermission.HasValue)
+        {
+            if (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers)
+                return (ErrorType.BadRequest, "공개 범위가 특정 친구 (비)공개인 게시글은 댓글 작성 권한을 설정할 수 없습니다.");
+
+            var convertedCommentPermission = requestDto.CommentPermission.Value.ToDiscoveryOption();
+            if (convertedCommentPermission > requestDto.DiscoveryOption) return (ErrorType.BadRequest, "댓글 작성 권한은 게시글의 공개 범위보다 클 수 없습니다.");
+        }
+
         var userService = serviceProvider.GetRequiredService<IUserService>();
 
         var user = await userService.GetUserByIdAsync(userId);
@@ -397,6 +406,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
             var parentPostResult = await GetPostByIdAsync(requestDto.ParentPostId);
             if (parentPostResult.IsFailure) return parentPostResult.CastFailure();
+
+            if (parentPostResult.Value.DisallowShare)
+                return (ErrorType.BadRequest, "원본 게시글이 공유를 비허용하고 있는 관계로 이 게시글을 공유할 수 없습니다.");
 
             var parentPost = parentPostResult.Value;
             if (parentPost.DiscoveryOption == DiscoveryOption.SelectedUsers
@@ -436,6 +448,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? (requestDto.DiscoveryOptionSelectedUserIds ?? []) : null,
             ParentPostId = requestDto.ParentPostId,
             SearchIndex = GenerateSearchIndexFromContents(contents),
+            CommentPermission = requestDto.CommentPermission,
+            DisallowShare = requestDto.DisallowShare,
             IsRepost = false
         };
 
@@ -465,7 +479,16 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     /// <inheritdoc/>
     public async Task<Result> ModifyPostAsync(string postId, string userId, ModifyPostRequestDto requestDto, IEnumerable<IFormFile> files)
     {
-        var postResult = await GetPostByIdAsync(postId);
+        if (requestDto.CommentPermission.HasValue)
+        {
+            if (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers)
+                return (ErrorType.BadRequest, "공개 범위가 특정 친구 (비)공개인 게시글은 댓글 작성 권한을 설정할 수 없습니다.");
+
+            var convertedCommentPermission = requestDto.CommentPermission.Value.ToDiscoveryOption();
+            if (convertedCommentPermission > requestDto.DiscoveryOption) return (ErrorType.BadRequest, "댓글 작성 권한은 게시글의 공개 범위보다 클 수 없습니다.");
+        }
+
+            var postResult = await GetPostByIdAsync(postId);
         if (postResult.IsFailure) return postResult.CastFailure();
 
         // Sanitize contents
@@ -506,6 +529,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         // Update the post contents
         post.Contents = contents;
         post.SearchIndex = GenerateSearchIndexFromContents(contents);
+        post.CommentPermission = requestDto.CommentPermission;
+        post.DisallowShare = requestDto.DisallowShare;
 
         post.ModifiedAt = DateTime.UtcNow;
 
@@ -785,6 +810,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             DiscoveryOptionSelectedUserIds = [],
             ParentPostId = postId,
             SearchIndex = originalPost.SearchIndex,
+            CommentPermission = AccessPermission.OnlyMe,
+            DisallowShare = true,
             IsRepost = false,
             IsPublicPost = true
         };
@@ -798,6 +825,54 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         await _publicPostCollection.DeleteManyAsync(x => x.UserId == requesterId);
         await _publicPostCollection.InsertOneAsync(publicPost);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> CheckCommentAccessAsync(string postId, string requesterId)
+    {
+        var postResult = await GetPostByIdAsync(postId);
+        if (postResult.IsFailure) return postResult.CastFailure();
+
+        return await CheckCommentAccessAsync(postResult, requesterId);
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> CheckCommentAccessAsync(Post post, string requesterId)
+    {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+        var requesterResult = await userService.GetUserByIdAsync(requesterId);
+        if (requesterResult.IsFailure) return requesterResult.CastFailure();
+
+        if (requesterResult.Value.Rank >= Rank.Moderator) return Result.Success(); // Moderators can access all posts
+
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
+
+        var postAuthorId = post.UserId;
+        if (postAuthorId == requesterId) return Result.Success();
+
+        // Apply discovery option / privacy settings
+        var commentPermission = post.CommentPermission?.ToDiscoveryOption() ?? post.DiscoveryOption;
+        if (commentPermission < DiscoveryOption.Everyone)
+        {
+            bool hasAccess;
+            if (commentPermission == DiscoveryOption.FriendsOfFriends) hasAccess = await friendshipService.AreFriendsOfFriendsAsync(postAuthorId, requesterId);
+            else if (commentPermission == DiscoveryOption.Friends) hasAccess = await friendshipService.AreFriendsAsync(postAuthorId, requesterId);
+            else if (commentPermission == DiscoveryOption.SelectedUsers) hasAccess = post.DiscoveryOptionSelectedUserIds.Contains(requesterId);
+            else if (commentPermission == DiscoveryOption.UnselectedUsers) hasAccess = !post.DiscoveryOptionSelectedUserIds.Contains(requesterId);
+            else if (commentPermission == DiscoveryOption.OnlyMe) hasAccess = postAuthorId == requesterId;
+            else
+            {
+                var requesterBlockerIdsResult = await friendshipService.GetBlockerUserIdsAsync(requesterId);
+                if (requesterBlockerIdsResult.IsFailure) return requesterBlockerIdsResult;
+                else if (requesterBlockerIdsResult.Value.Contains(postAuthorId)) hasAccess = false;
+                else hasAccess = true;
+            }
+
+            if (!hasAccess) return (ErrorType.Forbidden, "이 게시물에 대한 댓글 작성 권한이 없습니다.");
+        }
 
         return Result.Success();
     }
@@ -881,6 +956,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                 CommentsCount = 0,
                 PostReactions = [],
                 SharedAndRepostedUsers = [],
+                CommentPermission = post.CommentPermission,
                 IsRepost = false,
                 CreatedAt = post.CreatedAt,
                 ModifiedAt = null
@@ -908,6 +984,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             CommentsCount = commentsCountResult.Value,
             PostReactions = postReactionDtos.Value,
             SharedAndRepostedUsers = sharedAndRepostedUserDtos.Value,
+            CommentPermission = post.CommentPermission,
             IsRepost = post.IsRepost,
             CreatedAt = post.CreatedAt,
             ModifiedAt = post.ModifiedAt
@@ -945,6 +1022,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                     DiscoveryOptionSelectedUserIds = parentPostResult.Value.DiscoveryOptionSelectedUserIds,
                     Contents = parentPostResult.Value.Contents,
                     SharedAndRepostedUsers = parentPostSharedAndRepostedUserDtos,
+                    CommentPermission = parentPostResult.Value.CommentPermission,
                     IsRepost = parentPostResult.Value.IsRepost,
                     CreatedAt = parentPostResult.Value.CreatedAt,
                     ModifiedAt = parentPostResult.Value.ModifiedAt

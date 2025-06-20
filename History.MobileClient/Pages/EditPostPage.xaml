@@ -216,6 +216,62 @@
                     <Label
                         FontAttributes="Bold"
                         HorizontalOptions="Start"
+                        Text="공유 및 리포스트 비허용"
+                        VerticalOptions="Center" />
+                    <Switch
+                        x:Name="DisallowShareSwitch"
+                        HorizontalOptions="End"
+                        OnColor="{StaticResource Primary}"
+                        ThumbColor="#EEEEEE"
+                        Toggled="OnDisallowShareSwitchSwitchToggled"
+                        VerticalOptions="Center" />
+                </Grid>
+                <VerticalStackLayout HorizontalOptions="Fill" Spacing="4">
+                    <Grid>
+                        <Label
+                            FontAttributes="Bold"
+                            HorizontalOptions="Start"
+                            Text="댓글 작성 권한 설정"
+                            VerticalOptions="Center" />
+                        <Switch
+                            x:Name="CommentPermissionSwitch"
+                            HorizontalOptions="End"
+                            OnColor="{StaticResource Primary}"
+                            ThumbColor="#EEEEEE"
+                            Toggled="OnCommentPermissionSwitchSwitchToggled"
+                            VerticalOptions="Center" />
+                    </Grid>
+                    <HorizontalStackLayout
+                        x:Name="DiscoveryOptionPickerParent"
+                        Grid.Row="1"
+                        HorizontalOptions="Center"
+                        IsVisible="False">
+                        <Image
+                            Margin="0,0,6,0"
+                            HeightRequest="16"
+                            VerticalOptions="Center"
+                            WidthRequest="16">
+                            <Image.Source>
+                                <FontImageSource
+                                    x:Name="DiscoveryOptionFontImageSource"
+                                    FontFamily="FASolid"
+                                    Color="White" />
+                            </Image.Source>
+                        </Image>
+                        <Picker
+                            x:Name="CommentPermissionPicker"
+                            Grid.Row="1"
+                            Margin="0"
+                            HorizontalOptions="Center"
+                            SelectedIndexChanged="OnCommentPermissionPickerSelectedIndexChanged"
+                            TextColor="White"
+                            VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+                <Grid>
+                    <Label
+                        FontAttributes="Bold"
+                        HorizontalOptions="Start"
                         Text="타임라인 새로고침"
                         VerticalOptions="Center" />
                     <Switch

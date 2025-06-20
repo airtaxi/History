@@ -165,6 +165,23 @@ public interface IPostService
     /// <returns>Returns a task that resolves to a result indicating access permissions.</returns>
     public Task<Result> CheckAccessAsync(Post post, string requesterId);
 
+
+    /// <summary>
+    /// Checks if a user has access to comment on a specific post asynchronously.
+    /// </summary>
+    /// <param name="postId">The unique identifier of the post for which comment access is being checked.</param>
+    /// <param name="requesterId">The unique identifier of the user requesting access to comment on the post.</param>
+    /// <returns>A task that resolves to a result indicating whether the user has permission to comment on the post.</returns>
+    public Task<Result> CheckCommentAccessAsync(string postId, string requesterId);
+
+    /// <summary>
+    /// Checks if a user has access to comment on a specific post asynchronously.
+    /// </summary>
+    /// <param name="post">The post object containing the details for which comment access is being checked.</param>
+    /// <param name="requesterId">The unique identifier of the user requesting access to comment on the post.</param>
+    /// <returns>A task that resolves to a result indicating whether the user has permission to comment on the post.</returns>
+    public Task<Result> CheckCommentAccessAsync(Post post, string requesterId);
+
     /// <summary>
     /// Generates a response data transfer object for a given post asynchronously.
     /// </summary>

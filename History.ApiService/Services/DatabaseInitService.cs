@@ -46,6 +46,7 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.SearchIndex)), cancellationToken: cancellationToken);
         await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.DiscoveryOption)), cancellationToken: cancellationToken);
         await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.DiscoveryOptionSelectedUserIds)), cancellationToken: cancellationToken);
+        await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.CommentPermission)), cancellationToken: cancellationToken);
         await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
 
         logger.LogInformation("Creating indexes for PublicPost collection...");

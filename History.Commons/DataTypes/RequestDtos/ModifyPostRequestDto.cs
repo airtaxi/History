@@ -8,4 +8,8 @@ public class ModifyPostRequestDto
     public DiscoveryOption DiscoveryOption { get; set; }
     public List<BaseContent> Contents { get; set; } = [];
     public List<string> DiscoveryOptionSelectedUserIds { get; set; } = [];
+
+    public bool DisallowShare { get; set; }
+
+    public AccessPermission? CommentPermission { get; set; }
 }

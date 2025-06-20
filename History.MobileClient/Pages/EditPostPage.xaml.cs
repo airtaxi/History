@@ -37,6 +37,7 @@ public partial class EditPostPage : ContentPage
     private readonly bool _isShare;
     private readonly PostResponseDto _post;
 
+    private AccessPermission? _commentPermission;
     private MediaAttachmentViewModel _attachmentViewModelBeingDragged;
     private ExternalUrlContentViewModel _externalUrlContentViewModel;
 
@@ -330,6 +331,7 @@ public partial class EditPostPage : ContentPage
         _isUploading = true;
         try
         {
+            var disallowShare = Configuration.GetValue<bool?>("DisallowShare") ?? false;
             var editorContents = MainTextContent.GetContents();
 
             var files = new Dictionary<string, byte[]>();
@@ -388,7 +390,7 @@ public partial class EditPostPage : ContentPage
 
                 if (_post != null && !_isShare)
                 {
-                    var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
+                    var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, _commentPermission, disallowShare, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
                     if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
@@ -582,7 +584,7 @@ public partial class EditPostPage : ContentPage
                         }
                     }
 
-                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
+                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
                     if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
@@ -613,15 +615,13 @@ public partial class EditPostPage : ContentPage
     private void OnSizeChanged(object sender, EventArgs e)
     {
 #if ANDROID
-        var staggeredItemsLayout = MediaCollectionView.ItemsLayout as StaggeredItemsLayout;
-        if (staggeredItemsLayout == null) return;
+        if (MediaCollectionView.ItemsLayout is not StaggeredItemsLayout staggeredItemsLayout) return;
 
         var previousSpan = staggeredItemsLayout.Span;
         var newSpan = ((int)Width / 200) + 1;
         if (newSpan != previousSpan) MediaCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
 #elif IOS
-        var gridItemsLayout = MediaCollectionView.ItemsLayout as GridItemsLayout;
-        if (gridItemsLayout == null) return;
+        if (MediaCollectionView.ItemsLayout is not GridItemsLayout gridItemsLayout) return;
 
         var previousSpan = gridItemsLayout.Span;
         var newSpan = ((int)Width / 200) + 1;
@@ -642,9 +642,7 @@ public partial class EditPostPage : ContentPage
     private void OnDeleteAttachmentBorderTapped(object sender, TappedEventArgs e)
     {
         var element = sender as Element;
-        var viewModel = element.BindingContext as MediaAttachmentViewModel;
-
-        if (viewModel == null) return;
+        if (element.BindingContext is not MediaAttachmentViewModel viewModel) return;
 
         viewModel.Dispose();
         _attachmentViewModels.Remove(viewModel);
@@ -653,6 +651,13 @@ public partial class EditPostPage : ContentPage
     private async void OnDiscoveryOptionPickerSelectedIndexChanged(object sender, EventArgs e)
     {
         var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
+
+        if (_commentPermission.HasValue && (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers))
+        {
+            await DisplayAlert("오류", "댓글 작성 권한을 설정한 경우, 공개 범위를 특정 친구 (비)공개로 설정할 수 없습니다.", Constants.PromptOk);
+            DiscoveryOptionPicker.SelectedIndex = (int)Shared.LastUsedPostDiscoveryOption;
+            return;
+        }
 
         if (!_isShare)
         {
@@ -670,6 +675,23 @@ public partial class EditPostPage : ContentPage
         DiscoveryOptionFontImageSource.Glyph = Utils.GetDiscoveryOptionGlyph(discoveryOption);
     }
 
+    private async void OnCommentPermissionPickerSelectedIndexChanged(object sender, EventArgs e)
+    {
+        var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
+        var commentPermission = (AccessPermission)CommentPermissionPicker.SelectedIndex;
+        var convertedCommentPermission = commentPermission.ToDiscoveryOption();
+
+        if (convertedCommentPermission > discoveryOption)
+        {
+            await DisplayAlert("오류", "댓글 작성 권한은 공개 범위보다 클 수 없습니다.", Constants.PromptOk);
+            CommentPermissionPicker.SelectedIndex = (int)_commentPermission;
+            return;
+        }
+
+        CommentPermissionFontImageSource.Glyph = Utils.GetDiscoveryOptionGlyph(convertedCommentPermission);
+        _commentPermission = commentPermission;
+    }
+
     private async void OnDeleteExternalUrlContentBorderTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
     private async void OnInsertOrDeleteExternalUrlTapped(object sender, TappedEventArgs e) => await ToggleExternalMediaAsync();
 
@@ -685,10 +707,52 @@ public partial class EditPostPage : ContentPage
         Configuration.SetValue("ShouldWritePostToKakaoStory", @switch.IsToggled);
     }
 
+    private void OnDisallowShareSwitchSwitchToggled(object sender, ToggledEventArgs e)
+    {
+        var @switch = sender as Switch;
+        Configuration.SetValue("DisallowShare", @switch.IsToggled);
+    }
+
+    private async void OnCommentPermissionSwitchSwitchToggled(object sender, ToggledEventArgs e)
+    {
+        var @switch = sender as Switch;
+        if (@switch.IsToggled)
+        {
+            var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
+            if (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers)
+            {
+                await DisplayAlert("오류", "공개 범위를 특정 친구 (비)공개로 설정한 경우, 댓글 작성 권한을 설정할 수 없습니다.", Constants.PromptOk);
+                @switch.IsToggled = false;
+                return;
+            }
+
+            var commentPermission = discoveryOption.ToAccessPermission();
+            if (!commentPermission.HasValue)
+            {
+                await DisplayAlert("오류", "로직 오류. 개발자에게 문의해주세요.", Constants.PromptOk);
+                @switch.IsToggled = false;
+                return;
+            }
+
+            _commentPermission = commentPermission.Value;
+            CommentPermissionPicker.SelectedIndex = (int)_commentPermission;
+            DiscoveryOptionPickerParent.IsVisible = true;
+        }
+        else
+        {
+            _commentPermission = null;
+            CommentPermissionPicker.SelectedIndex = -1; // Reset to default (None)commentPermission;
+            DiscoveryOptionPickerParent.IsVisible = false;
+        }
+    }
+
     protected override void OnAppearing()
     {
         base.OnAppearing();
         _isInForeground = true;
+
+        var disallowShare = Configuration.GetValue<bool?>("DisallowShare") ?? false;
+        DisallowShareSwitch.IsToggled = disallowShare;
 
         var shouldRefreshOnNewPost = Configuration.GetValue<bool?>($"ShouldRefreshOnNewPost[{_isShare}]") ?? !_isShare;
         RefreshSwitch.IsToggled = shouldRefreshOnNewPost;
