@@ -340,6 +340,11 @@ public partial class EditPostPage : ContentPage
         _isUploading = true;
         try
         {
+            if (_reservationTime.HasValue)
+            {
+                var proceed = await DisplayAlert("안내", "예약 시간을 설정하셨습니다. 예약 게시글은 예약 시간이 지나야 게시되며, 게시가 되기 전 까지는 게시글을 수정할 수 없습니다. 예약 게시글을 작성하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+                if (!proceed) return;
+            }
             var disallowShare = DisallowShareSwitch.IsToggled;
             var editorContents = MainTextContent.GetContents();
 
@@ -403,7 +408,6 @@ public partial class EditPostPage : ContentPage
                     if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
-                        _isUploading = false;
                         WeakReferenceMessenger.Default.Send<ValueChangedMessage<PostResponseDto>>(new(result.Value));
                         await App.PopAsync();
                     }
