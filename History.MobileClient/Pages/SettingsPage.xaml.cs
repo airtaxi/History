@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
@@ -13,6 +14,9 @@ public partial class SettingsPage : ContentPage
     private bool _isInForeground;
 
     private UserResponseDto _user;
+
+    private const string PushNotificationOn = "켜짐";
+    private const string PushNotificationOff = "꺼짐";
 
     public SettingsPage(UserResponseDto user)
 	{
@@ -32,6 +36,16 @@ public partial class SettingsPage : ContentPage
 
         FriendListDiscovryOptionLabel.Text = user.FriendListDiscoveryOption.ToDisplayString();
 
+        // push notification permission
+        CommentPushNotificationPermissionLabel.Text = user.CommentPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+        CommentMentionPushNotificationPermissionLabel.Text = user.CommentMentionPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+        CommentLikePushNotificationPermissionLabel.Text = user.CommentLikePushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+        SharedPostCommentPushNotificationPermissionLabel.Text = user.SharedPostCommentPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+        SharedPostCommentPushNotificationPermissionLabel.Text = user.SharedPostCommentPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+        PostReactionPushNotificationPermissionLabel.Text = user.PostReactionPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+        PostMentionPushNotificationPermissionLabel.Text = user.PostMentionPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+        IsFavoriteFriendNewPostPushNotificationEnabledLabel.Text = user.IsFavoriteFriendNewPostPushNotificationEnabled ? PushNotificationOn : PushNotificationOff;
+
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
@@ -45,6 +59,59 @@ public partial class SettingsPage : ContentPage
         Shared.MyRank = default;
         Shared.LastUsedPostDiscoveryOption = default;
         Shared.Friends = default;
+    }
+
+    private async Task SetupPushNotificationPermission(PushNotificationType type)
+    {
+        var accessPermissions = Enum.GetValues<AccessPermission>().Select(x => x.ToDisplayString()).ToList();
+        var offIndex = accessPermissions.FindIndex(x => x == AccessPermission.OnlyMe.ToDisplayString());
+        accessPermissions[offIndex] = PushNotificationOff;
+
+        var action = await DisplayActionSheet(type.ToDisplayString() + " 푸시 알림", Constants.PromptCancel, null, [.. accessPermissions]);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var selectedIndex = accessPermissions.IndexOf(action);
+        if (selectedIndex < 0 || selectedIndex >= accessPermissions.Count)
+        {
+            await DisplayAlert("오류", "잘못된 선택입니다. 다시 시도해주세요.", Constants.PromptOk);
+            return;
+        }
+
+        var permission = (AccessPermission)selectedIndex;
+
+        var result = await App.ExecuteRequestAsync(new UpdatePushNotificationPermission(type, permission));
+        if (result.IsSuccess)
+        {
+            switch (type)
+            {
+                case PushNotificationType.Comment:
+                    CommentPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+                    _user.CommentPushNotificationPermission = permission;
+                    break;
+                case PushNotificationType.CommentMention:
+                    CommentMentionPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+                    _user.CommentMentionPushNotificationPermission = permission;
+                    break;
+                case PushNotificationType.CommentLike:
+                    CommentLikePushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+                    _user.CommentLikePushNotificationPermission = permission;
+                    break;
+                case PushNotificationType.SharedPostComment:
+                    SharedPostCommentPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+                    _user.SharedPostCommentPushNotificationPermission = permission;
+                    break;
+                case PushNotificationType.PostReaction:
+                    PostReactionPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+                    _user.PostReactionPushNotificationPermission = permission;
+                    break;
+                case PushNotificationType.PostMention:
+                    PostMentionPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+                    _user.PostMentionPushNotificationPermission = permission;
+                    break;
+            }
+
+            await DisplayAlert("안내", $"{type.ToDisplayString()} 푸시 알림 설정이 변경되었습니다.", Constants.PromptOk);
+        }
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
@@ -208,4 +275,25 @@ public partial class SettingsPage : ContentPage
     }
 
     private async void OnCheckForUpdateGridTapped(object sender, TappedEventArgs e) => await Utils.CheckForUpdateAsync();
+
+    private async void OnCommentPushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.Comment);
+    private async void OnCommentMentionPushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.CommentMention);
+    private async void OnCommentLikePushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.CommentLike);
+    private async void OnSharedPostCommentPushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.SharedPostComment);
+    private async void OnPostReactionPushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.PostReaction);
+    private async void OnPostMentionPushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.PostMention);
+    private async void OnIsFavoriteFriendNewPostPushNotificationEnabledGridTapped(object sender, TappedEventArgs e) 
+    {
+        var action = await DisplayActionSheet("즐겨찾기 친구 새 글 푸시 알림", Constants.PromptCancel, null, PushNotificationOn, PushNotificationOff);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == PushNotificationOn;
+        var result = await App.ExecuteRequestAsync(new UpdatePushNotificationPermission(PushNotificationType.FavoriteFriendNewPost, IsEnabled ? AccessPermission.Everyone : AccessPermission.OnlyMe));
+        if (result.IsSuccess)
+        {
+            IsFavoriteFriendNewPostPushNotificationEnabledLabel.Text = isEnabled ? PushNotificationOn : PushNotificationOff;
+            _user.IsFavoriteFriendNewPostPushNotificationEnabled = isEnabled;
+            await DisplayAlert("안내", $"즐겨찾기 친구 새 글 푸시 알림이 {action}으로 설정되었습니다.", Constants.PromptOk);
+        }
+    }
 }

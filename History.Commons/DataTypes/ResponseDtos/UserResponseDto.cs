@@ -27,6 +27,14 @@ public class UserResponseDto()
 
     public bool IsFavorite { get; set; }
 
+    public bool IsFavoriteFriendNewPostPushNotificationEnabled { get; set; }
+    public AccessPermission CommentPushNotificationPermission { get; set; }
+    public AccessPermission CommentMentionPushNotificationPermission { get; set; }
+    public AccessPermission CommentLikePushNotificationPermission { get; set; }
+    public AccessPermission SharedPostCommentPushNotificationPermission { get; set; }
+    public AccessPermission PostReactionPushNotificationPermission { get; set; }
+    public AccessPermission PostMentionPushNotificationPermission { get; set; }
+
     public Friendship Friendship { get; set; }
 
     public UserResponseDto(User user) : this()
@@ -51,5 +59,14 @@ public class UserResponseDto()
         BackgroundMediaId = user.BackgroundThumbnailMediaId;
         BackgroundThumbnailMediaId = user.BackgroundThumbnailMediaId;
         UsesAnimatedBackgroundMedia = false;
+
+        // Push notification settings
+        IsFavoriteFriendNewPostPushNotificationEnabled = user.IsFavoriteFriendNewPostPushNotificationEnabled;
+        CommentPushNotificationPermission = user.CommentPushNotificationPermission;
+        CommentMentionPushNotificationPermission = user.CommentMentionPushNotificationPermission;
+        CommentLikePushNotificationPermission = user.CommentLikePushNotificationPermission;
+        SharedPostCommentPushNotificationPermission = user.SharedPostCommentPushNotificationPermission;
+        PostReactionPushNotificationPermission = user.PostReactionPushNotificationPermission;
+        PostMentionPushNotificationPermission = user.PostMentionPushNotificationPermission;
     }
 }

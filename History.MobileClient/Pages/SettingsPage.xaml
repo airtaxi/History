@@ -178,6 +178,215 @@
                     HeightRequest="24">
                     <Label
                         FontSize="14"
+                        Text="푸시 알림"
+                        TextColor="{AppThemeBinding Dark={StaticResource CategoryDarkForeground},
+                                                    Light={StaticResource CategoryLightForeground}}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCommentPushNotificationPermissionGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="댓글 푸시 알림"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="CommentPushNotificationPermissionLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCommentMentionPushNotificationPermissionGridTapped" />
+                    </Grid.GestureRecognizers>
+
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="댓글 언급 푸시 알림"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="CommentMentionPushNotificationPermissionLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCommentLikePushNotificationPermissionGridTapped" />
+                    </Grid.GestureRecognizers>
+
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="댓글 좋아요 푸시 알림"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="CommentLikePushNotificationPermissionLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSharedPostCommentPushNotificationPermissionGridTapped" />
+                    </Grid.GestureRecognizers>
+
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="공유글의 댓글 푸시 알림"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="SharedPostCommentPushNotificationPermissionLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPostReactionPushNotificationPermissionGridTapped" />
+                    </Grid.GestureRecognizers>
+
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="게시글 좋아요 푸시 알림"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="PostReactionPushNotificationPermissionLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPostMentionPushNotificationPermissionGridTapped" />
+                    </Grid.GestureRecognizers>
+
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="게시글 언급 푸시 알림"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="PostMentionPushNotificationPermissionLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPostMentionPushNotificationPermissionGridTapped" />
+                    </Grid.GestureRecognizers>
+
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="관심 친구의 새 게시글 푸시 알림"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="IsFavoriteFriendNewPostPushNotificationEnabledLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid
+                    Padding="14,0,14,0"
+                    Background="{AppThemeBinding Dark={StaticResource CategoryDarkBackground},
+                                                 Light={StaticResource CategoryLightBackground}}"
+                    HeightRequest="24">
+                    <Label
+                        FontSize="14"
                         Text="서비스 정보"
                         TextColor="{AppThemeBinding Dark={StaticResource CategoryDarkForeground},
                                                     Light={StaticResource CategoryLightForeground}}"

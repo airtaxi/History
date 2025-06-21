@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Google.Protobuf.WellKnownTypes;
 using History.ApiService.Helpers;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
@@ -7,9 +6,7 @@ using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Driver;
-using NJsonSchema.Validation;
 
 namespace History.ApiService.Services;
 
@@ -325,38 +322,6 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc/>
-    public async Task<Result> WithdrawAsync(string userId)
-    {
-        var postService = serviceProvider.GetRequiredService<IPostService>();
-        var commentService = serviceProvider.GetRequiredService<ICommentService>();
-        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
-        var refreshTokenService = serviceProvider.GetRequiredService<IRefreshTokenService>();
-        var notificationService = serviceProvider.GetRequiredService<INotificationService>();
-        var mediaService = serviceProvider.GetRequiredService<IMediaService>();
-
-        await postService.HandleWithdrawAsync(userId);
-        await commentService.HandleWithdrawAsync(userId);
-        await friendshipService.HandleWithdrawAsync(userId);
-        await refreshTokenService.HandleWithdrawAsync(userId);
-        await notificationService.HandleWithdrawAsync(userId);
-        await mediaService.DeleteMediasByUserIdAsync(userId);
-
-        var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
-        await _userCollection.DeleteOneAsync(filter);
-
-        return Result.Success();
-    }
-
-    /// <inheritdoc/>
-    public async Task<Result<List<string>>> FilterAllowSearch(List<string> userIds)
-    {
-        if (userIds == null || !userIds.Any()) return new List<string>();
-        var filter = Builders<User>.Filter.In(u => u.Id, userIds) & Builders<User>.Filter.Eq(u => u.AllowSearch, true);
-        var ids = await _userCollection.Find(filter).Project(u => u.Id).ToListAsync();
-        return ids;
-    }
-
-    /// <inheritdoc/>
     public async Task<Result> UpdateMemoAsync(string userId, string requesterId, string memo)
     {
         if (userId == requesterId) return (ErrorType.BadRequest, "자신에게 메모를 작성할 수 없습니다.");
@@ -389,6 +354,93 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         }
 
         await _userMemoCollection.InsertOneAsync(userMemo);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc/>
+    public async Task<Result> UpdatePushNotificationPermissionAsync(string userId, PushNotificationType type, AccessPermission accessPermission)
+    {
+        var userResult = await GetUserByIdAsync(userId);
+        if (userResult.IsFailure) return userResult.CastFailure();
+
+        FilterDefinition<User> filter;
+        UpdateDefinition<User> update;
+
+        if (type == PushNotificationType.FavoriteFriendNewPost)
+        {
+            if (accessPermission < AccessPermission.Everyone && accessPermission > AccessPermission.OnlyMe)
+                return (ErrorType.BadRequest, "관심 친구의 새 게시글 푸시 알림 설정은 켜짐 (모든 사람) 또는 꺼짐 (나만)으로 설정할 수 있습니다.");
+
+            var isOn = accessPermission == AccessPermission.Everyone;
+            filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+            update = Builders<User>.Update.Set(u => u.IsFavoriteFriendNewPostPushNotificationEnabled, isOn);
+        }
+        else
+        {
+            var fieldName = $"{type}PushNotificationPermission";
+            filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+            update = Builders<User>.Update.Set(fieldName, accessPermission);
+        }
+
+        var result = await _userCollection.UpdateOneAsync(filter, update);
+        return result.MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "푸시 알림 권한을 변경하는 중 오류가 발생했습니다.");
+    }
+    /// <inheritdoc/>
+    public async Task<Result<List<string>>> FilterAllowSearch(List<string> userIds)
+    {
+        if (userIds == null || !userIds.Any()) return new List<string>();
+        var filter = Builders<User>.Filter.In(u => u.Id, userIds) & Builders<User>.Filter.Eq(u => u.AllowSearch, true);
+        var ids = await _userCollection.Find(filter).Project(u => u.Id).ToListAsync();
+        return ids;
+    }
+
+    /// <inheritdoc/>
+    public async Task<Result<List<string>>> FilterPushNotificationPermissionsAsync(string userId, IEnumerable<string> recipients, PushNotificationType type)
+    {
+        if (recipients == null || !recipients.Any()) return new List<string>();
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
+        var userFriendsResult = await friendshipService.GetFriendIdsAsync(userId);
+        if (userFriendsResult.IsFailure) return userFriendsResult;
+
+        var userFriendsOfFriendIdsResult = await friendshipService.GetFriendsOfFriendIdsAsync(userId);
+        if (userFriendsOfFriendIdsResult.IsFailure) return userFriendsOfFriendIdsResult.CastFailure<List<string>>();
+
+        FilterDefinition<User> filter;
+        if (type == PushNotificationType.FavoriteFriendNewPost) filter = Builders<User>.Filter.In(u => u.Id, recipients) & Builders<User>.Filter.Eq(u => u.IsFavoriteFriendNewPostPushNotificationEnabled, true);
+        else
+        {
+            var typeString = type.ToString();
+            var fieldName = $"{typeString}PushNotificationPermission";
+            filter = Builders<User>.Filter.Or(Builders<User>.Filter.Eq(fieldName, AccessPermission.Everyone) & Builders<User>.Filter.In(u => u.Id, recipients),
+                Builders<User>.Filter.Eq(fieldName, AccessPermission.FriendsOfFriends) & Builders<User>.Filter.In(u => u.Id, userFriendsOfFriendIdsResult.Value),
+                Builders<User>.Filter.Eq(fieldName, AccessPermission.Friends) & Builders<User>.Filter.In(u => u.Id, userFriendsResult.Value));
+        }
+
+        var ids = await _userCollection.Find(filter).Project(u => u.Id).ToListAsync();
+        return ids.Distinct().ToList();
+    }
+
+    /// <inheritdoc/>
+    public async Task<Result> WithdrawAsync(string userId)
+    {
+        var postService = serviceProvider.GetRequiredService<IPostService>();
+        var commentService = serviceProvider.GetRequiredService<ICommentService>();
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+        var refreshTokenService = serviceProvider.GetRequiredService<IRefreshTokenService>();
+        var notificationService = serviceProvider.GetRequiredService<INotificationService>();
+        var mediaService = serviceProvider.GetRequiredService<IMediaService>();
+
+        await postService.HandleWithdrawAsync(userId);
+        await commentService.HandleWithdrawAsync(userId);
+        await friendshipService.HandleWithdrawAsync(userId);
+        await refreshTokenService.HandleWithdrawAsync(userId);
+        await notificationService.HandleWithdrawAsync(userId);
+        await mediaService.DeleteMediasByUserIdAsync(userId);
+
+        var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+        await _userCollection.DeleteOneAsync(filter);
 
         return Result.Success();
     }
