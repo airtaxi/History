@@ -163,8 +163,8 @@ public partial class SettingsPage : ContentPage
         if (result.IsSuccess) FriendListDiscovryOptionLabel.Text = rawDiscoveryOption;
     }
 
-    private readonly int[] Months = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-    private readonly int[] MonthDays = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    private static readonly int[] s_months = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    private static readonly int[] s_monthDays = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
     private async void OnBirthdayGridTapped(object sender, TappedEventArgs e)
     {
@@ -173,19 +173,19 @@ public partial class SettingsPage : ContentPage
 
         if (action == "생일 추가" || action == "생일 변경")
         {
-            var months = Months.Select(m => $"{m}월").ToArray();
+            var months = s_months.Select(m => $"{m}월").ToArray();
             action = await DisplayActionSheet("월을 선택해주세요", Constants.PromptCancel, null, months);
             if (action == null || action == Constants.PromptCancel) return;
 
             var month = Array.IndexOf(months, action) + 1;
-            var days = Enumerable.Range(1, MonthDays[month - 1]).Select(d => $"{d}일").ToArray();
+            var days = Enumerable.Range(1, s_monthDays[month - 1]).Select(d => $"{d}일").ToArray();
 
             action = await DisplayActionSheet("일을 선택해주세요", Constants.PromptCancel, null, days);
             if (action == null || action == Constants.PromptCancel) return;
 
             var day = Array.IndexOf(days, action) + 1;
 
-            if (month < 1 || month > 12 || day < 1 || day > MonthDays[month - 1])
+            if (month < 1 || month > 12 || day < 1 || day > s_monthDays[month - 1])
             {
                 await DisplayAlert("오류", "잘못된 날짜입니다. 다시 시도해주세요.", Constants.PromptOk);
                 return;
