@@ -1,5 +1,4 @@
-﻿using History.Commons.DataTypes.ResponseDtos;
-using History.Commons.Enums;
+﻿using History.Commons.Enums;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace History.Commons.DataTypes;
@@ -20,6 +19,7 @@ public class Notification
     public string ImageUrl { get; set; }
 
     public bool PushNotificationDisabled { get; set; }
+    public IEnumerable<string> PushNotificationRecipients { get; set; }
 
     public Dictionary<string, string> Data { get; set; }
 

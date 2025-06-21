@@ -30,6 +30,7 @@ BsonSerializer.RegisterSerializer(new EnumSerializer<DiscoveryOption>(BsonType.S
 BsonSerializer.RegisterSerializer(new EnumSerializer<PostReactionType>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<FriendshipStatus>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<NotificationType>(BsonType.String));
+BsonSerializer.RegisterSerializer(new EnumSerializer<PushNotificationType>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<MediaBucket>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<Rank>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<ErrorType>(BsonType.String));

@@ -4,9 +4,7 @@ using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
-using MongoDB.Bson;
 using MongoDB.Driver;
-using System.Text.Json;
 using Notification = History.Commons.DataTypes.Notification;
 
 namespace History.ApiService.Services;
@@ -128,15 +126,22 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             || type == NotificationType.PostReaction)
             && firstNotification.Data.TryGetValue("PostId", out var postId))
         {
-            //var filter = Builders<Notification>.Filter.Eq("Data.PostId", postId);
-            //if (type == NotificationType.Comment || type == NotificationType.CommentMention)
-            //{
-            //    filter &= Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.CommentMention)
-            //        | Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.Comment);
-            //}
-            //else filter &= Builders<Notification>.Filter.Eq(n => n.Type, type);
-            //var update = Builders<Notification>.Update.PullAll(x => x.Recipients, Builders<string>.Filter.In("", allRecipients));
-            //await _notificationCollection.UpdateManyAsync(filter, update);
+            var filter = Builders<Notification>.Filter.Eq("Data.PostId", postId);
+            if (type == NotificationType.Comment || type == NotificationType.CommentMention)
+            {
+                filter &= Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.CommentMention)
+                    | Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.Comment);
+            }
+            else filter &= Builders<Notification>.Filter.Eq(n => n.Type, type);
+
+            UpdateDefinition<Notification> update = null;
+            foreach(var recipient in allRecipients)
+            {
+                if (update == null) update = Builders<Notification>.Update.Pull(x => x.Recipients, recipient);
+                else update = update.Pull(x => x.Recipients, recipient);
+            }
+
+            if (update != null) await _notificationCollection.UpdateManyAsync(filter, update);
         }
 
         if (type == NotificationType.CommentLike && firstNotification.Data.TryGetValue("CommentId", out var commentId))
@@ -152,6 +157,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         foreach (var notification in notificationResult.Value)
         {
             var recipients = notification.Recipients;
+            var pushNotificationRecipients = notification.PushNotificationRecipients;
             var title = notification.Title;
             var body = notification.Body;
             var imageUrl = notification.ImageUrl;
@@ -170,7 +176,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             // Insert new
             await _notificationCollection.InsertOneAsync(notification);
 
-            if (!notification.PushNotificationDisabled) await SendFirebaseNotificationAsync(recipients, title, body, imageUrl, data);
+            if (!notification.PushNotificationDisabled && pushNotificationRecipients.Any()) await SendFirebaseNotificationAsync(pushNotificationRecipients, title, body, imageUrl, data);
         }
 
         return Result.Success();
@@ -302,6 +308,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (filterResult.IsFailure) return filterResult.CastFailure<List<Notification>>();
             core.Recipients = filterResult.Value.Except([postResult.Value.UserId]).Distinct();
 
+            await SetPushNotificationRecipientsAsync(core, PushNotificationType.Comment);
+
             core.UserId = userResult.Value.Id;
 
             if (userResult.Value.Id == postResult.Value.UserId) core.Recipients = core.Recipients.Except([userResult.Value.Id]);
@@ -321,6 +329,24 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             authorCore.Recipients = [postResult.Value.UserId];
             authorCore.Title = $"{userResult.Value.Nickname}님이 회원님의 게시글에 댓글을 달았습니다.";
             notifications.Add(authorCore);
+
+            if (postResult.Value.ParentPostId != null)
+            {
+                var parentPostResult = await postService.GetPostByIdAsync(postResult.Value.ParentPostId);
+                if (parentPostResult.IsSuccess)
+                {
+                    var parentPostAuthorResult = await userService.GetUserByIdAsync(parentPostResult.Value.UserId);
+                    if (parentPostAuthorResult.IsSuccess)
+                    {
+                        var parentCore = core.Clone();
+                        parentCore.Recipients = [parentPostResult.Value.UserId];
+                        await SetPushNotificationRecipientsAsync(core, PushNotificationType.SharedPostComment);
+
+                        parentCore.Title = $"{userResult.Value.Nickname}님이 회원님의 공유 게시글에 댓글을 달았습니다.";
+                        notifications.Add(parentCore);
+                    }
+                }
+            }
         }
         else if (type == NotificationType.CommentMention)
         {
@@ -343,6 +369,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var filterResult = await FilterRecipientsByAccessAsync(core.Recipients, postResult.Value);
             if (filterResult.IsFailure) return filterResult.CastFailure<List<Notification>>();
             core.Recipients = filterResult.Value;
+
+            await SetPushNotificationRecipientsAsync(core, PushNotificationType.CommentMention);
 
             core.UserId = userResult.Value.Id;
 
@@ -369,6 +397,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (commentResult.IsFailure) return commentResult.CastFailure<List<Notification>>();
 
             core.Recipients = [commentResult.Value.UserId];
+            await SetPushNotificationRecipientsAsync(core, PushNotificationType.CommentLike);
+
             core.UserId = userResult.Value.Id;
 
             core.Title = $"{userResult.Value.Nickname}님이 내 댓글을 좋아합니다";
@@ -394,6 +424,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (parentPostResult.IsFailure) return parentPostResult.CastFailure<List<Notification>>();
 
             core.Recipients = [parentPostResult.Value.UserId];
+            core.PushNotificationRecipients = core.Recipients;
+
             core.UserId = userResult.Value.Id;
 
             core.Title = $"{userResult.Value.Nickname}님이 내 게시글을 공유했습니다";
@@ -419,6 +451,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (parentPostResult.IsFailure) return parentPostResult.CastFailure<List<Notification>>();
 
             core.Recipients = [parentPostResult.Value.UserId];
+            core.PushNotificationRecipients = core.Recipients;
+
             core.UserId = userResult.Value.Id;
 
             core.Title = $"{userResult.Value.Nickname}님이 내 게시글을 리포스트했습니다";
@@ -443,6 +477,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (userResult.IsFailure) return userResult.CastFailure<List<Notification>>();
 
             core.Recipients = [postResult.Value.UserId];
+            await SetPushNotificationRecipientsAsync(core, PushNotificationType.PostReaction);
+
             core.UserId = userResult.Value.Id;
 
             core.Title = $"{userResult.Value.Nickname}님이 내 게시글에 \"{postReactionResult.Value.Type.ToDisplayString()}\"를 남겼습니다.";
@@ -470,6 +506,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (filterResult.IsFailure) return filterResult.CastFailure<List<Notification>>();
             core.Recipients = filterResult.Value;
 
+            await SetPushNotificationRecipientsAsync(core, PushNotificationType.PostMention);
+
             core.UserId = userResult.Value.Id;
 
             core.Title = $"{userResult.Value.Nickname}님이 게시글에서 회원님을 언급했습니다";
@@ -491,6 +529,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (userResult.IsFailure) return userResult.CastFailure<List<Notification>>();
 
             core.Recipients = [friendshipResult.Value.UserId];
+            core.PushNotificationRecipients = core.Recipients;
+
             core.UserId = userResult.Value.Id;
 
             if (friendshipResult.Value.Status == FriendshipStatus.Waiting)
@@ -522,6 +562,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (moderatorResult.IsFailure) return moderatorResult.CastFailure<List<Notification>>();
 
             core.Recipients = [recordResult.Value.UserId];
+            core.PushNotificationRecipients = core.Recipients;
+
             core.UserId = recordResult.Value.ModeratorId;
 
             core.Title = $"관리자 {moderatorResult.Value.Nickname}님이 회원님의 컨텐츠에 대해 [{recordResult.Value.ReportType.ToDisplayString()}]의 이유로 {recordResult.Value.RestrictionType.ToDisplayString()} 조치하였습니다.";
@@ -551,6 +593,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (moderatorUserIdsResult.IsFailure) return moderatorUserIdsResult.CastFailure<List<Notification>>();
 
             core.Recipients = moderatorUserIdsResult.Value;
+            core.PushNotificationRecipients = core.Recipients;
+
             core.UserId = recordResult.Value.ReporterId;
 
             core.Data.Add("UserId", reporterResult.Value.Id);
@@ -607,6 +651,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var filterResult = await FilterRecipientsByAccessAsync(core.Recipients, postResult.Value);
             if (filterResult.IsFailure) return filterResult.CastFailure<List<Notification>>();
             core.Recipients = filterResult.Value.Distinct();
+
+            await SetPushNotificationRecipientsAsync(core, PushNotificationType.FavoriteFriendNewPost);
 
             core.UserId = postResult.Value.UserId;
 
@@ -677,6 +723,21 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         return Result.Success();
     }
 
+    private async Task SetPushNotificationRecipientsAsync(Notification notification, PushNotificationType pushNotificationType)
+    {
+        if (notification.PushNotificationDisabled)
+        {
+            notification.PushNotificationRecipients = [];
+            return;
+        }
+
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+        var pushNotificationRecipientsResult = await userService.FilterPushNotificationPermissionsAsync(notification.UserId, notification.Recipients, pushNotificationType);
+        if (pushNotificationRecipientsResult.IsFailure) notification.PushNotificationRecipients = [];
+        else notification.PushNotificationRecipients = pushNotificationRecipientsResult.Value;
+    }
+
+
     private async Task<Result<List<string>>> FilterRecipientsByAccessAsync(IEnumerable<string> recipients, Post post)
     {
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
@@ -697,20 +758,9 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             result.Value.Add(post.UserId); // Include the post author
             return recipients.Intersect(result.Value).Distinct().ToList();
         }
-        else if (post.DiscoveryOption == DiscoveryOption.SelectedUsers)
-        {
-            return recipients.Intersect(post.DiscoveryOptionSelectedUserIds).ToList();
-        }
-        else if (post.DiscoveryOption == DiscoveryOption.UnselectedUsers)
-        {
-            var result = await friendshipService.GetUserFriendIdsAsync(post.UserId, post.UserId);
-            if (result.IsFailure) return result;
-            return recipients.Except(result.Value).ToList();
-        }
-        else if (post.DiscoveryOption == DiscoveryOption.OnlyMe)
-        {
-            return new List<string> { post.UserId };
-        }
+        else if (post.DiscoveryOption == DiscoveryOption.SelectedUsers) return recipients.Intersect(post.DiscoveryOptionSelectedUserIds).ToList();
+        else if (post.DiscoveryOption == DiscoveryOption.UnselectedUsers) return recipients.Except(post.DiscoveryOptionSelectedUserIds).ToList();
+        else if (post.DiscoveryOption == DiscoveryOption.OnlyMe) return new List<string> { post.UserId };
         else return (ErrorType.BadRequest, "Invalid Discovery Option");
     }
 }

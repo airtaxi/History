@@ -728,6 +728,26 @@ public class UserController(IUserService userService, IFriendshipService friends
         else return StatusCode(500, result.FullErrorMessage);
     }
 
+    [HttpPut("push-notification-permission")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> UpdatePushNotificationPermission([FromBody] UpdatePushNotificationPermissionRequestDto request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var result = await userService.UpdatePushNotificationPermissionAsync(userId, request.Type, request.AccessPermission);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
     /// <summary>
     /// Verify the ID token from the OAuth provider
     /// </summary>

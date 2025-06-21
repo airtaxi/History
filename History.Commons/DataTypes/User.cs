@@ -96,6 +96,48 @@ public class User
     public bool AllowSearch { get; set; } = true;
 
     /// <summary>
+    /// Comment push notification permission.
+    /// </summary>
+    [BsonDefaultValue(AccessPermission.Everyone)]
+    public AccessPermission CommentPushNotificationPermission { get; set; } = AccessPermission.Everyone;
+
+    /// <summary>
+    /// Comment mention push notification permission.
+    /// </summary>
+    [BsonDefaultValue(AccessPermission.Everyone)]
+    public AccessPermission CommentMentionPushNotificationPermission { get; set; } = AccessPermission.Everyone;
+
+    /// <summary>
+    /// Comment like push notification permission.
+    /// </summary>
+    [BsonDefaultValue(AccessPermission.Everyone)]
+    public AccessPermission CommentLikePushNotificationPermission { get; set; } = AccessPermission.Everyone;
+
+    /// <summary>
+    /// Shared post comment push notification permission.
+    /// </summary>
+    [BsonDefaultValue(AccessPermission.Everyone)]
+    public AccessPermission SharedPostCommentPushNotificationPermission { get; set; } = AccessPermission.Everyone;
+
+    /// <summary>
+    /// Post reaction push notification permission.
+    /// </summary>
+    [BsonDefaultValue(AccessPermission.Everyone)]
+    public AccessPermission PostReactionPushNotificationPermission { get; set; } = AccessPermission.Everyone;
+
+    /// <summary>
+    /// Post mention push notification permission.
+    /// </summary>
+    [BsonDefaultValue(AccessPermission.Everyone)]
+    public AccessPermission PostMentionPushNotificationPermission { get; set; } = AccessPermission.Everyone;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether push notifications for new posts by favorite friends are enabled.
+    /// </summary>
+    [BsonDefaultValue(true)]
+    public bool IsFavoriteFriendNewPostPushNotificationEnabled { get; set; } = true;
+
+    /// <summary>
     /// Represents the date and time when the user was created.
     /// </summary>
     public DateTime CreatedAt { get; set; }

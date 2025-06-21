@@ -169,6 +169,24 @@ public interface IUserService
     public Task<Result> UpdatePinnedPostAsync(string userId, string pinnedPostId);
 
     /// <summary>
+    /// Adds a memo for a user, which can be used to store additional information about the user.
+    /// </summary>
+    /// <param name="userId">The ID of the user for whom the memo is being added.</param>
+    /// <param name="registerId">The ID of the user who is adding the memo</param>
+    /// <param name="memo">The content of the memo to be added.</param>
+    /// <returns>A task that represents the asynchronous operation, with a result indicating the success or failure of the memo addition.</returns>
+    public Task<Result> UpdateMemoAsync(string userId, string requesterId, string memo);
+
+    /// <summary>
+    /// Updates the push notification permission for a user.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose permission is being updated.</param>
+    /// <param name="type">The type of push notification for which the permission is being updated.</param>
+    /// <param name="accessPermission">The new access permission to be set for the user.</param>
+    /// <returns>A task that represents the asynchronous operation, with a result indicating the success or failure of the update operation.</returns>
+    public Task<Result> UpdatePushNotificationPermissionAsync(string userId, PushNotificationType type, AccessPermission accessPermission);
+
+    /// <summary>
     /// Withdraws a user's account, deleting their data.
     /// </summary>
     /// <param name="userId">The ID of the user whose account is to be withdrawn.</param>
@@ -183,13 +201,12 @@ public interface IUserService
     public Task<Result<List<string>>> FilterAllowSearch(List<string> userIds);
 
     /// <summary>
-    /// Adds a memo for a user, which can be used to store additional information about the user.
+    /// Filters push notification permissions for a given type and list of user IDs.
     /// </summary>
-    /// <param name="userId">The ID of the user for whom the memo is being added.</param>
-    /// <param name="registerId">The ID of the user who is adding the memo</param>
-    /// <param name="memo">The content of the memo to be added.</param>
-    /// <returns>A task that represents the asynchronous operation, with a result indicating the success or failure of the memo addition.</returns>
-    public Task<Result> UpdateMemoAsync(string userId, string requesterId, string memo);
+    /// <param name="userIds">The list of user IDs to filter permissions for.</param>
+    /// <param name="type">The type of push notification to filter permissions for.</param>
+    /// <returns>A task that represents the asynchronous operation, with a result containing a list of user IDs that are allowed to send the push notification</returns>
+    public Task<Result<List<string>>> FilterPushNotificationPermissionsAsync(string userId, IEnumerable<string> recipients, PushNotificationType type);
 
     /// <summary>
     /// Generate text preview asynchronously based on the provided contents.
