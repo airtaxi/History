@@ -158,7 +158,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var data = notification.Data;
 
             if (!recipients.Any()) continue;
-            else if (recipients.Count() > 1) recipients = recipients.Except([notification.UserId]).Distinct();
+            else if (notification.Type != NotificationType.Birthdayw) recipients = recipients.Except([notification.UserId]).Distinct();
 
             while (true)
             {
