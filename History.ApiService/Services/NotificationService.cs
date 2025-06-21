@@ -157,9 +157,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var imageUrl = notification.ImageUrl;
             var data = notification.Data;
 
-            recipients = recipients.Except([notification.UserId]).Distinct();
-
             if (!recipients.Any()) continue;
+            else if (recipients.Count() > 1) recipients = recipients.Except([notification.UserId]).Distinct();
 
             while (true)
             {
