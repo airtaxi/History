@@ -679,6 +679,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             if (postAuthorFriendsResult.IsFailure) return postAuthorFriendsResult.CastFailure<List<Notification>>();
 
             core.Recipients = postAuthorFriendsResult.Value.Except([postResult.Value.UserId]).Distinct();
+            core.PushNotificationRecipients = core.Recipients;
 
             core.UserId = postResult.Value.UserId;
 
@@ -692,6 +693,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
             var authorCore = core.Clone();
             authorCore.Recipients = [postResult.Value.UserId];
+            authorCore.PushNotificationRecipients = authorCore.Recipients;
             authorCore.Title = $"오늘은 회원님의 생일입니다! 🎉";
             authorCore.Body = $"회원님의 생일을 진심으로 축하드립니다! 다른 친구들이 남긴 축하 메시지를 확인해보세요!";
             notifications.Add(authorCore);
