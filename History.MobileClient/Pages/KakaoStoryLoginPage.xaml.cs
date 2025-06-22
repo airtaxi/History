@@ -59,10 +59,13 @@ public partial class KakaoStoryLoginPage : ContentPage
         await CheckCookies();
     }
 
+    private bool _gotCookies = false;
     private async Task CheckCookies()
     {
         var cookies = await WebViewCookieHelper.GetCookieListAsync(BrowserWebView, "https://story.kakao.com");
         if (cookies == null) return;
+
+        if (_gotCookies) return;
 
         bool isSuccess = cookies.Any(x => x.Name == "_karmt");
         if (isSuccess)
@@ -74,12 +77,15 @@ public partial class KakaoStoryLoginPage : ContentPage
             try
             {
                 var friends = await KakaoStoryApiHandler.GetFriends();
-                var setResult = _taskCompletionSource.TrySetResult(cookies);
-                if (setResult)
-                {
-                    Configuration.SetValue("KakaoStoryCookies", cookies);
-                    await App.PopModalAsync();
-                }
+
+                _gotCookies = true; // Successfully got cookies, prevent further checks
+
+                // Go back to the previous page and wait for the animation to finish
+                await App.PopModalAsync();
+
+                // Now set the cookies in the configuration and complete the task
+                Configuration.SetValue("KakaoStoryCookies", cookies);
+                _taskCompletionSource.TrySetResult(cookies);
             }
             catch { }
         }
