@@ -408,12 +408,12 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         if (userFriendsOfFriendIdsResult.IsFailure) return userFriendsOfFriendIdsResult.CastFailure<List<string>>();
 
         FilterDefinition<User> filter;
-        if (type == PushNotificationType.FavoriteFriendNewPost) filter = Builders<User>.Filter.In(u => u.Id, recipients) & Builders<User>.Filter.Eq(u => u.IsFavoriteFriendNewPostPushNotificationEnabled, true);
+        if (type == PushNotificationType.FavoriteFriendNewPost) filter = Builders<User>.Filter.In(u => u.Id, recipients) & (Builders<User>.Filter.Eq(u => u.IsFavoriteFriendNewPostPushNotificationEnabled, true) | Builders<User>.Filter.Exists(u => u.IsFavoriteFriendNewPostPushNotificationEnabled, false));
         else
         {
             var typeString = type.ToString();
             var fieldName = $"{typeString}PushNotificationPermission";
-            filter = Builders<User>.Filter.Or(Builders<User>.Filter.Eq(fieldName, AccessPermission.Everyone) & Builders<User>.Filter.In(u => u.Id, recipients),
+            filter = Builders<User>.Filter.Or((Builders<User>.Filter.Eq(fieldName, AccessPermission.Everyone) | Builders<User>.Filter.Exists(fieldName, false)) & Builders<User>.Filter.In(u => u.Id, recipients),
                 Builders<User>.Filter.Eq(fieldName, AccessPermission.FriendsOfFriends) & Builders<User>.Filter.In(u => u.Id, userFriendsOfFriendIdsResult.Value),
                 Builders<User>.Filter.Eq(fieldName, AccessPermission.Friends) & Builders<User>.Filter.In(u => u.Id, userFriendsResult.Value));
         }

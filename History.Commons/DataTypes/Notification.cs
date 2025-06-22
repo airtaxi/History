@@ -19,7 +19,7 @@ public class Notification
     public string ImageUrl { get; set; }
 
     public bool PushNotificationDisabled { get; set; }
-    public IEnumerable<string> PushNotificationRecipients { get; set; }
+    public IEnumerable<string> PushNotificationRecipients { get; set; } = [];
 
     public Dictionary<string, string> Data { get; set; }
 

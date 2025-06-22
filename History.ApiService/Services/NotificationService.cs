@@ -5,6 +5,7 @@ using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using MongoDB.Driver;
+using System.Text.Json;
 using Notification = History.Commons.DataTypes.Notification;
 
 namespace History.ApiService.Services;
@@ -158,6 +159,10 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         {
             var recipients = notification.Recipients;
             var pushNotificationRecipients = notification.PushNotificationRecipients;
+            if (!pushNotificationRecipients.Any())
+            {
+                Console.WriteLine($"Push notification recipients are empty for notification type {notification.Type} with associated ID {associatedId}. Defaulting to all recipients. {JsonSerializer.Serialize(notification)}");
+            }
             var title = notification.Title;
             var body = notification.Body;
             var imageUrl = notification.ImageUrl;
@@ -327,6 +332,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
             var authorCore = core.Clone();
             authorCore.Recipients = [postResult.Value.UserId];
+            await SetPushNotificationRecipientsAsync(authorCore, PushNotificationType.Comment);
+
             authorCore.Title = $"{userResult.Value.Nickname}님이 회원님의 게시글에 댓글을 달았습니다.";
             notifications.Add(authorCore);
 
@@ -733,10 +740,16 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             return;
         }
 
+        Console.WriteLine($"[B]SPNRA: {string.Join(",", notification.Recipients)}");
         var userService = serviceProvider.GetRequiredService<IUserService>();
         var pushNotificationRecipientsResult = await userService.FilterPushNotificationPermissionsAsync(notification.UserId, notification.Recipients, pushNotificationType);
         if (pushNotificationRecipientsResult.IsFailure) notification.PushNotificationRecipients = [];
-        else notification.PushNotificationRecipients = pushNotificationRecipientsResult.Value;
+        else
+        {
+            Console.WriteLine($"SPNRA: {string.Join(",", pushNotificationRecipientsResult.Value ?? [])}");
+            notification.PushNotificationRecipients = pushNotificationRecipientsResult.Value;
+        }
+
     }
 
 
