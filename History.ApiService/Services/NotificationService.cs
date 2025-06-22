@@ -169,7 +169,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var imageUrl = notification.ImageUrl;
             var data = notification.Data;
 
-            else if (notification.Type != NotificationType.Birthday)
+            if (notification.Type != NotificationType.Birthday)
             {
                 recipients = recipients.Except([notification.UserId]).Distinct();
                 pushNotificationRecipients = pushNotificationRecipients.Except([notification.UserId]).Distinct();
