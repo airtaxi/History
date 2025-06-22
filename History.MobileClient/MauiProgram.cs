@@ -79,6 +79,11 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
+#if ANDROID
+        CrossFirebaseCloudMessaging.Current.NotificationTapped += OnNotificationTapped;
+        CrossFirebaseCloudMessaging.Current.NotificationReceived += OnNotificationReceived;
+#endif
+
         return builder.Build();
     }
 
@@ -95,12 +100,7 @@ public static class MauiProgram
                 return false;
             }));
 #elif ANDROID
-            events.AddAndroid(android => android.OnCreate((activity, _) =>
-            {
-                CrossFirebaseCloudMessaging.Current.NotificationTapped += OnNotificationTapped;
-                CrossFirebaseCloudMessaging.Current.NotificationReceived += OnNotificationReceived;
-                CrossFirebase.Initialize(activity);
-            }));
+            events.AddAndroid(android => android.OnCreate((activity, _) => CrossFirebase.Initialize(activity)));
 #endif
         });
 
