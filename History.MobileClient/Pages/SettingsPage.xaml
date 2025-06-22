@@ -355,7 +355,7 @@
                 </Grid>
                 <Grid Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnPostMentionPushNotificationPermissionGridTapped" />
+                        <TapGestureRecognizer Tapped="OnIsFavoriteFriendNewPostPushNotificationEnabledGridTapped" />
                     </Grid.GestureRecognizers>
 
                     <Label
