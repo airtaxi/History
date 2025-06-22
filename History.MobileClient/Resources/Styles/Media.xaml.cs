@@ -195,7 +195,9 @@ public partial class Media : ResourceDictionary
 
                 viewModel.ResizeCarouselView(carouselView, image, imageWidth, imageHeight);
 
+#if IOS
                 image.InvalidateMeasure();
+#endif
             }
         });
     }
