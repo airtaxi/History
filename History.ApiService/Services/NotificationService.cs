@@ -120,34 +120,34 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
         var allRecipients = notificationResult.Value.SelectMany(x => x.Recipients);
 
-        if ((type == NotificationType.Comment
-            || type == NotificationType.CommentMention
-            || type == NotificationType.Share
-            || type == NotificationType.Repost
-            || type == NotificationType.PostReaction)
-            && firstNotification.Data.TryGetValue("PostId", out var postId))
-        {
-            var filter = Builders<Notification>.Filter.Eq("Data.PostId", postId);
-            if (type == NotificationType.Comment || type == NotificationType.CommentMention)
-            {
-                filter &= Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.Comment)
-                    | Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.CommentMention);
-            }
-            else filter &= Builders<Notification>.Filter.Eq(n => n.Type, type);
+        //if ((type == NotificationType.Comment
+        //    || type == NotificationType.CommentMention
+        //    || type == NotificationType.Share
+        //    || type == NotificationType.Repost
+        //    || type == NotificationType.PostReaction)
+        //    && firstNotification.Data.TryGetValue("PostId", out var postId))
+        //{
+        //    var filter = Builders<Notification>.Filter.Eq("Data.PostId", postId);
+        //    if (type == NotificationType.Comment || type == NotificationType.CommentMention)
+        //    {
+        //        filter &= Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.Comment)
+        //            | Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.CommentMention);
+        //    }
+        //    else filter &= Builders<Notification>.Filter.Eq(n => n.Type, type);
 
-            UpdateDefinition<Notification> update = null;
-            foreach(var recipient in allRecipients)
-            {
-                if (update == null) update = Builders<Notification>.Update.Pull(x => x.Recipients, recipient);
-                else update = update.Pull(x => x.Recipients, recipient);
-            }
+        //    UpdateDefinition<Notification> update = null;
+        //    foreach(var recipient in allRecipients)
+        //    {
+        //        if (update == null) update = Builders<Notification>.Update.Pull(x => x.Recipients, recipient);
+        //        else update = update.Pull(x => x.Recipients, recipient);
+        //    }
 
-            if (update != null)
-            {
-                var result = await _notificationCollection.UpdateManyAsync(filter, update);
-                Console.WriteLine($"NOTI PULL {JsonSerializer.Serialize(result)}");
-            }
-        }
+        //    if (update != null)
+        //    {
+        //        var result = await _notificationCollection.UpdateManyAsync(filter, update);
+        //        Console.WriteLine($"NOTI PULL {JsonSerializer.Serialize(result)}");
+        //    }
+        //}
 
         if (type == NotificationType.CommentLike && firstNotification.Data.TryGetValue("CommentId", out var commentId))
         {
