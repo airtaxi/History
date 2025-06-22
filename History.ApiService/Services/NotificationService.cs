@@ -340,7 +340,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
                     {
                         var parentCore = core.Clone();
                         parentCore.Recipients = [parentPostResult.Value.UserId];
-                        await SetPushNotificationRecipientsAsync(core, PushNotificationType.SharedPostComment);
+                        await SetPushNotificationRecipientsAsync(parentCore, PushNotificationType.SharedPostComment);
 
                         parentCore.Title = $"{userResult.Value.Nickname}님이 회원님의 공유 게시글에 댓글을 달았습니다.";
                         notifications.Add(parentCore);
