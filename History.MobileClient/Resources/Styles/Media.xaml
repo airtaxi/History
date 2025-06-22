@@ -13,7 +13,7 @@
     <DataTemplate x:Key="ImageTemplate" x:DataType="vm:ImageViewModel">
         <ffimageloading:CachedImage
             Aspect="{x:Binding Aspect}"
-            DownsampleToViewSize="True"
+            DownsampleToViewSize="False"
             Finish="OnImageFinished"
             HorizontalOptions="{x:Binding HorizontalContentOptions}"
             Loaded="OnImageLoaded"
