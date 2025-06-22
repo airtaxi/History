@@ -130,8 +130,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             var filter = Builders<Notification>.Filter.Eq("Data.PostId", postId);
             if (type == NotificationType.Comment || type == NotificationType.CommentMention)
             {
-                filter &= Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.CommentMention)
-                    | Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.Comment);
+                filter &= Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.Comment)
+                    | Builders<Notification>.Filter.Eq(n => n.Type, NotificationType.CommentMention);
             }
             else filter &= Builders<Notification>.Filter.Eq(n => n.Type, type);
 
@@ -142,7 +142,11 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
                 else update = update.Pull(x => x.Recipients, recipient);
             }
 
-            if (update != null) await _notificationCollection.UpdateManyAsync(filter, update);
+            if (update != null)
+            {
+                var result = await _notificationCollection.UpdateManyAsync(filter, update);
+                Console.WriteLine($"NOTI PULL {JsonSerializer.Serialize(result)}");
+            }
         }
 
         if (type == NotificationType.CommentLike && firstNotification.Data.TryGetValue("CommentId", out var commentId))
@@ -159,21 +163,19 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         {
             var recipients = notification.Recipients;
             var pushNotificationRecipients = notification.PushNotificationRecipients;
-            if (!pushNotificationRecipients.Any())
-            {
-                Console.WriteLine($"Push notification recipients are empty for notification type {notification.Type} with associated ID {associatedId}. Defaulting to all recipients. {JsonSerializer.Serialize(notification)}");
-            }
+
             var title = notification.Title;
             var body = notification.Body;
             var imageUrl = notification.ImageUrl;
             var data = notification.Data;
 
-            if (!recipients.Any()) continue;
             else if (notification.Type != NotificationType.Birthday)
             {
                 recipients = recipients.Except([notification.UserId]).Distinct();
                 pushNotificationRecipients = pushNotificationRecipients.Except([notification.UserId]).Distinct();
             }
+
+            if (!recipients.Any()) continue;
 
             while (true)
             {
