@@ -240,7 +240,7 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState activationState)
     {
-        MainWindow = new Window(new LoginPage());
+        MainWindow ??= new Window(new LoginPage());
         return MainWindow;
     }
 
