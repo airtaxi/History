@@ -1,6 +1,5 @@
 server {
-	listen 5173 default_server;
-    listen [::]:5173 default_server;
+	listen 5173;
     server_name _;
 	
     access_log  /var/log/nginx/server.access.log  main;
