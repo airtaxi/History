@@ -135,8 +135,22 @@ const reportPost = () => {
   }
 };
 
+// 시간 포맷 함수 추가
 
+function formatRelativeTime(dateString: string): string {
+  const created = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - created.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
 
+  if (diffMinutes < 1) return '방금 전';
+  if (diffMinutes < 60) return `${diffMinutes}분 전`;
+  if (diffHours < 12) return `${diffHours}시간 전`;
+
+  // 12시간 이상이면 날짜와 시간만 출력
+  return `${created.getFullYear()}-${(created.getMonth() + 1).toString().padStart(2, '0')}-${created.getDate().toString().padStart(2, '0')} ${created.getHours().toString().padStart(2, '0')}:${created.getMinutes().toString().padStart(2, '0')}`;
+}
 
 /**
  * 게시글 공유 (리포스트)
@@ -599,7 +613,7 @@ const isImageUrl = (url: string): boolean => {
         <RouterLink :to="`/user/${post.user.userId}`" class="author-name" @click.stop>
           {{ post.user.nickname }}
         </RouterLink>
-        <div class="post-timestamp">{{ new Date(post.createdAt).toLocaleString() }}</div>
+        <div class="post-timestamp">{{ formatRelativeTime(post.createdAt) }}</div>
       </div>
       <div v-if="canEdit" class="more-menu-container" @click.stop="toggleMenu">
         <button class="more-button">...</button>
