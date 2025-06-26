@@ -1,7 +1,7 @@
 server {
-	listen 5173;
-    server_name _;
-	
+    listen 80;
+    listen [::]:80;
+
     access_log  /var/log/nginx/server.access.log  main;
 
     location / {
