@@ -70,7 +70,7 @@ public static class MediaEncodingHelper
                     {
                         FileName = "ffmpeg",
                         Arguments = $"-framerate {framerate} -i \"{Path.Combine(tempDir, "frame_%03d.png")}\" " +
-                                    $"-c:v libopenh264 -crf 30 \"{outputMp4Path}\"",
+                                    $"-c:v libopenh264 -b:v 2M -maxrate 3M \"{outputMp4Path}\"",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
@@ -250,7 +250,7 @@ public static class MediaEncodingHelper
                     FileName = "ffmpeg",
                     Arguments = $"-i \"{inputVideoPath}\" " +
                                scaleFilter +
-                               "-c:v libopenh264 -crf 30 " +
+                               "-c:v libopenh264 -b:v 2M -maxrate 3M " +
                                "-c:a aac -b:a 128k " +  // Add audio codec if present
                                $"\"{outputMp4Path}\"",
                     UseShellExecute = false,
