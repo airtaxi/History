@@ -34,9 +34,10 @@ onMounted(async () => {
     // 폼 데이터 초기화
     nickname.value = originalUser.value.nickname;
     handle.value = originalUser.value.handle;
-    description.value = originalUser.value.description;
-    profileImageUrl.value = getMediaUrl(originalUser.value.profileThumbnailMediaId) || '/src/assets/images/default_profile.png';
-    backgroundImageUrl.value = getMediaUrl(originalUser.value.backgroundThumbnailMediaId) || '/src/assets/images/default_background.jpg';
+    description.value = originalUser.value.description ?? '';
+    profileImageUrl.value = getMediaUrl(originalUser.value.profileThumbnailMediaId || '') || '/src/assets/images/default_profile.png';
+    backgroundImageUrl.value = getMediaUrl(originalUser.value.backgroundThumbnailMediaId || '') || '/src/assets/images/default_background.jpg';
+
 
   } catch (error) {
     console.error("프로필 정보 로딩 실패:", error);
