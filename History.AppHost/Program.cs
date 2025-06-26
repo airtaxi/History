@@ -15,7 +15,9 @@ var api = builder.AddProject<Projects.History_ApiService>("ApiService")
 
 builder.AddDockerfile("vue", "../History.WebFront")
     .WaitFor(api)
-    .WithHttpEndpoint(5173, 5173)
+    .WithHttpEndpoint(5173, 5173, "http")
+    .WithEndpoint("http", endpoint => endpoint.IsExternal = true)
     .WithExternalHttpEndpoints();
+
 
 builder.Build().Run();
