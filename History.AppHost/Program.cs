@@ -13,10 +13,9 @@ var api = builder.AddProject<Projects.History_ApiService>("ApiService")
     .WithReference(mongodb)
     .WaitFor(mongodb);
 
-builder.AddNpmApp("vue", "../History.WebFront")
+builder.AddDockerfile("vue", "../History.WebFront")
     .WaitFor(api)
-    .WithHttpEndpoint(env: "8080", port:5173, targetPort:5174)
-    .WithExternalHttpEndpoints()
-    .PublishAsDockerFile();
+    .WithHttpEndpoint(5173, 5173)
+    .WithExternalHttpEndpoints();
 
 builder.Build().Run();

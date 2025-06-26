@@ -17,6 +17,6 @@ COPY --from=build /app/default.conf.template /etc/nginx/templates/default.conf.t
 COPY --from=build /app/dist /usr/share/nginx/html
 
 # Expose the default nginx port
-EXPOSE 80
+EXPOSE 5173
 
 CMD ["nginx", "-g", "daemon off;"]
