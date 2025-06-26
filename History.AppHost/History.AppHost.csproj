@@ -1,23 +1,34 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
+	<Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsAspireHost>true</IsAspireHost>
-    <UserSecretsId>5a29251e-b42f-4a1d-b3dc-7c0c3fbe25c7</UserSecretsId>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsAspireHost>true</IsAspireHost>
+		<UserSecretsId>5a29251e-b42f-4a1d-b3dc-7c0c3fbe25c7</UserSecretsId>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\History.ApiService\History.ApiService.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\History.ApiService\History.ApiService.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.2.0" />
-    <PackageReference Include="Aspire.Hosting.MongoDB" Version="9.2.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Aspire.Hosting.AppHost" Version="9.2.0" />
+		<PackageReference Include="Aspire.Hosting.MongoDB" Version="9.2.0" />
+		<PackageReference Include="Aspire.Hosting.NodeJs" Version="9.3.1" />
+	</ItemGroup>
 
+
+	<Target Name="RestoreNpm" BeforeTargets="Build" Condition=" '$(DesignTimeBuild)' != 'true' ">
+		<ItemGroup>
+			<PackageJsons Include="..\*\package.json" />
+		</ItemGroup>
+
+		<!-- Install npm packages if node_modules is missing -->
+		<Message Importance="Normal" Text="Installing npm packages for %(PackageJsons.RelativeDir)" Condition="!Exists('%(PackageJsons.RootDir)%(PackageJsons.Directory)/node_modules')" />
+		<Exec Command="npm install" WorkingDirectory="%(PackageJsons.RootDir)%(PackageJsons.Directory)" Condition="!Exists('%(PackageJsons.RootDir)%(PackageJsons.Directory)/node_modules')" />
+	</Target>
 </Project>
