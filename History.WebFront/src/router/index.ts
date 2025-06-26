@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-// 모든 import 경로를 '@'로 시작하도록 수정합니다.
-import TimelineView from '@/views/TimelineView.vue' 
+import TimelineView from '@/views/TimelineView.vue'
+import { useAuthStore } from '@/stores/auth' // Pinia store
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,54 +8,67 @@ const router = createRouter({
     {
       path: '/',
       name: 'timeline',
-      component: TimelineView
+      component: TimelineView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/login',
       name: 'login',
-      component: () => import('@/views/accounts/LoginView.vue') // 수정
+      component: () => import('@/views/accounts/LoginView.vue')
     },
     {
-      path: '/profile-setup', 
+      path: '/profile-setup',
       name: 'profile-setup',
-      component: () => import('@/views/accounts/ProfilemakeView.vue')
+      component: () => import('@/views/accounts/ProfilemakeView.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/user/:userId',
       name: 'user-profile',
-      component: () => import('@/views/UserProfileView.vue') // 수정
+      component: () => import('@/views/UserProfileView.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/post/:postId',
       name: 'post-detail',
-      component: () => import('@/views/PostDetailView.vue') // 수정
-    },
-    {
-      path: '/me',
-      name: 'my-page',
-      component: () => import('@/views/MyPageView.vue')
-    },
-    {
-      path: '/post/:postId',
-      name: 'post-detail',
-      component: () => import('@/views/PostDetailView.vue')
+      component: () => import('@/views/PostDetailView.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/post/edit/:postId',
       name: 'EditPost',
       component: () => import('@/views/EditPostView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/me',
+      name: 'my-page',
+      component: () => import('@/views/MyPageView.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/notifications',
       name: 'NotificationsView',
-      component: () => import('@/views/NotificationsView.vue')
+      component: () => import('@/views/NotificationsView.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/user-settings',
       name: 'UserSettingsView',
-      component: () => import('@/views/SettingsView.vue')
+      component: () => import('@/views/SettingsView.vue'),
+      meta: { requiresAuth: true },
     },
   ]
+})
+
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore()
+
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next('/login')
+  } else {
+    next()
+  }
 })
 
 export default router
