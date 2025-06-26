@@ -596,8 +596,8 @@ const isImageUrl = (url: string): boolean => {
         <img :src="props.profileImageMap?.[post.user.userId] || '/src/assets/images/default_profile.png'" alt="프로필" class="author-avatar" />
       </RouterLink>
       <div>
-        <RouterLink :to="`/user/${post.user.userId}`" @click.stop>
-          <div class="author-name">{{ post.user.nickname }}</div>
+        <RouterLink :to="`/user/${post.user.userId}`" class="author-name" @click.stop>
+          {{ post.user.nickname }}
         </RouterLink>
         <div class="post-timestamp">{{ new Date(post.createdAt).toLocaleString() }}</div>
       </div>
@@ -874,7 +874,17 @@ const isImageUrl = (url: string): boolean => {
 .post-card:hover { background-color: #fafafa; }
 .post-author { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .author-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-.author-name { font-weight: 600; }
+.author-name {
+  color: #333;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.author-name:hover {
+  color: #ed664d;
+  text-decoration: none;
+  cursor: pointer;
+}
 .post-timestamp { font-size: 0.8rem; color: #666; }
 .post-content-area { margin-bottom: 12px; }
 .post-text { line-height: 1.6; white-space: pre-wrap; margin: 0 0 1em 0; }
@@ -1312,4 +1322,5 @@ const isImageUrl = (url: string): boolean => {
   transform: scale(1.02);
   box-shadow: 0 4px 12px rgba(237, 102, 77, 0.15);
 }
+
 </style>
