@@ -24,7 +24,7 @@
   </template>
   
   <script setup lang="ts">
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, onUnmounted } from 'vue';
   import type { NotificationResponseDto } from '@/types';
   import apiClient from '@/api';
   import { useRouter } from 'vue-router';
@@ -32,20 +32,57 @@
   const notifications = ref<NotificationResponseDto[]>([]);
   const isLoading = ref(false);
   const router = useRouter();
-  
-  onMounted(() => {
-    isLoading.value = true;
-    apiClient.get('/api/User/notifications')
+  const from = ref(0);
+  const limit = 10;
+  const hasMore = ref(true);
+  const isFetchingMore = ref(false);
+
+  const handleScroll = () => {
+  const scrollPosition = window.innerHeight + window.scrollY;
+  const threshold = document.body.offsetHeight - 100;
+
+  if (scrollPosition >= threshold) {
+    loadNotifications();
+  }
+};
+
+
+  const loadNotifications = () => {
+    if (!hasMore.value || isFetchingMore.value) return;
+
+    isFetchingMore.value = true;
+    apiClient.get(`/api/User/notifications?limit=${limit}&from=${from.value}`)
       .then(res => {
-        notifications.value = res.data;
+        console.log('[응답 받은 알림 목록]', res.data); 
+        console.log('[응답 받은 개수]', res.data.length);
+
+        if (res.data.length < limit) {
+          hasMore.value = false;
+        }
+        notifications.value.push(...res.data);
+        from.value += res.data.length;
+
+        
       })
       .catch(err => {
         console.error('알림 로딩 실패', err);
       })
       .finally(() => {
+        isFetchingMore.value = false;
         isLoading.value = false;
       });
+  };
+
+  onMounted(() => {
+    isLoading.value = true;
+    loadNotifications();
+    window.addEventListener('scroll', handleScroll);
   });
+
+  onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+  });
+
   
   /**
    * 알림 클릭 시 관련 페이지로 이동하는 딥링킹 함수
