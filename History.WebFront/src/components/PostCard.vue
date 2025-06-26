@@ -39,6 +39,9 @@ const props = defineProps<{
 const authStore = useAuthStore();  // 인증 정보 관리
 const router = useRouter();        // 페이지 라우팅
 const uiStore = useUiStore();      // UI 상태 관리
+const totalReactions = computed(() => {
+  return Object.values(reactionMap).reduce((sum, count) => sum + count, 0)
+})
 
 // === 컴포넌트 상태 관리 ===
 /** @description 더보기 메뉴 열림/닫힘 상태 */
@@ -830,9 +833,16 @@ const isImageUrl = (url: string): boolean => {
       </div>
     </div>
 
-    <div class="post-actions">
-      <button @click.stop>💬 댓글</button>
-      <button @click.stop="sharePost">🔗 공유</button>
+    <div class="post-footer">
+      <button @click.stop="postReaction('Like')" class="footer-btn" :class="{ active: myReaction === 'Like' }">
+        ❤️ {{ Object.values(reactionMap).reduce((sum, count) => sum + (count || 0), 0) }}
+      </button>
+      <button @click.stop="goToPostDetail" class="footer-btn">
+        💬 {{ post.comments ? post.comments.length : 0 }}
+      </button>
+      <button @click.stop="sharePost" class="footer-btn">
+        🔗 공유
+      </button>
     </div>
   </div>
 
@@ -884,6 +894,37 @@ const isImageUrl = (url: string): boolean => {
   padding: 16px;
   cursor: pointer;
   transition: background-color 0.2s;
+}
+.post-footer {
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+  margin-top: 16px;
+}
+
+.footer-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  transition: background-color 0.2s ease;
+}
+
+.footer-btn:hover {
+  background-color: #f8f9fa;
+}
+
+.footer-btn.active {
+  color: #ed664d;
+  font-weight: 600;
 }
 .post-card:hover { background-color: #fafafa; }
 .post-author { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
