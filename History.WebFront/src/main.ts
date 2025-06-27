@@ -4,6 +4,7 @@ import router from './router';
 import { createPinia } from 'pinia';
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 import { useAuthStore } from '@/stores/auth';
+import './assets/fonts.css';
 
 // 개발 환경에서 Friendship API 테스트 유틸리티 로드
 if (import.meta.env.DEV) {

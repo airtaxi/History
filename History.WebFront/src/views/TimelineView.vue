@@ -30,13 +30,39 @@ const getMediaBlobUrl = async (mediaId: string) => {
 
 const prepareProfileImageMap = async (postList: PostResponseDto[]) => {
   const map: Record<string, string> = {};
-  const userIds = [...new Set(postList.map(p => p.user.userId))];
+  const userIds = new Set<string>();
+  
+  // 게시글 작성자들의 ID 수집
+  postList.forEach(p => {
+    userIds.add(p.user.userId);
+    
+    // 리포스트인 경우 원본 게시글 작성자도 추가
+    if ((p as any).isRepost && (p as any).parentPost?.user) {
+      userIds.add((p as any).parentPost.user.userId);
+    }
+  });
 
+  // 각 사용자의 프로필 이미지 처리
   for (const uid of userIds) {
-    const post = postList.find(p => p.user.userId === uid);
-    if (post?.user.profileThumbnailMediaId) {
-      const blobUrl = await getMediaBlobUrl(post.user.profileThumbnailMediaId);
-      map[uid] = blobUrl;
+    // 이미 처리된 사용자는 건너뛰기
+    if (profileImageMap.value[uid]) continue;
+    
+    // 일반 게시글에서 사용자 찾기
+    let user = postList.find(p => p.user.userId === uid)?.user;
+    
+    // 리포스트 원본에서 사용자 찾기
+    if (!user) {
+      for (const post of postList) {
+        if ((post as any).isRepost && (post as any).parentPost?.user?.userId === uid) {
+          user = (post as any).parentPost.user;
+          break;
+        }
+      }
+    }
+    
+    if (user?.profileThumbnailMediaId) {
+      const blobUrl = await getMediaBlobUrl(user.profileThumbnailMediaId);
+      map[uid] = blobUrl || '/src/assets/images/default_profile_image.jpg';
     }
   }
 
