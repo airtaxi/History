@@ -81,18 +81,17 @@ const fetchTimeline = async () => {
 
     // 10개의 게시글을 모을 때까지 반복
     while (hasMore && posts.value.length < 10) {
-      const response = await apiClient.get<PostResponseDto[]>('/api/Post/timeline', {
+      const { data }: { data: PostResponseDto[] } = await apiClient.get('/api/Post/timeline', {
         params: fromId ? { from: fromId } : {}
       });
 
-      const pagePosts: PostResponseDto[] = response.data.filter(
+      const pagePosts: PostResponseDto[] = data.filter(
         (post: PostResponseDto) => !post.isRepost || (post.isRepost && post.parentPost !== null)
       );
 
-      if (response.data.length === 0) {
+      if (data.length === 0) {
         hasMore = false;
-        // 초기 로드에서는 noMorePosts를 설정하지 않음 (추가 데이터가 있을 수 있음)
-        break;
+        break; // ✅ 이제 유효한 while 루프 내 break
       }
 
       if (pagePosts.length > 0) {
@@ -100,14 +99,10 @@ const fetchTimeline = async () => {
         await prepareProfileImageMap(pagePosts);
       }
 
-      // 다음 페이지를 위한 fromId 업데이트
-      if (response.data.length > 0) {
-        fromId = response.data[response.data.length - 1].id;
-      } else {
-        hasMore = false;
-      }
+      fromId = data[data.length - 1]?.id;
     }
 
+  
     // 정확히 10개만 남기기
     if (posts.value.length > 10) {
       posts.value = posts.value.slice(0, 10);
@@ -211,7 +206,7 @@ onUnmounted(() => {
 // 새 글 작성 후 타임라인 새로고침
 const handlePostCreated = async () => {
   try {
-    const response = await apiClient.get<PostResponseDto[]>('/api/Post/timeline');
+    const response: { data: PostResponseDto[] } = await apiClient.get<PostResponseDto[]>('/api/Post/timeline');
 
     const newPosts: PostResponseDto[] = response.data.filter(
       (post: PostResponseDto) => !post.isRepost || (post.isRepost && post.parentPost !== null)
