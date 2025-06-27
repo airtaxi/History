@@ -51,13 +51,42 @@ const getMediaBlobUrl = async (mediaId: string | null | undefined) => {
 
 const prepareProfileImageMap = async (postList: PostResponseDto[]) => {
   const map: Record<string, string> = {};
-  const userIds = [...new Set(postList.map(p => p.user.userId))];
+  const userIds = new Set<string>();
+  
+  // 게시글 작성자들의 ID 수집
+  postList.forEach(p => {
+    userIds.add(p.user.userId);
+    
+    // 리포스트인 경우 원본 게시글 작성자도 추가
+    if ((p as any).isRepost && (p as any).parentPost?.user) {
+      userIds.add((p as any).parentPost.user.userId);
+    }
+  });
+  
+  // 각 사용자의 프로필 이미지 처리
   for (const uid of userIds) {
-    const post = postList.find(p => p.user.userId === uid);
-    if (post?.user.profileThumbnailMediaId) {
-      map[uid] = await getMediaBlobUrl(post.user.profileThumbnailMediaId);
+    // 이미 처리된 사용자는 건너뛰기
+    if (profileImageMap.value[uid]) continue;
+    
+    // 일반 게시글에서 사용자 찾기
+    let user = postList.find(p => p.user.userId === uid)?.user;
+    
+    // 리포스트 원본에서 사용자 찾기
+    if (!user) {
+      for (const post of postList) {
+        if ((post as any).isRepost && (post as any).parentPost?.user?.userId === uid) {
+          user = (post as any).parentPost.user;
+          break;
+        }
+      }
+    }
+    
+    if (user?.profileThumbnailMediaId) {
+      const blobUrl = await getMediaBlobUrl(user.profileThumbnailMediaId);
+      map[uid] = blobUrl || '/src/assets/images/default_profile_image.jpg';
     }
   }
+  
   profileImageMap.value = { ...profileImageMap.value, ...map };
 };
 
@@ -264,13 +293,72 @@ const loadMorePosts = async () => {
     const lastPost = posts.value[posts.value.length - 1];
     const params = lastPost ? { from: lastPost.id } : {};
     const res = await apiClient.get<PostResponseDto[]>(`/api/Post/user/${routeUserId.value}`, { params });
-    const newPosts = res.data;
+    
+    console.log('🔍 UserProfile API 응답:', res.data);
+    
+    // 받은 게시글 처리
+    const allPosts: any[] = [];
+    
+    for (const post of res.data as any[]) {
+      // 1. 원본 게시글 추가 (내가 작성한 것만)
+      if (!post.isRepost && post.user.userId === routeUserId.value) {
+        allPosts.push(post);
+      }
+      
+      // 2. sharedAndRepostedUsers에서 현재 사용자의 리포스트 찾기
+      if (post.sharedAndRepostedUsers && Array.isArray(post.sharedAndRepostedUsers)) {
+        const myReposts = post.sharedAndRepostedUsers.filter(
+          (item: any) => item.isRepost && item.user.userId === routeUserId.value
+        );
+        
+        // 각 리포스트를 별도 게시글로 변환
+        for (const repostInfo of myReposts) {
+          try {
+            // 리포스트의 상세 정보 가져오기 (contents 포함)
+            const repostDetailRes = await apiClient.get(`/api/Post/${repostInfo.postId}`);
+            const repostDetail = repostDetailRes.data;
+            
+            // 리포스트 게시글 생성 (상세 정보 포함)
+            const repostPost = {
+              ...repostDetail,
+              isRepost: true,
+              parentPost: post // 원본 게시글 객체로 교체
+            };
+            
+            allPosts.push(repostPost);
+          } catch (e) {
+            console.warn(`리포스트 ${repostInfo.postId} 상세 정보 로드 실패:`, e);
+            // 실패 시 기본 정보만으로 생성
+            const repostPost = {
+              id: repostInfo.postId,
+              user: repostInfo.user,
+              isRepost: true,
+              parentPost: post,
+              contents: [],
+              createdAt: repostInfo.sharedAt,
+              discoveryOption: post.discoveryOption,
+              postReactions: [],
+              comments: [],
+              commentsCount: 0
+            };
+            allPosts.push(repostPost);
+          }
+        }
+      }
+    }
+    
+    // 시간순 정렬 (최신순)
+    allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    // 테스트코드 제거하기!!!!!!!
+    
+    console.log('🔍 처리된 게시글 (리포스트 포함):', allPosts);
 
-    if (newPosts.length === 0) {
+    if (allPosts.length === 0) {
       noMorePosts.value = true;
     } else {
-      posts.value.push(...newPosts);
-      await prepareProfileImageMap(newPosts);
+      posts.value.push(...allPosts);
+      await prepareProfileImageMap(allPosts);
     }
   } catch (e) {
     console.error('추가 게시글 로딩 실패:', e);
@@ -430,8 +518,8 @@ watch(routeUserId, () => {
 
 <style scoped>
 header {
-  flex-shrink: 0;
-  height: auto; 
+flex-shrink: 0;
+height: auto; 
 }
 
 .page-container {
