@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import apiClient from '@/api';
 import type { PostResponseDto } from '@/types';
 import TheHeader from '@/components/layout/TheHeader.vue';
@@ -74,11 +74,13 @@ const fetchTimeline = async () => {
   try {
     isLoading.value = true;
     posts.value = [];
+    noMorePosts.value = false; // 무한 스크롤을 위해 false로 초기화
 
     let hasMore = true;
     let fromId = null;
 
-    while (hasMore) {
+    // 10개의 게시글을 모을 때까지 반복
+    while (hasMore && posts.value.length < 10) {
       const response = await apiClient.get<PostResponseDto[]>('/api/Post/timeline', {
         params: fromId ? { from: fromId } : {}
       });
@@ -87,24 +89,28 @@ const fetchTimeline = async () => {
         (post: PostResponseDto) => !post.isRepost || (post.isRepost && post.parentPost !== null)
       );
 
-      if (pagePosts.length === 0) {
+      if (response.data.length === 0) {
         hasMore = false;
+        // 초기 로드에서는 noMorePosts를 설정하지 않음 (추가 데이터가 있을 수 있음)
         break;
       }
 
-      posts.value.push(...pagePosts);
+      if (pagePosts.length > 0) {
+        posts.value.push(...pagePosts);
+        await prepareProfileImageMap(pagePosts);
+      }
 
-      await prepareProfileImageMap(pagePosts);
-
-      fromId = pagePosts[pagePosts.length - 1].id;
-
-      if (posts.value.length >= 5) {
+      // 다음 페이지를 위한 fromId 업데이트
+      if (response.data.length > 0) {
+        fromId = response.data[response.data.length - 1].id;
+      } else {
         hasMore = false;
       }
     }
 
-    if (posts.value.length === 0) {
-      noMorePosts.value = true;
+    // 정확히 10개만 남기기
+    if (posts.value.length > 10) {
+      posts.value = posts.value.slice(0, 10);
     }
 
   } catch (error) {
@@ -124,19 +130,42 @@ const loadMorePosts = async () => {
 
   try {
     isLoadingMore.value = true;
-    const response = await apiClient.get<PostResponseDto[]>('/api/Post/timeline', {
-      params: { from: lastPost.id }
-    });
+    let fromId = lastPost.id;
+    let addedCount = 0;
+    const targetAddCount = 5; // 한 번에 추가할 게시글 목표 개수
 
-    const newPosts: PostResponseDto[] = response.data.filter((post: PostResponseDto) => !post.isRepost || (post.isRepost && post.parentPost !== null));
+    // 목표 개수만큼 추가할 때까지 반복
+    while (addedCount < targetAddCount && !noMorePosts.value) {
+      const response = await apiClient.get<PostResponseDto[]>('/api/Post/timeline', {
+        params: { from: fromId }
+      });
 
-    if (newPosts.length > 0) {
-      posts.value.push(...newPosts);
-      
-      await prepareProfileImageMap(newPosts);
-    } else {
-      noMorePosts.value = true;
+      if (response.data.length === 0) {
+        noMorePosts.value = true;
+        break;
+      }
+
+      const newPosts: PostResponseDto[] = response.data.filter(
+        (post: PostResponseDto) => !post.isRepost || (post.isRepost && post.parentPost !== null)
+      );
+
+      if (newPosts.length > 0) {
+        posts.value.push(...newPosts);
+        await prepareProfileImageMap(newPosts);
+        addedCount += newPosts.length;
+      }
+
+      // 다음 페이지를 위한 fromId 업데이트
+      fromId = response.data[response.data.length - 1].id;
+
+      // API 응답은 있지만 필터링 후 추가된 게시글이 없으면 계속 시도
+      if (response.data.length > 0 && newPosts.length === 0) {
+        continue;
+      }
     }
+
+    console.log(`무한 스크롤: ${addedCount}개 게시글 추가됨`); // 디버깅용
+
   } catch (error) {
     console.error('추가 타임라인 로딩 실패:', error);
   } finally {
@@ -151,21 +180,25 @@ let observer: IntersectionObserver;
 onMounted(() => {
   fetchTimeline(); // 최초 데이터 로드
 
-  observer = new IntersectionObserver(
-    (entries) => {
-      // 감시 대상(sentinel)이 화면에 보이면 loadMorePosts 함수 호출
-      if (entries[0].isIntersecting) {
-        loadMorePosts();
+  // Vue의 nextTick을 사용하여 DOM이 업데이트된 후 observer 설정
+  nextTick(() => {
+    observer = new IntersectionObserver(
+      (entries) => {
+        // 감시 대상(sentinel)이 화면에 보이면 loadMorePosts 함수 호출
+        if (entries[0].isIntersecting) {
+          console.log('무한 스크롤 트리거됨'); // 디버깅용
+          loadMorePosts();
+        }
+      },
+      {
+        rootMargin: '200px', // 화면에 보이기 200px 전에 미리 로드 시작
       }
-    },
-    {
-      rootMargin: '200px', // 화면에 보이기 200px 전에 미리 로드 시작
-    }
-  );
+    );
 
-  if (loadMoreSentinel.value) {
-    observer.observe(loadMoreSentinel.value);
-  }
+    if (loadMoreSentinel.value) {
+      observer.observe(loadMoreSentinel.value);
+    }
+  });
 });
 
 // 컴포넌트가 사라질 때 observer 정리
