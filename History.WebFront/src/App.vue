@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router';
+import { useUiStore } from '@/stores/ui';
+import PostModal from '@/components/PostModal.vue';
+
+const uiStore = useUiStore();
 </script>
 
 <template>
@@ -7,6 +11,8 @@ import { RouterView } from 'vue-router';
     <main class="main-content">
       <RouterView />
     </main>
+
+    <PostModal v-if="uiStore.isPostEditorOpen" />
     
     <footer class="app-footer">
       <div class="footer-content">

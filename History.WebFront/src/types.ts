@@ -77,6 +77,7 @@ export interface PostResponseDto {
   createdAt: string;
   isRepost?: boolean;
   parentPost?: PostResponseDto | string;
+  comments?: CommentResponseDto[];
 }
 
 export interface NotificationResponseDto {

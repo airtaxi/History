@@ -16,11 +16,44 @@ const handleLogout = () => {
   router.push('/login'); // 로그인 페이지로 이동
 };
 
+/**
+ * 프로필 이미지 Blob URL 생성 함수 (공통 사용)
+ */
+const getMediaBlobUrl = async (mediaId: string) => {
+  try {
+    const response = await apiClient.get(`/api/Media/${mediaId}`, {
+      responseType: 'blob'
+    });
+    const contentType = response.headers['content-type'];
+    if (!contentType.startsWith('image')) return '';
+    return URL.createObjectURL(response.data);
+  } catch {
+    return '';
+  }
+};
+
 // 검색
 const searchQuery = ref('');
 const searchResults = ref<UserResponseDto[]>([]);
 const isSearchFocused = ref(false);
+const searchProfileMap = ref<Record<string, string>>({});
 let searchTimeout: number;
+
+/**
+ * 검색 결과의 프로필 이미지 준비
+ */
+const prepareSearchProfileImages = async (userList: UserResponseDto[]) => {
+  for (const user of userList) {
+    if (searchProfileMap.value[user.userId]) continue;
+    
+    if (user.profileThumbnailMediaId) {
+      const blobUrl = await getMediaBlobUrl(user.profileThumbnailMediaId);
+      searchProfileMap.value[user.userId] = blobUrl || '/src/assets/images/default_profile_image.jpg';
+    } else {
+      searchProfileMap.value[user.userId] = '/src/assets/images/default_profile_image.jpg';
+    }
+  }
+};
 
 /**
  * 사용자 검색 입력 처리 함수 (디바운싱 적용)
@@ -49,6 +82,9 @@ const onSearchInput = () => {
     try {
       const response = await apiClient.get<UserResponseDto[]>(`/api/User/nickname-search/${searchQuery.value}`);
       searchResults.value = response.data;
+      
+      // 프로필 이미지 준비
+      await prepareSearchProfileImages(searchResults.value);
     } catch (error) {
       console.error('Search error:', error);
       searchResults.value = [];
@@ -172,21 +208,53 @@ const hideResults = () => {
 const showNotifications = ref(false);
 const notifications = ref<NotificationResponseDto[]>([]);
 const isLoadingNotifications = ref(false);
+const notificationProfileMap = ref<Record<string, string>>({});
+
+/**
+ * 알림 목록의 프로필 이미지 준비
+ */
+const prepareNotificationProfileImages = async (notificationList: NotificationResponseDto[]) => {
+  const userIds = new Set<string>();
+  
+  notificationList.forEach(noti => {
+    if (noti.user && noti.user.userId) {
+      userIds.add(noti.user.userId);
+    }
+  });
+  
+  for (const userId of userIds) {
+    if (notificationProfileMap.value[userId]) continue;
+    
+    const user = notificationList.find(n => n.user.userId === userId)?.user;
+    if (user?.profileThumbnailMediaId) {
+      const blobUrl = await getMediaBlobUrl(user.profileThumbnailMediaId);
+      notificationProfileMap.value[userId] = blobUrl || '/src/assets/images/default_profile_image.jpg';
+    } else {
+      notificationProfileMap.value[userId] = '/src/assets/images/default_profile_image.jpg';
+    }
+  }
+};
 
 /**
  * 서버에서 알림 목록을 가져오는 함수
  * 
- * 이 함수는 이미 알림이 로드되어 있으면 중복 요청을 하지 않습니다.
+ * 이 함수는 force 파라미터가 true이거나 알림이 없을 때 서버에서 알림을 가져옵니다.
  * 
  * @async
  * @function fetchNotifications
+ * @param {boolean} force - 강제로 새로고침할지 여부
  */
-const fetchNotifications = async () => {
-  if (notifications.value.length > 0) return;
+const fetchNotifications = async (force = false) => {
+  if (!force && notifications.value.length > 0) return;
   isLoadingNotifications.value = true;
   try {
-    const response = await apiClient.get<NotificationResponseDto[]>('/api/User/notifications');
+    const response = await apiClient.get<NotificationResponseDto[]>('/api/User/notifications', {
+      params: { limit: 20 } // 헤더 드롭다운용으로 최대 20개까지 가져오기
+    });
     notifications.value = response.data;
+    
+    // 프로필 이미지 준비
+    await prepareNotificationProfileImages(notifications.value);
   } catch (error) {
     console.error("알림 로딩 실패:", error);
   } finally {
@@ -202,7 +270,8 @@ const fetchNotifications = async () => {
 const toggleNotifications = () => {
   showNotifications.value = !showNotifications.value;
   if (showNotifications.value) {
-    fetchNotifications();
+    // 드롭다운을 열 때마다 최신 알림을 가져오도록 force=true 설정
+    fetchNotifications(true);
   }
 };
 </script>
@@ -232,7 +301,7 @@ const toggleNotifications = () => {
         <div v-if="isSearchFocused && searchQuery" class="search-results-dropdown">
           <div v-if="!searchResults || searchResults.length === 0" class="no-results">검색 결과가 없습니다.</div>
           <div v-else v-for="user in searchResults" :key="user.userId" @click="goToUserPage(user.userId)" class="search-result-item">
-            <img :src="user.profileThumbnailMediaId ? `/api/Media/${user.profileThumbnailMediaId}` : '/src/assets/images/default_profile.png'" class="result-avatar">
+            <img :src="searchProfileMap[user.userId] || '/src/assets/images/default_profile_image.jpg'" class="result-avatar">
             <div class="result-info">
               <div class="result-name">{{ user.nickname }}</div>
               <div class="result-handle">@{{ user.handle }}</div>
@@ -270,13 +339,16 @@ const toggleNotifications = () => {
                 class="notification-item"
                 @click="goToNotification(noti)"
               >
-                  <img :src="noti.user.profileThumbnailMediaId ? `/api/Media/${noti.user.profileThumbnailMediaId}` : '/src/assets/images/default_profile.png'" class="result-avatar">
+                  <img :src="notificationProfileMap[noti.user.userId] || '/src/assets/images/default_profile_image.jpg'" class="result-avatar">
                   <div class="notification-content">
                     <p class="notification-title" v-html="noti.title.replace(noti.user.nickname, `<strong>${noti.user.nickname}</strong>`)"></p>
                     <span class="notification-time">{{ new Date(noti.createdAt).toLocaleTimeString() }}</span>
                   </div>
               </li>
             </ul>
+            <RouterLink to="/notifications" class="view-all-notifications" @click="showNotifications = false">
+              전체 알림 보기 →
+            </RouterLink>
           </div>
         </div>
       </div>
@@ -307,12 +379,118 @@ const toggleNotifications = () => {
 .result-handle { font-size: 0.85rem; color: #666; }
 .no-results, .loading-item { padding: 20px; text-align: center; color: #888; }
 .notification-wrapper { position: relative; }
-.notification-dropdown { position: absolute; top: 55px; right: 0; width: 380px; background: white; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border: 1px solid #ddd; padding: 0; }
-.notification-header { font-weight: 600; padding: 12px 16px; border-bottom: 1px solid #eee; }
-.notification-list { list-style: none; margin: 0; padding: 0; max-height: 400px; overflow-y: auto; }
-.notification-item { display: flex; padding: 12px 16px; border-bottom: 1px solid #eee; gap: 12px; }
-.notification-item:last-child { border-bottom: none; }
-.notification-content { flex: 1; }
-.notification-title { margin: 0 0 4px 0; font-size: 0.9rem; line-height: 1.4; }
-.notification-time { font-size: 0.75rem; color: #888; }
+.notification-dropdown { 
+  position: absolute; 
+  top: 55px; 
+  right: 0; 
+  width: 380px; 
+  background: white; 
+  border-radius: 8px; 
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
+  border: 1px solid #ddd; 
+  padding: 0; 
+  max-height: 520px; /* 전체 드롭다운 최대 높이 설정 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.notification-header { 
+  font-weight: 600; 
+  padding: 12px 16px; 
+  border-bottom: 1px solid #eee; 
+  flex-shrink: 0; /* 헤더는 고정 */
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.notification-list { 
+  list-style: none; 
+  margin: 0; 
+  padding: 0; 
+  max-height: 440px; /* 헤더를 제외한 리스트 높이 */
+  overflow-y: auto; 
+  overflow-x: hidden;
+  flex: 1;
+}
+/* 스크롤바 스타일링 */
+.notification-list::-webkit-scrollbar {
+  width: 6px;
+}
+.notification-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+.notification-list::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 3px;
+}
+.notification-list::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+.notification-item { 
+  display: flex; 
+  padding: 12px 16px; 
+  border-bottom: 1px solid #eee; 
+  gap: 12px; 
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.notification-item:hover {
+  background-color: #f8f9fa;
+}
+.notification-item:last-child { 
+  border-bottom: none; 
+}
+.notification-content { 
+  flex: 1; 
+  min-width: 0; /* 긴 텍스트 오버플로우 방지 */
+}
+.notification-title { 
+  margin: 0 0 4px 0; 
+  font-size: 0.9rem; 
+  line-height: 1.4; 
+  word-break: break-word; /* 긴 단어 줄바꿈 */
+}
+.notification-time { 
+  font-size: 0.75rem; 
+  color: #888; 
+}
+/* 로딩 및 빈 상태 */
+.loading-item, .no-results {
+  padding: 40px 20px;
+  text-align: center;
+  color: #888;
+}
+/* 알림이 많을 때 하단 여백 */
+.notification-list:not(:empty) {
+  padding-bottom: 8px;
+}
+/* 전체 알림 보기 링크 */
+.view-all-notifications {
+  display: block;
+  text-align: center;
+  padding: 12px 16px;
+  color: #ed664d;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-top: 1px solid #eee;
+  background: #fafafa;
+  transition: all 0.2s;
+}
+.view-all-notifications:hover {
+  background: #f0f0f0;
+  color: #d54e37;
+}
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .notification-dropdown {
+    width: 320px;
+    right: -10px;
+    max-height: 70vh;
+  }
+  .notification-list {
+    max-height: calc(70vh - 80px);
+  }
+}
 </style>

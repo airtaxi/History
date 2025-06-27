@@ -42,6 +42,18 @@ const uiStore = useUiStore();      // UI 상태 관리
 const totalReactions = computed(() => {
   return Object.values(reactionMap).reduce((sum, count) => sum + count, 0)
 })
+const showImageModal = ref(false);
+const selectedImageUrl = ref('');
+
+const openImageModal = (url: string) => {
+  selectedImageUrl.value = url;
+  showImageModal.value = true;
+};
+
+const closeImageModal = () => {
+  showImageModal.value = false;
+  selectedImageUrl.value = '';
+};
 
 // === 컴포넌트 상태 관리 ===
 /** @description 더보기 메뉴 열림/닫힘 상태 */
@@ -234,6 +246,21 @@ onMounted(async () => {
     }
   }
   
+  // 리포스트인 경우 원본 게시글의 미디어도 로드
+  if ((props.post as any).isRepost && (props.post as any).parentPost) {
+    console.log('🔍 리포스트 원본 게시글 미디어 로드 중...');
+    const parentPost = (props.post as any).parentPost;
+    if (parentPost.contents && Array.isArray(parentPost.contents)) {
+      for (const content of parentPost.contents) {
+        if ((content as any).$type === 'media' && ((content as any).mediaId || (content as any).thumbnailMediaId)) {
+          const id = (content as any).mediaId || (content as any).thumbnailMediaId;
+          console.log('📷 원본 게시글 미디어 ID:', id);
+          mediaUrlMap.value[id] = await getMediaBlobUrl(id);
+        }
+      }
+    }
+  }
+  
   // 반응 정보 로드 (카운트, 내 반응, 툴팁용 사용자 정보)
   await loadReactionData();
 });
@@ -345,7 +372,7 @@ const loadReactionData = async () => {
         }
         
         // 프로필 이미지 URL 결정 (props에서 제공된 맵 우선 사용)
-        let profileImageUrl = '/src/assets/images/default_profile.png';
+        let profileImageUrl = '/src/assets/images/default_profile_image.jpg';
         if (user.profileThumbnailMediaId && props.profileImageMap?.[user.userId]) {
           profileImageUrl = props.profileImageMap[user.userId];
         }
@@ -551,7 +578,7 @@ const submitReport = () => {
 };
 
 /**
- * URL이 이미지 URL인지 판단하는 함수
+ * URL이 이미지 URL인지 판단하는 함수 (강화된 버전)
  * @param {string} url - 검사할 URL
  * @returns {boolean} 이미지 URL인지 여부
  */
@@ -610,7 +637,7 @@ const isImageUrl = (url: string): boolean => {
   <div class="post-card" @click="goToPostDetail">
     <div class="post-author">
       <RouterLink :to="`/user/${post.user.userId}`" @click.stop>
-        <img :src="props.profileImageMap?.[post.user.userId] || '/src/assets/images/default_profile.png'" alt="프로필" class="author-avatar" />
+        <img :src="props.profileImageMap?.[post.user.userId] || '/src/assets/images/default_profile_image.jpg'" alt="프로필" class="author-avatar" />
       </RouterLink>
       <div>
         <RouterLink :to="`/user/${post.user.userId}`" class="author-name" @click.stop>
@@ -703,7 +730,7 @@ const isImageUrl = (url: string): boolean => {
       <!-- 원본 게시글 표시 (리포스트인 경우) -->
       <div v-if="(post as any).isRepost && (post as any).parentPost" class="original-post-card" @click.stop="goToOriginalPost">
         <div class="original-post-author">
-          <img :src="(post as any).parentPost.user.profileThumbnailMediaId ? `/api/Media/${(post as any).parentPost.user.profileThumbnailMediaId}` : '/src/assets/images/default_profile_image.jpg'" 
+          <img :src="props.profileImageMap?.[(post as any).parentPost.user.userId] || '/src/assets/images/default_profile_image.jpg'" 
                class="original-author-avatar">
           <div class="original-author-info">
             <div class="original-author-name">{{ (post as any).parentPost.user.nickname }}</div>
