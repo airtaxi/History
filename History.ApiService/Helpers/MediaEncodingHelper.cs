@@ -43,8 +43,8 @@ public static class MediaEncodingHelper
                         newHeight = (uint)Math.Round((double)frame.Height * maxWidth.Value / frame.Width, 0);
                     }
 
-                    if (newWidth % 2 != 0) newWidth++;
-                    if (newHeight % 2 != 0) newHeight++;
+                    if (newWidth % 8 != 0) newWidth -= newWidth % 8;
+                    if (newHeight % 8 != 0) newHeight -= newHeight % 8;
 
                     if (newWidth != frame.Width || newHeight != frame.Height)
                     {
@@ -70,7 +70,7 @@ public static class MediaEncodingHelper
                     {
                         FileName = "ffmpeg",
                         Arguments = $"-framerate {framerate} -i \"{Path.Combine(tempDir, "frame_%03d.png")}\" " +
-                                    $"-c:v libopenh264 -b:v 2M -maxrate 3M \"{outputMp4Path}\"",
+                                    $"-c:v libkvazaar -b:v 1M -maxrate 2M \"{outputMp4Path}\"",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
@@ -217,8 +217,8 @@ public static class MediaEncodingHelper
                 uint newHeight = (uint)Math.Round((double)originalHeight * maxWidth.Value / originalWidth, 0);
 
                 // Ensure dimensions are even (h264 requirement)
-                if (newWidth % 2 != 0) newWidth++;
-                if (newHeight % 2 != 0) newHeight++;
+                if (newWidth % 8 != 0) newWidth -= newWidth % 8;
+                if (newHeight % 8 != 0) newHeight -= newHeight % 8;
 
                 scaleFilter = $"-vf scale={newWidth}:{newHeight} ";
             }
@@ -228,8 +228,8 @@ public static class MediaEncodingHelper
                 uint newWidth = originalWidth;
                 uint newHeight = originalHeight;
 
-                if (newWidth % 2 != 0) newWidth++;
-                if (newHeight % 2 != 0) newHeight++;
+                if (newWidth % 8 != 0) newWidth -= newWidth % 8;
+                if (newHeight % 8 != 0) newHeight -= newHeight % 8;
 
                 if (newWidth != originalWidth || newHeight != originalHeight)
                 {
@@ -250,7 +250,7 @@ public static class MediaEncodingHelper
                     FileName = "ffmpeg",
                     Arguments = $"-i \"{inputVideoPath}\" " +
                                scaleFilter +
-                               "-c:v libopenh264 -b:v 2M -maxrate 3M " +
+                               "-c:v libkvazaar -b:v 1M -maxrate 2M -tag:v hvc1 -r 24 " +
                                "-c:a aac -b:a 128k " +  // Add audio codec if present
                                $"\"{outputMp4Path}\"",
                     UseShellExecute = false,
