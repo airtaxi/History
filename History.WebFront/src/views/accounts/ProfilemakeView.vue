@@ -13,6 +13,7 @@ const authStore = useAuthStore();
 const nickname = ref('');
 const handle = ref('');
 const agreedToTerms = ref(false);
+const agreedToPrivacy = ref(false);
 const profileImageFile = ref<File | null>(null);
 const profileImageUrl = ref<string | null>(null);
 
@@ -56,7 +57,7 @@ const onFileSelected = (event: Event) => {
 };
 
 const isConfirmDisabled = computed(() => {
-  return !nickname.value || !handle.value || !agreedToTerms.value || isLoading.value;
+  return !nickname.value || !handle.value || !agreedToTerms.value || !agreedToPrivacy.value || isLoading.value;
 });
 
 const handleCancel = () => {
@@ -173,14 +174,16 @@ const handleConfirm = async () => {
         
         <div class="terms-group">
           <input type="checkbox" id="terms" v-model="agreedToTerms">
-          <label for="terms">개인정보 수집 및 이용약관에 동의합니다.</label>
+          <label for="terms">
+            [필수] <a href="https://history.cenox.io/terms.html" target="_blank" rel="noopener noreferrer">서비스 이용 약관</a>에 동의합니다.
+          </label>
         </div>
 
-        <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
-        
-        <div class="button-group">
-          <button @click="handleCancel" class="btn btn-secondary">취소</button>
-          <button @click="handleConfirm" class="btn btn-primary" :disabled="isConfirmDisabled">확인</button>
+        <div class="terms-group">
+          <input type="checkbox" id="privacy" v-model="agreedToPrivacy">
+          <label for="privacy">
+            [필수] <a href="https://history.cenox.io/privacyagreement.html" target="_blank" rel="noopener noreferrer">개인정보 수집·이용</a>에 동의합니다.
+          </label>
         </div>
       </div>
     </main>

@@ -429,6 +429,11 @@ watch(routeUserId, () => {
 </template>
 
 <style scoped>
+header {
+  flex-shrink: 0;
+  height: auto; 
+}
+
 .page-container {
   display: flex;
   flex-direction: column;

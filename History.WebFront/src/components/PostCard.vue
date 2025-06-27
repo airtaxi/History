@@ -39,6 +39,9 @@ const props = defineProps<{
 const authStore = useAuthStore();  // 인증 정보 관리
 const router = useRouter();        // 페이지 라우팅
 const uiStore = useUiStore();      // UI 상태 관리
+const totalReactions = computed(() => {
+  return Object.values(reactionMap).reduce((sum, count) => sum + count, 0)
+})
 
 // === 컴포넌트 상태 관리 ===
 /** @description 더보기 메뉴 열림/닫힘 상태 */
@@ -135,8 +138,22 @@ const reportPost = () => {
   }
 };
 
+// 시간 포맷 함수 추가
 
+function formatRelativeTime(dateString: string): string {
+  const created = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - created.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
 
+  if (diffMinutes < 1) return '방금 전';
+  if (diffMinutes < 60) return `${diffMinutes}분 전`;
+  if (diffHours < 12) return `${diffHours}시간 전`;
+
+  // 12시간 이상이면 날짜와 시간만 출력
+  return `${created.getFullYear()}-${(created.getMonth() + 1).toString().padStart(2, '0')}-${created.getDate().toString().padStart(2, '0')} ${created.getHours().toString().padStart(2, '0')}:${created.getMinutes().toString().padStart(2, '0')}`;
+}
 
 /**
  * 게시글 공유 (리포스트)
@@ -596,10 +613,10 @@ const isImageUrl = (url: string): boolean => {
         <img :src="props.profileImageMap?.[post.user.userId] || '/src/assets/images/default_profile.png'" alt="프로필" class="author-avatar" />
       </RouterLink>
       <div>
-        <RouterLink :to="`/user/${post.user.userId}`" @click.stop>
-          <div class="author-name">{{ post.user.nickname }}</div>
+        <RouterLink :to="`/user/${post.user.userId}`" class="author-name" @click.stop>
+          {{ post.user.nickname }}
         </RouterLink>
-        <div class="post-timestamp">{{ new Date(post.createdAt).toLocaleString() }}</div>
+        <div class="post-timestamp">{{ formatRelativeTime(post.createdAt) }}</div>
       </div>
       <div v-if="canEdit" class="more-menu-container" @click.stop="toggleMenu">
         <button class="more-button">...</button>
@@ -816,9 +833,16 @@ const isImageUrl = (url: string): boolean => {
       </div>
     </div>
 
-    <div class="post-actions">
-      <button @click.stop>💬 댓글</button>
-      <button @click.stop="sharePost">🔗 공유</button>
+    <div class="post-footer">
+      <button @click.stop="postReaction('Like')" class="footer-btn" :class="{ active: myReaction === 'Like' }">
+        ❤️ {{ Object.values(reactionMap).reduce((sum, count) => sum + (count || 0), 0) }}
+      </button>
+      <button @click.stop="goToPostDetail" class="footer-btn">
+        💬 {{ post.comments ? post.comments.length : 0 }}
+      </button>
+      <button @click.stop="sharePost" class="footer-btn">
+        🔗 공유
+      </button>
     </div>
   </div>
 
@@ -871,10 +895,51 @@ const isImageUrl = (url: string): boolean => {
   cursor: pointer;
   transition: background-color 0.2s;
 }
+.post-footer {
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+  margin-top: 16px;
+}
+
+.footer-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  transition: background-color 0.2s ease;
+}
+
+.footer-btn:hover {
+  background-color: #f8f9fa;
+}
+
+.footer-btn.active {
+  color: #ed664d;
+  font-weight: 600;
+}
 .post-card:hover { background-color: #fafafa; }
 .post-author { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .author-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-.author-name { font-weight: 600; }
+.author-name {
+  color: #333;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.author-name:hover {
+  color: #ed664d;
+  text-decoration: none;
+  cursor: pointer;
+}
 .post-timestamp { font-size: 0.8rem; color: #666; }
 .post-content-area { margin-bottom: 12px; }
 .post-text { line-height: 1.6; white-space: pre-wrap; margin: 0 0 1em 0; }
@@ -1312,4 +1377,5 @@ const isImageUrl = (url: string): boolean => {
   transform: scale(1.02);
   box-shadow: 0 4px 12px rgba(237, 102, 77, 0.15);
 }
+
 </style>

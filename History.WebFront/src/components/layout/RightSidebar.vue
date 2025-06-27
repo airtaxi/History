@@ -171,7 +171,7 @@ onMounted(async () => {
   padding: 16px;
 }
 .profile-summary-card { text-align: center; }
-.my-avatar { width: 72px; height: 72px; border-radius: 50%; margin-bottom: 12px; }
+.my-avatar { width: 72px; height: 72px; border-radius: 50%; margin-bottom: 12px; object-fit: cover; }
 .my-name { font-weight: 600; font-size: 1.1rem; }
 .my-handle { color: #666; font-size: 0.9rem; }
 .tabs { display: flex; border-bottom: 1px solid #eee; margin-bottom: 8px; }
@@ -181,7 +181,7 @@ onMounted(async () => {
 .friend-item { padding: 8px 0; }
 .friend-link { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; padding: 4px; border-radius: 6px; transition: background-color 0.2s; }
 .friend-link:hover { background-color: #f0f2f5; }
-.friend-avatar { width: 36px; height: 36px; border-radius: 50%; }
+.friend-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover;}
 .empty-message { text-align: center; color: #888; padding: 20px 0; font-size: 0.9rem; }
 
 .friend-request-item {
