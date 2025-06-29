@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/api';
 import type { PostResponseDto, CommentResponseDto, UserDto } from '@/types'; // UserDto 추가
 import { useAuthStore } from '@/stores/auth';
-import TheHeader from '@/components/layout/TheHeader.vue';
 import PostCard from '@/components/PostCard.vue';
 import CommentItem from '@/components/CommentItem.vue';
 import CreateComment from '@/components/CreateComment.vue';
@@ -230,7 +229,6 @@ const deleteMyComment = async (commentId: string) => {
 
 <template>
   <div class="detail-view-layout">
-    <TheHeader />
     <main v-if="isLoading" class="loading-indicator">
       <div class="spinner"></div>
     </main>
