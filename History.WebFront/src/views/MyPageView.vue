@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
 import apiClient from '@/api';
 import type { UserResponseDto } from '@/types';
-import TheHeader from '@/components/layout/TheHeader.vue';
 import ProfileEditView from '@/views/accounts/ProfileEditView.vue'; // 수정 폼 컴포넌트 import
 
 const user = ref<UserResponseDto | null>(null);
@@ -45,7 +44,6 @@ const handleProfileUpdated = () => {
 
 <template>
   <div class="page-container">
-    <TheHeader />
 
     <main v-if="isLoading" class="loading-content">
       </main>
