@@ -3,7 +3,6 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import apiClient from '@/api';
 import type { UserResponseDto, PostResponseDto } from '@/types';
-import TheHeader from '@/components/layout/TheHeader.vue';
 import ProfileEditView from '@/views/accounts/ProfileEditView.vue';
 import PostCard from '@/components/PostCard.vue';
 import { watchEffect } from 'vue'
@@ -417,7 +416,6 @@ watch(routeUserId, () => {
 
 <template>
   <div class="page-container">
-    <TheHeader />
 
     <main v-if="isLoading" class="loading-content">
       <div class="spinner"></div>
