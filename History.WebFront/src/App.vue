@@ -2,7 +2,7 @@
 import { RouterView } from 'vue-router';
 import { useUiStore } from '@/stores/ui';
 import PostModal from '@/components/PostModal.vue';
-
+import "./App.css"
 const uiStore = useUiStore();
 </script>
 
@@ -26,57 +26,3 @@ const uiStore = useUiStore();
     </footer>
   </div>
 </template>
-
-<style scoped>
-
-.app-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background-color: #f8f9fa;
-}
-
-.main-content {
-  flex-grow: 1;
-}
-
-.app-footer {
-  background-color: #ffffff;
-  color: #868e96;
-  padding: 30px 24px;
-  border-top: 1px solid #e9ecef;
-  flex-shrink: 0;
-  font-size: 0.85rem;
-  text-align: center;
-}
-
-.footer-content {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.footer-links {
-  margin-bottom: 8px;
-}
-
-.footer-links a {
-  color: #495057;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.footer-links a:hover {
-  color: #000;
-  text-decoration: underline;
-}
-
-.footer-links .divider {
-  margin: 0 12px;
-  color: #dee2e6;
-}
-
-.copyright {
-  margin: 0;
-  color: #adb5bd;
-}
-</style>
