@@ -7,6 +7,7 @@ import ProfileEditView from '@/views/accounts/ProfileEditView.vue';
 import PostCard from '@/components/PostCard.vue';
 import { watchEffect } from 'vue'
 import { watch } from 'vue';
+// import '@/views/ProfileView.css' 전역 css 버그로 인한 일시 주석처리
 
 const route = useRoute();
 const routeUserId = computed(() => route.params.userId);
@@ -436,21 +437,21 @@ watch(routeUserId, () => {
               
               <!-- 친구 요청을 받은 상황 -->
               <template v-else-if="hasPendingRequestFromUser">
-                <button @click="acceptFriendRequest" class="action-btn primary">친구 요청 수락</button>
-                <button @click="rejectFriendRequest" class="action-btn secondary">거절</button>
-                <button @click="ignoreFriendRequest" class="action-btn secondary">무시</button>
+                <button @click="acceptFriendRequest" class="action-btn profile primary">친구 요청 수락</button>
+                <button @click="rejectFriendRequest" class="action-btn profile secondary">거절</button>
+                <button @click="ignoreFriendRequest" class="action-btn profile secondary">무시</button>
               </template>
               
               <!-- 무시한 상황 -->
               <template v-else-if="isIgnored">
-                <button @click="unignoreUser" class="action-btn secondary">무시 해제</button>
+                <button @click="unignoreUser" class="action-btn profile secondary">무시 해제</button>
               </template>
               
               <!-- 이미 친구인 상황 -->
               <template v-else-if="isFriend">
-                <button @click="removeFriend" class="action-btn secondary">친구 삭제</button>
-                <button @click="blockUser" class="action-btn danger">차단</button>
-                <button @click="toggleFavorite" class="action-btn secondary">
+                <button @click="removeFriend" class="action-btn profile secondary">친구 삭제</button>
+                <button @click="blockUser" class="action-btn profile danger">차단</button>
+                <button @click="toggleFavorite" class="action-btn profile secondary">
                   {{ isFavorite ? '즐겨찾기 해제' : '즐겨찾기 등록' }}
                 </button>
               </template>
@@ -549,23 +550,76 @@ height: auto;
   padding: 24px 0;
   overflow-y: auto;
 }
-.profile-page { max-width: 980px; margin: 0 auto; background-color: #fff; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;}
-.profile-header { position: relative; }
-.background-image-wrapper { height: 250px; background-color: #e9ecef; }
-.background-image { width: 100%; height: 100%; object-fit: cover; }
-.profile-info-bar { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 24px; position: relative; top: -40px; margin-bottom: -40px; }
-.profile-avatar-wrapper { border: 4px solid white; border-radius: 50%; width: 140px; height: 140px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.profile-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-.profile-actions { padding-bottom: 12px; }
-.edit-profile-btn { background-color: #ed664d; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; border: none; cursor: pointer; }
+.profile-page { 
+    max-width: 980px; 
+    margin: 0 auto; 
+    background-color: #fff; 
+    border: 1px solid #ddd; 
+    border-radius: 8px; 
+    overflow: hidden;
+}
+.profile-header { 
+    position: relative; 
+}
+.background-image-wrapper { 
+    height: 250px; 
+    background-color: #e9ecef; 
+}
+.background-image { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+}
+.profile-info-bar { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-end; 
+    padding: 0 24px; 
+    position: relative; 
+    top: -40px; 
+    margin-bottom:16px;
+}
+.profile-avatar-wrapper { 
+    border: 4px solid white; 
+    border-radius: 50%; 
+    width: 140px; 
+    height: 140px; 
+    background-color: white; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+}
+.profile-avatar { 
+    width: 100%; 
+    height: 100%; 
+    border-radius: 50%; 
+    object-fit: cover; 
+}
+.profile-actions { 
+    display: flex; 
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    padding-bottom: 12px; 
+}
+.edit-profile-btn { 
+    background-color: #ed664d; 
+    color: white; 
+    padding: 8px 16px; 
+    border-radius: 6px; 
+    text-decoration: none; 
+    font-weight: 600; 
+    border: none; 
+    cursor: pointer; 
+}
 .action-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  margin-right: 8px;
-  transition: opacity 0.2s;
+    display: flex;
+    white-space: nowrap;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: opacity 0.2s;
 }
 .action-btn:hover {
   opacity: 0.9;
@@ -590,17 +644,53 @@ height: auto;
 .action-btn:last-child {
   margin-right: 0;
 }
-.profile-details { padding: 0 24px 24px 24px; }
-.nickname { font-size: 2rem; font-weight: 800; margin: 0 0 4px 0; }
-.handle { font-size: 1rem; color: #666; margin-bottom: 16px; }
-.description { font-size: 1rem; color: #333; margin-bottom: 16px; }
-.stats-container { display: flex; gap: 24px; }
-.stat { font-size: 1rem; }
-.stat-value { font-weight: 600; margin-right: 4px; }
-.stat-label { color: #666; }
-.content-tabs { display: flex; border-top: 1px solid #eee; padding: 0 24px; }
-.tab { padding: 16px 0; margin-right: 24px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; }
-.tab.active { color: #ed664d; border-bottom-color: #ed664d; }
+.profile-details { 
+    padding: 0 24px 24px 24px; 
+}
+.nickname { 
+    font-size: 2rem; 
+    font-weight: 800; 
+    margin: 0 0 4px 0; 
+}
+.handle { 
+    font-size: 1rem; 
+    color: #666; 
+    margin-bottom: 16px; 
+}
+.description { 
+    font-size: 1rem; 
+    color: #333; 
+    margin-bottom: 16px; 
+}
+.stats-container { 
+    display: flex; 
+    gap: 24px; 
+}
+.stat { 
+    font-size: 1rem; 
+}
+.stat-value { 
+    font-weight: 600; margin-right: 4px; 
+}
+.stat-label { 
+    color: #666; 
+}
+.content-tabs { 
+    display: flex; 
+    border-top: 1px solid #eee; 
+    padding: 0 24px; 
+}
+.tab { 
+    padding: 16px 0; 
+    margin-right: 24px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    border-bottom: 2px solid transparent; 
+}
+.tab.active { 
+    color: #ed664d; 
+    border-bottom-color: #ed664d; 
+}
 .my-posts-list {
   display: flex;
   flex-direction: column;
