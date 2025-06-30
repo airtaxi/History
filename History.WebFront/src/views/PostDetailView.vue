@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth';
 import PostCard from '@/components/PostCard.vue';
 import CommentItem from '@/components/CommentItem.vue';
 import CreateComment from '@/components/CreateComment.vue';
+// import "./PostDetailView.css" 전역 css 버그로 인한 일시 주석처리
 
 const route = useRoute();
 const router = useRouter();
@@ -260,11 +261,29 @@ const deleteMyComment = async (commentId: string) => {
 </template>
 
 <style scoped>
-.main-content { max-width: 800px; margin: 24px auto; padding: 0 20px; }
-.post-section { margin-bottom: 24px; }
-.comments-section { background: white; border: 1px solid #ddd; border-radius: 8px; }
-h3 { padding: 16px; margin: 0; border-bottom: 1px solid #eee; }
-.loading-indicator { text-align: center; padding: 40px; }
+.main-content { 
+  max-width: 800px; 
+  margin: 24px auto; 
+  padding: 0 20px; 
+}
+.post-section { 
+  margin-bottom: 24px; 
+}
+.comments-section { 
+  background: white; 
+  border: 1px solid #ddd; 
+  border-radius: 8px; 
+}
+h3 { 
+  padding: 16px; 
+  margin: 0; 
+  border-bottom: 1px solid #eee; 
+}
+.loading-indicator { 
+  text-align: center; 
+  padding: 40px; 
+}
+
 .spinner { /* 스피너 스타일 */ }
 
 .load-more-container {
