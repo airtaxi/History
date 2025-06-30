@@ -4,6 +4,7 @@ import { useRouter, RouterLink } from 'vue-router';
 import apiClient from '@/api';
 import type { UserResponseDto } from '@/types';
 import ProfileEditView from '@/views/accounts/ProfileEditView.vue'; // 수정 폼 컴포넌트 import
+// import '@/views/ProfileView.css' 전역 css 버그로 인한 일시 주석처리
 
 const user = ref<UserResponseDto | null>(null);
 const postCount = ref(0);
