@@ -268,11 +268,99 @@ const handlePostCreated = async () => {
 .end-of-feed { text-align: center; color: #888; padding: 20px; }
 .sentinel { height: 1px; }
 
-@media (max-width: 960px) {
-  .sidebar-column { display: none; }
-  .main-content { justify-content: center; }
-}
+/* 모바일 반응형 개선 */
 @media (max-width: 768px) {
-  .main-content { padding: 0 16px; margin-top: 16px; }
+  .timeline-layout {
+    background-color: white;
+  }
+  
+  .main-content { 
+    padding: 0;
+    margin-top: 0;
+    gap: 0;
+  }
+  
+  .feed-column {
+    max-width: 100%;
+    gap: 8px;
+  }
+  
+  .post-list {
+    gap: 8px;
+  }
+  
+  /* 모바일에서 CreatePost 컴포넌트 최적화 */
+  .feed-column :deep(.create-post-container) {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    margin-bottom: 8px;
+  }
+  
+  /* 모바일에서 PostCard 최적화 */
+  .feed-column :deep(.post-card) {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .loading-indicator {
+    padding: 20px;
+  }
+  
+  .spinner {
+    width: 30px;
+    height: 30px;
+    border-width: 3px;
+  }
+}
+
+/* 태블릿 반응형 */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .main-content {
+    gap: 20px;
+    padding: 0 20px;
+  }
+  
+  .feed-column {
+    max-width: 580px;
+  }
+}
+
+/* RightSidebar 숨기기 */
+@media (max-width: 960px) {
+  .main-content :deep(.sidebar-column) { 
+    display: none; 
+  }
+  
+  .main-content { 
+    justify-content: center; 
+  }
+}
+
+/* 대형 화면 */
+@media (min-width: 1400px) {
+  .main-content {
+    max-width: 1200px;
+    gap: 32px;
+  }
+  
+  .feed-column {
+    max-width: 680px;
+  }
+}
+
+/* 터치 장치를 위한 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  /* 터치 대상 크기 증가 */
+  .feed-column :deep(button) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* 스크롤 성능 최적화 */
+  .post-list {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 </style>

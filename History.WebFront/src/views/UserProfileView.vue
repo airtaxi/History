@@ -14,8 +14,6 @@ const routeUserId = computed(() => route.params.userId);
 const me = ref<UserResponseDto | null>(null);
 const user = ref<UserResponseDto | null>(null);
 const posts = ref<PostResponseDto[]>([]);
-const postCount = ref(0);
-const friendCount = ref(0);
 const isLoading = ref(true);
 const isLoadingMore = ref(false);
 const noMorePosts = ref(false);
@@ -132,7 +130,6 @@ const acceptFriendRequest = async () => {
     alert('친구 요청을 수락했습니다.');
     hasPendingRequestFromUser.value = false;
     isFriend.value = true;
-    friendCount.value += 1;
   } catch (e) {
     console.error('친구 요청 수락 실패:', e);
     alert('친구 요청 수락에 실패했습니다.');
@@ -172,7 +169,6 @@ const removeFriend = async () => {
     await apiClient.post(`/api/Friendship/remove/${user.value?.userId}`);
     alert('친구를 삭제했습니다.');
     isFriend.value = false;
-    friendCount.value -= 1;
   } catch (e) {
     console.error('친구 삭제 실패:', e);
     alert('친구 삭제에 실패했습니다.');
@@ -194,7 +190,6 @@ const blockUser = async () => {
     isBlocked.value = true;
     if (isFriend.value) {
       isFriend.value = false;
-      friendCount.value -= 1;
     }
   } catch (e: any) {
     console.error('사용자 차단 실패:', e);
@@ -260,23 +255,18 @@ const unignoreUser = async () => {
 const fetchInitialData = async () => {
   isLoading.value = true;
   try {
-    const [meRes, userRes, postCountRes, friendRes] = await Promise.all([
+    const [meRes, userRes] = await Promise.all([
       apiClient.get<UserResponseDto>('/api/User/me'),
-      apiClient.get<UserResponseDto>(`/api/User/${routeUserId.value}`),
-      apiClient.get<{ count: number }>(`/api/Post/user/${routeUserId.value}/count`),
-      apiClient.get<UserResponseDto[]>(`/api/Friendship/${routeUserId.value}`),
+      apiClient.get<UserResponseDto>(`/api/User/${routeUserId.value}`)
     ]);
     me.value = meRes.data;
     user.value = userRes.data;
-    postCount.value = postCountRes.data.count;
-    friendCount.value = friendRes.data.length;
 
     profileImageUrl.value = await getMediaBlobUrl(user.value.profileThumbnailMediaId);
     backgroundImageUrl.value = await getMediaBlobUrl(user.value.backgroundThumbnailMediaId);
 
     // 친구 관계 상태 확인
     await checkFriendshipStatus();
-
     await loadMorePosts(); // 첫 페이지 로딩
   } catch (e) {
     console.error('프로필 초기 로딩 실패:', e);
@@ -291,74 +281,48 @@ const loadMorePosts = async () => {
   isLoadingMore.value = true;
   try {
     const lastPost = posts.value[posts.value.length - 1];
-    const params = lastPost ? { from: lastPost.id } : {};
+    const params = lastPost ? { from: lastPost.id, limit: 50 } : { limit: 50 };
     const res = await apiClient.get<PostResponseDto[]>(`/api/Post/user/${routeUserId.value}`, { params });
     
     console.log('🔍 UserProfile API 응답:', res.data);
     
-    // 받은 게시글 처리
-    const allPosts: any[] = [];
+    // 백엔드에서 리포스트를 제외하므로, 각 게시글의 sharedAndRepostedUsers를 확인하여 리포스트 추가
+    const allPosts: PostResponseDto[] = [...res.data];
     
-    for (const post of res.data as any[]) {
-      // 1. 원본 게시글 추가 (내가 작성한 것만)
-      if (!post.isRepost && post.user.userId === routeUserId.value) {
-        allPosts.push(post);
-      }
+    // 전체 게시글 목록 조회 (리포스트 찾기 위해)
+    try {
+      const allPostsRes = await apiClient.get<PostResponseDto[]>('/api/Post/timeline', {
+        params: { limit: 100 }
+      });
       
-      // 2. sharedAndRepostedUsers에서 현재 사용자의 리포스트 찾기
-      if (post.sharedAndRepostedUsers && Array.isArray(post.sharedAndRepostedUsers)) {
-        const myReposts = post.sharedAndRepostedUsers.filter(
-          (item: any) => item.isRepost && item.user.userId === routeUserId.value
-        );
-        
-        // 각 리포스트를 별도 게시글로 변환
-        for (const repostInfo of myReposts) {
-          try {
-            // 리포스트의 상세 정보 가져오기 (contents 포함)
-            const repostDetailRes = await apiClient.get(`/api/Post/${repostInfo.postId}`);
-            const repostDetail = repostDetailRes.data;
-            
-            // 리포스트 게시글 생성 (상세 정보 포함)
-            const repostPost = {
-              ...repostDetail,
-              isRepost: true,
-              parentPost: post // 원본 게시글 객체로 교체
-            };
-            
-            allPosts.push(repostPost);
-          } catch (e) {
-            console.warn(`리포스트 ${repostInfo.postId} 상세 정보 로드 실패:`, e);
-            // 실패 시 기본 정보만으로 생성
-            const repostPost = {
-              id: repostInfo.postId,
-              user: repostInfo.user,
-              isRepost: true,
-              parentPost: post,
-              contents: [],
-              createdAt: repostInfo.sharedAt,
-              discoveryOption: post.discoveryOption,
-              postReactions: [],
-              comments: [],
-              commentsCount: 0
-            };
-            allPosts.push(repostPost);
-          }
-        }
-      }
+      // 현재 사용자가 리포스트한 게시글 찾기
+      const reposts = allPostsRes.data.filter((post: any) => 
+        post.isRepost && 
+        post.user.userId === routeUserId.value && 
+        post.parentPost !== null
+      );
+      
+      console.log('🔍 찾은 리포스트:', reposts);
+      allPosts.push(...reposts);
+    } catch (err) {
+      console.warn('리포스트 조회 실패:', err);
     }
     
-    // 시간순 정렬 (최신순)
+    // 날짜순 정렬
     allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
-    // 테스트코드 제거하기!!!!!!!
+    // 중복 제거
+    const uniquePosts = allPosts.filter((post, index, self) => 
+      index === self.findIndex(p => p.id === post.id)
+    );
     
-    console.log('🔍 처리된 게시글 (리포스트 포함):', allPosts);
+    const newPosts = uniquePosts.slice(0, 20);
 
-    if (allPosts.length === 0) {
+    if (newPosts.length === 0) {
       noMorePosts.value = true;
     } else {
-      posts.value.push(...allPosts);
-      await prepareProfileImageMap(allPosts);
+      posts.value.push(...newPosts);
+      await prepareProfileImageMap(newPosts);
     }
   } catch (e) {
     console.error('추가 게시글 로딩 실패:', e);
@@ -481,16 +445,6 @@ watch(routeUserId, () => {
           <h1 class="nickname">{{ user.nickname }}</h1>
           <p class="handle">@{{ user.handle }}</p>
           <p class="description">{{ user.description || '한 줄 소개가 없습니다.' }}</p>
-          <div class="stats-container">
-            <div class="stat">
-              <span class="stat-value">{{ postCount }}</span>
-              <span class="stat-label">게시물</span>
-            </div>
-            <div class="stat">
-              <span class="stat-value">{{ friendCount }}</span>
-              <span class="stat-label">친구</span>
-            </div>
-          </div>
         </div>
 
         <div class="content-tabs">

@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { useUiStore } from '@/stores/ui';
 import apiClient from '@/api';
 import { defineEmits } from 'vue';
+import type { UserResponseDto } from '@/types';
 
 /**
  * CreatePost 컴포넌트의 props와 emits 정의
@@ -11,6 +12,52 @@ const uiStore = useUiStore();
 const emit = defineEmits(['post-created']);
 
 // ==================== 반응형 상태 변수들 ====================
+
+const generateContentsFromText = (): Array<any> => {
+  const text = newPostText.value;
+  const result: Array<any> = [];
+
+  // 닉네임 → userId 매핑
+  const nicknameToUserIdMap: Record<string, string> = {};
+  friendsList.value.forEach(friend => {
+    nicknameToUserIdMap[friend.nickname] = friend.userId;
+  });
+
+  let currentIndex = 0;
+  const mentionRegex = /@(\S+)/g;
+  let match;
+
+  while ((match = mentionRegex.exec(text)) !== null) {
+    const mentionStart = match.index;
+    const mentionEnd = mentionRegex.lastIndex;
+    const nickname = match[1];
+
+    // 이전 일반 텍스트 추가
+    if (mentionStart > currentIndex) {
+      const beforeText = text.substring(currentIndex, mentionStart);
+      result.push({ $type: 'text', Text: beforeText });
+    }
+
+    // 해당 닉네임이 친구 목록에 있는 경우에만 MentionContent 추가
+    const userId = nicknameToUserIdMap[nickname];
+    if (userId) {
+      result.push({ $type: 'profile', UserId: userId });
+    } else {
+      // 못 찾으면 텍스트로 처리
+      result.push({ $type: 'text', Text: text.substring(mentionStart, mentionEnd) });
+    }
+
+    currentIndex = mentionEnd;
+  }
+
+  // 남은 텍스트 추가
+  if (currentIndex < text.length) {
+    result.push({ $type: 'text', Text: text.substring(currentIndex) });
+  }
+
+  return result;
+};
+
 
 /**
  * 게시글 텍스트 내용
@@ -116,6 +163,28 @@ const originalPost = computed(() => uiStore.repostOriginalPost);
  */
 const originalPostMediaUrls = ref<Record<string, string>>({});
 
+/**
+ * 원본 게시글 작성자의 프로필 이미지 URL
+ * @type {import('vue').Ref<string>}
+ */
+const originalPostAuthorProfileUrl = ref<string>('');
+
+/**
+ * 컴포넌트 확장 상태 (인라인 에디터용)
+ * @type {import('vue').Ref<boolean>}
+ */
+const isExpanded = ref(false);
+
+/**
+ * @멘션 관련 상태
+ */
+const mentionSearchText = ref('');
+const mentionSearchResults = ref<UserResponseDto[]>([]);
+const isMentioning = ref(false);
+const mentionStartIndex = ref(-1);
+const mentionDropdownPosition = ref({ top: 0, left: 0 });
+const selectedMentionIndex = ref(-1);
+
 // ==================== Computed 속성들 ====================
 
 /**
@@ -135,6 +204,25 @@ const getSelectedFriends = computed(() => {
 });
 
 // ==================== 친구 관련 함수들 ====================
+
+/**
+ * 미디어 파일의 Blob URL을 가져오는 함수
+ * @param mediaId - 미디어 ID
+ * @returns 이미지 URL 또는 빈 문자열
+ */
+const getMediaBlobUrl = async (mediaId: string | null | undefined) => {
+  if (!mediaId) return '';
+  try {
+    const response = await apiClient.get(`/api/Media/${mediaId}`, {
+      responseType: 'blob'
+    });
+    const contentType = response.headers['content-type'];
+    if (!contentType.startsWith('image')) return '';
+    return URL.createObjectURL(response.data);
+  } catch {
+    return '';
+  }
+};
 
 /**
  * 현재 사용자의 친구 목록을 서버에서 로드합니다.
@@ -171,6 +259,10 @@ const loadFriends = async () => {
       friendsList.value = response.data;
       console.log('✅ 친구 목록 로드 완료:', friendsList.value.length, '명');
       console.log('📋 친구 목록 데이터:', friendsList.value);
+      // 첫 번째 친구의 데이터 구조 확인
+      if (friendsList.value.length > 0) {
+        console.log('🔍 친구 데이터 구조 예시:', friendsList.value[0]);
+      }
     }
   } catch (error) {
     console.error('❌ 친구 목록 로드 실패:', error);
@@ -384,12 +476,16 @@ const submitPost = async () => {
 
     // 텍스트 내용이 있는 경우 Contents 배열에 추가
     if (newPostText.value.trim()) {
-      postDto.Contents.push({ $type: 'text', Text: newPostText.value });
+      const textParts = generateContentsFromText();
+      postDto.Contents.push(...textParts);
     }
 
-    // 링크가 있는 경우 Contents 배열에 추가
+    // 링크가 있는 경우 externalUrl 콘텐츠로 추가
     if (attachedLink.value.trim()) {
-      postDto.Contents.push({ $type: 'text', Text: attachedLink.value });
+      postDto.Contents.push({ 
+        $type: 'externalUrl', 
+        SourceUrl: attachedLink.value.trim() 
+      });
     }
 
     const formData = new FormData();
@@ -514,6 +610,201 @@ const submitPost = async () => {
 };
 
 /**
+ * 취소 버튼 클릭 시 처리하는 함수
+ * 
+ * @function handleCancel
+ * @returns {void}
+ * 
+ * @description
+ * 1. 모달 모드인 경우 에디터를 닫습니다.
+ * 2. 타임라인 인라인 모드인 경우 compact-view로 돌아갑니다.
+ * 3. 작성 중인 내용들을 초기화합니다.
+ */
+const handleCancel = () => {
+  if (uiStore.isPostEditorOpen) {
+    // 모달 모드인 경우 에디터 닫기
+    uiStore.closePostEditor();
+  } else {
+    // 타임라인 인라인 모드인 경우 축소
+    isExpanded.value = false;
+  }
+  
+  // 작성 중인 내용 초기화
+  newPostText.value = '';
+  attachedFiles.value = [];
+  previewItems.value = [];
+  attachedLink.value = '';
+  selectedUserIds.value = [];
+  showFriendSelector.value = false;
+  
+  // @멘션 관련 초기화
+  isMentioning.value = false;
+  mentionSearchText.value = '';
+  mentionSearchResults.value = [];
+};
+
+/**
+ * @멘션 검색 타이머
+ */
+let mentionSearchTimeout: number | null = null;
+
+/**
+ * 텍스트 입력 시 @멘션 감지 및 처리
+ * 
+ * @function handleTextInput
+ * @param {Event} event - input 이벤트
+ */
+const handleTextInput = (event: Event) => {
+  const target = event.target as HTMLTextAreaElement;
+  const cursorPosition = target.selectionStart;
+  const text = target.value;
+  
+  // @ 심볼 찾기
+  const lastAtSymbol = text.lastIndexOf('@', cursorPosition - 1);
+  
+  if (lastAtSymbol !== -1 && lastAtSymbol < cursorPosition) {
+    const searchText = text.substring(lastAtSymbol + 1, cursorPosition);
+    
+    // 공백이 있으면 멘션 종료
+    if (searchText.includes(' ') || searchText.includes('\n')) {
+      isMentioning.value = false;
+      mentionSearchResults.value = [];
+      return;
+    }
+    
+    // @멘션 시작
+    isMentioning.value = true;
+    mentionStartIndex.value = lastAtSymbol;
+    mentionSearchText.value = searchText;
+    
+    // 드롭다운 위치 계산
+    const textareaRect = target.getBoundingClientRect();
+    mentionDropdownPosition.value = {
+      top: textareaRect.bottom + 5,
+      left: textareaRect.left
+    };
+    
+    // 친구 검색
+    searchMentions();
+  } else {
+    isMentioning.value = false;
+    mentionSearchResults.value = [];
+  }
+};
+
+/**
+ * @멘션을 위한 친구 검색
+ * 
+ * @function searchMentions
+ */
+const searchMentions = () => {
+  if (mentionSearchTimeout) {
+    clearTimeout(mentionSearchTimeout);
+  }
+  
+  // 친구 목록이 없으면 먼저 로드
+  if (friendsList.value.length === 0) {
+    loadFriends().then(() => {
+      performMentionSearch();
+    });
+  } else {
+    performMentionSearch();
+  }
+};
+
+const performMentionSearch = async () => {
+  let results: UserResponseDto[] = [];
+  
+  if (!mentionSearchText.value) {
+    // 검색어가 없으면 친구 목록 전체 표시
+    results = friendsList.value.slice(0, 5);
+  } else {
+    // 친구 목록에서 필터링
+    const filtered = friendsList.value.filter(friend => 
+      friend.nickname.toLowerCase().includes(mentionSearchText.value.toLowerCase()) ||
+      friend.handle.toLowerCase().includes(mentionSearchText.value.toLowerCase())
+    );
+    
+    results = filtered.slice(0, 5);
+  }
+  
+  // 각 유저의 프로필 이미지 URL 가져오기
+  for (const user of results) {
+    if (user.profileThumbnailMediaId || user.ProfileThumbnailMediaId) {
+      const mediaId = user.profileThumbnailMediaId || user.ProfileThumbnailMediaId;
+      const imageUrl = await getMediaBlobUrl(mediaId);
+      // UserResponseDto에 이미지 URL 추가
+      (user as any).profileImageUrl = imageUrl || '/src/assets/images/default_profile_image.jpg';
+    } else {
+      (user as any).profileImageUrl = '/src/assets/images/default_profile_image.jpg';
+    }
+  }
+  
+  mentionSearchResults.value = results;
+  
+  // 검색 결과가 변경되면 선택 인덱스 초기화
+  selectedMentionIndex.value = -1;
+};
+
+/**
+ * @멘션 선택
+ * 
+ * @function selectMention
+ * @param {UserResponseDto} user - 선택된 사용자
+ */
+const selectMention = (user: UserResponseDto) => {
+  const text = newPostText.value;
+  const beforeMention = text.substring(0, mentionStartIndex.value);
+  const afterCursor = text.substring(mentionStartIndex.value + mentionSearchText.value.length + 1);
+  
+  newPostText.value = `${beforeMention}@${user.nickname} ${afterCursor}`;
+  
+  isMentioning.value = false;
+  mentionSearchResults.value = [];
+  mentionSearchText.value = '';
+  selectedMentionIndex.value = -1;
+};
+
+/**
+ * 키보드 이벤트 처리
+ * 
+ * @function handleKeyDown
+ * @param {KeyboardEvent} event - 키보드 이벤트
+ */
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (!isMentioning.value || mentionSearchResults.value.length === 0) return;
+  
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault();
+      selectedMentionIndex.value = Math.min(
+        selectedMentionIndex.value + 1,
+        mentionSearchResults.value.length - 1
+      );
+      break;
+      
+    case 'ArrowUp':
+      event.preventDefault();
+      selectedMentionIndex.value = Math.max(selectedMentionIndex.value - 1, 0);
+      break;
+      
+    case 'Enter':
+      event.preventDefault();
+      if (selectedMentionIndex.value >= 0) {
+        selectMention(mentionSearchResults.value[selectedMentionIndex.value]);
+      }
+      break;
+      
+    case 'Escape':
+      event.preventDefault();
+      isMentioning.value = false;
+      mentionSearchResults.value = [];
+      selectedMentionIndex.value = -1;
+      break;
+  }
+};
+
+/**
  * 파일 선택 시 처리하는 함수
  * 
  * @function handleFileChange
@@ -557,9 +848,10 @@ const handleFileChange = (event: Event) => {
  * 
  * @description
  * 1. 원본 게시글이 없으면 함수를 종료합니다.
- * 2. 게시글의 각 콘텐츠를 순회하며 미디어 타입을 찾습니다.
- * 3. 미디어 파일의 ID로 API를 호출하여 Blob 데이터를 가져옵니다.
- * 4. Blob URL을 생성하여 originalPostMediaUrls에 저장합니다.
+ * 2. 원본 작성자의 프로필 이미지를 로드합니다.
+ * 3. 게시글의 각 콘텐츠를 순회하며 미디어 타입을 찾습니다.
+ * 4. 미디어 파일의 ID로 API를 호출하여 Blob 데이터를 가져옵니다.
+ * 5. Blob URL을 생성하여 originalPostMediaUrls에 저장합니다.
  * 
  * @example
  * await loadOriginalPostMedia();
@@ -567,6 +859,22 @@ const handleFileChange = (event: Event) => {
 const loadOriginalPostMedia = async () => {
   if (!originalPost.value) return;
   
+  // 원본 작성자 프로필 이미지 로드
+  if (originalPost.value.user?.profileThumbnailMediaId) {
+    try {
+      const response = await apiClient.get(`/api/media/${originalPost.value.user.profileThumbnailMediaId}`, {
+        responseType: 'blob',
+      });
+      originalPostAuthorProfileUrl.value = URL.createObjectURL(response.data);
+    } catch (error) {
+      console.warn('원본 작성자 프로필 이미지 로딩 실패');
+      originalPostAuthorProfileUrl.value = '/src/assets/images/default_profile_image.jpg';
+    }
+  } else {
+    originalPostAuthorProfileUrl.value = '/src/assets/images/default_profile_image.jpg';
+  }
+  
+  // 원본 게시글 미디어 로드
   for (const content of originalPost.value.contents) {
     if ((content as any).$type === 'media' && ((content as any).mediaId || (content as any).thumbnailMediaId)) {
       const id = (content as any).mediaId || (content as any).thumbnailMediaId;
@@ -681,12 +989,16 @@ const handleRepost = async () => {
 
         // 추가 텍스트 내용이 있는 경우 Contents 배열에 추가
         if (newPostText.value.trim()) {
-          updateDto.Contents.push({ $type: 'text', Text: newPostText.value.trim() });
+          const textParts = generateContentsFromText();
+          updateDto.Contents.push(...textParts);
         }
 
-        // 추가 링크가 있는 경우 Contents 배열에 추가
+        // 추가 링크가 있는 경우 externalUrl 콘텐츠로 추가
         if (attachedLink.value.trim()) {
-          updateDto.Contents.push({ $type: 'text', Text: attachedLink.value.trim() });
+          updateDto.Contents.push({ 
+            $type: 'externalUrl', 
+            SourceUrl: attachedLink.value.trim() 
+          });
         }
 
         const formData = new FormData();
@@ -702,7 +1014,7 @@ const handleRepost = async () => {
         });
 
         formData.append('JsonData', JSON.stringify(updateDto));
-
+        console.log('🧪 최종 postDto JSON:', JSON.stringify(postDto, null, 2));
         console.log('🚀 2단계 - 게시글 내용 업데이트 API 호출 중...');
         await apiClient.put(`/api/Post/${repostId}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
@@ -761,7 +1073,7 @@ watch(isRepostMode, (newValue) => {
 
 <template>
   <div class="post-card create-post-card">
-    <div v-if="!uiStore.isPostEditorOpen" class="compact-view" @click="uiStore.openPostEditor">
+    <div v-if="!isExpanded && !uiStore.isPostEditorOpen" class="compact-view" @click="isExpanded = true">
       <textarea readonly placeholder="오늘 하루, 기억하고 싶은 순간이 있나요?"></textarea>
     </div>
 
@@ -776,9 +1088,58 @@ watch(isRepostMode, (newValue) => {
         </div>
       </div>
       
-      <textarea v-model="newPostText" class="create-post-input" :placeholder="isRepostMode ? '이 게시글에 대한 생각을 추가해보세요...' : '오늘 하루, 기억하고 싶은 순간이 있나요?'" />
+              <textarea 
+            v-model="newPostText" 
+            @input="handleTextInput"
+            @keydown="handleKeyDown"
+            class="create-post-input" 
+            :placeholder="isRepostMode ? '이 게시글에 대한 생각을 추가해보세요...' : '오늘 하루, 기억하고 싶은 순간이 있나요?'" 
+            aria-label="게시글 내용 입력"
+            :aria-describedby="isMentioning ? 'mention-hint' : undefined"
+          />
+          
+        <!-- @멘션 드롭다운 -->
+        <div 
+          v-if="isMentioning"
+          class="mention-dropdown"
+          role="listbox"
+          :aria-label="`친구 검색 결과: ${mentionSearchResults.length}명`"
+          :style="{
+            position: 'fixed',
+            top: mentionDropdownPosition.top + 'px',
+            left: mentionDropdownPosition.left + 'px',
+            zIndex: 1000
+          }"
+        >
+          <div v-if="mentionSearchResults.length === 0" class="mention-no-results" role="status">
+            {{ friendsList.length === 0 ? '친구가 없습니다' : '검색 결과가 없습니다' }}
+          </div>
+          <div 
+            v-else
+            v-for="(user, index) in mentionSearchResults" 
+            :key="user.userId"
+            class="mention-item"
+            :class="{ 'selected': index === selectedMentionIndex }"
+            @click="selectMention(user)"
+            @mouseenter="selectedMentionIndex = index"
+            role="option"
+            :aria-selected="index === selectedMentionIndex"
+            :aria-label="`${user.nickname} @${user.handle}`"
+          >
+            <img :src="(user as any).profileImageUrl || '/src/assets/images/default_profile_image.jpg'" :alt="`${user.nickname} 프로필 이미지`">
+            <div>
+              <div class="nickname">{{ user.nickname }}</div>
+              <div class="handle">@{{ user.handle }}</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 스크린 리더용 멘션 안내 -->
+        <span id="mention-hint" class="sr-only">
+          @ 심볼을 입력하여 친구를 멘션할 수 있습니다. 위아래 화살표로 선택하고 Enter로 확정하세요.
+        </span>
 
-      <div class="create-post-actions">
+        <div class="create-post-actions">
         <label class="action-btn">
           📷📹 파일 업로드
           <input type="file" accept="image/*" multiple @change="handleFileChange" hidden />
@@ -790,7 +1151,7 @@ watch(isRepostMode, (newValue) => {
       <div v-if="isRepostMode && originalPost" class="original-post-preview">
         <div class="original-post-card">
           <div class="original-post-author">
-            <img :src="originalPost.user.profileThumbnailMediaId ? `/api/Media/${originalPost.user.profileThumbnailMediaId}` : '/src/assets/images/default_profile_image.jpg'" 
+            <img :src="originalPostAuthorProfileUrl || '/src/assets/images/default_profile_image.jpg'" 
                  class="original-author-avatar">
             <div class="original-author-info">
               <div class="original-author-name">{{ originalPost.user.nickname }}</div>
@@ -894,7 +1255,7 @@ watch(isRepostMode, (newValue) => {
           </select>
         </div>
         <div class="submit-buttons">
-          <button @click="uiStore.closePostEditor" class="btn-cancel">취소</button>
+          <button @click="handleCancel" class="btn-cancel">취소</button>
           <button @click="submitPost" class="btn-submit">올리기</button>
         </div>
       </div>
@@ -919,6 +1280,7 @@ watch(isRepostMode, (newValue) => {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   background-color: #f8f9fa;
+  box-sizing: border-box;
   cursor: pointer;
   resize: none;
   transition: border-color 0.2s;
@@ -1303,5 +1665,72 @@ watch(isRepostMode, (newValue) => {
   border-radius: 6px;
   object-fit: contain;
   margin-top: 8px;
+}
+
+/* @멘션 드롭다운 스타일 */
+.mention-dropdown {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  width: 250px;
+}
+
+.mention-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.mention-item:hover,
+.mention-item.selected {
+  background-color: #f5f5f5;
+}
+
+.mention-item.selected {
+  background-color: #e8f5ff;
+}
+
+.mention-no-results {
+  padding: 12px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.mention-item img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 8px;
+  object-fit: cover;
+}
+
+.mention-item .nickname {
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.mention-item .handle {
+  color: #666;
+  font-size: 12px;
+}
+
+/* 스크린 리더 전용 텍스트 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>
