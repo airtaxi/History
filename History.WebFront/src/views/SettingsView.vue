@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue'
 import apiClient from '@/api'
 import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import TheHeader from '@/components/layout/TheHeader.vue'
 import type { UserResponseDto } from '@/types'
 
 const router = useRouter()
@@ -387,7 +386,6 @@ onMounted(fetchSettingsData)
 
 <template>
   <div class="settings-layout">
-    <TheHeader />
     <main class="main-content">
       <div class="settings-container">
         <div class="page-header">

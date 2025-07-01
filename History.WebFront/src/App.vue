@@ -3,6 +3,9 @@ import { RouterView, useRoute } from 'vue-router';
 import { useUiStore } from '@/stores/ui';
 import { computed } from 'vue';
 import PostModal from '@/components/PostModal.vue';
+import "./App.css" // 전체 프레임에 대한 전역 css는 App.css에서 모두 관리합니다.
+import TheHeader from '@/components/layout/TheHeader.vue';
+
 
 const uiStore = useUiStore();
 const route = useRoute();
@@ -13,15 +16,15 @@ const shouldShowFooter = computed(() => {
   return !hideFooterRoutes.includes(route.name as string);
 });
 </script>
-
 <template>
+  <TheHeader />
   <div class="app-container">
     <main class="main-content">
       <RouterView />
     </main>
 
     <PostModal v-if="uiStore.isPostEditorOpen" />
-    
+  
     <footer v-if="shouldShowFooter" class="app-footer">
       <div class="footer-content">
         <div class="footer-links">
@@ -36,7 +39,6 @@ const shouldShowFooter = computed(() => {
 </template>
 
 <style scoped>
-
 .app-container {
   display: flex;
   flex-direction: column;
@@ -111,3 +113,4 @@ const shouldShowFooter = computed(() => {
   }
 }
 </style>
+

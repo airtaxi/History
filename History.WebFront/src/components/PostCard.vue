@@ -17,6 +17,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import apiClient from '@/api';
+import "./PostCard.css"
 
 /**
  * 컴포넌트 Props 정의
@@ -983,19 +984,15 @@ const isImageUrl = (url: string): boolean => {
           </template>
         </p>
 
-        <div v-else-if="((content as any).$type === 'media') && ((content as any).mediaId || (content as any).thumbnailMediaId)">
-          <template v-if="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]">
-            <video
-              v-if="(content as any).mimeType && (content as any).mimeType.startsWith('video/')"
-              controls
-              class="post-image"
-            >
-              <source :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]" :type="(content as any).mimeType" />
-              브라우저가 video 태그를 지원하지 않습니다.
-            </video>
+          <div v-else-if="((content as any).$type === 'media') && ((content as any).mediaId || (content as any).thumbnailMediaId)">
+            <template v-if="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]">
+              <video v-if="(content as any).mimeType && (content as any).mimeType.startsWith('video/')" controls class="post-image">
+                <source :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]" :type="(content as any).mimeType" />
+                브라우저가 video 태그를 지원하지 않습니다.
+              </video>
             <img
               v-else
-              :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]"
+              :src="mediaUrlMap[(content as any).mediaId`` || (content as any).thumbnailMediaId]"
               :alt="(content as any).description || '게시물 이미지'"
               class="post-image"
               @click.stop="openImageModal(mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId])"
@@ -1351,7 +1348,10 @@ const isImageUrl = (url: string): boolean => {
   cursor: pointer;
 }
 .post-timestamp { font-size: 0.8rem; color: #666; }
-.post-content-area { margin-bottom: 12px; }
+.post-content-area { 
+  margin-bottom: 12px; 
+  word-break: break-all;
+}
 .post-text { line-height: 1.6; white-space: pre-wrap; margin: 0 0 1em 0; }
 /* 느낌 버튼 그룹 스타일 */
 .reaction-buttons {
@@ -1737,8 +1737,22 @@ const isImageUrl = (url: string): boolean => {
   font-weight: 600;
   color: #212529;
   font-size: 1rem;
+  margin-bottom: 4px;
+  line-height: 1.3;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.link-description {
+  color: #495057;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
   line-height: 1.4;
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -1785,6 +1799,7 @@ const isImageUrl = (url: string): boolean => {
 .link-preview.small .link-description {
   font-size: 0.75rem;
   margin-bottom: 4px;
+  line-clamp: 1;
   -webkit-line-clamp: 1;
 }
 
@@ -1970,6 +1985,5 @@ const isImageUrl = (url: string): boolean => {
   box-shadow: 0 0 16px rgba(0, 0, 0, 0.4);
   object-fit: contain;
 }
-
 
 </style>
