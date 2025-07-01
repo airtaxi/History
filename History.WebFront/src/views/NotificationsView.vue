@@ -16,8 +16,9 @@
             class="noti-avatar"
           />
           <div class="noti-info">
-            <p v-html="noti.title.replace(noti.user.nickname, `<strong>${noti.user.nickname}</strong>`)"></p>
+            <p v-html="noti.user && noti.user.nickname ? noti.title.replace(noti.user.nickname, `<strong>${noti.user.nickname}</strong>`) : noti.title"></p>
             <span class="noti-time">{{ new Date(noti.createdAt).toLocaleString() }}</span>
+            <p v-if="noti.body" class="noti-body">{{ noti.body }}</p>
           </div>
         </li>
       </ul>
@@ -100,6 +101,9 @@ const fetchNotifications = async (from?: string) => {
     
     const response = await apiClient.get('/api/User/notifications', { params });
     const newNotifications = response.data;
+    
+    // 디버깅을 위한 알림 데이터 확인
+    console.log('받은 알림 데이터:', newNotifications);
     
     if (newNotifications.length === 0) {
       hasMore.value = false;
@@ -308,6 +312,13 @@ const goToTarget = (noti: NotificationResponseDto) => {
 .noti-time {
   font-size: 0.8rem;
   color: #888;
+}
+
+.noti-body {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.3;
 }
 
 .loading, .empty {

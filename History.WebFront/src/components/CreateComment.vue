@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, defineExpose } from 'vue';
 import apiClient from '@/api';
+import type { UserResponseDto } from '@/types';
 
 const props = defineProps<{ postId: string }>();
 const emit = defineEmits(['comment-created']);
@@ -12,6 +13,71 @@ const attachedLink = ref('');
 const showImagePreview = ref(false);
 const imagePreviewUrl = ref('');
 
+// @멘션 관련 상태
+const mentionSearchText = ref('');
+const mentionSearchResults = ref<UserResponseDto[]>([]);
+const isMentioning = ref(false);
+const mentionStartIndex = ref(-1);
+const mentionDropdownPosition = ref({ top: 0, left: 0 });
+const friendsList = ref<UserResponseDto[]>([]);
+const myProfile = ref<any | null>(null);
+const selectedMentionIndex = ref(-1);
+
+const generateContentsFromText = (): Array<any> => {
+  const text = newCommentText.value;
+  const result: Array<any> = [];
+
+  // 닉네임 → userId 매핑
+  const nicknameToUserIdMap: Record<string, string> = {};
+  friendsList.value.forEach(friend => {
+    nicknameToUserIdMap[friend.nickname] = friend.userId;
+    nicknameToUserIdMap[friend.handle] = friend.userId;
+  });
+
+  let currentIndex = 0;
+  const mentionRegex = /@(\S+)/g;
+  let match;
+
+  while ((match = mentionRegex.exec(text)) !== null) {
+    const mentionStart = match.index;
+    const mentionEnd = mentionRegex.lastIndex;
+    const nickname = match[1];
+
+    if (mentionStart > currentIndex) {
+      result.push({
+        $type: 'text',
+        Text: text.substring(currentIndex, mentionStart),
+      });
+    }
+
+    const userId = nicknameToUserIdMap[nickname];
+    if (userId) {
+      result.push({
+        $type: 'profile',
+        UserId: userId,
+      });
+    } else {
+      // 못 찾으면 그냥 텍스트로 처리
+      result.push({
+        $type: 'text',
+        Text: text.substring(mentionStart, mentionEnd),
+      });
+    }
+
+    currentIndex = mentionEnd;
+  }
+
+  if (currentIndex < text.length) {
+    result.push({
+      $type: 'text',
+      Text: text.substring(currentIndex),
+    });
+  }
+
+  return result;
+};
+
+
 const submitComment = async () => {
   if (!newCommentText.value.trim() && !attachedImage.value && !attachedLink.value.trim()) {
     alert('댓글 내용을 입력하세요!');
@@ -21,10 +87,9 @@ const submitComment = async () => {
   const contents: any[] = [];
 
   if (newCommentText.value.trim()) {
-    contents.push({
-      $type: 'text',
-      Text: newCommentText.value.trim(),
-    });
+    const parsedText = generateContentsFromText();
+    console.log('✅ 멘션 파싱 결과:', parsedText); 
+    contents.push(...parsedText);
   }
 
   if (attachedLink.value.trim()) {
@@ -113,6 +178,148 @@ const clearForm = () => {
   attachedLink.value = '';
   showImagePreview.value = false;
   imagePreviewUrl.value = '';
+  
+  // @멘션 관련 초기화
+  isMentioning.value = false;
+  mentionSearchText.value = '';
+  mentionSearchResults.value = [];
+};
+
+// 친구 목록 로드
+const loadFriends = async () => {
+  try {
+    if (!myProfile.value) {
+      const profileRes = await apiClient.get('/api/User/me');
+      myProfile.value = profileRes.data;
+    }
+    
+    if (myProfile.value) {
+      const response = await apiClient.get(`/api/Friendship/${myProfile.value.userId}`);
+      friendsList.value = response.data;
+    }
+  } catch (error) {
+    console.error('친구 목록 로드 실패:', error);
+    friendsList.value = [];
+  }
+};
+
+// @멘션 검색 타이머
+let mentionSearchTimeout: number | null = null;
+
+// 텍스트 입력 시 @멘션 감지
+const handleTextInput = (event: Event) => {
+  const target = event.target as HTMLTextAreaElement;
+  const cursorPosition = target.selectionStart;
+  const text = target.value;
+  
+  const lastAtSymbol = text.lastIndexOf('@', cursorPosition - 1);
+  
+  if (lastAtSymbol !== -1 && lastAtSymbol < cursorPosition) {
+    const searchText = text.substring(lastAtSymbol + 1, cursorPosition);
+    
+    if (searchText.includes(' ') || searchText.includes('\n')) {
+      isMentioning.value = false;
+      mentionSearchResults.value = [];
+      return;
+    }
+    
+    isMentioning.value = true;
+    mentionStartIndex.value = lastAtSymbol;
+    mentionSearchText.value = searchText;
+    
+    const textareaRect = target.getBoundingClientRect();
+    mentionDropdownPosition.value = {
+      top: textareaRect.bottom + 5,
+      left: textareaRect.left
+    };
+    
+    searchMentions();
+  } else {
+    isMentioning.value = false;
+    mentionSearchResults.value = [];
+  }
+};
+
+// @멘션 검색
+const searchMentions = () => {
+  if (mentionSearchTimeout) {
+    clearTimeout(mentionSearchTimeout);
+  }
+  
+  // 친구 목록이 없으면 먼저 로드
+  if (friendsList.value.length === 0) {
+    loadFriends().then(() => {
+      performMentionSearch();
+    });
+  } else {
+    performMentionSearch();
+  }
+};
+
+const performMentionSearch = () => {
+  if (!mentionSearchText.value) {
+    // 검색어가 없으면 친구 목록 전체 표시
+    mentionSearchResults.value = friendsList.value.slice(0, 5);
+  } else {
+    // 친구 목록에서 필터링
+    const filtered = friendsList.value.filter(friend => 
+      friend.nickname.toLowerCase().includes(mentionSearchText.value.toLowerCase()) ||
+      friend.handle.toLowerCase().includes(mentionSearchText.value.toLowerCase())
+    );
+    
+    mentionSearchResults.value = filtered.slice(0, 5);
+  }
+  
+  // 검색 결과가 변경되면 선택 인덱스 초기화
+  selectedMentionIndex.value = -1;
+};
+
+// @멘션 선택
+const selectMention = (user: UserResponseDto) => {
+  const text = newCommentText.value;
+  const beforeMention = text.substring(0, mentionStartIndex.value);
+  const afterCursor = text.substring(mentionStartIndex.value + mentionSearchText.value.length + 1);
+  
+  newCommentText.value = `${beforeMention}@${user.handle} ${afterCursor}`;
+  
+  isMentioning.value = false;
+  mentionSearchResults.value = [];
+  mentionSearchText.value = '';
+  selectedMentionIndex.value = -1;
+};
+
+// 키보드 이벤트 처리
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (!isMentioning.value || mentionSearchResults.value.length === 0) return;
+  
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault();
+      selectedMentionIndex.value = Math.min(
+        selectedMentionIndex.value + 1,
+        mentionSearchResults.value.length - 1
+      );
+      break;
+      
+    case 'ArrowUp':
+      event.preventDefault();
+      selectedMentionIndex.value = Math.max(selectedMentionIndex.value - 1, 0);
+      break;
+      
+    case 'Enter':
+      event.preventDefault();
+      if (selectedMentionIndex.value >= 0) {
+        selectMention(mentionSearchResults.value[selectedMentionIndex.value]);
+      }
+      break;
+      
+    case 'Escape':
+      event.preventDefault();
+      isMentioning.value = false;
+      mentionSearchResults.value = [];
+      selectedMentionIndex.value = -1;
+      break;
+  }
 };
 
 defineExpose({ addMention, clearForm });
@@ -120,7 +327,44 @@ defineExpose({ addMention, clearForm });
 
 <template>
   <div class="create-comment-form">
-    <textarea ref="textareaRef" v-model="newCommentText" placeholder="댓글을 입력하세요..." />
+    <textarea 
+      ref="textareaRef" 
+      v-model="newCommentText" 
+      @input="handleTextInput"
+      @keydown="handleKeyDown"
+      placeholder="댓글을 입력하세요..." 
+    />
+    
+    <!-- @멘션 드롭다운 -->
+    <div 
+      v-if="isMentioning"
+      class="mention-dropdown"
+      :style="{
+        position: 'fixed',
+        top: mentionDropdownPosition.top + 'px',
+        left: mentionDropdownPosition.left + 'px',
+        zIndex: 1000
+      }"
+    >
+      <div v-if="mentionSearchResults.length === 0" class="mention-no-results">
+        {{ friendsList.length === 0 ? '친구가 없습니다' : '검색 결과가 없습니다' }}
+      </div>
+      <div 
+        v-else
+        v-for="(user, index) in mentionSearchResults" 
+        :key="user.userId"
+        class="mention-item"
+        :class="{ 'selected': index === selectedMentionIndex }"
+        @click="selectMention(user)"
+        @mouseenter="selectedMentionIndex = index"
+      >
+        <img :src="user.profileThumbnailMediaId ? `/api/media/${user.profileThumbnailMediaId}` : '/default_profile_image.jpg'" alt="">
+        <div>
+          <div class="nickname">{{ user.nickname }}</div>
+          <div class="handle">@{{ user.handle }}</div>
+        </div>
+      </div>
+    </div>
 
     <div class="attach-section">
       <label class="upload-btn">
@@ -206,5 +450,59 @@ button {
   max-height: 80%;
   border-radius: 8px;
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+}
+
+/* @멘션 드롭다운 스타일 */
+.mention-dropdown {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  width: 250px;
+}
+
+.mention-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.mention-item:hover,
+.mention-item.selected {
+  background-color: #f5f5f5;
+}
+
+.mention-item.selected {
+  background-color: #e8f5ff;
+}
+
+.mention-no-results {
+  padding: 12px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.mention-item img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 8px;
+  object-fit: cover;
+}
+
+.mention-item .nickname {
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.mention-item .handle {
+  color: #666;
+  font-size: 12px;
 }
 </style>

@@ -9,13 +9,9 @@
  * - 리포스트 및 원본 게시글 표시
  * - 게시글 수정/삭제 (권한 기반)
  * - 신고 기능
- * 
- * @author AI Assistant
- * @version 2.005
- * @since 2025-01-27
  */
 
-import { defineProps, computed, ref, onMounted } from 'vue';
+import { defineProps, computed, ref, onMounted, onUnmounted } from 'vue';
 import type { PostResponseDto } from '@/types';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
@@ -40,12 +36,13 @@ const authStore = useAuthStore();  // 인증 정보 관리
 const router = useRouter();        // 페이지 라우팅
 const uiStore = useUiStore();      // UI 상태 관리
 const totalReactions = computed(() => {
-  return Object.values(reactionMap).reduce((sum, count) => sum + count, 0)
+  return Object.values(reactionMap.value).reduce((sum, count) => sum + count, 0)
 })
 const showImageModal = ref(false);
 const selectedImageUrl = ref('');
 
 const openImageModal = (url: string) => {
+  console.log('[모달] 이미지 URL:', url)
   selectedImageUrl.value = url;
   showImageModal.value = true;
 };
@@ -80,6 +77,21 @@ const hoveredReaction = ref<string | null>(null);
 /** @description 툴팁의 화면 좌표 위치 */
 const tooltipPosition = ref({ top: 0, left: 0 });
 
+/** @description 반응 선택 팝업 표시 여부 */
+const showReactionPopup = ref(false);
+
+/** @description 반응 팝업의 화면 좌표 위치 */
+const reactionPopupPosition = ref({ top: 0, left: 0 });
+
+/** @description Long press 타이머 */
+let longPressTimer: number | null = null;
+
+/** @description Long press 진행 중 여부 */
+const isLongPressing = ref(false);
+
+/** @description 팝업 표시 직후 클릭 방지를 위한 플래그 */
+const isClickDisabled = ref(false);
+
 /**
  * 툴팁 표시 및 위치 계산
  * 
@@ -111,6 +123,142 @@ const showTooltip = (event: MouseEvent, reactionType: string) => {
  */
 const hideTooltip = () => {
   hoveredReaction.value = null;
+};
+
+/**
+ * 반응 버튼 클릭 시 처리
+ * 
+ * 일반 클릭 시 바로 좋아요 반응을 추가합니다.
+ * 
+ * @param {MouseEvent} event - 클릭 이벤트 객체
+ */
+const handleReactionClick = (event: MouseEvent) => {
+  event.stopPropagation();
+  
+  // Long press가 아닌 일반 클릭인 경우에만 좋아요 추가
+  if (!isLongPressing.value) {
+    postReaction('Like');
+  }
+};
+
+/**
+ * 반응 버튼 Long Press 시작
+ * 
+ * 마우스/터치 다운 시 타이머를 시작하여 500ms 후 팝업을 표시합니다.
+ * 
+ * @param {MouseEvent | TouchEvent} event - 마우스/터치 이벤트 객체
+ */
+const startLongPress = (event: MouseEvent | TouchEvent) => {
+  event.stopPropagation();
+  event.preventDefault(); // 기본 동작 방지
+  
+  isLongPressing.value = false;
+  
+  const target = event.currentTarget as HTMLElement;
+  const rect = target.getBoundingClientRect();
+  
+  longPressTimer = window.setTimeout(() => {
+    isLongPressing.value = true;
+    reactionPopupPosition.value = {
+      top: rect.top - 80, // 버튼 위쪽에 더 높게 표시 (60 -> 80)
+      left: rect.left + rect.width / 2
+    };
+    showReactionPopup.value = true;
+    
+    // 팝업 표시 후 300ms 동안 클릭 비활성화
+    isClickDisabled.value = true;
+    setTimeout(() => {
+      isClickDisabled.value = false;
+    }, 300);
+  }, 500); // 500ms 후 팝업 표시
+};
+
+/**
+ * 반응 버튼 Long Press 종료
+ * 
+ * 마우스/터치 업 시 타이머를 취소합니다.
+ * 
+ * @param {MouseEvent | TouchEvent} event - 마우스/터치 이벤트 객체
+ */
+const endLongPress = (event: MouseEvent | TouchEvent) => {
+  event.stopPropagation();
+  
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+  
+  // 팝업이 열리지 않은 경우에만 플래그 리셋
+  if (!showReactionPopup.value) {
+    setTimeout(() => {
+      isLongPressing.value = false;
+    }, 100);
+  }
+};
+
+/**
+ * 반응 선택 팝업에서 반응 선택
+ * 
+ * 팝업에서 반응을 선택했을 때 호출됩니다.
+ * 
+ * @param {string} reactionType - 선택한 반응 타입
+ */
+const selectReaction = async (reactionType: string) => {
+  // 클릭이 비활성화된 상태면 무시
+  if (isClickDisabled.value) return;
+  
+  // 이모지 플로팅 애니메이션 생성
+  createFloatingEmoji(reactionType);
+  
+  await postReaction(reactionType);
+  showReactionPopup.value = false;
+  isLongPressing.value = false;
+};
+
+/**
+ * 플로팅 이모지 애니메이션 생성
+ * 
+ * @param {string} reactionType - 반응 타입
+ */
+const createFloatingEmoji = (reactionType: string) => {
+  const emojiMap: Record<string, string> = {
+    'Like': '❤️',
+    'Awesome': '🔥',
+    'Happy': '😄',
+    'Sad': '😢',
+    'Support': '💪'
+  };
+  
+  const emoji = document.createElement('div');
+  emoji.className = 'floating-emoji';
+  emoji.textContent = emojiMap[reactionType] || '❤️';
+  emoji.style.left = reactionPopupPosition.value.left + 'px';
+  emoji.style.top = (reactionPopupPosition.value.top + 40) + 'px';
+  
+  document.body.appendChild(emoji);
+  
+  // 애니메이션 종료 후 제거
+  setTimeout(() => {
+    emoji.remove();
+  }, 800);
+};
+
+/**
+ * 반응 타입의 한글 레이블 반환
+ * 
+ * @param {string} reactionType - 반응 타입
+ * @returns {string} 한글 레이블
+ */
+const getReactionLabel = (reactionType: string): string => {
+  const labelMap: Record<string, string> = {
+    'Like': '좋아요',
+    'Awesome': '멋져요',
+    'Happy': '기뻐요',
+    'Sad': '슬퍼요',
+    'Support': '힘내요'
+  };
+  
+  return labelMap[reactionType] || '반응';
 };
 
 /**
@@ -178,7 +326,20 @@ function formatRelativeTime(dateString: string): string {
  * <button @click="sharePost">🔗 공유</button>
  * ```
  */
-const sharePost = () => {
+const sharePost = (event: MouseEvent) => {
+  // 리포스트 버튼에 애니메이션 클래스 추가
+  const button = event.currentTarget as HTMLElement;
+  const icon = button.querySelector('.repost-icon');
+  
+  if (icon) {
+    icon.classList.add('repost-success');
+    
+    // 애니메이션 종료 후 클래스 제거
+    setTimeout(() => {
+      icon.classList.remove('repost-success');
+    }, 600);
+  }
+  
   // 리포스트 에디터 열기
   uiStore.openRepostEditor(props.post);
 };
@@ -221,8 +382,21 @@ const getMediaBlobUrl = async (mediaId: string) => {
  * 이 과정은 사용자가 게시글을 볼 때 즉시 이미지/동영상이 표시되고
  * 정확한 반응 상태가 표시되도록 보장합니다.
  */
+/**
+ * 반응 팝업 외부 클릭 처리
+ * 
+ * 팝업이 열려있을 때 외부를 클릭하면 팝업을 닫습니다.
+ */
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  if (!target.closest('.reaction-popup') && !target.closest('.footer-btn')) {
+    showReactionPopup.value = false;
+  }
+};
+
 onMounted(async () => {
   // 디버깅: 게시글 콘텐츠 구조 확인
+  console.log('[📌 게시글 전체 데이터]', props.post);
   console.log('🔍 게시글 콘텐츠 구조:', props.post.contents);
   props.post.contents.forEach((content, index) => {
     console.log(`📝 콘텐츠 ${index}:`, {
@@ -263,6 +437,14 @@ onMounted(async () => {
   
   // 반응 정보 로드 (카운트, 내 반응, 툴팁용 사용자 정보)
   await loadReactionData();
+  
+  // 외부 클릭 리스너 추가
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  // 외부 클릭 리스너 제거
+  document.removeEventListener('click', handleClickOutside);
 });
 
 /**
@@ -320,6 +502,87 @@ const deleteMyPost = () => {
       });
   }
 };
+
+function splitTextWithLinks(text: string): Array<{ text: string; isLink: boolean }> {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const result: Array<{ text: string; isLink: boolean }> = [];
+
+  let lastIndex = 0;
+  let match;
+
+  while ((match = urlRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      result.push({ text: text.slice(lastIndex, match.index), isLink: false });
+    }
+    result.push({ text: match[0], isLink: true });
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    result.push({ text: text.slice(lastIndex), isLink: false });
+  }
+
+  return result;
+}
+
+/**
+ * 텍스트에서 @멘션과 링크를 감지하여 분리
+ * 
+ * @handle 형식의 멘션과 URL을 찾아서 각각 다른 타입으로 분리합니다.
+ * 
+ * @param {string} text - 원본 텍스트
+ * @returns {Array} 분리된 텍스트 청크 배열
+ */
+function splitTextWithLinksAndMentions(text: string): Array<{ text: string; type: 'text' | 'link' | 'mention' }> {
+  // 향상된 URL 감지 정규식: http(s)://, www., 도메인 패턴 등을 감지
+  const urlRegex = /(?:https?:\/\/[^\s]+)|(?:www\.[^\s]+)|(?:[a-zA-Z0-9][a-zA-Z0-9-]*(?:\.[a-zA-Z0-9][a-zA-Z0-9-]*)+(?:\/[^\s]*)?)/g;
+  // 공백을 포함한 닉네임 지원 (@닉네임 형태)
+  const mentionRegex = /@[a-zA-Z0-9_가-힣\s]+/g;
+  
+  // 모든 매치를 찾아서 위치와 함께 저장
+  const matches: Array<{ text: string; type: 'link' | 'mention'; index: number; length: number }> = [];
+  
+  let match;
+  while ((match = urlRegex.exec(text)) !== null) {
+    let url = match[0];
+    // www.로 시작하는 경우 https:// 추가
+    if (url.startsWith('www.')) {
+      url = url;
+    }
+    matches.push({ text: url, type: 'link', index: match.index, length: match[0].length });
+  }
+  
+  while ((match = mentionRegex.exec(text)) !== null) {
+    matches.push({ text: match[0], type: 'mention', index: match.index, length: match[0].length });
+  }
+  
+  // 위치순으로 정렬
+  matches.sort((a, b) => a.index - b.index);
+  
+  const result: Array<{ text: string; type: 'text' | 'link' | 'mention' }> = [];
+
+  let lastIndex = 0;
+  
+  // 매치를 순서대로 처리
+  for (const match of matches) {
+    // 매치 이전의 일반 텍스트 추가
+    if (match.index > lastIndex) {
+      result.push({ text: text.slice(lastIndex, match.index), type: 'text' });
+    }
+    
+    // 매치된 항목 추가
+    result.push({ text: match.text, type: match.type });
+    
+    lastIndex = match.index + match.length;
+  }
+
+  // 마지막 매치 이후의 텍스트 추가
+  if (lastIndex < text.length) {
+    result.push({ text: text.slice(lastIndex), type: 'text' });
+  }
+
+  return result;
+}
 
 /**
  * 서버에서 최신 반응 데이터를 로드하여 UI 상태를 동기화
@@ -437,6 +700,7 @@ const postReaction = async (newType: string) => {
   
   try {
     console.log(`[반응 처리] 이전: ${previousReaction}, 새로운: ${newType}`);
+    console.log('[현재 반응 상태]', { reactionMap: reactionMap.value, myReaction: myReaction.value });
     
     if (previousReaction === newType) {
       // === 시나리오 1: 같은 반응 재클릭 → 해제 ===
@@ -447,7 +711,7 @@ const postReaction = async (newType: string) => {
       myReaction.value = null;
       
       const response = await apiClient.post(`/api/Post/${props.post.id}/reaction/${newType}`);
-      console.log('[반응 API 응답 - 해제]', response.data);
+      console.log('[반응 API 응답 - 해제]', response);
       
     } else if (previousReaction && previousReaction !== newType) {
       // === 시나리오 2: 다른 반응으로 변경 ===
@@ -465,7 +729,7 @@ const postReaction = async (newType: string) => {
       // 2차: 새 반응 추가
       console.log(`[반응 API 호출 - 새로 추가] POST /api/Post/${props.post.id}/reaction/${newType}`);
       const response = await apiClient.post(`/api/Post/${props.post.id}/reaction/${newType}`);
-      console.log('[반응 API 응답 - 변경 완료]', response.data);
+      console.log('[반응 API 응답 - 변경 완료]', response);
       
     } else {
       // === 시나리오 3: 새로운 반응 추가 ===
@@ -476,7 +740,8 @@ const postReaction = async (newType: string) => {
       myReaction.value = newType;
       
       const response = await apiClient.post(`/api/Post/${props.post.id}/reaction/${newType}`);
-      console.log('[반응 API 응답 - 추가]', response.data);
+      console.log('[반응 API 응답 - 추가]', response);
+      console.log('[반응 후 상태]', { reactionMap: reactionMap.value, myReaction: myReaction.value });
     }
     
     // 최종 서버 데이터로 동기화 (실제 데이터와 일치 보장)
@@ -521,6 +786,8 @@ const showReportModal = ref(false);
 
 /** @description 선택된 신고 사유 (기본값: 성인물) */
 const selectedReason = ref('ExplicitContent');
+
+
 
 /**
  * 신고 대화상자 열기
@@ -575,6 +842,35 @@ const submitReport = () => {
         alert(errorMsg);
       }
     });
+};
+
+/**
+ * @멘션 클릭 시 해당 유저 프로필로 이동
+ * 
+ * @handle 형식의 멘션에서 handle을 추출하여 프로필 페이지로 라우팅합니다.
+ * 
+ * @param {string} mentionText - @를 포함한 멘션 텍스트 (예: @john123)
+ */
+const navigateToProfile = async (mentionText: string) => {
+  // @를 제거하고 handle만 추출
+  const nickname = mentionText.substring(1);
+  
+  try {
+    // handle로 사용자 검색
+    const response = await apiClient.get(`/api/User/nickname-search/${nickname}`);
+    const users = response.data;
+    
+    // handle이 정확히 일치하는 사용자 찾기
+    const user = users.find((u: any) => u.nickname === nickname);
+    
+    if (user) {
+      router.push(`/user/${user.userId}`);
+    } else {
+      console.warn(`사용자를 찾을 수 없습니다: ${handle}`);
+    }
+  } catch (error) {
+    console.error('사용자 검색 실패:', error);
+  }
 };
 
 /**
@@ -668,7 +964,24 @@ const isImageUrl = (url: string): boolean => {
     <div class="post-content-area">
       <div v-for="(content, index) in post.contents" :key="index">
         <!-- 텍스트 콘텐츠 처리 -->
-        <p v-if="(content as any).$type === 'text'">{{ (content as any).text }}</p>
+        <p v-if="(content as any).$type === 'text'">
+          <template v-for="(chunk, index) in splitTextWithLinksAndMentions((content as any).text)" :key="index">
+            <a v-if="chunk.type === 'link'"
+              :href="chunk.text.startsWith('www.') ? 'https://' + chunk.text : chunk.text"
+              target="_blank"
+              rel="noopener noreferrer"
+              style="color: #0066cc; word-break: break-all;"
+              @click.stop>
+              {{ chunk.text }}
+            </a>
+            <span v-else-if="chunk.type === 'mention'"
+              class="mention"
+              @click.stop="navigateToProfile(chunk.text)">
+              {{ chunk.text }}
+            </span>
+            <span v-else>{{ chunk.text }}</span>
+          </template>
+        </p>
 
         <div v-else-if="((content as any).$type === 'media') && ((content as any).mediaId || (content as any).thumbnailMediaId)">
           <template v-if="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]">
@@ -685,6 +998,7 @@ const isImageUrl = (url: string): boolean => {
               :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]"
               :alt="(content as any).description || '게시물 이미지'"
               class="post-image"
+              @click.stop="openImageModal(mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId])"
             />
           </template>
           <p v-if="(content as any).description">{{ (content as any).description }}</p>
@@ -692,12 +1006,12 @@ const isImageUrl = (url: string): boolean => {
 
         <!-- 외부 링크 처리 (백엔드 메타데이터 활용) -->
         <div v-else-if="(content as any).$type === 'externalUrl'" class="external-link-container">
-          <a :href="(content as any).url || (content as any).Url" target="_blank" rel="noopener noreferrer" class="external-link" @click.stop>
-            <div class="link-preview" :class="{ 'has-image': !!(content as any).image || !!(content as any).Image || !!(content as any).imageUrl || !!(content as any).ImageUrl || !!(content as any).thumbnail || !!(content as any).Thumbnail }">
+          <a :href="(content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url" target="_blank" rel="noopener noreferrer" class="external-link" @click.stop>
+            <div class="link-preview" :class="{ 'has-image': !!(content as any).thumbnailImageUrl || !!(content as any).ThumbnailImageUrl || !!(content as any).image || !!(content as any).Image }">
               <!-- 백엔드에서 제공한 이미지가 있으면 표시 -->
               <img 
-                v-if="(content as any).image || (content as any).Image || (content as any).imageUrl || (content as any).ImageUrl || (content as any).thumbnail || (content as any).Thumbnail"
-                :src="(content as any).image || (content as any).Image || (content as any).imageUrl || (content as any).ImageUrl || (content as any).thumbnail || (content as any).Thumbnail"
+                v-if="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
+                :src="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
                 :alt="(content as any).title || (content as any).Title || '링크 미리보기'"
                 class="link-preview-image"
                 @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
@@ -709,7 +1023,10 @@ const isImageUrl = (url: string): boolean => {
                 <div v-if="(content as any).description || (content as any).Description" class="link-description">
                   {{ (content as any).description || (content as any).Description }}
                 </div>
-                <div class="link-url">{{ (content as any).url || (content as any).Url }}</div>
+                <div class="link-url">
+                  <span class="link-icon">🔗</span>
+                  <span class="link-text">{{ (content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url }}</span>
+                </div>
               </div>
             </div>
           </a>
@@ -718,6 +1035,7 @@ const isImageUrl = (url: string): boolean => {
         <RouterLink
           v-else-if="(content as any).$type === 'profile'"
           :to="`/user/${(content as any).userId}`"
+          class="mention"
           @click.stop>
           {{ (content as any).nickname }}
         </RouterLink>
@@ -748,6 +1066,7 @@ const isImageUrl = (url: string): boolean => {
                   :src="(content as any).text.trim()" 
                   :alt="'이미지'" 
                   class="original-post-media external-image"
+                  @click.stop="openImageModal((content as any).text.trim())"
                   @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
                 />
               </template>
@@ -775,12 +1094,12 @@ const isImageUrl = (url: string): boolean => {
 
             <!-- 리포스트 내 외부 링크 처리 (백엔드 메타데이터 활용) -->
             <div v-else-if="(content as any).$type === 'externalUrl'" class="external-link-container">
-              <a :href="(content as any).url || (content as any).Url" target="_blank" rel="noopener noreferrer" class="external-link" @click.stop>
-                <div class="link-preview small" :class="{ 'has-image': !!(content as any).image || !!(content as any).Image || !!(content as any).imageUrl || !!(content as any).ImageUrl || !!(content as any).thumbnail || !!(content as any).Thumbnail }">
+              <a :href="(content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url" target="_blank" rel="noopener noreferrer" class="external-link" @click.stop>
+                <div class="link-preview small" :class="{ 'has-image': !!(content as any).thumbnailImageUrl || !!(content as any).ThumbnailImageUrl || !!(content as any).image || !!(content as any).Image }">
                   <!-- 백엔드에서 제공한 이미지가 있으면 표시 -->
                   <img 
-                    v-if="(content as any).image || (content as any).Image || (content as any).imageUrl || (content as any).ImageUrl || (content as any).thumbnail || (content as any).Thumbnail"
-                    :src="(content as any).image || (content as any).Image || (content as any).imageUrl || (content as any).ImageUrl || (content as any).thumbnail || (content as any).Thumbnail"
+                    v-if="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
+                    :src="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
                     :alt="(content as any).title || (content as any).Title || '링크 미리보기'"
                     class="link-preview-image"
                     @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
@@ -792,7 +1111,10 @@ const isImageUrl = (url: string): boolean => {
                     <div v-if="(content as any).description || (content as any).Description" class="link-description">
                       {{ (content as any).description || (content as any).Description }}
                     </div>
-                    <div class="link-url">{{ (content as any).url || (content as any).Url }}</div>
+                    <div class="link-url">
+                      <span class="link-icon">🔗</span>
+                      <span class="link-text">{{ (content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url }}</span>
+                    </div>
                   </div>
                 </div>
               </a>
@@ -802,73 +1124,40 @@ const isImageUrl = (url: string): boolean => {
       </div>
     </div>
 
-    <!-- 느낌 버튼 그룹 -->
-    <div class="reaction-buttons">
-      <div class="reaction-btn-container">
-        <button @click.stop="postReaction('Like')" 
-                @mouseenter="showTooltip($event, 'Like')" 
-                @mouseleave="hideTooltip"
-                :class="{ active: myReaction === 'Like' }" 
-                class="reaction-btn">
-          <span class="reaction-emoji">👍</span>
-          <span class="reaction-count">{{ reactionMap['Like'] || 0 }}</span>
-        </button>
-      </div>
-      
-      <div class="reaction-btn-container">
-        <button @click.stop="postReaction('Awesome')" 
-                @mouseenter="showTooltip($event, 'Awesome')" 
-                @mouseleave="hideTooltip"
-                :class="{ active: myReaction === 'Awesome' }" 
-                class="reaction-btn">
-          <span class="reaction-emoji">🔥</span>
-          <span class="reaction-count">{{ reactionMap['Awesome'] || 0 }}</span>
-        </button>
-      </div>
-      
-      <div class="reaction-btn-container">
-        <button @click.stop="postReaction('Happy')" 
-                @mouseenter="showTooltip($event, 'Happy')" 
-                @mouseleave="hideTooltip"
-                :class="{ active: myReaction === 'Happy' }" 
-                class="reaction-btn">
-          <span class="reaction-emoji">😄</span>
-          <span class="reaction-count">{{ reactionMap['Happy'] || 0 }}</span>
-        </button>
-      </div>
-      
-      <div class="reaction-btn-container">
-        <button @click.stop="postReaction('Sad')" 
-                @mouseenter="showTooltip($event, 'Sad')" 
-                @mouseleave="hideTooltip"
-                :class="{ active: myReaction === 'Sad' }" 
-                class="reaction-btn">
-          <span class="reaction-emoji">😢</span>
-          <span class="reaction-count">{{ reactionMap['Sad'] || 0 }}</span>
-        </button>
-      </div>
-      
-      <div class="reaction-btn-container">
-        <button @click.stop="postReaction('Support')" 
-                @mouseenter="showTooltip($event, 'Support')" 
-                @mouseleave="hideTooltip"
-                :class="{ active: myReaction === 'Support' }" 
-                class="reaction-btn">
-          <span class="reaction-emoji">💪</span>
-          <span class="reaction-count">{{ reactionMap['Support'] || 0 }}</span>
-        </button>
-      </div>
-    </div>
+
 
     <div class="post-footer">
-      <button @click.stop="postReaction('Like')" class="footer-btn" :class="{ active: myReaction === 'Like' }">
-        ❤️ {{ Object.values(reactionMap).reduce((sum, count) => sum + (count || 0), 0) }}
+      <button 
+        @click.stop="handleReactionClick"
+        @mousedown.stop="startLongPress"
+        @mouseup.stop="endLongPress"
+        @mouseleave.stop="endLongPress"
+        @touchstart.stop="startLongPress"
+        @touchend.stop="endLongPress"
+        @touchcancel.stop="endLongPress"
+        class="footer-btn" 
+        :class="{ active: myReaction }"
+        :aria-label="`반응하기: ${myReaction ? getReactionLabel(myReaction) : '선택되지 않음'}, 총 ${totalReactions}개`"
+        :aria-pressed="!!myReaction"
+        role="button">
+        <span v-if="!myReaction" aria-hidden="true">🤍</span>
+        <span v-else-if="myReaction === 'Like'" aria-hidden="true">❤️</span>
+        <span v-else-if="myReaction === 'Awesome'" aria-hidden="true">🔥</span>
+        <span v-else-if="myReaction === 'Happy'" aria-hidden="true">😄</span>
+        <span v-else-if="myReaction === 'Sad'" aria-hidden="true">😢</span>
+        <span v-else-if="myReaction === 'Support'" aria-hidden="true">💪</span>
+        <span aria-hidden="true">{{ totalReactions }}</span>
       </button>
-      <button @click.stop="goToPostDetail" class="footer-btn">
-        💬 {{ post.comments ? post.comments.length : 0 }}
+      <button @click.stop="goToPostDetail" class="footer-btn" :aria-label="`댓글 ${post.comments ? post.comments.length : 0}개, 댓글 보기`">
+        <span aria-hidden="true">💬 {{ post.comments ? post.comments.length : 0 }}</span>
       </button>
-      <button @click.stop="sharePost" class="footer-btn">
-        🔗 공유
+      <button @click.stop="sharePost" class="footer-btn repost-btn" title="리포스트하기">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="repost-icon">
+          <path d="M17 1l4 4-4 4M3 23l-4-4 4-4M21 5H10a4 4 0 00-4 4v1M3 19h11a4 4 0 004-4v-1"/>
+        </svg>
+        <span v-if="(post as any).sharedAndRepostedUsers?.filter((u: any) => u.isRepost).length > 0" class="repost-count">
+          {{ (post as any).sharedAndRepostedUsers.filter((u: any) => u.isRepost).length }}
+        </span>
       </button>
     </div>
   </div>
@@ -897,6 +1186,38 @@ const isImageUrl = (url: string): boolean => {
     </div>
   </Teleport>
 
+  <!-- 반응 선택 팝업 -->
+  <Teleport to="body">
+    <div v-if="showReactionPopup" 
+         class="reaction-popup"
+         :style="{ 
+           top: `${reactionPopupPosition.top}px`, 
+           left: `${reactionPopupPosition.left}px` 
+         }"
+         @click.stop>
+      <button @click="selectReaction('Like')" class="popup-reaction-btn" :class="{ active: myReaction === 'Like' }" aria-label="좋아요 반응" :aria-pressed="myReaction === 'Like'">
+        <span class="popup-emoji" aria-hidden="true">👍</span>
+        <span class="popup-label">좋아요</span>
+      </button>
+      <button @click="selectReaction('Awesome')" class="popup-reaction-btn" :class="{ active: myReaction === 'Awesome' }" aria-label="멋져요 반응" :aria-pressed="myReaction === 'Awesome'">
+        <span class="popup-emoji" aria-hidden="true">🔥</span>
+        <span class="popup-label">멋져요</span>
+      </button>
+      <button @click="selectReaction('Happy')" class="popup-reaction-btn" :class="{ active: myReaction === 'Happy' }" aria-label="기뻐요 반응" :aria-pressed="myReaction === 'Happy'">
+        <span class="popup-emoji" aria-hidden="true">😄</span>
+        <span class="popup-label">기뻐요</span>
+      </button>
+      <button @click="selectReaction('Sad')" class="popup-reaction-btn" :class="{ active: myReaction === 'Sad' }" aria-label="슬퍼요 반응" :aria-pressed="myReaction === 'Sad'">
+        <span class="popup-emoji" aria-hidden="true">😢</span>
+        <span class="popup-label">슬퍼요</span>
+      </button>
+      <button @click="selectReaction('Support')" class="popup-reaction-btn" :class="{ active: myReaction === 'Support' }" aria-label="힘내요 반응" :aria-pressed="myReaction === 'Support'">
+        <span class="popup-emoji" aria-hidden="true">💪</span>
+        <span class="popup-label">힘내요</span>
+      </button>
+    </div>
+  </Teleport>
+
   <!-- 신고 모달 -->
   <div v-if="showReportModal" class="report-modal" @click.stop>
     <p>🚨 신고 사유를 선택해주세요:</p>
@@ -911,9 +1232,29 @@ const isImageUrl = (url: string): boolean => {
       <button @click="cancelReport">취소</button>
     </div>
   </div>
+
+  <!-- 이미지 모달 -->
+  <Teleport to="body">
+    <div v-if="showImageModal" class="image-modal" @click="closeImageModal">
+      <img :src="selectedImageUrl" alt="확대 이미지" class="modal-image" />
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
+/* @멘션 스타일 */
+.mention {
+  color: #ed664d;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.mention:hover {
+  font-weight: 700;
+  background-color: #fff0ed;
+}
+
 .post-card {
   background: white;
   border-radius: 8px;
@@ -952,6 +1293,48 @@ const isImageUrl = (url: string): boolean => {
 .footer-btn.active {
   color: #ed664d;
   font-weight: 600;
+}
+
+/* 리포스트 버튼 스타일 */
+.repost-btn {
+  position: relative;
+}
+
+.repost-btn .repost-icon {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.repost-btn:hover .repost-icon {
+  stroke: #22c55e;
+  transform: rotate(180deg);
+}
+
+.repost-btn.active .repost-icon {
+  stroke: #22c55e;
+}
+
+.repost-count {
+  font-size: 14px;
+  font-weight: 600;
+  margin-left: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 리포스트 성공 애니메이션 */
+@keyframes repostSuccess {
+  0% {
+    transform: scale(1) rotate(0);
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+  }
+}
+
+.repost-success {
+  animation: repostSuccess 0.6s ease-out;
 }
 .post-card:hover { background-color: #fafafa; }
 .post-author { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
@@ -1289,29 +1672,30 @@ const isImageUrl = (url: string): boolean => {
 .link-preview {
   border: 1px solid #e1e5e9;
   border-radius: 12px;
-  background: #f8f9fa;
+  background: white;
   transition: all 0.2s ease;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .link-preview:hover {
-  border-color: #ed664d;
-  background: #fef7f5;
+  border-color: #d1d5db;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(237, 102, 77, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .link-preview.has-image {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   padding: 0;
 }
 
 .link-preview.has-image .link-preview-image {
-  width: 120px;
-  height: 120px;
+  width: 100%;
+  height: 200px;
   object-fit: cover;
   flex-shrink: 0;
+  background: #f5f5f5;
 }
 
 .link-preview.has-image .link-info {
@@ -1319,11 +1703,12 @@ const isImageUrl = (url: string): boolean => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 8px;
 }
 
 .link-preview:not(.has-image) {
   padding: 16px;
+  background: #f8f9fa;
 }
 
 .link-preview.small {
@@ -1351,32 +1736,45 @@ const isImageUrl = (url: string): boolean => {
 .link-title {
   font-weight: 600;
   color: #212529;
-  font-size: 0.9rem;
-  margin-bottom: 4px;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.link-description {
-  color: #495057;
-  font-size: 0.85rem;
-  margin-bottom: 6px;
+  font-size: 1rem;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  margin: 0;
+}
+
+.link-description {
+  color: #6c757d;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
 }
 
 .link-url {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: #6c757d;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.link-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.link-text {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
 }
 
 .link-preview.small .link-title {
@@ -1394,6 +1792,70 @@ const isImageUrl = (url: string): boolean => {
   font-size: 0.7rem;
 }
 
+/* 링크 미리보기 로딩 스켈레톤 */
+.link-preview-skeleton {
+  border: 1px solid #e1e5e9;
+  border-radius: 12px;
+  background: #f8f9fa;
+  overflow: hidden;
+  animation: skeleton-loading 1.4s infinite ease-in-out;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-color: #f8f9fa;
+  }
+  50% {
+    background-color: #e9ecef;
+  }
+  100% {
+    background-color: #f8f9fa;
+  }
+}
+
+.link-preview-skeleton.has-image {
+  display: flex;
+  flex-direction: row;
+  padding: 0;
+}
+
+.skeleton-image {
+  width: 120px;
+  height: 120px;
+  background: #e9ecef;
+  flex-shrink: 0;
+}
+
+.skeleton-info {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-title {
+  height: 20px;
+  background: #e9ecef;
+  border-radius: 4px;
+  width: 80%;
+}
+
+.skeleton-description {
+  height: 16px;
+  background: #e9ecef;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.skeleton-url {
+  height: 14px;
+  background: #e9ecef;
+  border-radius: 4px;
+  width: 60%;
+  margin-top: auto;
+}
+
 .external-image {
   border: 1px solid #e9ecef;
   transition: all 0.2s ease;
@@ -1404,5 +1866,110 @@ const isImageUrl = (url: string): boolean => {
   transform: scale(1.02);
   box-shadow: 0 4px 12px rgba(237, 102, 77, 0.15);
 }
+
+/* 반응 선택 팝업 */
+.reaction-popup {
+  position: fixed;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 32px;
+  padding: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  gap: 4px;
+  z-index: 9999;
+  animation: popupSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popupSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+/* 반응 카운트 변경 애니메이션 */
+.reaction-count {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 반응 이모지 플로팅 애니메이션 */
+@keyframes emojiFloat {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -40px) scale(1.5);
+  }
+}
+
+.floating-emoji {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10000;
+  animation: emojiFloat 0.8s ease-out forwards;
+  font-size: 24px;
+}
+
+.popup-reaction-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.popup-reaction-btn:hover {
+  background-color: #f8f9fa;
+  transform: scale(1.1);
+}
+
+.popup-reaction-btn.active {
+  background-color: #fef7f5;
+}
+
+.popup-emoji {
+  font-size: 24px;
+}
+
+.popup-label {
+  font-size: 11px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: zoom-out;
+}
+
+.modal-image {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 8px;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.4);
+  object-fit: contain;
+}
+
 
 </style>
