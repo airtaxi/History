@@ -992,7 +992,7 @@ const isImageUrl = (url: string): boolean => {
               </video>
             <img
               v-else
-              :src="mediaUrlMap[(content as any).mediaId`` || (content as any).thumbnailMediaId]"
+              :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]"
               :alt="(content as any).description || '게시물 이미지'"
               class="post-image"
               @click.stop="openImageModal(mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId])"
