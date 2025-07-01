@@ -2,7 +2,6 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import apiClient from '@/api';
 import type { PostResponseDto } from '@/types';
-import TheHeader from '@/components/layout/TheHeader.vue';
 import PostCard from '@/components/PostCard.vue';
 import RightSidebar from '@/components/layout/RightSidebar.vue';
 import CreatePost from '@/components/CreatePost.vue';
@@ -228,7 +227,6 @@ const handlePostCreated = async () => {
 
 <template>
   <div class="timeline-layout">
-    <TheHeader />
     <main class="main-content">
       <div class="feed-column">
         <CreatePost @post-created="handlePostCreated" />

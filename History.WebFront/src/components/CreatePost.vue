@@ -3,7 +3,6 @@ import { ref, computed, watch } from 'vue';
 import { useUiStore } from '@/stores/ui';
 import apiClient from '@/api';
 import { defineEmits } from 'vue';
-import type { UserResponseDto } from '@/types';
 
 /**
  * CreatePost 컴포넌트의 props와 emits 정의
@@ -1073,7 +1072,7 @@ watch(isRepostMode, (newValue) => {
 
 <template>
   <div class="post-card create-post-card">
-    <div v-if="!isExpanded && !uiStore.isPostEditorOpen" class="compact-view" @click="isExpanded = true">
+    <div v-if="!uiStore.isPostEditorOpen" class="compact-view" @click="uiStore.openPostEditor">
       <textarea readonly placeholder="오늘 하루, 기억하고 싶은 순간이 있나요?"></textarea>
     </div>
 
@@ -1264,6 +1263,7 @@ watch(isRepostMode, (newValue) => {
 </template>
 
 <style scoped>
+
 .post-card {
   background: white;
   border-radius: 8px;
@@ -1280,7 +1280,6 @@ watch(isRepostMode, (newValue) => {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   background-color: #f8f9fa;
-  box-sizing: border-box;
   cursor: pointer;
   resize: none;
   transition: border-color 0.2s;
@@ -1288,6 +1287,7 @@ watch(isRepostMode, (newValue) => {
 
 .compact-view textarea:hover {
   border-color: #ed664d;
+  margin: 20px;
 }
 
 .create-post-input {
