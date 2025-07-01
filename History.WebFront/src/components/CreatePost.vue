@@ -174,6 +174,9 @@ const originalPostAuthorProfileUrl = ref<string>('');
  */
 const isExpanded = ref(false);
 
+const openInlineEditor = () => {
+  isExpanded.value = true; 
+};
 /**
  * @멘션 관련 상태
  */
@@ -619,12 +622,13 @@ const submitPost = async () => {
  * 2. 타임라인 인라인 모드인 경우 compact-view로 돌아갑니다.
  * 3. 작성 중인 내용들을 초기화합니다.
  */
-const handleCancel = () => {
+ const handleCancel = () => {
+  // 모달이 열려있다면 모달을 닫습니다.
   if (uiStore.isPostEditorOpen) {
-    // 모달 모드인 경우 에디터 닫기
     uiStore.closePostEditor();
-  } else {
-    // 타임라인 인라인 모드인 경우 축소
+  }
+  // 인라인으로 확장되었다면 축소합니다.
+  if (isExpanded.value) {
     isExpanded.value = false;
   }
   
@@ -1072,7 +1076,7 @@ watch(isRepostMode, (newValue) => {
 
 <template>
   <div class="post-card create-post-card">
-    <div v-if="!uiStore.isPostEditorOpen" class="compact-view" @click="uiStore.openPostEditor">
+    <div v-if="!uiStore.isPostEditorOpen && !isExpanded" class="compact-view" @click="openInlineEditor">
       <textarea readonly placeholder="오늘 하루, 기억하고 싶은 순간이 있나요?"></textarea>
     </div>
 
@@ -1283,11 +1287,7 @@ watch(isRepostMode, (newValue) => {
   cursor: pointer;
   resize: none;
   transition: border-color 0.2s;
-}
-
-.compact-view textarea:hover {
-  border-color: #ed664d;
-  margin: 20px;
+  box-sizing: border-box;
 }
 
 .create-post-input {
