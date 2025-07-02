@@ -1,11 +1,13 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.Messaging;
+using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls.Shapes;
 using System.Diagnostics;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace History.MobileClient.Resources.Styles;
@@ -20,8 +22,16 @@ public partial class Content : ResourceDictionary
     private async void OnTextAndProfileContentsLabelLongPressed(object sender, LongPressCompletedEventArgs e)
     {
         var label = sender as Label;
-        var texts = label.FormattedText.Spans.SelectMany(x => x.Text);
-        var text = string.Concat(texts);
+        var viewModel = label.BindingContext as TextAndProfileContentsViewModel;
+        var contents = viewModel.TextAndProfileContents;
+
+        var builder = new StringBuilder();
+        foreach(var content in contents)
+        {
+            if (content is TextContent textContent) builder.Append(textContent.Text);
+            else if (content is ProfileContent profileContent) builder.Append(profileContent.Nickname);
+        }
+        var text = builder.ToString().Trim();
 
         HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
         await Clipboard.Default.SetTextAsync(text);
