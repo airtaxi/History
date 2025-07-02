@@ -379,11 +379,13 @@ function formatRelativeTime(dateString: string): string {
 
 <template>
   <div class="comment-item">
-    <img
-      :src="safeProfileImageUrl"
-      class="author-avatar"
-      @error="handleImageError"
-    />
+    <RouterLink :to="`/user/${comment.user.userId}`" @click.stop>
+      <img
+        :src="safeProfileImageUrl"
+        class="author-avatar"
+        @error="handleImageError"
+      />
+    </RouterLink>
 
     <div class="comment-content">
       <div class="comment-header">

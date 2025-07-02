@@ -23,7 +23,7 @@ const shouldShowFooter = computed(() => {
       <RouterView />
     </main>
 
-    <PostModal v-if="uiStore.isPostEditorOpen" />
+    <PostModal v-if="uiStore.isEditorOpen" />
   
     <footer v-if="shouldShowFooter" class="app-footer">
       <div class="footer-content">

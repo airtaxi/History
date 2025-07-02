@@ -166,20 +166,19 @@ let friendSearchTimeout: number;
  * 리포스트 모드 여부를 확인하는 computed 속성
  * @type {import('vue').ComputedRef<boolean>}
  */
-const isRepostMode = computed(() => uiStore.isRepostMode);
+const isShareMode = computed(() => uiStore.isShareMode);
 
 /**
  * 리포스트할 원본 게시글 정보
  * @type {import('vue').ComputedRef<any>}
  */
-const originalPost = computed(() => uiStore.repostOriginalPost);
+const originalPostForShare = computed(() => uiStore.shareOriginalPost);
 
 /**
  * 원본 게시글의 미디어 파일들의 Blob URL 매핑
  * @type {import('vue').Ref<Record<string, string>>}
  */
 const originalPostMediaUrls = ref<Record<string, string>>({});
-
 /**
  * 원본 게시글 작성자의 프로필 이미지 URL
  * @type {import('vue').Ref<string>}
@@ -195,6 +194,7 @@ const isExpanded = ref(false);
 const openInlineEditor = () => {
   isExpanded.value = true; 
 };
+
 /**
  * @멘션 관련 상태
  */
@@ -457,11 +457,6 @@ const onDiscoveryOptionChange = () => {
  * await submitPost();
  */
 const submitPost = async () => {
-  // 리포스트 모드인 경우 다른 로직 처리
-  if (isRepostMode.value && originalPost.value) {
-    return await handleRepost();
-  }
-
   if (!newPostText.value.trim() && attachedFiles.value.length === 0 && !attachedLink.value.trim()) {
     alert('내용을 입력해주세요.');
     return;
@@ -477,27 +472,15 @@ const submitPost = async () => {
     const initialDiscoveryOption = isSpecificFriendOption ? 'Friends' : discoveryOption.value;
     
     // 게시글 데이터 타입을 명시적으로 정의하여 타입 안전성 확보
-    const postDto: {
-      DiscoveryOption: string;
-      CommentPermission: string | null; 
-      DisallowShare: boolean;      
-      ReservationTime: string | null; 
-      Contents: Array<{
-        $type: string;
-        Text?: string;
-        FileName?: string; 
-        Description?: string;
-      }>;
-      ParentPostId: string | null;
-      DiscoveryOptionSelectedUserIds: string[];
-    } = {
+    const postDto = {
       DiscoveryOption: initialDiscoveryOption,
       CommentPermission: commentPermission.value, 
-      DisallowShare: disallowShare.value,         
+      DisallowShare: disallowShare.value,       
       ReservationTime: reservationTime.value,     
-      Contents: [],
-      ParentPostId: null,
-      DiscoveryOptionSelectedUserIds: [] // 일단 빈 배열로 전송
+      Contents: [] as any[],
+      // ✨ 공유 모드일 경우 ParentPostId 설정
+      ParentPostId: isShareMode.value ? originalPostForShare.value.id : null,
+      DiscoveryOptionSelectedUserIds: [] as string[]
     };
 
     // 텍스트 내용이 있는 경우 Contents 배열에 추가
@@ -617,8 +600,9 @@ const submitPost = async () => {
     commentPermission.value = null;
     disallowShare.value = false;
     reservationTime.value = null;
-    uiStore.closePostEditor();
+    uiStore.closeEditor();
     emit('post-created');
+
   } catch (error: any) {
     console.error('❌ 게시글 작성 실패:', error);
     console.error('📊 에러 상세정보:', {
@@ -651,8 +635,8 @@ const submitPost = async () => {
  */
  const handleCancel = () => {
   // 모달이 열려있다면 모달을 닫습니다.
-  if (uiStore.isPostEditorOpen) {
-    uiStore.closePostEditor();
+  if (uiStore.isEditorOpen) {
+    uiStore.closeEditor();
   }
   // 인라인으로 확장되었다면 축소합니다.
   if (isExpanded.value) {
@@ -887,12 +871,12 @@ const handleFileChange = (event: Event) => {
  * await loadOriginalPostMedia();
  */
 const loadOriginalPostMedia = async () => {
-  if (!originalPost.value) return;
+  if (!originalPostForShare.value) return;
   
   // 원본 작성자 프로필 이미지 로드
-  if (originalPost.value.user?.profileThumbnailMediaId) {
+  if (originalPostForShare.value.user?.profileThumbnailMediaId) {
     try {
-      const response = await apiClient.get(`/api/media/${originalPost.value.user.profileThumbnailMediaId}`, {
+      const response = await apiClient.get(`/api/media/${originalPostForShare.value.user.profileThumbnailMediaId}`, {
         responseType: 'blob',
       });
       originalPostAuthorProfileUrl.value = URL.createObjectURL(response.data);
@@ -905,7 +889,7 @@ const loadOriginalPostMedia = async () => {
   }
   
   // 원본 게시글 미디어 로드
-  for (const content of originalPost.value.contents) {
+  for (const content of originalPostForShare.value.contents) {
     if ((content as any).$type === 'media' && ((content as any).mediaId || (content as any).thumbnailMediaId)) {
       const id = (content as any).mediaId || (content as any).thumbnailMediaId;
       try {
@@ -920,170 +904,6 @@ const loadOriginalPostMedia = async () => {
   }
 };
 
-/**
- * 리포스트 처리를 담당하는 함수
- * 
- * @async
- * @function handleRepost
- * @returns {Promise<void>}
- * 
- * @description
- * 2단계 리포스트 프로세스를 수행합니다:
- * 1. 1단계: 원본 게시글에 대해 리포스트 API 호출
- * 2. 2단계: 추가 내용이 있는 경우 리포스트된 게시글을 수정
- * 
- * 리포스트 ID 찾기 과정:
- * - 원본 게시글의 sharedAndRepostedUsers에서 내가 리포스트한 항목 찾기
- * - 찾지 못한 경우 최신 리포스트로 대체
- * 
- * @throws {Error} 리포스트 실패 시 에러를 throw하고 사용자에게 알림
- * 
- * @example
- * await handleRepost();
- */
-const handleRepost = async () => {
-  try {
-    console.log('🔄 리포스트 처리 시작...');
-    
-    // 1단계: 먼저 리포스트 API 호출
-    console.log('🚀 1단계 - 리포스트 API 호출 중...');
-    const repostResponse = await apiClient.post(`/api/Post/${originalPost.value!.id}/repost`);
-    console.log('✅ 1단계 - 리포스트 완료:', repostResponse.data);
-    
-    // 추가 내용이 있는 경우 2단계 진행
-    if (newPostText.value.trim() || attachedFiles.value.length > 0 || attachedLink.value.trim()) {
-      console.log('🔄 2단계 - 추가 내용으로 게시글 수정 시작...');
-      
-      // 리포스트된 게시글 ID 찾기 (원본 게시글의 sharedAndRepostedUsers에서 찾기)
-      let repostId;
-      try {
-        // 내 프로필 정보가 없으면 먼저 가져오기
-        if (!myProfile.value) {
-          const profileRes = await apiClient.get('/api/User/me');
-          myProfile.value = profileRes.data;
-        }
-        
-        // 잠시 대기 후 원본 게시글 정보를 다시 조회 (리포스트 정보 업데이트된 후)
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const originalPostRes = await apiClient.get(`/api/Post/${originalPost.value!.id}`);
-        console.log('🔍 원본 게시글 최신 정보:', originalPostRes.data);
-        
-        const sharedAndRepostedUsers = originalPostRes.data.sharedAndRepostedUsers || [];
-        console.log('🔍 리포스트한 사용자들:', sharedAndRepostedUsers);
-        
-        // 내가 리포스트한 항목 찾기
-        const myRepost = sharedAndRepostedUsers.find((item: any) => {
-          console.log(`🔍 리포스트 항목: userId=${item.user?.userId}, postId=${item.postId}, isRepost=${item.isRepost}`);
-          return item.user?.userId === myProfile.value.userId && item.isRepost === true;
-        });
-        
-        if (myRepost) {
-          repostId = myRepost.postId;
-          console.log('🎯 리포스트 ID 찾음:', repostId);
-        } else {
-          console.warn('⚠️ sharedAndRepostedUsers에서 내 리포스트를 찾을 수 없습니다.');
-          
-          // Fallback: 최근 생성된 리포스트 중 가장 최신 것 찾기
-          const latestRepost = sharedAndRepostedUsers
-            .filter((item: any) => item.user?.userId === myProfile.value.userId && item.isRepost === true)
-            .sort((a: any, b: any) => new Date(b.sharedAt).getTime() - new Date(a.sharedAt).getTime())[0];
-            
-          if (latestRepost) {
-            repostId = latestRepost.postId;
-            console.log('🎯 최신 리포스트 ID로 대체:', repostId);
-          }
-        }
-      } catch (error) {
-        console.error('❌ 리포스트 ID 조회 실패:', error);
-      }
-      
-      if (repostId) {
-        // 리포스트 수정용 데이터 타입을 명시적으로 정의
-        const updateDto: {
-          DiscoveryOption: string;
-          Contents: Array<{
-            $type: string;
-            Text?: string;
-            FileName?: string;
-            Description?: string;
-          }>;
-          ParentPostId: string;
-          DiscoveryOptionSelectedUserIds: string[];
-        } = {
-          DiscoveryOption: 'Friends',
-          Contents: [],
-          ParentPostId: originalPost.value!.id,
-          DiscoveryOptionSelectedUserIds: []
-        };
-
-        // 추가 텍스트 내용이 있는 경우 Contents 배열에 추가
-        if (newPostText.value.trim()) {
-          const textParts = generateContentsFromText();
-          updateDto.Contents.push(...textParts);
-        }
-
-        // 추가 링크가 있는 경우 externalUrl 콘텐츠로 추가
-        if (attachedLink.value.trim()) {
-          updateDto.Contents.push({ 
-            $type: 'externalUrl', 
-            SourceUrl: attachedLink.value.trim() 
-          });
-        }
-
-        const formData = new FormData();
-
-        // 추가 파일들을 FormData에 추가하고 Contents 배열에 메타데이터 추가
-        attachedFiles.value.forEach(file => {
-          formData.append('Files', file, file.name);
-          updateDto.Contents.push({
-            $type: 'upload',
-            FileName: file.name,
-            Description: ''
-          });
-        });
-
-        formData.append('JsonData', JSON.stringify(updateDto));
-        // console.log('🧪 최종 postDto JSON:', JSON.stringify(postDto, null, 2));
-        console.log('🚀 2단계 - 게시글 내용 업데이트 API 호출 중...');
-        await apiClient.put(`/api/Post/${repostId}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        console.log('✅ 2단계 - 게시글 내용 업데이트 완료!');
-      }
-    }
-
-    console.log('🎉 리포스트 전체 프로세스 완료!');
-    
-    // 초기화
-    newPostText.value = '';
-    attachedFiles.value = [];
-    previewItems.value = [];
-    attachedLink.value = '';
-    selectedUserIds.value = [];
-    showFriendSelector.value = false;
-    uiStore.closePostEditor();
-    emit('post-created');
-    
-  } catch (error: any) {
-    console.error('❌ 리포스트 실패:', error);
-    console.error('📊 에러 상세정보:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      statusText: error.response?.statusText
-    });
-    
-    if (error.response?.status === 500) {
-      alert('서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-    } else if (error.response?.data) {
-      alert(`리포스트 실패: ${error.response.data}`);
-    } else {
-      alert('리포스트에 실패했습니다.');
-    }
-  }
-};
-
 // ==================== 생명주기 및 감시자 ====================
 
 /**
@@ -1093,8 +913,8 @@ const handleRepost = async () => {
  * isRepostMode가 true가 되고 originalPost가 존재할 때
  * 즉시 원본 게시글의 미디어 파일들을 로드합니다.
  */
-watch(isRepostMode, (newValue) => {
-  if (newValue && originalPost.value) {
+ watch(isShareMode, (newValue) => { 
+  if (newValue && originalPostForShare.value) { 
     loadOriginalPostMedia();
   }
 }, { immediate: true });
@@ -1103,28 +923,25 @@ watch(isRepostMode, (newValue) => {
 
 <template>
   <div class="post-card create-post-card">
-    <div v-if="!uiStore.isPostEditorOpen && !isExpanded" class="compact-view" @click="openInlineEditor">
+    <div v-if="!uiStore.isEditorOpen && !isExpanded" class="compact-view" @click="openInlineEditor">
       <textarea readonly placeholder="오늘 하루, 기억하고 싶은 순간이 있나요?"></textarea>
     </div>
 
     <div v-else class="expanded-view">
-      <div v-if="isRepostMode" class="repost-header">
+      <div v-if="isShareMode" class="repost-header">
         <div class="repost-label">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M23.77 15.67c-.292-.293-.767-.293-1.06 0l-2.22 2.22V7.65c0-2.068-1.683-3.75-3.75-3.75h-5.85c-.414 0-.75.336-.75.75s.336.75.75.75h5.85c1.24 0 2.25 1.01 2.25 2.25v10.24l-2.22-2.22c-.293-.293-.768-.293-1.061 0s-.293.768 0 1.061l3.5 3.5c.145.147.337.22.53.22s.383-.072.53-.22l3.5-3.5c.294-.292.294-.767.001-1.06zM3.5 16.44c.414 0 .75-.336.75-.75V5.44c0-1.24 1.01-2.25 2.25-2.25h5.85c.414 0 .75-.336.75-.75s-.336-.75-.75-.75H6.5c-2.068 0-3.75 1.682-3.75 3.75v10.24L.53 13.22c-.293-.293-.768-.293-1.061 0s-.293.768 0 1.061l3.5 3.5c.145.147.337.22.53.22s.383-.072.53-.22l3.5-3.5c.293-.292.293-.767 0-1.06s-.767-.293-1.06 0L3.5 15.44z"/>
+            <path d="M12 22v-9m-4 4 4-4 4 4m-8-4a9 9 0 1 1 18 0 9 9 0 0 1-18 0Z"/>
           </svg>
-          <span>리포스트</span>
+          <span>공유하기</span>
         </div>
       </div>
       
       <textarea 
         v-model="newPostText" 
-        @input="handleTextInput"
-        @keydown="handleKeyDown"
         class="create-post-input" 
-        :placeholder="isRepostMode ? '이 게시글에 대한 생각을 추가해보세요...' : '오늘 하루, 기억하고 싶은 순간이 있나요?'" 
+        :placeholder="isShareMode ? '공유할 게시글에 생각을 추가해보세요...' : '오늘 하루, 기억하고 싶은 순간이 있나요?'" 
         aria-label="게시글 내용 입력"
-        :aria-describedby="isMentioning ? 'mention-hint' : undefined"
       ></textarea>
       
       <div 
@@ -1174,19 +991,19 @@ watch(isRepostMode, (newValue) => {
       <input v-model="attachedLink" placeholder="🔗 링크 붙여넣기" class="link-input" />
     </div>
 
-      <div v-if="isRepostMode && originalPost" class="original-post-preview">
+    <div v-if="isShareMode && originalPostForShare" class="original-post-preview">
         <div class="original-post-card">
           <div class="original-post-author">
             <img :src="originalPostAuthorProfileUrl || '/src/assets/images/default_profile_image.jpg'" 
                  class="original-author-avatar">
             <div class="original-author-info">
-              <div class="original-author-name">{{ originalPost.user.nickname }}</div>
-              <div class="original-post-timestamp">{{ new Date(originalPost.createdAt).toLocaleString() }}</div>
+              <div class="original-author-name">{{ originalPostForShare.user.nickname }}</div>
+              <div class="original-post-timestamp">{{ new Date(originalPostForShare.createdAt).toLocaleString() }}</div>
             </div>
           </div>
           
           <div class="original-post-content">
-            <div v-for="(content, index) in originalPost.contents" :key="index">
+            <div v-for="(content, index) in originalPostForShare.contents" :key="index">
               <p v-if="(content as any).$type === 'text'">{{ (content as any).text }}</p>
               
               <div v-else-if="(content as any).$type === 'media' && ((content as any).mediaId || (content as any).thumbnailMediaId)">

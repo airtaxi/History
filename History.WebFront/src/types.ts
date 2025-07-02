@@ -72,12 +72,25 @@ export type AnyContent = TextContent | MediaContent | ProfileContent | UploadCon
 
 export interface PostResponseDto {
   id: string;
-  user: UserResponseDto;
-  contents: AnyContent[];
+  user: any; // 또는 UserResponseDto
+  discoveryOption: string;
+  contents: any[];
+  comments: any[];
+  commentsCount: number;
+  postReactions: any[];
+  commentPermission: string | null;
+  disallowShare: boolean;
+  isRepost: boolean;
   createdAt: string;
-  isRepost?: boolean;
-  parentPost?: PostResponseDto | string;
-  comments?: CommentResponseDto[];
+  modifiedAt: string | null;
+  parentPost?: PostResponseDto;
+
+  sharedAndRepostedUsers?: {
+    user: any; // 또는 UserResponseDto
+    postId: string;
+    isRepost: boolean;
+    sharedAt: string;
+  }[];
 }
 
 export interface NotificationResponseDto {
