@@ -80,12 +80,10 @@ public partial class KakaoStoryLoginPage : ContentPage
 
                 _gotCookies = true; // Successfully got cookies, prevent further checks
 
-                // Go back to the previous page and wait for the animation to finish
-                await App.PopModalAsync();
-
-                // Now set the cookies in the configuration and complete the task
                 Configuration.SetValue("KakaoStoryCookies", cookies);
                 _taskCompletionSource.TrySetResult(cookies);
+
+                await App.PopModalAsync();
             }
             catch { }
         }
