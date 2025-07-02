@@ -165,7 +165,7 @@
     </DataTemplate>
 
     <DataTemplate x:Key="ExternalUrlContentTemplate" x:DataType="vm:ExternalUrlContentViewModel">
-        <Grid IsClippedToBounds="True" MinimumHeightRequest="250">
+        <Grid HeightRequest="250" IsClippedToBounds="True">
             <Rectangle
                 Margin="-4"
                 Fill="#808080"
