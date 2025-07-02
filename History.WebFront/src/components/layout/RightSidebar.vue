@@ -10,6 +10,7 @@ const myProfile = ref<UserResponseDto | null>(null);
 const friends = ref<UserResponseDto[]>([]);
 const pendingRequests = ref<UserResponseDto[]>([]);
 const profileImageMap = ref<Record<string, string>>({});
+const favoriteUserIds = ref<Set<string>>(new Set());
 const activeTab = ref<'friends' | 'requests'>('friends');
 const getProfileUrl = (mediaId: string | null) =>
   mediaId ? `/api/Media/${mediaId}` : defaultProfile;
@@ -81,9 +82,83 @@ const refreshFriendsList = async () => {
     const friendsRes = await apiClient.get(`/api/Friendship/${myProfile.value.userId}`);
     friends.value = friendsRes.data;
     await prepareProfileImageMap(friends.value);
+    await loadFavorites();
   } catch (error) {
     console.error('친구 목록 새로고침 실패:', error);
   }
+};
+
+// 즐겨찾기 토글
+const toggleFavorite = async (userId: string, event: Event) => {
+  event.preventDefault();
+  event.stopPropagation();
+  
+  try {
+    await apiClient.post(`/api/Friendship/toggle-favorite/${userId}`);
+    
+    if (favoriteUserIds.value.has(userId)) {
+      favoriteUserIds.value.delete(userId);
+    } else {
+      favoriteUserIds.value.add(userId);
+    }
+    
+    // 리렌더링을 위해 새로운 Set 생성
+    favoriteUserIds.value = new Set(favoriteUserIds.value);
+    
+    // 로컬 스토리지에 저장
+    if (myProfile.value) {
+      const savedKey = `favoriteFriends_${myProfile.value.userId}`;
+      localStorage.setItem(savedKey, JSON.stringify(Array.from(favoriteUserIds.value)));
+    }
+    
+    // 친구 목록을 즐겨찾기 기준으로 재정렬
+    sortFriendsByFavorite();
+  } catch (error) {
+    console.error('즐겨찾기 토글 실패:', error);
+  }
+};
+
+// 즐겨찾기 목록 로드 (로컬 스토리지에서 가져오기)
+const loadFavorites = async () => {
+  if (!myProfile.value) return;
+  
+  // 로컬 스토리지에서 즐겨찾기 목록 가져오기
+  const savedKey = `favoriteFriends_${myProfile.value.userId}`;
+  const saved = localStorage.getItem(savedKey);
+  
+  if (saved) {
+    try {
+      favoriteUserIds.value = new Set(JSON.parse(saved));
+    } catch (error) {
+      console.error('즐겨찾기 목록 파싱 실패:', error);
+      favoriteUserIds.value = new Set();
+    }
+  } else {
+    favoriteUserIds.value = new Set();
+  }
+  
+  // 친구 목록을 즐겨찾기 기준으로 재정렬
+  sortFriendsByFavorite();
+};
+
+// 친구 목록을 즐겨찾기 기준으로 정렬
+const sortFriendsByFavorite = () => {
+  friends.value.sort((a, b) => {
+    const aIsFavorite = favoriteUserIds.value.has(a.userId);
+    const bIsFavorite = favoriteUserIds.value.has(b.userId);
+    
+    // 즐겨찾기가 우선
+    if (aIsFavorite && !bIsFavorite) return -1;
+    if (!aIsFavorite && bIsFavorite) return 1;
+    
+    // 둘 다 즐겨찾기이거나 둘 다 아닌 경우 이름순
+    return a.nickname.localeCompare(b.nickname);
+  });
+  
+  console.log('정렬된 친구 목록:', friends.value.map(f => ({
+    name: f.nickname,
+    isFavorite: favoriteUserIds.value.has(f.userId)
+  })));
 };
 
 onMounted(async () => {
@@ -101,6 +176,7 @@ onMounted(async () => {
         pendingRequests.value = pendingRes.data;
 
         await prepareProfileImageMap([myProfile.value, ...friends.value, ...pendingRequests.value]);
+        await loadFavorites();
     }
   } catch (error) {
     console.error('사이드바 정보 로딩 실패:', error);
@@ -132,6 +208,22 @@ onMounted(async () => {
               <img :src="profileImageMap[friend.userId] || defaultProfile" class="friend-avatar" />
               <span>{{ friend.nickname }}</span>
             </RouterLink>
+            <button 
+              v-if="favoriteUserIds.has(friend.userId)"
+              @click="toggleFavorite(friend.userId, $event)" 
+              class="favorite-btn active"
+              title="즐겨찾기 해제"
+            >
+              ⭐
+            </button>
+            <button 
+              v-else
+              @click="toggleFavorite(friend.userId, $event)" 
+              class="favorite-btn"
+              title="즐겨찾기 추가"
+            >
+              ☆
+            </button>
           </li>
         </ul>
         <p v-if="friends.length === 0" class="empty-message">아직 친구가 없습니다.</p>
@@ -178,11 +270,45 @@ onMounted(async () => {
 .tabs button { flex: 1; padding: 10px; border: none; background: none; cursor: pointer; font-weight: 500; color: #888; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; }
 .tabs button.active { color: #ed664d; border-bottom-color: #ed664d; }
 .friend-list { list-style: none; padding: 0; margin: 0; }
-.friend-item { padding: 8px 0; }
-.friend-link { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; padding: 4px; border-radius: 6px; transition: background-color 0.2s; }
+.friend-item { 
+  padding: 8px 0; 
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.friend-link { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  text-decoration: none; 
+  color: inherit; 
+  padding: 4px; 
+  border-radius: 6px; 
+  transition: background-color 0.2s; 
+  flex: 1;
+}
 .friend-link:hover { background-color: #f0f2f5; }
 .friend-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover;}
 .empty-message { text-align: center; color: #888; padding: 20px 0; font-size: 0.9rem; }
+
+.favorite-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px;
+  color: #ddd;
+  transition: all 0.2s;
+}
+
+.favorite-btn:hover {
+  transform: scale(1.1);
+  color: #ffc107;
+}
+
+.favorite-btn.active {
+  color: #ffc107;
+}
 
 .friend-request-item {
   display: flex;

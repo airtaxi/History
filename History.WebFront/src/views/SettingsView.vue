@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import apiClient from '@/api'
-import { useRouter } from 'vue-router'
+import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import TheHeader from '@/components/layout/TheHeader.vue'
 import type { UserResponseDto } from '@/types'
 
 const router = useRouter()
@@ -387,7 +386,6 @@ onMounted(fetchSettingsData)
 
 <template>
   <div class="settings-layout">
-    <TheHeader />
     <main class="main-content">
       <div class="settings-container">
         <div class="page-header">
@@ -592,6 +590,31 @@ onMounted(fetchSettingsData)
             </div>
             <button @click="withdraw" class="btn btn-danger">회원 탈퇴</button>
           </div>
+        </div>
+
+        <!-- 정보 및 지원 -->
+        <div class="settings-card">
+          <div class="card-header">
+            <h2>📚 정보 및 지원</h2>
+          </div>
+          <RouterLink to="/terms" class="setting-link">
+            <div class="setting-item">
+              <div class="setting-info">
+                <label class="setting-label">이용약관</label>
+                <span class="setting-description">히스토리 서비스 이용약관을 확인합니다</span>
+              </div>
+              <span class="arrow-icon">→</span>
+            </div>
+          </RouterLink>
+          <RouterLink to="/privacy" class="setting-link">
+            <div class="setting-item">
+              <div class="setting-info">
+                <label class="setting-label">개인정보처리방침</label>
+                <span class="setting-description">개인정보 수집 및 이용에 대한 방침을 확인합니다</span>
+              </div>
+              <span class="arrow-icon">→</span>
+            </div>
+          </RouterLink>
         </div>
       </div>
     </main>
@@ -1011,5 +1034,28 @@ onMounted(fetchSettingsData)
   .toggle-label {
     font-size: 0.85rem;
   }
+}
+
+/* 정보 및 지원 링크 스타일 */
+.setting-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.setting-link:hover .setting-item {
+  background-color: #f8f9fa;
+}
+
+.arrow-icon {
+  color: #6c757d;
+  font-size: 1.2rem;
+  font-weight: 300;
+  transition: transform 0.2s ease;
+}
+
+.setting-link:hover .arrow-icon {
+  transform: translateX(4px);
+  color: #ed664d;
 }
 </style>
