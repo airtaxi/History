@@ -44,8 +44,8 @@
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android' AND '$(Configuration)' == 'Release'">
 		<AndroidEnableSGenConcurrent>true</AndroidEnableSGenConcurrent>
-		<!--<EnableLLVM>true</EnableLLVM>-->
-		<!--<AndroidEnableMarshalMethods>true</AndroidEnableMarshalMethods>-->
+		<EnableLLVM>True</EnableLLVM>
+		<AndroidEnableProfiledAot>False</AndroidEnableProfiledAot>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android' AND '$(Configuration)' == 'Debug'">
