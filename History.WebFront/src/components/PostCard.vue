@@ -327,23 +327,39 @@ function formatRelativeTime(dateString: string): string {
  * <button @click="sharePost">🔗 공유</button>
  * ```
  */
-const sharePost = (event: MouseEvent) => {
-  // 리포스트 버튼에 애니메이션 클래스 추가
-  const button = event.currentTarget as HTMLElement;
-  const icon = button.querySelector('.repost-icon');
-  
-  if (icon) {
-    icon.classList.add('repost-success');
-    
-    // 애니메이션 종료 후 클래스 제거
-    setTimeout(() => {
-      icon.classList.remove('repost-success');
-    }, 600);
-  }
-  
-  // 리포스트 에디터 열기
-  uiStore.openRepostEditor(props.post);
+ const openShareEditor = () => {
+  // `uiStore`에 `openShareEditor` 같은 명확한 이름의 함수를 만들어 사용하는 것이 좋습니다.
+  // 여기서는 기존 `openRepostEditor`를 그대로 사용한다고 가정합니다.
+  uiStore.openShareEditor(props.post);
 };
+
+/**
+ * 리포스트 (즉시 실행)
+ * - 에디터를 열지 않고, 확인창 후 바로 리포스트 API를 호출합니다.
+ */
+const handleInstantRepost = async (event: MouseEvent) => {
+  if (confirm('이 게시물을 리포스트하시겠습니까?')) {
+    const button = event.currentTarget as HTMLElement;
+    const icon = button.querySelector('.repost-icon');
+    
+    try {
+      await apiClient.post(`/api/Post/${props.post.id}/repost`);
+      
+      if (icon) {
+        icon.classList.add('repost-success');
+        setTimeout(() => icon.classList.remove('repost-success'), 600);
+      }
+      
+      alert('리포스트되었습니다.');
+      // emit('post-action-complete');
+
+    } catch (error: any) {
+      console.error("리포스트 실패:", error);
+      alert(`리포스트에 실패했습니다: ${error.response?.data || error.message}`);
+    }
+  }
+};
+
 
 /**
  * 미디어 파일의 Blob URL 생성
@@ -867,7 +883,7 @@ const navigateToProfile = async (mentionText: string) => {
     if (user) {
       router.push(`/user/${user.userId}`);
     } else {
-      console.warn(`사용자를 찾을 수 없습니다: ${handle}`);
+      console.warn(`사용자를 찾을 수 없습니다: ${nickname}`);
     }
   } catch (error) {
     console.error('사용자 검색 실패:', error);
@@ -1043,7 +1059,7 @@ const isImageUrl = (url: string): boolean => {
       </div>
       
       <!-- 원본 게시글 표시 (리포스트인 경우) -->
-      <div v-if="(post as any).isRepost && (post as any).parentPost" class="original-post-card" @click.stop="goToOriginalPost">
+      <div v-if="post.parentPost" class="original-post-card" @click.stop="goToOriginalPost">
         <div class="original-post-author">
           <img :src="props.profileImageMap?.[(post as any).parentPost.user.userId] || '/src/assets/images/default_profile_image.jpg'" 
                class="original-author-avatar">
@@ -1131,12 +1147,8 @@ const isImageUrl = (url: string): boolean => {
         @mouseleave.stop="endLongPress"
         @touchstart.stop="startLongPress"
         @touchend.stop="endLongPress"
-        @touchcancel.stop="endLongPress"
         class="footer-btn" 
-        :class="{ active: myReaction }"
-        :aria-label="`반응하기: ${myReaction ? getReactionLabel(myReaction) : '선택되지 않음'}, 총 ${totalReactions}개`"
-        :aria-pressed="!!myReaction"
-        role="button">
+        :class="{ active: myReaction }">
         <span v-if="!myReaction" aria-hidden="true">🤍</span>
         <span v-else-if="myReaction === 'Like'" aria-hidden="true">❤️</span>
         <span v-else-if="myReaction === 'Awesome'" aria-hidden="true">🔥</span>
@@ -1145,15 +1157,27 @@ const isImageUrl = (url: string): boolean => {
         <span v-else-if="myReaction === 'Support'" aria-hidden="true">💪</span>
         <span aria-hidden="true">{{ totalReactions }}</span>
       </button>
-      <button @click.stop="goToPostDetail" class="footer-btn" :aria-label="`댓글 ${post.comments ? post.comments.length : 0}개, 댓글 보기`">
+
+      <button @click.stop="goToPostDetail" class="footer-btn">
         <span aria-hidden="true">💬 {{ post.comments ? post.comments.length : 0 }}</span>
       </button>
-      <button @click.stop="sharePost" class="footer-btn repost-btn" title="리포스트하기">
+
+      <button @click.stop="openShareEditor" class="footer-btn" title="공유하기">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M12 22v-9m-4 4 4-4 4 4"/>
+            <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+        </svg>
+        <span v-if="post.sharedAndRepostedUsers?.filter(u => !u.isRepost).length > 0">
+            {{ post.sharedAndRepostedUsers.filter(u => !u.isRepost).length }}
+        </span>
+      </button>
+
+      <button @click.stop="handleInstantRepost" class="footer-btn repost-btn" title="리포스트하기">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="repost-icon">
           <path d="M17 1l4 4-4 4M3 23l-4-4 4-4M21 5H10a4 4 0 00-4 4v1M3 19h11a4 4 0 004-4v-1"/>
         </svg>
-        <span v-if="(post as any).sharedAndRepostedUsers?.filter((u: any) => u.isRepost).length > 0" class="repost-count">
-          {{ (post as any).sharedAndRepostedUsers.filter((u: any) => u.isRepost).length }}
+        <span v-if="post.sharedAndRepostedUsers?.filter(u => u.isRepost).length > 0" class="repost-count">
+          {{ post.sharedAndRepostedUsers.filter(u => u.isRepost).length }}
         </span>
       </button>
     </div>

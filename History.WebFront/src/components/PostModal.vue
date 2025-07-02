@@ -14,7 +14,7 @@
   const uiStore = useUiStore();
   
   const close = () => {
-    uiStore.closePostEditor();  // 모달 닫기
+    uiStore.closeEditor();  // 모달 닫기
   };
   </script>
   
