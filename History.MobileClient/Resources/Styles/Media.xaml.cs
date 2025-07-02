@@ -12,7 +12,6 @@ namespace History.MobileClient.Resources.Styles;
 public partial class Media : ResourceDictionary
 {
     private static readonly ConcurrentDictionary<ContentView, IViewHandler> MediaElementHandlerMap = [];
-    private static readonly ConcurrentDictionary<object, Size> ImageSizeMap = [];
 
     public Media() => InitializeComponent();
 

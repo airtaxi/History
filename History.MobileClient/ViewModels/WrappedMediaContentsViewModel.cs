@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices.Marshalling;
 using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -40,6 +41,13 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
         }
     }
     public string CarouselPositionText => $"{CarouselPosition + 1} / {_mediaContentsCount}";
+
+    [ObservableProperty]
+    public partial LayoutOptions CarouselViewHorizontalOptions { get; set; } = LayoutOptions.Fill;
+
+    [ObservableProperty]
+    public partial double CarouselViewWidth { get; set; } = -1;
+
     public double CarouselViewHeight
     {
         get
@@ -47,8 +55,27 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
             var newHeight = CalculateNewHeight();
             try
             {
-                Debug.WriteLine($"CarouselViewHeight: {newHeight} (W: {CurrentPositionMediaImageViewModel.CarouselView?.Width ?? -2})");
+
+                var carouselViewWidth = CurrentPositionMediaImageViewModel.CarouselView?.Width ?? -2;
+                Debug.WriteLine($"CarouselViewHeight: {newHeight} (W: {carouselViewWidth})");
                 if (newHeight == 0) return _lastCarouselViewHeight;
+
+                App.Page.Dispatcher.Dispatch(() =>
+                {
+                    var maxWidth = CurrentPositionMediaImageViewModel.MaxWidth;
+                    if (CarouselViewWidth == -1 && carouselViewWidth > maxWidth)
+                    {
+                        CarouselViewWidth = maxWidth;
+                        CarouselViewHorizontalOptions = LayoutOptions.Start;
+                        CurrentPositionMediaImageViewModel.CarouselView.WidthRequest = maxWidth;
+                        CurrentPositionMediaImageViewModel.CarouselView.HorizontalOptions = LayoutOptions.Start;
+                    }
+                    else if (CarouselViewWidth != -1 && carouselViewWidth < maxWidth)
+                    {
+                        CarouselViewWidth = -1;
+                        CarouselViewHorizontalOptions = LayoutOptions.Fill;
+                    }
+                });
 
                 _lastCarouselViewHeight = newHeight;
                 return newHeight;
@@ -105,7 +132,7 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
         WeakReferenceMessenger.Default.Register<ResizeCarouselViewMessage>(this, OnCarouselViewHeightChangedMessageReceived);
     }
 
-    public void UpdateCarouselViewHeight()
+    public void UpdateCarouselViewSize()
     {
         var newHeight = CalculateNewHeight();
         if (newHeight != _lastCarouselViewHeight && newHeight > 0)
@@ -127,12 +154,12 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
         var height = CurrentPositionMediaImageViewModel.ImageHeight;
         var aspectRatio = (double)width / height;
 
-        var newHeight = carouselView.Width / aspectRatio;
+        var carouselViewWidth = Math.Min(carouselView.Width, CurrentPositionMediaImageViewModel.MaxWidth);
+        var newHeight = carouselViewWidth / aspectRatio;
 
         if (_postType != PostType.Unwrapped)
         {
             var targetMaxAspectRatio = 1; // 1:1 aspect ratio for timeline
-            var carouselViewWidth = carouselView.Width;
             var newMaxHeight = carouselViewWidth / targetMaxAspectRatio;
             if (newMaxHeight > 0)
             {
@@ -148,7 +175,7 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
     {
         if (CurrentPositionMediaImageViewModel == message.Value)
         {
-            UpdateCarouselViewHeight();
+            UpdateCarouselViewSize();
         }
     }
 }
