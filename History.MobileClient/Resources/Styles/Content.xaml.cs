@@ -72,7 +72,11 @@ public partial class Content : ResourceDictionary
         clip.Rect = new Rect(0, 0, carouselView.Width, carouselView.Height);
 
         var viewModel = carouselView.BindingContext as WrappedMediaContentsViewModel;
-        viewModel.UpdateCarouselViewHeight();
+        if(viewModel != null)
+        {
+            viewModel.CarouselViewWidth = -1;
+            viewModel.UpdateCarouselViewSize();
+        }
     }
 
     private void OnWrappedMediaContentsCarouselViewPositionChanged(object sender, PositionChangedEventArgs e)

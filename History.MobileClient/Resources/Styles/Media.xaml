@@ -18,6 +18,8 @@
             Finish="OnImageFinished"
             HorizontalOptions="{x:Binding HorizontalContentOptions}"
             Loaded="OnImageLoaded"
+            MaximumWidthRequest="{x:Binding MaxWidth,
+                                            Mode=OneWay}"
             Source="{x:Binding Uri,
                                Mode=OneTime}"
             VerticalOptions="{x:Binding VerticalContentOptions}" />
@@ -27,6 +29,8 @@
         <Image
             Aspect="{x:Binding Aspect}"
             HorizontalOptions="{x:Binding HorizontalContentOptions}"
+            MaximumWidthRequest="{x:Binding MaxWidth,
+                                            Mode=OneWay}"
             Source="{x:Binding Uri,
                                Mode=OneTime}"
             VerticalOptions="{x:Binding VerticalContentOptions}" />

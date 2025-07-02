@@ -74,17 +74,21 @@
     <DataTemplate x:Key="AndroidWrappedMediaContentsTemplate" x:DataType="vm:WrappedMediaContentsViewModel">
         <Grid>
             <CarouselView
+                BackgroundColor="#808080"
                 CurrentItem="{x:Binding FirstMedia}"
                 HeightRequest="{x:Binding CarouselViewHeight,
                                           Mode=OneWay}"
+                HorizontalOptions="{x:Binding CarouselViewHorizontalOptions,
+                                              Mode=OneWay}"
                 HorizontalScrollBarVisibility="Never"
-                IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
                 ItemTemplate="{StaticResource MediaContentTemplate}"
                 ItemsSource="{x:Binding Medias}"
                 MaximumHeightRequest="{x:Binding MaxCarouselViewHeight}"
                 Position="{x:Binding CarouselPosition,
                                      Mode=OneWayToSource}"
-                SizeChanged="OnWrappedMediaContentsCarouselViewSizeChanged">
+                SizeChanged="OnWrappedMediaContentsCarouselViewSizeChanged"
+                WidthRequest="{x:Binding CarouselViewWidth,
+                                         Mode=OneWay}">
                 <CarouselView.Clip>
                     <RoundRectangleGeometry CornerRadius="6" />
                 </CarouselView.Clip>
@@ -114,6 +118,8 @@
             <CarouselView
                 HeightRequest="{x:Binding CarouselViewHeight,
                                           Mode=OneWay}"
+                HorizontalOptions="{x:Binding CarouselViewHorizontalOptions,
+                                              Mode=OneWay}"
                 HorizontalScrollBarVisibility="Never"
                 IsSwipeEnabled="{x:Binding CarouselSwipeEnabled}"
                 ItemTemplate="{StaticResource MediaContentTemplate}"

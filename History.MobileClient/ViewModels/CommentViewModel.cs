@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using AndroidX.Lifecycle;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -75,7 +76,16 @@ public partial class CommentViewModel : ObservableObject
         try
         {
             Comment = comment;
-            Contents = Utils.GenerateContentViewModels(Comment.Contents, _postType);
+
+            var contents = Utils.GenerateContentViewModels(Comment.Contents, _postType);
+            var imageViewModels = (contents.FirstOrDefault(x => x is WrappedMediaContentsViewModel) as WrappedMediaContentsViewModel)?.Medias.Select(x => x.ImageMedia);
+            imageViewModels ??= contents.OfType<MediaContentViewModel>().Select(x => x.ImageMedia);
+            foreach (ImageViewModel imageViewModel in imageViewModels)
+            {
+                imageViewModel.MaxWidth = 200;
+            }
+
+            Contents = contents;
         }
         catch (ObjectDisposedException) { } // The view is disposed. this view model also will be removed on next GC
         catch (Exception) { } // Ignore any exceptions during update, as the view might be in the foreground.

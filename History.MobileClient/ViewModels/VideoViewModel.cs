@@ -42,5 +42,7 @@ public partial class VideoViewModel(string uri) : ObservableObject, IMediaViewMo
 
     [ObservableProperty]
     public partial bool FullScreenSwipeable { get; set; } = true;
+
+    public double MaxWidth { get; set; } = double.PositiveInfinity;
 }
 
