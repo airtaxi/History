@@ -10,7 +10,7 @@ public class HandlePostReaction : IAuthRequiredRequest, IRequestWithUrlParameter
     public Method Method => Method.Post;
     public Dictionary<string, string> UrlParameters { get; set; } = [];
 
-    public HandlePostReaction(string postId, PostReactionType type)
+    public HandlePostReaction(string postId, ReactionType type)
     {
         UrlParameters["postId"] = postId;
         UrlParameters["type"] = type.ToString();

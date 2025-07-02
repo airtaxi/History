@@ -87,13 +87,13 @@ public partial class PostViewModel : ObservableObject
 
     public bool HasReactions => Post.PostReactions.Count > 0;
     public int ReactionsCount => Post.PostReactions.Count;
-    public List<PostInteractionViewModel> Interactions
+    public List<InteractionViewModel> Interactions
     {
         get
         {
-            var reactions = Post.PostReactions.Select(x => new PostInteractionViewModel(x));
-            var shared = Post.SharedAndRepostedUsers.Where(x => !x.IsRepost).Select(x => new PostInteractionViewModel(x, true));
-            var reposted = Post.SharedAndRepostedUsers.Where(x => x.IsRepost).Select(x => new PostInteractionViewModel(x, false));
+            var reactions = Post.PostReactions.Select(x => new InteractionViewModel(x));
+            var shared = Post.SharedAndRepostedUsers.Where(x => !x.IsRepost).Select(x => new InteractionViewModel(x, true));
+            var reposted = Post.SharedAndRepostedUsers.Where(x => x.IsRepost).Select(x => new InteractionViewModel(x, false));
 
             var result = reactions.Concat(shared).Concat(reposted).OrderByDescending(x => x.CreatedAt).ToList();
             return result;
@@ -102,7 +102,7 @@ public partial class PostViewModel : ObservableObject
     public PostType PostType { get; }
     public bool IsParentPost { get; }
 
-    public PostInteractionViewModel Reaction => Interactions.FirstOrDefault(r => r.User.UserId == Shared.UserId && r.ReactionType != null);
+    public InteractionViewModel Reaction => Interactions.FirstOrDefault(r => r.User.UserId == Shared.UserId && r.ReactionType != null);
     public string ReactionGlyph => Reaction?.Glyph ?? Solid.Heart;
     public string ReactionFontFamily => Reaction != null ? "FASolid" : "FARegular";
     public Color ReactionColor => Reaction?.Color ?? (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Colors.White : Colors.Black);
@@ -372,10 +372,10 @@ public partial class PostViewModel : ObservableObject
         }
 
         // Add reaction
-        var rawReaction = await App.Page.DisplayActionSheet("느낌 달기", Constants.PromptCancel, null, [.. Enum.GetValues<PostReactionType>().Select(x => x.ToDisplayString())]);
+        var rawReaction = await App.Page.DisplayActionSheet("느낌 달기", Constants.PromptCancel, null, [.. Enum.GetValues<ReactionType>().Select(x => x.ToDisplayString())]);
         if (rawReaction == null || rawReaction == Constants.PromptCancel) return;
 
-        var reaction = PostReactionTypeExtensions.FromDisplayString(rawReaction);
+        var reaction = ReactionTypeExtensions.FromDisplayString(rawReaction);
 
         await App.ExecuteRequestAsync(new HandlePostReaction(Post.Id, reaction));
         await RefreshAsync();
@@ -418,7 +418,7 @@ public partial class PostViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleReactionTapAsync()
     {
-        var page = new PostInteractionsPage(Interactions.Where(x => x.Type == PostInteractionType.Reaction).Select(x => new FriendshipViewModel(x.User, x)), Enums.PostInteractionType.Reaction);
+        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Reaction).Select(x => new FriendshipViewModel(x.User, x)), Enums.InteractionType.Reaction);
 #if IOS
         await App.PushAsync(page);
 #else
@@ -429,7 +429,7 @@ public partial class PostViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleSharedTapAsync()
     {
-        var page = new PostInteractionsPage(Interactions.Where(x => x.Type == PostInteractionType.Share).Select(x => new FriendshipViewModel(x.User, x)), Enums.PostInteractionType.Share);
+        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Share).Select(x => new FriendshipViewModel(x.User, x)), Enums.InteractionType.Share);
 #if IOS
         await App.PushAsync(page);
 #else
@@ -440,7 +440,7 @@ public partial class PostViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleRepostTapAsync()
     {
-        var page = new PostInteractionsPage(Interactions.Where(x => x.Type == PostInteractionType.Repost).Select(x => new FriendshipViewModel(x.User, x)), Enums.PostInteractionType.Repost);
+        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Repost).Select(x => new FriendshipViewModel(x.User, x)), Enums.InteractionType.Repost);
 #if IOS
         await App.PushAsync(page);
 #else

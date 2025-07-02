@@ -25,7 +25,7 @@ public class PostReaction
     /// <summary>
     /// Represents the type of reaction associated with a post.
     /// </summary>
-    public PostReactionType Type { get; set; }
+    public ReactionType Type { get; set; }
 
     /// <summary>
     /// Represents the date and time when the object was created.

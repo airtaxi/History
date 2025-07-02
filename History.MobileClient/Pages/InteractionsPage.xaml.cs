@@ -7,35 +7,37 @@ using System.ComponentModel;
 
 namespace History.MobileClient.Pages;
 
-public partial class PostInteractionsPage : ContentPage, INotifyPropertyChanged
+public partial class InteractionsPage : ContentPage, INotifyPropertyChanged
 {
-    public IEnumerable<FriendshipViewModel> Users { get; private set; }
+    public IEnumerable<FriendshipViewModel> ViewModels { get; private set; }
     public string NoUsersText { get; private set; }
     public bool HasNoUsers { get; private set; }
 
     private bool _isInForeground;
 
 
-    public PostInteractionsPage(IEnumerable<FriendshipViewModel> users, PostInteractionType type)
+    public InteractionsPage(IEnumerable<FriendshipViewModel> viewModels, InteractionType type)
     {
         InitializeComponent();
         BindingContext = this;
 
-        Users = users;
-        HasNoUsers = !users.Any();
+        ViewModels = viewModels;
+        HasNoUsers = !viewModels.Any();
         if (HasNoUsers)
         {
-            if (type == PostInteractionType.Reaction) NoUsersText = "느낌을 단 사용자가 없습니다";
-            else if (type == PostInteractionType.Share) NoUsersText = "공유한 사용자가 없습니다";
-            else if (type == PostInteractionType.Repost) NoUsersText = "리포스트한 사용자가 없습니다";
+            if (type == InteractionType.Reaction) NoUsersText = "느낌을 단 사용자가 없습니다";
+            else if (type == InteractionType.Share) NoUsersText = "공유한 사용자가 없습니다";
+            else if (type == InteractionType.Repost) NoUsersText = "리포스트한 사용자가 없습니다";
+            else if (type == InteractionType.CommentLike) NoUsersText = "댓글에 좋아요를 누른 사용자가 없습니다";
         }
-        OnPropertyChanged(nameof(Users));
+        OnPropertyChanged(nameof(ViewModels));
         OnPropertyChanged(nameof(NoUsersText));
         OnPropertyChanged(nameof(HasNoUsers));
 
-        if (type == PostInteractionType.Reaction) TitleLabel.Text = "느낌 사용자 목록";
-        else if (type == PostInteractionType.Share) TitleLabel.Text = "공유 사용자 목록";
-        else if (type == PostInteractionType.Repost) TitleLabel.Text = "리포스트 사용자 목록";
+        if (type == InteractionType.Reaction) TitleLabel.Text = "느낌 사용자 목록";
+        else if (type == InteractionType.Share) TitleLabel.Text = "공유 사용자 목록";
+        else if (type == InteractionType.Repost) TitleLabel.Text = "리포스트 사용자 목록";
+        else if (type == InteractionType.CommentLike) TitleLabel.Text = "댓글 좋아요 사용자 목록";
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }

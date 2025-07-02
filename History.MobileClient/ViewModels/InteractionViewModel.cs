@@ -9,13 +9,13 @@ using UraniumUI.Icons.MaterialSymbols;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class PostInteractionViewModel
+public partial class InteractionViewModel
 {
-    public PostInteractionType Type { get; }
+    public InteractionType Type { get; }
     public DateTime CreatedAt { get; }
     public UserResponseDto User { get; }
     public string TargetPostId { get; }
-    public PostReactionType? ReactionType { get; }
+    public ReactionType? ReactionType { get; }
 
 
     public double IconSize { get; } = 12;
@@ -24,9 +24,9 @@ public partial class PostInteractionViewModel
     public string Glyph { get; }
     public Color Color { get; }
 
-    public PostInteractionViewModel(PostReactionDto reaction)
+    public InteractionViewModel(PostReactionDto reaction)
     {
-        Type = PostInteractionType.Reaction;
+        Type = InteractionType.Reaction;
         CreatedAt = reaction.CreatedAt;
         User = reaction.User;
         ReactionType = reaction.Type;
@@ -37,29 +37,46 @@ public partial class PostInteractionViewModel
         FontFamily = "FASolid";
         Glyph = reaction.Type switch
         {
-            PostReactionType.Like => Solid.Heart,
-            PostReactionType.Awesome => Solid.Star,
-            PostReactionType.Happy => Solid.FaceSmile,
-            PostReactionType.Sad => Solid.Droplet,
-            PostReactionType.Support => Solid.Bolt,
+            Commons.Enums.ReactionType.Like => Solid.Heart,
+            Commons.Enums.ReactionType.Awesome => Solid.Star,
+            Commons.Enums.ReactionType.Happy => Solid.FaceSmile,
+            Commons.Enums.ReactionType.Sad => Solid.Droplet,
+            Commons.Enums.ReactionType.Support => Solid.Bolt,
             _ => throw new ArgumentOutOfRangeException(nameof(reaction.Type), reaction.Type, null)
         };
         Color = reaction.Type switch
         {
-            PostReactionType.Like => Color.FromRgb(0xeb, 0x55, 0x27),
-            PostReactionType.Awesome => Color.FromRgb(0xbb, 0xcc, 0x29),
-            PostReactionType.Happy => Color.FromRgb(0xff, 0xc1, 0x00),
-            PostReactionType.Sad => Color.FromRgb(0xf5, 0xbe, 0x06),
-            PostReactionType.Support => Color.FromRgb(0xa0, 0x61, 0xb1),
+            Commons.Enums.ReactionType.Like => Color.FromRgb(0xeb, 0x55, 0x27),
+            Commons.Enums.ReactionType.Awesome => Color.FromRgb(0xbb, 0xcc, 0x29),
+            Commons.Enums.ReactionType.Happy => Color.FromRgb(0xff, 0xc1, 0x00),
+            Commons.Enums.ReactionType.Sad => Color.FromRgb(0xf5, 0xbe, 0x06),
+            Commons.Enums.ReactionType.Support => Color.FromRgb(0xa0, 0x61, 0xb1),
             _ => throw new ArgumentOutOfRangeException(nameof(reaction.Type), reaction.Type, null)
         };
 
-        if (reaction.Type == PostReactionType.Like) IconSize = 9;
+        if (reaction.Type == Commons.Enums.ReactionType.Like) IconSize = 9;
     }
 
-    public PostInteractionViewModel(SharedAndRepostedUserDto sharedUser, bool isShare)
+    // Comment Like
+    public InteractionViewModel(UserResponseDto user)
     {
-        Type = sharedUser.IsRepost ? PostInteractionType.Repost : PostInteractionType.Share;
+        Type = InteractionType.CommentLike;
+        CreatedAt = DateTime.UtcNow; // Comment likes do not have a created date in the API
+        User = user;
+        ReactionType = Commons.Enums.ReactionType.Like;
+
+        ProfileMedia = user.UsesAnimatedProfileMedia
+        ? new VideoViewModel(Utils.GenerateMediaUri(user.ProfileMediaId))
+        : new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+
+        FontFamily = "FASolid";
+        Glyph = Solid.Heart;
+        Color = Color.FromRgb(0xeb, 0x55, 0x27);
+    }
+
+    public InteractionViewModel(SharedAndRepostedUserDto sharedUser, bool isShare)
+    {
+        Type = sharedUser.IsRepost ? InteractionType.Repost : InteractionType.Share;
         CreatedAt = sharedUser.SharedAt;
         User = sharedUser.User;
         TargetPostId = !sharedUser.IsRepost ? sharedUser.PostId : null;

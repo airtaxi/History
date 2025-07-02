@@ -126,6 +126,20 @@ public partial class CommentViewModel : ObservableObject
         else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
 
+    [RelayCommand]
+    public async Task HandleCommentLikeTapAsync()
+    {
+        var users = Comment.LikedUsers;
+        if (users.Count == 0)
+        {
+            await App.Page.DisplayAlert("오류", "이 댓글에 좋아요를 누른 사용자가 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        var viewModels = users.Select(x => new FriendshipViewModel(x, new(x)));
+        var page = new InteractionsPage(viewModels, InteractionType.CommentLike);
+    }
+
     public async Task HandleLikeAsync()
     {
         var commentResult = await App.ExecuteRequestAsync(new HandleCommentLike(Comment.Id));

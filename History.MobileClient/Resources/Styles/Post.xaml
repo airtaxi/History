@@ -176,7 +176,7 @@
                 </HorizontalStackLayout>
                 <CollectionView
                     HeightRequest="48"
-                    ItemTemplate="{StaticResource PostInteractionTemplate}"
+                    ItemTemplate="{StaticResource InteractionTemplate}"
                     ItemsLayout="HorizontalList"
                     ItemsSource="{x:Binding Interactions}"
                     VerticalOptions="Start" />

@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace History.MobileClient.Enums;
 
-public enum PostInteractionType
+public enum InteractionType
 {
     Reaction,
     Share,
-    Repost
+    Repost,
+    CommentLike
 }

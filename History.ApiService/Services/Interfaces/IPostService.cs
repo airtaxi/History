@@ -111,7 +111,7 @@ public interface IPostService
     /// <param name="userId">Identifies the user who is reacting to the post.</param>
     /// <param name="type">Indicates the type of reaction being made to the post.</param>
     /// <returns>Returns a task that represents the asynchronous operation, yielding a result of the reaction handling.</returns>
-    public Task<Result> HandlePostReactionAsync(string postId, string userId, PostReactionType type);
+    public Task<Result> HandlePostReactionAsync(string postId, string userId, ReactionType type);
 
     /// <summary>
     /// Searches for posts based on a specified query and returns a list of matching posts.

@@ -679,7 +679,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     }
 
     /// <inheritdoc/>
-    public async Task<Result> HandlePostReactionAsync(string postId, string userId, PostReactionType type)
+    public async Task<Result> HandlePostReactionAsync(string postId, string userId, ReactionType type)
     {
         var accessResult = await CheckAccessAsync(postId, userId);
         if (accessResult.IsFailure) return accessResult;
