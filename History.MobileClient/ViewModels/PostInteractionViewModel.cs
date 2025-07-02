@@ -48,7 +48,7 @@ public partial class PostInteractionViewModel
         {
             PostReactionType.Like => Color.FromRgb(0xeb, 0x55, 0x27),
             PostReactionType.Awesome => Color.FromRgb(0xbb, 0xcc, 0x29),
-            PostReactionType.Happy => Color.FromRgb(0xbb, 0xcc, 0x29),
+            PostReactionType.Happy => Color.FromRgb(0xff, 0xc1, 0x00),
             PostReactionType.Sad => Color.FromRgb(0xf5, 0xbe, 0x06),
             PostReactionType.Support => Color.FromRgb(0xa0, 0x61, 0xb1),
             _ => throw new ArgumentOutOfRangeException(nameof(reaction.Type), reaction.Type, null)
