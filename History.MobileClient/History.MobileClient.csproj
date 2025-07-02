@@ -26,8 +26,8 @@
 		<ApplicationId>com.airtaxi.history</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0.45</ApplicationDisplayVersion>
-		<ApplicationVersion>56</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0.46</ApplicationDisplayVersion>
+		<ApplicationVersion>57</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
@@ -44,8 +44,8 @@
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android' AND '$(Configuration)' == 'Release'">
 		<AndroidEnableSGenConcurrent>true</AndroidEnableSGenConcurrent>
-		<EnableLLVM>True</EnableLLVM>
-		<AndroidEnableProfiledAot>False</AndroidEnableProfiledAot>
+		<!--<EnableLLVM>True</EnableLLVM>
+		<AndroidEnableProfiledAot>False</AndroidEnableProfiledAot>-->
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-android' AND '$(Configuration)' == 'Debug'">
