@@ -37,11 +37,11 @@
                 </views:DataTemplatePresenter>
                 <Grid
                     Margin="0,0,-2,-2"
-                    BindingContext="{x:Binding PostInteractionViewModel}"
+                    BindingContext="{x:Binding InteractionViewModel}"
                     IsVisible="{x:Binding IsInteractionAvailable}">
                     <Border
-                        x:Name="PostInteractionBorder"
-                        x:DataType="vm:PostInteractionViewModel"
+                        x:Name="InteractionBorder"
+                        x:DataType="vm:InteractionViewModel"
                         Background="{x:Binding Color}"
                         HeightRequest="16"
                         HorizontalOptions="End"

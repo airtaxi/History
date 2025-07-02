@@ -12,7 +12,7 @@ using UraniumUI.Icons.FontAwesome;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class FriendshipViewModel(UserResponseDto user, PostInteractionViewModel postInteractionViewModel = null) : ObservableObject
+public partial class FriendshipViewModel(UserResponseDto user, InteractionViewModel interactionViewModel = null) : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Nickname))]
@@ -56,8 +56,8 @@ public partial class FriendshipViewModel(UserResponseDto user, PostInteractionVi
 
     public bool IsFriendshipImageVisible => User.UserId != Shared.UserId;
 
-    public bool IsInteractionAvailable => PostInteractionViewModel != null;
-    public PostInteractionViewModel PostInteractionViewModel { get; } = postInteractionViewModel;
+    public bool IsInteractionAvailable => InteractionViewModel != null;
+    public InteractionViewModel InteractionViewModel { get; } = interactionViewModel;
 
     private async Task RefreshAsync()
     {
@@ -70,9 +70,9 @@ public partial class FriendshipViewModel(UserResponseDto user, PostInteractionVi
     {
         if (User == null) return;
 
-        if (PostInteractionViewModel?.TargetPostId != null)
+        if (InteractionViewModel?.TargetPostId != null)
         {
-            var postResult = await App.ExecuteRequestAsync(new GetPost(PostInteractionViewModel.TargetPostId), ErrorType.Forbidden);
+            var postResult = await App.ExecuteRequestAsync(new GetPost(InteractionViewModel.TargetPostId), ErrorType.Forbidden);
             if (postResult.IsSuccess)
             {
                 var postViewModel = new PostViewModel(postResult.Value, PostType.Unwrapped);

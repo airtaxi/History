@@ -27,7 +27,7 @@ FirebaseApp.Create(new AppOptions()
 });
 
 BsonSerializer.RegisterSerializer(new EnumSerializer<DiscoveryOption>(BsonType.String));
-BsonSerializer.RegisterSerializer(new EnumSerializer<PostReactionType>(BsonType.String));
+BsonSerializer.RegisterSerializer(new EnumSerializer<ReactionType>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<FriendshipStatus>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<NotificationType>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<PushNotificationType>(BsonType.String));

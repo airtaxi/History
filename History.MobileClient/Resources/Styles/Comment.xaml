@@ -82,6 +82,9 @@
                         FontSize="12"
                         IsVisible="{x:Binding HasLikes}"
                         LineBreakMode="TailTruncation">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{x:Binding HandleCommentLikeTapCommand}" />
+                        </Label.GestureRecognizers>
                         <Label.FormattedText>
                             <FormattedString>
                                 <Span Text=" · " TextColor="{AppThemeBinding Light=Black, Dark=White}" />

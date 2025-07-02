@@ -175,7 +175,7 @@
 		<MauiXaml Update="Pages\PostPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="Pages\PostInteractionsPage.xaml">
+		<MauiXaml Update="Pages\InteractionsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\PublicPostPage.xaml">
@@ -217,7 +217,7 @@
 		<MauiXaml Update="Resources\Styles\Post.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="Resources\Styles\PostInteraction.xaml">
+		<MauiXaml Update="Resources\Styles\Interaction.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Profile.xaml">
