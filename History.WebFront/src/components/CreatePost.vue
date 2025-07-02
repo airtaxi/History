@@ -77,6 +77,24 @@ const newPostText = ref('');
 const discoveryOption = ref('Friends');
 
 /**
+ * 댓글 허용 범위 설정 옵션
+ * @type {import('vue').Ref<string>}
+ */
+ const commentPermission = ref<string | null>(null); 
+
+/**
+ * 다른 사용자의 공유 허용 여부
+ * @type {import('vue').Ref<boolean>}
+ */
+ const disallowShare = ref(false); // 기본값 'false' (공유 허용)
+
+/**
+ * 예약 발행 시간 (ISO 8601 형식의 문자열 또는 null)
+ * @type {import('vue').Ref<string | null>}
+ */
+ const reservationTime = ref<string | null>(null);
+
+/**
  * 업로드할 파일들의 배열
  * @type {import('vue').Ref<File[]>}
  */
@@ -461,6 +479,9 @@ const submitPost = async () => {
     // 게시글 데이터 타입을 명시적으로 정의하여 타입 안전성 확보
     const postDto: {
       DiscoveryOption: string;
+      CommentPermission: string | null; 
+      DisallowShare: boolean;      
+      ReservationTime: string | null; 
       Contents: Array<{
         $type: string;
         Text?: string;
@@ -471,6 +492,9 @@ const submitPost = async () => {
       DiscoveryOptionSelectedUserIds: string[];
     } = {
       DiscoveryOption: initialDiscoveryOption,
+      CommentPermission: commentPermission.value, 
+      DisallowShare: disallowShare.value,         
+      ReservationTime: reservationTime.value,     
       Contents: [],
       ParentPostId: null,
       DiscoveryOptionSelectedUserIds: [] // 일단 빈 배열로 전송
@@ -590,6 +614,9 @@ const submitPost = async () => {
     attachedLink.value = '';
     selectedUserIds.value = [];
     showFriendSelector.value = false;
+    commentPermission.value = null;
+    disallowShare.value = false;
+    reservationTime.value = null;
     uiStore.closePostEditor();
     emit('post-created');
   } catch (error: any) {
@@ -1017,7 +1044,7 @@ const handleRepost = async () => {
         });
 
         formData.append('JsonData', JSON.stringify(updateDto));
-        console.log('🧪 최종 postDto JSON:', JSON.stringify(postDto, null, 2));
+        // console.log('🧪 최종 postDto JSON:', JSON.stringify(postDto, null, 2));
         console.log('🚀 2단계 - 게시글 내용 업데이트 API 호출 중...');
         await apiClient.put(`/api/Post/${repostId}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
@@ -1081,7 +1108,6 @@ watch(isRepostMode, (newValue) => {
     </div>
 
     <div v-else class="expanded-view">
-      <!-- 리포스트 헤더 -->
       <div v-if="isRepostMode" class="repost-header">
         <div class="repost-label">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -1091,66 +1117,63 @@ watch(isRepostMode, (newValue) => {
         </div>
       </div>
       
-              <textarea 
-            v-model="newPostText" 
-            @input="handleTextInput"
-            @keydown="handleKeyDown"
-            class="create-post-input" 
-            :placeholder="isRepostMode ? '이 게시글에 대한 생각을 추가해보세요...' : '오늘 하루, 기억하고 싶은 순간이 있나요?'" 
-            aria-label="게시글 내용 입력"
-            :aria-describedby="isMentioning ? 'mention-hint' : undefined"
-          />
-          
-        <!-- @멘션 드롭다운 -->
+      <textarea 
+        v-model="newPostText" 
+        @input="handleTextInput"
+        @keydown="handleKeyDown"
+        class="create-post-input" 
+        :placeholder="isRepostMode ? '이 게시글에 대한 생각을 추가해보세요...' : '오늘 하루, 기억하고 싶은 순간이 있나요?'" 
+        aria-label="게시글 내용 입력"
+        :aria-describedby="isMentioning ? 'mention-hint' : undefined"
+      ></textarea>
+      
+      <div 
+        v-if="isMentioning"
+        class="mention-dropdown"
+        role="listbox"
+        :aria-label="`친구 검색 결과: ${mentionSearchResults.length}명`"
+        :style="{
+          position: 'fixed',
+          top: mentionDropdownPosition.top + 'px',
+          left: mentionDropdownPosition.left + 'px',
+          zIndex: 1000
+        }"
+      >
+        <div v-if="mentionSearchResults.length === 0" class="mention-no-results" role="status">
+          {{ friendsList.length === 0 ? '친구가 없습니다' : '검색 결과가 없습니다' }}
+        </div>
         <div 
-          v-if="isMentioning"
-          class="mention-dropdown"
-          role="listbox"
-          :aria-label="`친구 검색 결과: ${mentionSearchResults.length}명`"
-          :style="{
-            position: 'fixed',
-            top: mentionDropdownPosition.top + 'px',
-            left: mentionDropdownPosition.left + 'px',
-            zIndex: 1000
-          }"
+          v-else
+          v-for="(user, index) in mentionSearchResults" 
+          :key="user.userId"
+          class="mention-item"
+          :class="{ 'selected': index === selectedMentionIndex }"
+          @click="selectMention(user)"
+          @mouseenter="selectedMentionIndex = index"
+          role="option"
+          :aria-selected="index === selectedMentionIndex"
+          :aria-label="`${user.nickname} @${user.handle}`"
         >
-          <div v-if="mentionSearchResults.length === 0" class="mention-no-results" role="status">
-            {{ friendsList.length === 0 ? '친구가 없습니다' : '검색 결과가 없습니다' }}
-          </div>
-          <div 
-            v-else
-            v-for="(user, index) in mentionSearchResults" 
-            :key="user.userId"
-            class="mention-item"
-            :class="{ 'selected': index === selectedMentionIndex }"
-            @click="selectMention(user)"
-            @mouseenter="selectedMentionIndex = index"
-            role="option"
-            :aria-selected="index === selectedMentionIndex"
-            :aria-label="`${user.nickname} @${user.handle}`"
-          >
-            <img :src="(user as any).profileImageUrl || '/src/assets/images/default_profile_image.jpg'" :alt="`${user.nickname} 프로필 이미지`">
-            <div>
-              <div class="nickname">{{ user.nickname }}</div>
-              <div class="handle">@{{ user.handle }}</div>
-            </div>
+          <img :src="(user as any).profileImageUrl || '/src/assets/images/default_profile_image.jpg'" :alt="`${user.nickname} 프로필 이미지`">
+          <div>
+            <div class="nickname">{{ user.nickname }}</div>
+            <div class="handle">@{{ user.handle }}</div>
           </div>
         </div>
-        
-        <!-- 스크린 리더용 멘션 안내 -->
-        <span id="mention-hint" class="sr-only">
-          @ 심볼을 입력하여 친구를 멘션할 수 있습니다. 위아래 화살표로 선택하고 Enter로 확정하세요.
-        </span>
-
-        <div class="create-post-actions">
-        <label class="action-btn">
-          📷📹 파일 업로드
-          <input type="file" accept="image/*" multiple @change="handleFileChange" hidden />
-        </label>
-        <input v-model="attachedLink" placeholder="🔗 링크 붙여넣기" class="link-input" />
       </div>
+      
+      <span id="mention-hint" class="sr-only">
+        @ 심볼을 입력하여 친구를 멘션할 수 있습니다. 위아래 화살표로 선택하고 Enter로 확정하세요.
+      </span>
 
-      <!-- 리포스트 원본 게시글 미리보기 -->
+      <div class="create-post-actions">
+      <label class="action-btn">
+        📷📹 파일 업로드
+        <input type="file" accept="image/*" multiple @change="handleFileChange" hidden />
+      </label>
+      <input v-model="attachedLink" placeholder="🔗 링크 붙여넣기" class="link-input" />
+    </div>
+
       <div v-if="isRepostMode && originalPost" class="original-post-preview">
         <div class="original-post-card">
           <div class="original-post-author">
@@ -1189,7 +1212,6 @@ watch(isRepostMode, (newValue) => {
         </div>
       </div>
 
-      <!-- 여러 개 미리보기 -->
       <div v-if="previewItems.length" class="preview-box">
         <div v-for="(item, idx) in previewItems" :key="idx" class="preview-item">
           <img v-if="!item.isVideo" :src="item.url" class="preview-image" />
@@ -1200,7 +1222,6 @@ watch(isRepostMode, (newValue) => {
         </div>
       </div>
 
-      <!-- 친구 선택 UI -->
       <div v-if="showFriendSelector" class="friend-selector-section">
         <div class="friend-selector-header">
           <h4>{{ discoveryOption === 'SelectedUsers' ? '공개할 친구 선택' : '비공개할 친구 선택' }}</h4>
@@ -1217,7 +1238,6 @@ watch(isRepostMode, (newValue) => {
             class="friend-search-input"
           />
           
-          <!-- 친구 검색 결과 드롭다운 -->
           <div v-if="isFriendSearchFocused && friendSearchText" class="friend-search-dropdown">
             <div v-if="friendSearchResults.length === 0" class="no-results">검색 결과가 없습니다.</div>
             <div v-else v-for="user in friendSearchResults" :key="user.userId" 
@@ -1232,7 +1252,6 @@ watch(isRepostMode, (newValue) => {
           </div>
         </div>
 
-        <!-- 선택된 친구들 표시 -->
         <div v-if="selectedUserIds.length > 0" class="selected-friends-display">
           <div class="selected-friends-header">선택된 친구 ({{ selectedUserIds.length }}명)</div>
           <div class="selected-friends-list">
@@ -1245,17 +1264,38 @@ watch(isRepostMode, (newValue) => {
           </div>
         </div>
       </div>
-
+      
       <div class="create-post-footer">
-        <div class="privacy-selector">
-          <select v-model="discoveryOption" @change="onDiscoveryOptionChange">
-            <option value="OnlyMe">나만 보기</option>
-            <option value="SelectedUsers">특정 친구 공개</option>
-            <option value="UnselectedUsers">특정 친구 비공개</option>
-            <option value="Friends">친구 공개</option>
-            <option value="FriendsOfFriends">친구의 친구 공개</option>
-            <option value="Everyone">전체 공개</option>
-          </select>
+        <div class="footer-options-group">
+          <div class="option-item">
+            <label for="discovery-option">공개</label>
+            <select id="discovery-option" v-model="discoveryOption" @change="onDiscoveryOptionChange">
+              <option value="OnlyMe">나만 보기</option>
+              <option value="SelectedUsers">특정 친구 공개</option>
+              <option value="UnselectedUsers">특정 친구 비공개</option>
+              <option value="Friends">친구 공개</option>
+              <option value="FriendsOfFriends">친구의 친구까지</option>
+              <option value="Everyone">전체 공개</option>
+            </select>
+          </div>
+          <div class="option-item">
+            <label for="comment-permission">댓글</label>
+            <select id="comment-permission" v-model="commentPermission">
+              <option :value="null">게시글 설정 따름</option>
+              <option value="OnlyMe">나만</option>
+              <option value="Friends">친구만</option>
+              <option value="FriendsOfFriends">친구의 친구까지</option>
+              <option value="Everyone">모든 사람</option>
+            </select>
+          </div>
+          <div class="option-item checkbox-item">
+            <input type="checkbox" id="disallow-share" v-model="disallowShare">
+            <label for="disallow-share">공유 금지</label>
+          </div>
+          <div class="option-item">
+            <label for="reservation-time">예약</label>
+            <input type="datetime-local" id="reservation-time" v-model="reservationTime">
+          </div>
         </div>
         <div class="submit-buttons">
           <button @click="handleCancel" class="btn-cancel">취소</button>
@@ -1329,8 +1369,17 @@ watch(isRepostMode, (newValue) => {
 .create-post-footer {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end; 
+  flex-wrap: wrap; 
+  gap: 16px;
   margin-top: 12px;
+}
+
+.footer-options-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px; /* 그룹 간 간격 */
+  align-items: flex-end;
 }
 
 .privacy-selector select {
@@ -1339,6 +1388,46 @@ watch(isRepostMode, (newValue) => {
   border: 1px solid #ddd;
   background-color: white;
   font-size: 0.9rem;
+}
+
+.privacy-selector,
+.advanced-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px; 
+  align-items: center;
+}
+
+.advanced-options select,
+.advanced-options input[type="datetime-local"] {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background-color: white;
+  font-size: 0.9rem;
+  height: 38px; 
+}
+
+.advanced-options input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.advanced-options .checkbox-item label {
+  cursor: pointer;
+}
+
+.advanced-options .option-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.advanced-options label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #495057;
 }
 
 .submit-buttons { display: flex; gap: 8px; }

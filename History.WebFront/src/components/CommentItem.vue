@@ -360,6 +360,21 @@ onMounted(async () => {
     }
   }
 });
+
+function formatRelativeTime(dateString: string): string {
+  const created = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - created.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
+
+  if (diffMinutes < 1) return '방금 전';
+  if (diffMinutes < 60) return `${diffMinutes}분 전`;
+  if (diffHours < 12) return `${diffHours}시간 전`;
+
+  return `${created.getFullYear()}-${(created.getMonth() + 1).toString().padStart(2, '0')}-${created.getDate().toString().padStart(2, '0')} ${created.getHours().toString().padStart(2, '0')}:${created.getMinutes().toString().padStart(2, '0')}`;
+}
+
 </script>
 
 <template>
@@ -374,7 +389,7 @@ onMounted(async () => {
       <div class="comment-header">
         <div class="comment-author-info">
           <span class="author-name" @click="mentionUser">{{ comment.user.nickname }}</span>
-          <span class="comment-timestamp">{{ new Date(comment.createdAt).toLocaleString() }}</span>
+          <span class="comment-timestamp">{{ formatRelativeTime(comment.createdAt) }}</span>
         </div>
         
         <!-- 더보기 메뉴 (내 댓글인 경우에만 표시) -->
