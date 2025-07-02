@@ -49,7 +49,7 @@ public partial class InteractionViewModel
             Commons.Enums.ReactionType.Like => Color.FromRgb(0xeb, 0x55, 0x27),
             Commons.Enums.ReactionType.Awesome => Color.FromRgb(0xbb, 0xcc, 0x29),
             Commons.Enums.ReactionType.Happy => Color.FromRgb(0xff, 0xc1, 0x00),
-            Commons.Enums.ReactionType.Sad => Color.FromRgb(0xf5, 0xbe, 0x06),
+            Commons.Enums.ReactionType.Sad => Color.FromRgb(0x00, 0x9f, 0xb2),
             Commons.Enums.ReactionType.Support => Color.FromRgb(0xa0, 0x61, 0xb1),
             _ => throw new ArgumentOutOfRangeException(nameof(reaction.Type), reaction.Type, null)
         };
