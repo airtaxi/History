@@ -1,5 +1,4 @@
-﻿using AndroidX.Lifecycle;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -148,6 +147,7 @@ public partial class CommentViewModel : ObservableObject
 
         var viewModels = users.Select(x => new FriendshipViewModel(x, new(x)));
         var page = new InteractionsPage(viewModels, InteractionType.CommentLike);
+        await App.PushAsync(page);
     }
 
     public async Task HandleLikeAsync()
