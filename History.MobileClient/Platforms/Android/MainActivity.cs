@@ -9,6 +9,7 @@ using Android.Content.PM;
 using Android.OS;
 using Android.Util;
 using Android.Views;
+using Android.Widget;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using AndroidX.Core.View;
@@ -310,7 +311,7 @@ public class MainActivity : MauiAppCompatActivity
             return;
         }
 
-            var mediaUri = GetParcelableExtraSafe<Android.Net.Uri>(intent, Intent.ExtraStream);
+        var mediaUri = GetParcelableExtraSafe<Android.Net.Uri>(intent, Intent.ExtraStream);
         if (mediaUri == null) return;
 
         var mediaInfo = AndroidMediaPickerHelper.GetMediaFile(mediaUri);
@@ -331,6 +332,38 @@ public class MainActivity : MauiAppCompatActivity
     {
         if (AppShell.IsLoaded)
         {
+            mediaFiles = [.. mediaFiles.Where(m =>
+                // Image formats
+                   m.FileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".tiff", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".heic", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".heif", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".bmp", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".jxl", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".ico", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".avif", StringComparison.OrdinalIgnoreCase)
+                // Video formats
+                || m.FileName.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".mov", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".wmv", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".webm", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".avi", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".flv", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".ogv", StringComparison.OrdinalIgnoreCase)
+                || m.FileName.EndsWith(".3gp", StringComparison.OrdinalIgnoreCase)
+            )];
+
+            if (mediaFiles.Count == 0)
+            {
+                Toast.MakeText(Platform.AppContext, "올바르지 않은 미디어 형식을 공유하였습니다.", ToastLength.Long).Show();
+                return;
+            }
+
             App.Page.Dispatcher.Dispatch(async () =>
             {
                 var page = new EditPostPage(mediaFiles);
