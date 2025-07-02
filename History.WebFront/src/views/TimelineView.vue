@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import apiClient from '@/api';
 import type { PostResponseDto } from '@/types';
-import TheHeader from '@/components/layout/TheHeader.vue';
 import PostCard from '@/components/PostCard.vue';
 import RightSidebar from '@/components/layout/RightSidebar.vue';
 import CreatePost from '@/components/CreatePost.vue';
@@ -30,13 +29,39 @@ const getMediaBlobUrl = async (mediaId: string) => {
 
 const prepareProfileImageMap = async (postList: PostResponseDto[]) => {
   const map: Record<string, string> = {};
-  const userIds = [...new Set(postList.map(p => p.user.userId))];
+  const userIds = new Set<string>();
+  
+  // 게시글 작성자들의 ID 수집
+  postList.forEach(p => {
+    userIds.add(p.user.userId);
+    
+    // 리포스트인 경우 원본 게시글 작성자도 추가
+    if ((p as any).isRepost && (p as any).parentPost?.user) {
+      userIds.add((p as any).parentPost.user.userId);
+    }
+  });
 
+  // 각 사용자의 프로필 이미지 처리
   for (const uid of userIds) {
-    const post = postList.find(p => p.user.userId === uid);
-    if (post?.user.profileThumbnailMediaId) {
-      const blobUrl = await getMediaBlobUrl(post.user.profileThumbnailMediaId);
-      map[uid] = blobUrl;
+    // 이미 처리된 사용자는 건너뛰기
+    if (profileImageMap.value[uid]) continue;
+    
+    // 일반 게시글에서 사용자 찾기
+    let user = postList.find(p => p.user.userId === uid)?.user;
+    
+    // 리포스트 원본에서 사용자 찾기
+    if (!user) {
+      for (const post of postList) {
+        if ((post as any).isRepost && (post as any).parentPost?.user?.userId === uid) {
+          user = (post as any).parentPost.user;
+          break;
+        }
+      }
+    }
+    
+    if (user?.profileThumbnailMediaId) {
+      const blobUrl = await getMediaBlobUrl(user.profileThumbnailMediaId);
+      map[uid] = blobUrl || '/src/assets/images/default_profile_image.jpg';
     }
   }
 
@@ -48,37 +73,38 @@ const fetchTimeline = async () => {
   try {
     isLoading.value = true;
     posts.value = [];
+    noMorePosts.value = false; // 무한 스크롤을 위해 false로 초기화
 
     let hasMore = true;
     let fromId = null;
 
-    while (hasMore) {
-      const response = await apiClient.get<PostResponseDto[]>('/api/Post/timeline', {
+    // 10개의 게시글을 모을 때까지 반복
+    while (hasMore && posts.value.length < 10) {
+      const { data }: { data: PostResponseDto[] } = await apiClient.get('/api/Post/timeline', {
         params: fromId ? { from: fromId } : {}
       });
 
-      const pagePosts: PostResponseDto[] = response.data.filter(
+      const pagePosts: PostResponseDto[] = data.filter(
         (post: PostResponseDto) => !post.isRepost || (post.isRepost && post.parentPost !== null)
       );
 
-      if (pagePosts.length === 0) {
+      if (data.length === 0) {
         hasMore = false;
-        break;
+        break; // ✅ 이제 유효한 while 루프 내 break
       }
 
-      posts.value.push(...pagePosts);
-
-      await prepareProfileImageMap(pagePosts);
-
-      fromId = pagePosts[pagePosts.length - 1].id;
-
-      if (posts.value.length >= 5) {
-        hasMore = false;
+      if (pagePosts.length > 0) {
+        posts.value.push(...pagePosts);
+        await prepareProfileImageMap(pagePosts);
       }
+
+      fromId = data[data.length - 1]?.id;
     }
 
-    if (posts.value.length === 0) {
-      noMorePosts.value = true;
+  
+    // 정확히 10개만 남기기
+    if (posts.value.length > 10) {
+      posts.value = posts.value.slice(0, 10);
     }
 
   } catch (error) {
@@ -98,19 +124,42 @@ const loadMorePosts = async () => {
 
   try {
     isLoadingMore.value = true;
-    const response = await apiClient.get<PostResponseDto[]>('/api/Post/timeline', {
-      params: { from: lastPost.id }
-    });
+    let fromId = lastPost.id;
+    let addedCount = 0;
+    const targetAddCount = 5; // 한 번에 추가할 게시글 목표 개수
 
-    const newPosts: PostResponseDto[] = response.data.filter((post: PostResponseDto) => !post.isRepost || (post.isRepost && post.parentPost !== null));
+    // 목표 개수만큼 추가할 때까지 반복
+    while (addedCount < targetAddCount && !noMorePosts.value) {
+      const response = await apiClient.get<PostResponseDto[]>('/api/Post/timeline', {
+        params: { from: fromId }
+      });
 
-    if (newPosts.length > 0) {
-      posts.value.push(...newPosts);
-      
-      await prepareProfileImageMap(newPosts);
-    } else {
-      noMorePosts.value = true;
+      if (response.data.length === 0) {
+        noMorePosts.value = true;
+        break;
+      }
+
+      const newPosts: PostResponseDto[] = response.data.filter(
+        (post: PostResponseDto) => !post.isRepost || (post.isRepost && post.parentPost !== null)
+      );
+
+      if (newPosts.length > 0) {
+        posts.value.push(...newPosts);
+        await prepareProfileImageMap(newPosts);
+        addedCount += newPosts.length;
+      }
+
+      // 다음 페이지를 위한 fromId 업데이트
+      fromId = response.data[response.data.length - 1].id;
+
+      // API 응답은 있지만 필터링 후 추가된 게시글이 없으면 계속 시도
+      if (response.data.length > 0 && newPosts.length === 0) {
+        continue;
+      }
     }
+
+    console.log(`무한 스크롤: ${addedCount}개 게시글 추가됨`); // 디버깅용
+
   } catch (error) {
     console.error('추가 타임라인 로딩 실패:', error);
   } finally {
@@ -125,21 +174,25 @@ let observer: IntersectionObserver;
 onMounted(() => {
   fetchTimeline(); // 최초 데이터 로드
 
-  observer = new IntersectionObserver(
-    (entries) => {
-      // 감시 대상(sentinel)이 화면에 보이면 loadMorePosts 함수 호출
-      if (entries[0].isIntersecting) {
-        loadMorePosts();
+  // Vue의 nextTick을 사용하여 DOM이 업데이트된 후 observer 설정
+  nextTick(() => {
+    observer = new IntersectionObserver(
+      (entries) => {
+        // 감시 대상(sentinel)이 화면에 보이면 loadMorePosts 함수 호출
+        if (entries[0].isIntersecting) {
+          console.log('무한 스크롤 트리거됨'); // 디버깅용
+          loadMorePosts();
+        }
+      },
+      {
+        rootMargin: '200px', // 화면에 보이기 200px 전에 미리 로드 시작
       }
-    },
-    {
-      rootMargin: '200px', // 화면에 보이기 200px 전에 미리 로드 시작
-    }
-  );
+    );
 
-  if (loadMoreSentinel.value) {
-    observer.observe(loadMoreSentinel.value);
-  }
+    if (loadMoreSentinel.value) {
+      observer.observe(loadMoreSentinel.value);
+    }
+  });
 });
 
 // 컴포넌트가 사라질 때 observer 정리
@@ -152,7 +205,7 @@ onUnmounted(() => {
 // 새 글 작성 후 타임라인 새로고침
 const handlePostCreated = async () => {
   try {
-    const response = await apiClient.get<PostResponseDto[]>('/api/Post/timeline');
+    const response: { data: PostResponseDto[] } = await apiClient.get<PostResponseDto[]>('/api/Post/timeline');
 
     const newPosts: PostResponseDto[] = response.data.filter(
       (post: PostResponseDto) => !post.isRepost || (post.isRepost && post.parentPost !== null)
@@ -174,7 +227,6 @@ const handlePostCreated = async () => {
 
 <template>
   <div class="timeline-layout">
-    <TheHeader />
     <main class="main-content">
       <div class="feed-column">
         <CreatePost @post-created="handlePostCreated" />
@@ -214,11 +266,99 @@ const handlePostCreated = async () => {
 .end-of-feed { text-align: center; color: #888; padding: 20px; }
 .sentinel { height: 1px; }
 
-@media (max-width: 960px) {
-  .sidebar-column { display: none; }
-  .main-content { justify-content: center; }
-}
+/* 모바일 반응형 개선 */
 @media (max-width: 768px) {
-  .main-content { padding: 0 16px; margin-top: 16px; }
+  .timeline-layout {
+    background-color: white;
+  }
+  
+  .main-content { 
+    padding: 0;
+    margin-top: 0;
+    gap: 0;
+  }
+  
+  .feed-column {
+    max-width: 100%;
+    gap: 8px;
+  }
+  
+  .post-list {
+    gap: 8px;
+  }
+  
+  /* 모바일에서 CreatePost 컴포넌트 최적화 */
+  .feed-column :deep(.create-post-container) {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    margin-bottom: 8px;
+  }
+  
+  /* 모바일에서 PostCard 최적화 */
+  .feed-column :deep(.post-card) {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .loading-indicator {
+    padding: 20px;
+  }
+  
+  .spinner {
+    width: 30px;
+    height: 30px;
+    border-width: 3px;
+  }
+}
+
+/* 태블릿 반응형 */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .main-content {
+    gap: 20px;
+    padding: 0 20px;
+  }
+  
+  .feed-column {
+    max-width: 580px;
+  }
+}
+
+/* RightSidebar 숨기기 */
+@media (max-width: 960px) {
+  .main-content :deep(.sidebar-column) { 
+    display: none; 
+  }
+  
+  .main-content { 
+    justify-content: center; 
+  }
+}
+
+/* 대형 화면 */
+@media (min-width: 1400px) {
+  .main-content {
+    max-width: 1200px;
+    gap: 32px;
+  }
+  
+  .feed-column {
+    max-width: 680px;
+  }
+}
+
+/* 터치 장치를 위한 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  /* 터치 대상 크기 증가 */
+  .feed-column :deep(button) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* 스크롤 성능 최적화 */
+  .post-list {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 </style>

@@ -4,10 +4,10 @@ import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/api';
 import type { PostResponseDto, CommentResponseDto, UserDto } from '@/types'; // UserDto 추가
 import { useAuthStore } from '@/stores/auth';
-import TheHeader from '@/components/layout/TheHeader.vue';
 import PostCard from '@/components/PostCard.vue';
 import CommentItem from '@/components/CommentItem.vue';
 import CreateComment from '@/components/CreateComment.vue';
+// import "./PostDetailView.css" 전역 css 버그로 인한 일시 주석처리
 
 const route = useRoute();
 const router = useRouter();
@@ -57,7 +57,7 @@ const prepareProfileImageMapForUsers = async (users: (UserDto | undefined)[]) =>
 
     const user = users.find(u => u?.userId === userId)!;
     const blobUrl = await getMediaBlobUrl(user.profileThumbnailMediaId!);
-    profileImageMap.value[userId] = blobUrl || '/src/assets/images/default_profile.png';
+    profileImageMap.value[userId] = blobUrl || '/src/assets/images/default_profile_image.jpg';
   }
 };
 
@@ -182,7 +182,13 @@ onMounted(async () => {
 
     // 게시물 작성자의 프로필 이미지 준비
     if (post.value) {
-      await prepareProfileImageMapForUsers([post.value.user]);
+      const users = [post.value.user];
+      // 리포스트인 경우 원본 게시글 작성자도 추가
+
+      if ((post.value as any).isRepost && (post.value as any).parentPost?.user) {
+        users.push((post.value as any).parentPost.user);
+      }
+      await prepareProfileImageMapForUsers(users);
     }
 
     // 2. 첫 페이지 댓글 불러오기
@@ -224,7 +230,6 @@ const deleteMyComment = async (commentId: string) => {
 
 <template>
   <div class="detail-view-layout">
-    <TheHeader />
     <main v-if="isLoading" class="loading-indicator">
       <div class="spinner"></div>
     </main>
@@ -238,7 +243,7 @@ const deleteMyComment = async (commentId: string) => {
           v-for="comment in comments" 
           :key="comment.id" 
           :comment="comment"
-          :profile-image-url="profileImageMap[comment.user.userId] || '/src/assets/images/default_profile.png'"
+          :profile-image-url="profileImageMap[comment.user.userId] || '/src/assets/images/default_profile_image.jpg'"
           @mention-user="handleMentionUser"
           @delete-comment="deleteMyComment"
           @like-comment="handleLikeComment"     @update-comment="handleUpdateComment" />
@@ -256,11 +261,30 @@ const deleteMyComment = async (commentId: string) => {
 </template>
 
 <style scoped>
-.main-content { max-width: 800px; margin: 24px auto; padding: 0 20px; }
-.post-section { margin-bottom: 24px; }
-.comments-section { background: white; border: 1px solid #ddd; border-radius: 8px; }
-h3 { padding: 16px; margin: 0; border-bottom: 1px solid #eee; }
-.loading-indicator { text-align: center; padding: 40px; }
+.main-content { 
+  max-width: 800px; 
+  margin: 24px auto; 
+  padding: 0 20px; 
+}
+.post-section { 
+  margin-bottom: 24px; 
+}
+.comments-section { 
+  background: white; 
+  border: 1px solid #ddd; 
+  border-radius: 8px; 
+}
+h3 { 
+  padding: 16px; 
+  margin: 0; 
+  border-bottom: 1px solid #eee; 
+}
+.loading-indicator { 
+  text-align: center; 
+  padding: 40px; 
+}
+
+.spinner { /* 스피너 스타일 */ }
 
 .load-more-container {
   text-align: center;

@@ -3,19 +3,17 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import apiClient from '@/api';
 import type { UserResponseDto, PostResponseDto } from '@/types';
-import TheHeader from '@/components/layout/TheHeader.vue';
 import ProfileEditView from '@/views/accounts/ProfileEditView.vue';
 import PostCard from '@/components/PostCard.vue';
 import { watchEffect } from 'vue'
 import { watch } from 'vue';
+// import '@/views/ProfileView.css' 전역 css 버그로 인한 일시 주석처리
 
 const route = useRoute();
 const routeUserId = computed(() => route.params.userId);
 const me = ref<UserResponseDto | null>(null);
 const user = ref<UserResponseDto | null>(null);
 const posts = ref<PostResponseDto[]>([]);
-const postCount = ref(0);
-const friendCount = ref(0);
 const isLoading = ref(true);
 const isLoadingMore = ref(false);
 const noMorePosts = ref(false);
@@ -51,13 +49,42 @@ const getMediaBlobUrl = async (mediaId: string | null | undefined) => {
 
 const prepareProfileImageMap = async (postList: PostResponseDto[]) => {
   const map: Record<string, string> = {};
-  const userIds = [...new Set(postList.map(p => p.user.userId))];
+  const userIds = new Set<string>();
+  
+  // 게시글 작성자들의 ID 수집
+  postList.forEach(p => {
+    userIds.add(p.user.userId);
+    
+    // 리포스트인 경우 원본 게시글 작성자도 추가
+    if ((p as any).isRepost && (p as any).parentPost?.user) {
+      userIds.add((p as any).parentPost.user.userId);
+    }
+  });
+  
+  // 각 사용자의 프로필 이미지 처리
   for (const uid of userIds) {
-    const post = postList.find(p => p.user.userId === uid);
-    if (post?.user.profileThumbnailMediaId) {
-      map[uid] = await getMediaBlobUrl(post.user.profileThumbnailMediaId);
+    // 이미 처리된 사용자는 건너뛰기
+    if (profileImageMap.value[uid]) continue;
+    
+    // 일반 게시글에서 사용자 찾기
+    let user = postList.find(p => p.user.userId === uid)?.user;
+    
+    // 리포스트 원본에서 사용자 찾기
+    if (!user) {
+      for (const post of postList) {
+        if ((post as any).isRepost && (post as any).parentPost?.user?.userId === uid) {
+          user = (post as any).parentPost.user;
+          break;
+        }
+      }
+    }
+    
+    if (user?.profileThumbnailMediaId) {
+      const blobUrl = await getMediaBlobUrl(user.profileThumbnailMediaId);
+      map[uid] = blobUrl || '/src/assets/images/default_profile_image.jpg';
     }
   }
+  
   profileImageMap.value = { ...profileImageMap.value, ...map };
 };
 
@@ -103,7 +130,6 @@ const acceptFriendRequest = async () => {
     alert('친구 요청을 수락했습니다.');
     hasPendingRequestFromUser.value = false;
     isFriend.value = true;
-    friendCount.value += 1;
   } catch (e) {
     console.error('친구 요청 수락 실패:', e);
     alert('친구 요청 수락에 실패했습니다.');
@@ -143,7 +169,6 @@ const removeFriend = async () => {
     await apiClient.post(`/api/Friendship/remove/${user.value?.userId}`);
     alert('친구를 삭제했습니다.');
     isFriend.value = false;
-    friendCount.value -= 1;
   } catch (e) {
     console.error('친구 삭제 실패:', e);
     alert('친구 삭제에 실패했습니다.');
@@ -165,7 +190,6 @@ const blockUser = async () => {
     isBlocked.value = true;
     if (isFriend.value) {
       isFriend.value = false;
-      friendCount.value -= 1;
     }
   } catch (e: any) {
     console.error('사용자 차단 실패:', e);
@@ -231,23 +255,18 @@ const unignoreUser = async () => {
 const fetchInitialData = async () => {
   isLoading.value = true;
   try {
-    const [meRes, userRes, postCountRes, friendRes] = await Promise.all([
+    const [meRes, userRes] = await Promise.all([
       apiClient.get<UserResponseDto>('/api/User/me'),
-      apiClient.get<UserResponseDto>(`/api/User/${routeUserId.value}`),
-      apiClient.get<{ count: number }>(`/api/Post/user/${routeUserId.value}/count`),
-      apiClient.get<UserResponseDto[]>(`/api/Friendship/${routeUserId.value}`),
+      apiClient.get<UserResponseDto>(`/api/User/${routeUserId.value}`)
     ]);
     me.value = meRes.data;
     user.value = userRes.data;
-    postCount.value = postCountRes.data.count;
-    friendCount.value = friendRes.data.length;
 
     profileImageUrl.value = await getMediaBlobUrl(user.value.profileThumbnailMediaId);
     backgroundImageUrl.value = await getMediaBlobUrl(user.value.backgroundThumbnailMediaId);
 
     // 친구 관계 상태 확인
     await checkFriendshipStatus();
-
     await loadMorePosts(); // 첫 페이지 로딩
   } catch (e) {
     console.error('프로필 초기 로딩 실패:', e);
@@ -262,9 +281,42 @@ const loadMorePosts = async () => {
   isLoadingMore.value = true;
   try {
     const lastPost = posts.value[posts.value.length - 1];
-    const params = lastPost ? { from: lastPost.id } : {};
+    const params = lastPost ? { from: lastPost.id, limit: 50 } : { limit: 50 };
     const res = await apiClient.get<PostResponseDto[]>(`/api/Post/user/${routeUserId.value}`, { params });
-    const newPosts = res.data;
+    
+    console.log('🔍 UserProfile API 응답:', res.data);
+    
+    // 백엔드에서 리포스트를 제외하므로, 각 게시글의 sharedAndRepostedUsers를 확인하여 리포스트 추가
+    const allPosts: PostResponseDto[] = [...res.data];
+    
+    // 전체 게시글 목록 조회 (리포스트 찾기 위해)
+    try {
+      const allPostsRes = await apiClient.get<PostResponseDto[]>('/api/Post/timeline', {
+        params: { limit: 100 }
+      });
+      
+      // 현재 사용자가 리포스트한 게시글 찾기
+      const reposts = allPostsRes.data.filter((post: any) => 
+        post.isRepost && 
+        post.user.userId === routeUserId.value && 
+        post.parentPost !== null
+      );
+      
+      console.log('🔍 찾은 리포스트:', reposts);
+      allPosts.push(...reposts);
+    } catch (err) {
+      console.warn('리포스트 조회 실패:', err);
+    }
+    
+    // 날짜순 정렬
+    allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    // 중복 제거
+    const uniquePosts = allPosts.filter((post, index, self) => 
+      index === self.findIndex(p => p.id === post.id)
+    );
+    
+    const newPosts = uniquePosts.slice(0, 20);
 
     if (newPosts.length === 0) {
       noMorePosts.value = true;
@@ -329,7 +381,6 @@ watch(routeUserId, () => {
 
 <template>
   <div class="page-container">
-    <TheHeader />
 
     <main v-if="isLoading" class="loading-content">
       <div class="spinner"></div>
@@ -350,21 +401,21 @@ watch(routeUserId, () => {
               
               <!-- 친구 요청을 받은 상황 -->
               <template v-else-if="hasPendingRequestFromUser">
-                <button @click="acceptFriendRequest" class="action-btn primary">친구 요청 수락</button>
-                <button @click="rejectFriendRequest" class="action-btn secondary">거절</button>
-                <button @click="ignoreFriendRequest" class="action-btn secondary">무시</button>
+                <button @click="acceptFriendRequest" class="action-btn profile primary">친구 요청 수락</button>
+                <button @click="rejectFriendRequest" class="action-btn profile secondary">거절</button>
+                <button @click="ignoreFriendRequest" class="action-btn profile secondary">무시</button>
               </template>
               
               <!-- 무시한 상황 -->
               <template v-else-if="isIgnored">
-                <button @click="unignoreUser" class="action-btn secondary">무시 해제</button>
+                <button @click="unignoreUser" class="action-btn profile secondary">무시 해제</button>
               </template>
               
               <!-- 이미 친구인 상황 -->
               <template v-else-if="isFriend">
-                <button @click="removeFriend" class="action-btn secondary">친구 삭제</button>
-                <button @click="blockUser" class="action-btn danger">차단</button>
-                <button @click="toggleFavorite" class="action-btn secondary">
+                <button @click="removeFriend" class="action-btn profile secondary">친구 삭제</button>
+                <button @click="blockUser" class="action-btn profile danger">차단</button>
+                <button @click="toggleFavorite" class="action-btn profile secondary">
                   {{ isFavorite ? '즐겨찾기 해제' : '즐겨찾기 등록' }}
                 </button>
               </template>
@@ -393,16 +444,6 @@ watch(routeUserId, () => {
           <h1 class="nickname">{{ user.nickname }}</h1>
           <p class="handle">@{{ user.handle }}</p>
           <p class="description">{{ user.description || '한 줄 소개가 없습니다.' }}</p>
-          <div class="stats-container">
-            <div class="stat">
-              <span class="stat-value">{{ postCount }}</span>
-              <span class="stat-label">게시물</span>
-            </div>
-            <div class="stat">
-              <span class="stat-value">{{ friendCount }}</span>
-              <span class="stat-label">친구</span>
-            </div>
-          </div>
         </div>
 
         <div class="content-tabs">
@@ -430,8 +471,8 @@ watch(routeUserId, () => {
 
 <style scoped>
 header {
-  flex-shrink: 0;
-  height: auto; 
+flex-shrink: 0;
+height: auto; 
 }
 
 .page-container {
@@ -463,23 +504,76 @@ header {
   padding: 24px 0;
   overflow-y: auto;
 }
-.profile-page { max-width: 980px; margin: 0 auto; background-color: #fff; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;}
-.profile-header { position: relative; }
-.background-image-wrapper { height: 250px; background-color: #e9ecef; }
-.background-image { width: 100%; height: 100%; object-fit: cover; }
-.profile-info-bar { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 24px; position: relative; top: -40px; margin-bottom: -40px; }
-.profile-avatar-wrapper { border: 4px solid white; border-radius: 50%; width: 140px; height: 140px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.profile-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-.profile-actions { padding-bottom: 12px; }
-.edit-profile-btn { background-color: #ed664d; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; border: none; cursor: pointer; }
+.profile-page { 
+    max-width: 980px; 
+    margin: 0 auto; 
+    background-color: #fff; 
+    border: 1px solid #ddd; 
+    border-radius: 8px; 
+    overflow: hidden;
+}
+.profile-header { 
+    position: relative; 
+}
+.background-image-wrapper { 
+    height: 250px; 
+    background-color: #e9ecef; 
+}
+.background-image { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+}
+.profile-info-bar { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-end; 
+    padding: 0 24px; 
+    position: relative; 
+    top: -40px; 
+    margin-bottom:16px;
+}
+.profile-avatar-wrapper { 
+    border: 4px solid white; 
+    border-radius: 50%; 
+    width: 140px; 
+    height: 140px; 
+    background-color: white; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+}
+.profile-avatar { 
+    width: 100%; 
+    height: 100%; 
+    border-radius: 50%; 
+    object-fit: cover; 
+}
+.profile-actions { 
+    display: flex; 
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    padding-bottom: 12px; 
+}
+.edit-profile-btn { 
+    background-color: #ed664d; 
+    color: white; 
+    padding: 8px 16px; 
+    border-radius: 6px; 
+    text-decoration: none; 
+    font-weight: 600; 
+    border: none; 
+    cursor: pointer; 
+}
 .action-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  margin-right: 8px;
-  transition: opacity 0.2s;
+    display: flex;
+    white-space: nowrap;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    margin-right: 8px;
+    transition: opacity 0.2s;
 }
 .action-btn:hover {
   opacity: 0.9;
@@ -504,17 +598,53 @@ header {
 .action-btn:last-child {
   margin-right: 0;
 }
-.profile-details { padding: 0 24px 24px 24px; }
-.nickname { font-size: 2rem; font-weight: 800; margin: 0 0 4px 0; }
-.handle { font-size: 1rem; color: #666; margin-bottom: 16px; }
-.description { font-size: 1rem; color: #333; margin-bottom: 16px; }
-.stats-container { display: flex; gap: 24px; }
-.stat { font-size: 1rem; }
-.stat-value { font-weight: 600; margin-right: 4px; }
-.stat-label { color: #666; }
-.content-tabs { display: flex; border-top: 1px solid #eee; padding: 0 24px; }
-.tab { padding: 16px 0; margin-right: 24px; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; }
-.tab.active { color: #ed664d; border-bottom-color: #ed664d; }
+.profile-details { 
+    padding: 0 24px 24px 24px; 
+}
+.nickname { 
+    font-size: 2rem; 
+    font-weight: 800; 
+    margin: 0 0 4px 0; 
+}
+.handle { 
+    font-size: 1rem; 
+    color: #666; 
+    margin-bottom: 16px; 
+}
+.description { 
+    font-size: 1rem; 
+    color: #333; 
+    margin-bottom: 16px; 
+}
+.stats-container { 
+    display: flex; 
+    gap: 24px; 
+}
+.stat { 
+    font-size: 1rem; 
+}
+.stat-value { 
+    font-weight: 600; margin-right: 4px; 
+}
+.stat-label { 
+    color: #666; 
+}
+.content-tabs { 
+    display: flex; 
+    border-top: 1px solid #eee; 
+    padding: 0 24px; 
+}
+.tab { 
+    padding: 16px 0; 
+    margin-right: 24px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    border-bottom: 2px solid transparent; 
+}
+.tab.active { 
+    color: #ed664d; 
+    border-bottom-color: #ed664d; 
+}
 .my-posts-list {
   display: flex;
   flex-direction: column;
