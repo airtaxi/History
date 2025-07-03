@@ -20,7 +20,11 @@ const shouldShowFooter = computed(() => {
   <TheHeader />
   <div class="app-container">
     <main class="main-content">
-      <RouterView />
+      <router-view v-slot="{ Component, route }">
+        <keep-alive include="TimelineView">
+          <component :is="Component" :key="route.name" />
+        </keep-alive>
+      </router-view>
     </main>
 
     <PostModal v-if="uiStore.isEditorOpen" />

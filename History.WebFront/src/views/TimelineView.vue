@@ -1,3 +1,8 @@
+<script lang="ts">
+  export default {
+    name: 'TimelineView' 
+  }
+</script>
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import apiClient from '@/api';
