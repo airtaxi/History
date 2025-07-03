@@ -379,23 +379,31 @@ function formatRelativeTime(dateString: string): string {
 
 <template>
   <div class="comment-item">
-    <RouterLink :to="`/user/${comment.user.userId}`" @click.stop>
-      <img
-        :src="safeProfileImageUrl"
-        class="author-avatar"
-        @error="handleImageError"
-      />
-    </RouterLink>
+  <!-- 왼쪽: 프로필 이미지 -->
+  <RouterLink :to="`/user/${comment.user.userId}`" @click.stop>
+    <img
+      :src="safeProfileImageUrl"
+      class="author-avatar"
+      @error="handleImageError"
+    />
+  </RouterLink>
 
-    <div class="comment-content">
-      <div class="comment-header">
-        <div class="comment-author-info">
-          <span class="author-name" @click="mentionUser">{{ comment.user.nickname }}</span>
-          <span class="comment-timestamp">{{ formatRelativeTime(comment.createdAt) }}</span>
-        </div>
-        
-        <!-- 더보기 메뉴 (내 댓글인 경우에만 표시) -->
-        <div v-if="isMyComment" class="more-menu-container" @click="toggleMenu">
+  <!-- 오른쪽 전체 -->
+  <div class="comment-main">
+    <!-- 🧩 상단: 닉네임, 시간, 좋아요, 더보기 -->
+    <div class="comment-header">
+      <div class="nickname-time">
+        <span class="author-name" @click="mentionUser">{{ comment.user.nickname }}</span>
+        <span class="comment-timestamp">{{ formatRelativeTime(comment.createdAt) }}</span>
+      </div>
+      
+      <!-- 좋아요 + 더보기 메뉴 같이 오른쪽 끝 정렬 -->
+      <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">
+        <button @click="likeComment" :class="['like-btn', { 'liked': isLikedByMe }]">
+          ❤️ <span v-if="comment.likedUsers?.length">{{ comment.likedUsers.length }}</span>
+        </button>
+
+        <div v-if="isMyComment" class="more-menu-container" @click.stop="toggleMenu">
           <button class="more-button">⋯</button>
           <div v-if="isMenuOpen" class="dropdown-menu">
             <div @click.stop="startEdit">수정</div>
@@ -403,6 +411,7 @@ function formatRelativeTime(dateString: string): string {
           </div>
         </div>
       </div>
+    </div>
 
       <div v-if="!isEditing" class="comment-body">
         <template v-for="(content, index) in comment.contents" :key="index">
@@ -500,14 +509,6 @@ function formatRelativeTime(dateString: string): string {
           <button @click="cancelEdit" class="cancel-btn">취소</button>
         </div>
       </div>
-
-      <div class="comment-actions">
-        <button @click="likeComment" :class="['like-btn', { 'liked': isLikedByMe }]">
-          <span class="like-icon">❤️</span>
-          <span class="like-text">좋아요</span>
-          <span v-if="comment.likedUsers && comment.likedUsers.length > 0" class="like-count">{{ comment.likedUsers.length }}</span>
-        </button>
-      </div>
     </div>
   </div>
 </template>
@@ -515,11 +516,10 @@ function formatRelativeTime(dateString: string): string {
 <style scoped>
 .comment-item {
   display: flex;
+  align-items: flex-start;
+  padding: 12px 16px;
   gap: 12px;
-  padding: 16px;
-  border-bottom: 1px solid #e9ecef;
-  background: white;
-  transition: background-color 0.2s;
+  border-bottom: 1px solid #eee;
 }
 
 .comment-item:hover {
@@ -527,12 +527,21 @@ function formatRelativeTime(dateString: string): string {
 }
 
 .author-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
 }
+
+.comment-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
 
 .comment-content {
   flex: 1;
@@ -542,8 +551,13 @@ function formatRelativeTime(dateString: string): string {
 .comment-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 8px;
+  align-items: center;
+}
+
+.nickname-time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .comment-author-info {
@@ -554,9 +568,9 @@ function formatRelativeTime(dateString: string): string {
 
 .author-name {
   font-weight: 600;
+  font-size: 0.9rem;
   color: #212529;
   cursor: pointer;
-  font-size: 0.9rem;
 }
 
 .author-name:hover {
@@ -592,16 +606,15 @@ function formatRelativeTime(dateString: string): string {
 
 .dropdown-menu {
   position: absolute;
-  top: 100%;
+  top: 24px; 
   right: 0;
   background: white;
   border: 1px solid #dee2e6;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 10;
+  z-index: 1000;
   min-width: 120px;
   padding: 4px 0;
-  margin-top: 4px;
 }
 
 .dropdown-menu div {
@@ -627,7 +640,10 @@ function formatRelativeTime(dateString: string): string {
 }
 
 .comment-body {
-  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: #495057;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .comment-text {
@@ -747,18 +763,14 @@ function formatRelativeTime(dateString: string): string {
 }
 
 .like-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   background: none;
   border: none;
-  color: #6c757d;
-  cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 20px;
+  color: #999;
   font-size: 0.85rem;
-  font-weight: 500;
-  transition: all 0.2s;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .like-btn:hover {
@@ -768,7 +780,6 @@ function formatRelativeTime(dateString: string): string {
 
 .like-btn.liked {
   color: #ed664d;
-  background-color: #fef7f5;
 }
 
 .like-btn.liked:hover {
