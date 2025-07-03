@@ -4,6 +4,10 @@ import apiClient from '@/api';
 import type { UserResponseDto } from '@/types';
 import 'emoji-picker-element';
 
+type UserWithImage = UserResponseDto & {
+  profileImageUrl?: string;
+};
+
 const props = defineProps<{ postId: string }>();
 const emit = defineEmits(['comment-created']);
 
@@ -18,11 +22,11 @@ const showEmojiPicker = ref(false);
 
 // @멘션 관련 상태
 const mentionSearchText = ref('');
-const mentionSearchResults = ref<UserResponseDto[]>([]);
+const mentionSearchResults = ref<UserWithImage[]>([]);
 const isMentioning = ref(false);
 const mentionStartIndex = ref(-1);
 const mentionDropdownPosition = ref({ top: 0, left: 0 });
-const friendsList = ref<UserResponseDto[]>([]);
+const friendsList = ref<UserWithImage[]>([]);
 const myProfile = ref<any | null>(null);
 const selectedMentionIndex = ref(-1);
 
@@ -196,7 +200,7 @@ const searchMentions = () => {
 
 // [수정] 프로필 이미지 로딩 로직이 포함된 완전한 검색 함수
 const performMentionSearch = async () => {
-  let results: UserResponseDto[];
+  let results: UserWithImage[];
 
   if (!mentionSearchText.value) {
     results = friendsList.value.slice(0, 5);
@@ -227,7 +231,7 @@ const performMentionSearch = async () => {
   selectedMentionIndex.value = -1;
 };
 
-const selectMention = (user: UserResponseDto) => {
+const selectMention = (user: UserWithImage) => {
   const text = newCommentText.value;
   const beforeMention = text.substring(0, mentionStartIndex.value);
   const afterCursor = text.substring(mentionStartIndex.value + mentionSearchText.value.length + 1);

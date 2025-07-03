@@ -325,7 +325,7 @@ const toggleNotifications = () => {
             <path fill="currentColor" d="M12 1a2 2 0 0 1 2 2v1.26a8.07 8.07 0 0 1 2.53.9l.89-.89a2 2 0 1 1 2.83 2.83l-.89.89a8.07 8.07 0 0 1 .9 2.53H21a2 2 0 1 1 0 4h-1.26a8.07 8.07 0 0 1-.9 2.53l.89.89a2 2 0 1 1-2.83 2.83l-.89-.89a8.07 8.07 0 0 1-2.53.9V21a2 2 0 1 1-4 0v-1.26a8.07 8.07 0 0 1-2.53-.9l-.89.89a2 2 0 1 1-2.83-2.83l.89-.89a8.07 8.07 0 0 1-.9-2.53H3a2 2 0 1 1 0-4h1.26a8.07 8.07 0 0 1 .9-2.53l-.89-.89a2 2 0 1 1 2.83-2.83l.89.89a8.07 8.07 0 0 1 2.53-.9V3a2 2 0 0 1 2-2z"/>
           </svg>
         </RouterLink>
-        <button class="action-btn header" @click="uiStore.openPostEditor" title="글쓰기">
+        <button class="action-btn header" @click="uiStore.openEditorForNewPost" title="글쓰기">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="m19.3 8.925l-4.25-4.2l1.4-1.4q.575-.575 1.413-.575t1.412.575l1.425 1.425q.575.575.575 1.413t-.575 1.412zm-5.725 5.725L3 21v-4.25l10.6-10.6z"/></svg>
         </button>
         <button class="action-btn header" @click="handleLogout" title="로그아웃">
