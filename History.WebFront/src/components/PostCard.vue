@@ -32,6 +32,10 @@ const props = defineProps<{
   showActions?: boolean;
 }>();
 
+const goToUserProfile = (userId: string) => {
+  router.push(`/user/${userId}`);
+};
+
 // === Store 및 Router 인스턴스 ===
 const authStore = useAuthStore();  // 인증 정보 관리
 const router = useRouter();        // 페이지 라우팅
@@ -1066,11 +1070,16 @@ const isImageUrl = (url: string): boolean => {
         </div>
       </div>
       
-      <!-- 원본 게시글 표시 (리포스트인 경우) -->
-      <div v-if="post.parentPost" class="original-post-card" @click.stop="goToOriginalPost">
+      <!-- 원본 게시글 표시 (공유인 경우) -->
+      <div v-if="!post.isRepost && post.parentPost" class="original-post-card" @click.stop="goToOriginalPost">
         <div class="original-post-author">
-          <img :src="props.profileImageMap?.[(post as any).parentPost.user.userId] || '/src/assets/images/default_profile_image.jpg'" 
-               class="original-author-avatar">
+          <img
+            :src="props.profileImageMap && post.parentPost?.user?.userId
+                  ? props.profileImageMap[post.parentPost.user.userId]
+                  : '/src/assets/images/default_profile_image.jpg'"
+            class="original-author-avatar"
+            @click.stop="goToUserProfile(post.parentPost.user.userId)"
+          />
           <div class="original-author-info">
             <div class="original-author-name">{{ (post as any).parentPost.user.nickname }}</div>
             <div class="original-post-timestamp">{{ new Date((post as any).parentPost.createdAt).toLocaleString() }}</div>

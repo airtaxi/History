@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import apiClient from '@/api';
 import type { PostResponseDto, CommentResponseDto, UserDto } from '@/types'; // UserDto 추가
@@ -170,6 +170,39 @@ const refreshComments = async () => {
   // 댓글 목록을 처음부터 다시 불러옴
   await fetchMoreComments();
 };
+
+watch(() => route.params.postId, async (newPostId) => {
+  if (!newPostId) return;
+  // postId 업데이트
+  const newId = newPostId as string;
+
+  // 상태 초기화
+  post.value = null;
+  comments.value = [];
+  commentsNextFrom.value = 0;
+  hasMoreComments.value = true;
+  isLoading.value = true;
+
+  try {
+    const postResponse = await apiClient.get<PostResponseDto>(`/api/Post/${newId}`);
+    post.value = postResponse.data;
+
+    // 프로필 이미지 준비
+    const users = [post.value.user];
+    if ((post.value as any).isRepost && (post.value as any).parentPost?.user) {
+      users.push((post.value as any).parentPost.user);
+    }
+    await prepareProfileImageMapForUsers(users);
+
+    // 댓글 다시 불러오기
+    await fetchMoreComments();
+
+  } catch (error) {
+    console.error("라우트 변경 시 포스트 로딩 실패:", error);
+  } finally {
+    isLoading.value = false;
+  }
+});
 
 
 // 페이지가 처음 로드될 때 실행

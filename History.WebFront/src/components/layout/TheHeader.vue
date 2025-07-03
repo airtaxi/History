@@ -12,6 +12,14 @@ const router = useRouter();
 
 const { logout } = useAuthStore();
 
+const goHome = () => {
+  if (router.currentRoute.value.path === '/') {
+    window.location.reload();
+  } else {
+    router.push('/');
+  }
+};
+
 const handleLogout = () => {
   logout(); // 토큰 및 사용자 정보 초기화
   router.push('/login'); // 로그인 페이지로 이동
@@ -280,7 +288,7 @@ const toggleNotifications = () => {
 <template>
   <header class="main-header">
     <div class="header-content">
-      <RouterLink to="/" class="header-logo-link">
+      <RouterLink to="/" class="header-logo-link" @click.prevent="goHome">
         <img src="@/assets/images/icon_nobg_white.png" alt="History 로고" class="header-logo-image">
         <span class="header-title">History</span>
       </RouterLink>
