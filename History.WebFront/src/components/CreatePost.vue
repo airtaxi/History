@@ -872,11 +872,12 @@ const handleFileChange = (event: Event) => {
  */
 const loadOriginalPostMedia = async () => {
   if (!originalPostForShare.value) return;
+
   
   // 원본 작성자 프로필 이미지 로드
   if (originalPostForShare.value.user?.profileThumbnailMediaId) {
     try {
-      const response = await apiClient.get(`/api/media/${originalPostForShare.value.user.profileThumbnailMediaId}`, {
+      const response = await apiClient.get(`/api/Media/${originalPostForShare.value.user.profileThumbnailMediaId}`, {
         responseType: 'blob',
       });
       originalPostAuthorProfileUrl.value = URL.createObjectURL(response.data);
@@ -893,12 +894,12 @@ const loadOriginalPostMedia = async () => {
     if ((content as any).$type === 'media' && ((content as any).mediaId || (content as any).thumbnailMediaId)) {
       const id = (content as any).mediaId || (content as any).thumbnailMediaId;
       try {
-        const response = await apiClient.get(`/api/media/${id}`, {
+        const response = await apiClient.get(`/api/Media/${id}`, {
           responseType: 'blob',
         });
-        originalPostMediaUrls.value[id] = URL.createObjectURL(response.data);
-      } catch (error) {
-        console.warn('원본 게시글 미디어 로딩 실패:', id);
+        const blobUrl = URL.createObjectURL(response.data);
+        originalPostMediaUrls.value[id] = blobUrl;
+      } catch (err) {
       }
     }
   }

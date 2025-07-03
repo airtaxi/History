@@ -379,7 +379,7 @@ const handleInstantRepost = async (event: MouseEvent) => {
  */
 const getMediaBlobUrl = async (mediaId: string) => {
   try {
-    const response = await apiClient.get(`/api/media/${mediaId}`, {
+    const response = await apiClient.get(`/api/Media/${mediaId}`, {
       responseType: 'blob',
     });
     const blob = response.data;
@@ -438,7 +438,7 @@ onMounted(async () => {
   }
   
   // 리포스트인 경우 원본 게시글의 미디어도 로드
-  if ((props.post as any).isRepost && (props.post as any).parentPost) {
+  if ((props.post as any).parentPost) {
     console.log('🔍 리포스트 원본 게시글 미디어 로드 중...');
     const parentPost = (props.post as any).parentPost;
     if (parentPost.contents && Array.isArray(parentPost.contents)) {
@@ -950,11 +950,19 @@ const isImageUrl = (url: string): boolean => {
   <div class="post-card" @click="goToPostDetail">
     <div class="post-author">
       <RouterLink :to="`/user/${post.user.userId}`" @click.stop>
-        <img :src="props.profileImageMap?.[post.user.userId] || '/src/assets/images/default_profile_image.jpg'" alt="프로필" class="author-avatar" />
+        <img
+          :src="props.profileImageMap?.[(post as any).isRepost ? (post as any).parentPost.user.userId : post.user.userId] || '/src/assets/images/default_profile_image.jpg'"
+          alt="프로필"
+          class="author-avatar"
+        />
       </RouterLink>
       <div>
-        <RouterLink :to="`/user/${post.user.userId}`" class="author-name" @click.stop>
-          {{ post.user.nickname }}
+        <RouterLink
+          :to="`/user/${(post as any).isRepost ? (post as any).parentPost.user.userId : post.user.userId}`"
+          class="author-name"
+          @click.stop
+        >
+          {{ (post as any).isRepost ? (post as any).parentPost.user.nickname : post.user.nickname }}
         </RouterLink>
         <div class="post-timestamp">{{ formatRelativeTime(post.createdAt) }}</div>
       </div>
@@ -979,7 +987,7 @@ const isImageUrl = (url: string): boolean => {
     </div>
 
     <div class="post-content-area">
-      <div v-for="(content, index) in post.contents" :key="index">
+      <div v-for="(content, index) in (post as any).isRepost ? (post as any).parentPost.contents : post.contents" :key="index">
         <!-- 텍스트 콘텐츠 처리 -->
         <p v-if="(content as any).$type === 'text'">
           <template v-for="(chunk, index) in splitTextWithLinksAndMentions((content as any).text)" :key="index">
