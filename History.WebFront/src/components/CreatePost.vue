@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { useUiStore } from '@/stores/ui';
 import apiClient from '@/api';
 import { defineEmits } from 'vue';
+import type { UserResponseDto } from '@/types';
 
 /**
  * CreatePost 컴포넌트의 props와 emits 정의
@@ -479,7 +480,7 @@ const submitPost = async () => {
       ReservationTime: reservationTime.value,     
       Contents: [] as any[],
       // ✨ 공유 모드일 경우 ParentPostId 설정
-      ParentPostId: isShareMode.value ? originalPostForShare.value.id : null,
+      ParentPostId: isShareMode.value && originalPostForShare.value ? originalPostForShare.value.id : null,
       DiscoveryOptionSelectedUserIds: [] as string[]
     };
 
@@ -744,8 +745,8 @@ const performMentionSearch = async () => {
   
   // 각 유저의 프로필 이미지 URL 가져오기
   for (const user of results) {
-    if (user.profileThumbnailMediaId || user.ProfileThumbnailMediaId) {
-      const mediaId = user.profileThumbnailMediaId || user.ProfileThumbnailMediaId;
+    if (user.profileThumbnailMediaId || user.profileThumbnailMediaId) {
+      const mediaId = user.profileThumbnailMediaId || user.profileThumbnailMediaId;
       const imageUrl = await getMediaBlobUrl(mediaId);
       // UserResponseDto에 이미지 URL 추가
       (user as any).profileImageUrl = imageUrl || '/src/assets/images/default_profile_image.jpg';

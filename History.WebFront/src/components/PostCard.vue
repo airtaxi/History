@@ -31,6 +31,8 @@ const props = defineProps<{
   showActions?: boolean;
 }>();
 
+const emit = defineEmits(['open-detail']);
+
 const goToUserProfile = (userId: string) => {
   router.push(`/user/${userId}`);
 };
@@ -924,86 +926,88 @@ const isImageUrl = (url: string): boolean => {
       <span>{{ post.user.nickname }}님이 리포스트했습니다</span>
     </div>
 
-    <div class="original-post-card" @click.stop="goToOriginalPost">
-      <div class="original-post-author">
-        <img
-          :src="props.profileImageMap && post.parentPost?.user?.userId
-                  ? props.profileImageMap[post.parentPost.user.userId]
-                  : '/src/assets/images/default_profile_image.jpg'"
-          class="original-author-avatar"
-          @click.stop="goToUserProfile(post.parentPost.user.userId)"
-        />
-        <div class="original-author-info">
-          <div class="original-author-name">{{ post.parentPost.user.nickname }}</div>
-          <div class="original-post-timestamp">{{ new Date(post.parentPost.createdAt).toLocaleString() }}</div>
-        </div>
-      </div>
-      
-      <div class="original-post-content">
-        <div v-for="(content, index) in (post as any).parentPost.contents" :key="index">
-          <template v-if="(content as any).$type === 'text'">
-            <template v-if="isImageUrl((content as any).text)">
-              <img 
-                :src="(content as any).text.trim()" 
-                :alt="'이미지'" 
-                class="original-post-media external-image"
-                @click.stop="openImageModal((content as any).text.trim())"
-                @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
-              />
-            </template>
-            <p v-else>{{ (content as any).text }}</p>
-          </template>
-          
-          <div v-else-if="((content as any).$type === 'media') && ((content as any).mediaId || (content as any).thumbnailMediaId)">
-            <template v-if="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]">
-              <video
-                v-if="(content as any).mimeType && (content as any).mimeType.startsWith('video/')"
-                controls
-                class="original-post-media"
-              >
-                <source :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]" :type="(content as any).mimeType" />
-                브라우저가 video 태그를 지원하지 않습니다.
-              </video>
-              <img
-                v-else
-                :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]"
-                :alt="(content as any).description || '게시물 이미지'"
-                class="original-post-media"
-              />
-            </template>
+    <template v-if="post.parentPost && post.parentPost.user">
+      <div class="original-post-card" @click.stop="goToOriginalPost">
+        <div class="original-post-author">
+          <img
+            :src="props.profileImageMap && post.parentPost.user.userId
+                    ? props.profileImageMap[post.parentPost.user.userId]
+                    : '/src/assets/images/default_profile_image.jpg'"
+            class="original-author-avatar"
+            @click.stop="goToUserProfile(post.parentPost.user.userId)"
+          />
+          <div class="original-author-info">
+            <div class="original-author-name">{{ post.parentPost.user.nickname }}</div>
+            <div class="original-post-timestamp">{{ new Date(post.parentPost.createdAt).toLocaleString() }}</div>
           </div>
+        </div>
 
-          <div v-else-if="(content as any).$type === 'externalUrl'" class="external-link-container">
-            <a :href="(content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url" target="_blank" rel="noopener noreferrer" class="external-link" @click.stop>
-              <div class="link-preview small" :class="{ 'has-image': !!(content as any).thumbnailImageUrl || !!(content as any).ThumbnailImageUrl || !!(content as any).image || !!(content as any).Image }">
+        <div class="original-post-content">
+          <div v-for="(content, index) in post.parentPost.contents" :key="index">
+            <template v-if="(content as any).$type === 'text'">
+              <template v-if="isImageUrl((content as any).text)">
                 <img 
-                  v-if="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
-                  :src="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
-                  :alt="(content as any).title || (content as any).Title || '링크 미리보기'"
-                  class="link-preview-image"
+                  :src="(content as any).text.trim()" 
+                  alt="이미지" 
+                  class="original-post-media external-image"
+                  @click.stop="openImageModal((content as any).text.trim())"
                   @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
                 />
-                <div class="link-info">
-                  <div v-if="(content as any).title || (content as any).Title" class="link-title">
-                    {{ (content as any).title || (content as any).Title }}
-                  </div>
-                  <div v-if="(content as any).description || (content as any).Description" class="link-description">
-                    {{ (content as any).description || (content as any).Description }}
-                  </div>
-                  <div class="link-url">
-                    <span class="link-icon">🔗</span>
-                    <span class="link-text">{{ (content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url }}</span>
+              </template>
+              <p v-else>{{ (content as any).text }}</p>
+            </template>
+            
+            <div v-else-if="(content as any).$type === 'media' && ((content as any).mediaId || (content as any).thumbnailMediaId)">
+              <template v-if="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]">
+                <video
+                  v-if="(content as any).mimeType && (content as any).mimeType.startsWith('video/')"
+                  controls
+                  class="original-post-media"
+                >
+                  <source :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]" :type="(content as any).mimeType" />
+                  브라우저가 video 태그를 지원하지 않습니다.
+                </video>
+                <img
+                  v-else
+                  :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]"
+                  :alt="(content as any).description || '게시물 이미지'"
+                  class="original-post-media"
+                />
+              </template>
+            </div>
+
+            <div v-else-if="(content as any).$type === 'externalUrl'" class="external-link-container">
+              <a :href="(content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url" target="_blank" rel="noopener noreferrer" class="external-link" @click.stop>
+                <div class="link-preview small" :class="{ 'has-image': !!(content as any).thumbnailImageUrl || !!(content as any).ThumbnailImageUrl || !!(content as any).image || !!(content as any).Image }">
+                  <img 
+                    v-if="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
+                    :src="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
+                    :alt="(content as any).title || (content as any).Title || '링크 미리보기'"
+                    class="link-preview-image"
+                    @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
+                  />
+                  <div class="link-info">
+                    <div v-if="(content as any).title || (content as any).Title" class="link-title">
+                      {{ (content as any).title || (content as any).Title }}
+                    </div>
+                    <div v-if="(content as any).description || (content as any).Description" class="link-description">
+                      {{ (content as any).description || (content as any).Description }}
+                    </div>
+                    <div class="link-url">
+                      <span class="link-icon">🔗</span>
+                      <span class="link-text">{{ (content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url }}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </a>
+              </a>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </template>
   </div>
 
-  <div v-else class="post-card" @click="goToPostDetail">
+  <div v-else class="post-card" @click="emit('open-detail', post)">
     <div class="post-author">
       <RouterLink :to="`/user/${post.user.userId}`" @click.stop>
         <img
@@ -1212,8 +1216,8 @@ const isImageUrl = (url: string): boolean => {
             <path d="M12 22v-9m-4 4 4-4 4 4"/>
             <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
         </svg>
-        <span v-if="post.sharedAndRepostedUsers?.filter(u => !u.isRepost).length > 0">
-            {{ post.sharedAndRepostedUsers.filter(u => !u.isRepost).length }}
+        <span v-if="(post.sharedAndRepostedUsers ?? []).filter(u => !u.isRepost).length > 0">
+          {{ post.sharedAndRepostedUsers?.filter(u => !u.isRepost).length }}
         </span>
       </button>
 
@@ -1221,8 +1225,8 @@ const isImageUrl = (url: string): boolean => {
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="repost-icon">
           <path d="M17 1l4 4-4 4M3 23l-4-4 4-4M21 5H10a4 4 0 00-4 4v1M3 19h11a4 4 0 004-4v-1"/>
         </svg>
-        <span v-if="post.sharedAndRepostedUsers?.filter(u => u.isRepost).length > 0" class="repost-count">
-          {{ post.sharedAndRepostedUsers.filter(u => u.isRepost).length }}
+        <span v-if="(post.sharedAndRepostedUsers ?? []).filter(u => u.isRepost).length > 0" class="repost-count">
+          {{ post.sharedAndRepostedUsers?.filter(u => u.isRepost).length }}
         </span>
       </button>
     </div>
