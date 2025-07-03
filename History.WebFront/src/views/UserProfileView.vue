@@ -288,26 +288,7 @@ const loadMorePosts = async () => {
     
     // 백엔드에서 리포스트를 제외하므로, 각 게시글의 sharedAndRepostedUsers를 확인하여 리포스트 추가
     const allPosts: PostResponseDto[] = [...res.data];
-    
-    // 전체 게시글 목록 조회 (리포스트 찾기 위해)
-    try {
-      const allPostsRes = await apiClient.get<PostResponseDto[]>('/api/Post/timeline', {
-        params: { limit: 100 }
-      });
-      
-      // 현재 사용자가 리포스트한 게시글 찾기
-      const reposts = allPostsRes.data.filter((post: any) => 
-        post.isRepost && 
-        post.user.userId === routeUserId.value && 
-        post.parentPost !== null
-      );
-      
-      console.log('🔍 찾은 리포스트:', reposts);
-      allPosts.push(...reposts);
-    } catch (err) {
-      console.warn('리포스트 조회 실패:', err);
-    }
-    
+        
     // 날짜순 정렬
     allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     
