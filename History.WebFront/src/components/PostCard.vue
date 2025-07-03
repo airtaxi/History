@@ -1631,11 +1631,13 @@ const isImageUrl = (url: string): boolean => {
 .original-post-card {
   border: 1px solid #e9ecef;
   border-radius: 8px;
-  padding: 12px;
-  margin-top: 4px;
-  background-color: #f9f9f9;
+  padding: 16px; 
+  margin-top: 8px;
+  background-color: #fff;
   cursor: pointer;
   transition: all 0.2s;
+  font-size: 1rem; 
+  line-height: 1.6;
 }
 
 .original-post-card:hover {
@@ -1685,7 +1687,7 @@ const isImageUrl = (url: string): boolean => {
 
 .original-post-media {
   max-width: 100%;
-  max-height: 150px;
+  max-height: 400px;
   border-radius: 4px;
   object-fit: contain;
   margin-top: 6px;
