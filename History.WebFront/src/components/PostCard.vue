@@ -1007,7 +1007,7 @@ const isImageUrl = (url: string): boolean => {
     </template>
   </div>
 
-  <div v-else class="post-card" @click="emit('open-detail', post)">
+  <div v-else class="post-card" @click="goToPostDetail">
     <div class="post-author">
       <RouterLink :to="`/user/${post.user.userId}`" @click.stop>
         <img

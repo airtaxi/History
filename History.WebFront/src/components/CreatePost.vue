@@ -944,6 +944,8 @@ const loadOriginalPostMedia = async () => {
         class="create-post-input" 
         :placeholder="isShareMode ? '공유할 게시글에 생각을 추가해보세요...' : '오늘 하루, 기억하고 싶은 순간이 있나요?'" 
         aria-label="게시글 내용 입력"
+        @input="handleTextInput"
+        @keydown="handleKeyDown"
       ></textarea>
       
       <div 
