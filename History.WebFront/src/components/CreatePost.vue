@@ -264,25 +264,25 @@ const getMediaBlobUrl = async (mediaId: string | null | undefined) => {
  */
 const loadFriends = async () => {
   try {
-    console.log('🔄 친구 목록 로드 시작...');
+    //console.log('🔄 친구 목록 로드 시작...');
     
     // 내 프로필 정보가 없으면 먼저 가져오기
     if (!myProfile.value) {
-      console.log('📝 내 프로필 정보 가져오는 중...');
+      //console.log('📝 내 프로필 정보 가져오는 중...');
       const profileRes = await apiClient.get('/api/User/me');
       myProfile.value = profileRes.data;
-      console.log('✅ 내 프로필:', myProfile.value);
+      //console.log('✅ 내 프로필:', myProfile.value);
     }
     
     if (myProfile.value) {
-      console.log('👥 친구 목록 가져오는 중...');
+      //console.log('👥 친구 목록 가져오는 중...');
       const response = await apiClient.get(`/api/Friendship/${myProfile.value.userId}`);
       friendsList.value = response.data;
-      console.log('✅ 친구 목록 로드 완료:', friendsList.value.length, '명');
-      console.log('📋 친구 목록 데이터:', friendsList.value);
+      //console.log('✅ 친구 목록 로드 완료:', friendsList.value.length, '명');
+      //console.log('📋 친구 목록 데이터:', friendsList.value);
       // 첫 번째 친구의 데이터 구조 확인
       if (friendsList.value.length > 0) {
-        console.log('🔍 친구 데이터 구조 예시:', friendsList.value[0]);
+        //console.log('🔍 친구 데이터 구조 예시:', friendsList.value[0]);
       }
     }
   } catch (error) {
@@ -315,21 +315,21 @@ const onFriendSearchInput = () => {
     return;
   }
   
-  console.log('🔍 검색어:', friendSearchText.value);
+  //console.log('🔍 검색어:', friendSearchText.value);
   
   friendSearchTimeout = window.setTimeout(async () => {
     try {
-      console.log('🌐 검색 API 호출 중...');
+      //console.log('🌐 검색 API 호출 중...');
       const response = await apiClient.get(`/api/User/nickname-search/${friendSearchText.value}`);
-      console.log('📨 검색 API 응답:', response.data);
+      //console.log('📨 검색 API 응답:', response.data);
       
       // 검색 결과 중 내 친구만 필터링
       const myFriendIds = new Set(friendsList.value.map(f => f.userId));
-      console.log('👤 내 친구 ID 목록:', Array.from(myFriendIds));
+      //console.log('👤 내 친구 ID 목록:', Array.from(myFriendIds));
       
       friendSearchResults.value = response.data.filter((user: any) => myFriendIds.has(user.userId));
-      console.log('✅ 필터링된 검색 결과:', friendSearchResults.value);
-      console.log('📊 검색 결과:', response.data.length, '개 중 친구:', friendSearchResults.value.length, '명');
+      //console.log('✅ 필터링된 검색 결과:', friendSearchResults.value);
+      //console.log('📊 검색 결과:', response.data.length, '개 중 친구:', friendSearchResults.value.length, '명');
     } catch (error) {
       console.error('❌ 친구 검색 실패:', error);
       friendSearchResults.value = [];
@@ -357,7 +357,7 @@ const onFriendSearchInput = () => {
  * });
  */
 const selectFriendFromSearch = (user: any) => {
-  console.log('✅ 친구 선택:', user);
+  //console.log('✅ 친구 선택:', user);
   toggleFriendSelection(user.userId);
   friendSearchText.value = '';
   friendSearchResults.value = [];
@@ -405,7 +405,7 @@ const toggleFriendSelection = (userId: string) => {
   } else {
     selectedUserIds.value.push(userId);
   }
-  console.log('👥 선택된 친구들:', selectedUserIds.value);
+  //console.log('👥 선택된 친구들:', selectedUserIds.value);
 };
 
 /**
@@ -426,7 +426,7 @@ const toggleFriendSelection = (userId: string) => {
  */
 const onDiscoveryOptionChange = () => {
   selectedUserIds.value = [];
-  console.log('🔧 공개 설정 변경:', discoveryOption.value);
+  //console.log('🔧 공개 설정 변경:', discoveryOption.value);
   if (needsFriendSelection.value) {
     showFriendSelector.value = true;
     loadFriends();
@@ -466,7 +466,7 @@ const submitPost = async () => {
   try {
     // selectedUserIds를 일반 배열로 변환
     const selectedUserIdsArray = [...selectedUserIds.value];
-    console.log('📤 전송할 선택된 친구 ID들:', selectedUserIdsArray);
+    //console.log('📤 전송할 선택된 친구 ID들:', selectedUserIdsArray);
     
     // 특정 친구 선택이 필요한 경우 일단 Friends로 생성 후 변경
     const isSpecificFriendOption = ['SelectedUsers', 'UnselectedUsers'].includes(discoveryOption.value);
@@ -510,23 +510,23 @@ const submitPost = async () => {
       });
     });
 
-    console.log('📋 1단계 - 게시글 생성용 postDto:', postDto);
+    //console.log('📋 1단계 - 게시글 생성용 postDto:', postDto);
     formData.append('JsonData', JSON.stringify(postDto));
 
-    console.log('🚀 1단계 - 게시글 작성 API 호출 중...');
+    //console.log('🚀 1단계 - 게시글 작성 API 호출 중...');
     const createResponse = await apiClient.post('/api/Post', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-    console.log('✅ 1단계 - 게시글 작성 성공!');
-    console.log('📊 응답 데이터 타입:', typeof createResponse.data);
-    console.log('📊 응답 데이터 내용:', createResponse.data);
-    console.log('📊 응답 헤더:', createResponse.headers);
-    console.log('📊 전체 응답 객체:', createResponse);
+    //console.log('✅ 1단계 - 게시글 작성 성공!');
+    //console.log('📊 응답 데이터 타입:', typeof createResponse.data);
+    //console.log('📊 응답 데이터 내용:', createResponse.data);
+    //console.log('📊 응답 헤더:', createResponse.headers);
+    //console.log('📊 전체 응답 객체:', createResponse);
 
     // 특정 친구 선택이 필요한 경우 2단계 진행
     if (isSpecificFriendOption && selectedUserIdsArray.length > 0) {
-      console.log('🔄 2단계 - 공개 설정 변경 시작...');
+      //console.log('🔄 2단계 - 공개 설정 변경 시작...');
       
       // 생성된 게시글의 ID 추출 시도
       let postId;
@@ -534,13 +534,13 @@ const submitPost = async () => {
       // 방법 1: 응답 데이터에서 직접 추출
       if (typeof createResponse.data === 'string' && createResponse.data.trim()) {
         postId = createResponse.data.trim();
-        console.log('🎯 방법1 - 응답 문자열에서 ID 추출:', postId);
+        //console.log('🎯 방법1 - 응답 문자열에서 ID 추출:', postId);
       } else if (createResponse.data?.id) {
         postId = createResponse.data.id;
-        console.log('🎯 방법1 - 응답 객체에서 ID 추출:', postId);
+        //console.log('🎯 방법1 - 응답 객체에서 ID 추출:', postId);
       } else if (Array.isArray(createResponse.data) && createResponse.data[0]?.id) {
         postId = createResponse.data[0].id;
-        console.log('🎯 방법1 - 응답 배열에서 ID 추출:', postId);
+        //console.log('🎯 방법1 - 응답 배열에서 ID 추출:', postId);
       }
 
       // 방법 2: 응답 헤더에서 ID 찾기
@@ -549,13 +549,13 @@ const submitPost = async () => {
         const idMatch = locationHeader.match(/\/([^\/]+)$/);
         if (idMatch) {
           postId = idMatch[1];
-          console.log('🎯 방법2 - Location 헤더에서 ID 추출:', postId);
+          //console.log('🎯 방법2 - Location 헤더에서 ID 추출:', postId);
         }
       }
 
       // 방법 3: 내 최근 게시글 조회해서 ID 가져오기
       if (!postId) {
-        console.log('🔍 방법3 - 최근 게시글 조회로 ID 찾기 시도...');
+        //console.log('🔍 방법3 - 최근 게시글 조회로 ID 찾기 시도...');
         try {
           if (!myProfile.value) {
             const profileRes = await apiClient.get('/api/User/me');
@@ -565,7 +565,7 @@ const submitPost = async () => {
           const recentPostsRes = await apiClient.get(`/api/Post/user/${myProfile.value.userId}?limit=1`);
           if (recentPostsRes.data && recentPostsRes.data.length > 0) {
             postId = recentPostsRes.data[0].id;
-            console.log('🎯 방법3 - 최근 게시글에서 ID 추출:', postId);
+            //console.log('🎯 방법3 - 최근 게시글에서 ID 추출:', postId);
           }
         } catch (recentPostError) {
           console.error('❌ 최근 게시글 조회 실패:', recentPostError);
@@ -578,18 +578,18 @@ const submitPost = async () => {
           selectedUserIds: selectedUserIdsArray
         };
 
-        console.log('📋 2단계 - 공개 설정 변경용 데이터:', discoveryUpdateDto);
-        console.log('🎯 대상 게시글 ID:', postId);
+        //console.log('📋 2단계 - 공개 설정 변경용 데이터:', discoveryUpdateDto);
+        //console.log('🎯 대상 게시글 ID:', postId);
 
         await apiClient.put(`/api/Post/${postId}/discovery-option`, discoveryUpdateDto);
-        console.log('✅ 2단계 - 공개 설정 변경 성공!');
+        //console.log('✅ 2단계 - 공개 설정 변경 성공!');
       } else {
         console.error('❌ 모든 방법으로도 게시글 ID를 찾을 수 없습니다.');
         alert('게시글은 생성되었지만 공개 설정 변경에 실패했습니다. 게시글을 직접 수정해주세요.');
       }
     }
 
-    console.log('🎉 전체 프로세스 완료!');
+    //console.log('🎉 전체 프로세스 완료!');
 
     // 초기화
     newPostText.value = '';

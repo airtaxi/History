@@ -82,18 +82,18 @@ const previewUrl = ref('');
  * onMounted(() => { loadOriginalPost(); });
  */
 onMounted(() => {
-  console.log('📋 게시글 수정 페이지 로딩 시작...');
-  console.log('🆔 수정할 게시글 ID:', postId);
+  //console.log('📋 게시글 수정 페이지 로딩 시작...');
+  //console.log('🆔 수정할 게시글 ID:', postId);
   
   apiClient.get(`/api/Post/${postId}`)
     .then((res) => {
-      console.log('✅ 원본 게시글 로딩 성공:', res.data);
+      //console.log('✅ 원본 게시글 로딩 성공:', res.data);
       originalPost.value = res.data;
       
       // 텍스트 콘텐츠 추출
       const textContentItem = res.data.contents.find((c: any) => c.$type === 'text');
       textContent.value = textContentItem?.text || textContentItem?.Text || '';
-      console.log('📝 추출된 텍스트 내용:', textContent.value);
+      //console.log('📝 추출된 텍스트 내용:', textContent.value);
       
       // 이미지/미디어 콘텐츠 추출
       const mediaContentItem = res.data.contents.find((c: any) => 
@@ -103,7 +103,7 @@ onMounted(() => {
       if (mediaContentItem?.mediaId || mediaContentItem?.thumbnailMediaId) {
         const mediaId = mediaContentItem.mediaId || mediaContentItem.thumbnailMediaId;
         previewUrl.value = `/api/Media/${mediaId}`;
-        console.log('🖼️ 기존 이미지 미리보기 URL 설정:', previewUrl.value);
+        //console.log('🖼️ 기존 이미지 미리보기 URL 설정:', previewUrl.value);
       }
     })
     .catch((error) => {
@@ -190,7 +190,7 @@ const handleFileChange = (event: Event) => {
  * <button @click="handleSubmit">수정하기</button>
  */
 const handleSubmit = async () => {
-  console.log('🚀 게시글 수정 제출 시작...');
+  //console.log('🚀 게시글 수정 제출 시작...');
   
   // 입력 검증
   if (!textContent.value.trim()) {
@@ -236,22 +236,22 @@ const handleSubmit = async () => {
         Description: ''
       });
       
-      console.log('📎 새로운 파일 첨부:', {
-        name: selectedFile.value.name,
-        size: selectedFile.value.size,
-        type: selectedFile.value.type
-      });
+      // console.log('📎 새로운 파일 첨부:', {
+      //   name: selectedFile.value.name,
+      //   size: selectedFile.value.size,
+      //   type: selectedFile.value.type
+      // });
     }
 
-    console.log('📋 게시글 수정용 postDto:', postDto);
+    //console.log('📋 게시글 수정용 postDto:', postDto);
     formData.append('JsonData', JSON.stringify(postDto));
 
-    console.log('🚀 게시글 수정 API 호출 중...');
+    //console.log('🚀 게시글 수정 API 호출 중...');
     const response = await apiClient.put(`/api/Post/${postId}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     
-    console.log('✅ 게시글 수정 성공:', response.data);
+    //console.log('✅ 게시글 수정 성공:', response.data);
     alert('수정 완료!');
     
     // 수정 완료 후 게시글 상세 페이지로 이동

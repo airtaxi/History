@@ -155,10 +155,10 @@ const sortFriendsByFavorite = () => {
     return a.nickname.localeCompare(b.nickname);
   });
   
-  console.log('정렬된 친구 목록:', friends.value.map(f => ({
-    name: f.nickname,
-    isFavorite: favoriteUserIds.value.has(f.userId)
-  })));
+  // console.log('정렬된 친구 목록:', friends.value.map(f => ({
+  //   name: f.nickname,
+  //   isFavorite: favoriteUserIds.value.has(f.userId)
+  // })));
 };
 
 onMounted(async () => {

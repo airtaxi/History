@@ -103,7 +103,7 @@ const fetchNotifications = async (from?: string) => {
     const newNotifications = response.data;
     
     // 디버깅을 위한 알림 데이터 확인
-    console.log('받은 알림 데이터:', newNotifications);
+    //console.log('받은 알림 데이터:', newNotifications);
     
     if (newNotifications.length === 0) {
       hasMore.value = false;
@@ -191,12 +191,12 @@ const goToTarget = (noti: NotificationResponseDto) => {
   try {
     const { type, data } = noti;
     
-    console.log('[알림 페이지 클릭]', { type, data }); // 디버깅 로그
+    //console.log('[알림 페이지 클릭]', { type, data }); // 디버깅 로그
     
     // 게시글 관련 알림들 - PostDetailView로 이동
     if (['Comment', 'CommentMention', 'CommentLike', 'Share', 'Repost', 'PostReaction', 'PostMention', 'FavoriteFriendNewPost', 'Birthday'].includes(type)) {
       if (data.PostId) {
-        console.log(`[게시글로 이동] /post/${data.PostId}`);
+        //console.log(`[게시글로 이동] /post/${data.PostId}`);
         router.push(`/post/${data.PostId}`);
         return;
       }
@@ -205,7 +205,7 @@ const goToTarget = (noti: NotificationResponseDto) => {
     // 친구 요청 알림 - UserProfileView로 이동
     if (type === 'FriendRequest') {
       if (data.UserId) {
-        console.log(`[유저 프로필로 이동] /user/${data.UserId}`);
+        //console.log(`[유저 프로필로 이동] /user/${data.UserId}`);
         router.push(`/user/${data.UserId}`);
         return;
       }
@@ -213,7 +213,7 @@ const goToTarget = (noti: NotificationResponseDto) => {
     
     // 제재 관련 알림 - 설정 페이지로 이동
     if (type === 'Restriction') {
-      console.log('[설정 페이지로 이동] /settings');
+      //console.log('[설정 페이지로 이동] /settings');
       router.push('/settings');
       return;
     }
@@ -221,7 +221,7 @@ const goToTarget = (noti: NotificationResponseDto) => {
     // 신고 관련 알림 (관리자용) - 게시글이나 댓글로 이동
     if (type === 'Report') {
       if (data.PostId) {
-        console.log(`[신고 게시글로 이동] /post/${data.PostId}`);
+        //console.log(`[신고 게시글로 이동] /post/${data.PostId}`);
         router.push(`/post/${data.PostId}`);
         return;
       }
@@ -229,7 +229,7 @@ const goToTarget = (noti: NotificationResponseDto) => {
     
     // 기본값: 사용자 프로필로 이동
     if (noti.user.userId) {
-      console.log(`[기본: 유저 프로필로 이동] /user/${noti.user.userId}`);
+      //console.log(`[기본: 유저 프로필로 이동] /user/${noti.user.userId}`);
       router.push(`/user/${noti.user.userId}`);
     } else {
       console.warn('알림 데이터가 부족합니다:', noti);

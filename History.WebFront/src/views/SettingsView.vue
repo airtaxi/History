@@ -54,24 +54,24 @@ const favoriteFriendOptions = [
  */
 const fetchSettingsData = async () => {
   try {
-    console.log('[설정 데이터 로딩 시작]')
+    //console.log('[설정 데이터 로딩 시작]')
     
     const userRes = await apiClient.get('/api/User/me')
     const user = userRes.data
     
-    console.log('[사용자 정보]', user)
+    //console.log('[사용자 정보]', user)
     
     birthdayText.value = user.birthday || '설정되지 않음'
     
     // 푸시 알림 설정 확인
-    console.log('[푸시 알림 설정 확인]', {
-      commentPushNotificationPermission: user.commentPushNotificationPermission,
-      commentMentionPushNotificationPermission: user.commentMentionPushNotificationPermission,
-      commentLikePushNotificationPermission: user.commentLikePushNotificationPermission,
-      postReactionPushNotificationPermission: user.postReactionPushNotificationPermission,
-      postMentionPushNotificationPermission: user.postMentionPushNotificationPermission,
-      isFavoriteFriendNewPostPushNotificationEnabled: user.isFavoriteFriendNewPostPushNotificationEnabled
-    })
+    // console.log('[푸시 알림 설정 확인]', {
+    //   commentPushNotificationPermission: user.commentPushNotificationPermission,
+    //   commentMentionPushNotificationPermission: user.commentMentionPushNotificationPermission,
+    //   commentLikePushNotificationPermission: user.commentLikePushNotificationPermission,
+    //   postReactionPushNotificationPermission: user.postReactionPushNotificationPermission,
+    //   postMentionPushNotificationPermission: user.postMentionPushNotificationPermission,
+    //   isFavoriteFriendNewPostPushNotificationEnabled: user.isFavoriteFriendNewPostPushNotificationEnabled
+    // })
     
     // 각 알림 타입별로 설정값 적용
     pushNotifications.value.comment = user.commentPushNotificationPermission || 'OnlyMe'
@@ -81,7 +81,7 @@ const fetchSettingsData = async () => {
     pushNotifications.value.postMention = user.postMentionPushNotificationPermission || 'OnlyMe'
     pushNotifications.value.favoriteFriendNewPost = user.isFavoriteFriendNewPostPushNotificationEnabled ? 'Everyone' : 'OnlyMe'
     
-    console.log('[설정된 푸시 상태]', pushNotifications.value)
+    //console.log('[설정된 푸시 상태]', pushNotifications.value)
     
     friendDiscovery.value = user.friendDiscovery || '전체공개'
 
@@ -92,7 +92,7 @@ const fetchSettingsData = async () => {
     blockedUsers.value = blocked.data
     ignoredUsers.value = ignored.data
     
-    console.log('[설정 데이터 로딩 완료]')
+    //console.log('[설정 데이터 로딩 완료]')
   } catch (err: any) {
     console.error('설정 데이터 불러오기 실패:', err)
     console.error('에러 상세:', err.response?.data)
@@ -157,10 +157,10 @@ const setPush = async (type: 'favoriteFriendNewPost') => {
   const currentValue = pushNotifications.value[type]
   const newValue = currentValue === 'Everyone' ? 'OnlyMe' : 'Everyone'
   
-  console.log(`[${type} 알림 설정 변경]`, {
-    currentValue,
-    newValue
-  })
+  // console.log(`[${type} 알림 설정 변경]`, {
+  //   currentValue,
+  //   newValue
+  // })
   
   try {
     const response = await apiClient.put('/api/User/push-notification-permission', {
@@ -168,11 +168,11 @@ const setPush = async (type: 'favoriteFriendNewPost') => {
       accessPermission: newValue
     })
     
-    console.log(`[${type} 알림 설정 성공]`, response.data)
+    //console.log(`[${type} 알림 설정 성공]`, response.data)
     pushNotifications.value[type] = newValue
     
     const statusText = newValue === 'Everyone' ? '켜짐' : '꺼짐'
-    console.log(`관심 친구의 새 게시물 알림이 ${statusText}으로 설정되었습니다.`)
+    //console.log(`관심 친구의 새 게시물 알림이 ${statusText}으로 설정되었습니다.`)
     
   } catch (err: any) {
     console.error(`[${type} 알림 설정 실패]`, err)
@@ -212,7 +212,7 @@ const setPush = async (type: 'favoriteFriendNewPost') => {
  */
 // 일반 알림 설정 변경 (드롭다운)
 const updateNotificationPermission = async (type: string, permission: string) => {
-  console.log(`[${type} 알림 설정 변경]`, { type, permission })
+  //console.log(`[${type} 알림 설정 변경]`, { type, permission })
   
   // API 타입과 상태 키 매핑
   const typeToKeyMap: Record<string, keyof typeof pushNotifications.value> = {
@@ -238,10 +238,10 @@ const updateNotificationPermission = async (type: string, permission: string) =>
       accessPermission: permission
     })
     
-    console.log(`[${type} 알림 설정 성공]`, response.data)
+    //console.log(`[${type} 알림 설정 성공]`, response.data)
     
     const statusText = permission === 'OnlyMe' ? '꺼짐' : '켜짐'
-    console.log(`${type} 알림이 ${statusText}으로 설정되었습니다.`)
+    //console.log(`${type} 알림이 ${statusText}으로 설정되었습니다.`)
     
   } catch (err: any) {
     console.error(`[${type} 알림 설정 실패]`, err)

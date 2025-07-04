@@ -51,7 +51,7 @@ const deniedUserId = ref('');
 const deniedUserNickname = ref('');
 
 const openImageModal = (url: string) => {
-  console.log('[모달] 이미지 URL:', url)
+  //console.log('[모달] 이미지 URL:', url)
   selectedImageUrl.value = url;
   showImageModal.value = true;
 };
@@ -277,14 +277,14 @@ const reportPost = () => {
       associatedId: props.post.id // 신고 대상 ID (게시글 ID)
     };
 
-    console.log('[신고 요청 데이터]', payload);
+    //console.log('[신고 요청 데이터]', payload);
 
     apiClient.post('/api/Report', payload)
       .then(() => {
         alert('신고가 접수되었습니다.');
       })
       .catch((err) => {
-        console.log('[신고 실패 응답]', err.response?.data?.errors);
+        //console.log('[신고 실패 응답]', err.response?.data?.errors);
         alert('신고 처리 중 오류가 발생했습니다.');
       });
   }
@@ -396,20 +396,20 @@ const handleClickOutside = (event: MouseEvent) => {
 
 onMounted(async () => {
   // 디버깅: 게시글 콘텐츠 구조 확인
-  console.log('[📌 게시글 전체 데이터]', props.post);
-  console.log('🔍 게시글 콘텐츠 구조:', props.post.contents);
+  //console.log('[📌 게시글 전체 데이터]', props.post);
+  //console.log('🔍 게시글 콘텐츠 구조:', props.post.contents);
   props.post.contents.forEach((content, index) => {
-    console.log(`📝 콘텐츠 ${index}:`, {
-      type: content.$type,
-      fullContent: content,
-      // externalUrl 타입의 경우 모든 속성 확인
-      ...(content.$type === 'externalUrl' && {
-        url: content.url || content.Url,
-        title: content.title || content.Title,
-        description: content.description || content.Description,
-        image: content.image || content.Image || content.imageUrl || content.ImageUrl || content.thumbnail || content.Thumbnail
-      })
-    });
+//     console.log(`📝 콘텐츠 ${index}:`, {
+//       type: content.$type,
+//       fullContent: content,
+//       // externalUrl 타입의 경우 모든 속성 확인
+//       ...(content.$type === 'externalUrl' && {
+//         url: content.url || content.Url,
+//         title: content.title || content.Title,
+//         description: content.description || content.Description,
+//         image: content.image || content.Image || content.imageUrl || content.ImageUrl || content.thumbnail || content.Thumbnail
+//       })
+//     });
   });
   
   // 미디어 URL 로드 (이미지, 동영상 등)
@@ -422,13 +422,13 @@ onMounted(async () => {
   
   // 리포스트인 경우 원본 게시글의 미디어도 로드
   if ((props.post as any).parentPost) {
-    console.log('🔍 리포스트 원본 게시글 미디어 로드 중...');
+    //console.log('🔍 리포스트 원본 게시글 미디어 로드 중...');
     const parentPost = (props.post as any).parentPost;
     if (parentPost.contents && Array.isArray(parentPost.contents)) {
       for (const content of parentPost.contents) {
         if ((content as any).$type === 'media' && ((content as any).mediaId || (content as any).thumbnailMediaId)) {
           const id = (content as any).mediaId || (content as any).thumbnailMediaId;
-          console.log('📷 원본 게시글 미디어 ID:', id);
+          //console.log('📷 원본 게시글 미디어 ID:', id);
           mediaUrlMap.value[id] = await getMediaBlobUrl(id);
         }
       }
@@ -593,11 +593,11 @@ function splitTextWithLinksAndMentions(text: string): Array<{ text: string; type
 const loadReactionData = async () => {
   try {
     const response = await apiClient.get(`/api/Post/${props.post.id}`);
-    console.log('[반응 정보 로드]', response.data);
+    //console.log('[반응 정보 로드]', response.data);
     
     // 서버 응답 구조 확인
     const postData = response.data;
-    console.log('[postReactions 데이터]', postData.postReactions);
+    //console.log('[postReactions 데이터]', postData.postReactions);
     
     // postReactions 배열에서 반응 카운트와 내 반응 추출
     const postReactions = postData.postReactions || [];
@@ -607,7 +607,7 @@ const loadReactionData = async () => {
     
     // postReactions 배열을 순회하면서 반응 타입별로 카운트 계산 및 사용자 정보 수집
     postReactions.forEach((reaction: any) => {
-      console.log('[개별 반응]', reaction);
+      //console.log('[개별 반응]', reaction);
       
       const reactionType = reaction.type || reaction.reactionType;
       const user = reaction.user;
@@ -645,11 +645,11 @@ const loadReactionData = async () => {
     myReaction.value = currentUserReaction;
     reactionUsersMap.value = usersMap;
     
-    console.log('[반응 상태 업데이트]', {
-      counts: reactionMap.value,
-      myReaction: myReaction.value,
-      usersMap: reactionUsersMap.value
-    });
+//     console.log('[반응 상태 업데이트]', {
+//       counts: reactionMap.value,
+//       myReaction: myReaction.value,
+//       usersMap: reactionUsersMap.value
+//     });
   } catch (err) {
     console.warn('반응 정보 로딩 실패:', err);
   }
@@ -681,23 +681,23 @@ const postReaction = async (newType: string) => {
   const originalReactionMap = { ...reactionMap.value };
   
   try {
-    console.log(`[반응 처리] 이전: ${previousReaction}, 새로운: ${newType}`);
-    console.log('[현재 반응 상태]', { reactionMap: reactionMap.value, myReaction: myReaction.value });
+    //console.log(`[반응 처리] 이전: ${previousReaction}, 새로운: ${newType}`);
+    //console.log('[현재 반응 상태]', { reactionMap: reactionMap.value, myReaction: myReaction.value });
     
     if (previousReaction === newType) {
       // === 시나리오 1: 같은 반응 재클릭 → 해제 ===
-      console.log(`[반응 API 호출 - 해제] POST /api/Post/${props.post.id}/reaction/${newType}`);
+      //console.log(`[반응 API 호출 - 해제] POST /api/Post/${props.post.id}/reaction/${newType}`);
       
       // Optimistic Update: 즉시 UI에서 제거
       reactionMap.value[newType] = Math.max((reactionMap.value[newType] || 1) - 1, 0);
       myReaction.value = null;
       
       const response = await apiClient.post(`/api/Post/${props.post.id}/reaction/${newType}`);
-      console.log('[반응 API 응답 - 해제]', response);
+      //console.log('[반응 API 응답 - 해제]', response);
       
     } else if (previousReaction && previousReaction !== newType) {
       // === 시나리오 2: 다른 반응으로 변경 ===
-      console.log(`[반응 변경] ${previousReaction} → ${newType}`);
+      //console.log(`[반응 변경] ${previousReaction} → ${newType}`);
       
       // Optimistic Update: 즉시 UI 업데이트
       reactionMap.value[previousReaction] = Math.max((reactionMap.value[previousReaction] || 1) - 1, 0);
@@ -705,25 +705,25 @@ const postReaction = async (newType: string) => {
       myReaction.value = newType;
       
       // 1차: 기존 반응 제거 (서버의 토글 방식 때문에 필요)
-      console.log(`[반응 API 호출 - 기존 제거] POST /api/Post/${props.post.id}/reaction/${previousReaction}`);
+      //console.log(`[반응 API 호출 - 기존 제거] POST /api/Post/${props.post.id}/reaction/${previousReaction}`);
       await apiClient.post(`/api/Post/${props.post.id}/reaction/${previousReaction}`);
       
       // 2차: 새 반응 추가
-      console.log(`[반응 API 호출 - 새로 추가] POST /api/Post/${props.post.id}/reaction/${newType}`);
+      //console.log(`[반응 API 호출 - 새로 추가] POST /api/Post/${props.post.id}/reaction/${newType}`);
       const response = await apiClient.post(`/api/Post/${props.post.id}/reaction/${newType}`);
-      console.log('[반응 API 응답 - 변경 완료]', response);
+      //console.log('[반응 API 응답 - 변경 완료]', response);
       
     } else {
       // === 시나리오 3: 새로운 반응 추가 ===
-      console.log(`[반응 API 호출 - 추가] POST /api/Post/${props.post.id}/reaction/${newType}`);
+      //console.log(`[반응 API 호출 - 추가] POST /api/Post/${props.post.id}/reaction/${newType}`);
       
       // Optimistic Update: 즉시 UI에 추가
       reactionMap.value[newType] = (reactionMap.value[newType] || 0) + 1;
       myReaction.value = newType;
       
       const response = await apiClient.post(`/api/Post/${props.post.id}/reaction/${newType}`);
-      console.log('[반응 API 응답 - 추가]', response);
-      console.log('[반응 후 상태]', { reactionMap: reactionMap.value, myReaction: myReaction.value });
+      //console.log('[반응 API 응답 - 추가]', response);
+      //console.log('[반응 후 상태]', { reactionMap: reactionMap.value, myReaction: myReaction.value });
     }
     
     // 최종 서버 데이터로 동기화 (실제 데이터와 일치 보장)
@@ -815,7 +815,7 @@ const submitReport = () => {
     associatedId: props.post.id,
   };
 
-  console.log('[신고 요청 데이터]', payload);
+  //console.log('[신고 요청 데이터]', payload);
 
   apiClient.post('/api/Report', payload)
     .then(() => {
@@ -829,7 +829,7 @@ const submitReport = () => {
       if (status === 409) {
         alert('이미 신고한 게시물이에요.');
       } else {
-        console.log('[신고 실패 응답]', err.response?.data?.errors);
+        //console.log('[신고 실패 응답]', err.response?.data?.errors);
         alert(errorMsg);
       }
     });
