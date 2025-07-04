@@ -294,23 +294,24 @@ const deleteMyComment = async (commentId: string) => {
 </template>
 
 <style scoped>
-.main-content { 
-  max-width: 800px; 
-  margin: 24px auto; 
-  padding: 0 20px; 
+.main-content {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 24px;
 }
 .post-section { 
   margin-bottom: 24px; 
 }
-.comments-section { 
-  background: white; 
-  border: 1px solid #ddd; 
-  border-radius: 8px; 
+.comments-section {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px 16px;
 }
-h3 { 
-  padding: 16px; 
-  margin: 0; 
-  border-bottom: 1px solid #eee; 
+.comments-section h3 {
+  margin-bottom: 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 .loading-indicator { 
   text-align: center; 
@@ -338,4 +339,35 @@ h3 {
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+.post-section :deep(.post-card) {
+  max-width: none;
+  margin: 0;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.post-section :deep(.post-card .content-text) {
+  white-space: pre-wrap; /* 줄바꿈 반영 */
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.post-section :deep(.original-post-content p) {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.post-section :deep(.original-post-card) {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px 16px;
+  background: #fafafa;
+  margin-top: 8px;
+}
+
 </style>
