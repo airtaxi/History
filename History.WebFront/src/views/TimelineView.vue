@@ -10,6 +10,8 @@ import type { PostResponseDto } from '@/types';
 import PostCard from '@/components/PostCard.vue';
 import RightSidebar from '@/components/layout/RightSidebar.vue';
 import CreatePost from '@/components/CreatePost.vue';
+import PostDetailModal from '@/components/PostDetailModal.vue';
+
 
 // --- 상태 관리 ---
 const posts = ref<PostResponseDto[]>([]);
@@ -18,6 +20,12 @@ const isLoadingMore = ref(false);
 const noMorePosts = ref(false); 
 const loadMoreSentinel = ref<HTMLElement | null>(null); 
 const profileImageMap = ref<Record<string, string>>({});
+const isDetailModalOpen = ref(false);
+const selectedPostId = ref('');
+const openModalWithPost = (postId: string) => {
+  selectedPostId.value = postId;
+  isDetailModalOpen.value = true;
+};
 
 const getMediaBlobUrl = async (mediaId: string) => {
   try {
@@ -241,7 +249,7 @@ const handlePostCreated = async () => {
         </div>
         
         <div v-else class="post-list">
-          <PostCard v-for="post in posts" :key="post.id" :post="post" :profile-image-map="profileImageMap" />
+          <PostCard v-for="post in posts" :key="post.id" :post="post" :profile-image-map="profileImageMap" @open-detail="openModalWithPost" />
         </div>
 
         <div ref="loadMoreSentinel" class="sentinel"></div>
@@ -256,6 +264,10 @@ const handlePostCreated = async () => {
       </div>
       <RightSidebar />
     </main>
+    <PostDetailModal
+      v-model="isDetailModalOpen"
+      :post-id="selectedPostId"
+    />
   </div>
 </template>
 
