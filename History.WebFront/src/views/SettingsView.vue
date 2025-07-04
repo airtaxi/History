@@ -390,7 +390,7 @@ onMounted(fetchSettingsData)
       <div class="settings-container">
         <div class="page-header">
           <h1>⚙️ 설정</h1>
-          <p class="page-subtitle">서브헤더를 적어주세요!</p>
+          <p class="page-subtitle">개인 설정 페이지입니다.</p>
         </div>
 
         <!-- 개인정보 설정 -->

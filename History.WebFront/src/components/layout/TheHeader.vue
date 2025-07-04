@@ -320,22 +320,18 @@ const toggleNotifications = () => {
       </div>
       
       <div class="user-actions">
-        <RouterLink to="/user-settings" class="action-btn header" title="설정">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M12 1a2 2 0 0 1 2 2v1.26a8.07 8.07 0 0 1 2.53.9l.89-.89a2 2 0 1 1 2.83 2.83l-.89.89a8.07 8.07 0 0 1 .9 2.53H21a2 2 0 1 1 0 4h-1.26a8.07 8.07 0 0 1-.9 2.53l.89.89a2 2 0 1 1-2.83 2.83l-.89-.89a8.07 8.07 0 0 1-2.53.9V21a2 2 0 1 1-4 0v-1.26a8.07 8.07 0 0 1-2.53-.9l-.89.89a2 2 0 1 1-2.83-2.83l.89-.89a8.07 8.07 0 0 1-.9-2.53H3a2 2 0 1 1 0-4h1.26a8.07 8.07 0 0 1 .9-2.53l-.89-.89a2 2 0 1 1 2.83-2.83l.89.89a8.07 8.07 0 0 1 2.53-.9V3a2 2 0 0 1 2-2z"/>
-          </svg>
+        <RouterLink to="/user-settings" class="action-btn header" style="text-decoration: none; font-size:1.3rem;" title="설정">
+          <i class="fa-solid fa-gear"></i>
         </RouterLink>
-        <button class="action-btn header" @click="uiStore.openEditorForNewPost" title="글쓰기">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="m19.3 8.925l-4.25-4.2l1.4-1.4q.575-.575 1.413-.575t1.412.575l1.425 1.425q.575.575.575 1.413t-.575 1.412zm-5.725 5.725L3 21v-4.25l10.6-10.6z"/></svg>
+        <button class="action-btn header" @click="uiStore.openEditorForNewPost" style="text-decoration: none; font-size:1.3rem;" title="글쓰기">
+          <i class="fa-solid fa-pen"></i>
         </button>
-        <button class="action-btn header" @click="handleLogout" title="로그아웃">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M16 13v-2H7V8l-5 4l5 4v-3zm6-10H12v2h10v16H12v2h10q.825 0 1.413-.588T22 20V4q0-.825-.588-1.413T20 2z"/>
-          </svg>
+        <button class="action-btn header" @click="handleLogout" style="text-decoration: none; font-size:1.3rem;" title="로그아웃">
+          <i class="fa-solid fa-right-from-bracket"></i>
         </button>
         <div class="notification-wrapper">
-          <button class="action-btn header" @click="toggleNotifications" title="알림">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21q-1.875 0-3.35-1.213t-1.8-2.912q.975.35 1.95.525T10.8 17q2.15 0 3.85-1.1T16.5 12.5q0-.425-.062-.837T16.3 11q1.15.825 1.8 2.063T18.5 15.5q0 2.225-1.488 4.013T12 21m-1-4q-1.25 0-2.125-.875T8 14q0-1.25.875-2.125T11 11q1.25 0 2.125.875T14 14q0 1.25-.875 2.125T11 17M6 13q-.425 0-.838-.062T4.3 12.8q-.825-1.15-1.062-2.587T3.5 7.5q0-3.325 2.338-5.663T11.5 0q1.925 0 3.588.9t2.587 2.45q-.65-.3-1.375-.425T15 2.8q-2.575 0-4.438 1.863T8.7 9.1q0 .425.063.85T8.9 10.8q-1.125-.8-1.8-2.05t-.65-2.625q0-.425.038-.85t.112-.8q-1.325.8-2.137 2.175T4 9.3q0 .775.175 1.513T4.8 12.2q.55.725 1.2 1.225T7.35 14q-.65.025-1.25-.137T5 13.45V13z"/></svg>
+          <button class="action-btn header" @click="toggleNotifications" style="text-decoration: none; font-size:1.3rem;" title="알림">
+            <i class="fa-solid fa-bell"></i>
           </button>
           <div v-if="showNotifications" class="notification-dropdown" @click.stop>
             <div class="notification-header">최근 알림</div>
@@ -456,10 +452,6 @@ const toggleNotifications = () => {
     justify-content: center; 
     cursor: pointer; 
     transition: background-color 0.2s; 
-}
-
-.action-btn:hover header { 
-    background-color: rgba(255, 255, 255, 0.15); 
 }
 
 .action-btn svg  { 

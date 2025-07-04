@@ -7,8 +7,28 @@ import ProfileEditView from '@/views/accounts/ProfileEditView.vue';
 import PostCard from '@/components/PostCard.vue';
 import { watchEffect } from 'vue'
 import { watch } from 'vue';
-// import '@/views/ProfileView.css' 전역 css 버그로 인한 일시 주석처리
+import PostDetailModal from '@/components/PostDetailModal.vue';
 
+const scrollContainer = ref<HTMLElement | null>(null);
+const isGridView = ref(false);
+const selectedPostId = ref('');
+const isDetailModalOpen = ref(false);
+const openModalWithPost = (postId: string) => {
+  selectedPostId.value = postId;
+  isDetailModalOpen.value = true;
+};
+
+const showScrollTopBtn = ref(false);
+const handleScroll = () => {
+  if (scrollContainer.value) {
+    showScrollTopBtn.value = scrollContainer.value.scrollTop > 200;
+  }
+};
+const scrollToTop = () => {
+  if (scrollContainer.value) {
+    scrollContainer.value.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+};
 const route = useRoute();
 const routeUserId = computed(() => route.params.userId);
 const me = ref<UserResponseDto | null>(null);
@@ -329,7 +349,9 @@ const handleProfileUpdated = () => {
 
 onMounted(() => {
   fetchInitialData();
-
+  if (scrollContainer.value) {
+    scrollContainer.value.addEventListener('scroll', handleScroll);
+  }
   observer = new IntersectionObserver((entries) => {
     if (entries[0].isIntersecting) loadMorePosts();
   }, { rootMargin: '200px' });
@@ -343,6 +365,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   observer?.disconnect();
+  if (scrollContainer.value) {
+    scrollContainer.value.removeEventListener('scroll', handleScroll);
+  }
 });
 
 watch(routeUserId, () => {
@@ -367,7 +392,7 @@ watch(routeUserId, () => {
       <div class="spinner"></div>
     </main>
 
-    <main v-else-if="user" class="profile-content">
+    <main v-else-if="user" class="profile-content" ref="scrollContainer">
       <div class="profile-page">
         <div class="profile-header">
           <div class="background-image-wrapper">
@@ -431,12 +456,18 @@ watch(routeUserId, () => {
           <div class="tab active">글 목록</div>
         </div>
 
-        <div class="my-posts-list">
+        <div class="view-toggle-wrapper">
+          <button @click="isGridView = false" :class="{ active: !isGridView }">리스트 보기</button>
+          <button @click="isGridView = true" :class="{ active: isGridView }">그리드 보기</button>
+        </div>
+
+        <div class="my-posts-list":class="{ grid: isGridView }">
           <PostCard
             v-for="post in posts"
             :key="post.id"
             :post="post"
             :profile-image-map="profileImageMap"
+            @open-detail="openModalWithPost"
           />
           <div ref="loadMoreSentinel" class="sentinel"></div>
           <div v-if="isLoadingMore" class="spinner small-spinner"></div>
@@ -444,16 +475,44 @@ watch(routeUserId, () => {
         </div>
       </div>
     </main>
-
     <ProfileEditView v-if="isEditModalOpen" @close="isEditModalOpen = false" @profile-updated="handleProfileUpdated" />
+    <PostDetailModal
+      v-model="isDetailModalOpen"
+      :post-id="selectedPostId"
+    />
+    <button
+      v-if="showScrollTopBtn"
+      class="scroll-top-button"
+      @click="scrollToTop"
+    >
+      ⬆ 맨 위로
+    </button>
   </div>
-
 </template>
 
 <style scoped>
 header {
 flex-shrink: 0;
 height: auto; 
+}
+
+.scroll-top-button {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  background-color: #ed664d;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: background-color 0.3s ease;
+  z-index: 1000;
+}
+.scroll-top-button:hover {
+  background-color: #e85b3e;
 }
 
 .page-container {
@@ -645,5 +704,52 @@ height: auto;
   text-align: center;
   color: #888;
   margin-top: 16px;
+}
+.view-toggle-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 24px 8px;
+  gap: 8px;
+}
+.view-toggle-wrapper button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.view-toggle-wrapper button.active {
+  background: #ed664d;
+  color: white;
+  border-color: #ed664d;
+}
+
+.my-posts-list.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* 그리드일 때 카드 전체를 수직 정렬 구조로 */
+.my-posts-list.grid :deep(.post-card) {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 360px;
+}
+
+/* 본문 내용은 flex-grow */
+.my-posts-list.grid :deep(.post-content) {
+  flex-grow: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+}
+
+/* 댓글수, 좋아요 등은 아래에 고정되게 */
+.my-posts-list.grid :deep(.post-footer) {
+  margin-top: auto;
 }
 </style>
