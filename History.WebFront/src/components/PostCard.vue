@@ -1,16 +1,5 @@
 <script setup lang="ts">
-/**
- * @fileoverview PostCard 컴포넌트 - 게시글 표시 및 상호작용을 담당하는 메인 컴포넌트
- *  * 주요 기능:
- * - 게시글 내용 표시 (텍스트, 미디어, 프로필 링크 등)
- * - 반응 시스템 (Like, Awesome, Happy, Sad, Support)
- * - hover 툴팁으로 반응한 사용자 정보 표시
- * - 리포스트 및 원본 게시글 표시
- * - 게시글 수정/삭제 (권한 기반)
- * - 신고 기능
- */
-
-import { defineProps, computed, ref, onMounted, onUnmounted } from 'vue';
+import { defineProps, computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import type { PostResponseDto } from '@/types';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
@@ -18,23 +7,63 @@ import { useUiStore } from '@/stores/ui';
 import apiClient from '@/api';
 import "./PostCard.css"
 
-/**
- * 컴포넌트 Props 정의
- * @typedef {Object} PostCardProps
- * @property {PostResponseDto} post - 표시할 게시글 데이터
- * @property {Record<string, string>} [profileImageMap] - 사용자별 프로필 이미지 URL 맵
- * @property {boolean} [showActions] - 수정/삭제 버튼 표시 여부 (작성자에게만)
- */
 const props = defineProps<{
   post: PostResponseDto;
   profileImageMap?: Record<string, string>;
   showActions?: boolean;
 }>();
 
+const profileBlobUrlMap = ref<Record<string, string>>({});
 const emit = defineEmits(['open-detail']);
-
+const showSharedUsersModal = ref(false);
+const showRepostedUsersModal = ref(false);  
+const longPressTimerShare = ref<number | null>(null);  
+const isLongPressingShare = ref(false); 
 const goToUserProfile = (userId: string) => {
   router.push(`/user/${userId}`);
+};
+
+const longPressTimerRepost = ref<number | null>(null);
+const isLongPressingRepost = ref(false);
+
+const startRepostLongPress = () => {
+  isLongPressingRepost.value = false;
+  longPressTimerRepost.value = window.setTimeout(() => {
+    isLongPressingRepost.value = true;
+    showRepostedUsersModal.value = true;
+  }, 500);
+};
+
+const endRepostLongPress = () => {
+  if (longPressTimerRepost.value) {
+    clearTimeout(longPressTimerRepost.value);
+    longPressTimerRepost.value = null;
+  }
+};
+
+
+const startShareLongPress = () => {
+  isLongPressingShare.value = false; 
+  longPressTimerShare.value = window.setTimeout(() => {
+    isLongPressingShare.value = true;
+    showSharedUsersModal.value = true;  
+  }, 500); 
+};
+
+const endShareLongPress = () => {
+  if (longPressTimerShare.value) {
+    clearTimeout(longPressTimerShare.value);
+    longPressTimerShare.value = null;
+  }
+};
+
+const handleShareClick = () => {
+  if (isLongPressingShare.value) {
+    isLongPressingShare.value = false;
+    return;
+  }
+
+  openShareEditor();
 };
 
 // === Store 및 Router 인스턴스 ===
@@ -100,36 +129,6 @@ const isLongPressing = ref(false);
 
 /** @description 팝업 표시 직후 클릭 방지를 위한 플래그 */
 const isClickDisabled = ref(false);
-
-/**
- * 툴팁 표시 및 위치 계산
- *  * 마우스가 반응 버튼에 올려졌을 때 해당 버튼 위에 툴팁을 표시합니다.
- * getBoundingClientRect()를 사용해 버튼의 정확한 화면 위치를 계산하고,
- * Fixed positioning으로 viewport 기준 절대 좌표를 설정합니다.
- *  * @param {MouseEvent} event - 마우스 이벤트 객체 (target에서 버튼 위치 추출)
- * @param {string} reactionType - 반응 타입 ('Like' | 'Awesome' | 'Happy' | 'Sad' | 'Support')
- * @example
- * ```vue
- * <button @mouseenter="showTooltip($event, 'Like')">👍</button>
- * ```
- */
-const showTooltip = (event: MouseEvent, reactionType: string) => {
-  const rect = (event.target as HTMLElement).getBoundingClientRect();
-  tooltipPosition.value = {
-    top: rect.top - 10, // 버튼 위쪽에 표시 (10px 여백)
-    left: rect.left + rect.width / 2 // 버튼 중앙 정렬
-  };
-  hoveredReaction.value = reactionType;
-};
-
-/**
- * 툴팁 숨기기
- *  * 마우스가 반응 버튼에서 벗어났을 때 툴팁을 숨깁니다.
- * hoveredReaction을 null로 설정하여 v-if 조건을 false로 만듭니다.
- */
-const hideTooltip = () => {
-  hoveredReaction.value = null;
-};
 
 /**
  * 반응 버튼 클릭 시 처리
@@ -240,55 +239,6 @@ const createFloatingEmoji = (reactionType: string) => {
   }, 800);
 };
 
-/**
- * 반응 타입의 한글 레이블 반환
- *  * @param {string} reactionType - 반응 타입
- * @returns {string} 한글 레이블
- */
-const getReactionLabel = (reactionType: string): string => {
-  const labelMap: Record<string, string> = {
-    'Like': '좋아요',
-    'Awesome': '멋져요',
-    'Happy': '기뻐요',
-    'Sad': '슬퍼요',
-    'Support': '힘내요'
-  };
-  
-  return labelMap[reactionType] || '반응';
-};
-
-/**
- * 게시글 즉시 신고 (레거시 함수)
- *  * 사용자 확인 후 즉시 '스팸' 사유로 게시글을 신고합니다.
- * 신고 사유를 선택할 수 없는 간단한 버전으로, 현재는 더 발전된 
- * openReportDialog() 함수를 사용하는 것을 권장합니다.
- *  * @deprecated 대신 openReportDialog() → submitReport() 플로우 사용 권장
- * @async
- *  * @example
- * ```vue
- *  * <button @click="reportPost">신고</button>
- * ```
- */
-const reportPost = () => {
-  if (confirm('이 게시물을 신고하시겠습니까?')) {
-    const payload = {
-      type: 'Spam',               // ReportType enum 값 (예: Spam, Hate, Nudity 등)
-      target: 'Post',             // ReportTarget enum 값 (Post 또는 Comment)
-      associatedId: props.post.id // 신고 대상 ID (게시글 ID)
-    };
-
-    //console.log('[신고 요청 데이터]', payload);
-
-    apiClient.post('/api/Report', payload)
-      .then(() => {
-        alert('신고가 접수되었습니다.');
-      })
-      .catch((err) => {
-        //console.log('[신고 실패 응답]', err.response?.data?.errors);
-        alert('신고 처리 중 오류가 발생했습니다.');
-      });
-  }
-};
 
 // 시간 포맷 함수 추가
 
@@ -396,8 +346,8 @@ const handleClickOutside = (event: MouseEvent) => {
 
 onMounted(async () => {
   // 디버깅: 게시글 콘텐츠 구조 확인
-  //console.log('[📌 게시글 전체 데이터]', props.post);
-  //console.log('🔍 게시글 콘텐츠 구조:', props.post.contents);
+  console.log('[📌 게시글 전체 데이터]', props.post);
+  console.log('🔍 게시글 콘텐츠 구조:', props.post.sharedAndRepostedUsers);
   props.post.contents.forEach((content, index) => {
 //     console.log(`📝 콘텐츠 ${index}:`, {
 //       type: content.$type,
@@ -414,32 +364,94 @@ onMounted(async () => {
   
   // 미디어 URL 로드 (이미지, 동영상 등)
   for (const content of props.post.contents) {
-    if (content.$type === 'media' && (content.mediaId || content.thumbnailMediaId)) {
-      const id = content.mediaId || content.thumbnailMediaId;
-      mediaUrlMap.value[id] = await getMediaBlobUrl(id);
-    }
-  }
-  
-  // 리포스트인 경우 원본 게시글의 미디어도 로드
-  if ((props.post as any).parentPost) {
-    //console.log('🔍 리포스트 원본 게시글 미디어 로드 중...');
-    const parentPost = (props.post as any).parentPost;
-    if (parentPost.contents && Array.isArray(parentPost.contents)) {
-      for (const content of parentPost.contents) {
-        if ((content as any).$type === 'media' && ((content as any).mediaId || (content as any).thumbnailMediaId)) {
-          const id = (content as any).mediaId || (content as any).thumbnailMediaId;
-          //console.log('📷 원본 게시글 미디어 ID:', id);
-          mediaUrlMap.value[id] = await getMediaBlobUrl(id);
-        }
-      }
-    }
-  }
-  
-  // 반응 정보 로드 (카운트, 내 반응, 툴팁용 사용자 정보)
-  await loadReactionData();
-  
-  // 외부 클릭 리스너 추가
-  document.addEventListener('click', handleClickOutside);
+    if (content.$type === 'media' && (content.mediaId || content.thumbnailMediaId)) {
+      const id = content.mediaId || content.thumbnailMediaId;
+      mediaUrlMap.value[id] = await getMediaBlobUrl(id);
+    }
+  }
+  
+  if ((props.post as any).parentPost) {
+    const parentPost = (props.post as any).parentPost;
+    if (parentPost.contents && Array.isArray(parentPost.contents)) {
+      for (const content of parentPost.contents) {
+        if ((content as any).$type === 'media' && ((content as any).mediaId || (content as any).thumbnailMediaId)) {
+          const id = (content as any).mediaId || (content as any).thumbnailMediaId;
+          mediaUrlMap.value[id] = await getMediaBlobUrl(id);
+        }
+      }
+    }
+  }
+
+  const usersToFetch = new Map<string, string>();
+
+  // 1. 현재 게시글 작성자 정보 수집
+  if (props.post.user && props.post.user.profileThumbnailMediaId) {
+    usersToFetch.set(props.post.user.userId, props.post.user.profileThumbnailMediaId);
+  }
+
+  // 2. 리포스트의 원본 게시글 작성자 정보 수집
+  const parentPost = (props.post as any).parentPost;
+  if (parentPost?.user?.profileThumbnailMediaId) {
+    usersToFetch.set(parentPost.user.userId, parentPost.user.profileThumbnailMediaId);
+  }
+
+  // 3. 수집된 사용자들의 프로필 이미지를 병렬로 요청
+  const fetchPromises = Array.from(usersToFetch.entries()).map(async ([userId, mediaId]) => {
+    if (!profileBlobUrlMap.value[userId]) {
+      const blobUrl = await getMediaBlobUrl(mediaId);
+      if (blobUrl) {
+        profileBlobUrlMap.value[userId] = blobUrl;
+      }
+    }
+  });
+  
+  await Promise.all(fetchPromises);
+  await loadReactionData();
+  
+  document.addEventListener('click', handleClickOutside);
+});
+
+watch(showSharedUsersModal, async (isOpened) => {
+  if (!isOpened) return; // 모달이 열릴 때만 실행
+
+  const users = props.post.sharedAndRepostedUsers?.filter(u => !u.isRepost) || [];
+  
+  const fetchPromises = users.map(async (item) => {
+    const userId = item.user.userId;
+    const mediaId = item.user.profileThumbnailMediaId;
+
+    // mediaId가 있고, 아직 로드되지 않은 이미지일 경우에만 요청
+    if (mediaId && !profileBlobUrlMap.value[userId]) {
+      const blobUrl = await getMediaBlobUrl(mediaId);
+      if (blobUrl) {
+        profileBlobUrlMap.value[userId] = blobUrl;
+      }
+    }
+  });
+
+  await Promise.all(fetchPromises);
+});
+
+// 리포스트 모달이 열릴 때 실행
+watch(showRepostedUsersModal, async (isOpened) => {
+  if (!isOpened) return; // 모달이 열릴 때만 실행
+
+  const users = props.post.sharedAndRepostedUsers?.filter(u => u.isRepost) || [];
+
+  const fetchPromises = users.map(async (item) => {
+    const userId = item.user.userId;
+    const mediaId = item.user.profileThumbnailMediaId;
+
+    // mediaId가 있고, 아직 로드되지 않은 이미지일 경우에만 요청
+    if (mediaId && !profileBlobUrlMap.value[userId]) {
+      const blobUrl = await getMediaBlobUrl(mediaId);
+      if (blobUrl) {
+        profileBlobUrlMap.value[userId] = blobUrl;
+      }
+    }
+  });
+
+  await Promise.all(fetchPromises);
 });
 
 onUnmounted(() => {
@@ -495,28 +507,6 @@ const deleteMyPost = () => {
       });
   }
 };
-
-function splitTextWithLinks(text: string): Array<{ text: string; isLink: boolean }> {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  const result: Array<{ text: string; isLink: boolean }> = [];
-
-  let lastIndex = 0;
-  let match;
-
-  while ((match = urlRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      result.push({ text: text.slice(lastIndex, match.index), isLink: false });
-    }
-    result.push({ text: match[0], isLink: true });
-    lastIndex = match.index + match[0].length;
-  }
-
-  if (lastIndex < text.length) {
-    result.push({ text: text.slice(lastIndex), isLink: false });
-  }
-
-  return result;
-}
 
 /**
  * 텍스트에서 @멘션과 링크를 감지하여 분리
@@ -930,9 +920,7 @@ const isImageUrl = (url: string): boolean => {
       <div class="original-post-card" @click.stop="goToOriginalPost">
         <div class="original-post-author">
           <img
-            :src="props.profileImageMap && post.parentPost.user.userId
-                    ? props.profileImageMap[post.parentPost.user.userId]
-                    : '/src/assets/images/default_profile_image.jpg'"
+            :src="profileBlobUrlMap[post.parentPost.user.userId] || '/src/assets/images/default_profile_image.jpg'"
             class="original-author-avatar"
             @click.stop="goToUserProfile(post.parentPost.user.userId)"
           />
@@ -954,7 +942,7 @@ const isImageUrl = (url: string): boolean => {
                   @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
                 />
               </template>
-              <p v-else>{{ (content as any).text }}</p>
+              <p v-else style="white-space: pre-wrap;">{{ (content as any).text }}</p>
             </template>
             
             <div v-else-if="(content as any).$type === 'media' && ((content as any).mediaId || (content as any).thumbnailMediaId)">
@@ -1034,7 +1022,7 @@ const isImageUrl = (url: string): boolean => {
 
     <div class="post-content-area">
       <div v-for="(content, index) in post.contents" :key="index">
-        <p v-if="(content as any).$type === 'text'">
+        <p v-if="(content as any).$type === 'text'" style="white-space: pre-wrap; word-break: break-word;">
           <template v-for="(chunk, index) in splitTextWithLinksAndMentions((content as any).text)" :key="index">
             <a v-if="chunk.type === 'link'"
               :href="chunk.text.startsWith('www.') ? 'https://' + chunk.text : chunk.text"
@@ -1211,7 +1199,15 @@ const isImageUrl = (url: string): boolean => {
         <span aria-hidden="true">💬 {{ post.comments ? post.comments.length : 0 }}</span>
       </button>
 
-      <button @click.stop="openShareEditor" class="footer-btn" title="공유하기">
+      <button
+      @mousedown.stop="startShareLongPress"
+      @mouseup.stop="endShareLongPress"
+      @mouseleave.stop="endShareLongPress"
+      @touchstart.stop="startShareLongPress"
+      @touchend.stop="endShareLongPress"
+      @click.stop="handleShareClick"
+        class="footer-btn"
+        title="공유하기">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M12 22v-9m-4 4 4-4 4 4"/>
             <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
@@ -1221,7 +1217,16 @@ const isImageUrl = (url: string): boolean => {
         </span>
       </button>
 
-      <button @click.stop="handleInstantRepost" class="footer-btn repost-btn" title="리포스트하기">
+      <button
+        @mousedown.stop="startRepostLongPress"
+        @mouseup.stop="endRepostLongPress"
+        @mouseleave.stop="endRepostLongPress"
+        @touchstart.stop="startRepostLongPress"
+        @touchend.stop="endRepostLongPress"
+        @click.stop="handleInstantRepost"
+        class="footer-btn repost-btn"
+        title="리포스트하기"
+      >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="repost-icon">
           <path d="M17 1l4 4-4 4M3 23l-4-4 4-4M21 5H10a4 4 0 00-4 4v1M3 19h11a4 4 0 004-4v-1"/>
         </svg>
@@ -1288,8 +1293,8 @@ const isImageUrl = (url: string): boolean => {
 
   <!-- 접근 거부 모달 -->
   <div v-if="showAccessDeniedModal" class="access-denied-modal">
-    <div class="modal-overlay" @click="showAccessDeniedModal = false"></div>
-    <div class="modal-content">
+    <div class="access-denied-overlay" @click="showAccessDeniedModal = false"></div>
+    <div class="access-denied-content">
       <p class="modal-text">
         친구공개 스토리입니다.<br />
         {{ deniedUserNickname }}님과 친구를 맺으면 스토리를 확인할 수 있습니다.
@@ -1322,20 +1327,68 @@ const isImageUrl = (url: string): boolean => {
       <img :src="selectedImageUrl" alt="확대 이미지" class="modal-image" />
     </div>
   </Teleport>
+
+  <Teleport to="body">
+    <div v-if="showSharedUsersModal" class="user-list-overlay" @click="showSharedUsersModal = false">
+      <div class="user-list-content" @click.stop>
+        <h3 class="modal-title">이 게시글을 공유한 사람</h3>
+        <ul class="shared-users-list">
+          <li v-for="item in post.sharedAndRepostedUsers?.filter(u => !u.isRepost)" :key="item.user.userId" style="display: flex; align-items: center; gap: 10px;">
+            <img
+              :src="profileBlobUrlMap[item.user.userId] || '/src/assets/images/default_profile_image.jpg'"
+              alt="프로필 이미지"
+              style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; cursor: pointer;"
+              @click.stop="goToUserProfile(item.user.userId)"
+            />
+            <RouterLink :to="`/user/${item.user.userId}`" @click="showSharedUsersModal = false" class="user-nickname-link">
+              {{ item.user.nickname || item.user.handle || '알 수 없음' }}
+            </RouterLink>
+          </li>
+        </ul>
+        <button @click="showSharedUsersModal = false" class="modal-close">닫기</button>
+      </div>
+    </div>
+  </Teleport>
+
+  <Teleport to="body">
+    <div v-if="showRepostedUsersModal" class="user-list-overlay" @click="showRepostedUsersModal = false">
+      <div class="user-list-content" @click.stop>
+        <h3 class="modal-title">이 게시글을 리포스트한 사람</h3>
+        <ul class="shared-users-list">
+          <li v-for="item in post.sharedAndRepostedUsers?.filter(u => u.isRepost)" :key="item.user.userId" style="display: flex; align-items: center; gap: 10px;">
+            <img
+              :src="profileBlobUrlMap[item.user.userId] || '/src/assets/images/default_profile_image.jpg'"
+              alt="프로필 이미지"
+              style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; cursor: pointer;"
+              @click.stop="goToUserProfile(item.user.userId)"
+            />
+            <RouterLink :to="`/user/${item.user.userId}`" @click="showRepostedUsersModal = false" class="user-nickname-link">
+              {{ item.user.nickname || item.user.handle || '알 수 없음' }}
+            </RouterLink>
+          </li>
+        </ul>
+        <button @click="showRepostedUsersModal = false" class="modal-close">닫기</button>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
-/* ================================== */
-/* [수정된 부분] 외부 링크         */
-/* ================================== */
-.external-link-container {
-  margin: 12px 0;
-}
-
-.external-link {
-  text-decoration: none;
-  color: inherit;
-  display: block;
+.post-content-area .post-image,
+.original-post-content .original-post-media,
+.original-post-content .external-image {
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 200px; 
+    max-height: 550px;
+    max-width: 580px;
+    margin: 16px auto; 
+    margin: 16px 0;
+    border-radius: 12px;
+    background-color: #000; 
+    overflow: hidden;
 }
 
 .link-preview {
@@ -1353,7 +1406,6 @@ const isImageUrl = (url: string): boolean => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-/* 이미지가 있는 링크 미리보기 레이아웃 */
 .link-preview.has-image {
   display: flex;
 }
@@ -1425,7 +1477,6 @@ const isImageUrl = (url: string): boolean => {
   -webkit-line-clamp: 1; /* 작은 UI에선 1줄 */
 }
 
-/* [수정된 부분] .link-desc -> .link-description 으로 변경 및 스타일 보강 */
 .link-description {
   color: #495057;
   font-size: 0.875rem;
@@ -1461,10 +1512,6 @@ const isImageUrl = (url: string): boolean => {
   text-overflow: ellipsis;
 }
 
-
-/* ================================== */
-/* 기존 스타일 (유지)           */
-/* ================================== */
 .repost-wrapper {
   background: white;
   border-radius: 8px;
@@ -1500,6 +1547,10 @@ const isImageUrl = (url: string): boolean => {
 }
 
 .post-card {
+  width: 100%; 
+  max-width: 580px; 
+  margin-left: auto;   
+  margin-right: auto;  
   background: white;
   border-radius: 8px;
   border: 1px solid #ddd;
@@ -1608,11 +1659,6 @@ const isImageUrl = (url: string): boolean => {
 .post-timestamp {
   font-size: 0.8rem;
   color: #666;
-}
-
-.post-content-area {
-  margin-bottom: 12px;
-  word-break: break-word;
 }
 
 .post-text {
@@ -1729,14 +1775,6 @@ const isImageUrl = (url: string): boolean => {
   background-color: #f2f2f2;
 }
 
-.post-image {
-  max-width: 100%;
-  max-height: 400px;
-  object-fit: contain;
-  border-radius: 8px;
-  margin-top: 8px;
-}
-
 .report-modal {
   position: fixed;
   top: 30%;
@@ -1824,20 +1862,8 @@ const isImageUrl = (url: string): boolean => {
 }
 
 .original-post-content p {
+  white-space: pre-wrap;
   margin: 0 0 6px 0;
-}
-
-.original-post-media {
-  max-width: 100%;
-  max-height: 400px;
-  border-radius: 4px;
-  object-fit: contain;
-  margin-top: 6px;
-}
-
-.external-image {
-  border: 1px solid #e9ecef;
-  transition: all 0.2s ease;
 }
 
 .external-image:hover {
@@ -1933,54 +1959,101 @@ const isImageUrl = (url: string): boolean => {
 
 .access-denied-modal {
   position: fixed;
-  z-index: 9999;
+  z-index: 10001; 
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.modal-overlay {
+
+.access-denied-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
 }
-.modal-content {
-  position: relative;
+
+.access-denied-content {
+  position: relative; /* 오버레이 위에 오도록 */
   background: white;
   padding: 24px;
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  max-width: 320px;
+  width: 320px;
   text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
-.modal-text {
-  font-size: 1rem;
-  margin-bottom: 16px;
-  color: #333;
-  line-height: 1.5;
+
+.access-denied-content .modal-text {
+  margin-bottom: 20px;
 }
-.modal-actions {
+.access-denied-content .modal-actions {
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
-.modal-cancel,
-.modal-visit {
+.access-denied-content .modal-actions button {
   flex: 1;
   padding: 10px;
-  font-weight: bold;
+  border-radius: 8px;
   border: none;
-  border-radius: 6px;
+  font-weight: bold;
   cursor: pointer;
 }
-.modal-cancel {
-  background: #ddd;
-  color: #333;
+.access-denied-content .modal-cancel {
+  background-color: #f0f0f0;
 }
-.modal-visit {
-  background: #ed664d;
+.access-denied-content .modal-visit {
+  background-color: #ed664d;
   color: white;
 }
 
+.user-list-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+.user-list-content {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
 
+.modal-title {
+  font-weight: bold;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.shared-users-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px 0;
+}
+.shared-users-list li {
+  margin: 6px 0;
+}
+.modal-close {
+  width: 100%;
+  padding: 8px;
+  background: #ed664d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.user-nickname-link {
+  color: #212529; 
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.user-nickname-link:hover {
+  color: #ed664d; 
+}
 </style>
