@@ -646,4 +646,9 @@ height: auto;
   color: #888;
   margin-top: 16px;
 }
+.my-posts-list :deep(.post-card) {
+  max-width: none;
+  margin-left: 0;   
+  margin-right: 0;
+}
 </style>
