@@ -40,6 +40,8 @@ const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
+let observer: IntersectionObserver;
+
 onMounted(() => {
   fetchTimeline();
 
