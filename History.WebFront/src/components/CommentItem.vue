@@ -345,7 +345,7 @@ function formatRelativeTime(dateString: string): string {
           
           <div class="edit-attachments">
             <div v-if="editedImageUrl || (originalImageMediaId && mediaUrlMap[originalImageMediaId])" class="image-preview">
-              <img :src="editedImageUrl || mediaUrlMap[originalImageMediaId]" alt="수정할 이미지" />
+              <img :src="editedImageUrl || mediaUrlMap[originalImageMediaId || '']" />
               <button @click="removeImage" class="remove-image-btn" title="이미지 삭제">×</button>
             </div>
           </div>

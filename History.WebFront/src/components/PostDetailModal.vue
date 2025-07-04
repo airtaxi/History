@@ -128,10 +128,10 @@ const fetchInitialData = async (currentPostId: string) => {
 
     let lastCommentId: string | null = null;
     while (true) {
-      const fromParam = lastCommentId ? `&from=${lastCommentId}` : '';
-      const requestUrl = `/api/Comment/${currentPostId}?limit=100${fromParam}`;
-      const response = await apiClient.get<CommentResponseDto[]>(requestUrl);
-      const newComments = response.data;
+        const fromParam: string = lastCommentId ? `&from=${lastCommentId}` : '';
+        const requestUrl: string = `/api/Comment/${currentPostId}?limit=100${fromParam}`;
+        const response: { data: CommentResponseDto[] } = await apiClient.get(requestUrl);
+        const newComments: CommentResponseDto[] = response.data;
       if (newComments.length === 0) break;
       
       allComments.value = [...new Map([...allComments.value, ...newComments].map(c => [c.id, c])).values()];

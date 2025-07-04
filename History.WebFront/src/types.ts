@@ -1,23 +1,11 @@
-/**
- * 사용자 기본 정보를 나타내는 타입
- * 
- * 이 타입은 프로필 정보, 친구 목록, 검색 결과 등에서 사용됩니다.
- * 
- * @interface UserResponseDto
- */
 export interface UserResponseDto {
-  /** 사용자 고유 식별자 */
   userId: string;
-  /** 사용자 핸들명 (@username 형태) */
   handle: string;
-  /** 사용자 표시 이름 (닉네임) */
   nickname: string;
-  /** 프로필 썸네일 이미지 미디어 ID (null이면 기본 이미지 사용) */
   profileThumbnailMediaId: string | null;
-  /** 배경 썸네일 이미지 미디어 ID (선택사항) */
   backgroundThumbnailMediaId?: string | null;
-  /** 사용자 소개/설명 (선택사항) */
   description?: string | null;
+  friends?: UserResponseDto[]; 
 }
 
 /**
@@ -86,7 +74,7 @@ export interface PostResponseDto {
   parentPost?: PostResponseDto;
 
   sharedAndRepostedUsers?: {
-    user: any; // 또는 UserResponseDto
+    user: any; 
     postId: string;
     isRepost: boolean;
     sharedAt: string;
@@ -116,6 +104,10 @@ export interface CommentResponseDto {
 
 export interface UserDto {
   userId: string;
+  handle: string;
   nickname: string;
-  profileThumbnailMediaId?: string | null;
+  profileThumbnailMediaId: string | null;
+  backgroundThumbnailMediaId?: string | null;
+  description?: string | null;
+  friends?: UserDto[]; 
 }
