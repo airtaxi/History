@@ -5,12 +5,13 @@ import { useAuthStore } from '@/stores/auth';
 import apiClient from '@/api';
 import { useRouter, RouterLink } from 'vue-router';
 
+
 const props = defineProps<{
   comment: CommentResponseDto;
   profileImageUrl: string;
 }>();
 
-const emit = defineEmits(['mention-user', 'delete-comment', 'like-comment', 'update-comment']);
+const emit = defineEmits(['mention-user', 'delete-comment', 'like-comment', 'update-comment', 'report-comment']);
 
 // === Store 인스턴스 ===
 const authStore = useAuthStore();
@@ -184,6 +185,11 @@ const splitTextWithLinksAndMentions = (text: string): Array<{ text: string; type
   return result;
 };
 
+const reportComment = () => {
+  emit('report-comment', props.comment.id);
+  isMenuOpen.value = false; // 메뉴 닫기
+};
+
 const navigateToProfile = async (mentionText: string) => {
   const nickname = mentionText.substring(1).trim();
   try {
@@ -249,17 +255,19 @@ function formatRelativeTime(dateString: string): string {
             <span v-if="comment.likedUsers?.length"> {{ comment.likedUsers.length }} </span>
           </button>
 
-          <div v-if="isMyComment" class="more-menu-container" @click.stop>
+          <div class="more-menu-container" @click.stop>
             <button class="more-button" @click="toggleMenu">⋯</button>
             <div v-if="isMenuOpen" class="dropdown-menu">
-              <div @click.stop="startEdit">수정</div>
-              <div @click.stop="deleteComment">삭제</div>
+              <template v-if="isMyComment">
+                <div @click.stop="startEdit">수정</div>
+                <div @click.stop="deleteComment">삭제</div>
+              </template>
+              <template v-else>
+                <div @click.stop="reportComment">🚨 신고</div>
+              </template>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div v-if="!isEditing" class="comment-body">
+        </div> </div> <div v-if="!isEditing" class="comment-body">
         <template v-for="(content, index) in comment.contents" :key="index">
           <p v-if="content.$type === 'text'" class="comment-text">
             <template v-for="(chunk, chunkIndex) in splitTextWithLinksAndMentions(content.text)" :key="`${index}-${chunkIndex}`">

@@ -134,7 +134,7 @@ const fetchInitialData = async (currentPostId: string) => {
       const newComments = response.data;
       if (newComments.length === 0) break;
       
-      allComments.value.push(...newComments);
+      allComments.value = [...new Map([...allComments.value, ...newComments].map(c => [c.id, c])).values()];
       lastCommentId = newComments[newComments.length - 1].id;
       if (newComments.length < 100) break;
     }
@@ -164,8 +164,6 @@ const refreshData = async () => {
     }
 }
 
-// getMediaBlobUrl, prepareProfileImageMapForUsers, handleLikeComment 등 나머지 함수들은
-// 기존 코드를 그대로 사용하시면 됩니다. (Props에서 postId를 사용하도록 수정)
 
 const getMediaBlobUrl = async (mediaId: string) => {
   try {
@@ -266,7 +264,6 @@ const handleMentionUser = (nickname: string) => {
               <div class="comment-controls">
                 <div class="filter-group">
                   <button @click="filterMode = 'all'" :class="{ active: filterMode === 'all' }">전체</button>
-                  <button @click="filterMode = 'friends'" :class="{ active: filterMode === 'friends' }">친구</button>
                 </div>
                 <div class="sort-group">
                   <button @click="sortOrder = 'newest'" :class="{ active: sortOrder === 'newest' }">최신순</button>
@@ -316,11 +313,11 @@ const handleMentionUser = (nickname: string) => {
 }
 
 .modal-container {
-  background-color: #f9f9f9;
+  background-color: #f9f9f9; /* 스크린샷의 어두운 테마 대신 밝은 테마 유지 */
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.2);
   width: 90%;
-  max-width: 800px;
+  max-width: 950px;
   height: 90vh;
   max-height: 900px;
   display: flex;

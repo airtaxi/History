@@ -15,6 +15,9 @@ const props = defineProps<{
 
 const profileBlobUrlMap = ref<Record<string, string>>({});
 const emit = defineEmits(['open-detail']);
+const requestOpenDetail = () => {
+  emit('open-detail', props.post.id);
+};
 const showSharedUsersModal = ref(false);
 const showRepostedUsersModal = ref(false);  
 const longPressTimerShare = ref<number | null>(null);  
@@ -1010,15 +1013,23 @@ const isImageUrl = (url: string): boolean => {
         </RouterLink>
         <div class="post-timestamp">{{ formatRelativeTime(post.createdAt) }}</div>
       </div>
-      <div v-if="canEdit" class="more-menu-container" @click.stop="toggleMenu">
+
+      <div v-if="props.showActions" class="more-menu-container" @click.stop="toggleMenu">
         <button class="more-button">...</button>
         <div v-if="isMenuOpen" class="dropdown-menu">
-          <div @click="goToEditPage">수정</div>
-          <div @click="deleteMyPost">삭제</div>
-          <button @click="openReportDialog">🚨 신고</button>
+          
+          <template v-if="canEdit">
+            <div @click="goToEditPage">수정</div>
+            <div @click="deleteMyPost">삭제</div>
+          </template>
+
+          <template v-else>
+            <div @click="openReportDialog">🚨 신고</div>
+          </template>
+
         </div>
       </div>
-    </div>
+      </div>
 
     <div class="post-content-area">
       <div v-for="(content, index) in post.contents" :key="index">
@@ -1195,7 +1206,7 @@ const isImageUrl = (url: string): boolean => {
         <span aria-hidden="true">{{ totalReactions }}</span>
       </button>
 
-      <button @click.stop="goToPostDetail" class="footer-btn">
+      <button @click.stop="requestOpenDetail" class="footer-btn">
         <span aria-hidden="true">💬 {{ post.commentsCount || 0 }}</span>
       </button>
 
