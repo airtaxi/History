@@ -1,29 +1,10 @@
 <script setup lang="ts">
-/**
- * @fileoverview CommentItem 컴포넌트 - 개별 댓글 표시 및 관리를 담당하는 메인 컴포넌트
- * 
- * 주요 기능:
- * - 댓글 내용 표시 (텍스트, 프로필 이미지, 작성 시간)
- * - 댓글 좋아요 기능
- * - 댓글 수정/삭제 (권한 기반)
- * - 사용자 멘션 기능
- * - PostCard.vue와 일관된 디자인
- * - 프로필 이미지 무한 로딩 방지
- * - 미디어 콘텐츠(이미지/비디오) 표시
- */
-
 import { ref, computed, onMounted } from 'vue';
 import type { CommentResponseDto } from '@/types';
 import { useAuthStore } from '@/stores/auth';
 import apiClient from '@/api';
 import { useRouter, RouterLink } from 'vue-router';
 
-/**
- * 컴포넌트 Props 정의
- * @typedef {Object} CommentItemProps
- * @property {CommentResponseDto} comment - 표시할 댓글 데이터
- * @property {string} profileImageUrl - 댓글 작성자의 프로필 이미지 URL
- */
 const props = defineProps<{
   comment: CommentResponseDto;
   profileImageUrl: string;
@@ -400,7 +381,9 @@ function formatRelativeTime(dateString: string): string {
       <!-- 좋아요 + 더보기 메뉴 같이 오른쪽 끝 정렬 -->
       <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">
         <button @click="likeComment" :class="['like-btn', { 'liked': isLikedByMe }]">
-          ❤️ <span v-if="comment.likedUsers?.length">{{ comment.likedUsers.length }}</span>
+          <span v-if="isLikedByMe">❤️</span>
+          <span v-else>🤍</span>
+          <span v-if="comment.likedUsers?.length"> {{ comment.likedUsers.length }} </span>
         </button>
 
         <div v-if="isMyComment" class="more-menu-container" @click.stop="toggleMenu">
