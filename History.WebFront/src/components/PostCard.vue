@@ -1196,7 +1196,7 @@ const isImageUrl = (url: string): boolean => {
       </button>
 
       <button @click.stop="goToPostDetail" class="footer-btn">
-        <span aria-hidden="true">💬 {{ post.comments ? post.comments.length : 0 }}</span>
+        <span aria-hidden="true">💬 {{ post.commentsCount || 0 }}</span>
       </button>
 
       <button
@@ -1208,10 +1208,7 @@ const isImageUrl = (url: string): boolean => {
       @click.stop="handleShareClick"
         class="footer-btn"
         title="공유하기">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M12 22v-9m-4 4 4-4 4 4"/>
-            <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-        </svg>
+        <i class="fa-solid fa-share-from-square"></i>
         <span v-if="(post.sharedAndRepostedUsers ?? []).filter(u => !u.isRepost).length > 0">
           {{ post.sharedAndRepostedUsers?.filter(u => !u.isRepost).length }}
         </span>
@@ -1227,9 +1224,7 @@ const isImageUrl = (url: string): boolean => {
         class="footer-btn repost-btn"
         title="리포스트하기"
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="repost-icon">
-          <path d="M17 1l4 4-4 4M3 23l-4-4 4-4M21 5H10a4 4 0 00-4 4v1M3 19h11a4 4 0 004-4v-1"/>
-        </svg>
+        <i class="fa-solid fa-circle-up"></i>
         <span v-if="(post.sharedAndRepostedUsers ?? []).filter(u => u.isRepost).length > 0" class="repost-count">
           {{ post.sharedAndRepostedUsers?.filter(u => u.isRepost).length }}
         </span>
@@ -1344,6 +1339,9 @@ const isImageUrl = (url: string): boolean => {
               {{ item.user.nickname || item.user.handle || '알 수 없음' }}
             </RouterLink>
           </li>
+          <li v-if="(post.sharedAndRepostedUsers?.filter(u => !u.isRepost).length ?? 0) === 0" style="text-align: center; color: #999; padding: 10px;">
+            공유한 사람이 없습니다.
+          </li>
         </ul>
         <button @click="showSharedUsersModal = false" class="modal-close">닫기</button>
       </div>
@@ -1365,6 +1363,9 @@ const isImageUrl = (url: string): boolean => {
             <RouterLink :to="`/user/${item.user.userId}`" @click="showRepostedUsersModal = false" class="user-nickname-link">
               {{ item.user.nickname || item.user.handle || '알 수 없음' }}
             </RouterLink>
+          </li>
+          <li v-if="(post.sharedAndRepostedUsers?.filter(u => u.isRepost).length ?? 0) === 0" style="text-align: center; color: #999; padding: 10px;">
+            리포스트한 사람이 없습니다.
           </li>
         </ul>
         <button @click="showRepostedUsersModal = false" class="modal-close">닫기</button>
@@ -1792,7 +1793,7 @@ const isImageUrl = (url: string): boolean => {
   min-width: 300px;
   height: 500px;
   background-color: black;
-  object-fit: cover;   /* ✅ 이미지가 잘려도 꽉 차게! */
+  object-fit: cover;  
   border-radius: 8px;
   display: block;
   margin: 12px auto;
@@ -2092,5 +2093,14 @@ const isImageUrl = (url: string): boolean => {
 
 .user-nickname-link:hover {
   color: #ed664d; 
+}
+
+.footer-btn i.fa-share-from-square {
+  font-size: 16px; /* 기본보다 조금 크게 */
+}
+
+.footer-btn svg.repost-icon {
+  width: 20px;
+  height: 20px;
 }
 </style>
