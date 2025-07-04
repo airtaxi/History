@@ -215,41 +215,6 @@ const loadMorePosts = async () => {
   }
 };
 
-
-// --- IntersectionObserver를 사용한 스크롤 감지 ---
-let observer: IntersectionObserver;
-
-onMounted(() => {
-  fetchTimeline(); // 최초 데이터 로드
-
-  // Vue의 nextTick을 사용하여 DOM이 업데이트된 후 observer 설정
-  nextTick(() => {
-    observer = new IntersectionObserver(
-      (entries) => {
-        // 감시 대상(sentinel)이 화면에 보이면 loadMorePosts 함수 호출
-        if (entries[0].isIntersecting) {
-          //console.log('무한 스크롤 트리거됨'); // 디버깅용
-          loadMorePosts();
-        }
-      },
-      {
-        rootMargin: '200px', // 화면에 보이기 200px 전에 미리 로드 시작
-      }
-    );
-
-    if (loadMoreSentinel.value) {
-      observer.observe(loadMoreSentinel.value);
-    }
-  });
-});
-
-// 컴포넌트가 사라질 때 observer 정리
-onUnmounted(() => {
-  if (observer) {
-    observer.disconnect();
-  }
-});
-
 // 새 글 작성 후 타임라인 새로고침
 const handlePostCreated = async () => {
   try {
