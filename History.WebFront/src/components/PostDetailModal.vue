@@ -253,7 +253,9 @@ const handleMentionUser = (nickname: string) => {
             <button @click="refreshData" class="icon-button" title="새로고침">
               <i class="fa-solid fa-rotate-right"></i>
             </button>
-            <span class="modal-header-title">{{ post.user.nickname }}님의 게시글</span>
+            <span class="modal-header-title">
+              {{ post?.user?.nickname ? post.user.nickname + '님의 게시글' : '게시글' }}
+            </span>
             <button @click="closeModal" class="icon-button close-icon">
               <i class="fa-solid fa-xmark"></i>
             </button>

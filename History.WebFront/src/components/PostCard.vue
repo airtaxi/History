@@ -6,13 +6,18 @@ import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import apiClient from '@/api';
 import "./PostCard.css"
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import { Swiper, SwiperSlide } from 'swiper/vue';
+import { Navigation, Pagination } from 'swiper/modules';
 
 const props = defineProps<{
   post: PostResponseDto;
   profileImageMap?: Record<string, string>;
   showActions?: boolean;
 }>();
-
+const modules = [Navigation, Pagination];
 const profileBlobUrlMap = ref<Record<string, string>>({});
 const emit = defineEmits(['open-detail']);
 const requestOpenDetail = () => {
@@ -348,21 +353,9 @@ const handleClickOutside = (event: MouseEvent) => {
 };
 
 onMounted(async () => {
-  // 디버깅: 게시글 콘텐츠 구조 확인
   console.log('[📌 게시글 전체 데이터]', props.post);
   console.log('🔍 게시글 콘텐츠 구조:', props.post.sharedAndRepostedUsers);
   props.post.contents.forEach((content, index) => {
-//     console.log(`📝 콘텐츠 ${index}:`, {
-//       type: content.$type,
-//       fullContent: content,
-//       // externalUrl 타입의 경우 모든 속성 확인
-//       ...(content.$type === 'externalUrl' && {
-//         url: content.url || content.Url,
-//         title: content.title || content.Title,
-//         description: content.description || content.Description,
-//         image: content.image || content.Image || content.imageUrl || content.ImageUrl || content.thumbnail || content.Thumbnail
-//       })
-//     });
   });
   
   // 미디어 URL 로드 (이미지, 동영상 등)
@@ -1029,164 +1022,179 @@ const isImageUrl = (url: string): boolean => {
 
         </div>
       </div>
-      </div>
+    </div>
 
     <div class="post-content-area">
-      <div v-for="(content, index) in post.contents" :key="index">
-        <p v-if="(content as any).$type === 'text'" style="white-space: pre-wrap; word-break: break-word;">
-          <template v-for="(chunk, index) in splitTextWithLinksAndMentions((content as any).text)" :key="index">
-            <a v-if="chunk.type === 'link'"
-              :href="chunk.text.startsWith('www.') ? 'https://' + chunk.text : chunk.text"
-              target="_blank"
-              rel="noopener noreferrer"
-              style="color: #0066cc; word-break: break-all;"
-              @click.stop>
-              {{ chunk.text }}
-            </a>
-            <span v-else-if="chunk.type === 'mention'"
-              class="mention"
-              @click.stop="navigateToProfile(chunk.text)">
-              {{ chunk.text }}
-            </span>
-            <span v-else>{{ chunk.text }}</span>
-          </template>
-        </p>
-
-        <div v-else-if="((content as any).$type === 'media') && ((content as any).mediaId || (content as any).thumbnailMediaId)">
-          <template v-if="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]">
-            <video v-if="(content as any).mimeType && (content as any).mimeType.startsWith('video/')" controls class="post-image">
-              <source :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]" :type="(content as any).mimeType" />
-              브라우저가 video 태그를 지원하지 않습니다.
+      <Swiper
+        class="media-swiper"
+        :spaceBetween="10"
+        :slidesPerView="1"
+        :loop="post.contents.filter(c => c.$type === 'media').length > 1"
+        :navigation="true"  
+        :pagination="{ clickable: true }"
+        :modules="modules"
+      >
+        <SwiperSlide
+          v-for="(content, index) in post.contents.filter(c => c.$type === 'media')"
+          :key="index"
+        >
+          <div v-if="mediaUrlMap[content.mediaId || content.thumbnailMediaId]">
+            <video
+              v-if="content.mimeType && content.mimeType.startsWith('video/')"
+              controls
+              class="post-image"
+            >
+              <source
+                :src="mediaUrlMap[content.mediaId || content.thumbnailMediaId]"
+                :type="content.mimeType"
+              />
             </video>
+
             <img
               v-else
-              :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]"
-              :alt="(content as any).description || '게시물 이미지'"
+              :src="mediaUrlMap[content.mediaId || content.thumbnailMediaId]"
+              :alt="content.description || '게시물 이미지'"
               class="post-image"
-              @click.stop="openImageModal(mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId])"
+              @click.stop="openImageModal(mediaUrlMap[content.mediaId || content.thumbnailMediaId])"
             />
-          </template>
-          <p v-if="(content as any).description">{{ (content as any).description }}</p>
-        </div>
+          </div>
+        </SwiperSlide>
+      </Swiper>
 
-        <div v-else-if="(content as any).$type === 'externalUrl'" class="external-link-container">
-          <a :href="(content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url" target="_blank" rel="noopener noreferrer" class="external-link" @click.stop>
-            <div class="link-preview" :class="{ 'has-image': !!(content as any).thumbnailImageUrl || !!(content as any).ThumbnailImageUrl || !!(content as any).image || !!(content as any).Image }">
-              <img 
-                v-if="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
-                :src="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
-                :alt="(content as any).title || (content as any).Title || '링크 미리보기'"
-                class="link-preview-image"
-                @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
-              />
-              <div class="link-info">
-                <div v-if="(content as any).title || (content as any).Title" class="link-title">
-                  {{ (content as any).title || (content as any).Title }}
-                </div>
-                <div v-if="(content as any).description || (content as any).Description" class="link-description">
-                  {{ (content as any).description || (content as any).Description }}
-                </div>
-                <div class="link-url">
-                  <span class="link-icon">🔗</span>
-                  <span class="link-text">{{ (content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url }}</span>
-                </div>
-              </div>
+      <div
+        v-for="(content, index) in post.contents"
+        :key="'extra-' + index"
+      >
+        <template v-if="content.$type !== 'media'">
+          <p
+            v-if="content.$type === 'text'"
+            style="white-space: pre-wrap; word-break: break-word;"
+          >
+            <template
+              v-for="(chunk, i) in splitTextWithLinksAndMentions(content.text)"
+              :key="i"
+            >
+              <a
+                v-if="chunk.type === 'link'"
+                :href="chunk.text.startsWith('www.') ? 'https://' + chunk.text : chunk.text"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="color: #0066cc; word-break: break-all;"
+                @click.stop
+              >
+                {{ chunk.text }}
+              </a>
+              <span
+                v-else-if="chunk.type === 'mention'"
+                class="mention"
+                @click.stop="navigateToProfile(chunk.text)"
+              >
+                {{ chunk.text }}
+              </span>
+              <span v-else>{{ chunk.text }}</span>
+            </template>
+          </p>
+
+          <div
+            v-else-if="content.$type === 'externalUrl'"
+            class="external-link-container"
+          >
             </div>
-          </a>
-        </div>
 
-        <RouterLink
-          v-else-if="(content as any).$type === 'profile'"
-          :to="`/user/${(content as any).userId}`"
-          class="mention"
-          @click.stop>
-          {{ (content as any).nickname }}
-        </RouterLink>
+          <RouterLink
+            v-else-if="content.$type === 'profile'"
+            :to="`/user/${content.userId}`"
+            class="mention"
+            @click.stop
+          >
+            {{ content.nickname }}
+          </RouterLink>
 
-        <div v-else-if="(content as any).$type === 'UploadContent'">
-          <p style="color: red;">[이미지 처리 실패] {{ (content as any).FileName }}</p>
+          <div v-else-if="content.$type === 'UploadContent'">
+            <p style="color: red;">[이미지 처리 실패] {{ content.FileName }}</p>
+          </div>
+        </template>
+      </div>
+    </div>
+    
+    <div v-if="post.parentPost" class="original-post-card" @click.stop="goToOriginalPost">
+      <div class="original-post-author">
+        <img
+          :src="props.profileImageMap && post.parentPost?.user?.userId
+                  ? props.profileImageMap[post.parentPost.user.userId]
+                  : '/src/assets/images/default_profile_image.jpg'"
+          class="original-author-avatar"
+          @click.stop="goToUserProfile(post.parentPost.user.userId)"
+        />
+        <div class="original-author-info">
+          <div class="original-author-name">{{ (post as any).parentPost.user.nickname }}</div>
+          <div class="original-post-timestamp">{{ new Date((post as any).parentPost.createdAt).toLocaleString() }}</div>
         </div>
       </div>
       
-      <div v-if="post.parentPost" class="original-post-card" @click.stop="goToOriginalPost">
-        <div class="original-post-author">
-          <img
-            :src="props.profileImageMap && post.parentPost?.user?.userId
-                    ? props.profileImageMap[post.parentPost.user.userId]
-                    : '/src/assets/images/default_profile_image.jpg'"
-            class="original-author-avatar"
-            @click.stop="goToUserProfile(post.parentPost.user.userId)"
-          />
-          <div class="original-author-info">
-            <div class="original-author-name">{{ (post as any).parentPost.user.nickname }}</div>
-            <div class="original-post-timestamp">{{ new Date((post as any).parentPost.createdAt).toLocaleString() }}</div>
+      <div class="original-post-content">
+        <div v-for="(content, index) in (post as any).parentPost.contents" :key="index">
+          <template v-if="(content as any).$type === 'text'">
+            <template v-if="isImageUrl((content as any).text)">
+              <img 
+                :src="(content as any).text.trim()" 
+                :alt="'이미지'" 
+                class="original-post-media external-image"
+                @click.stop="openImageModal((content as any).text.trim())"
+                @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
+              />
+            </template>
+            <p v-else>{{ (content as any).text }}</p>
+          </template>
+          
+          <div v-else-if="((content as any).$type === 'media') && ((content as any).mediaId || (content as any).thumbnailMediaId)">
+            <template v-if="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]">
+              <video
+                v-if="(content as any).mimeType && (content as any).mimeType.startsWith('video/')"
+                controls
+                class="original-post-media"
+              >
+                <source :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]" :type="(content as any).mimeType" />
+                브라우저가 video 태그를 지원하지 않습니다.
+              </video>
+              <img
+                v-else
+                :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]"
+                :alt="(content as any).description || '게시물 이미지'"
+                class="original-post-media"
+              />
+            </template>
           </div>
-        </div>
-        
-        <div class="original-post-content">
-          <div v-for="(content, index) in (post as any).parentPost.contents" :key="index">
-            <template v-if="(content as any).$type === 'text'">
-              <template v-if="isImageUrl((content as any).text)">
+
+          <div v-else-if="(content as any).$type === 'externalUrl'" class="external-link-container">
+            <a :href="(content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url" target="_blank" rel="noopener noreferrer" class="external-link" @click.stop>
+              <div class="link-preview small" :class="{ 'has-image': !!(content as any).thumbnailImageUrl || !!(content as any).ThumbnailImageUrl || !!(content as any).image || !!(content as any).Image }">
                 <img 
-                  :src="(content as any).text.trim()" 
-                  :alt="'이미지'" 
-                  class="original-post-media external-image"
-                  @click.stop="openImageModal((content as any).text.trim())"
+                  v-if="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
+                  :src="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
+                  :alt="(content as any).title || (content as any).Title || '링크 미리보기'"
+                  class="link-preview-image"
                   @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
                 />
-              </template>
-              <p v-else>{{ (content as any).text }}</p>
-            </template>
-            
-            <div v-else-if="((content as any).$type === 'media') && ((content as any).mediaId || (content as any).thumbnailMediaId)">
-              <template v-if="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]">
-                <video
-                  v-if="(content as any).mimeType && (content as any).mimeType.startsWith('video/')"
-                  controls
-                  class="original-post-media"
-                >
-                  <source :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]" :type="(content as any).mimeType" />
-                  브라우저가 video 태그를 지원하지 않습니다.
-                </video>
-                <img
-                  v-else
-                  :src="mediaUrlMap[(content as any).mediaId || (content as any).thumbnailMediaId]"
-                  :alt="(content as any).description || '게시물 이미지'"
-                  class="original-post-media"
-                />
-              </template>
-            </div>
-
-            <div v-else-if="(content as any).$type === 'externalUrl'" class="external-link-container">
-              <a :href="(content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url" target="_blank" rel="noopener noreferrer" class="external-link" @click.stop>
-                <div class="link-preview small" :class="{ 'has-image': !!(content as any).thumbnailImageUrl || !!(content as any).ThumbnailImageUrl || !!(content as any).image || !!(content as any).Image }">
-                  <img 
-                    v-if="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
-                    :src="(content as any).thumbnailImageUrl || (content as any).ThumbnailImageUrl || (content as any).image || (content as any).Image"
-                    :alt="(content as any).title || (content as any).Title || '링크 미리보기'"
-                    class="link-preview-image"
-                    @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
-                  />
-                  <div class="link-info">
-                    <div v-if="(content as any).title || (content as any).Title" class="link-title">
-                      {{ (content as any).title || (content as any).Title }}
-                    </div>
-                    <div v-if="(content as any).description || (content as any).Description" class="link-description">
-                      {{ (content as any).description || (content as any).Description }}
-                    </div>
-                    <div class="link-url">
-                      <span class="link-icon">🔗</span>
-                      <span class="link-text">{{ (content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url }}</span>
-                    </div>
+                <div class="link-info">
+                  <div v-if="(content as any).title || (content as any).Title" class="link-title">
+                    {{ (content as any).title || (content as any).Title }}
+                  </div>
+                  <div v-if="(content as any).description || (content as any).Description" class="link-description">
+                    {{ (content as any).description || (content as any).Description }}
+                  </div>
+                  <div class="link-url">
+                    <span class="link-icon">🔗</span>
+                    <span class="link-text">{{ (content as any).sourceUrl || (content as any).SourceUrl || (content as any).url || (content as any).Url }}</span>
                   </div>
                 </div>
-              </a>
-            </div>
+              </div>
+            </a>
           </div>
         </div>
       </div>
     </div>
-
+      
     <div class="post-footer">
       <button 
         @click.stop="handleReactionClick"
@@ -1297,7 +1305,6 @@ const isImageUrl = (url: string): boolean => {
     </div>
   </Teleport>
 
-  <!-- 접근 거부 모달 -->
   <div v-if="showAccessDeniedModal" class="access-denied-modal">
     <div class="access-denied-overlay" @click="showAccessDeniedModal = false"></div>
     <div class="access-denied-content">
@@ -1386,9 +1393,16 @@ const isImageUrl = (url: string): boolean => {
 </template>
 
 <style scoped>
-/* ================================== */
-/* [수정된 부분] 외부 링크         */
-/* ================================== */
+.media-swiper {
+  width: 100%;
+  height: auto;
+}
+
+.swiper-slide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .post-content-area video,
 .original-post-content video {
   display: block;
