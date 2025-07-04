@@ -1136,7 +1136,13 @@ const loadOriginalPostMedia = async () => {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.create-post-card { padding: 20px; }
+.create-post-card {
+    width: 100%;
+    max-width: 580px;  
+    margin-left: auto;
+    margin-right: auto;
+    padding: 20px;
+}
 
 .compact-view textarea {
   width: 100%;

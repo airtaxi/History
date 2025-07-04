@@ -350,7 +350,7 @@ const navigateToProfile = async (mentionText: string) => {
  */
 onMounted(async () => {
   // 디버깅: 댓글 콘텐츠 구조 확인
-  console.log('🔍 댓글 콘텐츠 구조:', props.comment.contents);
+  //console.log('🔍 댓글 콘텐츠 구조:', props.comment.contents);
   
   // 미디어 URL 로드 (이미지, 동영상 등)
   for (const content of props.comment.contents) {
