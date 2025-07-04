@@ -163,7 +163,7 @@ const loadMorePosts = async () => {
       }
     }
 
-    console.log(`무한 스크롤: ${addedCount}개 게시글 추가됨`); // 디버깅용
+    //console.log(`무한 스크롤: ${addedCount}개 게시글 추가됨`); // 디버깅용
 
   } catch (error) {
     console.error('추가 타임라인 로딩 실패:', error);
@@ -185,7 +185,7 @@ onMounted(() => {
       (entries) => {
         // 감시 대상(sentinel)이 화면에 보이면 loadMorePosts 함수 호출
         if (entries[0].isIntersecting) {
-          console.log('무한 스크롤 트리거됨'); // 디버깅용
+          //console.log('무한 스크롤 트리거됨'); // 디버깅용
           loadMorePosts();
         }
       },

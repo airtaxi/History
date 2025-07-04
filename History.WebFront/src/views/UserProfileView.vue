@@ -284,7 +284,7 @@ const loadMorePosts = async () => {
     const params = lastPost ? { from: lastPost.id, limit: 50 } : { limit: 50 };
     const res = await apiClient.get<PostResponseDto[]>(`/api/Post/user/${routeUserId.value}`, { params });
     
-    console.log('🔍 UserProfile API 응답:', res.data);
+    //console.log('🔍 UserProfile API 응답:', res.data);
     
     // 백엔드에서 리포스트를 제외하므로, 각 게시글의 sharedAndRepostedUsers를 확인하여 리포스트 추가
     const allPosts: PostResponseDto[] = [...res.data];
