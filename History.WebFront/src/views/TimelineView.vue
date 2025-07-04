@@ -27,6 +27,41 @@ const openModalWithPost = (postId: string) => {
   isDetailModalOpen.value = true;
 };
 
+// 스크롤 위로 올리는 코드
+const showScrollTopBtn = ref(false);
+
+// 스크롤 위치 감지
+const handleScroll = () => {
+  showScrollTopBtn.value = window.scrollY > 200;
+};
+
+// 맨 위로 스크롤
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+onMounted(() => {
+  fetchTimeline();
+
+  // 기존 IntersectionObserver 유지
+  nextTick(() => {
+    observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) loadMorePosts();
+    }, {
+      rootMargin: '200px',
+    });
+    if (loadMoreSentinel.value) observer.observe(loadMoreSentinel.value);
+  });
+
+  // 스크롤 이벤트 등록
+  window.addEventListener('scroll', handleScroll);
+});
+
+onUnmounted(() => {
+  observer?.disconnect();
+  window.removeEventListener('scroll', handleScroll);
+});
+
 const getMediaBlobUrl = async (mediaId: string) => {
   try {
     const response = await apiClient.get(`/api/Media/${mediaId}`, {
@@ -264,6 +299,13 @@ const handlePostCreated = async () => {
       </div>
       <RightSidebar />
     </main>
+    <button
+      v-if="showScrollTopBtn"
+      class="scroll-top-button"
+      @click="scrollToTop"
+    >
+      ⬆ 맨 위로
+    </button>
     <PostDetailModal
       v-model="isDetailModalOpen"
       :post-id="selectedPostId"
@@ -282,6 +324,24 @@ const handlePostCreated = async () => {
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .end-of-feed { text-align: center; color: #888; padding: 20px; }
 .sentinel { height: 1px; }
+.scroll-top-button {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  background-color: #ed664d;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: background-color 0.3s ease;
+  z-index: 1000;
+}
+.scroll-top-button:hover {
+  background-color: #e85b3e;
+}
 
 /* 모바일 반응형 개선 */
 @media (max-width: 768px) {

@@ -738,8 +738,8 @@ const postReaction = async (newType: string) => {
  * 게시글 상세 페이지로 이동
  *  * 현재 게시글의 PostDetailView로 라우팅하여 댓글 등 상세 정보를 볼 수 있도록 합니다.
  */
-const goToPostDetail = () => {
-  router.push(`/post/${props.post.id}`);
+const goToPostDetail = () => { 
+  emit('open-detail', props.post.id);
 };
 
 /**

@@ -249,9 +249,17 @@ const handleMentionUser = (nickname: string) => {
     <div v-if="modelValue" class="modal-overlay" @click="closeModal">
       <div class="modal-container" @click.stop>
         <div class="modal-header">
-          <button @click="closeModal" class="close-button">&times;</button>
+          <div class="modal-header-bar">
+            <button @click="refreshData" class="icon-button" title="새로고침">
+              <i class="fa-solid fa-rotate-right"></i>
+            </button>
+            <span class="modal-header-title">{{ post.user.nickname }}님의 게시글</span>
+            <button @click="closeModal" class="icon-button close-icon">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
         </div>
-        <div class="modal-body">
+        <div class="modal-body-with-fixed-footer">
           <main v-if="isLoading" class="loading-indicator">
             <div class="spinner"></div>
           </main>
@@ -285,12 +293,15 @@ const handleMentionUser = (nickname: string) => {
                   {{ isMoreCommentsLoading ? '로딩 중...' : '댓글 더보기' }}
                 </button>
               </div>
-              <CreateComment :post-id="postId" @comment-created="refreshData" ref="createCommentRef" />
             </div>
           </main>
           <main v-else class="error-indicator">
             게시물을 불러오지 못했습니다.
           </main>
+        </div>
+        <!-- 고정 댓글 입력창 -->
+        <div class="fixed-comment-input">
+          <CreateComment :post-id="postId" @comment-created="refreshData" ref="createCommentRef" />
         </div>
       </div>
     </div>
@@ -299,6 +310,44 @@ const handleMentionUser = (nickname: string) => {
 
 <style scoped>
 /* --- 모달 스타일 --- */
+.modal-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 42px;
+  padding: 0 12px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #f7f9fa;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.modal-header-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  color: #555;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.icon-button:hover {
+  color: #1877f2;
+}
+
+.close-icon {
+  font-size: 20px;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -323,12 +372,22 @@ const handleMentionUser = (nickname: string) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
-.modal-header {
-  padding: 10px 16px;
-  text-align: right;
-  flex-shrink: 0;
+.modal-body-with-fixed-footer {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 0 24px 12px 24px;
+}
+
+.fixed-comment-input {
+  border-top: 1px solid #eee;
+  padding: 10px 24px;
+  background-color: white;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 .close-button {
@@ -439,5 +498,26 @@ const handleMentionUser = (nickname: string) => {
 .filter-group, .sort-group {
   display: flex;
   gap: 8px;
+}
+
+.modal-title-area {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.refresh-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #555;
+  cursor: pointer;
+  margin-right: auto;
+  padding: 6px;
+  transition: color 0.2s;
+}
+
+.refresh-button:hover {
+  color: #1877f2;
 }
 </style>
