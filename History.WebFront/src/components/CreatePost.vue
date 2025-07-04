@@ -1137,10 +1137,6 @@ const loadOriginalPostMedia = async () => {
 }
 
 .create-post-card {
-    width: 100%;
-    max-width: 580px;  
-    margin-left: auto;
-    margin-right: auto;
     padding: 20px;
 }
 

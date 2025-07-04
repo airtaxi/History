@@ -340,34 +340,4 @@ const deleteMyComment = async (commentId: string) => {
   opacity: 0.6;
 }
 
-.post-section :deep(.post-card) {
-  max-width: none;
-  margin: 0;
-  border: none;
-  box-shadow: none;
-  border-radius: 0;
-  padding: 0;
-  background: transparent;
-}
-
-.post-section :deep(.post-card .content-text) {
-  white-space: pre-wrap; /* 줄바꿈 반영 */
-  font-size: 1rem;
-  line-height: 1.6;
-}
-
-.post-section :deep(.original-post-content p) {
-  white-space: pre-wrap;
-  line-height: 1.6;
-  margin-bottom: 8px;
-}
-
-.post-section :deep(.original-post-card) {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 12px 16px;
-  background: #fafafa;
-  margin-top: 8px;
-}
-
 </style>

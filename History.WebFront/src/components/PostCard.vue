@@ -1374,21 +1374,30 @@ const isImageUrl = (url: string): boolean => {
 </template>
 
 <style scoped>
-.post-content-area .post-image,
-.original-post-content .original-post-media,
-.original-post-content .external-image {
-    display: flex; 
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    min-height: 200px; 
-    max-height: 550px;
-    max-width: 580px;
-    margin: 16px auto; 
-    margin: 16px 0;
-    border-radius: 12px;
-    background-color: #000; 
-    overflow: hidden;
+/* ================================== */
+/* [수정된 부분] 외부 링크         */
+/* ================================== */
+.post-content-area video,
+.original-post-content video {
+  display: block;
+  margin: 12px auto;
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.external-link-container {
+  display: flex;
+  justify-content: center;
+}
+
+.external-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  max-width: 100%;
+  width: 100%;
 }
 
 .link-preview {
@@ -1406,6 +1415,7 @@ const isImageUrl = (url: string): boolean => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
+/* 이미지가 있는 링크 미리보기 레이아웃 */
 .link-preview.has-image {
   display: flex;
 }
@@ -1547,10 +1557,6 @@ const isImageUrl = (url: string): boolean => {
 }
 
 .post-card {
-  width: 100%; 
-  max-width: 580px; 
-  margin-left: auto;   
-  margin-right: auto;  
   background: white;
   border-radius: 8px;
   border: 1px solid #ddd;
@@ -1659,6 +1665,11 @@ const isImageUrl = (url: string): boolean => {
 .post-timestamp {
   font-size: 0.8rem;
   color: #666;
+}
+
+.post-content-area {
+  margin-bottom: 12px;
+  word-break: break-word;
 }
 
 .post-text {
@@ -1775,6 +1786,18 @@ const isImageUrl = (url: string): boolean => {
   background-color: #f2f2f2;
 }
 
+.post-image {
+  width: 100%;
+  max-width: 100%;
+  min-width: 300px;
+  height: 500px;
+  background-color: black;
+  object-fit: cover;   /* ✅ 이미지가 잘려도 꽉 차게! */
+  border-radius: 8px;
+  display: block;
+  margin: 12px auto;
+}
+
 .report-modal {
   position: fixed;
   top: 30%;
@@ -1864,6 +1887,20 @@ const isImageUrl = (url: string): boolean => {
 .original-post-content p {
   white-space: pre-wrap;
   margin: 0 0 6px 0;
+}
+
+.original-post-media {
+  display: block;
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 4px;
+  object-fit: contain;
+  margin: 12px auto;
+}
+
+.external-image {
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
 }
 
 .external-image:hover {
@@ -1959,7 +1996,7 @@ const isImageUrl = (url: string): boolean => {
 
 .access-denied-modal {
   position: fixed;
-  z-index: 10001; 
+  z-index: 9999;
   inset: 0;
   display: flex;
   align-items: center;
