@@ -10,6 +10,8 @@ import type { UserResponseDto } from '@/types';
  */
 const uiStore = useUiStore();
 const emit = defineEmits(['post-created']);
+const showAdvancedOptions = ref(false); 
+
 
 // ==================== 반응형 상태 변수들 ====================
 
@@ -245,23 +247,6 @@ const getMediaBlobUrl = async (mediaId: string | null | undefined) => {
   }
 };
 
-/**
- * 현재 사용자의 친구 목록을 서버에서 로드합니다.
- * RightSidebar 컴포넌트와 동일한 방식으로 구현되어 있습니다.
- * 
- * @async
- * @function loadFriends
- * @returns {Promise<void>}
- * 
- * @description
- * 1. 먼저 내 프로필 정보를 확인하고, 없으면 '/api/User/me'에서 가져옵니다.
- * 2. 프로필 정보가 있으면 '/api/Friendship/{userId}' API로 친구 목록을 조회합니다.
- * 3. 성공 시 friendsList에 저장하고, 실패 시 빈 배열로 초기화합니다.
- * 
- * @example
- * await loadFriends();
- * console.log('친구 목록:', friendsList.value);
- */
 const loadFriends = async () => {
   try {
     //console.log('🔄 친구 목록 로드 시작...');
@@ -761,12 +746,6 @@ const performMentionSearch = async () => {
   selectedMentionIndex.value = -1;
 };
 
-/**
- * @멘션 선택
- * 
- * @function selectMention
- * @param {UserResponseDto} user - 선택된 사용자
- */
 const selectMention = (user: UserResponseDto) => {
   const text = newPostText.value;
   const beforeMention = text.substring(0, mentionStartIndex.value);
@@ -780,12 +759,6 @@ const selectMention = (user: UserResponseDto) => {
   selectedMentionIndex.value = -1;
 };
 
-/**
- * 키보드 이벤트 처리
- * 
- * @function handleKeyDown
- * @param {KeyboardEvent} event - 키보드 이벤트
- */
 const handleKeyDown = (event: KeyboardEvent) => {
   if (!isMentioning.value || mentionSearchResults.value.length === 0) return;
   
@@ -819,22 +792,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
   }
 };
 
-/**
- * 파일 선택 시 처리하는 함수
- * 
- * @function handleFileChange
- * @param {Event} event - input file 요소의 change 이벤트
- * @returns {void}
- * 
- * @description
- * 1. 선택된 파일들을 attachedFiles 배열에 저장합니다.
- * 2. 각 파일에 대해 미리보기 URL을 생성합니다.
- * 3. 파일 타입에 따라 비디오 여부를 판단합니다.
- * 4. previewItems 배열에 미리보기 정보를 저장합니다.
- * 
- * @example
- * <input type="file" @change="handleFileChange" multiple />
- */
 const handleFileChange = (event: Event) => {
   const files = (event.target as HTMLInputElement).files;
   if (!files) return;
@@ -854,23 +811,6 @@ const handleFileChange = (event: Event) => {
 
 // ==================== 리포스트 관련 함수들 ====================
 
-/**
- * 원본 게시글의 미디어 파일들을 로드하는 함수
- * 
- * @async
- * @function loadOriginalPostMedia
- * @returns {Promise<void>}
- * 
- * @description
- * 1. 원본 게시글이 없으면 함수를 종료합니다.
- * 2. 원본 작성자의 프로필 이미지를 로드합니다.
- * 3. 게시글의 각 콘텐츠를 순회하며 미디어 타입을 찾습니다.
- * 4. 미디어 파일의 ID로 API를 호출하여 Blob 데이터를 가져옵니다.
- * 5. Blob URL을 생성하여 originalPostMediaUrls에 저장합니다.
- * 
- * @example
- * await loadOriginalPostMedia();
- */
 const loadOriginalPostMedia = async () => {
   if (!originalPostForShare.value) return;
 
@@ -908,13 +848,6 @@ const loadOriginalPostMedia = async () => {
 
 // ==================== 생명주기 및 감시자 ====================
 
-/**
- * 리포스트 모드 감지 시 원본 게시글 미디어를 로딩하는 감시자
- * 
- * @description
- * isRepostMode가 true가 되고 originalPost가 존재할 때
- * 즉시 원본 게시글의 미디어 파일들을 로드합니다.
- */
  watch(isShareMode, (newValue) => { 
   if (newValue && originalPostForShare.value) { 
     loadOriginalPostMedia();
@@ -1087,7 +1020,10 @@ const loadOriginalPostMedia = async () => {
       </div>
       
       <div class="create-post-footer">
-        <div class="footer-options-group">
+        <button class="toggle-advanced-btn" @click="showAdvancedOptions = !showAdvancedOptions">
+          {{ showAdvancedOptions ? '🔽 고급 설정 닫기' : '⚙️ 고급 설정 열기' }}
+        </button>
+        <div v-if="showAdvancedOptions" class="footer-options-group">
           <div class="option-item">
             <label for="discovery-option">공개</label>
             <select id="discovery-option" v-model="discoveryOption" @change="onDiscoveryOptionChange">
@@ -1128,6 +1064,21 @@ const loadOriginalPostMedia = async () => {
 </template>
 
 <style scoped>
+.toggle-advanced-btn {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 12px;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.toggle-advanced-btn:hover {
+  color: #ed664d;
+  text-decoration: underline;
+}
 
 .post-card {
   background: white;

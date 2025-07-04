@@ -7,13 +7,26 @@ import defaultProfile from '@/assets/images/default_profile_image.jpg';
 
 const authStore = useAuthStore();
 const myProfile = ref<UserResponseDto | null>(null);
-const friends = ref<UserResponseDto[]>([]);
 const pendingRequests = ref<UserResponseDto[]>([]);
 const profileImageMap = ref<Record<string, string>>({});
-const favoriteUserIds = ref<Set<string>>(new Set());
 const activeTab = ref<'friends' | 'requests'>('friends');
-const getProfileUrl = (mediaId: string | null) =>
-  mediaId ? `/api/Media/${mediaId}` : defaultProfile;
+interface FriendUserResponseDto extends UserResponseDto {
+  isFavorite: boolean;
+}
+const friends = ref<FriendUserResponseDto[]>([]);
+
+const waitingRequests = ref<UserResponseDto[]>([]);
+
+const cancelFriendRequest = async (userId: string) => {
+  try {
+    await apiClient.post(`/api/Friendship/request/${userId}/cancel`);
+    waitingRequests.value = waitingRequests.value.filter(r => r.userId !== userId);
+    alert('친구 요청을 취소했습니다.');
+  } catch (error) {
+    console.error('친구 요청 취소 실패:', error);
+    alert('친구 요청 취소에 실패했습니다.');
+  }
+};
 
 const getMediaBlobUrl = async (mediaId: string | null) => {
   if (!mediaId) return defaultProfile;
@@ -28,11 +41,11 @@ const getMediaBlobUrl = async (mediaId: string | null) => {
 };
 
 const prepareProfileImageMap = async (users: UserResponseDto[]) => {
-  const map: Record<string, string> = {};
+  const newMap: Record<string, string> = {};
   for (const user of users) {
-    map[user.userId] = await getMediaBlobUrl(user.profileThumbnailMediaId);
+    newMap[user.userId] = await getMediaBlobUrl(user.profileThumbnailMediaId);
   }
-  profileImageMap.value = map;
+  profileImageMap.value = { ...profileImageMap.value, ...newMap };
 };
 
 // 친구 요청 수락
@@ -82,7 +95,8 @@ const refreshFriendsList = async () => {
     const friendsRes = await apiClient.get(`/api/Friendship/${myProfile.value.userId}`);
     friends.value = friendsRes.data;
     await prepareProfileImageMap(friends.value);
-    await loadFavorites();
+    sortFriendsByFavorite();
+
   } catch (error) {
     console.error('친구 목록 새로고침 실패:', error);
   }
@@ -94,71 +108,29 @@ const toggleFavorite = async (userId: string, event: Event) => {
   event.stopPropagation();
   
   try {
+    // 1. API를 호출해 서버의 즐겨찾기 상태를 변경
     await apiClient.post(`/api/Friendship/toggle-favorite/${userId}`);
     
-    if (favoriteUserIds.value.has(userId)) {
-      favoriteUserIds.value.delete(userId);
-    } else {
-      favoriteUserIds.value.add(userId);
-    }
-    
-    // 리렌더링을 위해 새로운 Set 생성
-    favoriteUserIds.value = new Set(favoriteUserIds.value);
-    
-    // 로컬 스토리지에 저장
-    if (myProfile.value) {
-      const savedKey = `favoriteFriends_${myProfile.value.userId}`;
-      localStorage.setItem(savedKey, JSON.stringify(Array.from(favoriteUserIds.value)));
-    }
-    
-    // 친구 목록을 즐겨찾기 기준으로 재정렬
-    sortFriendsByFavorite();
+    // 2. 성공 시, 친구 목록을 새로고침하여 최신 상태를 반영
+    await refreshFriendsList();
   } catch (error) {
     console.error('즐겨찾기 토글 실패:', error);
+    alert('즐겨찾기 변경에 실패했습니다.');
   }
 };
-
-// 즐겨찾기 목록 로드 (로컬 스토리지에서 가져오기)
-const loadFavorites = async () => {
-  if (!myProfile.value) return;
   
-  // 로컬 스토리지에서 즐겨찾기 목록 가져오기
-  const savedKey = `favoriteFriends_${myProfile.value.userId}`;
-  const saved = localStorage.getItem(savedKey);
-  
-  if (saved) {
-    try {
-      favoriteUserIds.value = new Set(JSON.parse(saved));
-    } catch (error) {
-      console.error('즐겨찾기 목록 파싱 실패:', error);
-      favoriteUserIds.value = new Set();
-    }
-  } else {
-    favoriteUserIds.value = new Set();
-  }
-  
-  // 친구 목록을 즐겨찾기 기준으로 재정렬
-  sortFriendsByFavorite();
-};
 
 // 친구 목록을 즐겨찾기 기준으로 정렬
 const sortFriendsByFavorite = () => {
   friends.value.sort((a, b) => {
-    const aIsFavorite = favoriteUserIds.value.has(a.userId);
-    const bIsFavorite = favoriteUserIds.value.has(b.userId);
+    // a가 즐겨찾기이고 b는 아닐 경우 a를 위로
+    if (a.isFavorite && !b.isFavorite) return -1;
+    // b가 즐겨찾기이고 a는 아닐 경우 b를 위로
+    if (!a.isFavorite && b.isFavorite) return 1;
     
-    // 즐겨찾기가 우선
-    if (aIsFavorite && !bIsFavorite) return -1;
-    if (!aIsFavorite && bIsFavorite) return 1;
-    
-    // 둘 다 즐겨찾기이거나 둘 다 아닌 경우 이름순
+    // 둘 다 즐겨찾기이거나 아니면 이름순으로 정렬
     return a.nickname.localeCompare(b.nickname);
   });
-  
-  // console.log('정렬된 친구 목록:', friends.value.map(f => ({
-  //   name: f.nickname,
-  //   isFavorite: favoriteUserIds.value.has(f.userId)
-  // })));
 };
 
 onMounted(async () => {
@@ -168,15 +140,22 @@ onMounted(async () => {
 
     // 내 프로필을 성공적으로 가져온 후에 친구 목록과 신청 목록을 가져옵니다.
     if (myProfile.value) {
-        const [friendsRes, pendingRes] = await Promise.all([
+        const [friendsRes, pendingRes, waitingRes] = await Promise.all([
             apiClient.get(`/api/Friendship/${myProfile.value.userId}`),
-            apiClient.get('/api/Friendship/pending')
+            apiClient.get('/api/Friendship/pending'),
+            apiClient.get('/api/Friendship/waiting') 
         ]);
         friends.value = friendsRes.data;
         pendingRequests.value = pendingRes.data;
+        waitingRequests.value = waitingRes.data;
 
-        await prepareProfileImageMap([myProfile.value, ...friends.value, ...pendingRequests.value]);
-        await loadFavorites();
+        await prepareProfileImageMap([
+          myProfile.value, 
+          ...friends.value, 
+          ...pendingRequests.value, 
+          ...waitingRequests.value
+        ]);
+        sortFriendsByFavorite();
     }
   } catch (error) {
     console.error('사이드바 정보 로딩 실패:', error);
@@ -209,7 +188,7 @@ onMounted(async () => {
               <span>{{ friend.nickname }}</span>
             </RouterLink>
             <button 
-              v-if="favoriteUserIds.has(friend.userId)"
+              v-if="friend.isFavorite"
               @click="toggleFavorite(friend.userId, $event)" 
               class="favorite-btn active"
               title="즐겨찾기 해제"
@@ -228,21 +207,36 @@ onMounted(async () => {
         </ul>
         <p v-if="friends.length === 0" class="empty-message">아직 친구가 없습니다.</p>
       </div>
-      <div v-if="activeTab === 'requests'">
-         <ul class="friend-list">
-            <li v-for="request in pendingRequests" :key="request.userId" class="friend-request-item">
-              <RouterLink :to="`/user/${request.userId}`" class="request-info">
-                <img :src="profileImageMap[request.userId] || defaultProfile" class="friend-avatar" />
-                <span>{{ request.nickname }}</span>
-              </RouterLink>
-              <div class="request-actions">
-                <button @click="acceptFriendRequest(request.userId)" class="accept-btn">수락</button>
-                <button @click="rejectFriendRequest(request.userId)" class="reject-btn">거절</button>
-                <button @click="ignoreFriendRequest(request.userId)" class="ignore-btn">무시</button>
-              </div>
-            </li>
+      <div v-if="activeTab === 'requests'" class="requests-section">
+        <h4>받은 신청</h4>
+        <ul v-if="pendingRequests.length > 0" class="friend-list">
+          <li v-for="request in pendingRequests" :key="request.userId" class="friend-request-item">
+            <RouterLink :to="`/user/${request.userId}`" class="request-info">
+              <img :src="profileImageMap[request.userId] || defaultProfile" class="friend-avatar" />
+              <span>{{ request.nickname }}</span>
+            </RouterLink>
+            <div class="request-actions">
+              <button @click="acceptFriendRequest(request.userId)" class="accept-btn">수락</button>
+              <button @click="rejectFriendRequest(request.userId)" class="reject-btn">거절</button>
+            </div>
+          </li>
         </ul>
-        <p v-if="pendingRequests.length === 0" class="empty-message">받은 친구 요청이 없습니다.</p>
+        <p v-else class="empty-message">받은 친구 요청이 없습니다.</p>
+
+        <h4 class="sent-requests-title">보낸 신청</h4>
+        <ul v-if="waitingRequests.length > 0" class="friend-list">
+          <li v-for="request in waitingRequests" :key="request.userId" class="friend-request-item">
+            <RouterLink :to="`/user/${request.userId}`" class="request-info">
+              <img :src="profileImageMap[request.userId] || defaultProfile" class="friend-avatar" />
+              <span>{{ request.nickname }}</span>
+            </RouterLink>
+            <div class="request-actions">
+              <span class="request-status">[요청중]</span>
+              <button @click="cancelFriendRequest(request.userId)" class="cancel-btn">취소</button>
+            </div>
+          </li>
+        </ul>
+        <p v-else class="empty-message">보낸 친구 신청이 없습니다.</p>
       </div>
     </div>
   </div>
@@ -373,5 +367,40 @@ onMounted(async () => {
 
 .ignore-btn:hover {
   opacity: 0.9;
+}
+
+.requests-section h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.sent-requests-title {
+  margin-top: 24px;
+}
+
+.request-status {
+  font-size: 0.85rem;
+  color: #888;
+  margin-right: 8px;
+}
+
+.cancel-btn {
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background-color: #f7f7f7;
+  color: #555;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-btn:hover {
+  background-color: #e9e9e9;
 }
 </style>
