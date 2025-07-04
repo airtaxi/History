@@ -504,7 +504,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             if (convertedCommentPermission > requestDto.DiscoveryOption) return (ErrorType.BadRequest, "댓글 작성 권한은 게시글의 공개 범위보다 클 수 없습니다.");
         }
 
-            var postResult = await GetPostByIdAsync(postId);
+        var postResult = await GetPostByIdAsync(postId);
         if (postResult.IsFailure) return postResult.CastFailure();
 
         // Sanitize contents
@@ -520,9 +520,26 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         // Check if the user is the author of the post
         if (post.UserId != userId) return (ErrorType.Forbidden, "게시글을 수정할 수 있는 권한이 없습니다.");
 
+        var originalPostMediaContents = post.Contents.OfType<MediaContent>();
+        var mediaContents = contents.OfType<MediaContent>();
+        foreach(var mediaContent in mediaContents)
+        {
+            if (string.IsNullOrEmpty(mediaContent.MediaId) || string.IsNullOrEmpty(mediaContent.MimeType) || mediaContent.ThumbnailMediaId == null)
+                return (ErrorType.BadRequest, "미디어 콘텐츠는 MediaId, MimeType, ThumbnailMediaId가 모두 필요합니다.");
+
+            var originalPostMediaContent = originalPostMediaContents.FirstOrDefault(m => m.MediaId == mediaContent.MediaId);
+            if (originalPostMediaContent != null)
+            {
+                if (mediaContent.MimeType != originalPostMediaContent.MimeType)
+                    return (ErrorType.BadRequest, "미디어 콘텐츠의 MimeType이 원본과 다릅니다.");
+                else if (mediaContent.ThumbnailMediaId != originalPostMediaContent.ThumbnailMediaId)
+                    return (ErrorType.BadRequest, "미디어 콘텐츠의 ThumbnailMediaId가 원본과 다릅니다.");
+            }
+        }
+
         // Delete Media
-        var originalPostMediaIds = post.Contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
-        var mediaIds = contents.OfType<MediaContent>().Select(s => s.MediaId).ToList();
+        var originalPostMediaIds = originalPostMediaContents.Select(s => s.MediaId).ToList();
+        var mediaIds = mediaContents.Select(s => s.MediaId).ToList();
 
         var deletedMediaIds = originalPostMediaIds.Except(mediaIds).ToList();
         foreach (var mediaId in deletedMediaIds) await mediaService.DeleteMediaByIdAsync(mediaId);
