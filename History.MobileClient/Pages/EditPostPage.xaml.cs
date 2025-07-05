@@ -976,7 +976,7 @@ public partial class EditPostPage : ContentPage
 
         if (action == editHashtag)
         {
-            var newHashtag = await DisplayPromptAsync("해시태그 수정", "수정할 해시태그를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "해시태그", -1, Keyboard.Text, hashtag);
+            var newHashtag = await DisplayPromptAsync("해시태그 수정", "수정할 해시태그를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "해시태그  (최대 20자)", 20, Keyboard.Text, hashtag);
             if (string.IsNullOrWhiteSpace(newHashtag)) return;
 
             if (Hashtags.Contains(newHashtag))
@@ -996,7 +996,7 @@ public partial class EditPostPage : ContentPage
 	
     private async void OnInsertHashtagImageTapped(object sender, TappedEventArgs e)
     {
-        var hashtag = await DisplayPromptAsync("해시태그 추가", "추가할 해시태그를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "해시태그", -1, Keyboard.Text, string.Empty);
+        var hashtag = await DisplayPromptAsync("해시태그 추가", "추가할 해시태그를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "해시태그 (최대 29자)", 20, Keyboard.Text, string.Empty);
 		if (string.IsNullOrWhiteSpace(hashtag)) return;
 		
 		if (Hashtags.Contains(hashtag))
