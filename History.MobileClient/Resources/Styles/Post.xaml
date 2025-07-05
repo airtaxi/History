@@ -136,11 +136,10 @@
                         <Border
                             Margin="0,0,4,0"
                             Padding="8,4"
-                            BackgroundColor="#808080"
                             Stroke="#808080"
                             StrokeShape="RoundRectangle 8"
                             StrokeThickness="1.5">
-                            <Label TextColor="#808080">
+                            <Label>
                                 <Label.FormattedText>
                                     <FormattedString>
                                         <Span Text="#" />
@@ -330,11 +329,10 @@
                                 <Border
                                     Margin="0,0,4,0"
                                     Padding="8,4"
-                                    BackgroundColor="#808080"
                                     Stroke="#808080"
                                     StrokeShape="RoundRectangle 8"
                                     StrokeThickness="1.5">
-                                    <Label TextColor="#808080">
+                                    <Label>
                                         <Label.FormattedText>
                                             <FormattedString>
                                                 <Span Text="#" />
