@@ -134,7 +134,7 @@
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="x:String">
                         <Border
-                            Margin="0,0,12,0"
+                            Margin="0,0,4,0"
                             Padding="8,4"
                             BackgroundColor="#808080"
                             Stroke="#808080"
@@ -328,7 +328,7 @@
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="x:String">
                                 <Border
-                                    Margin="0,0,12,0"
+                                    Margin="0,0,4,0"
                                     Padding="8,4"
                                     BackgroundColor="#808080"
                                     Stroke="#808080"
