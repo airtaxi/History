@@ -962,7 +962,7 @@ public partial class EditPostPage : ContentPage
         return null;
     }
 
-    private async void OnHashtagTapped(object sender, TappedEventArgs e)
+    private async void OnHashtagBorderTapped(object sender, TappedEventArgs e)
     {
         var hashtag = e.Parameter as string;
         if (hashtag == null) return;
@@ -993,7 +993,7 @@ public partial class EditPostPage : ContentPage
         }
     }
 	
-    private async void OnHashtagImageTapped(object sender, TappedEventArgs e)
+    private async void OnInsertHashtagImageTapped(object sender, TappedEventArgs e)
     {
         var hashtag = await DisplayPromptAsync("해시태그 추가", "추가할 해시태그를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "해시태그", -1, Keyboard.Text, string.Empty);
 		if (string.IsNullOrWhiteSpace(hashtag)) return;

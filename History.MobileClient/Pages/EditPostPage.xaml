@@ -6,6 +6,7 @@
     xmlns:editPost="clr-namespace:History.MobileClient.ContentViews.EditPost"
     xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+    xmlns:local="clr-namespace:History.MobileClient.Pages"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:mention="clr-namespace:SpeakLink.Mention;assembly=SpeakLink"
     xmlns:sf="http://schemas.syncfusion.com/maui/toolkit"
@@ -13,7 +14,6 @@
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient"
-    xmlns:local="clr-namespace:History.MobileClient.Pages"
     Loaded="OnLoaded"
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False"
@@ -82,16 +82,23 @@
             Orientation="Vertical">
             <VerticalStackLayout Padding="6" Spacing="8">
                 <editPost:TextContentView x:Name="MainTextContent" Loaded="OnMainTextContentLoaded" />
-                <FlexLayout x:Name="HashtagFlexLayout" Margin="6,0,6,0" Wrap="Wrap"
-                            BindableLayout.ItemsSource="{Binding Hashtags}"
-                            x:DataType="local:EditPostPage">
+                <FlexLayout
+                    x:Name="HashtagFlexLayout"
+                    x:DataType="local:EditPostPage"
+                    BindableLayout.ItemsSource="{Binding Hashtags}"
+                    Wrap="Wrap">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
-                            <Border BackgroundColor="#808080" Padding="8,4" Margin="4" StrokeShape="RoundRectangle 4">
+                            <Border
+                                Margin="0,0,12,0"
+                                Padding="8,4"
+                                Stroke="#808080"
+                                StrokeShape="RoundRectangle 8"
+                                StrokeThickness="1.5">
                                 <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnHashtagTapped" CommandParameter="{Binding .}" />
+                                    <TapGestureRecognizer CommandParameter="{Binding .}" Tapped="OnHashtagBorderTapped" />
                                 </Border.GestureRecognizers>
-                                <Label TextColor="White">
+                                <Label TextColor="#808080">
                                     <Label.FormattedText>
                                         <FormattedString>
                                             <Span Text="#" />
@@ -105,10 +112,10 @@
                 </FlexLayout>
                 <views:DataTemplatePresenter
                     x:Name="ShareTargetPostDataTemplatePresenter"
+                    x:DataType="vm:PostViewModel"
                     InputTransparent="True"
                     IsVisible="False"
-                    Template="{StaticResource SharedPostTemplate}"
-                    x:DataType="vm:PostViewModel" />
+                    Template="{StaticResource SharedPostTemplate}" />
                 <CollectionView
                     x:Name="MediaCollectionView"
                     CanReorderItems="True"
@@ -395,7 +402,7 @@
                     VerticalOptions="Center"
                     WidthRequest="40">
                     <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnHashtagImageTapped" />
+                        <TapGestureRecognizer Tapped="OnInsertHashtagImageTapped" />
                     </Image.GestureRecognizers>
                     <Image.Source>
                         <FontImageSource

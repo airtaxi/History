@@ -125,16 +125,18 @@
             <FlexLayout
                 Margin="0,8,0,0"
                 BindableLayout.ItemsSource="{x:Binding Hashtags}"
-                Wrap="Wrap"
-                IsVisible="{x:Binding IsHashtagVisible}">
+                IsVisible="{x:Binding IsHashtagVisible}"
+                Wrap="Wrap">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="x:String">
                         <Border
-                            BackgroundColor="#808080"
                             Margin="4"
                             Padding="8,4"
-                            StrokeShape="RoundRectangle 4">
-                            <Label TextColor="White">
+                            BackgroundColor="#808080"
+                            Stroke="#808080"
+                            StrokeShape="RoundRectangle 8"
+                            StrokeThickness="1.5">
+                            <Label TextColor="#808080">
                                 <Label.FormattedText>
                                     <FormattedString>
                                         <Span Text="#" />
