@@ -70,7 +70,7 @@ public static class MediaEncodingHelper
                     {
                         FileName = "ffmpeg",
                         Arguments = $"-framerate {framerate} -i \"{Path.Combine(tempDir, "frame_%03d.png")}\" " +
-                                    $"-c:v libkvazaar -b:v 1M -maxrate 2M \"{outputMp4Path}\"",
+                                    $"-c:v libkvazaar -b:v 1M -maxrate 2M -tag:v hvc1 \"{outputMp4Path}\"",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
