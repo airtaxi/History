@@ -94,7 +94,7 @@
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer CommandParameter="{Binding .}" Tapped="OnHashtagBorderTapped" />
                                 </Border.GestureRecognizers>
-                                <Label TextColor="#808080">
+                                <Label>
                                     <Label.FormattedText>
                                         <FormattedString>
                                             <Span Text="#" />

@@ -110,7 +110,7 @@
                                 Stroke="#808080"
                                 StrokeShape="RoundRectangle 8"
                                 StrokeThickness="1.5">
-                                <Label TextColor="#808080">
+                                <Label>
                                     <Label.FormattedText>
                                         <FormattedString>
                                             <Span Text="#" />
