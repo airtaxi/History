@@ -217,24 +217,24 @@ const friendshipAPI = {
 // 브라우저 콘솔에서 사용할 수 있도록 window 객체에 추가
 if (typeof window !== 'undefined') {
   (window as any).friendshipAPI = friendshipAPI;
-  console.log('✨ friendshipAPI가 로드되었습니다!');
-  console.log('사용 가능한 함수들:');
-  console.log('- friendshipAPI.sendRequest(receiverId)');
-  console.log('- friendshipAPI.acceptRequest(userIdToAccept)');
-  console.log('- friendshipAPI.declineRequest(userIdToDecline)');
-  console.log('- friendshipAPI.cancelRequest(userIdToCancel)');
-  console.log('- friendshipAPI.blockUser(userIdToBlock)');
-  console.log('- friendshipAPI.ignoreUser(userIdToIgnore)');
-  console.log('- friendshipAPI.removeFriend(userIdToRemove)');
-  console.log('- friendshipAPI.unblockUser(blockedUserId)');
-  console.log('- friendshipAPI.unignoreUser(ignoredUserId)');
-  console.log('- friendshipAPI.getPendingRequests()');
-  console.log('- friendshipAPI.getWaitingRequests()');
-  console.log('- friendshipAPI.getBlockedUsers()');
-  console.log('- friendshipAPI.getIgnoredUsers()');
-  console.log('- friendshipAPI.getUserFriends(userId)');
-  console.log('- friendshipAPI.toggleFavorite(userId)');
-  console.log('- friendshipAPI.checkAllStatus(targetUserId)');
+  // console.log('✨ friendshipAPI가 로드되었습니다!');
+  // console.log('사용 가능한 함수들:');
+  // console.log('- friendshipAPI.sendRequest(receiverId)');
+  // console.log('- friendshipAPI.acceptRequest(userIdToAccept)');
+  // console.log('- friendshipAPI.declineRequest(userIdToDecline)');
+  // console.log('- friendshipAPI.cancelRequest(userIdToCancel)');
+  // console.log('- friendshipAPI.blockUser(userIdToBlock)');
+  // console.log('- friendshipAPI.ignoreUser(userIdToIgnore)');
+  // console.log('- friendshipAPI.removeFriend(userIdToRemove)');
+  // console.log('- friendshipAPI.unblockUser(blockedUserId)');
+  // console.log('- friendshipAPI.unignoreUser(ignoredUserId)');
+  // console.log('- friendshipAPI.getPendingRequests()');
+  // console.log('- friendshipAPI.getWaitingRequests()');
+  // console.log('- friendshipAPI.getBlockedUsers()');
+  // console.log('- friendshipAPI.getIgnoredUsers()');
+  // console.log('- friendshipAPI.getUserFriends(userId)');
+  // console.log('- friendshipAPI.toggleFavorite(userId)');
+  // console.log('- friendshipAPI.checkAllStatus(targetUserId)');
 }
 
 export default friendshipAPI; 

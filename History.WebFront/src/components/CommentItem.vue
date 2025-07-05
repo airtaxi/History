@@ -259,7 +259,7 @@ function formatRelativeTime(dateString: string): string {
             <button class="more-button" @click="toggleMenu">⋯</button>
             <div v-if="isMenuOpen" class="dropdown-menu">
               <template v-if="isMyComment">
-                <div @click.stop="startEdit">수정</div>
+                <!-- <div @click.stop="startEdit">수정</div> -->
                 <div @click.stop="deleteComment">삭제</div>
               </template>
               <template v-else>
