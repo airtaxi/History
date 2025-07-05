@@ -402,7 +402,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         // Sanitize contents
         var contents = requestDto.Contents ?? [];
         Utils.SanitizeContents(contents);
-        if (requestDto.ParentPostId == null && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
+
+        // Check if the post has any content
+        if (requestDto.ParentPostId == null && (requestDto.Hashtags ?? []).Count == 0 && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
             return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
 
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
@@ -520,7 +522,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         // Sanitize contents
         var contents = requestDto.Contents ?? [];
         Utils.SanitizeContents(contents);
-        if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
+
+        // Check if the post has any content
+        if (postResult.Value.ParentPostId == null && (requestDto.Hashtags ?? []).Count == 0 && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
             return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
 
         if (postResult.Value.ParentPostId != null)
@@ -872,6 +876,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         // Sanitize contents
         var contents = originalPost.Contents ?? [];
         Utils.SanitizeContents(contents);
+
+        // Check if the post has any content
         if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
             return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
 
