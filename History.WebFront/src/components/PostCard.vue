@@ -23,6 +23,15 @@ const emit = defineEmits(['open-detail']);
 const requestOpenDetail = () => {
   emit('open-detail', props.post.id);
 };
+const mediaForModal = computed(() => {
+  return props.post.contents
+    .filter(content => content.$type === 'media')
+    .map(content => ({
+      type: content.mimeType?.startsWith('video/') ? 'video' : 'image',
+      src: mediaUrlMap.value[content.mediaId || content.thumbnailMediaId],
+      mimeType: content.mimeType
+    }));
+});
 const showSharedUsersModal = ref(false);
 const showRepostedUsersModal = ref(false);  
 const longPressTimerShare = ref<number | null>(null);  
@@ -82,20 +91,18 @@ const totalReactions = computed(() => {
   return Object.values(reactionMap.value).reduce((sum, count) => sum + count, 0)
 })
 const showImageModal = ref(false);
-const selectedImageUrl = ref('');
+const initialSlideIndex = ref(0);
 const showAccessDeniedModal = ref(false);
 const deniedUserId = ref('');
 const deniedUserNickname = ref('');
 
-const openImageModal = (url: string) => {
-  //console.log('[모달] 이미지 URL:', url)
-  selectedImageUrl.value = url;
-  showImageModal.value = true;
+const openImageModal = (index: number) => {
+  initialSlideIndex.value = index; 
+  showImageModal.value = true;
 };
 
 const closeImageModal = () => {
   showImageModal.value = false;
-  selectedImageUrl.value = '';
 };
 
 // === 컴포넌트 상태 관리 ===
@@ -1043,6 +1050,7 @@ const isImageUrl = (url: string): boolean => {
               v-if="content.mimeType && content.mimeType.startsWith('video/')"
               controls
               class="post-image"
+              @click.stop="openImageModal(index)"
             >
               <source
                 :src="mediaUrlMap[content.mediaId || content.thumbnailMediaId]"
@@ -1053,9 +1061,9 @@ const isImageUrl = (url: string): boolean => {
             <img
               v-else
               :src="mediaUrlMap[content.mediaId || content.thumbnailMediaId]"
-              :alt="content.description || '게시물 이미지'"
+              alt="게시물 이미지"
               class="post-image"
-              @click.stop="openImageModal(mediaUrlMap[content.mediaId || content.thumbnailMediaId])"
+              @click.stop="openImageModal(index)"
             />
           </div>
         </SwiperSlide>
@@ -1337,7 +1345,36 @@ const isImageUrl = (url: string): boolean => {
 
   <Teleport to="body">
     <div v-if="showImageModal" class="image-modal" @click="closeImageModal">
-      <img :src="selectedImageUrl" alt="확대 이미지" class="modal-image" />
+      <button @click.stop="closeImageModal" class="modal-close-button">×</button>
+      <div class="modal-swiper-container" @click.stop>
+        <Swiper
+          v-if="mediaForModal.length > 0"
+          :initialSlide="initialSlideIndex"
+          :navigation="true"
+          :pagination="{ type: 'fraction' }"
+          :loop="mediaForModal.length > 1"
+          :modules="modules"
+          class="modal-swiper"
+        >
+          <SwiperSlide v-for="(media, i) in mediaForModal" :key="i">
+            <video
+              v-if="media.type === 'video'"
+              controls
+              class="modal-image"
+              :key="media.src" >
+              <source :src="media.src" :type="media.mimeType" />
+              브라우저가 video 태그를 지원하지 않습니다.
+            </video>
+            <img
+              v-else
+              :src="media.src"
+              alt="확대 이미지"
+              class="modal-image"
+              :key="media.src"
+            />
+          </SwiperSlide>
+        </Swiper>
+        </div>
     </div>
   </Teleport>
 
@@ -2010,14 +2047,28 @@ const isImageUrl = (url: string): boolean => {
   justify-content: center;
   z-index: 9999;
   cursor: zoom-out;
+  flex-direction: column;
+}
+
+.modal-swiper-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-swiper {
+  width: 90%;
+  height: 90%;
 }
 
 .modal-image {
-  max-width: 90%;
-  max-height: 90%;
-  border-radius: 8px;
-  box-shadow: 0 0 16px rgba(0, 0, 0, 0.4);
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; 
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .access-denied-modal {
@@ -2098,6 +2149,22 @@ const isImageUrl = (url: string): boolean => {
 }
 .shared-users-list li {
   margin: 6px 0;
+}
+.modal-close-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 24px;
+  line-height: 40px;
+  text-align: center;
+  cursor: pointer;
+  z-index: 10001; /* Swiper 위에 오도록 */
 }
 .modal-close {
   width: 100%;
