@@ -12,4 +12,6 @@ public class ModifyPostRequestDto
     public bool DisallowShare { get; set; }
 
     public AccessPermission? CommentPermission { get; set; }
+
+    public List<string> Hashtags { get; set; } = [];
 }

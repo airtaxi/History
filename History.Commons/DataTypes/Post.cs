@@ -70,4 +70,9 @@ public class Post
     /// Comment permission for this post.
     /// </summary>
     public AccessPermission? CommentPermission { get; set; }
+
+    /// <summary>
+    /// Hashtags for this post.
+    /// </summary>
+    public List<string> Hashtags { get; set; } = [];
 }

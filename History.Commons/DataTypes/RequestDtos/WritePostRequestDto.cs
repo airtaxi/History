@@ -17,4 +17,6 @@ public class WritePostRequestDto
     public AccessPermission? CommentPermission { get; set; }
 
     public DateTime? ReservationTime { get; set; }
+
+    public List<string> Hashtags { get; set; } = [];
 }

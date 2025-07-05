@@ -32,7 +32,7 @@ namespace History.MobileClient.Pages;
 
 public partial class EditPostPage : ContentPage
 {
-    public ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
+    public ObservableCollection<string> Hashtags { get; } = [];
 
     private bool _isInForeground;
     private bool _isUploading;
@@ -45,6 +45,8 @@ public partial class EditPostPage : ContentPage
     private AccessPermission? _commentPermission;
     private MediaAttachmentViewModel _attachmentViewModelBeingDragged;
     private ExternalUrlContentViewModel _externalUrlContentViewModel;
+
+    private readonly ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
 
 	public EditPostPage()
     {
@@ -142,6 +144,7 @@ public partial class EditPostPage : ContentPage
         CommentPermissionPicker.SelectedIndex = _commentPermission.HasValue ? (int)_commentPermission.Value : -1;
 
         DisallowShareSwitch.IsToggled = _post.DisallowShare;
+        foreach (var hashtag in _post.Hashtags ?? []) Hashtags.Add(hashtag);
     }
 
     private void Initialize()
@@ -460,7 +463,7 @@ public partial class EditPostPage : ContentPage
 
                 if (_post != null && !_isShare)
                 {
-                    var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, _commentPermission, disallowShare, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
+                    var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, _commentPermission, disallowShare, discoveryOptionSelectedUserIds, files, Hashtags.ToList()), ErrorType.BadRequest);
                     if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
@@ -652,7 +655,7 @@ public partial class EditPostPage : ContentPage
                         }
                     }
 
-                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null), ErrorType.BadRequest);
+                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null, Hashtags.ToList()), ErrorType.BadRequest);
                     if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
@@ -958,4 +961,49 @@ public partial class EditPostPage : ContentPage
 
         return null;
     }
+
+    private async void OnHashtagTapped(object sender, TappedEventArgs e)
+    {
+        var hashtag = e.Parameter as string;
+        if (hashtag == null) return;
+
+        const string editHashtag = "해시태그 수정";
+        const string removeHashtag = "해시태그 삭제";
+        const string cancel = "취소";
+
+        var action = await DisplayActionSheet($"'{hashtag}' 해시태그 관리", cancel, null, editHashtag, removeHashtag);
+
+        if (action == editHashtag)
+        {
+            var newHashtag = await DisplayPromptAsync("해시태그 수정", "수정할 해시태그를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "해시태그", -1, Keyboard.Text, hashtag);
+            if (string.IsNullOrWhiteSpace(newHashtag)) return;
+
+            if (Hashtags.Contains(newHashtag))
+            {
+                await DisplayAlert("오류", "이미 추가된 해시태그입니다.", Constants.PromptOk);
+                return;
+            }
+
+            var index = Hashtags.IndexOf(hashtag);
+            Hashtags[index] = newHashtag;
+        }
+        else if (action == removeHashtag)
+        {
+            Hashtags.Remove(hashtag);
+        }
+    }
+	
+    private async void OnHashtagImageTapped(object sender, TappedEventArgs e)
+    {
+        var hashtag = await DisplayPromptAsync("해시태그 추가", "추가할 해시태그를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "해시태그", -1, Keyboard.Text, string.Empty);
+		if (string.IsNullOrWhiteSpace(hashtag)) return;
+		
+		if (Hashtags.Contains(hashtag))
+		{
+			await DisplayAlert("오류", "이미 추가된 해시태그입니다.", Constants.PromptOk);
+			return;
+		}                                                                                                                                    
+		
+		Hashtags.Add(hashtag);
+	}
 }

@@ -13,7 +13,7 @@ public class WritePost : IAuthRequiredRequest, IRequestWithForm, IRequestWithFil
     public object Body { get; set; }
     public Dictionary<string, byte[]> Files { get; set; }
 
-    public WritePost(List<BaseContent> contents, DiscoveryOption discoveryOption, AccessPermission? commentPermission, bool disallowShare, string ParentPostId = null, List<string> discoveryOptionSelectedUserIds = null, Dictionary<string, byte[]> files = null, DateTime? reservationTime = null)
+    public WritePost(List<BaseContent> contents, DiscoveryOption discoveryOption, AccessPermission? commentPermission, bool disallowShare, string ParentPostId = null, List<string> discoveryOptionSelectedUserIds = null, Dictionary<string, byte[]> files = null, DateTime? reservationTime = null, List<string> hashtags = null)
     {
         Body = new WritePostRequestDto
         {
@@ -24,6 +24,7 @@ public class WritePost : IAuthRequiredRequest, IRequestWithForm, IRequestWithFil
             CommentPermission = commentPermission,
             ReservationTime = reservationTime,
             DisallowShare = disallowShare,
+            Hashtags = hashtags ?? []
         };
         Files = files ?? [];
     }

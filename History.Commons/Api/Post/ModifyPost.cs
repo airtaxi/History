@@ -15,7 +15,7 @@ public class ModifyPost : IBaseRequest<PostResponseDto>, IAuthRequiredRequest, I
     public Dictionary<string, byte[]> Files { get; set; }
     public Dictionary<string, string> UrlParameters { get; set; } = [];
 
-    public ModifyPost(string postId, List<BaseContent> contents, DiscoveryOption discoveryOption, AccessPermission? commentPermission, bool disallowShare, List<string> discoveryOptionSelectedUserIds = null, Dictionary<string, byte[]> files = null)
+    public ModifyPost(string postId, List<BaseContent> contents, DiscoveryOption discoveryOption, AccessPermission? commentPermission, bool disallowShare, List<string> discoveryOptionSelectedUserIds = null, Dictionary<string, byte[]> files = null, List<string> hashtags = null)
     {
         Body = new ModifyPostRequestDto
         {
@@ -23,7 +23,8 @@ public class ModifyPost : IBaseRequest<PostResponseDto>, IAuthRequiredRequest, I
             DiscoveryOption = discoveryOption,
             DiscoveryOptionSelectedUserIds = discoveryOptionSelectedUserIds,
             CommentPermission = commentPermission,
-            DisallowShare = disallowShare
+            DisallowShare = disallowShare,
+            Hashtags = hashtags ?? []
         };
         Files = files ?? [];
         UrlParameters["postId"] = postId;
