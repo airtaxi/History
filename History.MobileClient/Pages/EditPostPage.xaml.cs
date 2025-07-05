@@ -55,6 +55,7 @@ public partial class EditPostPage : ContentPage
 #if IOS
         MediaCollectionView.ItemsLayout = new GridItemsLayout(3, ItemsLayoutOrientation.Vertical);
 #endif
+        BindableLayout.SetItemsSource(HashtagFlexLayout, Hashtags);
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
