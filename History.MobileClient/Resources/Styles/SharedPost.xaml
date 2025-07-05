@@ -110,6 +110,9 @@
                                 Stroke="#808080"
                                 StrokeShape="RoundRectangle 8"
                                 StrokeThickness="1.5">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnHashtagBorderTapped" />
+                                </Border.GestureRecognizers>
                                 <Label>
                                     <Label.FormattedText>
                                         <FormattedString>
