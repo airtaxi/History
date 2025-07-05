@@ -13,6 +13,7 @@
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient"
+    xmlns:local="clr-namespace:History.MobileClient.Pages"
     Loaded="OnLoaded"
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False"
@@ -81,11 +82,33 @@
             Orientation="Vertical">
             <VerticalStackLayout Padding="6" Spacing="8">
                 <editPost:TextContentView x:Name="MainTextContent" Loaded="OnMainTextContentLoaded" />
+                <FlexLayout x:Name="HashtagFlexLayout" Margin="6,0,6,0" Wrap="Wrap"
+                            BindableLayout.ItemsSource="{Binding Hashtags}"
+                            x:DataType="local:EditPostPage">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Border BackgroundColor="#808080" Padding="8,4" Margin="4" StrokeShape="RoundRectangle 4">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnHashtagTapped" CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <Label TextColor="White">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="#" />
+                                            <Span Text="{Binding .}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
                 <views:DataTemplatePresenter
                     x:Name="ShareTargetPostDataTemplatePresenter"
                     InputTransparent="True"
                     IsVisible="False"
-                    Template="{StaticResource SharedPostTemplate}" />
+                    Template="{StaticResource SharedPostTemplate}"
+                    x:DataType="vm:PostViewModel" />
                 <CollectionView
                     x:Name="MediaCollectionView"
                     CanReorderItems="True"
@@ -367,6 +390,21 @@
                 HorizontalOptions="End"
                 Spacing="12"
                 VerticalOptions="Center">
+                <Image
+                    HeightRequest="40"
+                    VerticalOptions="Center"
+                    WidthRequest="40">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnHashtagImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Tag}"
+                            Color="{AppThemeBinding Light=Black,
+                                                    Dark=White}" />
+                    </Image.Source>
+                </Image>
                 <Grid>
                     <sf:SfDateTimePicker
                         x:Name="ReservationDateTimePicker"

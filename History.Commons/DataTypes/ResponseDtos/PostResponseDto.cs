@@ -27,4 +27,6 @@ public class PostResponseDto
 
     public DateTime CreatedAt { get; set; }
     public DateTime? ModifiedAt { get; set; }
+
+    public List<string> Hashtags { get; set; } = [];
 }

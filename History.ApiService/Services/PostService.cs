@@ -466,6 +466,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             SearchIndex = GenerateSearchIndexFromContents(contents),
             CommentPermission = requestDto.CommentPermission,
             DisallowShare = requestDto.DisallowShare,
+            Hashtags = requestDto.Hashtags ?? [],
             IsRepost = false
         };
 
@@ -564,6 +565,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         post.SearchIndex = GenerateSearchIndexFromContents(contents);
         post.CommentPermission = requestDto.CommentPermission;
         post.DisallowShare = requestDto.DisallowShare;
+        post.Hashtags = requestDto.Hashtags ?? [];
 
         post.ModifiedAt = DateTime.UtcNow;
 
@@ -856,6 +858,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             SearchIndex = originalPost.SearchIndex,
             CommentPermission = AccessPermission.OnlyMe,
             DisallowShare = true,
+            Hashtags = originalPost.Hashtags ?? [],
             IsRepost = false,
             IsPublicPost = true
         };
@@ -1035,6 +1038,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             SharedAndRepostedUsers = sharedAndRepostedUserDtos.Value,
             CommentPermission = post.CommentPermission,
             DisallowShare = post.DisallowShare,
+            Hashtags = post.Hashtags ?? [],
             IsRepost = post.IsRepost,
             CreatedAt = post.CreatedAt,
             ModifiedAt = post.ModifiedAt
@@ -1074,6 +1078,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                     SharedAndRepostedUsers = parentPostSharedAndRepostedUserDtos,
                     CommentPermission = parentPostResult.Value.CommentPermission,
                     DisallowShare = parentPostResult.Value.DisallowShare,
+                    Hashtags = parentPostResult.Value.Hashtags ?? [],
                     IsRepost = parentPostResult.Value.IsRepost,
                     CreatedAt = parentPostResult.Value.CreatedAt,
                     ModifiedAt = parentPostResult.Value.ModifiedAt

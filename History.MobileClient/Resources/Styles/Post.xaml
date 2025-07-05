@@ -122,6 +122,30 @@
                 BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
                 BindableLayout.ItemsSource="{x:Binding Contents}"
                 Spacing="8" />
+            <FlexLayout
+                Margin="0,8,0,0"
+                BindableLayout.ItemsSource="{x:Binding Hashtags}"
+                Wrap="Wrap"
+                IsVisible="{x:Binding IsHashtagVisible}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <Border
+                            BackgroundColor="#808080"
+                            Margin="4"
+                            Padding="8,4"
+                            StrokeShape="RoundRectangle 4">
+                            <Label TextColor="White">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="#" />
+                                        <Span Text="{x:Binding .}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
             <views:DataTemplatePresenter
                 IsVisible="{x:Binding IsShare}"
                 Template="{StaticResource SharedPostTemplate}"
