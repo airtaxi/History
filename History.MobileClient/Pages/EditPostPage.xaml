@@ -82,11 +82,7 @@
             Orientation="Vertical">
             <VerticalStackLayout Padding="6" Spacing="8">
                 <editPost:TextContentView x:Name="MainTextContent" Loaded="OnMainTextContentLoaded" />
-                <FlexLayout
-                    x:Name="HashtagFlexLayout"
-                    x:DataType="local:EditPostPage"
-                    BindableLayout.ItemsSource="{Binding Hashtags}"
-                    Wrap="Wrap">
+                <FlexLayout x:Name="HashtagFlexLayout" Wrap="Wrap">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
                             <Border
