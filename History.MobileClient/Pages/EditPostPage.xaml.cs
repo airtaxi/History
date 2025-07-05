@@ -83,7 +83,17 @@ public partial class EditPostPage : ContentPage
                 continue;
             }
 
-            _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, mediaFile.Bytes, isVideo));
+
+            var extension = Path.GetExtension(fileName);
+            string randomFileName;
+            do
+            {
+                randomFileName = Path.GetRandomFileName().Replace(".", string.Empty) + extension;
+                var isExists = _attachmentViewModels.Any(x => x.FileName.Equals(randomFileName, StringComparison.OrdinalIgnoreCase));
+                if (!isExists) break;
+            }
+            while (true);
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, mediaFile.Bytes, isVideo));
         }
 
         if (sizeExceed) Toast.Make("용량을 초과하는 미디어는 자동으로 제외되었습니다.").Show();
@@ -200,8 +210,17 @@ public partial class EditPostPage : ContentPage
         }
 
         var fileName = Path.GetFileName(path);
+        var extension = Path.GetExtension(fileName);
         var bytes = File.ReadAllBytes(path);
-        _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, bytes));
+        string randomFileName;
+        do
+        {
+            randomFileName = Path.GetRandomFileName().Replace(".", string.Empty) + extension;
+            var isExists = _attachmentViewModels.Any(x => x.FileName.Equals(randomFileName, StringComparison.OrdinalIgnoreCase));
+            if (!isExists) break;
+        }
+        while (true);
+        _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, bytes));
     }
 
     private async void OnInsertImageTapped(object sender, TappedEventArgs e)
@@ -259,7 +278,17 @@ public partial class EditPostPage : ContentPage
                 sizeExceed = true;
                 continue;
             }
-            _attachmentViewModels.Add(new MediaAttachmentViewModel(image.FileName, image.Bytes));
+
+            var extension = Path.GetExtension(image.FileName);
+            string randomFileName;
+            do
+            {
+                randomFileName = Path.GetRandomFileName().Replace(".", string.Empty) + extension;
+                var isExists = _attachmentViewModels.Any(x => x.FileName.Equals(randomFileName, StringComparison.OrdinalIgnoreCase));
+                if (!isExists) break;
+            }
+            while (true);
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, image.Bytes));
         }
 #endif
 
@@ -316,7 +345,17 @@ public partial class EditPostPage : ContentPage
                 sizeExceed = true;
                 continue;
             }
-            _attachmentViewModels.Add(new MediaAttachmentViewModel(video.FileName, video.Bytes, true));
+
+            var extension = Path.GetExtension(video.FileName);
+            string randomFileName;
+            do
+            {
+                randomFileName = Path.GetRandomFileName().Replace(".", string.Empty) + extension;
+                var isExists = _attachmentViewModels.Any(x => x.FileName.Equals(randomFileName, StringComparison.OrdinalIgnoreCase));
+                if (!isExists) break;
+            }
+            while (true);
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, video.Bytes, true));
         }
 #endif
 
