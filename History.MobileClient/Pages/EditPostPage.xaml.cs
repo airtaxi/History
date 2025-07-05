@@ -442,7 +442,7 @@ public partial class EditPostPage : ContentPage
 
             if (_externalUrlContentViewModel != null) contents.Add(_externalUrlContentViewModel.ExternalUrlContent);
 
-            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && !_isShare)
+            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && !_isShare && Hashtags.Count == 0)
             {
                 await DisplayAlert("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
                 return;
@@ -499,6 +499,7 @@ public partial class EditPostPage : ContentPage
                             // Samsung pass will overwrite the text content, fetch the text content before logging in to KakaoStory
                             var text = MainTextContent.MentionEditor.Text;
                             text = text?.Trim() ?? string.Empty;
+
                             if (Hashtags.Count > 0)
                             {
                                 text += "\n\n";
