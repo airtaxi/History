@@ -434,6 +434,15 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                 return (ErrorType.BadRequest, "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다.");
         }
 
+        // Sanitize hashtags and check length
+        for (int i = 0; i < requestDto.Hashtags.Count; i++)
+        {
+            var hashtag = requestDto.Hashtags[i];
+            requestDto.Hashtags[i] = Utils.SanitizeText(hashtag);
+            hashtag = requestDto.Hashtags[i];
+            if (hashtag.Length > 20) return (ErrorType.BadRequest, "해시태그는 최대 20자까지 입력할 수 있습니다.");
+        }
+
         string postId;
         while (true)
         {
@@ -513,6 +522,25 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         Utils.SanitizeContents(contents);
         if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
             return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
+
+        if (postResult.Value.ParentPostId != null)
+        {
+            var parentPostResult = await GetPostByIdAsync(postResult.Value.ParentPostId);
+            if (parentPostResult.IsFailure) return parentPostResult.CastFailure();
+
+            var parentPost = parentPostResult.Value;
+            if (requestDto.DiscoveryOption > parentPost.DiscoveryOption)
+                return (ErrorType.BadRequest, "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다.");
+        }
+
+        // Sanitize hashtags and check length
+        for (int i = 0; i < requestDto.Hashtags.Count; i++)
+        {
+            var hashtag = requestDto.Hashtags[i];
+            requestDto.Hashtags[i] = Utils.SanitizeText(hashtag);
+            hashtag = requestDto.Hashtags[i];
+            if (hashtag.Length > 20) return (ErrorType.BadRequest, "해시태그는 최대 20자까지 입력할 수 있습니다.");
+        }
 
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
         if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
