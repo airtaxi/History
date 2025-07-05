@@ -109,6 +109,14 @@ public partial class EditPostPage : ContentPage
         if (url != sharedText) _sharedTextContent = new() { Text = sharedText };
     }
 
+    public EditPostPage(List<string> hashtags) : this()
+    {
+        foreach (var hashtag in hashtags ?? [])
+        {
+            Hashtags.Add(hashtag);
+        }
+    }
+
     private void LoadPost()
     {
         if (!_isShare)
