@@ -499,6 +499,12 @@ public partial class EditPostPage : ContentPage
                             // Samsung pass will overwrite the text content, fetch the text content before logging in to KakaoStory
                             var text = MainTextContent.MentionEditor.Text;
                             text = text?.Trim() ?? string.Empty;
+                            if (Hashtags.Count > 0)
+                            {
+                                text += "\n\n";
+                                text += string.Join(" ", Hashtags.Select(x => $"#{x}"));
+                            }
+
                             //if (!string.IsNullOrWhiteSpace(text)) text += "\n----------------------\n";
                             //text += $"이 게시글은 대체 SNS인 히스토리를 통하여 작성되었습니다.\n히스토리 디스코드 채널에 참여하여 히스토리 베타에 참여해보세요.\n베타 참여 디스코드: {Constants.DiscordInviteUrl}";
 
