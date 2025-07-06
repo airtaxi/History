@@ -484,7 +484,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             DiscoveryOption = requestDto.DiscoveryOption,
             DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? (requestDto.DiscoveryOptionSelectedUserIds ?? []) : null,
             ParentPostId = requestDto.ParentPostId,
-            SearchIndex = GenerateSearchIndexFromContents(contents),
+            SearchIndex = GenerateSearchIndexFromContents(contents, requestDto.Hashtags),
             CommentPermission = requestDto.CommentPermission,
             DisallowShare = requestDto.DisallowShare,
             Hashtags = requestDto.Hashtags ?? [],
@@ -606,7 +606,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Update the post contents
         post.Contents = contents;
-        post.SearchIndex = GenerateSearchIndexFromContents(contents);
+        post.SearchIndex = GenerateSearchIndexFromContents(contents, requestDto.Hashtags);
         post.CommentPermission = requestDto.CommentPermission;
         post.DisallowShare = requestDto.DisallowShare;
         post.Hashtags = requestDto.Hashtags ?? [];
@@ -1228,11 +1228,19 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         return Result.Success();
     }
 
-    private static string GenerateSearchIndexFromContents(IEnumerable<BaseContent> contents) =>
-        string.Join(" ", contents.OfType<TextContent>().Select(s => s.Text))
+    private static string GenerateSearchIndexFromContents(IEnumerable<BaseContent> contents, IEnumerable<string> hashtags)
+    {
+        var body = string.Join(" ", contents.OfType<TextContent>().Select(s => s.Text))
         .ReplaceLineEndings()
         .ToLower()
         .Replace(Environment.NewLine, " ");
+
+        hashtags = hashtags.Select(x => $"#{x}").ToList();
+        var hashtag = string.Join(" ", hashtags ?? [])
+            .ToLower();
+
+        return $"{body} {hashtag}".Trim();
+    }
 
     private async Task<Result<List<PostReactionDto>>> GeneratePostReactionDtosAsync(string postId, string requesterId = null)
     {
