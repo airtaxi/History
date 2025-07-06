@@ -1,10 +1,9 @@
-import { ref, watch } from 'vue';
-import apiClient from '@/api';
+import { ref, type Ref } from 'vue';
 import type { UserResponseDto } from '@/types';
 import { useFriendData } from './useFriendData';
 
-export function useMentions(newPostText: ref<string>) {
-  const { friendsList, loadFriends, getMediaBlobUrl } = useFriendData();
+export function useMentions(newPostText: Ref<string>) {
+  const { friendsList, loadFriends } = useFriendData();
 
   const isMentioning = ref(false);
   const mentionSearchText = ref('');
