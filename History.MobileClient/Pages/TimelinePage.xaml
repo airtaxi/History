@@ -33,7 +33,10 @@
                 WidthRequest="48" />
 
             <HorizontalStackLayout HorizontalOptions="End">
-                <Image HeightRequest="48" WidthRequest="48">
+                <Image
+                    HeightRequest="32"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnSearchPostImageTapped" />
                     </Image.GestureRecognizers>
