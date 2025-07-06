@@ -794,7 +794,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
 
         var loweredQuery = query.ToLower();
-        var filter = Builders<Post>.Filter.Text(query);
+        var filter = Builders<Post>.Filter.Text(loweredQuery);
         if (!string.IsNullOrEmpty(fromPostId))
         {
             var fromPost = await _postCollection.Find(p => p.Id == fromPostId).FirstOrDefaultAsync();
@@ -1249,7 +1249,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         .ToLower()
         .Replace(Environment.NewLine, " ");
 
-        hashtags = [.. hashtags.Select(x => $"#{x}")];
+        hashtags = hashtags.Select(x => $"#{x}").ToList();
         var hashtag = string.Join(" ", hashtags ?? [])
             .ToLower();
 
