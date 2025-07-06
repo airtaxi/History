@@ -108,8 +108,18 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
 
         if (requesterId == null) Result<Comment>.Failure(ErrorType.Unauthorized, "로그인이 필요합니다.");
 
+        // Validate media contents
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
         if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
+
+        var mediaContents = contents.OfType<MediaContent>();
+        foreach (var mediaContent in mediaContents)
+        {
+            if (string.IsNullOrEmpty(mediaContent.MediaId) || string.IsNullOrEmpty(mediaContent.MimeType) || mediaContent.ThumbnailMediaId == null)
+            {
+                return (ErrorType.BadRequest, "미디어 콘텐츠는 MediaId, MimeType, ThumbnailMediaId가 모두 필요합니다.");
+            }
+        }
 
         // Check access
         var accessResult = await postService.CheckCommentAccessAsync(postId, requesterId);
@@ -168,11 +178,29 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         var permissionResult = await CheckPermissionAsync(commentId, requesterId);
         if (permissionResult.IsFailure) return permissionResult;
 
+        // Fetch original comment before update
+        var originalComment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
+
+        // Validate media contents
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
         if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
 
-        // Fetch original comment before update
-        var originalComment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
+        var originalPostMediaContents = originalComment.Contents.OfType<MediaContent>();
+        var mediaContents = contents.OfType<MediaContent>();
+        foreach (var mediaContent in mediaContents)
+        {
+            if (string.IsNullOrEmpty(mediaContent.MediaId) || string.IsNullOrEmpty(mediaContent.MimeType) || mediaContent.ThumbnailMediaId == null)
+                return (ErrorType.BadRequest, "미디어 콘텐츠는 MediaId, MimeType, ThumbnailMediaId가 모두 필요합니다.");
+
+            var originalPostMediaContent = originalPostMediaContents.FirstOrDefault(m => m.MediaId == mediaContent.MediaId);
+            if (originalPostMediaContent != null)
+            {
+                if (mediaContent.MimeType != originalPostMediaContent.MimeType)
+                    return (ErrorType.BadRequest, "미디어 콘텐츠의 MimeType이 원본과 다릅니다.");
+                else if (mediaContent.ThumbnailMediaId != originalPostMediaContent.ThumbnailMediaId)
+                    return (ErrorType.BadRequest, "미디어 콘텐츠의 ThumbnailMediaId가 원본과 다릅니다.");
+            }
+        }
 
         // Upload medias
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, originalComment.Id, requesterId, contents, files);
