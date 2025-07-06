@@ -110,7 +110,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
 
         // Validate media contents
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
-        if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
+        if (mediaCount > 1) return (ErrorType.BadRequest, "미디어는 최대 1개까지 추가할 수 있습니다.");
 
         var mediaContents = contents.OfType<MediaContent>();
         foreach (var mediaContent in mediaContents)
@@ -181,9 +181,12 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         // Fetch original comment before update
         var originalComment = await _commentCollection.Find(f => f.Id == commentId).FirstOrDefaultAsync();
 
+        // Check if the user is the author of the comment
+        if (originalComment.UserId != requesterId) return (ErrorType.Forbidden, "댓글을 수정할 수 있는 권한이 없습니다.");
+
         // Validate media contents
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
-        if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
+        if (mediaCount > 1) return (ErrorType.BadRequest, "미디어는 최대 1개까지 추가할 수 있습니다.");
 
         var originalPostMediaContents = originalComment.Contents.OfType<MediaContent>();
         var mediaContents = contents.OfType<MediaContent>();
