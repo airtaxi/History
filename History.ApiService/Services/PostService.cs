@@ -824,8 +824,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         }
         else filter &= Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone);
 
-            // For reservation posts.
-            filter &= Builders<Post>.Filter.Lte(p => p.CreatedAt, DateTime.UtcNow);
+        // For reservation posts.
+        filter &= Builders<Post>.Filter.Lte(p => p.CreatedAt, DateTime.UtcNow);
 
         return await _postCollection
             .Find(filter)
@@ -1249,7 +1249,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         .ToLower()
         .Replace(Environment.NewLine, " ");
 
-        hashtags = hashtags.Select(x => $"#{x}").ToList();
+        hashtags = [.. hashtags.Select(x => $"#{x}")];
         var hashtag = string.Join(" ", hashtags ?? [])
             .ToLower();
 
