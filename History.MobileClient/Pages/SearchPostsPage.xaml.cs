@@ -87,15 +87,15 @@ public partial class SearchPostsPage : ContentPage
 
     private async Task LoadMoreAsync()
     {
-        if (_fetchSemaphore.CurrentCount == 0) return;
+        if (string.IsNullOrWhiteSpace(_query)) return;
+        else if (_fetchSemaphore.CurrentCount == 0) return;
         else if (_areThereNoMorePostsToLoad) return;
 
         try
         {
-
             await _fetchSemaphore.WaitAsync();
 
-            var lastViewModel = _viewModels.OfType<PostViewModel>().LastOrDefault();
+            var lastViewModel = _lastViewModel;
             if (lastViewModel == null) return;
 
             var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
@@ -110,12 +110,6 @@ public partial class SearchPostsPage : ContentPage
             }
         }
         finally { _fetchSemaphore.Release(); }
-    }
-
-    private async void OnRefreshing(object sender, EventArgs e)
-    {
-        await SearchAsync();
-        (sender as RefreshView).IsRefreshing = false;
     }
 
     protected override void OnAppearing()

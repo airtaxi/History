@@ -17,6 +17,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -44,47 +45,39 @@
             </HorizontalStackLayout>
         </Grid>
 
-        <RefreshView Grid.Row="1" Refreshing="OnRefreshing">
-            <Grid RowSpacing="8">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
+        <SearchBar
+            x:Name="MainSearchBar"
+            Grid.Row="1"
+            Placeholder="게시글 내용 또는 #해시태그 검색"
+            SearchButtonPressed="OnSearchButtonPressed" />
 
-                <SearchBar
-                    x:Name="MainSearchBar"
-                    Grid.Row="0"
-                    Placeholder="게시글 내용 또는 #해시태그 검색"
-                    SearchButtonPressed="OnSearchButtonPressed" />
+        <CollectionView
+            x:Name="MainCollectionView"
+            Grid.Row="2"
+            ChildAdded="OnChildAdded"
+            ItemTemplate="{StaticResource TimelineTemplateSelector}"
+            ItemsUpdatingScrollMode="KeepItemsInView"
+            RemainingItemsThreshold="0"
+            RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
+            Scrolled="OnMainCollectionViewScrolled"
+            SelectionMode="None">
+            <CollectionView.ItemsLayout>
+                <staggered:StaggeredItemsLayout Span="10000" />
+            </CollectionView.ItemsLayout>
+        </CollectionView>
 
-                <CollectionView
-                    x:Name="MainCollectionView"
-                    Grid.Row="1"
-                    ChildAdded="OnChildAdded"
-                    ItemTemplate="{StaticResource TimelineTemplateSelector}"
-                    ItemsUpdatingScrollMode="KeepItemsInView"
-                    RemainingItemsThreshold="0"
-                    RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
-                    Scrolled="OnMainCollectionViewScrolled"
-                    SelectionMode="None">
-                    <CollectionView.ItemsLayout>
-                        <staggered:StaggeredItemsLayout Span="0" />
-                    </CollectionView.ItemsLayout>
-                </CollectionView>
-                <Label
-                    x:Name="EmptyLabel"
-                    Grid.Row="1"
-                    FontAttributes="Bold"
-                    FontSize="16"
-                    HorizontalOptions="Center"
-                    Text="비어있음"
-                    VerticalOptions="Center" />
-            </Grid>
-        </RefreshView>
+        <Label
+            x:Name="EmptyLabel"
+            Grid.Row="2"
+            FontAttributes="Bold"
+            FontSize="16"
+            HorizontalOptions="Center"
+            Text="비어있음"
+            VerticalOptions="Center" />
 
         <Border
             x:Name="ScrollToTopBorder"
-            Grid.Row="1"
+            Grid.Row="2"
             Margin="12"
             Background="#808080"
             HeightRequest="48"
@@ -120,7 +113,7 @@
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"
-            Grid.RowSpan="2"
+            Grid.RowSpan="3"
             HeightRequest="100"
             HorizontalOptions="Center"
             IsRunning="False"

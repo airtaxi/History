@@ -62,7 +62,7 @@
                     Scrolled="OnMainCollectionViewScrolled"
                     SelectionMode="None">
                     <CollectionView.ItemsLayout>
-                        <staggered:StaggeredItemsLayout Span="0" />
+                        <staggered:StaggeredItemsLayout Span="10000" />
                     </CollectionView.ItemsLayout>
                 </CollectionView>
             </RefreshView>
