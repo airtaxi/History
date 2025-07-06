@@ -798,10 +798,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         if (!string.IsNullOrEmpty(fromPostId))
         {
             var fromPost = await _postCollection.Find(p => p.Id == fromPostId).FirstOrDefaultAsync();
-            if (fromPost != null)
-            {
-                filter &= Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
-            }
+            if (fromPost != null) filter &= Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
         }
 
         if (requesterId != null)
