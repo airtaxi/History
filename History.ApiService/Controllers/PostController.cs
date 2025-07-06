@@ -282,7 +282,7 @@ public class PostController(IPostService postService, IFriendshipService friends
 
         var postsResult = await postService.SearchPostsAsync(requesterId, keyword, from, limit);
         var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
-        return Ok(postResponses);
+        return Ok(postResponses.Value);
     }
 
     [HttpPut("{postId}/discovery-option")]
