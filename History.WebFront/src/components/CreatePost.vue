@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useUiStore } from '@/stores/ui';
 import apiClient from '@/api';
 import { defineEmits } from 'vue';
@@ -9,6 +9,7 @@ import PostAttachments from './CreatePostComponent/PostAttachments.vue';
 import RepostPreview from './CreatePostComponent/RepostPreview.vue';
 import { useMentions } from './composables/useMentions.ts';
 import { useFriendData } from './composables/useFriendData.ts';
+import { useFileAttachment } from './composables/useFileAttachment.ts';
 
 /**
  * CreatePost 컴포넌트의 props와 emits 정의
@@ -20,6 +21,9 @@ const showAdvancedOptions = ref(false);
 // useFriendData 컴포저블 사용
 const { friendsList, myProfile, loadFriends } = useFriendData();
 console.log('[CreatePost] useFriendData 초기화 시점 friendsList:', friendsList.value);
+
+// useFileAttachment 컴포저블 사용
+const { attachedFiles, previewItems, isDragOver, addFiles, removeFile, handlePaste, setupDragAndDrop } = useFileAttachment();
 
 // ==================== 반응형 상태 변수들 ====================
 
@@ -58,14 +62,6 @@ const discoveryOption = ref('Friends');
  * @type {import('vue').Ref<string | null>}
  */
  const reservationTime = ref<string | null>(null);
-
-/**
- * 업로드할 파일들의 배열
- * @type {import('vue').Ref<File[]>}
- */
-const attachedFiles = ref<File[]>([]);
-
-
 
 /**
  * 첨부할 링크 URL
@@ -311,7 +307,6 @@ const submitPost = async () => {
 
     // 초기화
     newPostText.value = '';
-    attachedFiles.value = [];
     attachedLink.value = '';
     selectedUserIds.value = [];
     showFriendSelector.value = false;
@@ -363,19 +358,37 @@ const handleCancel = () => {
 
   // 작성 중인 내용 초기화
   newPostText.value = '';
-  attachedFiles.value = [];
   attachedLink.value = '';
   selectedUserIds.value = [];
   showFriendSelector.value = false;
+
+  // useFileAttachment 초기화
+  attachedFiles.value = [];
 
   // @멘션 관련 초기화
   isMentioning.value = false;
   mentionSearchResults.value = [];
 };
+
+// 드래그 앤 드롭 및 붙여넣기 이벤트 리스너 설정
+const createPostCardRef = ref<HTMLElement | null>(null);
+
+onMounted(() => {
+  if (createPostCardRef.value) {
+    setupDragAndDrop(createPostCardRef.value);
+    createPostCardRef.value.addEventListener('paste', handlePaste);
+  }
+});
+
+onUnmounted(() => {
+  if (createPostCardRef.value) {
+    createPostCardRef.value.removeEventListener('paste', handlePaste);
+  }
+});
 </script>
 
 <template>
-  <div class="post-card create-post-card">
+  <div class="post-card create-post-card" :class="{ 'drag-over': isDragOver }" ref="createPostCardRef">
     <div v-if="!uiStore.isEditorOpen && !isExpanded" class="compact-view" @click="openInlineEditor">
       <textarea readonly placeholder="오늘 하루, 기억하고 싶은 순간이 있나요?"></textarea>
     </div>
@@ -439,8 +452,10 @@ const handleCancel = () => {
       </span>
 
       <PostAttachments
-        v-model:attached-files="attachedFiles"
         v-model:attached-link="attachedLink"
+        :preview-items="previewItems"
+        @add-files="addFiles"
+        @remove-file="removeFile"
       />
 
     <RepostPreview :original-post="originalPostForShare" />
@@ -448,7 +463,7 @@ const handleCancel = () => {
 
 
       <FriendSelector
-        v-if="discoveryOption === 'SelectedUsers' || discoveryOption === 'UnselectedUsers'"
+        v-if="showFriendSelector"
         v-model="selectedUserIds"
         :discovery-option="discoveryOption"
         :friends-list="friendsList"
@@ -641,5 +656,10 @@ const handleCancel = () => {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.create-post-card.drag-over {
+  border: 2px dashed #ed664d;
+  background-color: #fff0ed;
 }
 </style>
