@@ -561,7 +561,7 @@ function splitTextWithLinksAndMentions(text: string): Array<{ text: string; type
     let url = match[0];
     // www.로 시작하는 경우 https:// 추가
     if (url.startsWith('www.')) {
-      url = url;
+      //url = url; 이럴필요 없음
     }
     matches.push({ text: url, type: 'link', index: match.index, length: match[0].length });
   }
@@ -1224,21 +1224,23 @@ const isImageUrl = (url: string): boolean => {
           :modules="modules"
           class="modal-swiper"
         >
-          <SwiperSlide v-for="(media, i) in modalMediaSource" :key="i">
+          <SwiperSlide v-for="media in modalMediaSource" :key="media.src">
             <video
               v-if="media.type === 'video'"
               controls
               class="modal-image"
-              :key="media.src" >
+              :key="'video-' + media.src"
+            >
               <source :src="media.src" :type="media.mimeType" />
               브라우저가 video 태그를 지원하지 않습니다.
             </video>
+
             <img
               v-else
               :src="media.src"
               alt="확대 이미지"
               class="modal-image"
-              :key="media.src"
+              :key="'image-' + media.src"
             />
           </SwiperSlide>
         </Swiper>
@@ -1411,11 +1413,13 @@ const isImageUrl = (url: string): boolean => {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp:2;
   -webkit-box-orient: vertical;
 }
 .link-preview.small .link-title {
   font-size: 0.9rem;
-  -webkit-line-clamp: 1; /* 작은 UI에선 1줄 */
+  -webkit-line-clamp: 1;
+  line-clamp:1; /* 작은 UI에선 1줄 */
 }
 
 .link-description {
@@ -1427,12 +1431,14 @@ const isImageUrl = (url: string): boolean => {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp:3;
   -webkit-box-orient: vertical;
   margin: 0;
 }
 .link-preview.small .link-description {
   font-size: 0.8rem;
-  -webkit-line-clamp: 2; /* 작은 UI에선 2줄 */
+  -webkit-line-clamp: 2;
+  line-clamp:2; /* 작은 UI에선 2줄 */
 }
 
 .link-url {

@@ -448,7 +448,7 @@ const handleCancel = () => {
 
 
       <FriendSelector
-        v-if="showFriendSelector"
+        v-if="discoveryOption === 'SelectedUsers' || discoveryOption === 'UnselectedUsers'"
         v-model="selectedUserIds"
         :discovery-option="discoveryOption"
         :friends-list="friendsList"
