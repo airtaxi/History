@@ -462,12 +462,12 @@ onUnmounted(() => {
 
 
 
-      <FriendSelector
-        v-if="showFriendSelector"
-        v-model="selectedUserIds"
-        :discovery-option="discoveryOption"
-        :friends-list="friendsList"
-      />
+    <FriendSelector
+      v-if="showFriendSelector && (discoveryOption === 'SelectedUsers' || discoveryOption === 'UnselectedUsers')"
+      v-model="selectedUserIds"
+      :discovery-option="discoveryOption as 'SelectedUsers' | 'UnselectedUsers'"
+      :friends-list="friendsList"
+    />
 
       <div class="create-post-footer">
         <button class="toggle-advanced-btn" @click="showAdvancedOptions = !showAdvancedOptions">
