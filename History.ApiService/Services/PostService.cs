@@ -803,6 +803,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                 filter &= Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
             }
         }
+
         if (requesterId != null)
         {
             var requesterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
@@ -821,9 +822,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                 Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone)
             );
         }
+        else filter &= Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone);
 
-        // For reservation posts.
-        filter &= Builders<Post>.Filter.Lte(p => p.CreatedAt, DateTime.UtcNow);
+            // For reservation posts.
+            filter &= Builders<Post>.Filter.Lte(p => p.CreatedAt, DateTime.UtcNow);
 
         return await _postCollection
             .Find(filter)
