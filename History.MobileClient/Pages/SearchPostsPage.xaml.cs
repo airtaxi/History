@@ -95,7 +95,7 @@ public partial class SearchPostsPage : ContentPage
         {
             await _fetchSemaphore.WaitAsync();
 
-            var lastViewModel = _lastViewModel;
+            var lastViewModel = _viewModels.OfType<PostViewModel>().LastOrDefault();
             if (lastViewModel == null) return;
 
             var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
