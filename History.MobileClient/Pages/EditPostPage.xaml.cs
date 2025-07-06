@@ -137,6 +137,8 @@ public partial class EditPostPage : ContentPage
                 ShareTargetPostDataTemplatePresenter.ViewModel = new PostViewModel(_post.ParentPost, PostType.Timeline);
                 ShareTargetPostDataTemplatePresenter.IsVisible = true;
             }
+
+            foreach (var hashtag in _post.Hashtags ?? []) Hashtags.Add(hashtag);
         }
         else
         {
@@ -153,7 +155,6 @@ public partial class EditPostPage : ContentPage
         CommentPermissionPicker.SelectedIndex = _commentPermission.HasValue ? (int)_commentPermission.Value : -1;
 
         DisallowShareSwitch.IsToggled = _post.DisallowShare;
-        foreach (var hashtag in _post.Hashtags ?? []) Hashtags.Add(hashtag);
     }
 
     private void Initialize()
