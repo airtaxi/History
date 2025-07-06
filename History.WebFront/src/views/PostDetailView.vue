@@ -38,11 +38,11 @@ const friendIds = ref<Set<string>>(new Set()); // 친구 ID 목록을 Set으로 
 // allComments, filterMode, sortOrder가 변경될 때마다 자동으로 다시 계산됩니다.
 const processedComments = computed(() => {
   // 얕은 복사를 통해 원본 배열(allComments)의 순서를 변경하지 않도록 합니다.
-  let commentsToProcess = [...allComments.value]; 
+  let commentsToProcess = [...allComments.value];
 
   // 1. 필터링 (친구 댓글만)
   if (filterMode.value === 'friends') {
-    commentsToProcess = commentsToProcess.filter(comment => 
+    commentsToProcess = commentsToProcess.filter(comment =>
       friendIds.value.has(comment.user.userId)
     );
   }
@@ -67,7 +67,7 @@ const loadMoreComments = () => {
   // processedComments에서 다음 20개를 가져옵니다.
   const nextComments = processedComments.value.slice(currentLength, currentLength + commentsLimit);
   displayedComments.value.push(...nextComments);
-  
+
   // 더 보여줄 댓글이 있는지 여부도 processedComments 기준으로 판단합니다.
   hasMoreComments.value = displayedComments.value.length < processedComments.value.length;
   isMoreCommentsLoading.value = false;
@@ -89,9 +89,9 @@ onMounted(() => {
   // 친구 목록 가져오기 (authStore에 친구 정보가 로드된 후를 가정)
   // authStore.user.friends가 없다면 빈 배열로 처리하여 오류 방지
   // 실제 친구 목록의 구조에 맞게 (e.g., authStore.friends) 수정이 필요할 수 있습니다.
-  const friends = authStore.user?.friends ?? []; 
+  const friends = authStore.user?.friends ?? [];
   friendIds.value = new Set(friends.map((friend: any) => friend.userId));
-  
+
   // 기존 데이터 로딩 로직 호출
   fetchInitialData(postId);
 });
@@ -104,80 +104,80 @@ onMounted(() => {
 
 // ...(기존의 나머지 script 코드)...
 const getMediaBlobUrl = async (mediaId: string) => {
-  try {
-    const response = await apiClient.get(`/api/Media/${mediaId}`, { responseType: 'blob' });
-    const contentType = response.headers['content-type'];
-    if (!contentType.startsWith('image')) return '';
-    return URL.createObjectURL(response.data);
-  } catch {
-    return '';
-  }
+  try {
+    const response = await apiClient.get(`/api/Media/${mediaId}`, { responseType: 'blob' });
+    const contentType = response.headers['content-type'];
+    if (!contentType.startsWith('image')) return '';
+    return URL.createObjectURL(response.data);
+  } catch {
+    return '';
+  }
 };
 
 const prepareProfileImageMapForUsers = async (users: (UserDto | undefined)[]) => {
-  const userIds = new Set<string>();
-  users.forEach(user => {
-    if (user?.profileThumbnailMediaId) userIds.add(user.userId);
-  });
-  for (const userId of userIds) {
-    if (profileImageMap.value[userId] || !users.find(u => u?.userId === userId)) continue;
-    const user = users.find(u => u?.userId === userId)!;
-    const blobUrl = await getMediaBlobUrl(user.profileThumbnailMediaId!);
-    profileImageMap.value[userId] = blobUrl || '/src/assets/images/default_profile_image.jpg';
-  }
+  const userIds = new Set<string>();
+  users.forEach(user => {
+    if (user?.profileThumbnailMediaId) userIds.add(user.userId);
+  });
+  for (const userId of userIds) {
+    if (profileImageMap.value[userId] || !users.find(u => u?.userId === userId)) continue;
+    const user = users.find(u => u?.userId === userId)!;
+    const blobUrl = await getMediaBlobUrl(user.profileThumbnailMediaId!);
+    profileImageMap.value[userId] = blobUrl || '/src/assets/images/default_profile_image.jpg';
+  }
 };
 
 const fetchInitialData = async (currentPostId: string) => {
-  isLoading.value = true;
-  try {
-    post.value = null;
-    allComments.value = [];
-    displayedComments.value = [];
-    hasMoreComments.value = true;
+  isLoading.value = true;
+  try {
+    post.value = null;
+    allComments.value = [];
+    displayedComments.value = [];
+    hasMoreComments.value = true;
 
-    const postResponse = await apiClient.get<PostResponseDto>(`/api/Post/${currentPostId}`);
-    post.value = postResponse.data;
+    const postResponse = await apiClient.get<PostResponseDto>(`/api/Post/${currentPostId}`);
+    post.value = postResponse.data;
 
-    let lastCommentId: string | null = null;
-    while (true) {
-        const fromParam: string = lastCommentId ? `&from=${lastCommentId}` : '';
+    let lastCommentId: string | null = null;
+    while (true) {
+        const fromParam: string = lastCommentId ? `&from=${lastCommentId}` : '';
         const requestUrl: string = `/api/Comment/${currentPostId}?limit=100${fromParam}`;
         const response: { data: CommentResponseDto[] } = await apiClient.get(requestUrl);
         const newComments: CommentResponseDto[] = response.data;
 
-      if (newComments.length === 0) {
-        break;
-      }
-      
-      allComments.value.push(...newComments);
-      lastCommentId = newComments[newComments.length - 1].id;
+      if (newComments.length === 0) {
+        break;
+      }
 
-      if (newComments.length < 100) {
-        break;
-      }
-    }
+      allComments.value.push(...newComments);
+      lastCommentId = newComments[newComments.length - 1].id;
 
-    if (post.value) {
-      const usersToLoad = new Set<UserDto>();
-      usersToLoad.add(post.value.user);
-      if ((post.value as any).isRepost && (post.value as any).parentPost?.user) {
-        usersToLoad.add((post.value as any).parentPost.user);
-      }
-      allComments.value.forEach(comment => usersToLoad.add(comment.user));
-      await prepareProfileImageMapForUsers(Array.from(usersToLoad));
-    }
-    
+      if (newComments.length < 100) {
+        break;
+      }
+    }
+
+    if (post.value) {
+      const usersToLoad = new Set<UserDto>();
+      usersToLoad.add(post.value.user);
+      if ((post.value as any).isRepost && (post.value as any).parentPost?.user) {
+        usersToLoad.add((post.value as any).parentPost.user);
+      }
+      allComments.value.forEach(comment => usersToLoad.add(comment.user));
+      await prepareProfileImageMapForUsers(Array.from(usersToLoad));
+    }
+
     // fetchInitialData가 끝나면 watch가 알아서 첫 페이지를 로드해줍니다.
 
-  } catch (error) {
-    console.error("초기 데이터 로딩 실패:", error);
-  } finally {
-    isLoading.value = false;
-  }
+  } catch (error) {
+    console.error("초기 데이터 로딩 실패:", error);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const refreshData = async () => {
-    await fetchInitialData(postId);
+    await fetchInitialData(postId);
 }
 
 const handleLikeComment = async (commentId: string) => {
@@ -202,49 +202,49 @@ const handleLikeComment = async (commentId: string) => {
 };
 
 const handleUpdateComment = async ({ commentId, newText }: { commentId: string, newText: string }) => {
-  try {
-    const formData = new FormData();
-    const jsonData = JSON.stringify([{ $type: 'text', Text: newText }]);
-    formData.append('JsonData', jsonData);
-    await apiClient.put(`/api/Comment/${commentId}`, formData);
-    
-    alert('댓글이 수정되었습니다.');
-    await refreshData(); 
-  } catch (error) {
-    console.warn('PUT API 실패, 삭제 후 재등록 방식으로 시도:', error);
-    try {
-      await apiClient.delete(`/api/Comment/${commentId}`);
-      const formData = new FormData();
-      const jsonData = JSON.stringify([{ $type: 'text', Text: newText }]);
-      formData.append('JsonData', jsonData);
-      await apiClient.post(`/api/Comment/${postId}`, formData);
-      
-      alert('댓글이 수정되었습니다.');
-      await refreshData();
-    } catch (secondError) {
-      console.error('삭제 후 재등록 실패:', secondError);
-      alert('댓글 수정에 실패했습니다.');
-    }
-  }
+  try {
+    const formData = new FormData();
+    const jsonData = JSON.stringify([{ $type: 'text', Text: newText }]);
+    formData.append('JsonData', jsonData);
+    await apiClient.put(`/api/Comment/${commentId}`, formData);
+
+    alert('댓글이 수정되었습니다.');
+    await refreshData();
+  } catch (error) {
+    console.warn('PUT API 실패, 삭제 후 재등록 방식으로 시도:', error);
+    try {
+      await apiClient.delete(`/api/Comment/${commentId}`);
+      const formData = new FormData();
+      const jsonData = JSON.stringify([{ $type: 'text', Text: newText }]);
+      formData.append('JsonData', jsonData);
+      await apiClient.post(`/api/Comment/${postId}`, formData);
+
+      alert('댓글이 수정되었습니다.');
+      await refreshData();
+    } catch (secondError) {
+      console.error('삭제 후 재등록 실패:', secondError);
+      alert('댓글 수정에 실패했습니다.');
+    }
+  }
 };
 
 const deleteMyComment = async (commentId: string) => {
-  try {
-    await apiClient.delete(`/api/Comment/${commentId}`);
-    allComments.value = allComments.value.filter(c => c.id !== commentId);
-  } catch (error) {
-    alert('댓글 삭제에 실패했습니다.');
-  }
+  try {
+    await apiClient.delete(`/api/Comment/${commentId}`);
+    allComments.value = allComments.value.filter(c => c.id !== commentId);
+  } catch (error) {
+    alert('댓글 삭제에 실패했습니다.');
+  }
 };
 
 const handleMentionUser = (nickname: string) => {
-  createCommentRef.value?.addMention(nickname);
+  createCommentRef.value?.addMention(nickname);
 };
 
 watch(() => route.params.postId, (newPostId) => {
-  if (newPostId && newPostId !== post.value?.id) {
-    fetchInitialData(newPostId as string);
-  }
+  if (newPostId && newPostId !== post.value?.id) {
+    fetchInitialData(newPostId as string);
+  }
 });
 </script>
 
@@ -258,7 +258,7 @@ watch(() => route.params.postId, (newPostId) => {
         <PostCard :post="post" :show-actions="true" :profile-image-map="profileImageMap" />
       </div>
       <div class="comments-section">
-        
+
         <h3>댓글 ({{ processedComments.length }})</h3>
 
         <div class="comment-controls">
@@ -270,10 +270,10 @@ watch(() => route.params.postId, (newPostId) => {
             <button @click="sortOrder = 'oldest'" :class="{ active: sortOrder === 'oldest' }">오래된순</button>
           </div>
         </div>
-        
-        <CommentItem 
-          v-for="comment in displayedComments" 
-          :key="comment.id" 
+
+        <CommentItem
+          v-for="comment in displayedComments"
+          :key="comment.id"
           :comment="comment"
           :profile-image-url="profileImageMap[comment.user.userId] || '/src/assets/images/default_profile_image.jpg'"
           @mention-user="handleMentionUser"
@@ -299,8 +299,8 @@ watch(() => route.params.postId, (newPostId) => {
   margin: 40px auto;
   padding: 0 24px;
 }
-.post-section { 
-  margin-bottom: 24px; 
+.post-section {
+  margin-bottom: 24px;
 }
 .comments-section {
   background: white;
@@ -313,9 +313,9 @@ watch(() => route.params.postId, (newPostId) => {
   font-size: 1.1rem;
   font-weight: 600;
 }
-.loading-indicator { 
-  text-align: center; 
-  padding: 40px; 
+.loading-indicator {
+  text-align: center;
+  padding: 40px;
 }
 
 .spinner { /* 스피너 스타일 */ }
