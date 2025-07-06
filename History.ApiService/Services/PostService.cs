@@ -556,6 +556,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             if (hashtag.Length > 20) return (ErrorType.BadRequest, "해시태그는 최대 20자까지 입력할 수 있습니다.");
         }
 
+        var post = postResult.Value;
+
+        // Check if the user is the author of the post
+        if (post.UserId != userId) return (ErrorType.Forbidden, "게시글을 수정할 수 있는 권한이 없습니다.");
+
         // Validate media contents
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
         if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
@@ -576,10 +581,6 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                     return (ErrorType.BadRequest, "미디어 콘텐츠의 ThumbnailMediaId가 원본과 다릅니다.");
             }
         }
-
-        var post = postResult.Value;
-        // Check if the user is the author of the post
-        if (post.UserId != userId) return (ErrorType.Forbidden, "게시글을 수정할 수 있는 권한이 없습니다.");
 
         // Delete Media
         var originalPostMediaIds = originalPostMediaContents.Select(s => s.MediaId).ToList();
