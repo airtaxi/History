@@ -118,7 +118,6 @@ public partial class SearchPostsPage : ContentPage
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    private bool _isFirstLoad = true;
     protected override void OnAppearing()
     {
         base.OnAppearing();
