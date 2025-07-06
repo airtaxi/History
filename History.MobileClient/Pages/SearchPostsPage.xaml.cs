@@ -1,4 +1,8 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Maui.Behaviors;
+using CommunityToolkit.Maui.Core.Platform;
+using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
+using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
@@ -8,12 +12,12 @@ using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using UraniumUI.Icons.FontAwesome;
 
 namespace History.MobileClient.Pages;
 
-public partial class TimelinePage : ContentPage
+public partial class SearchPostsPage : ContentPage
 {
-    public static bool ShouldRefresh { get; set; }
 
     private bool _isInForeground;
     private bool _areThereNoMorePostsToLoad;
@@ -24,9 +28,11 @@ public partial class TimelinePage : ContentPage
     private readonly ObservableCollection<PostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
-    public TimelinePage()
-	{
-		InitializeComponent();
+    private string _query;
+
+    public SearchPostsPage()
+    {
+        InitializeComponent();
         MainCollectionView.ItemsSource = _viewModels;
 #if IOS
         MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
@@ -36,6 +42,7 @@ public partial class TimelinePage : ContentPage
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
+
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {
         var viewModels = _viewModels.Where(x => x.Post.Id == message.Value.Id).ToList(); // ToList is needed (Collection will be modified)
@@ -43,9 +50,10 @@ public partial class TimelinePage : ContentPage
         _lastViewModel = _viewModels.LastOrDefault();
     }
 
-    public async Task RefreshAsync()
+    public async Task SearchAsync()
     {
-        if (_fetchSemaphore.CurrentCount == 0) return;
+        if (string.IsNullOrWhiteSpace(_query)) return;
+        else if (_fetchSemaphore.CurrentCount == 0) return;
 
         try
         {
@@ -63,13 +71,15 @@ public partial class TimelinePage : ContentPage
 
             _viewModels.Clear();
 
-            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts());
+            var postsResult = await App.ExecuteRequestAsync(new SearchPosts(_query));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
                 var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, PostType.Timeline));
                 _lastViewModel = viewModels.LastOrDefault();
+
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
+                EmptyLabel.IsVisible = !_viewModels.Any();
             }
         }
         finally { _fetchSemaphore.Release(); }
@@ -89,7 +99,7 @@ public partial class TimelinePage : ContentPage
             if (lastViewModel == null) return;
 
             var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
-            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts (lastPostId));
+            var postsResult = await App.ExecuteRequestAsync(new SearchPosts(_query, lastPostId));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
@@ -104,22 +114,13 @@ public partial class TimelinePage : ContentPage
 
     private async void OnRefreshing(object sender, EventArgs e)
     {
-        await RefreshAsync();
+        await SearchAsync();
         (sender as RefreshView).IsRefreshing = false;
     }
 
-    private bool _isFirstLoad = true;
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        _isInForeground = true;
-
-        if (_isFirstLoad || ShouldRefresh)
-        {
-            _isFirstLoad = false;
-            ShouldRefresh = false;
-            Dispatcher.Dispatch(async () => await RefreshAsync());
-        }
 
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
         if (safeAreaTopHeight != 0)
@@ -140,7 +141,7 @@ public partial class TimelinePage : ContentPage
     {
         base.OnNavigatedTo(args);
 
-        Debug.WriteLine($"[TL] Scroll Recovery: {_lastScrollOffsetY}");
+        Debug.WriteLine($"[SP] Scroll Recovery: {_lastScrollOffsetY}");
         MainCollectionView.SetScrollOffsetY(_lastScrollOffsetY, false);
     }
 
@@ -149,7 +150,7 @@ public partial class TimelinePage : ContentPage
         base.OnNavigatingFrom(args);
 
         _lastScrollOffsetY = MainCollectionView.GetScrollOffsetY();
-        Debug.WriteLine($"[TL] _lastScrollOffsetY: {_lastScrollOffsetY}");
+        Debug.WriteLine($"[SP] _lastScrollOffsetY: {_lastScrollOffsetY}");
     }
 
 #endif
@@ -157,7 +158,7 @@ public partial class TimelinePage : ContentPage
     {
         var isLoading = message.Value;
         if (!_isInForeground && message.Value) return;
-         
+
         Dispatcher.Dispatch(() =>
         {
             MainActivityIndicator.IsRunning = isLoading;
@@ -184,7 +185,7 @@ public partial class TimelinePage : ContentPage
     {
         var view = e.Element as View;
         var viewModel = view.BindingContext as PostViewModel;
-        Debug.WriteLine($"[TL] Child Added {viewModel.Post.Id == _lastViewModel?.Post.Id}");
+        Debug.WriteLine($"[SP] Child Added {viewModel.Post.Id == _lastViewModel?.Post.Id}");
 
         if (viewModel.Post.Id == _lastViewModel?.Post.Id)
         {
@@ -199,10 +200,6 @@ public partial class TimelinePage : ContentPage
     // Not used on Android, but required for compatibility
     private void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e) { }
 #endif
-
-    private async void OnTitleGridTapped(object sender, TappedEventArgs e) => await RefreshAsync();
-
-    private async void OnWritePostBorderTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
 
     private void OnMainCollectionViewScrolled(object sender, ItemsViewScrolledEventArgs e)
     {
@@ -221,9 +218,23 @@ public partial class TimelinePage : ContentPage
         MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
     }
 
-    private async void OnSearchPostImageTapped(object sender, TappedEventArgs e)
+    private async void OnSearchButtonPressed(object sender, EventArgs e)
     {
-        var page = new SearchPostsPage();
-        await App.PushAsync(page);
+        await MainSearchBar.HideSoftInputAsync(CancellationToken.None);
+
+        var searchBar = sender as SearchBar;
+        var query = searchBar.Text;
+        _query = query?.Trim();
+
+        await SearchAsync();
+    }
+
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+#if IOS
+        AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
     }
 }

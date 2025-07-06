@@ -1,11 +1,13 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
-    x:Class="History.MobileClient.Pages.TimelinePage"
+    x:Class="History.MobileClient.Pages.SearchPostsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Loaded="OnLoaded"
     Shell.NavBarIsVisible="False"
     SizeChanged="OnSizeChanged">
     <ContentPage.Behaviors>
@@ -20,40 +22,44 @@
 
         <Grid
             Grid.Row="0"
-            Padding="0,0,12,0"
+            Padding="12,0,0,0"
             BackgroundColor="{StaticResource Primary}"
             HeightRequest="48">
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnTitleGridTapped" />
-            </Grid.GestureRecognizers>
-            <Image
-                HeightRequest="48"
-                HorizontalOptions="Start"
-                Source="icon_nobg_white.png"
-                WidthRequest="48" />
-
-            <HorizontalStackLayout HorizontalOptions="End">
-                <Image
-                    HeightRequest="32"
-                    VerticalOptions="Center"
-                    WidthRequest="32">
+            <HorizontalStackLayout>
+                <Image HeightRequest="24" WidthRequest="24">
                     <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnSearchPostImageTapped" />
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
                     </Image.GestureRecognizers>
                     <Image.Source>
-                        <FontImageSource
-                            FontFamily="MaterialSharp"
-                            Glyph="{x:Static m:MaterialSharp.Search}"
-                            Color="White" />
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
                     </Image.Source>
                 </Image>
+                <Label
+                    x:Name="TitleLabel"
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="게시글 검색"
+                    TextColor="White"
+                    VerticalOptions="Center" />
             </HorizontalStackLayout>
         </Grid>
 
-        <Grid Grid.Row="1">
-            <RefreshView Refreshing="OnRefreshing">
+        <RefreshView Grid.Row="1" Refreshing="OnRefreshing">
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <SearchBar
+                    x:Name="MainSearchBar"
+                    Grid.Row="0"
+                    Placeholder="게시글 내용 또는 #해시태그 검색"
+                    SearchButtonPressed="OnSearchButtonPressed" />
+
                 <CollectionView
                     x:Name="MainCollectionView"
+                    Grid.Row="1"
                     ChildAdded="OnChildAdded"
                     ItemTemplate="{StaticResource TimelineTemplateSelector}"
                     ItemsUpdatingScrollMode="KeepItemsInView"
@@ -65,41 +71,16 @@
                         <staggered:StaggeredItemsLayout Span="0" />
                     </CollectionView.ItemsLayout>
                 </CollectionView>
-            </RefreshView>
-        </Grid>
-
-        <Border
-            Grid.Row="1"
-            Margin="12"
-            Background="{StaticResource Primary}"
-            HeightRequest="60"
-            HorizontalOptions="End"
-            StrokeThickness="0"
-            VerticalOptions="End"
-            WidthRequest="60">
-            <Border.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnWritePostBorderTapped" />
-            </Border.GestureRecognizers>
-            <Border.Shadow>
-                <Shadow
-                    Brush="Black"
-                    Opacity="1"
-                    Radius="6"
-                    Offset="1,2" />
-            </Border.Shadow>
-            <Border.StrokeShape>
-                <RoundRectangle CornerRadius="30" />
-            </Border.StrokeShape>
-            <Image HeightRequest="44" WidthRequest="44">
-                <Image.Source>
-                    <FontImageSource
-                        FontFamily="MaterialSharp"
-                        Glyph="{x:Static m:MaterialSharp.Edit_note}"
-                        Size="80"
-                        Color="White" />
-                </Image.Source>
-            </Image>
-        </Border>
+                <Label
+                    x:Name="EmptyLabel"
+                    Grid.Row="1"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    HorizontalOptions="Center"
+                    Text="비어있음"
+                    VerticalOptions="Center" />
+            </Grid>
+        </RefreshView>
 
         <Border
             x:Name="ScrollToTopBorder"
