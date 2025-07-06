@@ -128,6 +128,9 @@
 		<MauiXaml Update="Pages\AddFriendsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Pages\SearchPostsPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Pages\IgnoredFriendsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
@@ -256,5 +259,11 @@
 		<PackageReference Include="UraniumUI.Material" Version="2.12.1" />
 		<PackageReference Include="Xamarin.Build.Download" Version="0.11.4" />
 		<PackageReference Include="Xamarin.MediaGallery" Version="3.0.0-preview" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Pages\SearchPostsPage.xaml.cs">
+	    <DependentUpon>SearchPostsPage.xaml</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 </Project>
