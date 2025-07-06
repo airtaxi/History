@@ -1,6 +1,6 @@
 <script lang="ts">
   export default {
-    name: 'TimelineView' 
+    name: 'TimelineView'
   }
 </script>
 <script setup lang="ts">
@@ -15,10 +15,10 @@ import PostDetailModal from '@/components/PostDetailModal.vue';
 
 // --- 상태 관리 ---
 const posts = ref<PostResponseDto[]>([]);
-const isLoading = ref(true); 
-const isLoadingMore = ref(false); 
-const noMorePosts = ref(false); 
-const loadMoreSentinel = ref<HTMLElement | null>(null); 
+const isLoading = ref(true);
+const isLoadingMore = ref(false);
+const noMorePosts = ref(false);
+const loadMoreSentinel = ref<HTMLElement | null>(null);
 const profileImageMap = ref<Record<string, string>>({});
 const isDetailModalOpen = ref(false);
 const selectedPostId = ref('');
@@ -80,11 +80,11 @@ const getMediaBlobUrl = async (mediaId: string) => {
 const prepareProfileImageMap = async (postList: PostResponseDto[]) => {
   const map: Record<string, string> = {};
   const userIds = new Set<string>();
-  
+
   // 게시글 작성자들의 ID 수집
   postList.forEach(p => {
     userIds.add(p.user.userId);
-    
+
     // 리포스트인 경우 원본 게시글 작성자도 추가
     if ((p as any).isRepost && (p as any).parentPost?.user) {
       userIds.add((p as any).parentPost.user.userId);
@@ -95,10 +95,10 @@ const prepareProfileImageMap = async (postList: PostResponseDto[]) => {
   for (const uid of userIds) {
     // 이미 처리된 사용자는 건너뛰기
     if (profileImageMap.value[uid]) continue;
-    
+
     // 일반 게시글에서 사용자 찾기
     let user = postList.find(p => p.user.userId === uid)?.user;
-    
+
     // 리포스트 원본에서 사용자 찾기
     if (!user) {
       for (const post of postList) {
@@ -108,7 +108,7 @@ const prepareProfileImageMap = async (postList: PostResponseDto[]) => {
         }
       }
     }
-    
+
     if (user?.profileThumbnailMediaId) {
       const blobUrl = await getMediaBlobUrl(user.profileThumbnailMediaId);
       map[uid] = blobUrl || '/src/assets/images/default_profile_image.jpg';
@@ -151,7 +151,7 @@ const fetchTimeline = async () => {
       fromId = data[data.length - 1]?.id;
     }
 
-  
+
     // 정확히 10개만 남기기
     if (posts.value.length > 10) {
       posts.value = posts.value.slice(0, 10);
@@ -245,11 +245,11 @@ const handlePostCreated = async () => {
     <main class="main-content">
       <div class="feed-column">
         <CreatePost @post-created="handlePostCreated" />
-        
+
         <div v-if="isLoading" class="loading-indicator">
           <div class="spinner"></div>
         </div>
-        
+
         <div v-else class="post-list">
           <PostCard v-for="post in posts" :key="post.id" :post="post" :profile-image-map="profileImageMap" @open-detail="openModalWithPost" />
         </div>
@@ -315,22 +315,22 @@ const handlePostCreated = async () => {
   .timeline-layout {
     background-color: white;
   }
-  
-  .main-content { 
+
+  .main-content {
     padding: 0;
     margin-top: 0;
     gap: 0;
   }
-  
+
   .feed-column {
     max-width: 100%;
     gap: 8px;
   }
-  
+
   .post-list {
     gap: 8px;
   }
-  
+
   /* 모바일에서 CreatePost 컴포넌트 최적화 */
   .feed-column :deep(.create-post-container) {
     border-radius: 0;
@@ -338,18 +338,18 @@ const handlePostCreated = async () => {
     border-right: none;
     margin-bottom: 8px;
   }
-  
+
   /* 모바일에서 PostCard 최적화 */
   .feed-column :deep(.post-card) {
     border-radius: 0;
     border-left: none;
     border-right: none;
   }
-  
+
   .loading-indicator {
     padding: 20px;
   }
-  
+
   .spinner {
     width: 30px;
     height: 30px;
@@ -363,7 +363,7 @@ const handlePostCreated = async () => {
     gap: 20px;
     padding: 0 20px;
   }
-  
+
   .feed-column {
     max-width: 580px;
   }
@@ -371,12 +371,12 @@ const handlePostCreated = async () => {
 
 /* RightSidebar 숨기기 */
 @media (max-width: 960px) {
-  .main-content :deep(.sidebar-column) { 
-    display: none; 
+  .main-content :deep(.sidebar-column) {
+    display: none;
   }
-  
-  .main-content { 
-    justify-content: center; 
+
+  .main-content {
+    justify-content: center;
   }
 }
 
@@ -386,7 +386,7 @@ const handlePostCreated = async () => {
     max-width: 1200px;
     gap: 32px;
   }
-  
+
   .feed-column {
     max-width: 680px;
   }
@@ -399,7 +399,7 @@ const handlePostCreated = async () => {
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   /* 스크롤 성능 최적화 */
   .post-list {
     -webkit-overflow-scrolling: touch;
