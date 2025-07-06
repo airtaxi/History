@@ -14,6 +14,6 @@ public class SearchPosts : IBaseRequest<List<PostResponseDto>>, IOptionalAuthReq
     {
         QueryParameters["keyword"] = keyword;
         QueryParameters["limit"] = limit.ToString();
-        if (fromPostId != null) QueryParameters["fromPostId"] = fromPostId;
+        if (fromPostId != null) QueryParameters["from"] = fromPostId;
     }
 }
