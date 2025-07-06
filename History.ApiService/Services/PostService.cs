@@ -807,6 +807,19 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         {
             var requesterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
             filter &= Builders<Post>.Filter.Nin(p => p.UserId, requesterBannedFriendIdsResult.Value);
+
+            var friendIdsResult = await friendshipService.GetFriendIdsAsync(requesterId);
+            var friendsOfFriendIdsResult = await friendshipService.GetFriendsOfFriendIdsAsync(requesterId);
+
+            var friendIds = friendIdsResult.Value;
+            var friendsOfFriendIds = friendsOfFriendIdsResult.Value;
+
+            filter &= Builders<Post>.Filter.Or(
+                Builders<Post>.Filter.Eq(p => p.UserId, requesterId),
+                Builders<Post>.Filter.And(Builders<Post>.Filter.In(p => p.UserId, friendIds), Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Friends)),
+                Builders<Post>.Filter.And(Builders<Post>.Filter.In(p => p.UserId, friendsOfFriendIds), Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends)),
+                Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone)
+            );
         }
 
         // For reservation posts.
@@ -935,13 +948,12 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     public async Task<Result> CheckCommentAccessAsync(Post post, string requesterId)
     {
         var userService = serviceProvider.GetRequiredService<IUserService>();
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
         var requesterResult = await userService.GetUserByIdAsync(requesterId);
         if (requesterResult.IsFailure) return requesterResult.CastFailure();
 
         if (requesterResult.Value.Rank >= Rank.Moderator) return Result.Success(); // Moderators can access all posts
-
-        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
-
 
         var postAuthorId = post.UserId;
         if (postAuthorId == requesterId) return Result.Success();
