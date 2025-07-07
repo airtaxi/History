@@ -115,6 +115,7 @@ public partial class SearchPostsPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        _isInForeground = true;
 
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
         if (safeAreaTopHeight != 0)
