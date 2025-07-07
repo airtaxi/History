@@ -58,18 +58,6 @@ const router = createRouter({
       component: () => import('@/views/SettingsView.vue'),
       meta: { requiresAuth: true },
     },
-    {
-      path: '/terms',
-      name: 'TermsView',
-      component: () => import('@/views/TermsView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/privacy',
-      name: 'PrivacyView',
-      component: () => import('@/views/PrivacyView.vue'),
-      meta: { requiresAuth: true },
-    },
   ]
 })
 
