@@ -49,7 +49,7 @@ public class UserResponseDto()
         LastUsedPostDiscoveryOption = user.LastUsedPostDiscoveryOption;
 
         Nickname = user.Nickname;
-        //Birthday = user.Birthday;
+        Birthday = user.Birthday;
         Description = user.Description;
 
         ProfileMediaId = user.ProfileMediaId;
