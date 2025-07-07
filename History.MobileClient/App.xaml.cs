@@ -18,7 +18,6 @@ using Plugin.Firebase.CloudMessaging;
 using ShimSkiaSharp;
 using Syncfusion.Maui.Toolkit.Localization;
 using Syncfusion.Maui.Toolkit.Picker;
-using Syncfusion.Maui.Toolkit.Themes;
 
 namespace History.MobileClient;
 
@@ -249,13 +248,23 @@ public partial class App : Application
         ICollection<ResourceDictionary> mergedDictionaries = Current.Resources.MergedDictionaries;
         if (mergedDictionaries != null)
         {
-            var theme = mergedDictionaries.OfType<SyncfusionThemeResourceDictionary>().FirstOrDefault();
-            if (theme != null)
+            var toolkitTheme = mergedDictionaries.OfType<Syncfusion.Maui.Toolkit.Themes.SyncfusionThemeResourceDictionary>().FirstOrDefault();
+            var coreTheme = mergedDictionaries.OfType<Syncfusion.Maui.Themes.SyncfusionThemeResourceDictionary>().FirstOrDefault();
+            if (toolkitTheme != null)
             {
                 var appTheme = Utils.GetGlobalAppTheme();
-                if (appTheme == AppTheme.Light) theme.VisualTheme = SfVisuals.MaterialLight;
-                else theme.VisualTheme = SfVisuals.MaterialDark;
-                SfPickerResources.ResourceManager = new ResourceManager("History.MobileClient.Resources.SfDateTimePicker", Application.Current.GetType().Assembly);
+                if (appTheme == AppTheme.Light)
+                {
+                    coreTheme.VisualTheme = Syncfusion.Maui.Themes.SfVisuals.MaterialLight;
+                    toolkitTheme.VisualTheme = Syncfusion.Maui.Toolkit.Themes.SfVisuals.MaterialLight;
+                }
+                else
+                {
+                    coreTheme.VisualTheme = Syncfusion.Maui.Themes.SfVisuals.MaterialDark;
+                    toolkitTheme.VisualTheme = Syncfusion.Maui.Toolkit.Themes.SfVisuals.MaterialDark;
+                }
+
+                SfPickerResources.ResourceManager = new ResourceManager("History.MobileClient.Resources.SfDateTimePicker", Current.GetType().Assembly);
             }
         }
     }
