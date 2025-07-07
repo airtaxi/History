@@ -35,6 +35,8 @@ public class UserResponseDto()
     public AccessPermission PostReactionPushNotificationPermission { get; set; }
     public AccessPermission PostMentionPushNotificationPermission { get; set; }
 
+    public bool AllowSearch { get; set; }
+
     public Friendship Friendship { get; set; }
 
     public UserResponseDto(User user) : this()
@@ -68,5 +70,7 @@ public class UserResponseDto()
         SharedPostCommentPushNotificationPermission = user.SharedPostCommentPushNotificationPermission;
         PostReactionPushNotificationPermission = user.PostReactionPushNotificationPermission;
         PostMentionPushNotificationPermission = user.PostMentionPushNotificationPermission;
+
+        AllowSearch = user.AllowSearch;
     }
 }
