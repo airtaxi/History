@@ -1,4 +1,6 @@
-﻿namespace History.MobileClient.Pages;
+﻿using History.MobileClient.Helpers;
+
+namespace History.MobileClient.Pages;
 
 public partial class InAppBrowserPage : ContentPage
 {
