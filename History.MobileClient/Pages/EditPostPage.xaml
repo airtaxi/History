@@ -140,7 +140,31 @@
                                             Aspect="AspectFill"
                                             DownsampleToViewSize="True"
                                             Source="{x:Binding ImageSource,
-                                                               Mode=OneTime}" />
+                                                               Mode=OneWay}" />
+                                        <Grid Grid.Row="0" IsVisible="{x:Binding IsEditImageVisible}">
+                                            <Grid.GestureRecognizers>
+                                                <TapGestureRecognizer Tapped="OnEditAttachmentGridTapped" />
+                                            </Grid.GestureRecognizers>
+                                            <Rectangle
+                                                Fill="Black"
+                                                HorizontalOptions="Fill"
+                                                IsVisible="{x:Binding IsEditImageVisible}"
+                                                Opacity="0.5"
+                                                VerticalOptions="Fill" />
+                                            <Image
+                                                HeightRequest="32"
+                                                HorizontalOptions="Center"
+                                                IsVisible="{x:Binding IsEditImageVisible}"
+                                                VerticalOptions="Center"
+                                                WidthRequest="32">
+                                                <Image.Source>
+                                                    <FontImageSource
+                                                        FontFamily="MaterialSharp"
+                                                        Glyph="{x:Static m:MaterialSharp.Edit}"
+                                                        Color="White" />
+                                                </Image.Source>
+                                            </Image>
+                                        </Grid>
                                         <Rectangle
                                             Grid.Row="0"
                                             Fill="#808080"
