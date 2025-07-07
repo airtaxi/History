@@ -3,12 +3,7 @@ server {
     listen [::]:80;
 
     access_log  /var/log/nginx/server.access.log  main;
-    location /assets {
-        root /usr/share/nginx/html;
-        try_files $uri =404; # 해당 파일이 없으면 404 에러를 반환
-    }
 
-    # 나머지 모든 요청을 위한 기존 규칙
     location / {
         root /usr/share/nginx/html;
         try_files $uri $uri/ /index.html;
