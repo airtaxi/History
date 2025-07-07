@@ -2,12 +2,9 @@ import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL
-  // 기본 Content-Type 헤더를 삭제합니다.
-  // axios가 데이터에 맞춰 자동으로 올바른 헤더를 설정해줍니다.
+  baseURL: import.meta.env.VITE_API_BASE_URL,
 });
 
-// 모든 API 요청이 보내지기 전에 로그인 토큰을 헤더에 추가하는 로직 (이전과 동일)
 apiClient.interceptors.request.use(config => {
   const authStore = useAuthStore();
   if (authStore.accessToken) {
@@ -17,5 +14,23 @@ apiClient.interceptors.request.use(config => {
 }, error => {
   return Promise.reject(error);
 });
+
+apiClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      const authStore = useAuthStore();
+      
+      console.error('인증 에러! 자동 로그아웃됩니다.');
+
+      authStore.logout(); 
+      window.location.href = '/login';
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export default apiClient;

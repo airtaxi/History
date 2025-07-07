@@ -597,7 +597,8 @@ onMounted(fetchSettingsData)
           <div class="card-header">
             <h2>📚 정보 및 지원</h2>
           </div>
-          <RouterLink to="/terms" class="setting-link">
+          
+          <a href="/terms.html" target="_blank" class="setting-link">
             <div class="setting-item">
               <div class="setting-info">
                 <label class="setting-label">이용약관</label>
@@ -605,8 +606,9 @@ onMounted(fetchSettingsData)
               </div>
               <span class="arrow-icon">→</span>
             </div>
-          </RouterLink>
-          <RouterLink to="/privacy" class="setting-link">
+          </a>
+          
+          <a href="/privacypolicy.html" target="_blank" class="setting-link">
             <div class="setting-item">
               <div class="setting-info">
                 <label class="setting-label">개인정보처리방침</label>
@@ -614,7 +616,7 @@ onMounted(fetchSettingsData)
               </div>
               <span class="arrow-icon">→</span>
             </div>
-          </RouterLink>
+          </a>
         </div>
       </div>
     </main>
