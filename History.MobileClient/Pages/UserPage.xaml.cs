@@ -313,6 +313,7 @@ public partial class UserPage : ContentPage
         {
             LayoutFontImageSource.Glyph = MaterialSharp.Dataset;
 
+            MainCollectionView.ItemSizingStrategy = ItemSizingStrategy.MeasureAllItems;
             MainCollectionView.ItemTemplate = App.Current.Resources["TimelineTemplateSelector"] as DataTemplateSelector;
 #if IOS
             MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
@@ -326,6 +327,7 @@ public partial class UserPage : ContentPage
         {
             LayoutFontImageSource.Glyph = MaterialSharp.Lists;
 
+            MainCollectionView.ItemSizingStrategy = ItemSizingStrategy.MeasureFirstItem;
             MainCollectionView.ItemTemplate = App.Current.Resources["PostPreviewTemplate"] as DataTemplate;
             MainCollectionView.ItemsLayout = new GridItemsLayout(ItemsLayoutOrientation.Vertical)
             {
