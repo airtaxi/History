@@ -1,27 +1,24 @@
-﻿namespace History.MobileClient.ContentViews;
+﻿
+namespace History.MobileClient.ContentViews;
 
 public class SquareView : ContentView
 {
     public SquareView()
     {
         Loaded += OnLoaded;
-        SizeChanged += OnSizeChanged;
     }
 
-    private void OnLoaded(object sender, EventArgs e)
-    {
-        if (Width > 0)
-        {
-            HeightRequest = Width;
-        }
-    }
+    private void OnLoaded(object sender, EventArgs e) => Resize();
 
-    private void OnSizeChanged(object sender, EventArgs e)
+    private void Resize()
     {
-        if (Width > 0)
-        {
-            HeightRequest = Width;
-        }
+        var carouselView = FindCollectionView(this);
+        if (carouselView == null) return;
+
+        var layout = carouselView.ItemsLayout as GridItemsLayout;
+        if (layout == null) return;
+
+        HeightRequest = carouselView.Width / layout.Span;
     }
 
     protected override void OnSizeAllocated(double width, double height)
@@ -31,5 +28,14 @@ public class SquareView : ContentView
         {
             HeightRequest = width;
         }
+        else Resize();
+    }
+
+    private static CollectionView FindCollectionView(View view)
+    {
+        var parent = view.Parent;
+        while (parent != null && parent is not CollectionView) parent = parent.Parent;
+
+        return parent as CollectionView;
     }
 }
