@@ -331,9 +331,7 @@ public partial class UserPage : ContentPage
             MainCollectionView.ItemTemplate = App.Current.Resources["PostPreviewTemplate"] as DataTemplate;
             MainCollectionView.ItemsLayout = new GridItemsLayout(ItemsLayoutOrientation.Vertical)
             {
-                Span = 4,
-                HorizontalItemSpacing = 1,
-                VerticalItemSpacing = 1
+                Span = 4
             };
 
             MainCollectionView.Margin = 6;
