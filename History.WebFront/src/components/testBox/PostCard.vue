@@ -129,7 +129,7 @@ onMounted(async () => {
     v-if="post.isRepost"
     :post="post"
     :profileBlobUrlMap="profileBlobUrlMap"
-    :mediaUrlMap="mediaUrlMap" 
+    :mediaUrlMap="mediaUrlMap"
     @navigate-to-original="goToOriginalPost"
   />
 
@@ -211,4 +211,12 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.post-card {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  padding: 16px;
+  cursor: pointer;
+  transition: background-color .2s;
+}
 </style>
