@@ -54,6 +54,21 @@
             </HorizontalStackLayout>
             <HorizontalStackLayout HorizontalOptions="End" Spacing="16">
                 <Image
+                    HeightRequest="32"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnLayoutImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            x:Name="LayoutFontImageSource"
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Dataset}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image
                     x:Name="MemoImage"
                     HeightRequest="32"
                     VerticalOptions="Center"
@@ -131,7 +146,11 @@
                         <views:DataTemplatePresenter x:Name="ProfileDataTemplatePresenter" Template="{StaticResource ProfileTemplate}" />
                     </CollectionView.Header>
                     <CollectionView.ItemsLayout>
-                        <staggered:StaggeredItemsLayout Span="10000" />
+                        <GridItemsLayout
+                            HorizontalItemSpacing="1"
+                            Orientation="Vertical"
+                            Span="4"
+                            VerticalItemSpacing="1" />
                     </CollectionView.ItemsLayout>
                 </CollectionView>
             </RefreshView>

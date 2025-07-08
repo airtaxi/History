@@ -8,6 +8,7 @@ using History.Commons.Api.Moderation;
 using History.Commons.Api.Post;
 using History.Commons.Api.Report;
 using History.Commons.Api.User;
+using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
@@ -51,6 +52,10 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(TimestampText))]
     [NotifyPropertyChangedFor(nameof(Hashtags))]
     [NotifyPropertyChangedFor(nameof(IsHashtagVisible))]
+    [NotifyPropertyChangedFor(nameof(PreviewText))]
+    [NotifyPropertyChangedFor(nameof(PreviewThumbnail))]
+    [NotifyPropertyChangedFor(nameof(PreviewThumbnailVisible))]
+    [NotifyPropertyChangedFor(nameof(PreviewTimestamp))]
     public partial PostResponseDto Post { get; private set; }
 
     [ObservableProperty]
@@ -131,6 +136,25 @@ public partial class PostViewModel : ObservableObject
 
     public List<string> Hashtags => Post.Hashtags;
     public bool IsHashtagVisible => Hashtags != null && Hashtags.Count > 0;
+
+    public string PreviewText => Utils.GenerateTextPreviewFromContents(Post.Contents);
+    public string PreviewTimestamp => Post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd");
+    public bool PreviewThumbnailVisible => Post.Contents.OfType<MediaContent>().Any();
+    public ImageViewModel PreviewThumbnail
+    {
+        get
+        {
+            var url = Utils.GenerateThumbnailUrlFromContents(Post.Contents);
+            if (url == null) return null;
+
+            return new ImageViewModel(url)
+            {
+                Aspect = Aspect.Fill,
+                HorizontalContentOptions = LayoutOptions.Fill,
+                VerticalContentOptions = LayoutOptions.Fill
+            };
+        }
+    }
 
     public PostViewModel(PostResponseDto post, PostType postType, bool isParentPost = false)
     {

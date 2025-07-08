@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Maui.Alerts;
 using History.Commons;
@@ -157,6 +158,29 @@ public static partial class Utils
         if (modifiedAt != null) result += $" (수정됨)";
 
         return result;
+    }
+
+    public static string GenerateTextPreviewFromContents(IEnumerable<BaseContent> contents)
+    {
+        var textAndProfileContents = contents.Where(x => x is TextContent || x is ProfileContent);
+
+        var builder = new StringBuilder();
+        foreach (var content in textAndProfileContents)
+        {
+            if (content is TextContent textContent) builder.Append(textContent.Text);
+            else if (content is ProfileContent profileContent) builder.Append(profileContent.Nickname);
+        }
+
+        return builder.ToString();
+    }
+
+    public static string GenerateThumbnailUrlFromContents(IEnumerable<BaseContent> contents)
+    {
+        string imageUrl = null;
+        var mediaId = contents.OfType<MediaContent>().Select(x => x.ThumbnailMediaId).FirstOrDefault();
+        if (mediaId != null) imageUrl = GenerateMediaUri(mediaId);
+
+        return imageUrl;
     }
 
     public static FormattedString GenerateSpanFromTextAndProfileContents(List<BaseContent> contents, PostType postType, bool hasMedias)
