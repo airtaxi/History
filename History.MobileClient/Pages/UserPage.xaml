@@ -137,7 +137,7 @@
                 <CollectionView
                     x:Name="MainCollectionView"
                     ChildAdded="OnMainCollectionViewChildAdded"
-                    ItemTemplate="{StaticResource TimelineTemplateSelector}"
+                    ItemTemplate="{StaticResource PostPreviewTemplate}"
                     RemainingItemsThreshold="0"
                     RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
                     Scrolled="OnMainCollectionViewScrolled"
