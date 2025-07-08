@@ -5,7 +5,8 @@
  * 작성자 정보(아바타, 닉네임), 작성 시간, 그리고 게시물 관리(수정/삭제/신고)를 위한 "더보기" 메뉴를 표시합니다.
  *
  * @props {
- *   user: { avatar: string; nickname: string; } - 게시물 작성자 정보.
+ *   user: { userId: string; nickname: string; } - 게시물 작성자 정보.
+ *   profileImageUrl: string - 프로필 이미지의 Blob URL 또는 기본 이미지 경로.
  *   createdAt: string - 게시물 작성 시간 (ISO 8601 형식의 문자열).
  *   canEdit: boolean - 현재 사용자가 게시물을 수정/삭제할 권한이 있는지 여부.
  * }
@@ -19,7 +20,7 @@
   <div class="post-header">
     <!-- Author info (avatar, nickname) -->
     <div class="author-info">
-      <img :src="user.avatar" alt="User Avatar" class="avatar" />
+      <img :src="profileImageUrl" alt="User Avatar" class="avatar" />
       <span class="nickname">{{ user.nickname }}</span>
     </div>
     <!-- Created time -->
@@ -40,13 +41,17 @@
 import { ref } from 'vue';
 
 interface User {
-  avatar: string;
+  userId: string;
   nickname: string;
 }
 
 const props = defineProps({
   user: {
     type: Object as () => User,
+    required: true,
+  },
+  profileImageUrl: {
+    type: String,
     required: true,
   },
   createdAt: {
