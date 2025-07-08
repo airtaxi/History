@@ -12,7 +12,7 @@
  * @property {Ref<boolean>} showReactionPopup - 반응 선택 팝업 표시 여부.
  * @property {Ref<{ top: string, left: string }>} reactionPopupPosition - 반응 선택 팝업의 위치.
  * @property {Ref<string | null>} hoveredReaction - 현재 마우스 오버된 반응 (툴팁용).
- * @property {Ref<{ top: string, left: string }>} tooltipPosition - 반응 툴팁의 위치.
+ * @property {Ref<{ top: string, string }>} tooltipPosition - 반응 툴팁의 위치.
  * @property {Function} loadReactionData - 서버에서 반응 데이터를 로드하는 함수.
  * @property {Function} postReaction - 반응을 추가/변경/삭제하는 함수 (Optimistic Update 적용).
  * @property {Function} handleReactionClick - 반응 버튼 클릭 핸들러 (롱 프레스와 연동).
@@ -48,17 +48,39 @@ export function useReactions(post: PostResponseDto) {
    */
   const loadReactionData = async () => {
     try {
-      const response = await apiClient.get(`/api/Post/${post.id}/reactions`);
-      const data = response.data;
+      const response = await apiClient.get(`/api/Post/${post.id}`);
+      const postData = response.data;
 
-      // reactionMap 업데이트
-      reactionMap.value = data.reactionCounts || {};
+      const postReactions = postData.postReactions || [];
+      const counts: Record<string, number> = {};
+      const usersMap: Record<string, Array<any>> = {};
+      let currentUserReaction: string | null = null;
 
-      // myReaction 업데이트
-      myReaction.value = data.myReaction || null;
+      postReactions.forEach((reaction: any) => {
+        const reactionType = reaction.type || reaction.reactionType;
+        const user = reaction.user;
 
-      // reactionUsersMap 업데이트 (툴팁용)
-      reactionUsersMap.value = data.reactionUsers || {};
+        if (reactionType && user) {
+          counts[reactionType] = (counts[reactionType] || 0) + 1;
+
+          if (!usersMap[reactionType]) {
+            usersMap[reactionType] = [];
+          }
+          usersMap[reactionType].push({
+            userId: user.userId,
+            nickname: user.nickname || user.handle || 'Unknown',
+            profileImageUrl: user.profileThumbnailMediaId // Assuming this is handled by PostCard or parent
+          });
+
+          if (user.userId === uiStore.user?.userId) { // Assuming uiStore has current user info
+            currentUserReaction = reactionType;
+          }
+        }
+      });
+
+      reactionMap.value = counts;
+      myReaction.value = currentUserReaction;
+      reactionUsersMap.value = usersMap;
 
     } catch (error) {
       console.error('반응 데이터를 로드하는 데 실패했습니다:', error);

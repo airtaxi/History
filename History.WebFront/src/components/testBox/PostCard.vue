@@ -23,6 +23,8 @@ import ReactionPopup from '@/components/testBox/src/components/modals/ReactionPo
 import ReportModal from '@/components/testBox/src/components/modals/ReportModal.vue';
 import AccessDeniedModal from '@/components/testBox/src/components/modals/AccessDeniedModal.vue';
 
+import defaultProfileImage from '@/assets/images/default_profile_image.jpg';
+
 const props = defineProps<{
   post: PostResponseDto;
   profileImageMap?: Record<string, string>;
@@ -132,7 +134,11 @@ onMounted(async () => {
 
   <div v-else class="post-card" @click="requestOpenDetail">
     <PostHeader
-      :user="post.user"
+      :user="{
+        userId: post.user.userId,
+        nickname: post.user.nickname
+      }"
+      :profile-image-url="profileBlobUrlMap[post.user.userId] || defaultProfileImage"
       :created-at="post.createdAt"
       :can-edit="canEdit"
       @delete="deleteMyPost"
