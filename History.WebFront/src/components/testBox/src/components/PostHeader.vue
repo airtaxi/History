@@ -1,3 +1,20 @@
+<!--
+ * PostHeader.vue
+ *
+ * 이 컴포넌트는 게시물의 헤더 부분을 렌더링합니다.
+ * 작성자 정보(아바타, 닉네임), 작성 시간, 그리고 게시물 관리(수정/삭제/신고)를 위한 "더보기" 메뉴를 표시합니다.
+ *
+ * @props {
+ *   user: { avatar: string; nickname: string; } - 게시물 작성자 정보.
+ *   createdAt: string - 게시물 작성 시간 (ISO 8601 형식의 문자열).
+ *   canEdit: boolean - 현재 사용자가 게시물을 수정/삭제할 권한이 있는지 여부.
+ * }
+ * @emits {
+ *   edit: 게시물 수정 버튼 클릭 시 발생.
+ *   delete: 게시물 삭제 버튼 클릭 시 발생.
+ *   report: 게시물 신고 버튼 클릭 시 발생.
+ * }
+-->
 <template>
   <div class="post-header">
     <!-- Author info (avatar, nickname) -->
@@ -46,11 +63,19 @@ const emit = defineEmits(['edit', 'delete', 'report']);
 
 const showDropdown = ref(false);
 
+/**
+ * "더보기" 드롭다운 메뉴의 표시 여부를 토글합니다.
+ */
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value;
 };
 
-// Dummy function for formatRelativeTime - replace with actual utility
+/**
+ * 주어진 날짜 문자열을 현재 시간과의 상대적인 시간으로 포맷합니다.
+ * 예: "방금 전", "5분 전", "3시간 전", "2023-07-07 10:30"
+ * @param {string} dateString - 포맷할 날짜 문자열 (ISO 8601 형식).
+ * @returns {string} 포맷된 시간 문자열.
+ */
 const formatRelativeTime = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();

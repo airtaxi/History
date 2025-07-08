@@ -2,10 +2,14 @@
 import { defineProps, defineEmits, ref, onMounted } from 'vue';
 import type { PostResponseDto } from '@/types';
 
+
+
+
 // Composables
 import { useReactions } from '@/components/testBox/src/composables/useReactions';
 import { useMediaLoader } from '@/components/testBox/src/composables/useMediaLoader';
 import { usePostActions } from '@/components/testBox/src/composables/usePostActions';
+
 // Components
 import PostHeader from '@/components/testBox/src/components/PostHeader.vue';
 import PostContent from '@/components/testBox/src/components/PostContent.vue';
@@ -73,7 +77,46 @@ const requestOpenDetail = () => {
 };
 
 // 초기 데이터 로드
-onMounted(() => {
+onMounted(async () => {
+  // 게시물 미디어 로드
+  for (const content of props.post.contents) {
+    if (content.$type === 'media' && (content.mediaId || content.thumbnailMediaId)) {
+      const id = content.mediaId || content.thumbnailMediaId;
+      mediaUrlMap.value[id] = await getMediaBlobUrl(id);
+    }
+  }
+
+  // 부모 게시물 미디어 로드 (리포스트인 경우)
+  if ((props.post as any).parentPost) {
+    const parentPost = (props.post as any).parentPost;
+    if (parentPost.contents && Array.isArray(parentPost.contents)) {
+      for (const content of parentPost.contents) {
+        if ((content as any).$type === 'media' && ((content as any).mediaId || (content as any).thumbnailMediaId)) {
+          const id = (content as any).mediaId || (content as any).thumbnailMediaId;
+          mediaUrlMap.value[id] = await getMediaBlobUrl(id);
+        }
+      }
+    }
+  }
+
+  // 프로필 이미지 로드
+  const usersToFetch = new Map<string, string>();
+  if (props.post.user && props.post.user.profileThumbnailMediaId) {
+    usersToFetch.set(props.post.user.userId, props.post.user.profileThumbnailMediaId);
+  }
+  const parentPost = (props.post as any).parentPost;
+  if (parentPost?.user?.profileThumbnailMediaId) {
+    usersToFetch.set(parentPost.user.userId, parentPost.user.profileThumbnailMediaId);
+  }
+
+  await Promise.all(Array.from(usersToFetch.entries()).map(async ([userId, mediaId]) => {
+    if (!profileBlobUrlMap.value[userId]) {
+      const blobUrl = await getMediaBlobUrl(mediaId);
+      profileBlobUrlMap.value[userId] = blobUrl;
+    }
+  }));
+
+  // 반응 데이터 로드
   loadReactionData();
 });
 

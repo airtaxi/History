@@ -1,89 +1,121 @@
+<!--
+ * ReportModal.vue
+ *
+ * 이 컴포넌트는 게시물을 신고하기 위한 모달 UI를 렌더링합니다.
+ * 사용자가 미리 정의된 신고 사유를 선택하거나 추가적인 설명을 입력할 수 있도록 합니다.
+ *
+ * @props {
+ *   show: boolean - 모달의 표시 여부.
+ * }
+ * @emits {
+ *   close: 모달을 닫을 때 발생.
+ *   submit: 사용자가 신고를 제출할 때 발생. 선택된 사유를 페이로드로 전달.
+ * }
+-->
 <template>
   <Teleport to="body">
-    <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
-      <div class="modal-content">
-        <h3>Report Post</h3>
-        <textarea v-model="reportReason" placeholder="Reason for reporting..."></textarea>
-        <button @click="submitReport">Submit Report</button>
-        <button @click="$emit('close')">Cancel</button>
+    <div v-if="show" class="report-modal-overlay" @click.self="$emit('close')">
+      <div class="report-modal-content" @click.stop>
+        <p>🚨 신고 사유를 선택해주세요:</p>
+        <select v-model="selectedReason">
+          <option value="ExplicitContent">성인물</option>
+          <option value="CopyrightViolation">저작권 위반</option>
+          <option value="IllegalContent">불법 콘텐츠</option>
+          <option value="Other">기타</option>
+        </select>
+        <div class="report-actions">
+          <button @click="$emit('submit', selectedReason)">신고하기</button>
+          <button @click="$emit('close')">취소</button>
+        </div>
       </div>
     </div>
   </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
-const props = defineProps({
-  show: {
-    type: Boolean,
-    required: true,
-  },
-  postId: {
-    type: String,
-    required: true,
-  },
-});
+const props = defineProps<{
+  show: boolean;
+}>();
 
-const emit = defineEmits(['close', 'report-submitted']);
+const emit = defineEmits(['close', 'submit']);
 
-const reportReason = ref('');
+const selectedReason = ref('ExplicitContent');
 
-const submitReport = () => {
-  if (reportReason.value.trim()) {
-    console.log(`Reporting post ${props.postId} for: ${reportReason.value}`);
-    // Here you would typically call an API to submit the report
-    emit('report-submitted', props.postId, reportReason.value);
-    emit('close');
-    reportReason.value = '';
+// 모달이 열릴 때마다 선택된 사유를 초기화
+watch(() => props.show, (isShowing) => {
+  if (isShowing) {
+    selectedReason.value = 'ExplicitContent';
   }
-};
+});
 </script>
 
 <style scoped>
-.modal-overlay {
+.report-modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 10000;
 }
 
-.modal-content {
+.report-modal-content {
   background: white;
-  padding: 20px;
+  padding: 24px;
+  border-radius: 12px;
+  width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.report-modal-content p {
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.report-modal-content select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
   border-radius: 8px;
-  max-width: 500px;
-  width: 90%;
+  font-size: 1rem;
+}
+
+.report-actions {
   display: flex;
-  flex-direction: column;
   gap: 10px;
 }
 
-textarea {
-  width: 100%;
-  height: 100px;
+.report-actions button {
+  flex: 1;
   padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  resize: vertical;
-}
-
-button {
-  padding: 10px 15px;
-  background-color: #007bff;
-  color: white;
+  border-radius: 8px;
   border: none;
-  border-radius: 5px;
+  font-weight: bold;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-button:last-of-type {
-  background-color: #6c757d;
+.report-actions button:first-child {
+  background-color: #ed664d;
+  color: white;
+}
+
+.report-actions button:first-child:hover {
+  background-color: #d65c45;
+}
+
+.report-actions button:last-child {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.report-actions button:last-child:hover {
+  background-color: #e0e0e0;
 }
 </style>
