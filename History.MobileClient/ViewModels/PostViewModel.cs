@@ -139,7 +139,7 @@ public partial class PostViewModel : ObservableObject
 
     public string PreviewText => Utils.GenerateTextPreviewFromPost(Post);
     public string PreviewTimestamp => Post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd");
-    public bool PreviewThumbnailVisible => Post.Contents.OfType<MediaContent>().Any();
+    public bool PreviewThumbnailVisible => PreviewThumbnail != null;
     public ImageViewModel PreviewThumbnail
     {
         get
