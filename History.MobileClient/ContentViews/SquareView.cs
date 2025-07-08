@@ -2,7 +2,19 @@
 
 public class SquareView : ContentView
 {
-    public SquareView() => SizeChanged += OnSizeChanged;
+    public SquareView()
+    {
+        Loaded += OnLoaded;
+        SizeChanged += OnSizeChanged;
+    }
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+        if (Width > 0)
+        {
+            HeightRequest = Width;
+        }
+    }
 
     private void OnSizeChanged(object sender, EventArgs e)
     {
@@ -15,9 +27,9 @@ public class SquareView : ContentView
     protected override void OnSizeAllocated(double width, double height)
     {
         base.OnSizeAllocated(width, height);
-        if (Width > 0)
+        if (width > 0)
         {
-            HeightRequest = Width;
+            HeightRequest = width;
         }
     }
 }
