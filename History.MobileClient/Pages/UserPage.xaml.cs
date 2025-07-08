@@ -321,8 +321,6 @@ public partial class UserPage : ContentPage
             if (span == 1) MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
             else MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = span };
 #endif
-
-            MainCollectionView.Margin = 0;
         }
         else
         {
@@ -333,8 +331,6 @@ public partial class UserPage : ContentPage
             {
                 Span = 4
             };
-
-            MainCollectionView.Margin = 6;
         }
     }
 }
