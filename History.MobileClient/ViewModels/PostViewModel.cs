@@ -149,7 +149,7 @@ public partial class PostViewModel : ObservableObject
 
             return new ImageViewModel(url)
             {
-                Aspect = Aspect.Fill,
+                Aspect = Aspect.AspectFill,
                 HorizontalContentOptions = LayoutOptions.Fill,
                 VerticalContentOptions = LayoutOptions.Fill
             };
