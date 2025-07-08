@@ -311,7 +311,7 @@ public partial class UserPage : ContentPage
 
         if (!_useGridLayout)
         {
-            LayoutFontImageSource.Glyph = MaterialSharp.Lists;
+            LayoutFontImageSource.Glyph = MaterialSharp.Dataset;
 
             MainCollectionView.ItemTemplate = App.Current.Resources["TimelineTemplateSelector"] as DataTemplateSelector;
 #if IOS
@@ -326,7 +326,7 @@ public partial class UserPage : ContentPage
         }
         else
         {
-            LayoutFontImageSource.Glyph = MaterialSharp.Dataset;
+            LayoutFontImageSource.Glyph = MaterialSharp.Lists;
 
             MainCollectionView.ItemTemplate = App.Current.Resources["PostPreviewTemplate"] as DataTemplate;
             MainCollectionView.ItemsLayout = new GridItemsLayout(ItemsLayoutOrientation.Vertical)
