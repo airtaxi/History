@@ -108,7 +108,7 @@ public partial class UserPage : ContentPage
                 return;
             }
 
-            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId));
+            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, null, _useGridLayout ? 50 : 30));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
@@ -133,7 +133,7 @@ public partial class UserPage : ContentPage
             if (lastViewModel == null) return;
 
             var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
-            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, lastPostId));
+            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, lastPostId, _useGridLayout ? 50 : 30));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
