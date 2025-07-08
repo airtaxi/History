@@ -1,15 +1,19 @@
 <template>
   <div class="original-post-card" @click="$emit('navigate-to-original', post.id)">
-    <div class="header">
-      <img :src="profileBlobUrlMap[post.author.id]" alt="Author Avatar" class="avatar" />
-      <span class="author-name">{{ post.author.nickname }}</span>
-    </div>
-    <PostContent :contents="post.contents" :mediaUrlMap="mediaUrlMap" />
+    <PostHeader
+      :user="post.author || { userId: '', nickname: 'Unknown User', profileThumbnailMediaId: '' }"
+      :profile-image-url="profileBlobUrlMap[post.author?.id] || defaultProfileImage"
+      :created-at="post.createdAt"
+      :can-edit="false"
+    />
+    <PostContent :contents="post.contents || []" :mediaUrlMap="mediaUrlMap" />
   </div>
 </template>
 
 <script setup lang="ts">
 import PostContent from './PostContent.vue';
+import PostHeader from './PostHeader.vue'; // PostHeader 컴포넌트 import
+import defaultProfileImage from '@/assets/images/default_profile_image.jpg';
 
 const props = defineProps({
   post: {
@@ -18,7 +22,8 @@ const props = defineProps({
   },
   profileBlobUrlMap: {
     type: Object,
-    required: true,
+    required: false, // required를 false로 변경
+    default: () => ({}), // 기본값으로 빈 객체 설정
   },
   mediaUrlMap: {
     type: Object,
@@ -43,21 +48,5 @@ const emit = defineEmits(['navigate-to-original']);
   background-color: #f0f0f0;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  margin-right: 8px;
-}
-
-.author-name {
-  font-weight: bold;
-  font-size: 0.9em;
-}
+/* 기존 .header, .avatar, .author-name 스타일은 PostHeader.vue에서 관리 */
 </style>
