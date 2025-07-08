@@ -442,6 +442,35 @@
         </Grid>
     </DataTemplate>
 
+    <DataTemplate x:Key="PostPreviewTemplate" x:DataType="vm:PostViewModel">
+        <Grid Padding="4" IsClippedToBounds="True">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Label
+                Grid.Row="0"
+                FontSize="12"
+                LineBreakMode="TailTruncation"
+                MaxLines="3"
+                Text="{x:Binding PreviewText}" />
+            <Label
+                Grid.Row="1"
+                FontAttributes="Bold"
+                FontSize="10"
+                LineBreakMode="TailTruncation"
+                MaxLines="1"
+                Text="{x:Binding PreviewTimestamp}"
+                TextColor="#808080" />
+            <views:DataTemplatePresenter
+                Grid.RowSpan="2"
+                Margin="-4"
+                IsVisible="{x:Binding PreviewThumbnailVisible}"
+                Template="{StaticResource ImageTemplate}"
+                ViewModel="{x:Binding PreviewThumbnail}" />
+        </Grid>
+    </DataTemplate>
+
     <vm:TimelineTemplateSelector
         x:Key="TimelineTemplateSelector"
         PostTemplate="{StaticResource PostTemplate}"

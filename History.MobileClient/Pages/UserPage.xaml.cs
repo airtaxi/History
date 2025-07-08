@@ -9,6 +9,8 @@ using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 using History.Commons;
+using UraniumUI.Icons.MaterialSymbols;
+
 
 
 #if ANDROID
@@ -24,6 +26,7 @@ public partial class UserPage : ContentPage
 
     private bool _isInForeground;
     private bool _areThereNoMorePostsToLoad;
+    private bool _useGridLayout = true;
 #if IOS
     private double _lastScrollOffsetY;
 #endif
@@ -58,9 +61,6 @@ public partial class UserPage : ContentPage
         }
 
         MainCollectionView.ItemsSource = _viewModels;
-#if IOS
-        MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
-#endif
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
@@ -156,6 +156,8 @@ public partial class UserPage : ContentPage
 
     private void OnSizeChanged(object sender, EventArgs e)
     {
+        if (_useGridLayout) return;
+
 #if ANDROID
         var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
 
@@ -301,5 +303,36 @@ public partial class UserPage : ContentPage
 
         var response = await App.ExecuteRequestAsync(new UpdateMemo(UserId, memo.Trim()));
         if (response.IsSuccess) await _viewModel.RefreshAsync();
+    }
+
+    private void OnLayoutImageTapped(object sender, TappedEventArgs e)
+    {
+        _useGridLayout = !_useGridLayout;
+
+        if (!_useGridLayout)
+        {
+            LayoutFontImageSource.Glyph = MaterialSharp.Lists;
+
+            MainCollectionView.ItemTemplate = App.Current.Resources["TimelineTemplateSelector"] as DataTemplateSelector;
+#if IOS
+            MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
+#else
+            var span = ((int)Width / 700) + 1;
+            if (span == 1) MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
+            else MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = span };
+#endif
+        }
+        else
+        {
+            LayoutFontImageSource.Glyph = MaterialSharp.Dataset;
+
+            MainCollectionView.ItemTemplate = App.Current.Resources["PostPreviewTemplate"] as DataTemplate;
+            MainCollectionView.ItemsLayout = new GridItemsLayout(ItemsLayoutOrientation.Vertical)
+            {
+                Span = 4,
+                HorizontalItemSpacing = 1,
+                VerticalItemSpacing = 1
+            };
+        }
     }
 }
