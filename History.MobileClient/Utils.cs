@@ -11,6 +11,8 @@ using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
 using UraniumUI.Icons.FontAwesome;
+using History.Commons.DataTypes.ResponseDtos;
+
 
 #if ANDROID
 using Android.Content;
@@ -162,7 +164,7 @@ public static partial class Utils
 
     public static string GenerateTextPreviewFromContents(IEnumerable<BaseContent> contents)
     {
-        var textAndProfileContents = contents.Where(x => x is TextContent || x is ProfileContent);
+        var textAndProfileContents = post.Contents.Where(x => x is TextContent || x is ProfileContent);
 
         var builder = new StringBuilder();
         foreach (var content in textAndProfileContents)
@@ -181,6 +183,20 @@ public static partial class Utils
         if (mediaId != null) imageUrl = GenerateMediaUri(mediaId);
 
         return imageUrl;
+    }
+
+    public static string GenerateThumbnailUrlFromPost(PostResponseDto post)
+    {
+        var imageUrl = GenerateThumbnailUrlFromContents(post.Contents);
+        if (imageUrl == null && post.ParentPost != null) imageUrl = GenerateThumbnailUrlFromContents(post.ParentPost.Contents);
+        return imageUrl;
+    }
+
+    public static string GenerateTextPreviewFromPost(PostResponseDto post)
+    {
+        var preview = GenerateTextPreviewFromContents(post);
+        if (string.IsNullOrWhiteSpace(preview) && post.ParentPost != null) preview = GenerateTextPreviewFromContents(post.ParentPost.Contents);
+        return preview;
     }
 
     public static FormattedString GenerateSpanFromTextAndProfileContents(List<BaseContent> contents, PostType postType, bool hasMedias)
