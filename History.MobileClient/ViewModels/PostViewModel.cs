@@ -137,14 +137,14 @@ public partial class PostViewModel : ObservableObject
     public List<string> Hashtags => Post.Hashtags;
     public bool IsHashtagVisible => Hashtags != null && Hashtags.Count > 0;
 
-    public string PreviewText => Utils.GenerateTextPreviewFromContents(Post.Contents);
+    public string PreviewText => Utils.GenerateTextPreviewFromPost(Post);
     public string PreviewTimestamp => Post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd");
     public bool PreviewThumbnailVisible => Post.Contents.OfType<MediaContent>().Any();
     public ImageViewModel PreviewThumbnail
     {
         get
         {
-            var url = Utils.GenerateThumbnailUrlFromContents(Post.Contents);
+            var url = Utils.GenerateThumbnailUrlFromPost(Post);
             if (url == null) return null;
 
             return new ImageViewModel(url)
