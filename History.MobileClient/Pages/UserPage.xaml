@@ -64,7 +64,7 @@
                         <FontImageSource
                             x:Name="LayoutFontImageSource"
                             FontFamily="MaterialSharp"
-                            Glyph="{x:Static m:MaterialSharp.Dataset}"
+                            Glyph="{x:Static m:MaterialSharp.Lists}"
                             Color="White" />
                     </Image.Source>
                 </Image>
