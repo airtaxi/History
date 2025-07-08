@@ -146,11 +146,7 @@
                         <views:DataTemplatePresenter x:Name="ProfileDataTemplatePresenter" Template="{StaticResource ProfileTemplate}" />
                     </CollectionView.Header>
                     <CollectionView.ItemsLayout>
-                        <GridItemsLayout
-                            HorizontalItemSpacing="1"
-                            Orientation="Vertical"
-                            Span="4"
-                            VerticalItemSpacing="1" />
+                        <GridItemsLayout Orientation="Vertical" Span="4" />
                     </CollectionView.ItemsLayout>
                 </CollectionView>
             </RefreshView>
