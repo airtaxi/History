@@ -442,7 +442,7 @@
     </DataTemplate>
 
     <DataTemplate x:Key="PostPreviewTemplate" x:DataType="vm:PostViewModel">
-        <views:SquareView>
+        <views:SquareView BackgroundColor="{AppThemeBinding Dark=#000000, Light=#FFFFFF}">
             <views:SquareView.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
             </views:SquareView.GestureRecognizers>
@@ -468,7 +468,7 @@
                     TextColor="#808080" />
                 <views:DataTemplatePresenter
                     Grid.RowSpan="2"
-                    Margin="-4"
+                    Margin="-6"
                     IsVisible="{x:Binding PreviewThumbnailVisible}"
                     Template="{StaticResource ImageTemplate}"
                     ViewModel="{x:Binding PreviewThumbnail}" />
