@@ -128,7 +128,8 @@ onMounted(async () => {
   <OriginalPostCard
     v-if="post.isRepost"
     :post="post"
-    :profileImageMap="profileBlobUrlMap"
+    :profileBlobUrlMap="profileBlobUrlMap"
+    :mediaUrlMap="mediaUrlMap" 
     @navigate-to-original="goToOriginalPost"
   />
 

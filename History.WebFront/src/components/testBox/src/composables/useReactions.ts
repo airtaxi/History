@@ -92,39 +92,50 @@ export function useReactions(post: PostResponseDto) {
    * 낙관적 업데이트를 적용하여 사용자 경험을 향상시킵니다.
    * @param {string | null} reactionType - 설정할 반응 타입 (예: 'Like', 'Awesome'). null이면 반응 삭제.
    */
-  const postReaction = async (reactionType: string | null) => {
-    const previousMyReaction = myReaction.value;
-    const previousReactionMap = { ...reactionMap.value };
-
-    // 낙관적 업데이트
-    if (previousMyReaction) {
-      reactionMap.value[previousMyReaction] = (reactionMap.value[previousMyReaction] || 1) - 1;
-      if (reactionMap.value[previousMyReaction] <= 0) {
-        delete reactionMap.value[previousMyReaction];
-      }
-    }
-
-    if (reactionType) {
-      myReaction.value = reactionType;
-      reactionMap.value[reactionType] = (reactionMap.value[reactionType] || 0) + 1;
-    } else {
-      myReaction.value = null;
-    }
+  const postReaction = async (newType: string) => {
+    const previousReaction = myReaction.value;
+    const originalReactionMap = { ...reactionMap.value };
 
     try {
-      if (reactionType) {
-        await apiClient.post(`/api/Post/${post.id}/react`, { reactionType });
+      if (previousReaction === newType) {
+        // === 시나리오 1: 같은 반응 재클릭 → 해제 ===
+        reactionMap.value[newType] = Math.max((reactionMap.value[newType] || 1) - 1, 0);
+        myReaction.value = null;
+
+        await apiClient.post(`/api/Post/${post.id}/reaction/${newType}`);
+
+      } else if (previousReaction && previousReaction !== newType) {
+        // === 시나리오 2: 다른 반응으로 변경 ===
+        reactionMap.value[previousReaction] = Math.max((reactionMap.value[previousReaction] || 1) - 1, 0);
+        reactionMap.value[newType] = (reactionMap.value[newType] || 0) + 1;
+        myReaction.value = newType;
+
+        // 1차: 기존 반응 제거 (서버의 토글 방식 때문에 필요)
+        await apiClient.post(`/api/Post/${post.id}/reaction/${previousReaction}`);
+
+        // 2차: 새 반응 추가
+        await apiClient.post(`/api/Post/${post.id}/reaction/${newType}`);
+
       } else {
-        await apiClient.delete(`/api/Post/${post.id}/react`);
+        // === 시나리오 3: 새로운 반응 추가 ===
+        reactionMap.value[newType] = (reactionMap.value[newType] || 0) + 1;
+        myReaction.value = newType;
+
+        await apiClient.post(`/api/Post/${post.id}/reaction/${newType}`);
       }
-      // 실제 서버 응답에 따라 데이터 다시 로드 (정합성 보장)
+
+      // 최종 서버 데이터로 동기화 (실제 데이터와 일치 보장)
       await loadReactionData();
-    } catch (error) {
-      console.error('반응 업데이트 실패:', error);
-      // 에러 발생 시 롤백
-      myReaction.value = previousMyReaction;
-      reactionMap.value = previousReactionMap;
-      alert('반응 업데이트에 실패했습니다.');
+
+    } catch (err: any) {
+      console.error('반응 처리 실패:', err);
+      console.error('에러 응답:', err.response?.data);
+
+      // 실패 시 원래 상태로 롤백 (사용자가 혼란스럽지 않도록)
+      reactionMap.value = originalReactionMap;
+      myReaction.value = previousReaction;
+
+      alert('요청 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.');
     }
   };
 

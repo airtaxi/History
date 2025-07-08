@@ -26,7 +26,7 @@
     <!-- Created time -->
     <span class="created-at">{{ formatRelativeTime(createdAt) }}</span>
     <!-- More options menu -->
-    <div class="more-options">
+    <div class="more-options" @click.stop> <!-- @click.stop 추가 -->
       <button @click="toggleDropdown">...</button>
       <div v-if="showDropdown" class="dropdown-menu">
         <button v-if="canEdit" @click="$emit('edit')">Edit</button>

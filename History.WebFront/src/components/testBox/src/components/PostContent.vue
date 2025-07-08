@@ -19,6 +19,7 @@
     <!-- 미디어 슬라이더 (Swiper) -->
     <Swiper
       v-if="contents?.some(c => c.$type === 'media')"
+      ref="mediaSwiperRef"
       class="media-swiper"
       :spaceBetween="10"
       :slidesPerView="1"
@@ -97,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, ref, onMounted, nextTick } from 'vue';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Navigation, Pagination } from 'swiper/modules';
 
@@ -115,6 +116,33 @@ const props = defineProps({
 const emit = defineEmits(['open-media-modal', 'navigate-to-profile']);
 
 const modules = [Navigation, Pagination];
+
+const mediaSwiperRef = ref(null); // Swiper 인스턴스를 참조할 ref 추가
+
+// Swiper 네비게이션 버튼의 클릭 이벤트 전파를 막는 헬퍼 함수
+const addStopPropagationToSwiperNav = (swiperInstanceRef: any) => {
+  if (!swiperInstanceRef) return;
+
+  // $el을 통해 실제 DOM 요소에 접근합니다.
+  const swiperEl = swiperInstanceRef.$el;
+  if (!swiperEl) return;
+
+  const nextBtn = swiperEl.querySelector('.swiper-button-next');
+  const prevBtn = swiperEl.querySelector('.swiper-button-prev');
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', (e: Event) => e.stopPropagation());
+  }
+  if (prevBtn) {
+    prevBtn.addEventListener('click', (e: Event) => e.stopPropagation());
+  }
+};
+
+onMounted(async () => {
+  // Vue가 DOM 업데이트를 완료한 후 Swiper 로직을 실행하도록 보장합니다.
+  await nextTick();
+  addStopPropagationToSwiperNav(mediaSwiperRef.value);
+});
 
 /**
  * 텍스트에서 @멘션과 링크를 감지하여 분리합니다.
