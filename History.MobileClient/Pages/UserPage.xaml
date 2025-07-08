@@ -127,6 +127,9 @@
                     RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
                     Scrolled="OnMainCollectionViewScrolled"
                     SelectionMode="None">
+                    <CollectionView.Header>
+                        <views:DataTemplatePresenter x:Name="ProfileDataTemplatePresenter" Template="{StaticResource ProfileTemplate}" />
+                    </CollectionView.Header>
                     <CollectionView.ItemsLayout>
                         <staggered:StaggeredItemsLayout Span="10000" />
                     </CollectionView.ItemsLayout>

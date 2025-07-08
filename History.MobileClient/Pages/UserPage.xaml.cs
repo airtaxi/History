@@ -30,7 +30,7 @@ public partial class UserPage : ContentPage
     private object _lastViewModel;
     private ProfileViewModel _viewModel;
     private readonly bool _isMyProfile;
-    private readonly ObservableCollection<object> _viewModels = [];
+    private readonly ObservableCollection<PostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public UserPage() : this(Shared.UserId)
@@ -100,7 +100,7 @@ public partial class UserPage : ContentPage
             if (user.IsSuccess)
             {
                 _viewModel = new ProfileViewModel(user.Value);
-                _viewModels.Add(_viewModel);
+                ProfileDataTemplatePresenter.ViewModel = _viewModel;
             }
             else
             {
