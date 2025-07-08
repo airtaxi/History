@@ -173,7 +173,10 @@ public static partial class Utils
             else if (content is ProfileContent profileContent) builder.Append(profileContent.Nickname);
         }
 
-        return builder.ToString();
+        var result = builder.ToString();
+        result = result.ReplaceLineEndings("\n");
+        while (result.Contains("\n\n")) result = result.Replace("\n\n", "\n");
+        return result;
     }
 
     public static string GenerateThumbnailUrlFromContents(IEnumerable<BaseContent> contents)
@@ -196,6 +199,7 @@ public static partial class Utils
     {
         var preview = GenerateTextPreviewFromContents(post.Contents);
         if (string.IsNullOrWhiteSpace(preview) && post.ParentPost != null) preview = GenerateTextPreviewFromContents(post.ParentPost.Contents);
+        else if (string.IsNullOrWhiteSpace(preview) && post.Hashtags.Count > 0) preview = string.Join(" ", post.Hashtags.Select(x => $"#{x}"));
         return preview;
     }
 
