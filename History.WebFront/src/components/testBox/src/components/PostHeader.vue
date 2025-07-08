@@ -16,22 +16,25 @@
  *   report: 게시물 신고 버튼 클릭 시 발생.
  * }
 -->
+
 <template>
   <div class="post-header">
     <!-- Author info (avatar, nickname) -->
     <div class="author-info">
       <img :src="profileImageUrl" alt="User Avatar" class="avatar" />
-      <span class="nickname">{{ user.nickname }}</span>
+      <div class="postinfo-container">
+        <span class="nickname">{{ user.nickname }}</span>
+      <!-- Created time -->
+        <span class="created-at">{{ formatRelativeTime(createdAt) }}</span>
+      </div>
     </div>
-    <!-- Created time -->
-    <span class="created-at">{{ formatRelativeTime(createdAt) }}</span>
     <!-- More options menu -->
     <div class="more-options" @click.stop> <!-- @click.stop 추가 -->
-      <button @click="toggleDropdown">...</button>
+      <button class="more-options" @click="toggleDropdown">...</button>
       <div v-if="showDropdown" class="dropdown-menu">
-        <button v-if="canEdit" @click="$emit('edit')">Edit</button>
-        <button v-if="canEdit" @click="$emit('delete')">Delete</button>
-        <button @click="$emit('report')">Report</button>
+        <button v-if="canEdit" @click="$emit('edit')">수정</button>
+        <button v-if="canEdit" @click="$emit('delete')">삭제</button>
+        <button @click="$emit('report')">신고</button>
       </div>
     </div>
   </div>
@@ -81,25 +84,20 @@ const toggleDropdown = () => {
  * @param {string} dateString - 포맷할 날짜 문자열 (ISO 8601 형식).
  * @returns {string} 포맷된 시간 문자열.
  */
-const formatRelativeTime = (dateString: string) => {
-  const date = new Date(dateString);
+function formatRelativeTime(dateString: string): string {
+  const created = new Date(dateString);
   const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
+  const diffMs = now.getTime() - created.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
 
-  if (days > 0) {
-    return `${days} days ago`;
-  } else if (hours > 0) {
-    return `${hours} hours ago`;
-  } else if (minutes > 0) {
-    return `${minutes} minutes ago`;
-  } else {
-    return `${seconds} seconds ago`;
-  }
-};
+  if (diffMinutes < 1) return '방금 전';
+  if (diffMinutes < 60) return `${diffMinutes}분 전`;
+  if (diffHours < 12) return `${diffHours}시간 전`;
+
+  // 12시간 이상이면 날짜와 시간만 출력
+  return `${created.getFullYear()}-${(created.getMonth() + 1).toString().padStart(2, '0')}-${created.getDate().toString().padStart(2, '0')} ${created.getHours().toString().padStart(2, '0')}:${created.getMinutes().toString().padStart(2, '0')}`;
+}
 </script>
 
 <style scoped>
@@ -108,6 +106,7 @@ const formatRelativeTime = (dateString: string) => {
   align-items: center;
   padding: 10px;
   border-bottom: 1px solid #eee;
+  justify-content: space-between; /* 양쪽 끝으로 아이템 정렬 */
 }
 
 .author-info {
@@ -115,11 +114,17 @@ const formatRelativeTime = (dateString: string) => {
   align-items: center;
 }
 
+.postinfo-container{
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+}
 .avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
 }
 
 .nickname {
@@ -134,13 +139,21 @@ const formatRelativeTime = (dateString: string) => {
 
 .more-options {
   position: relative;
-  margin-left: 10px;
+  margin-left: auto;
+}
+
+button.more-options {
+  background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
 }
 
 .dropdown-menu {
   position: absolute;
   top: 100%;
   right: 0;
+  width: 5rem;
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 5px;
