@@ -164,7 +164,7 @@ public static partial class Utils
 
     public static string GenerateTextPreviewFromContents(IEnumerable<BaseContent> contents)
     {
-        var textAndProfileContents = post.Contents.Where(x => x is TextContent || x is ProfileContent);
+        var textAndProfileContents = contents.Where(x => x is TextContent || x is ProfileContent);
 
         var builder = new StringBuilder();
         foreach (var content in textAndProfileContents)
@@ -194,7 +194,7 @@ public static partial class Utils
 
     public static string GenerateTextPreviewFromPost(PostResponseDto post)
     {
-        var preview = GenerateTextPreviewFromContents(post);
+        var preview = GenerateTextPreviewFromContents(post.Contents);
         if (string.IsNullOrWhiteSpace(preview) && post.ParentPost != null) preview = GenerateTextPreviewFromContents(post.ParentPost.Contents);
         return preview;
     }
