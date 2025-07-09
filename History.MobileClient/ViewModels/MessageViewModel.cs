@@ -55,7 +55,7 @@ public partial class MessageViewModel : ObservableObject
     public async Task HandleProfileTapAsync()
     {
         // Don't open own profile
-        if (Receiver.UserId == Shared.UserId)
+        if (Sender.UserId == Shared.UserId)
         {
             await Toast.Make("내 프로필입니다").Show();   
             return;
