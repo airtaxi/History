@@ -52,6 +52,8 @@ public partial class WriteMessagePage : ContentPage
         RemoveImageButton.IsVisible = false;
     }
 
+    private async void OnBackImageTapped(object sender, EventArgs e) => await App.PopModalAsync();
+
     private async void OnSendButtonClicked(object sender, EventArgs e)
     {
         var text = MessageEditor.Text?.Trim();
