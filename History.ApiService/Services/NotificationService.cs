@@ -727,7 +727,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
             core.UserId = messageResult.Value.SenderId;
 
-            core.Title = $"{senderResult.Value.Nickname}님이 메시지를 보냈습니다.";
+            core.Title = $"{senderResult.Value.Nickname}님이 쪽지를 보냈습니다.";
             core.Body = await userService.GenerateTextPreviewFromContentsAsync(messageResult.Value.Contents);
             core.ImageUrl = Utils.GenerateThumbnailUrlFromContents(messageResult.Value.Contents);
 

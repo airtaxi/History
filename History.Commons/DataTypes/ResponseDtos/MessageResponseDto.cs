@@ -11,8 +11,4 @@ public class MessageResponseDto
     public List<BaseContent> Contents { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public DateTime? ReadAt { get; set; }
-    public DateTime? ModifiedAt { get; set; }
-    public bool IsDeleted { get; set; }
-    public DateTime? DeletedAt { get; set; }
-    public string DeletedBy { get; set; }
 }
