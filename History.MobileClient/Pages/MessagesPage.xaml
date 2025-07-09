@@ -28,7 +28,7 @@
                                     <TapGestureRecognizer Command="{x:Binding OpenMessageCommand}" />
                                 </Grid.GestureRecognizers>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
@@ -38,7 +38,7 @@
                                     HorizontalOptions="Start"
                                     IsVisible="{x:Binding IsUnread}"
                                     VerticalOptions="Fill"
-                                    WidthRequest="8" />
+                                    WidthRequest="4" />
                                 <Grid Grid.Column="1">
                                     <views:DataTemplatePresenter
                                         HeightRequest="40"
