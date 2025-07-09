@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.WriteMessagePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Shell.NavBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid RowSpacing="6" Padding="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Label x:Name="ReceiverLabel" Grid.Row="0" FontAttributes="Bold" FontSize="18" TextColor="{StaticResource Primary}" />
+        <StackLayout Grid.Row="1" Spacing="12">
+            <Editor x:Name="MessageEditor" Placeholder="쪽지 내용을 입력하세요 (최대 100자)" MaxLength="100" AutoSize="TextChanges"/>
+            <Image x:Name="AttachmentImage" HeightRequest="120" IsVisible="False" />
+            <Button x:Name="AttachImageButton" Text="이미지 첨부" Clicked="OnAttachImageButtonClicked" />
+            <Button x:Name="RemoveImageButton" Text="이미지 삭제" Clicked="OnRemoveImageButtonClicked" IsVisible="False" />
+        </StackLayout>
+        <Button Grid.Row="2" Text="보내기" Clicked="OnSendButtonClicked" BackgroundColor="{StaticResource Primary}" TextColor="White" />
+    </Grid>
+</ContentPage>

@@ -44,24 +44,6 @@ public interface IMessageService
     Task<Result> SendMessageAsync(string senderId, SendMessageRequestDto requestDto, IEnumerable<IFormFile> files);
 
     /// <summary>
-    /// Modify an existing message.
-    /// </summary>
-    /// <param name="messageId">The message ID</param>
-    /// <param name="senderId">The sender user ID</param>
-    /// <param name="requestDto">The updated message data</param>
-    /// <param name="files">The files to upload</param>
-    /// <returns>A task that represents the asynchronous operation</returns>
-    Task<Result> ModifyMessageAsync(string messageId, string senderId, ModifyMessageRequestDto requestDto, IEnumerable<IFormFile> files);
-
-    /// <summary>
-    /// Delete a message.
-    /// </summary>
-    /// <param name="messageId">The message ID</param>
-    /// <param name="requesterId">The user ID making the request</param>
-    /// <returns>A task that represents the asynchronous operation</returns>
-    Task<Result> DeleteMessageAsync(string messageId, string requesterId);
-
-    /// <summary>
     /// Mark a message as read.
     /// </summary>
     /// <param name="messageId">The message ID</param>

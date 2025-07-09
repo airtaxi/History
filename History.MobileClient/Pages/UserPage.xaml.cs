@@ -59,6 +59,10 @@ public partial class UserPage : ContentPage
             BanImage.IsVisible = false;
             MemoImage.IsVisible = false;
         }
+        else
+        {
+            MessageImage.IsVisible = true;
+        }
 
         MainCollectionView.ItemsSource = _viewModels;
 
@@ -294,6 +298,7 @@ public partial class UserPage : ContentPage
             AppleSwipeGestureHelper.ApplyToPage(this);
         }
 #endif
+        // 메시지 아이콘에 대한 추가 초기화 필요시 여기에 작성
     }
 
     private async void OnMemoImageTapped(object sender, TappedEventArgs e)
@@ -334,5 +339,10 @@ public partial class UserPage : ContentPage
                 VerticalItemSpacing = 1
             };
         }
+    }
+
+    private async void OnMessageImageTapped(object sender, TappedEventArgs e)
+    {
+        await App.PushAsync(new WriteMessagePage(UserId));
     }
 }

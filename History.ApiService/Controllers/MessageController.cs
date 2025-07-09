@@ -81,57 +81,6 @@ public class MessageController(IMessageService messageService) : ControllerBase
         return StatusCode(500, result.FullErrorMessage);
     }
 
-    [HttpPut("{messageId}")]
-    [Authorize]
-    [ProducesResponseType<string>(200)]
-    [ProducesResponseType<string>(400)]
-    [ProducesResponseType<string>(401)]
-    [ProducesResponseType<string>(403)]
-    [ProducesResponseType<string>(404)]
-    [ProducesResponseType<string>(429)]
-    [ProducesResponseType<string>(500)]
-    public async Task<IActionResult> ModifyMessage(string messageId, [FromForm] ModifyMessageRequestDto requestDto)
-    {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized("로그인이 필요한 서비스입니다.");
-
-        var files = Request.Form.Files;
-        var result = await messageService.ModifyMessageAsync(messageId, userId, requestDto, files);
-        
-        if (result.IsSuccess) return Ok("메시지가 수정되었습니다.");
-        
-        if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
-        if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
-        if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
-        
-        return StatusCode(500, result.FullErrorMessage);
-    }
-
-    [HttpDelete("{messageId}")]
-    [Authorize]
-    [ProducesResponseType<string>(200)]
-    [ProducesResponseType<string>(400)]
-    [ProducesResponseType<string>(401)]
-    [ProducesResponseType<string>(403)]
-    [ProducesResponseType<string>(404)]
-    [ProducesResponseType<string>(429)]
-    [ProducesResponseType<string>(500)]
-    public async Task<IActionResult> DeleteMessage(string messageId)
-    {
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized("로그인이 필요한 서비스입니다.");
-
-        var result = await messageService.DeleteMessageAsync(messageId, userId);
-        
-        if (result.IsSuccess) return Ok("메시지가 삭제되었습니다.");
-        
-        if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
-        if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
-        if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
-        
-        return StatusCode(500, result.FullErrorMessage);
-    }
-
     [HttpPost("{messageId}/read")]
     [Authorize]
     [ProducesResponseType<string>(200)]
