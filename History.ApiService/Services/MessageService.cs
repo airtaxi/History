@@ -19,7 +19,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
     public async Task<Result<Message>> GetMessageByIdAsync(string messageId)
     {
         var message = await _messageCollection.Find(m => m.Id == messageId).FirstOrDefaultAsync();
-        if (message == null) return (ErrorType.NotFound, "메시지를 찾을 수 없습니다.");
+        if (message == null) return (ErrorType.NotFound, "쪽지를 찾을 수 없습니다.");
         return message;
     }
 
@@ -79,7 +79,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
 
         // Check if user is equal to receiver
         if (senderId == requestDto.ReceiverId)
-            return (ErrorType.BadRequest, "자기 자신에게 메시지를 보낼 수 없습니다.");
+            return (ErrorType.BadRequest, "자기 자신에게 쪽지를 보낼 수 없습니다.");
 
         // Check for external URLs
         if (contents.Any(c => c is ExternalUrlContent))
@@ -87,11 +87,11 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
 
         // Check if the message has any content
         if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
-            return (ErrorType.BadRequest, "메시지에 내용이 없습니다.");
+            return (ErrorType.BadRequest, "쪽지에 내용이 없습니다.");
 
         // Validate media contents (limit to 1 image)
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
-        if (mediaCount > 1) return (ErrorType.BadRequest, "메시지에는 이미지를 최대 1개까지만 첨부할 수 있습니다.");
+        if (mediaCount > 1) return (ErrorType.BadRequest, "쪽지에는 이미지를 최대 1개까지만 첨부할 수 있습니다.");
 
         var mediaContents = contents.OfType<MediaContent>();
         foreach (var mediaContent in mediaContents)
@@ -140,7 +140,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
         var message = messageResult.Value;
         if (message.ReceiverId != userId)
         {
-            return (ErrorType.Forbidden, "이 메시지를 읽음 처리할 권한이 없습니다.");
+            return (ErrorType.Forbidden, "이 쪽지를 읽음 처리할 권한이 없습니다.");
         }
 
         if (message.ReadAt != null)
@@ -159,7 +159,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
     {
         if (senderId == receiverId)
         {
-            return (ErrorType.BadRequest, "자기 자신에게 메시지를 보낼 수 없습니다.");
+            return (ErrorType.BadRequest, "자기 자신에게 쪽지를 보낼 수 없습니다.");
         }
 
         var userService = serviceProvider.GetRequiredService<IUserService>();
@@ -170,7 +170,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
         if (bannedResult.IsFailure) return bannedResult.CastFailure();
         if (bannedResult.Value.Contains(receiverId))
         {
-            return (ErrorType.Forbidden, "상대방과의 관계로 인해 메시지를 보낼 수 없습니다.");
+            return (ErrorType.Forbidden, "상대방과의 관계로 인해 쪽지를 보낼 수 없습니다.");
         }
 
         // 수신자 존재 여부 및 AccessPermission 확인
@@ -181,7 +181,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
         var messagePermission = receiver.MessageReceivingPermission;
         if (messagePermission == AccessPermission.OnlyMe)
         {
-            return (ErrorType.Forbidden, "이 사용자는 메시지 수신을 허용하지 않습니다.");
+            return (ErrorType.Forbidden, "이 사용자는 쪽지 수신을 허용하지 않습니다.");
         }
         if (messagePermission == AccessPermission.Friends)
         {
@@ -189,7 +189,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
             if (areFriendsResult.IsFailure) return areFriendsResult.CastFailure();
             if (!areFriendsResult.Value)
             {
-                return (ErrorType.Forbidden, "이 사용자는 친구에게서만 메시지를 받습니다.");
+                return (ErrorType.Forbidden, "이 사용자는 친구에게서만 쪽지를 받습니다.");
             }
         }
         else if (messagePermission == AccessPermission.FriendsOfFriends)
@@ -198,11 +198,41 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
             if (areFriendsOfFriendsResult.IsFailure) return areFriendsOfFriendsResult.CastFailure();
             if (!areFriendsOfFriendsResult.Value)
             {
-                return (ErrorType.Forbidden, "이 사용자는 친구의 친구까지만 메시지를 받습니다.");
+                return (ErrorType.Forbidden, "이 사용자는 친구의 친구까지만 쪽지를 받습니다.");
             }
         }
 
         return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<MessageResponseDto>> GenerateMessageResponseDtoAsync(Message message, string requesterId)
+    {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+
+        var senderResult = await userService.GenerateUserResponseDtoAsync(message.SenderId);
+        if (senderResult.IsFailure) return senderResult.CastFailure<MessageResponseDto>();
+
+        var receiverResult = await userService.GenerateUserResponseDtoAsync(message.ReceiverId);
+        if (receiverResult.IsFailure) return receiverResult.CastFailure<MessageResponseDto>();
+
+        var sender = senderResult.Value;
+        var receiver = receiverResult.Value;
+
+        // Check if the requester is either the sender or receiver
+        if (sender.UserId != requesterId && receiver.UserId != requesterId) return (ErrorType.Forbidden, "이 쪽지를 조회할 권한이 없습니다.");
+
+        var result = new MessageResponseDto
+        {
+            Id = message.Id,
+            Sender = sender,
+            Receiver = receiver,
+            Contents = message.Contents,
+            CreatedAt = message.CreatedAt,
+            ReadAt = message.ReadAt
+        };
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -215,7 +245,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
         if (usersResult.IsFailure) return usersResult.CastFailure<List<MessageResponseDto>>();
 
         var users = usersResult.Value;
-        var result = new List<MessageResponseDto>();
+        var results = new List<MessageResponseDto>();
 
         foreach (var message in messages)
         {
@@ -224,7 +254,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
 
             if (sender == null || receiver == null) continue;
 
-            var messageDto = new MessageResponseDto
+            var result = new MessageResponseDto
             {
                 Id = message.Id,
                 Sender = sender,
@@ -234,10 +264,10 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
                 ReadAt = message.ReadAt
             };
 
-            result.Add(messageDto);
+            results.Add(result);
         }
 
-        return result;
+        return results;
     }
 
     /// <inheritdoc />

@@ -4,7 +4,6 @@ using RestSharp;
 
 namespace History.Commons.Api.Message;
 
-// 받은 쪽지 목록 조회용
 public class GetReceivedMessages : IBaseRequest<List<MessageResponseDto>>, IAuthRequiredRequest, IRequestWithQueryParameters
 {
     public string Path => "/api/message/received";

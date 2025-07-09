@@ -14,11 +14,37 @@
     </ContentPage.Behaviors>
     <Grid RowSpacing="0">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="3*" />
             <RowDefinition Height="7*" />
         </Grid.RowDefinitions>
-        <StackLayout
+
+        <Grid
             Grid.Row="0"
+            Padding="12,0,12,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout>
+                <Grid>
+                    <Image HeightRequest="24" WidthRequest="24">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                        </Image.GestureRecognizers>
+                        <Image.Source>
+                            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="쪽지"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+        <StackLayout
+            Grid.Row="1"
             Padding="24,24,24,12"
             Spacing="8">
             <Label Text="보낸이" />
@@ -88,7 +114,7 @@
                 Text="{x:Binding TimestampText}"
                 TextColor="#808080" />
         </StackLayout>
-        <Grid Grid.Row="1" BackgroundColor="{StaticResource Primary}">
+        <Grid Grid.Row="2" BackgroundColor="{StaticResource Primary}">
             <Image
                 x:Name="BackgroundImage"
                 Aspect="AspectFill"
