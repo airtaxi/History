@@ -18,7 +18,7 @@ public partial class MessageViewModel : ObservableObject
     private MessageResponseDto _message;
 
     public string Id => _message.Id;
-    private UserResponseDto Sender => _message.Sender;
+    public UserResponseDto Sender => _message.Sender;
     public UserResponseDto Receiver => _message.Receiver;
 
     public List<BaseContent> Contents => _message.Contents;
