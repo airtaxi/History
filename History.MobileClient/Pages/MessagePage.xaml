@@ -124,6 +124,7 @@
                 IsVisible="{x:Binding HasImage}"
                 Source="{x:Binding ImageUrl}" />
             <Rectangle
+                Margin="-1"
                 Fill="Black"
                 HorizontalOptions="Fill"
                 Opacity="0.5"
