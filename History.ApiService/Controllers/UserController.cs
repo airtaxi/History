@@ -805,7 +805,7 @@ public class UserController(IUserService userService, IFriendshipService friends
             issuer: Constants.JwtIssuer,
             audience: Constants.JwtAudience,
             claims: claims,
-            expires: isRefreshToken ? DateTime.UtcNow.AddYears(1) : DateTime.UtcNow.AddDays(3),
+            expires: isRefreshToken ? DateTime.UtcNow.AddYears(1) : DateTime.UtcNow.AddMonths(1),
             signingCredentials: creds
         );
 
