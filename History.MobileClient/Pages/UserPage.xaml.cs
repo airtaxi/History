@@ -342,6 +342,6 @@ public partial class UserPage : ContentPage
     private async void OnMessageImageTapped(object sender, TappedEventArgs e)
     {
         var canSendMessage = await App.ExecuteRequestAsync(new CheckMessagePermission(UserId));
-        if (canSendMessage.IsSuccess) await App.PushAsync(new WriteMessagePage(UserId));
+        if (canSendMessage.IsSuccess) await App.PushModalAsync(new WriteMessagePage(UserId, _viewModel.User.Nickname));
     }
 }

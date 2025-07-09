@@ -12,11 +12,11 @@ public partial class WriteMessagePage : ContentPage
     private byte[] _imageBytes;
     private string _imageFileName;
 
-    public WriteMessagePage(string receiverId)
+    public WriteMessagePage(string receiverId, string nickname)
     {
         InitializeComponent();
         _receiverId = receiverId;
-        ReceiverLabel.Text = $"받는 사람: {receiverId}";
+        ReceiverLabel.Text = $"받는 사람: {nickname}";
     }
 
     private async void OnAttachImageButtonClicked(object sender, EventArgs e)
@@ -77,11 +77,7 @@ public partial class WriteMessagePage : ContentPage
         if (result.IsSuccess)
         {
             await DisplayAlert("성공", "쪽지가 전송되었습니다.", "확인");
-            await App.PopAsync();
-        }
-        else
-        {
-            await DisplayAlert("오류", result.ErrorMessage, "확인");
+            await App.PopModalAsync();
         }
     }
 }
