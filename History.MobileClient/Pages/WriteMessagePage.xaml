@@ -78,8 +78,12 @@
             </StackLayout>
             <Button
                 Grid.Row="2"
+                Margin="-16"
                 BackgroundColor="{StaticResource Primary}"
                 Clicked="OnSendButtonClicked"
+                CornerRadius="0"
+                FontAttributes="Bold"
+                FontSize="24"
                 Text="보내기"
                 TextColor="White" />
 
