@@ -84,6 +84,7 @@
                 CornerRadius="0"
                 FontAttributes="Bold"
                 FontSize="24"
+                HeightRequest="64"
                 Text="보내기"
                 TextColor="White" />
 
