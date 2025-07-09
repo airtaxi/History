@@ -119,7 +119,8 @@
             <Image
                 x:Name="BackgroundImage"
                 Aspect="AspectFill"
-                IsVisible="{x:Binding HasImage}" />
+                IsVisible="{x:Binding HasImage}"
+                Source="{x:Binding ImageUrl}" />
             <Rectangle
                 Fill="Black"
                 HorizontalOptions="Fill"

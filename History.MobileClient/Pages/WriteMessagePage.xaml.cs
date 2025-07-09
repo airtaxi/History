@@ -1,22 +1,43 @@
-﻿using History.Commons.Api.Message;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons.Api.Message;
 using History.Commons.DataTypes.Contents;
-using History.MobileClient.Helpers;
-using System.IO;
+using History.MobileClient.DataTypes;
+
+#if IOS
 using NativeMedia;
+#else
+using History.MobileClient.Helpers;
+#endif
 
 namespace History.MobileClient.Pages;
 
 public partial class WriteMessagePage : ContentPage
 {
-    private readonly string _receiverId;
+    private bool _isInForeground;
+
     private byte[] _imageBytes;
     private string _imageFileName;
+    private readonly string _receiverId;
 
     public WriteMessagePage(string receiverId, string nickname)
     {
         InitializeComponent();
         _receiverId = receiverId;
         ReceiverLabel.Text = $"받는 사람: {nickname}";
+
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+    }
+
+    private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
+    {
+        var isLoading = message.Value;
+        if (!_isInForeground && message.Value) return;
+
+        Dispatcher.Dispatch(() =>
+        {
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 
     private async void OnAttachImageButtonClicked(object sender, EventArgs e)
