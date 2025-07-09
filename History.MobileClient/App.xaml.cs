@@ -3,9 +3,11 @@ using System.Net;
 using System.Reflection;
 using System.Resources;
 using System.Text.Json;
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
+using History.Commons.Api.Message;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.Enums;
@@ -284,6 +286,29 @@ public partial class App : Application
 
             var page = new UserPage(userId);
             await PushAsync(page);
+        }
+        else if (type == NotificationType.Message)
+        {
+            if !data.TryGetValue("MessageId", out var messageId)) return;
+            var messageResult = await ExecuteRequestAsync(new GetMessage(messageId));
+            if (messageResult.IsFailure) return;
+
+            var messageViewModel = new MessageViewModel(messageResult.Value);
+            var page = new MessagePage(messageViewModel);
+            await PushAsync(page);
+        }
+        else if (type == NotificationType.Restriction)
+        {
+            var accept = await Page.DisplayAlert("제재 내역", data["Body"], Constants.PromptOk, "소명 신청하기");
+            if (!accept)
+            {
+                var copy = await Page.DisplayAlert("알림", "공식 디스코드에서 소명 신청을 받고 있습니다.", "디스코드 초대 URL 복사", "확인");
+                if (copy)
+                {
+                    await Clipboard.SetTextAsync(Constants.DiscordInviteUrl);
+                    await Toast.Make("디스코드 초대 URL이 클립보드에 복사되었습니다.").Show();
+                }
+            }
         }
         else
         {
