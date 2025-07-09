@@ -10,19 +10,72 @@
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
         <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
     </ContentPage.Behaviors>
-    <Grid RowSpacing="6" Padding="16">
+    <Grid Padding="16" RowSpacing="6">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Label x:Name="ReceiverLabel" Grid.Row="0" FontAttributes="Bold" FontSize="18" TextColor="{StaticResource Primary}" />
-        <StackLayout Grid.Row="1" Spacing="12">
-            <Editor x:Name="MessageEditor" Placeholder="쪽지 내용을 입력하세요 (최대 100자)" MaxLength="100" AutoSize="TextChanges"/>
-            <Image x:Name="AttachmentImage" HeightRequest="120" IsVisible="False" />
-            <Button x:Name="AttachImageButton" Text="이미지 첨부" Clicked="OnAttachImageButtonClicked" />
-            <Button x:Name="RemoveImageButton" Text="이미지 삭제" Clicked="OnRemoveImageButtonClicked" IsVisible="False" />
+
+
+
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,12,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout>
+                <Grid>
+                    <Image HeightRequest="24" WidthRequest="24">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                        </Image.GestureRecognizers>
+                        <Image.Source>
+                            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="쪽지 작성"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <Label
+            x:Name="ReceiverLabel"
+            Grid.Row="1"
+            FontAttributes="Bold"
+            FontSize="18"
+            TextColor="{StaticResource Primary}" />
+        <StackLayout Grid.Row="2" Spacing="12">
+            <Editor
+                x:Name="MessageEditor"
+                AutoSize="TextChanges"
+                MaxLength="100"
+                Placeholder="쪽지 내용을 입력하세요 (최대 100자)" />
+            <Image
+                x:Name="AttachmentImage"
+                HeightRequest="120"
+                IsVisible="False" />
+            <Button
+                x:Name="AttachImageButton"
+                Clicked="OnAttachImageButtonClicked"
+                Text="이미지 첨부" />
+            <Button
+                x:Name="RemoveImageButton"
+                Clicked="OnRemoveImageButtonClicked"
+                IsVisible="False"
+                Text="이미지 삭제" />
         </StackLayout>
-        <Button Grid.Row="2" Text="보내기" Clicked="OnSendButtonClicked" BackgroundColor="{StaticResource Primary}" TextColor="White" />
+        <Button
+            Grid.Row="3"
+            BackgroundColor="{StaticResource Primary}"
+            Clicked="OnSendButtonClicked"
+            Text="보내기"
+            TextColor="White" />
     </Grid>
 </ContentPage>

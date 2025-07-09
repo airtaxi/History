@@ -1,4 +1,7 @@
-﻿using DotNet.RateLimiter.ActionFilters;
+﻿using System.Security.Claims;
+using System.Text.Json;
+using DotNet.RateLimiter.ActionFilters;
+using History.ApiService.DataTypes;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes.RequestDtos;
@@ -6,7 +9,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace History.ApiService.Controllers;
 
@@ -64,13 +67,13 @@ public class MessageController(IMessageService messageService) : ControllerBase
     [ProducesResponseType<string>(404)]
     [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
-    public async Task<IActionResult> SendMessage([FromForm] SendMessageRequestDto requestDto)
+    public async Task<IActionResult> SendMessage([FromForm] DataWithFilesForm request)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userId)) return Unauthorized("로그인이 필요한 서비스입니다.");
 
-        var files = Request.Form.Files;
-        var result = await messageService.SendMessageAsync(userId, requestDto, files);
+        var data = JsonSerializer.Deserialize<SendMessageRequestDto>(request.JsonData);
+        var result = await messageService.SendMessageAsync(userId, data, request.Files);
         
         if (result.IsSuccess) return Ok("메시지가 전송되었습니다.");
         
