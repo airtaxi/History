@@ -40,21 +40,6 @@
                         <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
                     </Image.Source>
                 </Image>
-                <Image
-                    x:Name="MessageImage"
-                    HeightRequest="32"
-                    IsVisible="False"
-                    WidthRequest="32">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnMessageImageTapped" />
-                    </Image.GestureRecognizers>
-                    <Image.Source>
-                        <FontImageSource
-                            FontFamily="MaterialSharp"
-                            Glyph="{x:Static m:MaterialSharp.Mail}"
-                            Color="White" />
-                    </Image.Source>
-                </Image>
                 <Label
                     x:Name="TitleLabel"
                     FontAttributes="Bold"
@@ -80,6 +65,21 @@
                             x:Name="LayoutFontImageSource"
                             FontFamily="MaterialSharp"
                             Glyph="{x:Static m:MaterialSharp.Lists}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image
+                    x:Name="MessageImage"
+                    HeightRequest="32"
+                    IsVisible="False"
+                    WidthRequest="32">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMessageImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Mail}"
                             Color="White" />
                     </Image.Source>
                 </Image>

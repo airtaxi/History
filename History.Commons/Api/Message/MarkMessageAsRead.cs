@@ -1,4 +1,4 @@
-using History.Commons.Interfaces;
+﻿using History.Commons.Interfaces;
 using RestSharp;
 
 namespace History.Commons.Api.Message;
@@ -9,8 +9,5 @@ public class MarkMessageAsRead : IAuthRequiredRequest, IRequestWithUrlParameters
     public Method Method => Method.Post;
     public Dictionary<string, string> UrlParameters { get; set; } = [];
 
-    public MarkMessageAsRead(string messageId)
-    {
-        UrlParameters["messageId"] = messageId;
-    }
+    public MarkMessageAsRead(string messageId) => UrlParameters["messageId"] = messageId;
 }
