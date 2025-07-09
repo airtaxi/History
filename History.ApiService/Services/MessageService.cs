@@ -231,11 +231,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
                 Receiver = receiver,
                 Contents = message.Contents,
                 CreatedAt = message.CreatedAt,
-                ReadAt = message.ReadAt,
-                ModifiedAt = message.ModifiedAt,
-                IsDeleted = message.IsDeleted,
-                DeletedAt = message.DeletedAt,
-                DeletedBy = message.DeletedBy
+                ReadAt = message.ReadAt
             };
 
             result.Add(messageDto);

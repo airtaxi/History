@@ -3,6 +3,7 @@
     x:Class="History.MobileClient.Pages.MessagesPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
@@ -34,7 +35,7 @@
                                     <views:DataTemplatePresenter
                                         HeightRequest="40"
                                         Template="{StaticResource MediaTemplateSelector}"
-                                        ViewModel="{x:Binding Sender.ProfileMediaId}"
+                                        ViewModel="{x:Binding SenderProfileMedia}"
                                         WidthRequest="40">
                                         <views:DataTemplatePresenter.Clip>
                                             <EllipseGeometry
@@ -45,19 +46,40 @@
                                     </views:DataTemplatePresenter>
                                 </Grid>
                                 <VerticalStackLayout Grid.Column="1">
+                                    <HorizontalStackLayout Spacing="4">
+                                        <Label
+                                            FontAttributes="Bold"
+                                            FontSize="14"
+                                            LineBreakMode="TailTruncation"
+                                            Text="{x:Binding SenderName}" />
+                                        <Image
+                                            HeightRequest="14"
+                                            IsVisible="{x:Binding IsSenderAdmin}"
+                                            WidthRequest="14">
+                                            <Image.Source>
+                                                <FontImageSource
+                                                    FontFamily="FASolid"
+                                                    Glyph="{x:Static fa:Solid.Crown}"
+                                                    Color="#f78501" />
+                                            </Image.Source>
+                                        </Image>
+                                        <Image
+                                            HeightRequest="14"
+                                            IsVisible="{x:Binding IsSenderModerator}"
+                                            WidthRequest="14">
+                                            <Image.Source>
+                                                <FontImageSource
+                                                    FontFamily="FASolid"
+                                                    Glyph="{x:Static fa:Solid.Gavel}"
+                                                    Color="#1a5bf3" />
+                                            </Image.Source>
+                                        </Image>
+                                    </HorizontalStackLayout>
                                     <Label
-                                        FontAttributes="Bold"
                                         FontSize="14"
                                         LineBreakMode="TailTruncation"
                                         MaxLines="1"
-                                        Text="{x:Binding SenderName}" />
-                                    <Label
-                                        FontSize="14"
-                                        LineBreakMode="TailTruncation"
-                                        MaxLines="1"
-                                        Text="{x:Binding MainText}"
-                                        TextColor="{AppThemeBinding Dark=#CFCFCF,
-                                                                    Light=#303030}" />
+                                        Text="{x:Binding MainText}" />
                                     <Label
                                         FontSize="12"
                                         LineBreakMode="TailTruncation"
