@@ -117,7 +117,7 @@ public class PostController(IPostService postService, IFriendshipService friends
     [ProducesResponseType<string>(404)]
     [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
-    public async Task<IActionResult> WritePost([FromForm] DataWithFilesForm requestDto)
+    public async Task<IActionResult> WritePost([FromForm] DataWithFilesForm request)
     {
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
