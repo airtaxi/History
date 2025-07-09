@@ -61,7 +61,7 @@ public partial class MessageViewModel : ObservableObject
             return;
         }
 
-        var page = new UserPage(Receiver.UserId);
+        var page = new UserPage(Sender.UserId);
         await App.PushModalAsync(page);
     }
 }
