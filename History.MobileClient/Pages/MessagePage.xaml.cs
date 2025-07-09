@@ -33,7 +33,7 @@ public partial class MessagePage : ContentPage
 
     private async void MarkAsReadIfNeeded()
     {
-        if (_viewModel.Receiver?.UserId == Shared.UserId && _viewModel.Message.ReadAt == null)
+        if (_viewModel.Receiver?.UserId == Shared.UserId && _viewModel.ReadAt == null)
         {
             await App.ExecuteRequestAsync(new MarkMessageAsRead(_viewModel.Id));
         }

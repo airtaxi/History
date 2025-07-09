@@ -15,18 +15,44 @@
             <RowDefinition Height="3*" />
             <RowDefinition Height="7*" />
         </Grid.RowDefinitions>
-        <!-- 상단: 보낸/받는 사람 정보 -->
-        <StackLayout Grid.Row="0" Padding="24,24,24,12" Spacing="8" BackgroundColor="{StaticResource Primary}">
-            <Label x:Name="SenderLabel" FontAttributes="Bold" FontSize="18" TextColor="White" />
-            <Label x:Name="ReceiverLabel" FontSize="16" TextColor="White" />
-            <Label x:Name="TimestampLabel" FontSize="12" TextColor="#CFCFCF" />
+        <StackLayout
+            Grid.Row="0"
+            Padding="24,24,24,12"
+            BackgroundColor="{StaticResource Primary}"
+            Spacing="8">
+            <Label
+                x:Name="SenderLabel"
+                FontAttributes="Bold"
+                FontSize="18"
+                TextColor="White" />
+            <Label
+                x:Name="ReceiverLabel"
+                FontSize="16"
+                TextColor="White" />
+            <Label
+                x:Name="TimestampLabel"
+                FontSize="12"
+                TextColor="#CFCFCF" />
         </StackLayout>
-        <!-- 하단: 배경 + 메시지 -->
         <Grid Grid.Row="1">
-            <Image x:Name="BackgroundImage" Aspect="AspectFill" IsVisible="False" />
-            <BoxView x:Name="BackgroundBox" BackgroundColor="{StaticResource Primary}" IsVisible="True" />
+            <Image
+                x:Name="BackgroundImage"
+                Aspect="AspectFill"
+                IsVisible="False" />
+            <BoxView
+                x:Name="BackgroundBox"
+                BackgroundColor="{StaticResource Primary}"
+                IsVisible="True" />
             <Rectangle Fill="#00000080" />
-            <Label x:Name="MessageLabel" FontSize="24" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Padding="24" />
+            <Label
+                x:Name="MessageLabel"
+                Padding="24"
+                FontSize="24"
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center"
+                TextColor="White"
+                VerticalOptions="Center"
+                VerticalTextAlignment="Center" />
         </Grid>
     </Grid>
 </ContentPage>
