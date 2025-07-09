@@ -40,7 +40,7 @@
             </HorizontalStackLayout>
         </Grid>
 
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" Padding="16">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -81,6 +81,16 @@
                 Clicked="OnSendButtonClicked"
                 Text="보내기"
                 TextColor="White" />
+
+            <ActivityIndicator
+                x:Name="MainActivityIndicator"
+                Grid.RowSpan="3"
+                HeightRequest="100"
+                HorizontalOptions="Center"
+                IsRunning="False"
+                VerticalOptions="Center"
+                WidthRequest="100"
+                Color="{StaticResource Primary}" />
         </Grid>
     </Grid>
 </ContentPage>

@@ -23,7 +23,7 @@ public partial class MessageViewModel : ObservableObject
     public List<BaseContent> Contents => _message.Contents;
     public DateTime CreatedAt => _message.CreatedAt;
     public DateTime? ReadAt => _message.ReadAt;
-    public bool IsUnread => ReadAt == null;
+    public bool IsUnread => Receiver.UserId == Shared.UserId && ReadAt == null;
 
     public string MainText => Contents.OfType<TextContent>().FirstOrDefault()?.Text ?? string.Empty;
     public string ImageUrl => Contents.OfType<MediaContent>().FirstOrDefault()?.MediaId != null ? Utils.GenerateMediaUri(Contents.OfType<MediaContent>().First().MediaId) : null;
