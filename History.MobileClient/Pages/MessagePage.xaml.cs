@@ -46,4 +46,13 @@ public partial class MessagePage : ContentPage
         AppleSwipeGestureHelper.ApplyToPage(this);
 #endif
     }
+
+    private async void OnReplyButtonClicked(object sender, EventArgs e)
+    {
+        var senderId = _viewModel.Sender?.UserId;
+        if (senderId == null) return;
+
+        var page = new WriteMessagePage(senderId, _viewModel.SenderName);
+        await App.PushModalAsync(page);
+    }
 }
