@@ -27,6 +27,7 @@ public class UserResponseDto()
 
     public bool IsFavorite { get; set; }
 
+    public AccessPermission MessageReceivingPermission { get; set; }
     public bool IsFavoriteFriendNewPostPushNotificationEnabled { get; set; }
     public AccessPermission CommentPushNotificationPermission { get; set; }
     public AccessPermission CommentMentionPushNotificationPermission { get; set; }
@@ -34,6 +35,7 @@ public class UserResponseDto()
     public AccessPermission SharedPostCommentPushNotificationPermission { get; set; }
     public AccessPermission PostReactionPushNotificationPermission { get; set; }
     public AccessPermission PostMentionPushNotificationPermission { get; set; }
+    public AccessPermission MessagePushNotificationPermission { get; set; }
 
     public bool AllowSearch { get; set; }
 
@@ -62,6 +64,9 @@ public class UserResponseDto()
         BackgroundThumbnailMediaId = user.BackgroundThumbnailMediaId;
         UsesAnimatedBackgroundMedia = false;
 
+        // Message settings
+        MessageReceivingPermission = user.MessageReceivingPermission;
+
         // Push notification settings
         IsFavoriteFriendNewPostPushNotificationEnabled = user.IsFavoriteFriendNewPostPushNotificationEnabled;
         CommentPushNotificationPermission = user.CommentPushNotificationPermission;
@@ -70,6 +75,7 @@ public class UserResponseDto()
         SharedPostCommentPushNotificationPermission = user.SharedPostCommentPushNotificationPermission;
         PostReactionPushNotificationPermission = user.PostReactionPushNotificationPermission;
         PostMentionPushNotificationPermission = user.PostMentionPushNotificationPermission;
+        MessagePushNotificationPermission = user.MessagePushNotificationPermission;
 
         AllowSearch = user.AllowSearch;
     }

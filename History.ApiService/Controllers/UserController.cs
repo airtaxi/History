@@ -748,6 +748,26 @@ public class UserController(IUserService userService, IFriendshipService friends
         else return StatusCode(500, result.FullErrorMessage);
     }
 
+    [HttpPut("message-receiving-permission")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> UpdateMessageReceivingPermission([FromBody] UpdateMessageReceivingPermissionRequestDto request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var result = await userService.UpdateMessageReceivingPermissionAsync(userId, request.Permission);
+        if (result.IsSuccess) return Ok("메시지 수신 권한이 변경되었습니다.");
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
     /// <summary>
     /// Verify the ID token from the OAuth provider
     /// </summary>

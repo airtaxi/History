@@ -187,6 +187,14 @@ public interface IUserService
     public Task<Result> UpdatePushNotificationPermissionAsync(string userId, PushNotificationType type, AccessPermission accessPermission);
 
     /// <summary>
+    /// Updates the message receiving permission for a user.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose permission is being updated.</param>
+    /// <param name="accessPermission">The new access permission to be set for the user.</param>
+    /// <returns>A task that represents the asynchronous operation, with a result indicating the success or failure of the update operation.</returns>
+    public Task<Result> UpdateMessageReceivingPermissionAsync(string userId, AccessPermission accessPermission);
+
+    /// <summary>
     /// Withdraws a user's account, deleting their data.
     /// </summary>
     /// <param name="userId">The ID of the user whose account is to be withdrawn.</param>
