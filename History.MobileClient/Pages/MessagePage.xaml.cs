@@ -23,4 +23,6 @@ public partial class MessagePage : ContentPage
             await App.ExecuteRequestAsync(new MarkMessageAsRead(_viewModel.Id));
         }
     }
+
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
 }

@@ -18,6 +18,27 @@ namespace History.ApiService.Controllers;
 [RateLimit(Limit = 6, PeriodInSec = 1)]
 public class MessageController(IMessageService messageService) : ControllerBase
 {
+    [HttpGet("{messageId}")]
+    [Authorize]
+    [ProducesResponseType<MessageResponseDto>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> GetMessage(string messageId)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var result = await messageService.GetMessageByIdAsync(messageId);
+        if (result.IsFailure) return StatusCode(500, result.FullErrorMessage);
+
+        var dtoResult = await messageService.GenerateMessageResponseDtoAsync(result.Value, userId);
+        if (dtoResult.IsFailure) return StatusCode(500, dtoResult.FullErrorMessage);
+        return Ok(dtoResult.Value);
+    }
+
     [HttpGet("received")]
     [Authorize]
     [ProducesResponseType<List<MessageResponseDto>>(200)]

@@ -68,6 +68,14 @@ public interface IMessageService
     Task<Result<List<MessageResponseDto>>> GenerateMessageResponseDtosAsync(List<Message> messages, string requesterId);
 
     /// <summary>
+    /// Generate a single message response DTO from a message.
+    /// </summary>
+    /// <param name="message">The message</param>
+    /// <param name="requesterId">Th requester user ID</param>
+    /// <returns>A task that represents the asynchronous operation with result of message DTO</returns>
+    Task<Result<MessageResponseDto>> GenerateMessageResponseDtoAsync(Message message, string requesterId);
+
+    /// <summary>
     /// Handle user withdrawal by cleaning up message data.
     /// </summary>
     /// <param name="userId">The user ID</param>

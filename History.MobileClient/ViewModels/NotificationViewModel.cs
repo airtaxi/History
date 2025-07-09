@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using History.Commons.Api.Message;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
@@ -48,6 +49,16 @@ public partial class NotificationViewModel(NotificationResponseDto notification)
                     await Toast.Make("디스코드 초대 URL이 클립보드에 복사되었습니다.").Show();
                 }
             }
+        }
+        else if (type == NotificationType.Message)
+        {
+            if (!Notification.Data.TryGetValue("MessageId", out var messageId)) return;
+
+            var messageResult = await App.ExecuteRequestAsync(new GetMessage(messageId));
+            if (!messageResult.IsSuccess) return;
+
+            var viewModel = new MessageViewModel(messageResult.Value);
+            await App.PushModalAsync(new MessagePage(viewModel));
         }
         else if (type == NotificationType.FriendRequest)
         {

@@ -48,5 +48,5 @@ public partial class MessageViewModel : ObservableObject
     public MessageViewModel(MessageResponseDto message) => _message = message;
 
     [RelayCommand]
-    public async Task OpenMessage() => await App.PushAsync(new MessagePage(this));
+    public async Task OpenMessage() => await App.PushModalAsync(new MessagePage(this));
 }
