@@ -45,6 +45,9 @@
                                         Template="{StaticResource MediaTemplateSelector}"
                                         ViewModel="{x:Binding SenderProfileMedia}"
                                         WidthRequest="40">
+                                        <views:DataTemplatePresenter.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
+                                        </views:DataTemplatePresenter.GestureRecognizers>
                                         <views:DataTemplatePresenter.Clip>
                                             <EllipseGeometry
                                                 Center="20,20"

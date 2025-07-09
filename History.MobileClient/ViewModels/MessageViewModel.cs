@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes;
@@ -48,5 +49,19 @@ public partial class MessageViewModel : ObservableObject
     public MessageViewModel(MessageResponseDto message) => _message = message;
 
     [RelayCommand]
-    public async Task OpenMessage() => await App.PushModalAsync(new MessagePage(this));
+    public async Task OpenMessageAsync() => await App.PushModalAsync(new MessagePage(this));
+
+    [RelayCommand]
+    public async Task HandleProfileTapAsync()
+    {
+        // Don't open own profile
+        if (Receiver.UserId == Shared.UserId)
+        {
+            await Toast.Make("내 프로필입니다").Show();   
+            return;
+        }
+
+        var page = new UserPage(Receiver.UserId);
+        await App.PushModalAsync(page);
+    }
 }

@@ -19,6 +19,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="3*" />
             <RowDefinition Height="7*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid
@@ -130,7 +131,7 @@
             <Label
                 Padding="24"
                 FontAttributes="Bold"
-                FontSize="24"
+                FontSize="32"
                 HorizontalOptions="Center"
                 HorizontalTextAlignment="Center"
                 LineBreakMode="WordWrap"
@@ -139,5 +140,18 @@
                 VerticalOptions="Center"
                 VerticalTextAlignment="Center" />
         </Grid>
+
+        <Button
+            x:Name="ReplyButton"
+            Grid.Row="3"
+            BackgroundColor="{StaticResource Primary}"
+            Clicked="OnReplyButtonClicked"
+            CornerRadius="0"
+            FontAttributes="Bold"
+            FontSize="24"
+            HeightRequest="64"
+            IsVisible="False"
+            Text="답장하기"
+            TextColor="White" />
     </Grid>
 </ContentPage>
