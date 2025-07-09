@@ -2,6 +2,8 @@
 using History.Commons.Api.Message;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
+
 
 #if IOS
 using NativeMedia;
@@ -102,5 +104,31 @@ public partial class WriteMessagePage : ContentPage
             await DisplayAlert("성공", "쪽지가 전송되었습니다.", "확인");
             await App.PopModalAsync();
         }
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _isInForeground = true;
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+        }
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+    }
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+#if IOS
+        AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
     }
 }

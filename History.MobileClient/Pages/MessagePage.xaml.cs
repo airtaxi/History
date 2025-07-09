@@ -1,6 +1,7 @@
-﻿using History.Commons.Api.Message;
+﻿using System.IO;
+using History.Commons.Api.Message;
+using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
-using System.IO;
 using Microsoft.Maui.Controls;
 
 namespace History.MobileClient.Pages;
@@ -16,6 +17,18 @@ public partial class MessagePage : ContentPage
         Dispatcher.Dispatch(MarkAsReadIfNeeded);
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
+        if (safeAreaTopHeight != 0)
+        {
+            var statusBarHeight = LayoutHelper.GetStatusBarHeight();
+            Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
+        }
+    }
+
     private async void MarkAsReadIfNeeded()
     {
         if (_viewModel.Receiver?.UserId == Shared.UserId && _viewModel.ReadAt == null)
@@ -25,4 +38,11 @@ public partial class MessagePage : ContentPage
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+#if IOS
+        AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
+    }
 }
