@@ -127,6 +127,7 @@
                 Margin="-1"
                 Fill="Black"
                 HorizontalOptions="Fill"
+                IsVisible="{x:Binding HasImage}"
                 Opacity="0.5"
                 VerticalOptions="Fill" />
             <Label
