@@ -342,12 +342,6 @@ public partial class UserPage : ContentPage
     private async void OnMessageImageTapped(object sender, TappedEventArgs e)
     {
         var canSendMessage = await App.ExecuteRequestAsync(new CheckMessagePermission(UserId));
-        if (!canSendMessage.IsSuccess)
-        {
-            await App.DisplayAlert("메시지 전송 불가", canSendMessage.ErrorMessage, "확인");
-            return;
-        }
-
-        await App.PushAsync(new WriteMessagePage(UserId));
+        if (!canSendMessage.IsSuccess) await App.PushAsync(new WriteMessagePage(UserId));
     }
 }
