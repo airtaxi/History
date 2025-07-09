@@ -28,16 +28,18 @@
                                     <TapGestureRecognizer Command="{x:Binding OpenMessageCommand}" />
                                 </Grid.GestureRecognizers>
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="8" />
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Grid Grid.Column="0">
-                                    <Rectangle
-                                        Fill="#80FF0000"
-                                        HorizontalOptions="Start"
-                                        IsVisible="{x:Binding IsUnread}"
-                                        VerticalOptions="Fill"
-                                        WidthRequest="8" />
+                                <Rectangle
+                                    Grid.Row="0"
+                                    Fill="#80FF0000"
+                                    HorizontalOptions="Start"
+                                    IsVisible="{x:Binding IsUnread}"
+                                    VerticalOptions="Fill"
+                                    WidthRequest="8" />
+                                <Grid Grid.Column="1">
                                     <views:DataTemplatePresenter
                                         HeightRequest="40"
                                         Template="{StaticResource MediaTemplateSelector}"
@@ -51,7 +53,7 @@
                                         </views:DataTemplatePresenter.Clip>
                                     </views:DataTemplatePresenter>
                                 </Grid>
-                                <VerticalStackLayout Grid.Column="1">
+                                <VerticalStackLayout Grid.Column="2">
                                     <HorizontalStackLayout Spacing="4">
                                         <Label
                                             FontAttributes="Bold"
