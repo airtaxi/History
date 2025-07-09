@@ -13,8 +13,7 @@ public class GetReceivedMessages : IBaseRequest<List<MessageResponseDto>>, IAuth
 
     public GetReceivedMessages(string from = null, int limit = 50)
     {
-        if (!string.IsNullOrEmpty(from))
-            QueryParameters["from"] = from;
+        if (!string.IsNullOrEmpty(from)) QueryParameters["from"] = from;
         QueryParameters["limit"] = limit.ToString();
     }
 }
