@@ -33,56 +33,70 @@
         </Grid>
         <Grid Grid.Row="1">
             <RefreshView Refreshing="OnRefreshing">
-                <CollectionView
-                    x:Name="MainCollectionView"
-                    RemainingItemsThreshold="0"
-                    RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
-                    SelectionMode="None">
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="vm:MessageViewModel">
-                            <Grid Padding="12,8,12,8" ColumnSpacing="8">
-                                <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{x:Binding OpenMessageCommand}" />
-                                </Grid.GestureRecognizers>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Grid Grid.Column="0">
-                                    <views:DataTemplatePresenter
-                                        HeightRequest="40"
-                                        Template="{StaticResource MediaTemplateSelector}"
-                                        ViewModel="{x:Binding Sender.ProfileMediaId}"
-                                        WidthRequest="40">
-                                        <views:DataTemplatePresenter.Clip>
-                                            <EllipseGeometry Center="20,20" RadiusX="20" RadiusY="20" />
-                                        </views:DataTemplatePresenter.Clip>
-                                    </views:DataTemplatePresenter>
+                <Grid>
+                    <CollectionView
+                        x:Name="MainCollectionView"
+                        RemainingItemsThreshold="0"
+                        RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
+                        SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:MessageViewModel">
+                                <Grid Padding="12,8,12,8" ColumnSpacing="8">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{x:Binding OpenMessageCommand}" />
+                                    </Grid.GestureRecognizers>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid Grid.Column="0">
+                                        <views:DataTemplatePresenter
+                                            HeightRequest="40"
+                                            Template="{StaticResource MediaTemplateSelector}"
+                                            ViewModel="{x:Binding Sender.ProfileMediaId}"
+                                            WidthRequest="40">
+                                            <views:DataTemplatePresenter.Clip>
+                                                <EllipseGeometry
+                                                    Center="20,20"
+                                                    RadiusX="20"
+                                                    RadiusY="20" />
+                                            </views:DataTemplatePresenter.Clip>
+                                        </views:DataTemplatePresenter>
+                                    </Grid>
+                                    <VerticalStackLayout Grid.Column="1">
+                                        <Label
+                                            FontAttributes="Bold"
+                                            FontSize="14"
+                                            LineBreakMode="TailTruncation"
+                                            MaxLines="1"
+                                            Text="{x:Binding SenderName}" />
+                                        <Label
+                                            FontSize="14"
+                                            LineBreakMode="TailTruncation"
+                                            MaxLines="1"
+                                            Text="{x:Binding MainText}"
+                                            TextColor="{AppThemeBinding Dark=#CFCFCF,
+                                                                        Light=#303030}" />
+                                        <Label
+                                            FontSize="12"
+                                            LineBreakMode="TailTruncation"
+                                            MaxLines="1"
+                                            Text="{x:Binding TimestampText}"
+                                            TextColor="#808080" />
+                                    </VerticalStackLayout>
                                 </Grid>
-                                <VerticalStackLayout Grid.Column="1">
-                                    <Label
-                                        FontAttributes="Bold"
-                                        FontSize="14"
-                                        LineBreakMode="TailTruncation"
-                                        MaxLines="1"
-                                        Text="{x:Binding SenderName}" />
-                                    <Label
-                                        FontSize="14"
-                                        LineBreakMode="TailTruncation"
-                                        MaxLines="1"
-                                        Text="{x:Binding MainText}"
-                                        TextColor="{AppThemeBinding Dark=#CFCFCF, Light=#303030}" />
-                                    <Label
-                                        FontSize="12"
-                                        LineBreakMode="TailTruncation"
-                                        MaxLines="1"
-                                        Text="{x:Binding TimestampText}"
-                                        TextColor="#808080" />
-                                </VerticalStackLayout>
-                            </Grid>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                    <Label
+                        x:Name="EmptyLabel"
+                        FontSize="16"
+                        HorizontalOptions="Center"
+                        IsVisible="False"
+                        Text="받은 쪽지가 없습니다."
+                        TextColor="#888888"
+                        VerticalOptions="Center" />
+                </Grid>
             </RefreshView>
         </Grid>
         <ActivityIndicator

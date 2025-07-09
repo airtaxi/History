@@ -39,6 +39,8 @@ public partial class MessagesPage : ContentPage
                 _viewModels.Clear();
                 foreach (var message in allMessages)
                     _viewModels.Add(new MessageViewModel(message));
+
+                EmptyLabel.IsVisible = !allMessages.Any();
             }
         }
         finally { _fetchSemaphore.Release(); }
@@ -52,6 +54,12 @@ public partial class MessagesPage : ContentPage
         {
             await _fetchSemaphore.WaitAsync();
             var lastViewModel = _viewModels.LastOrDefault();
+            if (lastViewModel == null)
+            {
+                _areThereNoMoreMessagesToLoad = true;
+                return;
+            }
+
             var messagesResult = await App.ExecuteRequestAsync(new GetReceivedMessages(lastViewModel?.Id));
             if (messagesResult.IsSuccess)
             {
@@ -79,6 +87,7 @@ public partial class MessagesPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
         Dispatcher.Dispatch(async () => await RefreshAsync());
+
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
         if (safeAreaTopHeight != 0)
         {
@@ -97,6 +106,7 @@ public partial class MessagesPage : ContentPage
     {
         var isLoading = message.Value;
         if (!_isInForeground && message.Value) return;
+
         Dispatcher.Dispatch(() =>
         {
             MainActivityIndicator.IsRunning = isLoading;

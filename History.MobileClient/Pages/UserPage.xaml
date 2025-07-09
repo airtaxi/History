@@ -43,13 +43,16 @@
                 <Image
                     x:Name="MessageImage"
                     HeightRequest="32"
-                    WidthRequest="32"
-                    IsVisible="False">
+                    IsVisible="False"
+                    WidthRequest="32">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnMessageImageTapped" />
                     </Image.GestureRecognizers>
                     <Image.Source>
-                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Markunread}" Color="White" />
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Mail}"
+                            Color="White" />
                     </Image.Source>
                 </Image>
                 <Label
