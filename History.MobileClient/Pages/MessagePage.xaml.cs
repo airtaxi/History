@@ -15,6 +15,7 @@ public partial class MessagePage : ContentPage
         _viewModel = viewModel;
         BindingContext = _viewModel;
         Dispatcher.Dispatch(MarkAsReadIfNeeded);
+        ReplyButton.IsVisible = viewModel.Receiver?.UserId != Shared.UserId;
     }
 
     protected override void OnAppearing()
