@@ -1,4 +1,5 @@
-﻿using History.MobileClient.ViewModels;
+﻿using History.Commons.Api.Message;
+using History.MobileClient.ViewModels;
 using System.IO;
 using Microsoft.Maui.Controls;
 
@@ -26,6 +27,15 @@ public partial class MessagePage : ContentPage
         {
             BackgroundImage.IsVisible = false;
             BackgroundBox.IsVisible = true;
+        }
+        MarkAsReadIfNeeded();
+    }
+
+    private async void MarkAsReadIfNeeded()
+    {
+        if (_viewModel.Receiver?.UserId == Shared.UserId && _viewModel.Message.ReadAt == null)
+        {
+            await App.ExecuteRequestAsync(new MarkMessageAsRead(_viewModel.Id));
         }
     }
 }

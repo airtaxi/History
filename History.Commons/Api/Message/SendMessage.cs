@@ -1,4 +1,4 @@
-using History.Commons.DataTypes.Contents;
+﻿using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.Interfaces;
 using RestSharp;
