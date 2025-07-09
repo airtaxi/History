@@ -32,6 +32,12 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <Grid Grid.Column="0">
+                                    <Rectangle
+                                        Fill="#80FF0000"
+                                        HorizontalOptions="Start"
+                                        IsVisible="{x:Binding IsUnread}"
+                                        VerticalOptions="Fill"
+                                        WidthRequest="8" />
                                     <views:DataTemplatePresenter
                                         HeightRequest="40"
                                         Template="{StaticResource MediaTemplateSelector}"

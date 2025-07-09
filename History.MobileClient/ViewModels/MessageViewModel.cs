@@ -18,10 +18,13 @@ public partial class MessageViewModel : ObservableObject
 
     public string Id => _message.Id;
     private UserResponseDto Sender => _message.Sender;
-    private UserResponseDto Receiver => _message.Receiver;
+    public UserResponseDto Receiver => _message.Receiver;
 
     public List<BaseContent> Contents => _message.Contents;
     public DateTime CreatedAt => _message.CreatedAt;
+    public DateTime? ReadAt => _message.ReadAt;
+    public bool IsUnread => ReadAt == null;
+
     public string MainText => Contents.OfType<TextContent>().FirstOrDefault()?.Text ?? string.Empty;
     public string ImageUrl => Contents.OfType<MediaContent>().FirstOrDefault()?.MediaId != null ? Utils.GenerateMediaUri(Contents.OfType<MediaContent>().First().MediaId) : null;
     public bool HasImage => !string.IsNullOrEmpty(ImageUrl);
@@ -40,12 +43,9 @@ public partial class MessageViewModel : ObservableObject
         ? new VideoViewModel(Utils.GenerateMediaUri(Receiver.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(Receiver.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
-    public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, _message.ModifiedAt);
+    public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, null);
 
-    public MessageViewModel(MessageResponseDto message)
-    {
-        _message = message;
-    }
+    public MessageViewModel(MessageResponseDto message) => _message = message;
 
     [RelayCommand]
     public async Task OpenMessage() => await App.PushAsync(new MessagePage(this));
