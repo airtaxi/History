@@ -1,4 +1,5 @@
-﻿using History.ApiService.Helpers;
+﻿using System.Collections.Generic;
+using History.ApiService.Helpers;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
@@ -89,6 +90,13 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
         if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
             return (ErrorType.BadRequest, "쪽지에 내용이 없습니다.");
 
+        // Check text length
+        var textContents = contents.OfType<TextContent>();
+        var text = string.Join("", textContents.Select(tc => tc.Text));
+        text = Utils.SanitizeText(text);
+        if (text.Length > 100)
+            return (ErrorType.BadRequest, "쪽지는 100자 이내로 작성해야 합니다.");
+
         // Validate media contents (limit to 1 image)
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
         if (mediaCount > 1) return (ErrorType.BadRequest, "쪽지에는 이미지를 최대 1개까지만 첨부할 수 있습니다.");
@@ -101,6 +109,12 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
                 return (ErrorType.BadRequest, "미디어 콘텐츠는 MediaId, MimeType, ThumbnailMediaId가 모두 필요합니다.");
             }
         }
+
+
+        var finalTextContent = new TextContent() { Text = text };
+        var finalMediaConent = mediaContents.FirstOrDefault();
+        var finalContents = new List<BaseContent>() { finalTextContent };
+        if (finalMediaConent != null) finalContents.Add(finalMediaConent);
 
         string messageId;
         while (true)
@@ -119,7 +133,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
             Id = messageId,
             SenderId = senderId,
             ReceiverId = requestDto.ReceiverId,
-            Contents = contents,
+            Contents = finalContents,
             CreatedAt = DateTime.UtcNow
         };
 
