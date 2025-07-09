@@ -1,19 +1,33 @@
-using History.Commons.DataTypes.ResponseDtos;
+﻿using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Interfaces;
 using RestSharp;
 
 namespace History.Commons.Api.Message;
 
-public class GetMessages : IBaseRequest<List<MessageResponseDto>>, IAuthRequiredRequest, IRequestWithUrlParameters, IRequestWithQueryParameters
+// 받은 쪽지 목록 조회용
+public class GetReceivedMessages : IBaseRequest<List<MessageResponseDto>>, IAuthRequiredRequest, IRequestWithQueryParameters
 {
-    public string Path => "/api/message/conversations/{conversationId}/messages";
+    public string Path => "/api/message/received";
     public Method Method => Method.Get;
-    public Dictionary<string, string> UrlParameters { get; set; } = [];
     public Dictionary<string, string> QueryParameters { get; set; } = [];
 
-    public GetMessages(string conversationId, string from = null, int limit = 50)
+    public GetReceivedMessages(string from = null, int limit = 50)
     {
-        UrlParameters["conversationId"] = conversationId;
+        if (!string.IsNullOrEmpty(from))
+            QueryParameters["from"] = from;
+        QueryParameters["limit"] = limit.ToString();
+    }
+}
+
+// 보낸 쪽지 목록 조회용
+public class GetSentMessages : IBaseRequest<List<MessageResponseDto>>, IAuthRequiredRequest, IRequestWithQueryParameters
+{
+    public string Path => "/api/message/sent";
+    public Method Method => Method.Get;
+    public Dictionary<string, string> QueryParameters { get; set; } = [];
+
+    public GetSentMessages(string from = null, int limit = 50)
+    {
         if (!string.IsNullOrEmpty(from))
             QueryParameters["from"] = from;
         QueryParameters["limit"] = limit.ToString();

@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.MessagePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
+    Shell.NavBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid RowSpacing="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="3*" />
+            <RowDefinition Height="7*" />
+        </Grid.RowDefinitions>
+        <!-- 상단: 보낸/받는 사람 정보 -->
+        <StackLayout Grid.Row="0" Padding="24,24,24,12" Spacing="8" BackgroundColor="{StaticResource Primary}">
+            <Label x:Name="SenderLabel" FontAttributes="Bold" FontSize="18" TextColor="White" />
+            <Label x:Name="ReceiverLabel" FontSize="16" TextColor="White" />
+            <Label x:Name="TimestampLabel" FontSize="12" TextColor="#CFCFCF" />
+        </StackLayout>
+        <!-- 하단: 배경 + 메시지 -->
+        <Grid Grid.Row="1">
+            <Image x:Name="BackgroundImage" Aspect="AspectFill" IsVisible="False" />
+            <BoxView x:Name="BackgroundBox" BackgroundColor="{StaticResource Primary}" IsVisible="True" />
+            <Rectangle Fill="#00000080" />
+            <Label x:Name="MessageLabel" FontSize="24" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" Padding="24" />
+        </Grid>
+    </Grid>
+</ContentPage>

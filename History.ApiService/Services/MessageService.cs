@@ -77,7 +77,11 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
         var contents = requestDto.Contents ?? [];
         Utils.SanitizeContents(contents);
 
-        // 쪽지에 외부 URL 첨부 불가 정책
+        // Check if user is equal to receiver
+        if (senderId == requestDto.ReceiverId)
+            return (ErrorType.BadRequest, "자기 자신에게 메시지를 보낼 수 없습니다.");
+
+        // Check for external URLs
         if (contents.Any(c => c is ExternalUrlContent))
             return (ErrorType.BadRequest, "쪽지에는 외부 URL을 첨부할 수 없습니다.");
 
@@ -123,109 +127,6 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
 
         // Send notification
         await notificationService.SendNotificationsAsync(NotificationType.Message, message.Id);
-
-        return Result.Success();
-    }
-
-    /// <inheritdoc />
-    public async Task<Result> ModifyMessageAsync(string messageId, string senderId, ModifyMessageRequestDto requestDto, IEnumerable<IFormFile> files)
-    {
-        var messageResult = await GetMessageByIdAsync(messageId);
-        if (messageResult.IsFailure) return messageResult.CastFailure();
-
-        var message = messageResult.Value;
-        if (message.SenderId != senderId)
-        {
-            return (ErrorType.Forbidden, "메시지를 수정할 권한이 없습니다.");
-        }
-
-        if (message.IsDeleted)
-        {
-            return (ErrorType.BadRequest, "삭제된 메시지는 수정할 수 없습니다.");
-        }
-
-        // Sanitize contents
-        var contents = requestDto.Contents ?? [];
-        Utils.SanitizeContents(contents);
-
-        // 쪽지에 외부 URL 첨부 불가 정책
-        if (contents.Any(c => c is ExternalUrlContent))
-            return (ErrorType.BadRequest, "쪽지에는 외부 URL을 첨부할 수 없습니다.");
-
-        // Check if the message has any content
-        if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
-            return (ErrorType.BadRequest, "메시지에 내용이 없습니다.");
-
-        // Validate media contents (limit to 1 image)
-        var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
-        if (mediaCount > 1) return (ErrorType.BadRequest, "메시지에는 이미지를 최대 1개까지만 첨부할 수 있습니다.");
-
-        var originalMediaContents = message.Contents.OfType<MediaContent>();
-        var mediaContents = contents.OfType<MediaContent>();
-        foreach (var mediaContent in mediaContents)
-        {
-            if (string.IsNullOrEmpty(mediaContent.MediaId) || string.IsNullOrEmpty(mediaContent.MimeType) || mediaContent.ThumbnailMediaId == null)
-                return (ErrorType.BadRequest, "미디어 콘텐츠는 MediaId, MimeType, ThumbnailMediaId가 모두 필요합니다.");
-
-            var originalMediaContent = originalMediaContents.FirstOrDefault(m => m.MediaId == mediaContent.MediaId);
-            if (originalMediaContent != null)
-            {
-                if (mediaContent.MimeType != originalMediaContent.MimeType)
-                    return (ErrorType.BadRequest, "미디어 콘텐츠의 MimeType이 원본과 다릅니다.");
-                else if (mediaContent.ThumbnailMediaId != originalMediaContent.ThumbnailMediaId)
-                    return (ErrorType.BadRequest, "미디어 콘텐츠의 ThumbnailMediaId가 원본과 다릅니다.");
-            }
-        }
-
-        // Delete removed media
-        var originalMediaIds = originalMediaContents.Select(s => s.MediaId).ToList();
-        var mediaIds = mediaContents.Select(s => s.MediaId).ToList();
-        var deletedMediaIds = originalMediaIds.Except(mediaIds).ToList();
-        foreach (var mediaId in deletedMediaIds)
-        {
-            await mediaService.DeleteMediaByIdAsync(mediaId);
-        }
-
-        // Upload new media
-        var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Message, messageId, senderId, contents, files);
-        if (uploadResult.IsFailure) return uploadResult;
-
-        // Update the message
-        message.Contents = contents;
-        message.ModifiedAt = DateTime.UtcNow;
-
-        await _messageCollection.ReplaceOneAsync(m => m.Id == messageId, message);
-
-        return Result.Success();
-    }
-
-    /// <inheritdoc />
-    public async Task<Result> DeleteMessageAsync(string messageId, string requesterId)
-    {
-        var messageResult = await GetMessageByIdAsync(messageId);
-        if (messageResult.IsFailure) return messageResult.CastFailure();
-
-        var message = messageResult.Value;
-        if (message.SenderId != requesterId)
-        {
-            return (ErrorType.Forbidden, "메시지를 삭제할 권한이 없습니다.");
-        }
-
-        if (message.IsDeleted)
-        {
-            return (ErrorType.BadRequest, "이미 삭제된 메시지입니다.");
-        }
-
-        // Mark as deleted instead of actually deleting
-        var updateDef = Builders<Message>.Update
-            .Set(m => m.IsDeleted, true)
-            .Set(m => m.DeletedAt, DateTime.UtcNow)
-            .Set(m => m.DeletedBy, requesterId);
-
-        await _messageCollection.UpdateOneAsync(m => m.Id == messageId, updateDef);
-
-        // Delete media files
-        await mediaService.DeleteMediaByAssociatedIdAsync(messageId);
 
         return Result.Success();
     }
@@ -334,8 +235,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
                 ModifiedAt = message.ModifiedAt,
                 IsDeleted = message.IsDeleted,
                 DeletedAt = message.DeletedAt,
-                DeletedBy = message.DeletedBy,
-                IsOwn = message.SenderId == requesterId
+                DeletedBy = message.DeletedBy
             };
 
             result.Add(messageDto);

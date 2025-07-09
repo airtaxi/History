@@ -40,6 +40,18 @@
                         <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
                     </Image.Source>
                 </Image>
+                <Image
+                    x:Name="MessageImage"
+                    HeightRequest="32"
+                    WidthRequest="32"
+                    IsVisible="False">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMessageImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Markunread}" Color="White" />
+                    </Image.Source>
+                </Image>
                 <Label
                     x:Name="TitleLabel"
                     FontAttributes="Bold"

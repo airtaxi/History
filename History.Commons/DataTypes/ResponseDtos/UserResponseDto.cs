@@ -60,9 +60,9 @@ public class UserResponseDto()
         ProfileThumbnailMediaId = user.ProfileThumbnailMediaId;
         UsesAnimatedProfileMedia = user.UsesAnimatedProfileMedia;
 
-        BackgroundMediaId = user.BackgroundThumbnailMediaId;
+        BackgroundMediaId = user.BackgroundMediaId;
         BackgroundThumbnailMediaId = user.BackgroundThumbnailMediaId;
-        UsesAnimatedBackgroundMedia = false;
+        UsesAnimatedBackgroundMedia = user.UsesAnimatedBackgroundMedia;
 
         // Message settings
         MessageReceivingPermission = user.MessageReceivingPermission;

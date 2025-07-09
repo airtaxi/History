@@ -13,11 +13,12 @@
             </Tab.Icon>
             <ShellContent ContentTemplate="{DataTemplate pages:TimelinePage}" />
         </Tab>
-        <Tab Title="알림">
+        <Tab Title="알림/쪽지">
             <Tab.Icon>
                 <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Notifications}" />
             </Tab.Icon>
-            <ShellContent ContentTemplate="{DataTemplate pages:NotificationsPage}" />
+            <ShellContent Title="알림" ContentTemplate="{DataTemplate pages:NotificationsPage}" />
+            <ShellContent Title="쪽지" ContentTemplate="{DataTemplate pages:MessagesPage}" />
         </Tab>
         <Tab Title="친구">
             <Tab.Icon>
