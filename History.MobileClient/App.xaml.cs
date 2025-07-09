@@ -289,7 +289,7 @@ public partial class App : Application
         }
         else if (type == NotificationType.Message)
         {
-            if !data.TryGetValue("MessageId", out var messageId)) return;
+            if (!data.TryGetValue("MessageId", out var messageId)) return;
             var messageResult = await ExecuteRequestAsync(new GetMessage(messageId));
             if (messageResult.IsFailure) return;
 
