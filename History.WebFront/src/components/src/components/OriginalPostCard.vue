@@ -92,7 +92,7 @@ import 'swiper/css/pagination';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Navigation, Pagination } from 'swiper/modules';
 import type { PostResponseDto } from '@/types';
-import ImageModal from '@/components/testBox/src/components/modals/ImageModal.vue';
+import ImageModal from '@/components/src/components/modals/ImageModal.vue';
 import defaultProfileImage from '@/assets/images/default_profile_image.jpg';
 
 const props = defineProps<{

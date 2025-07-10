@@ -79,7 +79,7 @@
 
 <script setup lang="ts">
 import { defineProps, defineEmits, ref } from 'vue';
-import { useLongPress } from '@/components/testBox/src/composables/useLongPress';
+import { useLongPress } from '@/components/src/composables/useLongPress';
 import type { PostResponseDto } from '@/types';
 
 const props = defineProps<{

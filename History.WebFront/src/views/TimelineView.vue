@@ -7,7 +7,7 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import apiClient from '@/api';
 import type { PostResponseDto } from '@/types';
-import PostCard from '@/components/testBox/PostCard.vue';
+import PostCard from '@/components/PostCard.vue';
 import RightSidebar from '@/components/layout/RightSidebar.vue';
 import CreatePost from '@/components/CreatePost.vue';
 import PostDetailModal from '@/components/PostDetailModal.vue';
