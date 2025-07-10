@@ -15,10 +15,10 @@
  *   handle-reaction-click: 반응 버튼 클릭 시 발생.
  *   start-long-press: 반응 버튼 롱 프레스 시작 시 발생.
  *   end-long-press: 반응 버튼 롱 프레스 종료 시 발생.
- *   open-share-editor: 공유 버튼 롱 프레스 시 공유 에디터를 열기 위해 발생.
- *   handle-instant-repost: 리포스트 버튼 롱 프레스 시 즉시 리포스트를 처리하기 위해 발생.
- *   show-shared-users-modal: 공유 카운트 클릭 시 공유 사용자 목록 모달을 열기 위해 발생.
- *   show-reposted-users-modal: 리포스트 카운트 클릭 시 리포스트 사용자 목록 모달을 열기 위해 발생.
+ *   open-share-editor: 공유 버튼 클릭 시 공유 에디터를 열기 위해 발생.
+ *   handle-instant-repost: 리포스트 버튼 클릭 시 즉시 리포스트를 처리하기 위해 발생.
+ *   show-shared-users-modal: 공유 버튼 롱 프레스 시 공유 사용자 목록 모달을 열기 위해 발생.
+ *   show-reposted-users-modal: 리포스트 버튼 롱 프레스 시 리포스트 사용자 목록 모달을 열기 위해 발생.
  * }
 -->
 <template>
@@ -45,12 +45,12 @@
       <span>💬 {{ post.commentsCount || 0 }}</span>
     </button>
     <button
-      @mousedown.stop="startShareLongPress"
-      @mouseup.stop="endShareLongPress"
-      @mouseleave.stop="endShareLongPress"
-      @touchstart.stop="startShareLongPress"
-      @touchend.stop="endShareLongPress"
-      @click.stop="$emit('open-share-editor')"
+      @mousedown.stop="shareLongPress.start(() => { console.log('[PostFooter] Long press 콜백 실행됨'); emit('show-shared-users-modal'); })"
+      @mouseup.stop="shareLongPress.end"
+      @mouseleave.stop="shareLongPress.end"
+      @touchstart.stop="shareLongPress.start(() => { console.log('[PostFooter] Long press 콜백 실행됨'); emit('show-shared-users-modal'); })"
+      @touchend.stop="shareLongPress.end"
+      @click.stop="handleShareClick"
       class="footer-btn"
       title="공유하기"
     >
@@ -60,12 +60,12 @@
       </span>
     </button>
     <button
-      @mousedown.stop="startRepostLongPress"
-      @mouseup.stop="endRepostLongPress"
-      @mouseleave.stop="endRepostLongPress"
-      @touchstart.stop="startRepostLongPress"
-      @touchend.stop="endRepostLongPress"
-      @click.stop="$emit('handle-instant-repost')"
+      @mousedown.stop="repostLongPress.start(() => emit('show-reposted-users-modal'))"
+      @mouseup.stop="repostLongPress.end"
+      @mouseleave.stop="repostLongPress.end"
+      @touchstart.stop="repostLongPress.start(() => emit('show-reposted-users-modal'))"
+      @touchend.stop="repostLongPress.end"
+      @click.stop="handleRepostClick"
       class="footer-btn repost-btn"
       title="리포스트하기"
     >
@@ -78,8 +78,8 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
-import { useLongPress } from '../composables/useLongPress';
+import { defineProps, defineEmits, ref } from 'vue';
+import { useLongPress } from '@/components/testBox/src/composables/useLongPress';
 import type { PostResponseDto } from '@/types';
 
 const props = defineProps<{
@@ -99,15 +99,25 @@ const emit = defineEmits([
   'show-reposted-users-modal',
 ]);
 
-// 공유 버튼 롱 프레스
-const { start: startShareLongPress, end: endShareLongPress } = useLongPress().onLongPress(() => {
-  emit('show-shared-users-modal');
-}, 500);
+const shareLongPress = useLongPress();
+const repostLongPress = useLongPress();
 
-// 리포스트 버튼 롱 프레스
-const { start: startRepostLongPress, end: endRepostLongPress } = useLongPress().onLongPress(() => {
-  emit('show-reposted-users-modal');
-}, 500);
+const handleShareClick = () => {
+  console.log(`[PostFooter] handleShareClick 호출됨. isLongPressing: ${shareLongPress.isLongPressing.value}`);
+  if (shareLongPress.isLongPressing.value) {
+    console.log('[PostFooter] Long press였으므로, open-share-editor 이벤트를 발생시키지 않음');
+    return;
+  }
+  console.log('[PostFooter] open-share-editor 이벤트 발생!');
+  emit('open-share-editor');
+};
+
+const handleRepostClick = (event: MouseEvent) => {
+  if (repostLongPress.isLongPressing.value) {
+    return;
+  }
+  emit('handle-instant-repost', event);
+};
 </script>
 
 <style scoped>

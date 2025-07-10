@@ -58,6 +58,7 @@ export function usePostActions(post: PostResponseDto, emit: (event: 'open-detail
    * 게시물 공유 에디터를 엽니다.
    */
   const openShareEditor = () => {
+    console.log('[usePostActions] openShareEditor 호출됨');
     uiStore.openShareEditor(post);
   };
 
