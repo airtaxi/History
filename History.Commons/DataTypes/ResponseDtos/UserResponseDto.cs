@@ -27,6 +27,7 @@ public class UserResponseDto()
 
     public bool IsFavorite { get; set; }
 
+    public AccessPermission MessageReceivingPermission { get; set; }
     public bool IsFavoriteFriendNewPostPushNotificationEnabled { get; set; }
     public AccessPermission CommentPushNotificationPermission { get; set; }
     public AccessPermission CommentMentionPushNotificationPermission { get; set; }
@@ -34,6 +35,9 @@ public class UserResponseDto()
     public AccessPermission SharedPostCommentPushNotificationPermission { get; set; }
     public AccessPermission PostReactionPushNotificationPermission { get; set; }
     public AccessPermission PostMentionPushNotificationPermission { get; set; }
+    public AccessPermission MessagePushNotificationPermission { get; set; }
+
+    public bool AllowSearch { get; set; }
 
     public Friendship Friendship { get; set; }
 
@@ -49,16 +53,19 @@ public class UserResponseDto()
         LastUsedPostDiscoveryOption = user.LastUsedPostDiscoveryOption;
 
         Nickname = user.Nickname;
-        //Birthday = user.Birthday;
+        Birthday = user.Birthday;
         Description = user.Description;
 
         ProfileMediaId = user.ProfileMediaId;
         ProfileThumbnailMediaId = user.ProfileThumbnailMediaId;
         UsesAnimatedProfileMedia = user.UsesAnimatedProfileMedia;
 
-        BackgroundMediaId = user.BackgroundThumbnailMediaId;
+        BackgroundMediaId = user.BackgroundMediaId;
         BackgroundThumbnailMediaId = user.BackgroundThumbnailMediaId;
-        UsesAnimatedBackgroundMedia = false;
+        UsesAnimatedBackgroundMedia = user.UsesAnimatedBackgroundMedia;
+
+        // Message settings
+        MessageReceivingPermission = user.MessageReceivingPermission;
 
         // Push notification settings
         IsFavoriteFriendNewPostPushNotificationEnabled = user.IsFavoriteFriendNewPostPushNotificationEnabled;
@@ -68,5 +75,8 @@ public class UserResponseDto()
         SharedPostCommentPushNotificationPermission = user.SharedPostCommentPushNotificationPermission;
         PostReactionPushNotificationPermission = user.PostReactionPushNotificationPermission;
         PostMentionPushNotificationPermission = user.PostMentionPushNotificationPermission;
+        MessagePushNotificationPermission = user.MessagePushNotificationPermission;
+
+        AllowSearch = user.AllowSearch;
     }
 }

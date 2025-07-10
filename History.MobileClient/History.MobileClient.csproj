@@ -26,8 +26,8 @@
 		<ApplicationId>com.airtaxi.history</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0.48</ApplicationDisplayVersion>
-		<ApplicationVersion>59</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0.53</ApplicationDisplayVersion>
+		<ApplicationVersion>65</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
@@ -128,6 +128,18 @@
 		<MauiXaml Update="Pages\AddFriendsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Pages\ImageEditorPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Pages\MessagePage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Pages\MessagesPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Pages\SearchPostsPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Pages\IgnoredFriendsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
@@ -197,6 +209,9 @@
 		<MauiXaml Update="Pages\WaitingFriendRequestsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Pages\WriteMessagePage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Comment.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
@@ -250,6 +265,7 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.80" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.6" />
 		<PackageReference Include="Plugin.Firebase.CloudMessaging" Version="3.1.2" />
+		<PackageReference Include="Syncfusion.Maui.ImageEditor" Version="30.1.38" />
 		<PackageReference Include="Syncfusion.Maui.Toolkit" Version="1.0.5" />
 		<PackageReference Include="UraniumUI.Icons.FontAwesome" Version="2.12.1" />
 		<PackageReference Include="UraniumUI.Icons.MaterialSymbols" Version="2.12.1" />

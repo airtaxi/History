@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.WriteMessagePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Loaded="OnLoaded"
+    Shell.NavBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid RowSpacing="6">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,12,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout>
+                <Grid>
+                    <Image HeightRequest="24" WidthRequest="24">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                        </Image.GestureRecognizers>
+                        <Image.Source>
+                            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="쪽지 작성"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <Grid Grid.Row="1" Padding="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Label
+                x:Name="ReceiverLabel"
+                Grid.Row="0"
+                FontAttributes="Bold"
+                FontSize="18"
+                TextColor="{StaticResource Primary}" />
+            <VerticalStackLayout Grid.Row="1" Spacing="12">
+                <Grid Padding="4,0,4,0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#000000}">
+                    <Editor
+                        x:Name="MessageEditor"
+                        AutoSize="Disabled"
+                        MaxLength="100"
+                        Placeholder="쪽지 내용을 입력하세요 (최대 100자)" />
+                </Grid>
+                <Image
+                    x:Name="AttachmentImage"
+                    HeightRequest="120"
+                    IsVisible="False" />
+                <Button
+                    x:Name="AttachImageButton"
+                    Background="{StaticResource Primary}"
+                    Clicked="OnAttachImageButtonClicked"
+                    Text="이미지 첨부"
+                    TextColor="White" />
+                <Button
+                    x:Name="RemoveImageButton"
+                    Background="{StaticResource Primary}"
+                    Clicked="OnRemoveImageButtonClicked"
+                    IsVisible="False"
+                    Text="이미지 삭제"
+                    TextColor="White" />
+            </VerticalStackLayout>
+            <Button
+                Grid.Row="2"
+                Margin="-16"
+                BackgroundColor="{StaticResource Primary}"
+                Clicked="OnSendButtonClicked"
+                CornerRadius="0"
+                FontAttributes="Bold"
+                FontSize="24"
+                HeightRequest="64"
+                Text="보내기"
+                TextColor="White" />
+
+            <ActivityIndicator
+                x:Name="MainActivityIndicator"
+                Grid.RowSpan="3"
+                HeightRequest="100"
+                HorizontalOptions="Center"
+                IsRunning="False"
+                VerticalOptions="Center"
+                WidthRequest="100"
+                Color="{StaticResource Primary}" />
+        </Grid>
+    </Grid>
+</ContentPage>

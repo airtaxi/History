@@ -96,6 +96,12 @@ public class User
     public bool AllowSearch { get; set; } = true;
 
     /// <summary>
+    /// Message receiving permission.
+    /// </summary>
+    [BsonDefaultValue(AccessPermission.Everyone)]
+    public AccessPermission MessageReceivingPermission { get; set; } = AccessPermission.Everyone;
+
+    /// <summary>
     /// Comment push notification permission.
     /// </summary>
     [BsonDefaultValue(AccessPermission.Everyone)]
@@ -130,6 +136,12 @@ public class User
     /// </summary>
     [BsonDefaultValue(AccessPermission.Everyone)]
     public AccessPermission PostMentionPushNotificationPermission { get; set; } = AccessPermission.Everyone;
+
+    /// <summary>
+    /// Message push notification permission.
+    /// </summary>
+    [BsonDefaultValue(AccessPermission.Everyone)]
+    public AccessPermission MessagePushNotificationPermission { get; set; } = AccessPermission.Everyone;
 
     /// <summary>
     /// Gets or sets a value indicating whether push notifications for new posts by favorite friends are enabled.

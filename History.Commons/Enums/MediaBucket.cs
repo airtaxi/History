@@ -9,5 +9,6 @@ public enum MediaBucket
     Background,
     Post,
     Comment,
-    Sticker
+    Sticker,
+    Message
 }

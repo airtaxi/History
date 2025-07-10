@@ -334,7 +334,7 @@ function formatRelativeTime(dateString: string): string {
             :to="`/user/${content.userId}`"
             class="mention"
             @click.stop>
-            @{{ content.nickname }}
+            {{ content.nickname }}
           </RouterLink>
         </template>
       </div>

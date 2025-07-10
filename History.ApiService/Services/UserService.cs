@@ -386,6 +386,15 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         var result = await _userCollection.UpdateOneAsync(filter, update);
         return result.MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "푸시 알림 권한을 변경하는 중 오류가 발생했습니다.");
     }
+
+    /// <inheritdoc/>
+    public async Task<Result> UpdateMessageReceivingPermissionAsync(string userId, AccessPermission accessPermission)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+        var update = Builders<User>.Update.Set(u => u.MessageReceivingPermission, accessPermission);
+        return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "메시지 수신 권한을 변경하는 중 오류가 발생했습니다.");
+    }
+
     /// <inheritdoc/>
     public async Task<Result<List<string>>> FilterAllowSearch(List<string> userIds)
     {
@@ -431,12 +440,14 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         var refreshTokenService = serviceProvider.GetRequiredService<IRefreshTokenService>();
         var notificationService = serviceProvider.GetRequiredService<INotificationService>();
         var mediaService = serviceProvider.GetRequiredService<IMediaService>();
+        var messageService = serviceProvider.GetRequiredService<IMessageService>();
 
         await postService.HandleWithdrawAsync(userId);
         await commentService.HandleWithdrawAsync(userId);
         await friendshipService.HandleWithdrawAsync(userId);
         await refreshTokenService.HandleWithdrawAsync(userId);
         await notificationService.HandleWithdrawAsync(userId);
+        await messageService.HandleWithdrawAsync(userId);
         await mediaService.DeleteMediasByUserIdAsync(userId);
 
         var filter = Builders<User>.Filter.Eq(u => u.Id, userId);

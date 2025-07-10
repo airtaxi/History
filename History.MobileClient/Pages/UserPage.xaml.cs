@@ -9,6 +9,10 @@ using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 using History.Commons;
+using UraniumUI.Icons.MaterialSymbols;
+using History.Commons.Api.Message;
+
+
 
 
 #if ANDROID
@@ -24,13 +28,14 @@ public partial class UserPage : ContentPage
 
     private bool _isInForeground;
     private bool _areThereNoMorePostsToLoad;
+    private bool _useGridLayout = true;
 #if IOS
     private double _lastScrollOffsetY;
 #endif
     private object _lastViewModel;
     private ProfileViewModel _viewModel;
     private readonly bool _isMyProfile;
-    private readonly ObservableCollection<object> _viewModels = [];
+    private readonly ObservableCollection<PostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public UserPage() : this(Shared.UserId)
@@ -56,11 +61,9 @@ public partial class UserPage : ContentPage
             BanImage.IsVisible = false;
             MemoImage.IsVisible = false;
         }
+        else MessageImage.IsVisible = true;
 
         MainCollectionView.ItemsSource = _viewModels;
-#if IOS
-        MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
-#endif
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
@@ -100,7 +103,7 @@ public partial class UserPage : ContentPage
             if (user.IsSuccess)
             {
                 _viewModel = new ProfileViewModel(user.Value);
-                _viewModels.Add(_viewModel);
+                ProfileDataTemplatePresenter.ViewModel = _viewModel;
             }
             else
             {
@@ -108,7 +111,7 @@ public partial class UserPage : ContentPage
                 return;
             }
 
-            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId));
+            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, null, _useGridLayout ? 50 : 30));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
@@ -133,7 +136,7 @@ public partial class UserPage : ContentPage
             if (lastViewModel == null) return;
 
             var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
-            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, lastPostId));
+            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, lastPostId, _useGridLayout ? 50 : 30));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
@@ -156,6 +159,8 @@ public partial class UserPage : ContentPage
 
     private void OnSizeChanged(object sender, EventArgs e)
     {
+        if (_useGridLayout) return;
+
 #if ANDROID
         var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
 
@@ -301,5 +306,42 @@ public partial class UserPage : ContentPage
 
         var response = await App.ExecuteRequestAsync(new UpdateMemo(UserId, memo.Trim()));
         if (response.IsSuccess) await _viewModel.RefreshAsync();
+    }
+
+    private void OnLayoutImageTapped(object sender, TappedEventArgs e)
+    {
+        _useGridLayout = !_useGridLayout;
+
+        if (!_useGridLayout)
+        {
+            LayoutFontImageSource.Glyph = MaterialSharp.Dataset;
+
+            MainCollectionView.ItemTemplate = App.Current.Resources["TimelineTemplateSelector"] as DataTemplateSelector;
+#if IOS
+            MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
+#else
+            var span = ((int)Width / 700) + 1;
+            if (span == 1) MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
+            else MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = span };
+#endif
+        }
+        else
+        {
+            LayoutFontImageSource.Glyph = MaterialSharp.Lists;
+
+            MainCollectionView.ItemTemplate = App.Current.Resources["PostPreviewTemplate"] as DataTemplate;
+            MainCollectionView.ItemsLayout = new GridItemsLayout(ItemsLayoutOrientation.Vertical)
+            {
+                Span = 3,
+                HorizontalItemSpacing = 1,
+                VerticalItemSpacing = 1
+            };
+        }
+    }
+
+    private async void OnMessageImageTapped(object sender, TappedEventArgs e)
+    {
+        var canSendMessage = await App.ExecuteRequestAsync(new CheckMessagePermission(UserId));
+        if (canSendMessage.IsSuccess) await App.PushModalAsync(new WriteMessagePage(UserId, _viewModel.User.Nickname));
     }
 }

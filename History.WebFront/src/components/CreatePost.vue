@@ -163,8 +163,10 @@ const onDiscoveryOptionChange = () => {
  * @example
  * await submitPost();
  */
-const submitPost = async () => {
-  if (!newPostText.value.trim() && attachedFiles.value.length === 0 && !attachedLink.value.trim()) {
+ const submitPost = async () => {
+  const isContentEmpty = !newPostText.value.trim() && attachedFiles.value.length === 0 && !attachedLink.value.trim();
+
+  if (isContentEmpty && !isShareMode.value) {
     alert('내용을 입력해주세요.');
     return;
   }
@@ -462,12 +464,14 @@ onUnmounted(() => {
 
 
 
+
       <FriendSelector
         v-if="discoveryOption === 'SelectedUsers' || discoveryOption === 'UnselectedUsers'"
         v-model="selectedUserIds"
         :discovery-option="discoveryOption"
         :friends-list="friendsList"
       />
+ㅔ
 
       <div class="create-post-footer">
         <button class="toggle-advanced-btn" @click="showAdvancedOptions = !showAdvancedOptions">
