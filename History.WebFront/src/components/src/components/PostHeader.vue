@@ -132,7 +132,7 @@ function formatRelativeTime(dateString: string): string {
 }
 
 .created-at {
-  margin-left: auto;
+  margin-right: auto;
   color: #888;
   font-size: 0.9em;
 }
