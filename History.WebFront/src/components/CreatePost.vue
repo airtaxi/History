@@ -163,12 +163,19 @@ const onDiscoveryOptionChange = () => {
  * @example
  * await submitPost();
  */
- const submitPost = async () => {
-  const isContentEmpty = !newPostText.value.trim() && attachedFiles.value.length === 0 && !attachedLink.value.trim();
-
-  if (isContentEmpty && !isShareMode.value) {
-    alert('내용을 입력해주세요.');
-    return;
+const submitPost = async () => {
+  // 공유 모드일 경우, 새로운 텍스트 내용이 없어도 원본 게시글이 있으면 게시 가능
+  if (isShareMode.value && originalPostForShare.value) {
+    // 새로운 텍스트 내용, 첨부 파일, 링크가 모두 없어도 공유는 가능
+    if (!newPostText.value.trim() && attachedFiles.value.length === 0 && !attachedLink.value.trim()) {
+      // 이 경우, 추가적인 유효성 검사 없이 진행
+    }
+  } else {
+    // 일반 게시글 작성 모드일 경우, 내용이 없으면 경고
+    if (!newPostText.value.trim() && attachedFiles.value.length === 0 && !attachedLink.value.trim()) {
+      alert('내용을 입력해주세요.');
+      return;
+    }
   }
 
   try {
@@ -464,14 +471,12 @@ onUnmounted(() => {
 
 
 
-
       <FriendSelector
         v-if="discoveryOption === 'SelectedUsers' || discoveryOption === 'UnselectedUsers'"
         v-model="selectedUserIds"
         :discovery-option="discoveryOption"
         :friends-list="friendsList"
       />
-ㅔ
 
       <div class="create-post-footer">
         <button class="toggle-advanced-btn" @click="showAdvancedOptions = !showAdvancedOptions">
