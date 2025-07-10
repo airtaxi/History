@@ -3,7 +3,9 @@ import type { UserResponseDto } from '@/types';
 import { useFriendData } from './useFriendData';
 
 export function useMentions(newPostText: Ref<string>) {
-  const { friendsList, loadFriends} = useFriendData();
+  
+  const { friendsList, loadFriends } = useFriendData();
+
 
   const isMentioning = ref(false);
   const mentionSearchText = ref('');

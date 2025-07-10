@@ -5,7 +5,6 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import apiClient from '@/api';
-import "./PostCard.css"
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
