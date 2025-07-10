@@ -3,7 +3,7 @@ import { RouterView, useRoute } from 'vue-router';
 import { useUiStore } from '@/stores/ui';
 import { computed } from 'vue';
 import PostModal from '@/components/PostModal.vue';
-import "./App.css" // 전체 프레임에 대한 전역 css는 App.css에서 모두 관리합니다.
+import "./App.css" 
 import TheHeader from '@/components/layout/TheHeader.vue';
 
 
@@ -32,9 +32,9 @@ const shouldShowFooter = computed(() => {
     <footer v-if="shouldShowFooter" class="app-footer">
       <div class="footer-content">
         <div class="footer-links">
-          <RouterLink to="/terms" class="footer-link">이용약관</RouterLink>
+          <a href="/terms.html" target="_blank" class="footer-link">이용약관</a>
           <span class="divider">|</span>
-          <RouterLink to="/privacy" class="footer-link">개인정보처리방침</RouterLink>
+          <a href="/privacypolicy.html" target="_blank" class="footer-link">개인정보처리방침</a>
         </div>
         <p class="copyright">&copy; {{ new Date().getFullYear() }} History. All rights reserved.</p>
       </div>

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Maui.Alerts;
 using History.Commons;
@@ -10,6 +11,8 @@ using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
 using UraniumUI.Icons.FontAwesome;
+using History.Commons.DataTypes.ResponseDtos;
+
 
 #if ANDROID
 using Android.Content;
@@ -157,6 +160,50 @@ public static partial class Utils
         if (modifiedAt != null) result += $" (수정됨)";
 
         return result;
+    }
+
+    public static string GenerateTextPreviewFromContents(IEnumerable<BaseContent> contents)
+    {
+        var textAndProfileContents = contents.Where(x => x is TextContent || x is ProfileContent);
+
+        var builder = new StringBuilder();
+        foreach (var content in textAndProfileContents)
+        {
+            if (content is TextContent textContent) builder.Append(textContent.Text);
+            else if (content is ProfileContent profileContent) builder.Append(profileContent.Nickname);
+        }
+
+        var result = builder.ToString();
+        result = result.ReplaceLineEndings("\n");
+        while (result.Contains("\n\n")) result = result.Replace("\n\n", "\n");
+        return result;
+    }
+
+    public static string GenerateThumbnailUrlFromContents(IEnumerable<BaseContent> contents)
+    {
+        string imageUrl = null;
+
+        var mediaId = contents.OfType<MediaContent>().Select(x => x.ThumbnailMediaId).FirstOrDefault();
+        if (mediaId == null) mediaId = contents.OfType<ExternalUrlContent>().Select(x => x.ThumbnailImageUrl).FirstOrDefault();
+
+        if (mediaId != null) imageUrl = GenerateMediaUri(mediaId);
+
+        return imageUrl;
+    }
+
+    public static string GenerateThumbnailUrlFromPost(PostResponseDto post)
+    {
+        var imageUrl = GenerateThumbnailUrlFromContents(post.Contents);
+        if (imageUrl == null && post.ParentPost != null) imageUrl = GenerateThumbnailUrlFromContents(post.ParentPost.Contents);
+        return imageUrl;
+    }
+
+    public static string GenerateTextPreviewFromPost(PostResponseDto post)
+    {
+        var preview = GenerateTextPreviewFromContents(post.Contents);
+        if (string.IsNullOrWhiteSpace(preview) && post.ParentPost != null) preview = GenerateTextPreviewFromContents(post.ParentPost.Contents);
+        else if (string.IsNullOrWhiteSpace(preview) && post.Hashtags.Count > 0) preview = string.Join(" ", post.Hashtags.Select(x => $"#{x}"));
+        return preview;
     }
 
     public static FormattedString GenerateSpanFromTextAndProfileContents(List<BaseContent> contents, PostType postType, bool hasMedias)

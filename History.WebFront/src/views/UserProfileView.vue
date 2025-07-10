@@ -730,26 +730,30 @@ height: auto;
   gap: 16px;
 }
 
-/* 그리드일 때 카드 전체를 수직 정렬 구조로 */
 .my-posts-list.grid :deep(.post-card) {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   height: 360px;
+  overflow: hidden; 
 }
 
-/* 본문 내용은 flex-grow */
-.my-posts-list.grid :deep(.post-content) {
-  flex-grow: 1;
+.my-posts-list.grid :deep(.post-content a) {
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  -webkit-box-orient: vertical;
   text-overflow: ellipsis;
+  display: block; 
+  max-width: 100%; 
 }
 
-/* 댓글수, 좋아요 등은 아래에 고정되게 */
-.my-posts-list.grid :deep(.post-footer) {
-  margin-top: auto;
+.my-posts-list.grid :deep(.post-content .comment-media-container) {
+  overflow: hidden;
+  max-height: 150px; 
+}
+
+.my-posts-list.grid :deep(.post-content .comment-media) {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
 }
 </style>

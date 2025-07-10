@@ -11,7 +11,8 @@ public enum PushNotificationType
     SharedPostComment,
     PostReaction,
     PostMention,
-    FavoriteFriendNewPost
+    FavoriteFriendNewPost,
+    Message
 }
 
 public static class PushNotificationTypeExtensions
@@ -27,6 +28,7 @@ public static class PushNotificationTypeExtensions
             PushNotificationType.PostReaction => "게시물 반응",
             PushNotificationType.PostMention => "게시물 언급",
             PushNotificationType.FavoriteFriendNewPost => "관심 친구의 새 게시글",
+            PushNotificationType.Message => "쪽지",
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }

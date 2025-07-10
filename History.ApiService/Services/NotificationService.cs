@@ -711,6 +711,29 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             authorCore.Body = $"회원님의 생일을 진심으로 축하드립니다! 다른 친구들이 남긴 축하 메시지를 확인해보세요!";
             notifications.Add(authorCore);
         }
+        else if (type == NotificationType.Message)
+        {
+            var userService = serviceProvider.GetRequiredService<IUserService>();
+            var messageService = serviceProvider.GetRequiredService<IMessageService>();
+
+            var messageResult = await messageService.GetMessageByIdAsync(associatedId);
+            if (messageResult.IsFailure) return messageResult.CastFailure<List<Notification>>();
+
+            var senderResult = await userService.GetUserByIdAsync(messageResult.Value.SenderId);
+            if (senderResult.IsFailure) return senderResult.CastFailure<List<Notification>>();
+
+            core.Recipients = [messageResult.Value.ReceiverId];
+            await SetPushNotificationRecipientsAsync(core, PushNotificationType.Message);
+
+            core.UserId = messageResult.Value.SenderId;
+
+            core.Title = $"{senderResult.Value.Nickname}님이 쪽지를 보냈습니다.";
+            core.Body = await userService.GenerateTextPreviewFromContentsAsync(messageResult.Value.Contents);
+            core.ImageUrl = Utils.GenerateThumbnailUrlFromContents(messageResult.Value.Contents);
+
+            core.Data.Add("UserId", senderResult.Value.Id);
+            core.Data.Add("MessageId", messageResult.Value.Id);
+        }
         else return (ErrorType.BadRequest, "지원되지 않는 알림 유형입니다.");
 
 		foreach (var notification in notifications)

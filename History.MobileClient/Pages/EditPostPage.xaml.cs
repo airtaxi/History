@@ -26,6 +26,7 @@ using History.MobileClient.Enums;
 using Syncfusion.Maui.Toolkit.Picker;
 using MongoDB.Bson.Serialization.Serializers;
 using Svg;
+using System.Threading.Tasks;
 
 
 namespace History.MobileClient.Pages;
@@ -35,7 +36,7 @@ public partial class EditPostPage : ContentPage
     public ObservableCollection<string> Hashtags { get; } = [];
 
     private bool _isInForeground;
-    private bool _isUploading;
+    private bool _preventDispose;
 
     private readonly bool _isShare;
     private readonly PostResponseDto _post;
@@ -405,8 +406,8 @@ public partial class EditPostPage : ContentPage
 
     private async void OnUploadButtonClicked(object sender, EventArgs e)
     {
-        if (_isUploading) return;
-        _isUploading = true;
+        if (_preventDispose) return;
+        _preventDispose = true;
         try
         {
             if (_reservationTime.HasValue)
@@ -692,13 +693,13 @@ public partial class EditPostPage : ContentPage
                 IsEnabled = true;
             }
         }
-        finally { _isUploading = false; }
+        finally { _preventDispose = false; }
     }
 
     protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
     {
         base.OnNavigatedFrom(args);
-        if (_isUploading) return;
+        if (_preventDispose) return;
 
         foreach (var viewModel in _attachmentViewModels) viewModel.Dispose();
     }
@@ -1023,4 +1024,33 @@ public partial class EditPostPage : ContentPage
 		
 		Hashtags.Add(hashtag);
 	}
+
+    private async void OnEditAttachmentGridTapped(object sender, TappedEventArgs e)
+    {
+        var view = sender as View;
+        var viewModel = view?.BindingContext as MediaAttachmentViewModel;
+        if (viewModel == null) return;
+
+        if (!viewModel.IsUpload)
+        {
+            await Toast.Make("업로드된 미디어는 편집을 지원하지 않습니다.").Show();
+            return;
+        }
+        else if (viewModel.IsVideo)
+        {
+            await Toast.Make("영상 미디어는 편집을 지원하지 않습니다.").Show();
+            return;
+        }
+
+        try
+        {
+            _preventDispose = true;
+            var page = new ImageEditorPage(viewModel.ImageSource);
+            await App.PushModalAsync(page);
+
+            var bytes = await page.GetResultAsync();
+            if (bytes != null) viewModel.ApplyEdit(bytes);
+        }
+        finally { _preventDispose = false; }
+    }
 }

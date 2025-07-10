@@ -19,6 +19,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Platform;
 using History.Commons;
 using Syncfusion.Maui.Toolkit.Hosting;
+using Syncfusion.Maui.Core.Hosting;
+using History.Commons.Api.Message;
+
+
 
 #if IOS
 using Plugin.Firebase.Core.Platforms.iOS;
@@ -32,6 +36,8 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Mzk0MDEzOUAzMzMwMmUzMDJlMzAzYjMzMzAzYmdWWGt6Mm1pZ1ZFZEMxVFdKY2p0NVhzV0xKMGZZdllnVVlMZ1ZnT2p2Qms9");
+
         ApiHandler.ApplicationVersion = AppInfo.Current.VersionString;
         ApiHandler.Platform = DeviceInfo.Platform.ToString();
 
@@ -44,6 +50,7 @@ public static class MauiProgram
             .UseUraniumUIMaterial()
             .UseSpeakLink()
             .ConfigureSyncfusionToolkit()
+            .ConfigureSyncfusionCore()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

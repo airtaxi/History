@@ -217,15 +217,13 @@
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
             </Grid.GestureRecognizers>
-
             <Border
                 Padding="12"
                 Background="{AppThemeBinding Dark=Black,
                                              Light=White}"
-                Stroke="#808080"
-                StrokeThickness="1">
+                StrokeThickness="0">
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
+                    <RoundRectangle CornerRadius="16" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="8">
                     <Grid Grid.Row="0" HeightRequest="48">
@@ -440,6 +438,41 @@
                 </VerticalStackLayout>
             </Border>
         </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="PostPreviewTemplate" x:DataType="vm:PostViewModel">
+        <views:SquareView BackgroundColor="{AppThemeBinding Dark=#000000, Light=#FFFFFF}">
+            <views:SquareView.GestureRecognizers>
+                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+            </views:SquareView.GestureRecognizers>
+
+            <Grid Padding="6" IsClippedToBounds="True">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Label
+                    Grid.Row="0"
+                    FontSize="12"
+                    LineBreakMode="TailTruncation"
+                    MaxLines="3"
+                    Text="{x:Binding PreviewText}" />
+                <Label
+                    Grid.Row="1"
+                    FontAttributes="Bold"
+                    FontSize="10"
+                    LineBreakMode="TailTruncation"
+                    MaxLines="1"
+                    Text="{x:Binding PreviewTimestamp}"
+                    TextColor="#808080" />
+                <views:DataTemplatePresenter
+                    Grid.RowSpan="2"
+                    Margin="-6"
+                    IsVisible="{x:Binding PreviewThumbnailVisible}"
+                    Template="{StaticResource ImageTemplate}"
+                    ViewModel="{x:Binding PreviewThumbnail}" />
+            </Grid>
+        </views:SquareView>
     </DataTemplate>
 
     <vm:TimelineTemplateSelector

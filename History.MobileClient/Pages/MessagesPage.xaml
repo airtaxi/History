@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.MessagesPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:views="clr-namespace:History.MobileClient.ContentViews"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
+    Shell.NavBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
+    </ContentPage.Behaviors>
+    <Grid RowSpacing="6">
+        <RefreshView Refreshing="OnRefreshing">
+            <Grid>
+                <CollectionView
+                    x:Name="MainCollectionView"
+                    RemainingItemsThreshold="0"
+                    RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
+                    SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:MessageViewModel">
+                            <Grid Padding="12,8,12,8" ColumnSpacing="8">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{x:Binding OpenMessageCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Rectangle
+                                    Grid.Row="0"
+                                    Fill="#80FF0000"
+                                    HorizontalOptions="Start"
+                                    IsVisible="{x:Binding IsUnread}"
+                                    VerticalOptions="Fill"
+                                    WidthRequest="4" />
+                                <Grid Grid.Column="1">
+                                    <views:DataTemplatePresenter
+                                        HeightRequest="40"
+                                        Template="{StaticResource MediaTemplateSelector}"
+                                        ViewModel="{x:Binding SenderProfileMedia}"
+                                        WidthRequest="40">
+                                        <views:DataTemplatePresenter.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
+                                        </views:DataTemplatePresenter.GestureRecognizers>
+                                        <views:DataTemplatePresenter.Clip>
+                                            <EllipseGeometry
+                                                Center="20,20"
+                                                RadiusX="20"
+                                                RadiusY="20" />
+                                        </views:DataTemplatePresenter.Clip>
+                                    </views:DataTemplatePresenter>
+                                </Grid>
+                                <VerticalStackLayout Grid.Column="2">
+                                    <HorizontalStackLayout Spacing="4">
+                                        <Label
+                                            FontAttributes="Bold"
+                                            FontSize="14"
+                                            LineBreakMode="TailTruncation"
+                                            Text="{x:Binding SenderName}" />
+                                        <Image
+                                            HeightRequest="14"
+                                            IsVisible="{x:Binding IsSenderAdmin}"
+                                            WidthRequest="14">
+                                            <Image.Source>
+                                                <FontImageSource
+                                                    FontFamily="FASolid"
+                                                    Glyph="{x:Static fa:Solid.Crown}"
+                                                    Color="#f78501" />
+                                            </Image.Source>
+                                        </Image>
+                                        <Image
+                                            HeightRequest="14"
+                                            IsVisible="{x:Binding IsSenderModerator}"
+                                            WidthRequest="14">
+                                            <Image.Source>
+                                                <FontImageSource
+                                                    FontFamily="FASolid"
+                                                    Glyph="{x:Static fa:Solid.Gavel}"
+                                                    Color="#1a5bf3" />
+                                            </Image.Source>
+                                        </Image>
+                                    </HorizontalStackLayout>
+                                    <Label
+                                        FontSize="14"
+                                        LineBreakMode="TailTruncation"
+                                        MaxLines="1"
+                                        Text="{x:Binding MainText}" />
+                                    <Label
+                                        FontSize="12"
+                                        LineBreakMode="TailTruncation"
+                                        MaxLines="1"
+                                        Text="{x:Binding TimestampText}"
+                                        TextColor="#808080" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <Label
+                    x:Name="EmptyLabel"
+                    FontSize="16"
+                    HorizontalOptions="Center"
+                    IsVisible="False"
+                    Text="받은 쪽지가 없습니다."
+                    TextColor="#888888"
+                    VerticalOptions="Center" />
+            </Grid>
+        </RefreshView>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="2"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
+    </Grid>
+</ContentPage>

@@ -18,10 +18,9 @@
                 Padding="12"
                 Background="{AppThemeBinding Dark=Black,
                                              Light=White}"
-                Stroke="#808080"
-                StrokeThickness="1">
+                StrokeThickness="0">
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="8" />
+                    <RoundRectangle CornerRadius="16" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="8">
                     <Grid Grid.Row="0" HeightRequest="36">

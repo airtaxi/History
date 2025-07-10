@@ -3,7 +3,9 @@ import type { UserResponseDto } from '@/types';
 import { useFriendData } from './useFriendData';
 
 export function useMentions(newPostText: Ref<string>) {
+  
   const { friendsList, loadFriends } = useFriendData();
+
 
   const isMentioning = ref(false);
   const mentionSearchText = ref('');
@@ -132,7 +134,7 @@ export function useMentions(newPostText: Ref<string>) {
     handleTextInput,
     handleKeyDown,
     selectMention,
-    friendsList, // CreatePost.vue에서 friendsList를 직접 사용할 수 있도록 노출
-    loadFriends, // CreatePost.vue에서 loadFriends를 직접 호출할 수 있도록 노출
+    friendsList, 
+    loadFriends, 
   };
 }

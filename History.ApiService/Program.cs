@@ -67,6 +67,7 @@ builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IModerationService, ModerationService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddHostedService<DatabaseInitService>();
 builder.Services.AddHostedService<BirthdayService>();
 builder.Services.AddRateLimitService(builder.Configuration);

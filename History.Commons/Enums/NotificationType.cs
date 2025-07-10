@@ -16,5 +16,6 @@ public enum NotificationType
     FavoriteFriendNewPost,
     Birthday,
     Restriction,
-    Report
+    Report,
+    Message
 }

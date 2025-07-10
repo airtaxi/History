@@ -63,7 +63,7 @@ public partial class TimelinePage : ContentPage
 
             _viewModels.Clear();
 
-            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts());
+            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(null, 30));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
@@ -89,7 +89,7 @@ public partial class TimelinePage : ContentPage
             if (lastViewModel == null) return;
 
             var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
-            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts (lastPostId));
+            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts (lastPostId, 30));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
@@ -219,5 +219,11 @@ public partial class TimelinePage : ContentPage
 
         MainCollectionView.SetScrollOffsetY(0, false); // Cancel scroll animation
         MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+    }
+
+    private async void OnSearchPostImageTapped(object sender, TappedEventArgs e)
+    {
+        var page = new SearchPostsPage();
+        await App.PushAsync(page);
     }
 }

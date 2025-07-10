@@ -407,8 +407,18 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         if (requestDto.ParentPostId == null && (requestDto.Hashtags ?? []).Count == 0 && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
             return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
 
+        // Validate media contents
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
         if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
+
+        var mediaContents = contents.OfType<MediaContent>();
+        foreach (var mediaContent in mediaContents)
+        {
+            if (string.IsNullOrEmpty(mediaContent.MediaId) || string.IsNullOrEmpty(mediaContent.MimeType) || mediaContent.ThumbnailMediaId == null)
+            {
+                return (ErrorType.BadRequest, "미디어 콘텐츠는 MediaId, MimeType, ThumbnailMediaId가 모두 필요합니다.");
+            }
+        }
 
         if ((requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers)
             && (requestDto.DiscoveryOptionSelectedUserIds == null
@@ -474,7 +484,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             DiscoveryOption = requestDto.DiscoveryOption,
             DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? (requestDto.DiscoveryOptionSelectedUserIds ?? []) : null,
             ParentPostId = requestDto.ParentPostId,
-            SearchIndex = GenerateSearchIndexFromContents(contents),
+            SearchIndex = GenerateSearchIndexFromContents(contents, requestDto.Hashtags),
             CommentPermission = requestDto.CommentPermission,
             DisallowShare = requestDto.DisallowShare,
             Hashtags = requestDto.Hashtags ?? [],
@@ -546,12 +556,14 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             if (hashtag.Length > 20) return (ErrorType.BadRequest, "해시태그는 최대 20자까지 입력할 수 있습니다.");
         }
 
-        var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
-        if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
-
         var post = postResult.Value;
+
         // Check if the user is the author of the post
         if (post.UserId != userId) return (ErrorType.Forbidden, "게시글을 수정할 수 있는 권한이 없습니다.");
+
+        // Validate media contents
+        var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
+        if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
 
         var originalPostMediaContents = post.Contents.OfType<MediaContent>();
         var mediaContents = contents.OfType<MediaContent>();
@@ -594,7 +606,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Update the post contents
         post.Contents = contents;
-        post.SearchIndex = GenerateSearchIndexFromContents(contents);
+        post.SearchIndex = GenerateSearchIndexFromContents(contents, requestDto.Hashtags);
         post.CommentPermission = requestDto.CommentPermission;
         post.DisallowShare = requestDto.DisallowShare;
         post.Hashtags = requestDto.Hashtags ?? [];
@@ -782,20 +794,32 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
 
         var loweredQuery = query.ToLower();
-        var filter = Builders<Post>.Filter.Where(p => p.SearchIndex.Contains(loweredQuery));
+        var filter = Builders<Post>.Filter.Text(loweredQuery);
         if (!string.IsNullOrEmpty(fromPostId))
         {
             var fromPost = await _postCollection.Find(p => p.Id == fromPostId).FirstOrDefaultAsync();
-            if (fromPost != null)
-            {
-                filter &= Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
-            }
+            if (fromPost != null) filter &= Builders<Post>.Filter.Lt(p => p.CreatedAt, fromPost.CreatedAt);
         }
+
         if (requesterId != null)
         {
             var requesterBannedFriendIdsResult = await friendshipService.GetBannedUserIdsAsync(requesterId);
             filter &= Builders<Post>.Filter.Nin(p => p.UserId, requesterBannedFriendIdsResult.Value);
+
+            var friendIdsResult = await friendshipService.GetFriendIdsAsync(requesterId);
+            var friendsOfFriendIdsResult = await friendshipService.GetFriendsOfFriendIdsAsync(requesterId);
+
+            var friendIds = friendIdsResult.Value;
+            var friendsOfFriendIds = friendsOfFriendIdsResult.Value;
+
+            filter &= Builders<Post>.Filter.Or(
+                Builders<Post>.Filter.Eq(p => p.UserId, requesterId),
+                Builders<Post>.Filter.And(Builders<Post>.Filter.In(p => p.UserId, friendIds), Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Friends)),
+                Builders<Post>.Filter.And(Builders<Post>.Filter.In(p => p.UserId, friendsOfFriendIds), Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.FriendsOfFriends)),
+                Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone)
+            );
         }
+        else filter &= Builders<Post>.Filter.Eq(p => p.DiscoveryOption, DiscoveryOption.Everyone);
 
         // For reservation posts.
         filter &= Builders<Post>.Filter.Lte(p => p.CreatedAt, DateTime.UtcNow);
@@ -923,13 +947,12 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     public async Task<Result> CheckCommentAccessAsync(Post post, string requesterId)
     {
         var userService = serviceProvider.GetRequiredService<IUserService>();
+        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
         var requesterResult = await userService.GetUserByIdAsync(requesterId);
         if (requesterResult.IsFailure) return requesterResult.CastFailure();
 
         if (requesterResult.Value.Rank >= Rank.Moderator) return Result.Success(); // Moderators can access all posts
-
-        var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
-
 
         var postAuthorId = post.UserId;
         if (postAuthorId == requesterId) return Result.Success();
@@ -1216,11 +1239,19 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         return Result.Success();
     }
 
-    private static string GenerateSearchIndexFromContents(IEnumerable<BaseContent> contents) =>
-        string.Join(" ", contents.OfType<TextContent>().Select(s => s.Text))
+    private static string GenerateSearchIndexFromContents(IEnumerable<BaseContent> contents, IEnumerable<string> hashtags)
+    {
+        var body = string.Join(" ", contents.OfType<TextContent>().Select(s => s.Text))
         .ReplaceLineEndings()
         .ToLower()
         .Replace(Environment.NewLine, " ");
+
+        hashtags = hashtags.Select(x => $"#{x}").ToList();
+        var hashtag = string.Join(" ", hashtags ?? [])
+            .ToLower();
+
+        return $"{body} {hashtag}".Trim();
+    }
 
     private async Task<Result<List<PostReactionDto>>> GeneratePostReactionDtosAsync(string postId, string requesterId = null)
     {

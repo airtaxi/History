@@ -31,6 +31,23 @@
                 HorizontalOptions="Start"
                 Source="icon_nobg_white.png"
                 WidthRequest="48" />
+
+            <HorizontalStackLayout HorizontalOptions="End">
+                <Image
+                    HeightRequest="32"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSearchPostImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Search}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+            </HorizontalStackLayout>
         </Grid>
 
         <Grid Grid.Row="1">
@@ -45,7 +62,7 @@
                     Scrolled="OnMainCollectionViewScrolled"
                     SelectionMode="None">
                     <CollectionView.ItemsLayout>
-                        <staggered:StaggeredItemsLayout Span="0" />
+                        <staggered:StaggeredItemsLayout Span="10000" />
                     </CollectionView.ItemsLayout>
                 </CollectionView>
             </RefreshView>

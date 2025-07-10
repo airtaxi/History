@@ -280,9 +280,9 @@ public class PostController(IPostService postService, IFriendshipService friends
 
         var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        var postsResult = await postService.SearchPostsAsync(requesterId, keyword, from, limit);
+        var postsResult = await postService.SearchPostsAsync(keyword, requesterId, from, limit);
         var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
-        return Ok(postResponses);
+        return Ok(postResponses.Value);
     }
 
     [HttpPut("{postId}/discovery-option")]
