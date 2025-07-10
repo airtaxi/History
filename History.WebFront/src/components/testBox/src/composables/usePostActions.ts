@@ -34,7 +34,7 @@ import { useUiStore } from '@/stores/ui';
 import apiClient from '@/api';
 import type { PostResponseDto } from '@/types';
 
-export function usePostActions(post: PostResponseDto, emit: (event: string, ...args: any[]) => void) {
+export function usePostActions(post: PostResponseDto, emit: (event: 'open-detail', ...args: any[]) => void) {
   const router = useRouter();
   const authStore = useAuthStore();
   const uiStore = useUiStore();
