@@ -105,6 +105,7 @@ function formatRelativeTime(dateString: string): string {
   display: flex;
   align-items: center;
   padding: 10px;
+  padding-top: 0;
   border-bottom: 1px solid #eee;
   justify-content: space-between; /* 양쪽 끝으로 아이템 정렬 */
 }
