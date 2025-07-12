@@ -24,7 +24,7 @@
 <template>
   <div class="post-footer">
     <button
-      @click.stop="$emit('handle-reaction-click')"
+      @click.stop="$emit('handle-reaction-click', $event)"
       @mousedown.stop="$emit('start-long-press', $event)"
       @mouseup.stop="$emit('end-long-press', $event)"
       @mouseleave.stop="$emit('end-long-press', $event)"
