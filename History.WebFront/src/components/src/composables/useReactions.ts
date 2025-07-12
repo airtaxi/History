@@ -39,9 +39,7 @@ export function useReactions(post: PostResponseDto) {
   const uiStore = useUiStore();
 
   // useLongPress 컴포저블 인스턴스 생성
-  const { onLongPress } = useLongPress();
-  let longPressStart: (() => void) | null = null;
-  let longPressEnd: (() => void) | null = null;
+  const longPress = useLongPress(500);
 
   /**
    * 서버에서 게시물의 반응 데이터를 로드하고 상태를 업데이트합니다.
@@ -159,9 +157,11 @@ export function useReactions(post: PostResponseDto) {
    * @param {Event} event - 이벤트 객체.
    */
   const toggleReactionPopup = (event: Event) => {
+    const target = event.currentTarget as HTMLElement;
+    if (!target) return;
+
     showReactionPopup.value = !showReactionPopup.value;
     if (showReactionPopup.value) {
-      const target = event.currentTarget as HTMLElement;
       const rect = target.getBoundingClientRect();
       reactionPopupPosition.value = {
         top: `${rect.top - 60}px`, // 버튼 위쪽에 위치
@@ -186,12 +186,17 @@ export function useReactions(post: PostResponseDto) {
    * @param {Event} event - 이벤트 객체.
    */
   const startLongPress = (event: Event) => {
-    const { start } = onLongPress(() => {
-      toggleReactionPopup(event);
-    }, 500); // 500ms 롱 프레스
-    longPressStart = start;
-    longPressEnd = onLongPress(() => {}, 0).end; // end 함수를 가져옴
-    start();
+    const targetElement = event.currentTarget as HTMLElement;
+    if (!targetElement) return;
+
+    longPress.start(() => {
+      showReactionPopup.value = true;
+      const rect = targetElement.getBoundingClientRect();
+      reactionPopupPosition.value = {
+        top: `${rect.top - 60}px`,
+        left: `${rect.left + rect.width / 2}px`,
+      };
+    });
   };
 
   /**
@@ -199,9 +204,7 @@ export function useReactions(post: PostResponseDto) {
    * 롱 프레스 타이머를 중지합니다.
    */
   const endLongPress = () => {
-    if (longPressEnd) {
-      longPressEnd();
-    }
+    longPress.end();
   };
 
   /**
