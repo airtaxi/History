@@ -35,7 +35,7 @@ const isQuotePost = computed(() => !props.post.isRepost && props.post.parentPost
 
 // Composables 초기화
 const { mediaUrlMap, profileBlobUrlMap, getMediaBlobUrl } = useMediaLoader();
-const { reactionMap, myReaction, showReactionPopup, reactionPopupPosition, loadReactionData, selectReaction, startLongPress, endLongPress } = useReactions(props.post);
+const { reactionMap, myReaction, showReactionPopup, reactionPopupPosition, loadReactionData, selectReaction, startLongPress, endLongPress, handleReactionClick } = useReactions(props.post);
 const { canEdit, openShareEditor, handleInstantRepost, deleteMyPost, submitReport, navigateToProfile, goToOriginalPost, openReportDialog, cancelReport, showReportModal, showAccessDeniedModal, deniedUserId, deniedUserNickname } = usePostActions(props.post, emit);
 
 // ImageModal 관련 상태 및 함수
@@ -167,7 +167,7 @@ onMounted(async () => {
       :my-reaction="myReaction"
       :total-reactions="reactionMap.Like || 0"
       @open-detail="requestOpenDetail"
-      @handle-reaction-click="selectReaction('Like')"
+      @handle-reaction-click="handleReactionClick"
       @start-long-press="startLongPress($event)"
       @end-long-press="endLongPress"
       @open-share-editor="openShareEditor"
