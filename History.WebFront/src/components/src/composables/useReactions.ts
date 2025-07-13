@@ -25,6 +25,7 @@ import { ref, type Ref, onMounted, onUnmounted } from 'vue';
 import apiClient from '@/api';
 import { useLongPress } from './useLongPress';
 import { useUiStore } from '@/stores/ui';
+import { useAuthStore } from '@/stores/auth';
 import type { PostResponseDto } from '@/types';
 
 export function useReactions(post: PostResponseDto) {
@@ -37,6 +38,7 @@ export function useReactions(post: PostResponseDto) {
   const tooltipPosition: Ref<{ top: string, left: string }> = ref({ top: '0px', left: '0px' });
 
   const uiStore = useUiStore();
+  const authStore = useAuthStore();
 
   // useLongPress 컴포저블 인스턴스 생성
   const longPress = useLongPress(500);
@@ -70,13 +72,14 @@ export function useReactions(post: PostResponseDto) {
             profileImageUrl: user.profileThumbnailMediaId // Assuming this is handled by PostCard or parent
           });
 
-          if (user.userId === uiStore.user?.userId) { // Assuming uiStore has current user info
+          if (user.userId === authStore.user?.userId) { // Assuming authStore has current user info
             currentUserReaction = reactionType;
           }
         }
       });
 
       reactionMap.value = counts;
+
       myReaction.value = currentUserReaction;
       reactionUsersMap.value = usersMap;
 
@@ -94,20 +97,18 @@ export function useReactions(post: PostResponseDto) {
     const previousReaction = myReaction.value;
     const originalReactionMap = { ...reactionMap.value };
 
-    console.log(`[postReaction] 시작. newType: ${newType}, previousReaction: ${previousReaction}`);
+
 
     try {
       if (previousReaction === newType) {
-        console.log('[postReaction] 시나리오 1: 같은 반응 재클릭 → 해제');
+
         // === 시나리오 1: 같은 반응 재클릭 → 해제 ===
         reactionMap.value[newType] = Math.max((reactionMap.value[newType] || 1) - 1, 0);
         myReaction.value = null;
-        console.log(`[postReaction] 낙관적 업데이트 후: reactionMap[${newType}]=${reactionMap.value[newType]}, myReaction=${myReaction.value}`);
 
         await apiClient.post(`/api/Post/${post.id}/reaction/${newType}`);
 
       } else if (previousReaction && previousReaction !== newType) {
-        console.log('[postReaction] 시나리오 2: 다른 반응으로 변경');
         // === 시나리오 2: 다른 반응으로 변경 ===
         reactionMap.value[previousReaction] = Math.max((reactionMap.value[previousReaction] || 1) - 1, 0);
         reactionMap.value[newType] = (reactionMap.value[newType] || 0) + 1;
@@ -120,19 +121,14 @@ export function useReactions(post: PostResponseDto) {
         await apiClient.post(`/api/Post/${post.id}/reaction/${newType}`);
 
       } else {
-        console.log('[postReaction] 시나리오 3: 새로운 반응 추가');
         // === 시나리오 3: 새로운 반응 추가 ===
         reactionMap.value[newType] = (reactionMap.value[newType] || 0) + 1;
         myReaction.value = newType;
-        console.log(`[postReaction] 낙관적 업데이트 후: reactionMap[${newType}]=${reactionMap.value[newType]}, myReaction=${myReaction.value}`);
 
         await apiClient.post(`/api/Post/${post.id}/reaction/${newType}`);
       }
-
-      console.log('[postReaction] API 요청 성공. 최종 데이터 동기화 시작.');
       // 최종 서버 데이터로 동기화 (실제 데이터와 일치 보장)
       await loadReactionData();
-      console.log('[postReaction] 최종 데이터 동기화 완료.');
 
     } catch (err: any) {
       console.error('반응 처리 실패:', err);
@@ -152,20 +148,9 @@ export function useReactions(post: PostResponseDto) {
    * @param {Event} event - 클릭 이벤트 객체.
    */
   const handleReactionClick = (event: MouseEvent) => {
-    console.log(`[handleReactionClick] 클릭 발생. 현재 myReaction: ${myReaction.value}`);
-    if (myReaction.value === 'Like') {
-      console.log('[handleReactionClick] 분기: myReaction is \'Like\'. postReaction(\'Like\') 호출');
-      // 내 반응이 '좋아요'면, 취소 로직을 태운다.
-      postReaction('Like');
-    } else if (myReaction.value) {
-      console.log('[handleReactionClick] 분기: myReaction is not \'Like\' but exists. toggleReactionPopup 호출');
-      // 내 반응이 '좋아요'가 아닌 다른 것이면, 팝업을 연다.
-      toggleReactionPopup(event);
-    } else {
-      console.log('[handleReactionClick] 분기: myReaction is null. postReaction(\'Like\') 호출');
-      // 내 반응이 없으면, '좋아요'를 추가한다.
-      postReaction('Like');
-    }
+    // Always attempt to post/toggle 'Like' reaction when the main button is clicked.
+    // The postReaction function will handle the logic of adding, removing, or changing.
+    postReaction('Like');
   };
 
   /**
@@ -229,7 +214,6 @@ export function useReactions(post: PostResponseDto) {
    * @param {string} emoji - 띄울 이모지 문자열.
    */
   const createFloatingEmoji = (emoji: string) => {
-    console.log(`Floating emoji animation for: ${emoji}`);
     // 실제 구현에서는 DOM 요소를 생성하고 CSS 애니메이션을 적용합니다.
     // 예:
     // const emojiEl = document.createElement('div');
