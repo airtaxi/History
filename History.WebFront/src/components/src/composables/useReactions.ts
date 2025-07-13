@@ -25,6 +25,7 @@ import { ref, type Ref, onMounted, onUnmounted } from 'vue';
 import apiClient from '@/api';
 import { useLongPress } from './useLongPress';
 import { useUiStore } from '@/stores/ui';
+import { useAuthStore } from '@/stores/auth';
 import type { PostResponseDto } from '@/types';
 
 export function useReactions(post: PostResponseDto) {
@@ -37,11 +38,10 @@ export function useReactions(post: PostResponseDto) {
   const tooltipPosition: Ref<{ top: string, left: string }> = ref({ top: '0px', left: '0px' });
 
   const uiStore = useUiStore();
+  const authStore = useAuthStore();
 
   // useLongPress 컴포저블 인스턴스 생성
-  const { onLongPress } = useLongPress();
-  let longPressStart: (() => void) | null = null;
-  let longPressEnd: (() => void) | null = null;
+  const longPress = useLongPress(500);
 
   /**
    * 서버에서 게시물의 반응 데이터를 로드하고 상태를 업데이트합니다.
@@ -72,13 +72,14 @@ export function useReactions(post: PostResponseDto) {
             profileImageUrl: user.profileThumbnailMediaId // Assuming this is handled by PostCard or parent
           });
 
-          if (user.userId === uiStore.user?.userId) { // Assuming uiStore has current user info
+          if (user.userId === authStore.user?.userId) { // Assuming authStore has current user info
             currentUserReaction = reactionType;
           }
         }
       });
 
       reactionMap.value = counts;
+
       myReaction.value = currentUserReaction;
       reactionUsersMap.value = usersMap;
 
@@ -96,8 +97,11 @@ export function useReactions(post: PostResponseDto) {
     const previousReaction = myReaction.value;
     const originalReactionMap = { ...reactionMap.value };
 
+
+
     try {
       if (previousReaction === newType) {
+
         // === 시나리오 1: 같은 반응 재클릭 → 해제 ===
         reactionMap.value[newType] = Math.max((reactionMap.value[newType] || 1) - 1, 0);
         myReaction.value = null;
@@ -123,7 +127,6 @@ export function useReactions(post: PostResponseDto) {
 
         await apiClient.post(`/api/Post/${post.id}/reaction/${newType}`);
       }
-
       // 최종 서버 데이터로 동기화 (실제 데이터와 일치 보장)
       await loadReactionData();
 
@@ -145,13 +148,9 @@ export function useReactions(post: PostResponseDto) {
    * @param {Event} event - 클릭 이벤트 객체.
    */
   const handleReactionClick = (event: MouseEvent) => {
-    if (myReaction.value) {
-      // 이미 반응이 있으면 팝업 토글
-      toggleReactionPopup(event);
-    } else {
-      // 반응이 없으면 'Like'로 반응
-      postReaction('Like');
-    }
+    // Always attempt to post/toggle 'Like' reaction when the main button is clicked.
+    // The postReaction function will handle the logic of adding, removing, or changing.
+    postReaction('Like');
   };
 
   /**
@@ -159,9 +158,11 @@ export function useReactions(post: PostResponseDto) {
    * @param {Event} event - 이벤트 객체.
    */
   const toggleReactionPopup = (event: Event) => {
+    const target = event.currentTarget as HTMLElement;
+    if (!target) return;
+
     showReactionPopup.value = !showReactionPopup.value;
     if (showReactionPopup.value) {
-      const target = event.currentTarget as HTMLElement;
       const rect = target.getBoundingClientRect();
       reactionPopupPosition.value = {
         top: `${rect.top - 60}px`, // 버튼 위쪽에 위치
@@ -186,12 +187,17 @@ export function useReactions(post: PostResponseDto) {
    * @param {Event} event - 이벤트 객체.
    */
   const startLongPress = (event: Event) => {
-    const { start } = onLongPress(() => {
-      toggleReactionPopup(event);
-    }, 500); // 500ms 롱 프레스
-    longPressStart = start;
-    longPressEnd = onLongPress(() => {}, 0).end; // end 함수를 가져옴
-    start();
+    const targetElement = event.currentTarget as HTMLElement;
+    if (!targetElement) return;
+
+    longPress.start(() => {
+      showReactionPopup.value = true;
+      const rect = targetElement.getBoundingClientRect();
+      reactionPopupPosition.value = {
+        top: `${rect.top - 60}px`,
+        left: `${rect.left + rect.width / 2}px`,
+      };
+    });
   };
 
   /**
@@ -199,9 +205,7 @@ export function useReactions(post: PostResponseDto) {
    * 롱 프레스 타이머를 중지합니다.
    */
   const endLongPress = () => {
-    if (longPressEnd) {
-      longPressEnd();
-    }
+    longPress.end();
   };
 
   /**
@@ -210,7 +214,6 @@ export function useReactions(post: PostResponseDto) {
    * @param {string} emoji - 띄울 이모지 문자열.
    */
   const createFloatingEmoji = (emoji: string) => {
-    console.log(`Floating emoji animation for: ${emoji}`);
     // 실제 구현에서는 DOM 요소를 생성하고 CSS 애니메이션을 적용합니다.
     // 예:
     // const emojiEl = document.createElement('div');
