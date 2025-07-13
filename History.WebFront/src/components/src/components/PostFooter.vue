@@ -41,7 +41,7 @@
       <span v-else-if="myReaction === 'Support'">💪</span>
       <span>{{ totalReactions }}</span>
     </button>
-    <button @click.stop="$emit('open-detail')" class="footer-btn">
+    <button @click.stop="$emit('open-comment-input')" class="footer-btn">
       <span>💬 {{ post.commentsCount || 0 }}</span>
     </button>
     <button
@@ -89,7 +89,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits([
-  'open-detail',
+  'open-comment-input',
   'handle-reaction-click',
   'start-long-press',
   'end-long-press',
