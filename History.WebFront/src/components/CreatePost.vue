@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useUiStore } from '@/stores/ui';
 import apiClient from '@/api';
 import { defineEmits } from 'vue';
@@ -32,6 +32,7 @@ const { attachedFiles, previewItems, isDragOver, addFiles, removeFile, handlePas
  * @type {import('vue').Ref<string>}
  */
 const newPostText = ref('');
+const textareaRef = ref<HTMLTextAreaElement | null>(null); // textarea 참조를 위한 ref
 
 /**
  * 게시글 공개 설정 옵션
@@ -95,8 +96,6 @@ const isShareMode = computed(() => uiStore.isShareMode);
  */
 const originalPostForShare = computed(() => uiStore.shareOriginalPost);
 
-
-
 /**
  * 컴포넌트 확장 상태 (인라인 에디터용)
  * @type {import('vue').Ref<boolean>}
@@ -117,6 +116,33 @@ const {
   selectMention
 } = useMentions(newPostText);
 
+// ==================== 자동 크기 조절 로직 ====================
+
+/**
+ * textarea 높이를 내용에 맞게 조절하는 함수
+ */
+const autoResizeTextarea = () => {
+  const textarea = textareaRef.value;
+  if (textarea) {
+    textarea.style.height = 'auto'; // 높이를 초기화하여 scrollHeight를 정확하게 계산
+    // nextTick을 사용하여 DOM 업데이트가 완료된 후 높이 설정
+    nextTick(() => {
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    });
+  }
+};
+
+// newPostText 내용이 변경될 때마다 높이를 조절
+watch(newPostText, autoResizeTextarea);
+
+// 컴포넌트가 확장되거나 에디터가 열릴 때도 높이를 재조절
+watch([isExpanded, () => uiStore.isEditorOpen], ([newIsExpanded, newIsEditorOpen]) => {
+  if (newIsExpanded || newIsEditorOpen) {
+    // expanded-view가 표시된 후 함수를 실행해야 정확한 계산이 가능
+    nextTick(autoResizeTextarea);
+  }
+});
+
 // ==================== Computed 속성들 ====================
 
 /**
@@ -134,8 +160,6 @@ const onDiscoveryOptionChange = () => {
   selectedUserIds.value = [];
   if (needsFriendSelection.value) {
     showFriendSelector.value = true;
-    // friendsList는 useFriendData에서 이미 로드되거나 useMentions에 의해 로드됨
-    // loadFriends(); // 불필요한 중복 호출 제거
   } else {
     showFriendSelector.value = false;
   }
@@ -146,30 +170,11 @@ const onDiscoveryOptionChange = () => {
 /**
  * 메인 게시글 제출 함수
  * 리포스트 모드와 일반 모드를 구분하여 처리합니다.
- *
- * @async
- * @function submitPost
- * @returns {Promise<void>}
- *
- * @description
- * 1. 리포스트 모드인 경우 handleRepost() 함수를 호출합니다.
- * 2. 일반 모드인 경우 새로운 게시글 작성 로직을 수행합니다.
- * 3. 특정 친구 선택 옵션의 경우 2단계 프로세스로 처리합니다:
- * - 1단계: Friends 옵션으로 게시글 생성
- * - 2단계: 원하는 옵션으로 공개 설정 변경
- *
- * @throws {Error} 게시글 작성 실패 시 에러를 throw하고 사용자에게 알림
- *
- * @example
- * await submitPost();
  */
 const submitPost = async () => {
   // 공유 모드일 경우, 새로운 텍스트 내용이 없어도 원본 게시글이 있으면 게시 가능
   if (isShareMode.value && originalPostForShare.value) {
     // 새로운 텍스트 내용, 첨부 파일, 링크가 모두 없어도 공유는 가능
-    if (!newPostText.value.trim() && attachedFiles.value.length === 0 && !attachedLink.value.trim()) {
-      // 이 경우, 추가적인 유효성 검사 없이 진행
-    }
   } else {
     // 일반 게시글 작성 모드일 경우, 내용이 없으면 경고
     if (!newPostText.value.trim() && attachedFiles.value.length === 0 && !attachedLink.value.trim()) {
@@ -179,31 +184,23 @@ const submitPost = async () => {
   }
 
   try {
-    // selectedUserIds를 일반 배열로 변환
     const selectedUserIdsArray = [...selectedUserIds.value];
-
-    // 특정 친구 선택이 필요한 경우 일단 Friends로 생성 후 변경
     const isSpecificFriendOption = ['SelectedUsers', 'UnselectedUsers'].includes(discoveryOption.value);
     const initialDiscoveryOption = isSpecificFriendOption ? 'Friends' : discoveryOption.value;
 
-    // 게시글 데이터 타입을 명시적으로 정의하여 타입 안전성 확보
     const postDto = {
       DiscoveryOption: initialDiscoveryOption,
       CommentPermission: commentPermission.value,
       DisallowShare: disallowShare.value,
       ReservationTime: reservationTime.value,
       Contents: [] as any[],
-      // ✨ 공유 모드일 경우 ParentPostId 설정
       ParentPostId: isShareMode.value && originalPostForShare.value ? originalPostForShare.value.id : null,
       DiscoveryOptionSelectedUserIds: [] as string[]
     };
 
-    // 텍스트 내용이 있는 경우 Contents 배열에 추가
     if (newPostText.value.trim()) {
       const text = newPostText.value;
       const textParts: Array<any> = [];
-
-      // 닉네임 → userId 매핑
       const nicknameToUserIdMap: Record<string, string> = {};
       friendsList.value.forEach(friend => {
         nicknameToUserIdMap[friend.nickname] = friend.userId;
@@ -229,7 +226,6 @@ const submitPost = async () => {
         } else {
           textParts.push({ $type: 'text', Text: text.substring(mentionStart, mentionEnd) });
         }
-
         currentIndex = mentionEnd;
       }
 
@@ -239,7 +235,6 @@ const submitPost = async () => {
       postDto.Contents.push(...textParts);
     }
 
-    // 링크가 있는 경우 externalUrl 콘텐츠로 추가
     if (attachedLink.value.trim()) {
       postDto.Contents.push({
         $type: 'externalUrl',
@@ -248,8 +243,6 @@ const submitPost = async () => {
     }
 
     const formData = new FormData();
-
-    // 첨부 파일들을 FormData에 추가하고 Contents 배열에 메타데이터 추가
     attachedFiles.value.forEach(file => {
       formData.append('Files', file, file.name);
       postDto.Contents.push({
@@ -265,10 +258,8 @@ const submitPost = async () => {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-    // 특정 친구 선택이 필요한 경우 2단계 진행
     if (isSpecificFriendOption && selectedUserIdsArray.length > 0) {
       let postId;
-
       if (typeof createResponse.data === 'string' && createResponse.data.trim()) {
         postId = createResponse.data.trim();
       } else if (createResponse.data?.id) {
@@ -291,7 +282,6 @@ const submitPost = async () => {
             const profileRes = await apiClient.get('/api/User/me');
             myProfile.value = profileRes.data;
           }
-
           const recentPostsRes = await apiClient.get(`/api/Post/user/${myProfile.value.userId}?limit=1`);
           if (recentPostsRes.data && recentPostsRes.data.length > 0) {
             postId = recentPostsRes.data[0].id;
@@ -306,7 +296,6 @@ const submitPost = async () => {
           newDiscoveryOption: discoveryOption.value,
           selectedUserIds: selectedUserIdsArray
         };
-
         await apiClient.put(`/api/Post/${postId}/discovery-option`, discoveryUpdateDto);
       } else {
         console.error('❌ 모든 방법으로도 게시글 ID를 찾을 수 없습니다.');
@@ -327,13 +316,6 @@ const submitPost = async () => {
 
   } catch (error: any) {
     console.error('❌ 게시글 작성 실패:', error);
-    console.error('📊 에러 상세정보:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-      statusText: error.response?.statusText
-    });
-
     if (error.response?.status === 500) {
       alert('서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
     } else if (error.response?.data) {
@@ -346,35 +328,20 @@ const submitPost = async () => {
 
 /**
  * 취소 버튼 클릭 시 처리하는 함수
- *
- * @function handleCancel
- * @returns {void}
- *
- * @description
- * 1. 모달 모드인 경우 에디터를 닫습니다.
- * 2. 타임라인 인라인 모드인 경우 compact-view로 돌아갑니다.
- * 3. 작성 중인 내용들을 초기화합니다.
  */
 const handleCancel = () => {
-  // 모달이 열려있다면 모달을 닫습니다.
   if (uiStore.isEditorOpen) {
     uiStore.closeEditor();
   }
-  // 인라인으로 확장되었다면 축소합니다.
   if (isExpanded.value) {
     isExpanded.value = false;
   }
 
-  // 작성 중인 내용 초기화
   newPostText.value = '';
   attachedLink.value = '';
   selectedUserIds.value = [];
   showFriendSelector.value = false;
-
-  // useFileAttachment 초기화
   attachedFiles.value = [];
-
-  // @멘션 관련 초기화
   isMentioning.value = false;
   mentionSearchResults.value = [];
 };
@@ -416,6 +383,7 @@ onUnmounted(() => {
         </div>
 
         <textarea
+          ref="textareaRef"
           v-model="newPostText"
           class="create-post-input"
           :placeholder="isShareMode ? '공유할 게시글에 생각을 추가해보세요...' : '오늘 하루, 기억하고 싶은 순간이 있나요?'"
@@ -525,11 +493,6 @@ onUnmounted(() => {
   border-radius: 8px;
   border: 1px solid #ddd;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  /* The padding will now be on the inner elements to allow for smooth transition */
-}
-
-.create-post-card {
-    /* Padding is removed from the parent and applied to children */
 }
 
 .compact-view {
@@ -558,10 +521,12 @@ onUnmounted(() => {
   width: 100%;
   min-height: 100px;
   border: none;
-  resize: vertical;
+  resize: none; /* 크기 조절 비활성화 */
+  overflow-y: hidden; /* 스크롤바 숨김 */
   font-size: 1rem;
   padding: 8px 0;
   line-height: 1.5;
+  box-sizing: border-box; /* 패딩과 보더가 너비/높이에 포함되도록 설정 */
 }
 
 .create-post-input:focus { outline: none; }
@@ -676,10 +641,10 @@ onUnmounted(() => {
   background-color: #fff0ed;
 }
 
-/* --- ✨ NEW: Transition Styles for expand/collapse animation --- */
+/* --- 포스트 입력란 --- */
 .expand-enter-active,
 .expand-leave-active {
-  transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;
+  transition: max-height 0.8s ease-in-out, opacity 0.7s ease-in-out;
   overflow: hidden;
 }
 
