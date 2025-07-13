@@ -140,8 +140,8 @@ watch([() => props.profileBlobUrlMap, () => props.post.parentPost?.user?.userId]
 }
 
 .original-author-avatar {
-  width: 24px;
-  height: 24px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -152,12 +152,12 @@ watch([() => props.profileBlobUrlMap, () => props.post.parentPost?.user?.userId]
 
 .original-author-name {
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #212529;
 }
 
 .original-post-timestamp {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: #6c757d;
   margin-top: 1px;
 }
