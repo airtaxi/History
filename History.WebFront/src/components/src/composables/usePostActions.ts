@@ -83,17 +83,19 @@ export function usePostActions(post: PostResponseDto, emit: (event: 'open-detail
    * 내 게시글을 삭제합니다.
    * 사용자 확인 후 서버에서 게시글을 삭제하고 이전 페이지로 돌아갑니다.
    */
-  const deleteMyPost = async () => {
+  const deleteMyPost = async (): Promise<boolean> => {
     if (confirm('정말 삭제하시겠습니까?')) {
       try {
         await apiClient.delete(`/api/Post/${post.id}`);
         alert('삭제되었습니다.');
-        router.back();
+        return true;
       } catch (error) {
         console.error('삭제 실패:', error);
         alert('삭제에 실패했습니다.');
+        return false;
       }
     }
+    return false;
   };
 
   /**
