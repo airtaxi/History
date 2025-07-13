@@ -505,11 +505,10 @@ onUnmounted(() => {
 
 .compact-view textarea {
   width: 100%;
-  padding: 12px;
+  padding: 5px 0;
   font-size: 1rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background-color: #f8f9fa;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
   cursor: pointer;
   resize: none;
   transition: border-color 0.2s;
@@ -524,7 +523,7 @@ onUnmounted(() => {
   resize: none; /* 크기 조절 비활성화 */
   overflow-y: hidden; /* 스크롤바 숨김 */
   font-size: 1rem;
-  padding: 8px 0;
+  padding: 0;
   line-height: 1.5;
   box-sizing: border-box; /* 패딩과 보더가 너비/높이에 포함되도록 설정 */
 }
