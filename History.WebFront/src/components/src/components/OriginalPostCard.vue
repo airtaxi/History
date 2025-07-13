@@ -28,7 +28,7 @@
           <img :src="profileBlobUrlMap[post.parentPost.user.userId] || defaultProfileImage" class="original-author-avatar" @click.stop="goToUserProfile(post.parentPost.user.userId)" />
           <div class="original-author-info">
             <div class="original-author-name">{{ post.parentPost.user.nickname }}</div>
-            <div class="original-post-timestamp">{{ new Date(post.parentPost.createdAt).toLocaleString() }}</div>
+            <div class="original-post-timestamp">{{ formatRelativeTime(post.parentPost.createdAt) }}</div>
           </div>
         </div>
         <PostContent
@@ -53,9 +53,12 @@
 import { defineProps, defineEmits, ref, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 
-import type { PostResponseDto } from '@/types';
+import { useImageModal } from '@/components/src/composables/useImageModal';
+import { formatRelativeTime } from '@/components/src/utils/timeUtils';
+import defaultProfileImage from '@/components/src/assets/images/default_profile_image.jpg';
 import ImageModal from '@/components/src/components/modals/ImageModal.vue';
-import defaultProfileImage from '@/assets/images/default_profile_image.jpg';
+import PostContent from '@/components/src/components/PostContent.vue';
+import type { PostResponseDto } from '@/types';
 
 const props = defineProps<{
   post: PostResponseDto;
@@ -66,39 +69,8 @@ const props = defineProps<{
 
 defineEmits<(event: 'navigate-to-original') => void>();
 
-const modules = [Navigation, Pagination];
 const router = useRouter();
-const repostSwiperRef = ref(null);
-
-const showImageModal = ref(false);
-const modalMediaSource = ref<any[]>([]);
-const initialSlideIndex = ref(0);
-
-const openImageModal = (mediaList: any[], index: number) => {
-  modalMediaSource.value = mediaList.map(content => {
-    let src = '';
-    let type = 'image';
-    let mimeType = content.mimeType || '';
-
-    if (content.isExternal) {
-      src = content.mediaId;
-    } else {
-      const mediaId = content.mediaId || content.thumbnailMediaId;
-      src = props.mediaUrlMap[mediaId];
-    }
-    if (mimeType.startsWith('video/')) {
-      type = 'video';
-    }
-    return { src, type, mimeType };
-  });
-
-  initialSlideIndex.value = index;
-  showImageModal.value = true;
-};
-
-const closeImageModal = () => {
-  showImageModal.value = false;
-};
+const { showImageModal, modalMediaSource, initialSlideIndex, openImageModal, closeImageModal } = useImageModal(props.mediaUrlMap);
 
 const goToUserProfile = (userId: string) => {
   router.push(`/user/${userId}`);

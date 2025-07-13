@@ -115,10 +115,17 @@ onMounted(async () => {
 });
 
 const processedContents = computed(() => {
+  const hasMedia = props.contents.some(content => content.$type === 'media');
+  
+  let sourceContents = props.contents;
+  if (hasMedia) {
+    sourceContents = props.contents.filter(content => content.$type !== 'externalUrl');
+  }
+
   const result: Array<any> = [];
   let mediaGroup: Array<any> = [];
 
-  props.contents.forEach(content => {
+  sourceContents.forEach(content => {
     if (content.$type === 'media') {
       mediaGroup.push(content);
     } else {

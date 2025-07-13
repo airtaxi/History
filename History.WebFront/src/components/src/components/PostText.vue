@@ -1,71 +1,99 @@
 <template>
-  <p style="white-space: pre-wrap; word-break: break-word;">
-    <template v-for="(chunk, i) in splitTextWithLinksAndMentions(text)" :key="i">
-      <a
-        v-if="chunk.type === 'link'"
-        :href="chunk.text.startsWith('www.') ? 'https://' + chunk.text : chunk.text"
-        target="_blank"
-        rel="noopener noreferrer"
-        style="color: #0066cc; word-break: break-all;"
-        @click.stop
-      >{{ chunk.text }}</a>
-      <span v-else-if="chunk.type === 'mention'" class="mention" @click.stop="$emit('navigate-to-profile', chunk.text)">{{ chunk.text }}</span>
-      <span v-else>{{ chunk.text }}</span>
-    </template>
-  </p>
+  <div class="post-text-container">
+    <p ref="textElement" :class="{ collapsed: isCollapsed }" class="post-text">
+      <template v-for="(chunk, i) in splitTextWithLinksAndMentions(text)" :key="i">
+        <a
+          v-if="chunk.type === 'link'"
+          :href="chunk.text.startsWith('www.') ? 'https://' + chunk.text : chunk.text"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-link"
+          @click.stop
+        >{{ chunk.text }}</a>
+        <span v-else-if="chunk.type === 'mention'" class="mention" @click.stop="$emit('navigate-to-profile', chunk.text)">{{ chunk.text }}</span>
+        <span v-else>{{ chunk.text }}</span>
+      </template>
+    </p>
+    <button v-if="showReadMore" @click="toggleCollapse" class="read-more-btn">
+      {{ isCollapsed ? '더보기' : '접기' }}
+    </button>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
+import { ref, onMounted, nextTick, defineProps, defineEmits } from 'vue';
+import { splitTextWithLinksAndMentions } from '@/components/src/utils/textUtils';
 
-defineProps<{
+const props = defineProps<{
   text: string;
 }>();
 
 defineEmits(['navigate-to-profile']);
 
-/**
- * 텍스트에서 @멘션과 링크를 감지하여 분리합니다.
- * @param {string} text - 원본 텍스트.
- * @returns {Array<{ text: string; type: 'text' | 'link' | 'mention' }>} 분리된 텍스트 청크 배열.
- */
-function splitTextWithLinksAndMentions(text: string): Array<{ text: string; type: 'text' | 'link' | 'mention' }> {
-  const urlRegex = /(?:https?:\/\/[^\s]+)|(?:www\.[^\s]+)|(?:[a-zA-Z0-9][a-zA-Z0-9-]*(?:\.[a-zA-Z0-9][a-zA-Z0-9-]*)+(?:\/[^\s]*)?)/g;
-  const mentionRegex = /@[a-zA-Z0-9_가-힣\s]+/g;
+const textElement = ref<HTMLElement | null>(null);
+const isCollapsed = ref(true);
+const showReadMore = ref(false);
 
-  const matches: Array<{ text: string; type: 'link' | 'mention'; index: number; length: number }> = [];
-
-  let match;
-  while ((match = urlRegex.exec(text)) !== null) {
-    matches.push({ text: match[0], type: 'link', index: match.index, length: match[0].length });
-  }
-
-  while ((match = mentionRegex.exec(text)) !== null) {
-    matches.push({ text: match[0], type: 'mention', index: match.index, length: match[0].length });
-  }
-
-  matches.sort((a, b) => a.index - b.index);
-
-  const result: Array<{ text: string; type: 'text' | 'link' | 'mention' }> = [];
-  let lastIndex = 0;
-
-  for (const match of matches) {
-    if (match.index > lastIndex) {
-      result.push({ text: text.slice(lastIndex, match.index), type: 'text' });
+const checkTextOverflow = async () => {
+  await nextTick();
+  if (textElement.value) {
+    const p = textElement.value;
+    const style = window.getComputedStyle(p);
+    let lineHeight = parseFloat(style.lineHeight);
+    if (isNaN(lineHeight) || style.lineHeight === 'normal') {
+      lineHeight = parseFloat(style.fontSize) * 1.2;
     }
-    result.push({ text: match.text, type: match.type });
-    lastIndex = match.index + match.length;
-  }
+    const fiveLinesHeight = lineHeight * 5;
 
-  if (lastIndex < text.length) {
-    result.push({ text: text.slice(lastIndex), type: 'text' });
+    if (p.scrollHeight > fiveLinesHeight) {
+      showReadMore.value = true;
+    } else {
+      showReadMore.value = false;
+      isCollapsed.value = false; // 컨텐츠가 5줄 미만이면 항상 펼쳐진 상태
+    }
   }
+};
 
-  return result;
-}
+const toggleCollapse = () => {
+  isCollapsed.value = !isCollapsed.value;
+};
+
+onMounted(() => {
+  checkTextOverflow();
+});
+
 </script>
 
 <style scoped>
+.post-text-container {
+  position: relative;
+}
+
+.post-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  transition: max-height 0.3s ease;
+}
+
+.post-text.collapsed {
+  max-height: 105px; /* 5 lines (21px * 5) */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+}
+
+.read-more-btn {
+  background: none;
+  border: none;
+  color: #8c8c8c;
+  cursor: pointer;
+  font-weight: bold;
+  padding: 4px 0;
+  margin-top: 4px;
+}
+
 .mention {
   color: #ed664d;
   font-weight: 700;
@@ -76,5 +104,15 @@ function splitTextWithLinksAndMentions(text: string): Array<{ text: string; type
 .mention:hover {
   font-weight: 700;
   background-color: #fff0ed;
+}
+
+.text-link {
+  color: #0066cc;
+  word-break: break-all;
+  text-decoration: none;
+}
+
+.text-link:hover {
+  text-decoration: underline;
 }
 </style>
