@@ -25,7 +25,7 @@
     <template v-if="post.parentPost && post.parentPost.user">
       <div class="original-post-card" @click.stop="$emit('navigate-to-original')">
         <div class="original-post-author">
-          <img :src="profileBlobUrlMap[post.parentPost.user.userId] || defaultProfileImage" class="original-author-avatar" @click.stop="goToUserProfile(post.parentPost.user.userId)" />
+          <img :src="parentProfileImageUrl" class="original-author-avatar" @click.stop="goToUserProfile(post.parentPost.user.userId)" />
           <div class="original-author-info">
             <div class="original-author-name">{{ post.parentPost.user.nickname }}</div>
             <div class="original-post-timestamp">{{ formatRelativeTime(post.parentPost.createdAt) }}</div>
@@ -50,12 +50,12 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, ref, onMounted, nextTick } from 'vue';
+import { defineProps, defineEmits, ref, onMounted, nextTick, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { useImageModal } from '@/components/src/composables/useImageModal';
 import { formatRelativeTime } from '@/components/src/utils/timeUtils';
-import defaultProfileImage from '@/components/src/assets/images/default_profile_image.jpg';
+import defaultProfileImage from '@/assets/images/default_profile_image.jpg';
 import ImageModal from '@/components/src/components/modals/ImageModal.vue';
 import PostContent from './PostContent.vue';
 import type { PostResponseDto } from '@/types';
@@ -76,6 +76,16 @@ const goToUserProfile = (userId: string) => {
   router.push(`/user/${userId}`);
 };
 
+const parentProfileImageUrl = ref(defaultProfileImage);
+
+watch([() => props.profileBlobUrlMap, () => props.post.parentPost?.user?.userId], ([newMap, newUserId]) => {
+  if (newMap && newUserId && newMap[newUserId]) {
+    parentProfileImageUrl.value = newMap[newUserId];
+  } else {
+    parentProfileImageUrl.value = defaultProfileImage;
+  }
+}, { immediate: true });
+
 
 </script>
 
@@ -85,7 +95,6 @@ const goToUserProfile = (userId: string) => {
   border-radius: 8px;
   border: 1px solid #ddd;
   padding: 12px 16px;
-  margin-bottom: 12px;
 }
 
 .embedded-post {
@@ -131,8 +140,8 @@ const goToUserProfile = (userId: string) => {
 }
 
 .original-author-avatar {
-  width: 24px;
-  height: 24px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -143,12 +152,12 @@ const goToUserProfile = (userId: string) => {
 
 .original-author-name {
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #212529;
 }
 
 .original-post-timestamp {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: #6c757d;
   margin-top: 1px;
 }

@@ -126,6 +126,9 @@ const loadPostData = async () => {
     }
   }));
 
+  console.log("[PostCard] profileBlobUrlMap after loading:", profileBlobUrlMap.value);
+  console.log("[PostCard] parentPost profileThumbnailMediaId:", props.post.parentPost?.user?.profileThumbnailMediaId);
+
   loadReactionData();
 };
 
