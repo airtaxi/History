@@ -35,6 +35,7 @@ defineProps<{
 
 <style scoped>
 .external-link-container {
+  margin-top: 0.5rem;
   display: flex;
   justify-content: center;
 }
