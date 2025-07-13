@@ -32,7 +32,11 @@ const props = defineProps<{
   profileImageMap?: Record<string, string>; // Optional prop to accept the map
 }>();
 
-const emit = defineEmits<(event: 'open-detail', ...args: any[]) => void>();
+const emit = defineEmits<{
+  (event: 'open-detail', ...args: any[]): void;
+}>();
+
+const isDeleted = ref(false); // 게시글 삭제 여부 상태
 
 const postCardElement = ref(null);
 const isDataLoaded = ref(false);
@@ -46,6 +50,7 @@ const isQuotePost = computed(() => !props.post.isRepost && props.post.parentPost
 const { mediaUrlMap, profileBlobUrlMap, getMediaBlobUrl } = useMediaLoader();
 const { reactionMap, myReaction, showReactionPopup, reactionPopupPosition, loadReactionData, selectReaction, startLongPress, endLongPress, handleReactionClick } = useReactions(props.post);
 const { canEdit, openShareEditor, handleInstantRepost, deleteMyPost, submitReport, navigateToProfile, goToOriginalPost, openReportDialog, cancelReport, showReportModal, showAccessDeniedModal, deniedUserId, deniedUserNickname } = usePostActions(props.post, emit);
+
 const { showImageModal, modalMediaSource, initialSlideIndex, openImageModal, closeImageModal } = useImageModal(mediaUrlMap.value);
 const {
   displayedComments,
@@ -78,6 +83,12 @@ const handleCommentIconClick = () => {
 
 const handleMentionUser = (nickname: string) => {
   createCommentRef.value?.addMention(nickname);
+};
+
+const handleDeletePost = async () => {
+  if (await deleteMyPost()) {
+    isDeleted.value = true;
+  }
 };
 
 // 데이터 로드 함수
@@ -126,7 +137,7 @@ useIntersectionObserver(postCardElement, loadPostData);
 <template>
   <!-- 순수 리포스트 -->
   <OriginalPostCard
-    v-if="isRepost"
+    v-if="isRepost && !isDeleted"
     ref="postCardElement"
     :post="post"
     :profileBlobUrlMap="profileBlobUrlMap"
@@ -135,7 +146,7 @@ useIntersectionObserver(postCardElement, loadPostData);
   />
 
   <!-- 일반 게시물 또는 인용(공유) 게시물 -->
-  <div v-else class="post-card" ref="postCardElement">
+  <div v-else-if="!isDeleted" class="post-card" ref="postCardElement">
     <div class="post-main-content">
       <PostHeader
         :user="{
@@ -145,7 +156,7 @@ useIntersectionObserver(postCardElement, loadPostData);
         :profile-image-url="profileBlobUrlMap[post.user.userId] || defaultProfileImage"
         :created-at="post.createdAt"
         :can-edit="canEdit"
-        @delete="deleteMyPost"
+        @delete="handleDeletePost"
         @report="openReportDialog"
       />
 
