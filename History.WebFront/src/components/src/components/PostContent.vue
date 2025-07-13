@@ -90,23 +90,22 @@ const modules = [Navigation, Pagination];
 const mediaSwiperRef = ref(null); // Swiper 인스턴스를 참조할 ref 추가
 
 // Swiper 네비게이션 버튼의 클릭 이벤트 전파를 막는 헬퍼 함수
-const addStopPropagationToSwiperNav = (swiperInstanceRef: any) => {
-  if (!swiperInstanceRef) return;
+  const addStopPropagationToSwiperNav = (swiperInstanceRef: any) => {
+    if (!swiperInstanceRef) return;
 
-  // $el을 통해 실제 DOM 요소에 접근합니다.
-  const swiperEl = swiperInstanceRef.$el;
-  if (!swiperEl) return;
+    const swiperEl = swiperInstanceRef.$el;
+    if (!swiperEl) return;
 
-  const nextBtn = swiperEl.querySelector('.swiper-button-next');
-  const prevBtn = swiperEl.querySelector('.swiper-button-prev');
+    const nextBtn = swiperEl.querySelector('.swiper-button-next');
+    const prevBtn = swiperEl.querySelector('.swiper-button-prev');
 
-  if (nextBtn) {
-    nextBtn.addEventListener('click', (e: Event) => e.stopPropagation());
-  }
-  if (prevBtn) {
-    prevBtn.addEventListener('click', (e: Event) => e.stopPropagation());
-  }
-};
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e: Event) => e.stopPropagation());
+    }
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e: Event) => e.stopPropagation());
+    }
+  };
 
 onMounted(async () => {
   // Vue가 DOM 업데이트를 완료한 후 Swiper 로직을 실행하도록 보장합니다.
