@@ -151,7 +151,6 @@ const openImageModal = (mediaList: any[], index: number) => {
 <style scoped>
   /* 게시물 콘텐츠 영역 */
   .post-content-area {
-    margin-bottom: 12px;
     word-break: break-word;
   }
 
