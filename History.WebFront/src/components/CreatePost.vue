@@ -7,9 +7,9 @@ import FriendSelector from './CreatePostComponent/FriendSelector.vue';
 import PostAdvancedOptions from './CreatePostComponent/PostAdvancedOptions.vue';
 import PostAttachments from './CreatePostComponent/PostAttachments.vue';
 import RepostPreview from './CreatePostComponent/RepostPreview.vue';
-import { useMentions } from './composables/useMentions.ts';
-import { useFriendData } from './composables/useFriendData.ts';
-import { useFileAttachment } from './composables/useFileAttachment.ts';
+import { useMentions } from '../composables/useMentions.ts';
+import { useFriendData } from '../composables/useFriendData.ts';
+import { useFileAttachment } from '../composables/useFileAttachment.ts';
 
 /**
  * CreatePost 컴포넌트의 props와 emits 정의
