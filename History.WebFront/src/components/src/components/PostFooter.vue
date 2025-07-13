@@ -24,7 +24,7 @@
 <template>
   <div class="post-footer">
     <button
-      @click.stop="$emit('handle-reaction-click')"
+      @click.stop="$emit('handle-reaction-click', $event)"
       @mousedown.stop="$emit('start-long-press', $event)"
       @mouseup.stop="$emit('end-long-press', $event)"
       @mouseleave.stop="$emit('end-long-press', $event)"
@@ -41,7 +41,7 @@
       <span v-else-if="myReaction === 'Support'">💪</span>
       <span>{{ totalReactions }}</span>
     </button>
-    <button @click.stop="$emit('open-detail')" class="footer-btn">
+    <button @click.stop="$emit('open-comment-input')" class="footer-btn">
       <span>💬 {{ post.commentsCount || 0 }}</span>
     </button>
     <button
@@ -89,7 +89,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits([
-  'open-detail',
+  'open-comment-input',
   'handle-reaction-click',
   'start-long-press',
   'end-long-press',
@@ -126,20 +126,20 @@ const handleRepostClick = (event: MouseEvent) => {
   justify-content: space-around;
   border-top: 1px solid #eee;
   padding-top: 10px;
-  margin-top: 16px;
+  padding-bottom: 10px;
 }
 
 .footer-btn {
   background: none;
   border: none;
-  font-size: 14px;
+  font-size: 1rem;
   color: #666;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 8px 12px;
+  padding: 0.5rem 12px;
   border-radius: 20px;
   transition: background-color 0.2s ease;
 }

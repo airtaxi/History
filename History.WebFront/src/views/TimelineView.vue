@@ -10,7 +10,7 @@ import type { PostResponseDto } from '@/types';
 import PostCard from '@/components/PostCard.vue';
 import RightSidebar from '@/components/layout/RightSidebar.vue';
 import CreatePost from '@/components/CreatePost.vue';
-import PostDetailModal from '@/components/PostDetailModal.vue';
+
 
 
 // --- 상태 관리 ---
@@ -273,10 +273,6 @@ const handlePostCreated = async () => {
     >
       ⬆ 맨 위로
     </button>
-    <PostDetailModal
-      v-model="isDetailModalOpen"
-      :post-id="selectedPostId"
-    />
   </div>
 </template>
 

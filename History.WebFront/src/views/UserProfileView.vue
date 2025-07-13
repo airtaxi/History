@@ -7,7 +7,7 @@ import ProfileEditView from '@/views/accounts/ProfileEditView.vue';
 import PostCard from '@/components/PostCard.vue';
 import { watchEffect } from 'vue'
 import { watch } from 'vue';
-import PostDetailModal from '@/components/PostDetailModal.vue';
+
 
 const scrollContainer = ref<HTMLElement | null>(null);
 const isGridView = ref(false);
@@ -70,25 +70,25 @@ const getMediaBlobUrl = async (mediaId: string | null | undefined) => {
 const prepareProfileImageMap = async (postList: PostResponseDto[]) => {
   const map: Record<string, string> = {};
   const userIds = new Set<string>();
-  
+
   // 게시글 작성자들의 ID 수집
   postList.forEach(p => {
     userIds.add(p.user.userId);
-    
+
     // 리포스트인 경우 원본 게시글 작성자도 추가
     if ((p as any).isRepost && (p as any).parentPost?.user) {
       userIds.add((p as any).parentPost.user.userId);
     }
   });
-  
+
   // 각 사용자의 프로필 이미지 처리
   for (const uid of userIds) {
     // 이미 처리된 사용자는 건너뛰기
     if (profileImageMap.value[uid]) continue;
-    
+
     // 일반 게시글에서 사용자 찾기
     let user = postList.find(p => p.user.userId === uid)?.user;
-    
+
     // 리포스트 원본에서 사용자 찾기
     if (!user) {
       for (const post of postList) {
@@ -98,13 +98,13 @@ const prepareProfileImageMap = async (postList: PostResponseDto[]) => {
         }
       }
     }
-    
+
     if (user?.profileThumbnailMediaId) {
       const blobUrl = await getMediaBlobUrl(user.profileThumbnailMediaId);
       map[uid] = blobUrl || '/src/assets/images/default_profile_image.jpg';
     }
   }
-  
+
   profileImageMap.value = { ...profileImageMap.value, ...map };
 };
 
@@ -122,7 +122,7 @@ const sendFriendRequest = async () => {
 // 친구 관계 상태 확인 함수
 const checkFriendshipStatus = async () => {
   if (!user.value || !me.value || isMyProfile.value) return;
-  
+
   try {
     // 병렬로 모든 상태 확인
     const [friendsRes, pendingRes, waitingRes, blockedRes, ignoredRes] = await Promise.all([
@@ -132,7 +132,7 @@ const checkFriendshipStatus = async () => {
       apiClient.get<UserResponseDto[]>('/api/Friendship/blocked'),
       apiClient.get<UserResponseDto[]>('/api/Friendship/ignored')
     ]);
-    
+
     isFriend.value = friendsRes.data.some(f => f.userId === user.value!.userId);
     hasPendingRequestFromUser.value = pendingRes.data.some(r => r.userId === user.value!.userId);
     hasPendingRequestToUser.value = waitingRes.data.some(r => r.userId === user.value!.userId);
@@ -184,7 +184,7 @@ const ignoreFriendRequest = async () => {
 // 친구 삭제
 const removeFriend = async () => {
   if (!confirm('정말로 친구를 삭제하시겠습니까?')) return;
-  
+
   try {
     await apiClient.post(`/api/Friendship/remove/${user.value?.userId}`);
     alert('친구를 삭제했습니다.');
@@ -198,12 +198,12 @@ const removeFriend = async () => {
 // 차단
 const blockUser = async () => {
   if (!confirm('정말로 이 사용자를 차단하시겠습니까?')) return;
-  
+
   if (!user.value?.userId) {
     alert('차단할 사용자 정보를 찾을 수 없습니다.');
     return;
   }
-  
+
   try {
     await apiClient.post(`/api/Friendship/block/${user.value.userId}`);
     alert('사용자를 차단했습니다.');
@@ -224,7 +224,7 @@ const unblockUser = async () => {
     alert('차단 해제할 사용자 정보를 찾을 수 없습니다.');
     return;
   }
-  
+
   try {
     await apiClient.delete(`/api/Friendship/block/${user.value.userId}`);
     alert('차단을 해제했습니다.');
@@ -303,20 +303,20 @@ const loadMorePosts = async () => {
     const lastPost = posts.value[posts.value.length - 1];
     const params = lastPost ? { from: lastPost.id, limit: 50 } : { limit: 50 };
     const res = await apiClient.get<PostResponseDto[]>(`/api/Post/user/${routeUserId.value}`, { params });
-    
+
     //console.log('🔍 UserProfile API 응답:', res.data);
-    
+
     // 백엔드에서 리포스트를 제외하므로, 각 게시글의 sharedAndRepostedUsers를 확인하여 리포스트 추가
     const allPosts: PostResponseDto[] = [...res.data];
-        
+
     // 날짜순 정렬
     allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    
+
     // 중복 제거
-    const uniquePosts = allPosts.filter((post, index, self) => 
+    const uniquePosts = allPosts.filter((post, index, self) =>
       index === self.findIndex(p => p.id === post.id)
     );
-    
+
     const newPosts = uniquePosts.slice(0, 20);
 
     if (newPosts.length === 0) {
@@ -404,19 +404,19 @@ watch(routeUserId, () => {
             </div>
             <div class="profile-actions">
               <button v-if="isMyProfile" @click="isEditModalOpen = true" class="edit-profile-btn">프로필 수정</button>
-              
+
               <!-- 친구 요청을 받은 상황 -->
               <template v-else-if="hasPendingRequestFromUser">
                 <button @click="acceptFriendRequest" class="action-btn profile primary">친구 요청 수락</button>
                 <button @click="rejectFriendRequest" class="action-btn profile secondary">거절</button>
                 <button @click="ignoreFriendRequest" class="action-btn profile secondary">무시</button>
               </template>
-              
+
               <!-- 무시한 상황 -->
               <template v-else-if="isIgnored">
                 <button @click="unignoreUser" class="action-btn profile secondary">무시 해제</button>
               </template>
-              
+
               <!-- 이미 친구인 상황 -->
               <template v-else-if="isFriend">
                 <button @click="removeFriend" class="action-btn profile secondary">친구 삭제</button>
@@ -425,18 +425,18 @@ watch(routeUserId, () => {
                   {{ isFavorite ? '즐겨찾기 해제' : '즐겨찾기 등록' }}
                 </button>
               </template>
-              
+
               <!-- 차단한 상황 -->
               <template v-else-if="isBlocked">
                 <button @click="unblockUser" class="action-btn secondary">차단 해제</button>
               </template>
-              
+
               <!-- 친구 요청을 보낸 상황 -->
               <template v-else-if="hasPendingRequestToUser">
                 <button @click="cancelFriendRequest" class="action-btn secondary">친구 요청 취소</button>
                 <button @click="blockUser" class="action-btn danger">차단</button>
               </template>
-              
+
               <!-- 친구가 아닌 상황 -->
               <template v-else>
                 <button @click="sendFriendRequest" class="action-btn primary">친구 요청</button>
@@ -475,11 +475,6 @@ watch(routeUserId, () => {
         </div>
       </div>
     </main>
-    <ProfileEditView v-if="isEditModalOpen" @close="isEditModalOpen = false" @profile-updated="handleProfileUpdated" />
-    <PostDetailModal
-      v-model="isDetailModalOpen"
-      :post-id="selectedPostId"
-    />
     <button
       v-if="showScrollTopBtn"
       class="scroll-top-button"
@@ -493,7 +488,7 @@ watch(routeUserId, () => {
 <style scoped>
 header {
 flex-shrink: 0;
-height: auto; 
+height: auto;
 }
 
 .scroll-top-button {
@@ -544,65 +539,65 @@ height: auto;
   padding: 24px 0;
   overflow-y: auto;
 }
-.profile-page { 
-    max-width: 980px; 
-    margin: 0 auto; 
-    background-color: #fff; 
-    border: 1px solid #ddd; 
-    border-radius: 8px; 
+.profile-page {
+    max-width: 980px;
+    margin: 0 auto;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     overflow: hidden;
 }
-.profile-header { 
-    position: relative; 
+.profile-header {
+    position: relative;
 }
-.background-image-wrapper { 
-    height: 250px; 
-    background-color: #e9ecef; 
+.background-image-wrapper {
+    height: 250px;
+    background-color: #e9ecef;
 }
-.background-image { 
-    width: 100%; 
-    height: 100%; 
-    object-fit: cover; 
+.background-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
-.profile-info-bar { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: flex-end; 
-    padding: 0 24px; 
-    position: relative; 
-    top: -40px; 
+.profile-info-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 24px;
+    position: relative;
+    top: -40px;
     margin-bottom:16px;
 }
-.profile-avatar-wrapper { 
-    border: 4px solid white; 
-    border-radius: 50%; 
-    width: 140px; 
-    height: 140px; 
-    background-color: white; 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+.profile-avatar-wrapper {
+    border: 4px solid white;
+    border-radius: 50%;
+    width: 140px;
+    height: 140px;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-.profile-avatar { 
-    width: 100%; 
-    height: 100%; 
-    border-radius: 50%; 
-    object-fit: cover; 
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
 }
-.profile-actions { 
-    display: flex; 
+.profile-actions {
+    display: flex;
     flex-wrap: nowrap;
     align-items: center;
     justify-content: flex-start;
-    padding-bottom: 12px; 
+    padding-bottom: 12px;
 }
-.edit-profile-btn { 
-    background-color: #ed664d; 
-    color: white; 
-    padding: 8px 16px; 
-    border-radius: 6px; 
-    text-decoration: none; 
-    font-weight: 600; 
-    border: none; 
-    cursor: pointer; 
+.edit-profile-btn {
+    background-color: #ed664d;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
 }
 .action-btn {
     display: flex;
@@ -638,52 +633,52 @@ height: auto;
 .action-btn:last-child {
   margin-right: 0;
 }
-.profile-details { 
-    padding: 0 24px 24px 24px; 
+.profile-details {
+    padding: 0 24px 24px 24px;
 }
-.nickname { 
-    font-size: 2rem; 
-    font-weight: 800; 
-    margin: 0 0 4px 0; 
+.nickname {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 4px 0;
 }
-.handle { 
-    font-size: 1rem; 
-    color: #666; 
-    margin-bottom: 16px; 
+.handle {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 16px;
 }
-.description { 
-    font-size: 1rem; 
-    color: #333; 
-    margin-bottom: 16px; 
+.description {
+    font-size: 1rem;
+    color: #333;
+    margin-bottom: 16px;
 }
-.stats-container { 
-    display: flex; 
-    gap: 24px; 
+.stats-container {
+    display: flex;
+    gap: 24px;
 }
-.stat { 
-    font-size: 1rem; 
+.stat {
+    font-size: 1rem;
 }
-.stat-value { 
-    font-weight: 600; margin-right: 4px; 
+.stat-value {
+    font-weight: 600; margin-right: 4px;
 }
-.stat-label { 
-    color: #666; 
+.stat-label {
+    color: #666;
 }
-.content-tabs { 
-    display: flex; 
-    border-top: 1px solid #eee; 
-    padding: 0 24px; 
+.content-tabs {
+    display: flex;
+    border-top: 1px solid #eee;
+    padding: 0 24px;
 }
-.tab { 
-    padding: 16px 0; 
-    margin-right: 24px; 
-    font-weight: 600; 
-    cursor: pointer; 
-    border-bottom: 2px solid transparent; 
+.tab {
+    padding: 16px 0;
+    margin-right: 24px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
 }
-.tab.active { 
-    color: #ed664d; 
-    border-bottom-color: #ed664d; 
+.tab.active {
+    color: #ed664d;
+    border-bottom-color: #ed664d;
 }
 .my-posts-list {
   display: flex;
@@ -735,19 +730,19 @@ height: auto;
   flex-direction: column;
   justify-content: space-between;
   height: 360px;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
 .my-posts-list.grid :deep(.post-content a) {
   overflow: hidden;
   text-overflow: ellipsis;
-  display: block; 
-  max-width: 100%; 
+  display: block;
+  max-width: 100%;
 }
 
 .my-posts-list.grid :deep(.post-content .comment-media-container) {
   overflow: hidden;
-  max-height: 150px; 
+  max-height: 150px;
 }
 
 .my-posts-list.grid :deep(.post-content .comment-media) {
