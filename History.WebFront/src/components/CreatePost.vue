@@ -7,9 +7,9 @@ import FriendSelector from './CreatePostComponent/FriendSelector.vue';
 import PostAdvancedOptions from './CreatePostComponent/PostAdvancedOptions.vue';
 import PostAttachments from './CreatePostComponent/PostAttachments.vue';
 import RepostPreview from './CreatePostComponent/RepostPreview.vue';
-import { useMentions } from '../composables/useMentions.ts';
-import { useFriendData } from '../composables/useFriendData.ts';
-import { useFileAttachment } from '../composables/useFileAttachment.ts';
+import { useMentions } from './composables/useMentions.ts';
+import { useFriendData } from './composables/useFriendData.ts';
+import { useFileAttachment } from './composables/useFileAttachment.ts';
 
 /**
  * CreatePost 컴포넌트의 props와 emits 정의
@@ -94,8 +94,6 @@ const isShareMode = computed(() => uiStore.isShareMode);
  * @type {import('vue').ComputedRef<any>}
  */
 const originalPostForShare = computed(() => uiStore.shareOriginalPost);
-
-
 
 /**
  * 컴포넌트 확장 상태 (인라인 에디터용)
@@ -401,7 +399,6 @@ onUnmounted(() => {
     <div v-if="!uiStore.isEditorOpen && !isExpanded" class="compact-view" @click="openInlineEditor">
       <textarea readonly placeholder="오늘 하루, 기억하고 싶은 순간이 있나요?"></textarea>
     </div>
-
     <div v-else class="expanded-view">
       <div v-if="isShareMode" class="repost-header">
         <div class="repost-label">
@@ -411,7 +408,6 @@ onUnmounted(() => {
           <span>공유하기</span>
         </div>
       </div>
-
       <textarea
         v-model="newPostText"
         class="create-post-input"
@@ -420,7 +416,6 @@ onUnmounted(() => {
         @input="handleTextInput"
         @keydown="handleKeyDown"
       ></textarea>
-
       <div
         v-if="isMentioning"
         class="mention-dropdown"
@@ -455,22 +450,16 @@ onUnmounted(() => {
           </div>
         </div>
       </div>
-
       <span id="mention-hint" class="sr-only">
         @ 심볼을 입력하여 친구를 멘션할 수 있습니다. 위아래 화살표로 선택하고 Enter로 확정하세요.
       </span>
-
       <PostAttachments
         v-model:attached-link="attachedLink"
         :preview-items="previewItems"
         @add-files="addFiles"
         @remove-file="removeFile"
       />
-
     <RepostPreview :original-post="originalPostForShare" />
-
-
-
       <FriendSelector
         v-if="discoveryOption === 'SelectedUsers' || discoveryOption === 'UnselectedUsers'"
         v-model="selectedUserIds"
@@ -546,7 +535,7 @@ onUnmounted(() => {
   min-height: 100px;
   border: none;
   resize: vertical;
-  font-size: 1.1rem;
+  font-size: 1rem;
   padding: 8px 0;
   line-height: 1.5;
 }
@@ -590,15 +579,6 @@ onUnmounted(() => {
 .btn-submit:hover {
   background-color: #e55a47;
 }
-
-
-
-
-
-
-
-
-
 
 /* @멘션 드롭다운 스타일 */
 .mention-dropdown {
