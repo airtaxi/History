@@ -57,7 +57,7 @@ import { useImageModal } from '@/components/src/composables/useImageModal';
 import { formatRelativeTime } from '@/components/src/utils/timeUtils';
 import defaultProfileImage from '@/components/src/assets/images/default_profile_image.jpg';
 import ImageModal from '@/components/src/components/modals/ImageModal.vue';
-import PostContent from '@/components/src/components/PostContent.vue';
+import PostContent from './PostContent.vue';
 import type { PostResponseDto } from '@/types';
 
 const props = defineProps<{

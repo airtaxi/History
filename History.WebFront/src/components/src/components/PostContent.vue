@@ -33,7 +33,7 @@
               <video
                 v-if="mediaItem.mimeType?.startsWith('video/')"
                 controls
-                class="post-image"
+                class="post-vidio"
                 @click.stop="openImageModal(content.media, mediaIndex)"
               >
                 <source :src="mediaUrlMap[mediaItem.mediaId || mediaItem.thumbnailMediaId]" :type="mediaItem.mimeType" />
@@ -116,7 +116,7 @@ onMounted(async () => {
 
 const processedContents = computed(() => {
   const hasMedia = props.contents.some(content => content.$type === 'media');
-  
+
   let sourceContents = props.contents;
   if (hasMedia) {
     sourceContents = props.contents.filter(content => content.$type !== 'externalUrl');
@@ -149,66 +149,56 @@ const openImageModal = (mediaList: any[], index: number) => {
 </script>
 
 <style scoped>
-.post-content-area {
-  margin-bottom: 12px;
-  word-break: break-word;
-}
+  /* 게시물 콘텐츠 영역 */
+  .post-content-area {
+    margin-bottom: 12px;
+    word-break: break-word;
+  }
 
-.media-swiper {
-  width: 100%;
-  height: auto;
-}
+  /* 미디어 스와이퍼 */
+  .media-swiper {
+    width: 100%;
+    height: auto;
+  }
 
-.post-image {
-  width: 100%;
-  max-width: 100%;
-  min-width: 300px;
-  height: 500px;
-  background-color: black;
-  object-fit: cover;
-  border-radius: 8px;
-  display: block;
-  margin: 12px auto;
-}
+  /* 게시물 이미지 및 비디오 공통 스타일 */
+  .post-image,
+  .post-vidio {
+    width: 100%;
+    max-width: 100%;
+    min-width: 300px;
+    background-color: black;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+    margin: 12px auto;
+  }
 
-.post-content-area {
-  margin-bottom: 12px;
-  word-break: break-word;
-}
+  .post-image {
+    aspect-ratio:1;
+  }
 
-.media-swiper {
-  width: 100%;
-  height: auto;
-}
+  .post-vidio {
+    object-fit: scale-down;
+    height: 100%;
+  }
 
-.post-image {
-  width: 100%;
-  max-width: 100%;
-  min-width: 300px;
-  height: 500px;
-  background-color: black;
-  object-fit: cover;
-  border-radius: 8px;
-  display: block;
-  margin: 12px auto;
-}
+  /* Swiper 네비게이션 커스텀 */
+  :deep(.swiper-button-next),
+  :deep(.swiper-button-prev) {
+    color: #ed664d;
+  }
 
-/* Swiper Navigation Customization */
-:deep(.swiper-button-next),
-:deep(.swiper-button-prev) {
-  color: #ed664d;
-}
+  :deep(.swiper-pagination) {
+    bottom: -5px;
+  }
 
-:deep(.swiper-pagination) {
-  bottom: -5px;
-}
+  :deep(.swiper-pagination-bullet) {
+    background-color: #A9A9A9;
+    opacity: 0.8;
+  }
 
-:deep(.swiper-pagination-bullet) {
-  background-color: #A9A9A9;
-  opacity: 0.8;
-}
-
-:deep(.swiper-pagination-bullet-active) {
-  background-color: #ed664d;
-}
+  :deep(.swiper-pagination-bullet-active) {
+    background-color: #ed664d;
+  }
 </style>
