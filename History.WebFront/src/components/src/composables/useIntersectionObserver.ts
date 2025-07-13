@@ -1,16 +1,16 @@
 
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 
 export function useIntersectionObserver(target: ref, callback: () => void, options = {}) {
   const observer = ref<IntersectionObserver | null>(null);
 
-  const observe = () => {
-    if (target.value) {
+  const setupObserver = () => {
+    if (target.value && target.value instanceof HTMLElement && !observer.value) {
       observer.value = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             callback();
-            unobserve();
+            cleanupObserver(); // Once it intersects, we can stop observing
           }
         });
       }, options);
@@ -18,18 +18,26 @@ export function useIntersectionObserver(target: ref, callback: () => void, optio
     }
   };
 
-  const unobserve = () => {
+  const cleanupObserver = () => {
     if (observer.value && target.value) {
       observer.value.unobserve(target.value);
+      observer.value.disconnect(); // Disconnect the observer
       observer.value = null;
     }
   };
 
-  onMounted(observe);
-  onUnmounted(unobserve);
+  onUnmounted(cleanupObserver);
+
+  watch(target, (newValue) => {
+    if (newValue) {
+      setupObserver();
+    } else {
+      cleanupObserver();
+    }
+  }, { immediate: true });
 
   return {
-    observe,
-    unobserve,
+    setupObserver,
+    cleanupObserver,
   };
 }
