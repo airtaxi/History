@@ -49,19 +49,19 @@ const discoveryOption = ref('Friends');
  * 댓글 허용 범위 설정 옵션
  * @type {import('vue').Ref<string>}
  */
- const commentPermission = ref<string | null>(null);
+const commentPermission = ref<string | null>(null);
 
 /**
  * 다른 사용자의 공유 허용 여부
  * @type {import('vue').Ref<boolean>}
  */
- const disallowShare = ref(false); // 기본값 'false' (공유 허용)
+const disallowShare = ref(false); // 기본값 'false' (공유 허용)
 
 /**
  * 예약 발행 시간 (ISO 8601 형식의 문자열 또는 null)
  * @type {import('vue').Ref<string | null>}
  */
- const reservationTime = ref<string | null>(null);
+const reservationTime = ref<string | null>(null);
 
 /**
  * 첨부할 링크 URL
@@ -94,6 +94,8 @@ const isShareMode = computed(() => uiStore.isShareMode);
  * @type {import('vue').ComputedRef<any>}
  */
 const originalPostForShare = computed(() => uiStore.shareOriginalPost);
+
+
 
 /**
  * 컴포넌트 확장 상태 (인라인 에디터용)
@@ -153,8 +155,8 @@ const onDiscoveryOptionChange = () => {
  * 1. 리포스트 모드인 경우 handleRepost() 함수를 호출합니다.
  * 2. 일반 모드인 경우 새로운 게시글 작성 로직을 수행합니다.
  * 3. 특정 친구 선택 옵션의 경우 2단계 프로세스로 처리합니다:
- *    - 1단계: Friends 옵션으로 게시글 생성
- *    - 2단계: 원하는 옵션으로 공개 설정 변경
+ * - 1단계: Friends 옵션으로 게시글 생성
+ * - 2단계: 원하는 옵션으로 공개 설정 변경
  *
  * @throws {Error} 게시글 작성 실패 시 에러를 throw하고 사용자에게 알림
  *
@@ -396,95 +398,108 @@ onUnmounted(() => {
 
 <template>
   <div class="post-card create-post-card" :class="{ 'drag-over': isDragOver }" ref="createPostCardRef">
-    <div v-if="!uiStore.isEditorOpen && !isExpanded" class="compact-view" @click="openInlineEditor">
+    <!-- Compact View: Always visible when not expanded -->
+    <div v-if="!isExpanded && !uiStore.isEditorOpen" class="compact-view" @click="openInlineEditor">
       <textarea readonly placeholder="오늘 하루, 기억하고 싶은 순간이 있나요?"></textarea>
     </div>
-    <div v-else class="expanded-view">
-      <div v-if="isShareMode" class="repost-header">
-        <div class="repost-label">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 22v-9m-4 4 4-4 4 4m-8-4a9 9 0 1 1 18 0 9 9 0 0 1-18 0Z"/>
-          </svg>
-          <span>공유하기</span>
+
+    <!-- Expanded View: Wrapped in a transition component for smooth animation -->
+    <transition name="expand">
+      <div v-if="isExpanded || uiStore.isEditorOpen" class="expanded-view">
+        <div v-if="isShareMode" class="repost-header">
+          <div class="repost-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 22v-9m-4 4 4-4 4 4m-8-4a9 9 0 1 1 18 0 9 9 0 0 1-18 0Z"/>
+            </svg>
+            <span>공유하기</span>
+          </div>
         </div>
-      </div>
-      <textarea
-        v-model="newPostText"
-        class="create-post-input"
-        :placeholder="isShareMode ? '공유할 게시글에 생각을 추가해보세요...' : '오늘 하루, 기억하고 싶은 순간이 있나요?'"
-        aria-label="게시글 내용 입력"
-        @input="handleTextInput"
-        @keydown="handleKeyDown"
-      ></textarea>
-      <div
-        v-if="isMentioning"
-        class="mention-dropdown"
-        role="listbox"
-        :aria-label="`친구 검색 결과: ${mentionSearchResults.length}명`"
-        :style="{
-          position: 'fixed',
-          top: mentionDropdownPosition.top + 'px',
-          left: mentionDropdownPosition.left + 'px',
-          zIndex: 1000
-        }"
-      >
-        <div v-if="mentionSearchResults.length === 0" class="mention-no-results" role="status">
-          {{ friendsList.length === 0 ? '친구가 없습니다' : '검색 결과가 없습니다' }}
-        </div>
+
+        <textarea
+          v-model="newPostText"
+          class="create-post-input"
+          :placeholder="isShareMode ? '공유할 게시글에 생각을 추가해보세요...' : '오늘 하루, 기억하고 싶은 순간이 있나요?'"
+          aria-label="게시글 내용 입력"
+          @input="handleTextInput"
+          @keydown="handleKeyDown"
+        ></textarea>
+
         <div
-          v-else
-          v-for="(user, index) in mentionSearchResults"
-          :key="user.userId"
-          class="mention-item"
-          :class="{ 'selected': index === selectedMentionIndex }"
-          @click="selectMention(user)"
-          @mouseenter="selectedMentionIndex = index"
-          role="option"
-          :aria-selected="index === selectedMentionIndex"
-          :aria-label="`${user.nickname} @${user.handle}`"
+          v-if="isMentioning"
+          class="mention-dropdown"
+          role="listbox"
+          :aria-label="`친구 검색 결과: ${mentionSearchResults.length}명`"
+          :style="{
+            position: 'fixed',
+            top: mentionDropdownPosition.top + 'px',
+            left: mentionDropdownPosition.left + 'px',
+            zIndex: 1000
+          }"
         >
-          <img :src="(user as any).profileImageUrl || '/src/assets/images/default_profile_image.jpg'" :alt="`${user.nickname} 프로필 이미지`">
-          <div>
-            <div class="nickname">{{ user.nickname }}</div>
-            <div class="handle">@{{ user.handle }}</div>
+          <div v-if="mentionSearchResults.length === 0" class="mention-no-results" role="status">
+            {{ friendsList.length === 0 ? '친구가 없습니다' : '검색 결과가 없습니다' }}
+          </div>
+          <div
+            v-else
+            v-for="(user, index) in mentionSearchResults"
+            :key="user.userId"
+            class="mention-item"
+            :class="{ 'selected': index === selectedMentionIndex }"
+            @click="selectMention(user)"
+            @mouseenter="selectedMentionIndex = index"
+            role="option"
+            :aria-selected="index === selectedMentionIndex"
+            :aria-label="`${user.nickname} @${user.handle}`"
+          >
+            <img :src="(user as any).profileImageUrl || '/src/assets/images/default_profile_image.jpg'" :alt="`${user.nickname} 프로필 이미지`">
+            <div>
+              <div class="nickname">{{ user.nickname }}</div>
+              <div class="handle">@{{ user.handle }}</div>
+            </div>
+          </div>
+        </div>
+
+        <span id="mention-hint" class="sr-only">
+          @ 심볼을 입력하여 친구를 멘션할 수 있습니다. 위아래 화살표로 선택하고 Enter로 확정하세요.
+        </span>
+
+        <PostAttachments
+          v-model:attached-link="attachedLink"
+          :preview-items="previewItems"
+          @add-files="addFiles"
+          @remove-file="removeFile"
+        />
+
+        <RepostPreview :original-post="originalPostForShare" />
+
+        <FriendSelector
+          v-if="discoveryOption === 'SelectedUsers' || discoveryOption === 'UnselectedUsers'"
+          v-model="selectedUserIds"
+          :discovery-option="discoveryOption"
+          :friends-list="friendsList"
+        />
+
+        <div class="create-post-footer">
+          <div> <!-- Wrapper for advanced options button -->
+            <button class="toggle-advanced-btn" @click="showAdvancedOptions = !showAdvancedOptions">
+              {{ showAdvancedOptions ? '🔽 고급 설정 닫기' : '⚙️ 고급 설정 열기' }}
+            </button>
+            <PostAdvancedOptions
+              v-if="showAdvancedOptions"
+              v-model:discovery-option="discoveryOption"
+              v-model:comment-permission="commentPermission"
+              v-model:disallow-share="disallowShare"
+              v-model:reservation-time="reservationTime"
+              @discovery-option-change="onDiscoveryOptionChange"
+            />
+          </div>
+          <div class="submit-buttons">
+            <button @click="handleCancel" class="btn-cancel">취소</button>
+            <button @click="submitPost" class="btn-submit">올리기</button>
           </div>
         </div>
       </div>
-      <span id="mention-hint" class="sr-only">
-        @ 심볼을 입력하여 친구를 멘션할 수 있습니다. 위아래 화살표로 선택하고 Enter로 확정하세요.
-      </span>
-      <PostAttachments
-        v-model:attached-link="attachedLink"
-        :preview-items="previewItems"
-        @add-files="addFiles"
-        @remove-file="removeFile"
-      />
-    <RepostPreview :original-post="originalPostForShare" />
-      <FriendSelector
-        v-if="discoveryOption === 'SelectedUsers' || discoveryOption === 'UnselectedUsers'"
-        v-model="selectedUserIds"
-        :discovery-option="discoveryOption"
-        :friends-list="friendsList"
-      />
-
-      <div class="create-post-footer">
-        <button class="toggle-advanced-btn" @click="showAdvancedOptions = !showAdvancedOptions">
-          {{ showAdvancedOptions ? '🔽 고급 설정 닫기' : '⚙️ 고급 설정 열기' }}
-        </button>
-        <PostAdvancedOptions
-          v-if="showAdvancedOptions"
-          v-model:discovery-option="discoveryOption"
-          v-model:comment-permission="commentPermission"
-          v-model:disallow-share="disallowShare"
-          v-model:reservation-time="reservationTime"
-          @discovery-option-change="onDiscoveryOptionChange"
-        />
-        <div class="submit-buttons">
-          <button @click="handleCancel" class="btn-cancel">취소</button>
-          <button @click="submitPost" class="btn-submit">올리기</button>
-        </div>
-      </div>
-    </div>
+    </transition>
   </div>
 </template>
 
@@ -510,9 +525,18 @@ onUnmounted(() => {
   border-radius: 8px;
   border: 1px solid #ddd;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  /* The padding will now be on the inner elements to allow for smooth transition */
 }
 
 .create-post-card {
+    /* Padding is removed from the parent and applied to children */
+}
+
+.compact-view {
+    padding: 20px;
+}
+
+.expanded-view {
     padding: 20px;
 }
 
@@ -650,5 +674,24 @@ onUnmounted(() => {
 .create-post-card.drag-over {
   border: 2px dashed #ed664d;
   background-color: #fff0ed;
+}
+
+/* --- ✨ NEW: Transition Styles for expand/collapse animation --- */
+.expand-enter-active,
+.expand-leave-active {
+  transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.expand-enter-to,
+.expand-leave-from {
+  max-height: 1000px; /* Set a sufficiently large value to not clip content */
+  opacity: 1;
 }
 </style>
