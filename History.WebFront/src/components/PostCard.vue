@@ -136,7 +136,7 @@ useIntersectionObserver(postCardElement, loadPostData);
 
   <!-- 일반 게시물 또는 인용(공유) 게시물 -->
   <div v-else class="post-card" ref="postCardElement">
-    <div>
+    <div class="post-main-content">
       <PostHeader
         :user="{
           userId: post.user.userId,
@@ -166,19 +166,21 @@ useIntersectionObserver(postCardElement, loadPostData);
       />
     </div>
 
-    <PostFooter
-      :post="post"
-      :my-reaction="myReaction"
-      :total-reactions="reactionMap.Like || 0"
-      @open-comment-input="handleCommentIconClick"
-      @handle-reaction-click="handleReactionClick"
-      @start-long-press="startLongPress($event)"
-      @end-long-press="endLongPress"
-      @open-share-editor="openShareEditor"
-      @handle-instant-repost="handleInstantRepost"
-      @show-shared-users-modal="handleShowSharedUsersModal"
-      @show-reposted-users-modal="showRepostedUsersModal = true"
-    />
+    <div class="post-footer-wrapper">
+      <PostFooter
+        :post="post"
+        :my-reaction="myReaction"
+        :total-reactions="reactionMap.Like || 0"
+        @open-comment-input="handleCommentIconClick"
+        @handle-reaction-click="handleReactionClick"
+        @start-long-press="startLongPress($event)"
+        @end-long-press="endLongPress"
+        @open-share-editor="openShareEditor"
+        @handle-instant-repost="handleInstantRepost"
+        @show-shared-users-modal="handleShowSharedUsersModal"
+        @show-reposted-users-modal="showRepostedUsersModal = true"
+      />
+    </div>
 
     <!-- 댓글 섹션 -->
     <div v-if="isCommentsVisible" class="comments-container" @click.stop>
@@ -191,7 +193,7 @@ useIntersectionObserver(postCardElement, loadPostData);
 
       <div v-if="isCommentsLoading" class="loading-indicator">댓글 로딩 중...</div>
 
-      <div v-else>
+      <div style="min-height: 1rem" v-else>
         <CommentItem
           v-for="comment in displayedComments"
           :key="comment.id"
@@ -258,21 +260,26 @@ useIntersectionObserver(postCardElement, loadPostData);
   background: #fff;
   border-radius: 8px;
   border: 1px solid #ddd;
-  padding: 16px;
   transition: background-color .2s;
   min-height: 150px;
 }
 
+.post-main-content {
+  padding: 16px;
+}
+
+.post-footer-wrapper {
+  padding: 0 16px;
+}
+
 .comments-container {
-  margin-top: 16px;
   border-top: 1px solid #eee;
-  padding-top: 16px;
 }
 
 .comment-controls {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 12px;
+  padding: 16px 16px 0;
 }
 
 .sort-group button {
@@ -299,6 +306,7 @@ useIntersectionObserver(postCardElement, loadPostData);
 .load-more-container {
   text-align: center;
   margin-top: 16px;
+  padding: 0 16px 16px;
 }
 
 .load-more-container button {

@@ -126,20 +126,20 @@ const handleRepostClick = (event: MouseEvent) => {
   justify-content: space-around;
   border-top: 1px solid #eee;
   padding-top: 10px;
-  margin-top: 16px;
+  padding-bottom: 10px;
 }
 
 .footer-btn {
   background: none;
   border: none;
-  font-size: 14px;
+  font-size: 1rem;
   color: #666;
   font-weight: 500;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 8px 12px;
+  padding: 0.5rem 12px;
   border-radius: 20px;
   transition: background-color 0.2s ease;
 }

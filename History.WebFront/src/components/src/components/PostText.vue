@@ -73,6 +73,7 @@ onMounted(() => {
   white-space: pre-wrap;
   word-break: break-word;
   margin: 0;
+  padding-top:0.5rem;
   transition: max-height 0.3s ease;
 }
 
@@ -81,6 +82,7 @@ onMounted(() => {
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 5;
+  line-clamp: 5;
   -webkit-box-orient: vertical;
 }
 
