@@ -49,7 +49,11 @@ const isQuotePost = computed(() => !props.post.isRepost && props.post.parentPost
 // Composables 초기화
 const { mediaUrlMap, profileBlobUrlMap, getMediaBlobUrl } = useMediaLoader();
 const { reactionMap, myReaction, showReactionPopup, reactionPopupPosition, loadReactionData, selectReaction, startLongPress, endLongPress, handleReactionClick } = useReactions(props.post);
-const { canEdit, openShareEditor, handleInstantRepost, deleteMyPost, submitReport, navigateToProfile, goToOriginalPost, openReportDialog, cancelReport, showReportModal, showAccessDeniedModal, deniedUserId, deniedUserNickname } = usePostActions(props.post, emit);
+const { 
+  canEdit, openShareEditor, handleInstantRepost, deleteMyPost, submitReport, 
+  navigateToProfile, goToOriginalPost, openReportDialog, cancelReport, showReportModal, 
+  showAccessDeniedModal, deniedUserId, deniedUserNickname, handleSendFriendRequest 
+} = usePostActions(props.post, emit);
 
 const { showImageModal, modalMediaSource, initialSlideIndex, openImageModal, closeImageModal } = useImageModal(mediaUrlMap.value);
 const {
@@ -82,8 +86,8 @@ const handleCommentIconClick = () => {
   }
 };
 
-const handleMentionUser = (nickname: string) => {
-  createCommentRef.value?.addMention(nickname);
+const handleMentionUser = (handle: string) => {
+  createCommentRef.value?.addMention(handle);
 };
 
 const handleDeletePost = async () => {
@@ -140,14 +144,14 @@ useIntersectionObserver(postCardElement, loadPostData);
 
 <template>
   <!-- 순수 리포스트 -->
-  <OriginalPostCard
-    v-if="isRepost && !isDeleted"
-    ref="postCardElement"
-    :post="post"
-    :profileBlobUrlMap="profileBlobUrlMap"
-    :mediaUrlMap="mediaUrlMap"
-    @navigate-to-original="goToOriginalPost"
-  />
+  <div v-if="isRepost && !isDeleted" ref="postCardElement"> 
+    <OriginalPostCard
+      :post="post"
+      :profileBlobUrlMap="profileBlobUrlMap"
+      :mediaUrlMap="mediaUrlMap"
+      @navigate-to-original="goToOriginalPost"
+    />
+  </div>
 
   <!-- 일반 게시물 또는 인용(공유) 게시물 -->
   <div v-else-if="!isDeleted" class="post-card" ref="postCardElement">
@@ -268,6 +272,7 @@ useIntersectionObserver(postCardElement, loadPostData);
     :denied-user-nickname="deniedUserNickname"
     :denied-user-id="deniedUserId"
     @close="showAccessDeniedModal = false"
+    @send-friend-request="handleSendFriendRequest"
   />
 </template>
 

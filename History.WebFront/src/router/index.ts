@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import TimelineView from '@/views/TimelineView.vue'
 import { useAuthStore } from '@/stores/auth' // Pinia store
+import PostDetailView from '@/views/PostDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,6 +16,11 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('@/views/accounts/LoginView.vue')
+    },
+    {
+      path: '/post/:postId', 
+      name: 'post-detail',
+      component: PostDetailView
     },
     {
       path: '/profile-setup',

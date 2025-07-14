@@ -123,7 +123,7 @@ const handleImageError = (event: Event) => {
 };
 
 const mentionUser = () => {
-  emit('mention-user', props.comment.user.nickname);
+  emit('mention-user', props.comment.user.handle);
 };
 
 const toggleMenu = (e: Event) => {

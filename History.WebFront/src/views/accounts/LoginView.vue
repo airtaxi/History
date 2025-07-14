@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import apiClient from '@/api'; // API 클라이언트
-import { useAuthStore } from '@/stores/auth'; // Pinia 스토어
+import apiClient from '@/api'; 
+import { useAuthStore } from '@/stores/auth'; 
 
 const router = useRouter();
 const route = useRoute();
