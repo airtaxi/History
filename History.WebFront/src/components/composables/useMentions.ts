@@ -1,83 +1,71 @@
-import { ref, type Ref } from 'vue';
+import { ref, watch } from 'vue';
+import type { Ref } from 'vue';
 import type { UserResponseDto } from '@/types';
-import { useFriendData } from './useFriendData';
 
-export function useMentions(newPostText: Ref<string>) {
-  
-  const { friendsList, loadFriends } = useFriendData();
-
-
+// useMentions는 이제 newPostText 뿐만 아니라 friendsList와 loadFriends도 받습니다.
+export function useMentions(
+  newPostText: Ref<string>,
+  friendsList: Ref<UserResponseDto[]>,
+  loadFriends: () => Promise<void>
+) {
   const isMentioning = ref(false);
-  const mentionSearchText = ref('');
   const mentionSearchResults = ref<UserResponseDto[]>([]);
-  const mentionStartIndex = ref(-1);
   const mentionDropdownPosition = ref({ top: 0, left: 0 });
   const selectedMentionIndex = ref(-1);
-  let mentionSearchTimeout: number | null = null;
+  const mentionSearchText = ref('');
+  const mentionStartIndex = ref(-1);
 
-  const handleTextInput = (event: Event) => {
-    const target = event.target as HTMLTextAreaElement;
-    const cursorPosition = target.selectionStart;
-    const text = target.value;
-
-    const lastAtSymbol = text.lastIndexOf('@', cursorPosition - 1);
-
-    if (lastAtSymbol !== -1 && lastAtSymbol < cursorPosition) {
-      const searchText = text.substring(lastAtSymbol + 1, cursorPosition);
-
-      if (searchText.includes(' ') || searchText.includes('\n')) {
-        isMentioning.value = false;
-        mentionSearchResults.value = [];
-        return;
-      }
-
-      isMentioning.value = true;
-      mentionStartIndex.value = lastAtSymbol;
-      mentionSearchText.value = searchText;
-
-      const textareaRect = target.getBoundingClientRect();
-      mentionDropdownPosition.value = {
-        top: textareaRect.bottom + 5,
-        left: textareaRect.left
-      };
-
-      searchMentions();
+  // 멘션 검색을 수행하는 내부 함수
+  const performMentionSearch = () => {
+    let results: UserResponseDto[] = [];
+    if (!mentionSearchText.value) {
+      // 검색어가 없으면 친구 목록 상위 5명을 보여줍니다.
+      results = friendsList.value.slice(0, 5);
     } else {
-      isMentioning.value = false;
-      mentionSearchResults.value = [];
+      // 검색어가 있으면 친구 목록에서 필터링합니다.
+      const searchTerm = mentionSearchText.value.toLowerCase();
+      results = friendsList.value
+        .filter(friend =>
+          friend.nickname.toLowerCase().includes(searchTerm) ||
+          friend.handle.toLowerCase().includes(searchTerm)
+        )
+        .slice(0, 5);
     }
+    mentionSearchResults.value = results;
+    selectedMentionIndex.value = -1; // 검색 결과 변경 시 선택 인덱스 초기화
   };
 
+  // @ 멘션을 위한 친구 검색 (디바운싱은 생략, 필요 시 추가)
   const searchMentions = () => {
-    if (mentionSearchTimeout) {
-      clearTimeout(mentionSearchTimeout);
-    }
-
     if (friendsList.value.length === 0) {
-      loadFriends().then(() => {
-        performMentionSearch();
-      });
+      // 친구 목록이 비어있으면 로드한 후 검색합니다.
+      loadFriends().then(() => performMentionSearch());
     } else {
       performMentionSearch();
     }
   };
 
-  const performMentionSearch = async () => {
-    let results: UserResponseDto[] = [];
+  const handleTextInput = (event: Event) => {
+    const target = event.target as HTMLTextAreaElement;
+    const cursorPosition = target.selectionStart;
+    const text = target.value;
+    const lastAtSymbol = text.lastIndexOf('@', cursorPosition - 1);
 
-    if (!mentionSearchText.value) {
-      results = friendsList.value.slice(0, 5);
+    if (lastAtSymbol !== -1 && text.substring(lastAtSymbol + 1, cursorPosition).trim().length === text.substring(lastAtSymbol + 1, cursorPosition).length) {
+      isMentioning.value = true;
+      mentionStartIndex.value = lastAtSymbol;
+      mentionSearchText.value = text.substring(lastAtSymbol + 1, cursorPosition);
+      
+      const textareaRect = target.getBoundingClientRect();
+      mentionDropdownPosition.value = {
+        top: textareaRect.bottom + 5,
+        left: textareaRect.left,
+      };
+      
+      searchMentions();
     } else {
-      const filtered = friendsList.value.filter(friend =>
-        friend.nickname.toLowerCase().includes(mentionSearchText.value.toLowerCase()) ||
-        friend.handle.toLowerCase().includes(mentionSearchText.value.toLowerCase())
-      );
-      results = filtered.slice(0, 5);
+      isMentioning.value = false;
     }
-
-    // useFriendData에서 이미 profileImageUrl을 추가했으므로 여기서는 추가 작업 불필요
-    mentionSearchResults.value = results;
-    selectedMentionIndex.value = -1;
   };
 
   const selectMention = (user: UserResponseDto) => {
@@ -86,11 +74,7 @@ export function useMentions(newPostText: Ref<string>) {
     const afterCursor = text.substring(mentionStartIndex.value + mentionSearchText.value.length + 1);
 
     newPostText.value = `${beforeMention}@${user.nickname} ${afterCursor}`;
-
     isMentioning.value = false;
-    mentionSearchResults.value = [];
-    mentionSearchText.value = '';
-    selectedMentionIndex.value = -1;
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -99,32 +83,31 @@ export function useMentions(newPostText: Ref<string>) {
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
-        selectedMentionIndex.value = Math.min(
-          selectedMentionIndex.value + 1,
-          mentionSearchResults.value.length - 1
-        );
+        selectedMentionIndex.value = (selectedMentionIndex.value + 1) % mentionSearchResults.value.length;
         break;
-
       case 'ArrowUp':
         event.preventDefault();
-        selectedMentionIndex.value = Math.max(selectedMentionIndex.value - 1, 0);
+        selectedMentionIndex.value = (selectedMentionIndex.value - 1 + mentionSearchResults.value.length) % mentionSearchResults.value.length;
         break;
-
       case 'Enter':
         event.preventDefault();
         if (selectedMentionIndex.value >= 0) {
           selectMention(mentionSearchResults.value[selectedMentionIndex.value]);
         }
         break;
-
       case 'Escape':
         event.preventDefault();
         isMentioning.value = false;
-        mentionSearchResults.value = [];
-        selectedMentionIndex.value = -1;
         break;
     }
   };
+
+  watch(isMentioning, (newValue) => {
+    if (!newValue) {
+      mentionSearchResults.value = [];
+      selectedMentionIndex.value = -1;
+    }
+  });
 
   return {
     isMentioning,
@@ -134,7 +117,5 @@ export function useMentions(newPostText: Ref<string>) {
     handleTextInput,
     handleKeyDown,
     selectMention,
-    friendsList, 
-    loadFriends, 
   };
 }

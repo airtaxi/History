@@ -199,4 +199,16 @@ const openImageModal = (mediaList: any[], index: number) => {
   :deep(.swiper-pagination-bullet-active) {
     background-color: #ed664d;
   }
+
+  .mention {
+  color: #ed664d;      
+  font-weight: 700;    
+  text-decoration: none; 
+  cursor: pointer;       
+  transition: opacity 0.2s; 
+}
+
+.mention:hover {
+  opacity: 0.8; 
+}
 </style>

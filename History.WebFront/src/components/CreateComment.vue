@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps, defineEmits, defineExpose } from 'vue';
+import { ref, defineProps, defineEmits, defineExpose, onMounted } from 'vue';
 import apiClient from '@/api';
 import type { UserResponseDto } from '@/types';
 import 'emoji-picker-element';
@@ -117,8 +117,8 @@ const removeAttachedImage = () => {
   imagePreviewUrl.value = '';
 };
 
-const addMention = (nickname: string) => {
-  const mention = `@${nickname} `;
+const addMention = (handle: string) => {
+  const mention = `@${handle} `;
   newCommentText.value += mention;
   textareaRef.value?.focus();
 };
@@ -271,6 +271,11 @@ const handleKeyDown = (event: KeyboardEvent) => {
       break;
   }
 };
+
+onMounted(() => {
+  loadFriends();
+});
+
 defineExpose({ addMention, clearForm });
 
 </script>

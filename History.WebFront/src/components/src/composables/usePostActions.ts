@@ -153,6 +153,21 @@ export function usePostActions(post: PostResponseDto, emit: (event: 'open-detail
   };
 
   /**
+   * 사용자에게 친구 신청을 보냅니다.
+   * @param {string} userId - 친구 신청을 보낼 사용자의 ID
+   */
+  const handleSendFriendRequest = async (userId: string) => {
+    try {
+      
+      alert(`${deniedUserNickname.value}님에게 친구 신청을 보냈습니다.`);
+      showAccessDeniedModal.value = false; // 성공 시 모달 닫기
+    } catch (error) {
+      console.error('친구 신청 실패:', error);
+      alert('친구 신청에 실패했습니다. 다시 시도해주세요.');
+    }
+  };
+
+  /**
    * 게시물 상세 페이지로 이동합니다.
    * @param {string} postId - 상세 페이지로 이동할 게시물의 ID.
    */
@@ -191,5 +206,6 @@ export function usePostActions(post: PostResponseDto, emit: (event: 'open-detail
     showAccessDeniedModal,
     deniedUserId,
     deniedUserNickname,
+    handleSendFriendRequest,
   };
 }

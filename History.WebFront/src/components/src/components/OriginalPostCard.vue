@@ -1,19 +1,3 @@
-<!--
- * OriginalPostCard.vue
- *
- * 이 컴포넌트는 리포스트된 원본 게시물 또는 인용된 원본 게시물의 UI를 렌더링합니다.
- * isEmbedded prop에 따라 리포스트 헤더 표시 여부를 제어합니다.
- *
- * @props {
- *   post: PostResponseDto - 리포스트 또는 인용 게시물 데이터. parentPost를 포함합니다.
- *   profileBlobUrlMap: Record<string, string> - 프로필 이미지 Blob URL 맵.
- *   mediaUrlMap: Record<string, string> - 미디어 콘텐츠 Blob URL 맵.
- *   isEmbedded: boolean - 인용 게시물 형태로 렌더링할지 여부. true이면 리포스트 헤더를 숨깁니다.
- * }
- * @emits {
- *   navigate-to-original: 사용자가 원본 게시물 영역을 클릭했을 때 발생.
- * }
--->
 <template>
   <div :class="{ 'repost-wrapper': !isEmbedded, 'embedded-post': isEmbedded }">
     <div v-if="!isEmbedded" class="repost-label-standalone">
@@ -84,7 +68,7 @@ watch([() => props.profileBlobUrlMap, () => props.post.parentPost?.user?.userId]
   } else {
     parentProfileImageUrl.value = defaultProfileImage;
   }
-}, { immediate: true });
+}, { immediate: true, deep: true });
 
 
 </script>

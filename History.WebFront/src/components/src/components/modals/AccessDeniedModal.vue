@@ -34,7 +34,6 @@
 
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue';
-import { useRouter } from 'vue-router';
 
 const props = defineProps<{
   show: boolean;
@@ -42,8 +41,7 @@ const props = defineProps<{
   deniedUserId: string;
 }>();
 
-const emit = defineEmits(['close']);
-const router = useRouter();
+const emit = defineEmits(['close', 'send-friend-request']);
 </script>
 
 <style scoped>

@@ -114,7 +114,7 @@ const {
   handleTextInput,
   handleKeyDown,
   selectMention
-} = useMentions(newPostText);
+} = useMentions(newPostText, friendsList, loadFriends);
 
 // ==================== 자동 크기 조절 로직 ====================
 
@@ -520,12 +520,12 @@ onUnmounted(() => {
   width: 100%;
   min-height: 100px;
   border: none;
-  resize: none; /* 크기 조절 비활성화 */
-  overflow-y: hidden; /* 스크롤바 숨김 */
+  resize: none; 
+  overflow-y: hidden; 
   font-size: 1rem;
   padding: 0;
   line-height: 1.5;
-  box-sizing: border-box; /* 패딩과 보더가 너비/높이에 포함되도록 설정 */
+  box-sizing: border-box; 
 }
 
 .create-post-input:focus { outline: none; }
