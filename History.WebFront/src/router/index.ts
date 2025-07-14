@@ -29,12 +29,6 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/post/:postId',
-      name: 'post-detail',
-      component: () => import('@/views/PostDetailView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
       path: '/post/edit/:postId',
       name: 'EditPost',
       component: () => import('@/views/EditPostView.vue'),
