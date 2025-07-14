@@ -17,7 +17,7 @@ export function useComments(post: PostResponseDto) {
   const isMoreCommentsLoading = ref(false);
   const commentsLimit = 20;
   const hasMoreComments = ref(true);
-  const commentsCount = ref(0); // 댓글 수 상태 추가
+  const commentsCount = ref(post.commentsCount || 0); // post.commentsCount 값으로 초기화
 
   const sortOrder = ref<SortOrder>('newest');
 
@@ -42,17 +42,19 @@ export function useComments(post: PostResponseDto) {
       hasMoreComments.value = true;
 
       let lastCommentId: string | null = null;
+      const fetchedComments: CommentResponseDto[] = [];
       while (true) {
         const fromParam = lastCommentId ? `&from=${lastCommentId}` : '';
         const response = await apiClient.get<CommentResponseDto[]>(`/api/Comment/${post.id}?limit=100${fromParam}`);
-        const newComments = response.data; // API 응답 구조에 맞게 수정
+        const newComments = response.data;
         if (newComments.length === 0) break;
         
-        allComments.value.push(...newComments);
-        commentsCount.value = allComments.value.length; // 댓글 수 업데이트
+        fetchedComments.push(...newComments);
         lastCommentId = newComments[newComments.length - 1].id;
         if (newComments.length < 100) break;
       }
+      allComments.value = fetchedComments;
+      commentsCount.value = fetchedComments.length; // 모든 댓글을 가져온 후 한번에 업데이트
       
       const usersToLoad = new Set<UserDto>();
       allComments.value.forEach(comment => usersToLoad.add(comment.user));
@@ -130,8 +132,11 @@ export function useComments(post: PostResponseDto) {
   const deleteMyComment = async (commentId: string) => {
     try {
       await apiClient.delete(`/api/Comment/${commentId}`);
-      allComments.value = allComments.value.filter(c => c.id !== commentId);
-      commentsCount.value = allComments.value.length; // 댓글 수 업데이트
+      const index = allComments.value.findIndex(c => c.id === commentId);
+      if (index !== -1) {
+        allComments.value.splice(index, 1);
+        commentsCount.value--; // 전체 개수를 다시 세는 대신 1 감소
+      }
       resetAndLoadFirstPage();
     } catch (error) {
       alert('댓글 삭제에 실패했습니다.');
@@ -165,6 +170,6 @@ export function useComments(post: PostResponseDto) {
     handleLikeComment,
     deleteMyComment,
     handleUpdateComment,
-    commentsCount, // commentsCount 반환
+    commentsCount,
   };
 }
