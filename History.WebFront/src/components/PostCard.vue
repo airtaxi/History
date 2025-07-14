@@ -97,6 +97,9 @@ const loadPostData = async () => {
   if (isDataLoaded.value) return;
   isDataLoaded.value = true;
 
+  // 댓글 개수 초기 로드
+  fetchInitialData();
+
   const allContents = [...props.post.contents];
   if (props.post.parentPost) {
     allContents.push(...props.post.parentPost.contents);
