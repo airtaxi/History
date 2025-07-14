@@ -9,6 +9,7 @@ import { usePostActions } from '@/components/src/composables/usePostActions';
 import { useImageModal } from '@/components/src/composables/useImageModal';
 import { useIntersectionObserver } from '@/components/src/composables/useIntersectionObserver';
 import { useComments } from '@/components/src/composables/useComments';
+import { useRouter } from 'vue-router'
 
 // Components
 import PostHeader from '@/components/src/components/PostHeader.vue';
@@ -31,6 +32,12 @@ const props = defineProps<{
   post: PostResponseDto;
   profileImageMap?: Record<string, string>; // Optional prop to accept the map
 }>();
+
+const router = useRouter();
+
+const handleHashtagNavigation = (hashtag: string) => {
+  router.push({ path: '/search/posts', query: { q: `#${hashtag}` } });
+};
 
 const emit = defineEmits<{
   (event: 'open-detail', ...args: any[]): void;
@@ -163,7 +170,7 @@ useIntersectionObserver(postCardElement, loadPostData);
         }"
         :profile-image-url="profileBlobUrlMap[post.user.userId] || defaultProfileImage"
         :created-at="post.createdAt"
-        :can-edit="canEdit"
+        :can-edit="canEdit ?? false"
         @delete="handleDeletePost"
         @report="openReportDialog"
       />
@@ -183,6 +190,17 @@ useIntersectionObserver(postCardElement, loadPostData);
         :is-embedded="true"
         @navigate-to-original="goToOriginalPost"
       />
+
+      <div v-if="post.hashtags && post.hashtags.length > 0" class="hashtags-container">
+        <span
+          v-for="tag in post.hashtags"
+          :key="tag"
+          class="hashtag-chip"
+          @click.stop="handleHashtagNavigation(tag)"
+        >
+          #{{ tag }}
+        </span>
+      </div>
     </div>
 
     <div class="post-footer-wrapper">
@@ -349,5 +367,28 @@ useIntersectionObserver(postCardElement, loadPostData);
   cursor: pointer;
   font-weight: 600;
   width: 100%;
+}
+
+.hashtags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 0 4px; 
+}
+
+.hashtag-chip {
+  padding: 6px 12px;
+  background-color: #f1f1f1; 
+  border: 1px solid #e0e0e0; 
+  border-radius: 20px; 
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555; 
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.hashtag-chip:hover {
+  background-color: #e7e7e7; 
 }
 </style>

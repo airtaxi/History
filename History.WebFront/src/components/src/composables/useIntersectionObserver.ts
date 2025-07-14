@@ -1,7 +1,11 @@
-
 import { ref, onMounted, onUnmounted, watch } from 'vue';
+import type { Ref } from 'vue';
 
-export function useIntersectionObserver(target: ref, callback: () => void, options = {}) {
+export function useIntersectionObserver(
+  target: Ref<HTMLElement | null>,
+  callback: () => void,
+  options = {}
+) {
   const observer = ref<IntersectionObserver | null>(null);
 
   const setupObserver = () => {
@@ -10,7 +14,7 @@ export function useIntersectionObserver(target: ref, callback: () => void, optio
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             callback();
-            cleanupObserver(); // Once it intersects, we can stop observing
+            cleanupObserver();
           }
         });
       }, options);
@@ -21,7 +25,7 @@ export function useIntersectionObserver(target: ref, callback: () => void, optio
   const cleanupObserver = () => {
     if (observer.value && target.value) {
       observer.value.unobserve(target.value);
-      observer.value.disconnect(); // Disconnect the observer
+      observer.value.disconnect();
       observer.value = null;
     }
   };

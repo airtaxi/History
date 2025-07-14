@@ -4,7 +4,7 @@
     <div v-if="visibleComments.length > 0" class="comment-list">
       <div v-for="comment in visibleComments" :key="comment.id" class="comment-item">
         <span class="comment-author">{{ comment.user.nickname }}</span>
-        <p class="comment-content">{{ comment.content }}</p>
+        <p class="comment-content">{{ comment.contents }}</p>
       </div>
     </div>
 
@@ -28,7 +28,8 @@
 
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue';
-import type { CommentDto } from '@/types';
+import type { CommentResponseDto as CommentDto } from '@/types';
+
 
 defineProps<{
   visibleComments: CommentDto[];

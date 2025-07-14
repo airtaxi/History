@@ -19,17 +19,23 @@
 
 <template>
   <div class="post-header">
-    <!-- Author info (avatar, nickname) -->
     <div class="author-info">
-      <img :src="profileImageUrl" alt="User Avatar" class="avatar" />
+      
+      <RouterLink :to="`/user/${user.userId}`">
+        <img :src="profileImageUrl" alt="User Avatar" class="avatar" />
+      </RouterLink>
+
       <div class="postinfo-container">
-        <span class="nickname">{{ user.nickname }}</span>
-      <!-- Created time -->
+        
+        <RouterLink :to="`/user/${user.userId}`" class="nickname-link">
+          <span class="nickname">{{ user.nickname }}</span>
+        </RouterLink>
+        
         <span class="created-at">{{ formatRelativeTime(createdAt) }}</span>
       </div>
     </div>
-    <!-- More options menu -->
-    <div class="more-options" @click.stop> <!-- @click.stop 추가 -->
+
+    <div class="more-options" @click.stop>
       <button class="more-options" @click="toggleDropdown">...</button>
       <div v-if="showDropdown" class="dropdown-menu">
         <button v-if="canEdit" @click="$emit('edit')">수정</button>
@@ -86,7 +92,7 @@ const toggleDropdown = () => {
   align-items: center;
   padding: 0 0 10px 0;
   border-bottom: 1px solid #eee;
-  justify-content: space-between; /* 양쪽 끝으로 아이템 정렬 */
+  justify-content: space-between; 
 }
 
 .author-info {
@@ -110,6 +116,12 @@ const toggleDropdown = () => {
 .nickname {
   font-weight: bold;
 }
+
+.nickname-link {
+  color: inherit; 
+  text-decoration: none; 
+}
+
 
 .created-at {
   margin-right: auto;

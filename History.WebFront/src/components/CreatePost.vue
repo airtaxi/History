@@ -35,6 +35,12 @@ const newPostText = ref('');
 const textareaRef = ref<HTMLTextAreaElement | null>(null); // textarea 참조를 위한 ref
 
 /**
+ * 게시글에 포함될 해시태그 배열
+ * @type {import('vue').Ref<string[]>}
+ */
+ const hashtags = ref<string[]>([]);
+
+/**
  * 게시글 공개 설정 옵션
  * - OnlyMe: 나만 보기
  * - SelectedUsers: 특정 친구 공개
@@ -172,6 +178,15 @@ const onDiscoveryOptionChange = () => {
  * 리포스트 모드와 일반 모드를 구분하여 처리합니다.
  */
 const submitPost = async () => {
+  // ==================== 해시태그 추출 및 본문에서 제거 ====================
+  const hashtagRegex = /#([\p{L}\p{N}_]+)/gu; // 유니코드 문자, 숫자, 밑줄 허용
+  const foundHashtags = newPostText.value.match(hashtagRegex) || [];
+  hashtags.value = foundHashtags.map(tag => tag.substring(1));
+
+  // 해시태그를 제거한 순수 텍스트 본문을 만듭니다.
+  const textWithoutHashtags = newPostText.value.replace(hashtagRegex, '').trim();
+  // ========================================================================
+
   // 공유 모드일 경우, 새로운 텍스트 내용이 없어도 원본 게시글이 있으면 게시 가능
   if (isShareMode.value && originalPostForShare.value) {
     // 새로운 텍스트 내용, 첨부 파일, 링크가 모두 없어도 공유는 가능
@@ -187,6 +202,9 @@ const submitPost = async () => {
     const selectedUserIdsArray = [...selectedUserIds.value];
     const isSpecificFriendOption = ['SelectedUsers', 'UnselectedUsers'].includes(discoveryOption.value);
     const initialDiscoveryOption = isSpecificFriendOption ? 'Friends' : discoveryOption.value;
+    const hashtagRegex = /#([\p{L}\p{N}_]+)/gu; // 유니코드 문자, 숫자, 밑줄 허용
+    const foundHashtags = newPostText.value.match(hashtagRegex) || [];
+    hashtags.value = foundHashtags.map(tag => tag.substring(1));
 
     const postDto = {
       DiscoveryOption: initialDiscoveryOption,
@@ -195,11 +213,12 @@ const submitPost = async () => {
       ReservationTime: reservationTime.value,
       Contents: [] as any[],
       ParentPostId: isShareMode.value && originalPostForShare.value ? originalPostForShare.value.id : null,
-      DiscoveryOptionSelectedUserIds: [] as string[]
+      DiscoveryOptionSelectedUserIds: [] as string[],
+      Hashtags: hashtags.value
     };
 
-    if (newPostText.value.trim()) {
-      const text = newPostText.value;
+    if (textWithoutHashtags) {
+      const text = textWithoutHashtags; 
       const textParts: Array<any> = [];
       const nicknameToUserIdMap: Record<string, string> = {};
       friendsList.value.forEach(friend => {
@@ -311,6 +330,7 @@ const submitPost = async () => {
     commentPermission.value = null;
     disallowShare.value = false;
     reservationTime.value = null;
+    hashtags.value = [];
     uiStore.closeEditor();
     emit('post-created');
 
@@ -342,6 +362,7 @@ const handleCancel = () => {
   selectedUserIds.value = [];
   showFriendSelector.value = false;
   attachedFiles.value = [];
+  hashtags.value = [];
   isMentioning.value = false;
   mentionSearchResults.value = [];
 };
@@ -391,6 +412,12 @@ onUnmounted(() => {
           @input="handleTextInput"
           @keydown="handleKeyDown"
         ></textarea>
+
+        <div v-if="newPostText.match(/#([\p{L}\p{N}_]+)/gu)" class="hashtags-preview">
+          <span v-for="tag in newPostText.match(/#([\p{L}\p{N}_]+)/gu)" :key="tag" class="hashtag-item">
+            {{ tag }}
+          </span>
+        </div>
 
         <div
           v-if="isMentioning"
@@ -472,6 +499,25 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.hashtags-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.hashtag-item {
+  padding: 4px 10px;
+  background-color: #e9ecef;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: #495057;
+  font-weight: 500;
+}
+
 .toggle-advanced-btn {
   background: none;
   border: none;

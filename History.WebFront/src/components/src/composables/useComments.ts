@@ -44,9 +44,9 @@ export function useComments(post: PostResponseDto) {
       let lastCommentId: string | null = null;
       const fetchedComments: CommentResponseDto[] = [];
       while (true) {
-        const fromParam = lastCommentId ? `&from=${lastCommentId}` : '';
+        const fromParam: string = lastCommentId ? `&from=${lastCommentId}` : '';
         const response = await apiClient.get<CommentResponseDto[]>(`/api/Comment/${post.id}?limit=100${fromParam}`);
-        const newComments = response.data;
+        const newComments: CommentResponseDto[] = response.data;
         if (newComments.length === 0) break;
         
         fetchedComments.push(...newComments);
