@@ -17,6 +17,7 @@ export function useComments(post: PostResponseDto) {
   const isMoreCommentsLoading = ref(false);
   const commentsLimit = 20;
   const hasMoreComments = ref(true);
+  const commentsCount = ref(0); // 댓글 수 상태 추가
 
   const sortOrder = ref<SortOrder>('newest');
 
@@ -48,6 +49,7 @@ export function useComments(post: PostResponseDto) {
         if (newComments.length === 0) break;
         
         allComments.value.push(...newComments);
+        commentsCount.value = allComments.value.length; // 댓글 수 업데이트
         lastCommentId = newComments[newComments.length - 1].id;
         if (newComments.length < 100) break;
       }
@@ -112,7 +114,13 @@ export function useComments(post: PostResponseDto) {
       const response = await apiClient.post(`/api/Comment/${commentId}/like`);
       const updatedComment = response.data;
       const index = allComments.value.findIndex(c => c.id === commentId);
-      if (index !== -1) allComments.value[index] = updatedComment;
+      if (index !== -1) {
+        const newAllComments = [...allComments.value];
+        newAllComments[index] = updatedComment;
+        allComments.value = newAllComments;
+        // displayedComments도 업데이트되도록 강제
+        resetAndLoadFirstPage();
+      }
     } catch (error) {
       console.error('좋아요 처리 실패:', error);
       alert('좋아요 처리에 실패했습니다.');
@@ -123,6 +131,8 @@ export function useComments(post: PostResponseDto) {
     try {
       await apiClient.delete(`/api/Comment/${commentId}`);
       allComments.value = allComments.value.filter(c => c.id !== commentId);
+      commentsCount.value = allComments.value.length; // 댓글 수 업데이트
+      resetAndLoadFirstPage();
     } catch (error) {
       alert('댓글 삭제에 실패했습니다.');
     }
@@ -155,5 +165,6 @@ export function useComments(post: PostResponseDto) {
     handleLikeComment,
     deleteMyComment,
     handleUpdateComment,
+    commentsCount, // commentsCount 반환
   };
 }
