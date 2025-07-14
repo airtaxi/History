@@ -199,7 +199,7 @@ useIntersectionObserver(postCardElement, loadPostData);
     </div>
 
     <!-- 댓글 섹션 -->
-    <div v-if="isCommentsVisible" class="comments-container" @click.stop>
+    <div class="comments-container" :class="{ visible: isCommentsVisible }" @click.stop>
       <div class="comment-controls">
         <div class="sort-group">
           <button @click="sortOrder = 'newest'" :class="{ active: sortOrder === 'newest' }">최신순</button>
@@ -290,6 +290,15 @@ useIntersectionObserver(postCardElement, loadPostData);
 
 .comments-container {
   border-top: 1px solid #eee;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.8s ease-in-out, opacity 0.7s ease-in-out;
+}
+
+.comments-container.visible {
+  max-height: 1000px; /* 충분히 큰 값으로 설정 */
+  opacity: 1;
 }
 
 .comment-controls {
