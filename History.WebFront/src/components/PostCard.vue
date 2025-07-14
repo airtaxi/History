@@ -63,7 +63,8 @@ const {
   loadMoreComments,
   handleLikeComment,
   deleteMyComment,
-  handleUpdateComment
+  handleUpdateComment,
+  commentsCount
 } = useComments(props.post);
 
 // UserListModal 관련 상태
@@ -126,9 +127,6 @@ const loadPostData = async () => {
     }
   }));
 
-  console.log("[PostCard] profileBlobUrlMap after loading:", profileBlobUrlMap.value);
-  console.log("[PostCard] parentPost profileThumbnailMediaId:", props.post.parentPost?.user?.profileThumbnailMediaId);
-
   loadReactionData();
 };
 
@@ -185,6 +183,7 @@ useIntersectionObserver(postCardElement, loadPostData);
         :post="post"
         :my-reaction="myReaction"
         :total-reactions="reactionMap.Like || 0"
+        :comments-count="commentsCount"
         @open-comment-input="handleCommentIconClick"
         @handle-reaction-click="handleReactionClick"
         @start-long-press="startLongPress($event)"
@@ -293,22 +292,23 @@ useIntersectionObserver(postCardElement, loadPostData);
 .comment-controls {
   display: flex;
   justify-content: flex-end;
-  padding: 16px 16px 0;
+  padding: 0.5em 16px 0;
 }
 
 .sort-group button {
+  font-size: 0.8em;
   margin-left: 8px;
   background: none;
-  border: 1px solid #ccc;
+  border: none;
   padding: 4px 8px;
   border-radius: 4px;
   cursor: pointer;
 }
 
 .sort-group button.active {
-  background-color: #ed664d;
-  color: white;
-  border-color: #ed664d;
+  color: #ed664d;
+  border-color: none;
+  font-weight: 800;
 }
 
 .loading-indicator {

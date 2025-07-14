@@ -42,7 +42,7 @@
       <span>{{ totalReactions }}</span>
     </button>
     <button @click.stop="$emit('open-comment-input')" class="footer-btn">
-      <span>💬 {{ post.commentsCount || 0 }}</span>
+      <span>💬 {{ commentsCount || 0 }}</span>
     </button>
     <button
       @mousedown.stop="shareLongPress.start(() => { console.log('[PostFooter] Long press 콜백 실행됨'); emit('show-shared-users-modal'); })"
@@ -86,6 +86,7 @@ const props = defineProps<{
   post: PostResponseDto;
   myReaction: string | null;
   totalReactions: number;
+  commentsCount: number; // commentsCount prop 추가
 }>();
 
 const emit = defineEmits([
