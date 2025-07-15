@@ -8,7 +8,7 @@ import PostCard from '@/components/PostCard.vue'; // PostCard 컴포넌트 경�
 const route = useRoute();
 const posts = ref<PostResponseDto[]>([]);
 const isLoading = ref(false);
-const searchQuery = ref(route.query.q || '');
+const searchQuery = ref(route.query.keyword || '');
 
 /**
  * API를 호출하여 게시글 검색 결과를 가져오는 함수
@@ -24,7 +24,7 @@ const fetchSearchResults = async (query: string) => {
 
   try {
     const response = await apiClient.get<PostResponseDto[]>('/api/Post/search', {
-      params: { query }
+      params: { keyword: query }
     });
     posts.value = response.data;
   } catch (error) {
@@ -40,11 +40,11 @@ onMounted(() => {
 });
 
 watch(
-  () => route.query.q,
-  (newQuery) => {
-    if (typeof newQuery === 'string') {
-      searchQuery.value = newQuery;
-      fetchSearchResults(newQuery);
+  () => route.query.keyword,
+  (newKeyword) => {
+    if (typeof newKeyword === 'string') {
+      searchQuery.value = newKeyword;
+      fetchSearchResults(newKeyword);
     }
   }
 );
