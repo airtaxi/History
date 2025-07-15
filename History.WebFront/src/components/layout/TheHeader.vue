@@ -297,7 +297,7 @@ const toggleNotifications = () => {
   
   router.push({
     path: '/search/posts',
-    query: { q: query }
+    query: { keyword: query }
   });
 };
 
