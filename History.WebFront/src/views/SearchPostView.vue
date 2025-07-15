@@ -23,7 +23,7 @@ const fetchSearchResults = async (query: string) => {
   posts.value = []; // 새 검색 시 기존 결과 초기화
 
   try {
-    const response = await apiClient.get<PostResponseDto[]>('/api/post/search', {
+    const response = await apiClient.get<PostResponseDto[]>('/api/Post/search', {
       params: { query }
     });
     posts.value = response.data;
@@ -35,12 +35,10 @@ const fetchSearchResults = async (query: string) => {
   }
 };
 
-// 컴포넌트가 마운트될 때 첫 검색 실행
 onMounted(() => {
   fetchSearchResults(searchQuery.value as string);
 });
 
-// URL의 검색어가 변경될 때마다 다시 검색 실행 (헤더에서 새로운 검색 시)
 watch(
   () => route.query.q,
   (newQuery) => {

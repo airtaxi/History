@@ -14,47 +14,54 @@ const errorMessage = ref('');
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const handleGoogleLogin = () => {
-  isLoading.value = true;
-  errorMessage.value = '';
-  const frontendRedirectUrl = `${window.location.origin}${route.path}`;
-  window.location.href = `${apiBaseUrl}/api/auth/google/login?redirectUrl=${encodeURIComponent(frontendRedirectUrl)}`;
+  isLoading.value = true;
+  sessionStorage.setItem('login_provider', 'Google');
+  const frontendRedirectUrl = `${window.location.origin}${route.path}`;
+  window.location.href = `${apiBaseUrl}/api/auth/google/login?redirectUrl=${encodeURIComponent(frontendRedirectUrl)}`;
+};
+
+const handleAppleLogin = () => {
+  isLoading.value = true;
+  sessionStorage.setItem('login_provider', 'Apple');
+  const frontendRedirectUrl = `${window.location.origin}${route.path}`;
+  window.location.href = `${apiBaseUrl}/api/auth/apple/login?redirectUrl=${encodeURIComponent(frontendRedirectUrl)}`;
 };
 
 onMounted(async () => {
-  const idToken = route.query.id_token as string;
+  const idToken = route.query.id_token as string;
+  // 저장된 제공자 정보 읽기
+  const provider = sessionStorage.getItem('login_provider');
 
-  if (idToken) {
-    isLoading.value = true;
-    try {
-      const response = await apiClient.post('/api/User/login', {
-        IdToken: idToken,
-        Provider: 'Google' // SocialService.cs 참고
-      });
-      
-      // Pinia 스토어에 토큰 저장
-      authStore.setTokens(response.data.accessToken, response.data.refreshToken);
+  if (idToken && provider) { // idToken과 provider가 모두 있을 때만 실행
+    isLoading.value = true;
+    // 사용 후 즉시 삭제하여 다음 동작에 영향 없도록 함
+    sessionStorage.removeItem('login_provider'); 
 
-      // 로그인 성공 시 메인 페이지로 이동
-      await router.push('/');
+    try {
+      const response = await apiClient.post('/api/User/login', {
+        IdToken: idToken,
+        Provider: provider // 동적으로 가져온 provider 값 사용
+      });
+      
+      authStore.setTokens(response.data.accessToken, response.data.refreshToken);
+      await router.push('/');
 
-    } catch (error: any) {
-      if (error.response && error.response.status === 404) {
-        // 404 Not Found: 신규 사용자이므로 프로필 생성 페이지로 이동
-        await router.push({ path: '/profile-setup', query: { id_token: idToken } });
-      } else if (error.response && error.response.status === 403) {
-        // 403 Forbidden: 가입 승인 대기 중
-        errorMessage.value = '가입 승인 대기 중입니다. 관리자에게 문의하세요.';
-      } else {
-        errorMessage.value = '로그인에 실패했습니다. 다시 시도해주세요.';
-        console.error('Login failed:', error);
-      }
-    } finally {
-      isLoading.value = false;
-      // URL에서 id_token 쿼리 파라미터 제거
-      router.replace({ query: {} });
-    }
-  }
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        await router.push({ path: '/profile-setup', query: { id_token: idToken, provider: provider } }); // provider 정보도 함께 전달
+      } else if (error.response && error.response.status === 403) {
+        errorMessage.value = '가입 승인 대기 중입니다. 관리자에게 문의하세요.';
+      } else {
+        errorMessage.value = '로그인에 실패했습니다. 다시 시도해주세요.';
+        console.error('Login failed:', error);
+      }
+    } finally {
+      isLoading.value = false;
+      router.replace({ query: {} });
+    }
+  }
 });
+
 </script>
 
 <template>
@@ -72,13 +79,18 @@ onMounted(async () => {
       <p class="tagline">당신의 이야기, 히스토리</p>
       
       <p class="login-guide">
-        구글 계정으로 간편하게 로그인하세요.<br>
+        구글/애플 계정으로 간편하게 로그인하세요.<br>
         기존 계정이 없을 경우 회원가입 페이지로 연동됩니다.
       </p>
 
       <button @click="handleGoogleLogin" class="google-login-btn" :disabled="isLoading">
         <svg class="google-icon" width="20" height="20" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><path d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9.1818v3.4818h4.7909c-.2045 1.125-.8273 2.0782-1.7818 2.7227v2.2591h2.9091c1.7045-1.5682 2.6864-3.8727 2.6864-6.6227z" fill="#4285F4"></path><path d="M9.1818 18c2.4455 0 4.4955-.8045 5.9864-2.1818l-2.9091-2.2591c-.8045.5409-1.8409.8591-3.0773.8591-2.3591 0-4.3636-1.5818-5.0818-3.7182H1.0818v2.3318C2.5636 15.8136 5.6091 18 9.1818 18z" fill="#34A853"></path><path d="M4.0955 10.71c-.1136-.3273-.1818-.6818-.1818-1.0455s.0682-.7182.1818-1.0455V6.2864H1.0818C.3864 7.7364 0 9.3227 0 11s.3864 3.2636 1.0818 4.7136l3.0137-2.3318z" fill="#FBBC05"></path><path d="M9.1818 3.5455c1.3227 0 2.5182.4545 3.4409 1.3455l2.5818-2.5818C13.6727.6364 11.6273 0 9.1818 0 5.6091 0 2.5636 2.1864 1.0818 5.2864l3.0137 2.3318c.7182-2.1364 2.7227-3.7182 5.0864-3.7182z" fill="#EA4335"></path></g></svg>
         <span>Google 계정으로 로그인/회원가입</span>
+      </button>
+
+      <button @click="handleAppleLogin" class="apple-login-btn" :disabled="isLoading">
+        <svg class="apple-icon" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M16.365 1.43c0 1.14-.478 2.145-1.2 2.886-.765.765-2.025 1.338-3.14 1.253-.12-1.11.39-2.295 1.17-3.03.855-.84 2.25-1.38 3.17-1.11zM20.25 17.805c-.585 1.44-1.29 2.865-2.34 2.91-1.005.045-1.32-.66-2.745-.66-1.425 0-1.785.63-2.76.705-1.17.09-2.07-1.245-2.85-2.67-1.545-2.76-2.7-7.77-1.14-10.95.81-1.68 2.295-2.745 3.96-2.79 1.095-.015 2.13.72 2.76.72.6 0 1.755-.885 2.955-.75.51.015 1.935.21 2.85 1.59-.075.045-1.695.99-1.665 2.955.045 2.34 1.965 3.12 2.01 3.15-.045.075-1.29.885-1.275 2.655.015 2.115 1.59 2.805 1.62 2.82z"/></svg>
+        <span>Apple 계정으로 로그인</span>
       </button>
 
       <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
@@ -90,6 +102,28 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.apple-login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #000;
+  color: white;
+  border: 1px solid #333;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  margin-top: 10px;
+}
+
+.apple-login-btn:hover:not(:disabled) {
+  background-color: #222;
+}
+
 .login-container {
   display: flex;
   align-items: center;
