@@ -1,13 +1,14 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import apiClient from '@/api';
-import type { UserResponseDto } from '@/types'; // 꼭 타입 임포트해줘
+import type { UserResponseDto } from '@/types'; 
 
 export const useAuthStore = defineStore('auth', () => {
   // 상태
   const accessToken = ref<string | null>(null);
   const refreshToken = ref<string | null>(null);
   const user = ref<UserResponseDto | null>(null);
+  const isLoading = ref(false); 
 
   // 게터
   const isAuthenticated = computed(() => !!accessToken.value);
@@ -26,14 +27,18 @@ export const useAuthStore = defineStore('auth', () => {
     delete apiClient.defaults.headers.common['Authorization'];
   }
 
-  function fetchMe() {
-    return apiClient.get('/api/User/me')
-      .then((res) => {
-        user.value = res.data;
-      })
-      .catch(() => {
-        user.value = null;
-      });
+  async function fetchMe() {
+    if (user.value || isLoading.value) return; 
+
+    try {
+      isLoading.value = true;
+      const res = await apiClient.get('/api/User/me');
+      user.value = res.data;
+    } catch {
+      user.value = null;
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   return {
@@ -41,10 +46,12 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken,
     user,
     isAuthenticated,
+    isLoading,
     setTokens,
     fetchMe,
     logout,
   };
 }, {
-  persist: true, 
+  persist: true,
 });
+

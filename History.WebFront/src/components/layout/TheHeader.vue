@@ -283,6 +283,25 @@ const toggleNotifications = () => {
     fetchNotifications(true);
   }
 };
+
+/**
+ * 게시글 검색을 실행하고 검색 결과 페이지로 이동하는 함수
+ */
+ const executePostSearch = () => {
+  const query = searchQuery.value.trim();
+  if (!query) return; // 검색어가 없으면 실행하지 않음
+
+  // 사용자 검색 드롭다운을 닫고, 검색어를 유지한 채 페이지 이동
+  isSearchFocused.value = false; 
+  searchResults.value = [];
+  
+  router.push({
+    path: '/search/posts',
+    query: { q: query }
+  });
+};
+
+
 </script>
 
 <template>
@@ -301,7 +320,7 @@ const toggleNotifications = () => {
             @input="onSearchInput" 
             @focus="isSearchFocused = true" 
             @blur="hideResults"
-            placeholder="닉네임, 핸들 검색" 
+            @keydown.enter="executePostSearch" placeholder="닉네임 검색 / 게시글 검색은 Enter" 
             class="search-input">
           <div class="search-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="m19.6 21l-6.3-6.3q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.888T3 9.5q0-2.725 1.888-4.612T9.5 3q2.725 0 4.612 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l6.3 6.3zM9.5 14q1.875 0 3.188-1.313T14 9.5q0-1.875-1.313-3.188T9.5 5Q7.625 5 6.312 6.313T5 9.5q0 1.875 1.313 3.188T9.5 14"/></svg>
