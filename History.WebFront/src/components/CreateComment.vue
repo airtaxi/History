@@ -3,6 +3,10 @@ import { ref, defineProps, defineEmits, defineExpose, onMounted } from 'vue';
 import apiClient from '@/api';
 import type { UserResponseDto } from '@/types';
 import 'emoji-picker-element';
+import { useAuthStore } from '@/stores/auth';
+import { useFriendStore } from '@/stores/friend';
+
+const friendStore = useFriendStore();
 
 type UserWithImage = UserResponseDto & {
   profileImageUrl?: string;
@@ -26,8 +30,6 @@ const mentionSearchResults = ref<UserWithImage[]>([]);
 const isMentioning = ref(false);
 const mentionStartIndex = ref(-1);
 const mentionDropdownPosition = ref({ top: 0, left: 0 });
-const friendsList = ref<UserWithImage[]>([]);
-const myProfile = ref<any | null>(null);
 const selectedMentionIndex = ref(-1);
 
 // 이모지 선택
@@ -42,7 +44,7 @@ const generateContentsFromText = (): Array<any> => {
   const text = newCommentText.value;
   const result: Array<any> = [];
   const nicknameToUserIdMap: Record<string, string> = {};
-  friendsList.value.forEach(friend => {
+  friendStore.friends.forEach(friend => {
     nicknameToUserIdMap[friend.nickname] = friend.userId;
     nicknameToUserIdMap[friend.handle] = friend.userId;
   });
@@ -132,86 +134,61 @@ const clearForm = () => {
   mentionSearchResults.value = [];
 };
 
-const loadFriends = async () => {
-  try {
-    if (!myProfile.value) {
-      const profileRes = await apiClient.get('/api/User/me');
-      myProfile.value = profileRes.data;
-    }
-    
-    if (myProfile.value) {
-      const response = await apiClient.get(`/api/Friendship/${myProfile.value.userId}`);
-      friendsList.value = response.data;
-    }
-  } catch (error) {
-    console.error('친구 목록 로드 실패:', error);
-    friendsList.value = [];
-  }
-};
 
-let mentionSearchTimeout: number | null = null;
+let debounceTimer: number | null = null; // 디바운싱 타이머 변수
 
 const handleTextInput = (event: Event) => {
-  const target = event.target as HTMLTextAreaElement;
-  const cursorPosition = target.selectionStart;
-  const text = target.value;
+  if (debounceTimer) clearTimeout(debounceTimer); // 이전 타이머가 있으면 취소
+
+  // 300ms 후에 검색 함수를 실행하도록 설정
+  debounceTimer = setTimeout(() => {
+    const target = event.target as HTMLTextAreaElement;
+    const cursorPosition = target.selectionStart;
+    const text = target.value;
   
-  const lastAtSymbol = text.lastIndexOf('@', cursorPosition - 1);
-  
-  if (lastAtSymbol !== -1 && lastAtSymbol < cursorPosition) {
-    const searchText = text.substring(lastAtSymbol + 1, cursorPosition);
+    const lastAtSymbol = text.lastIndexOf('@', cursorPosition - 1);
     
-    if (searchText.includes(' ') || searchText.includes('\n')) {
+    if (lastAtSymbol !== -1 && lastAtSymbol < cursorPosition) {
+      const searchText = text.substring(lastAtSymbol + 1, cursorPosition);
+      
+      if (searchText.includes(' ') || searchText.includes('\n')) {
+        isMentioning.value = false;
+        mentionSearchResults.value = [];
+        return;
+      }
+      
+      isMentioning.value = true;
+      mentionStartIndex.value = lastAtSymbol;
+      mentionSearchText.value = searchText;
+      
+      const textareaRect = target.getBoundingClientRect();
+      mentionDropdownPosition.value = {
+        top: textareaRect.bottom + 5,
+        left: textareaRect.left
+      };
+      
+      performMentionSearch(); // 여기서 직접 호출 (searchMentions 함수는 이제 불필요)
+    } else {
       isMentioning.value = false;
       mentionSearchResults.value = [];
-      return;
     }
-    
-    isMentioning.value = true;
-    mentionStartIndex.value = lastAtSymbol;
-    mentionSearchText.value = searchText;
-    
-    const textareaRect = target.getBoundingClientRect();
-    mentionDropdownPosition.value = {
-      top: textareaRect.bottom + 5,
-      left: textareaRect.left
-    };
-    
-    searchMentions();
-  } else {
-    isMentioning.value = false;
-    mentionSearchResults.value = [];
-  }
+  }, 300); // 300ms (0.3초)
 };
 
-const searchMentions = () => {
-  if (mentionSearchTimeout) {
-    clearTimeout(mentionSearchTimeout);
-  }
-  
-  if (friendsList.value.length === 0) {
-    loadFriends().then(() => {
-      performMentionSearch();
-    });
-  } else {
-    performMentionSearch();
-  }
-};
-
-// [수정] 프로필 이미지 로딩 로직이 포함된 완전한 검색 함수
+// 프로필 이미지 로딩 로직이 포함된 완전한 검색 함수
 const performMentionSearch = async () => {
   let results: UserWithImage[];
 
   if (!mentionSearchText.value) {
-    results = friendsList.value.slice(0, 5);
+    results = friendStore.friends.slice(0, 5);
   } else {
-    results = friendsList.value.filter(friend =>
+    results = friendStore.friends.filter(friend =>
       friend.nickname.toLowerCase().includes(mentionSearchText.value.toLowerCase()) ||
       friend.handle.toLowerCase().includes(mentionSearchText.value.toLowerCase())
     ).slice(0, 5);
   }
 
-  // [수정] 검색 결과의 프로필 이미지를 불러오는 로직 복원
+  // 검색 결과의 프로필 이미지를 불러오는 로직 복원
   for (const user of results) {
     if (user.profileThumbnailMediaId) {
       try {
@@ -273,9 +250,8 @@ const handleKeyDown = (event: KeyboardEvent) => {
 };
 
 onMounted(() => {
-  loadFriends();
+  friendStore.fetchFriends(); 
 });
-
 defineExpose({ addMention, clearForm });
 
 </script>
@@ -322,7 +298,7 @@ defineExpose({ addMention, clearForm });
       }"
     >
       <div v-if="mentionSearchResults.length === 0" class="mention-no-results">
-        {{ friendsList.length === 0 ? '친구가 없습니다' : '검색 결과가 없습니다' }}
+        {{ friendStore.friends.length === 0 ? '친구가 없습니다' : '검색 결과가 없습니다' }}
       </div>
       <div 
         v-else

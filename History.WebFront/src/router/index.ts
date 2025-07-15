@@ -58,6 +58,11 @@ const router = createRouter({
       component: () => import('@/views/SettingsView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/search/posts',
+      name: 'PostSearch',
+      component: () => import('@/views/SearchPostView.vue') 
+    },
   ]
 })
 
