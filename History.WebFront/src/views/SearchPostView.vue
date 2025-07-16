@@ -1,3 +1,9 @@
+<script lang="ts">
+export default {
+  name: 'PromotedPostsView' 
+}
+</script>
+
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
