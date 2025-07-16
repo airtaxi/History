@@ -72,6 +72,8 @@ export interface PostResponseDto {
   createdAt: string;
   modifiedAt: string | null;
   parentPost?: PostResponseDto;
+  hashtags?: string[]; // ← 배열로 정의
+  discoveryOptionSelectedUserIds?: string[]; // ← 배열로 정의
 
   sharedAndRepostedUsers?: {
     user: any; 
