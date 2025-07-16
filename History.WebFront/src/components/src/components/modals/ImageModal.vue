@@ -23,7 +23,7 @@
           :initialSlide="initialSlideIndex"
           :navigation="true"
           :pagination="{ type: 'fraction' }"
-          :loop="mediaSource.length > 1"
+          :loop="enableLoop"
           :modules="modules"
           class="modal-swiper"
         >
@@ -53,9 +53,10 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, computed } from 'vue';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Navigation, Pagination } from 'swiper/modules';
+
 
 const props = defineProps<{
   show: boolean;
@@ -64,8 +65,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['close']);
-
 const modules = [Navigation, Pagination];
+const enableLoop = computed(() => props.mediaSource.length > 1);
 </script>
 
 <style scoped>
