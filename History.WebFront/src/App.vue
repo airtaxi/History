@@ -21,9 +21,9 @@ const shouldShowFooter = computed(() => {
   <div class="app-container">
     <main class="main-content">
       <router-view v-slot="{ Component, route }">
-        <keep-alive include="TimelineView">
-          <component :is="Component" :key="route.name" />
-        </keep-alive>
+        <KeepAlive :include="['PromotedPostsView', 'TimelineView']">
+          <component :is="Component" />
+        </KeepAlive>
       </router-view>
     </main>
 
