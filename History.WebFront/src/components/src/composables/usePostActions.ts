@@ -72,13 +72,19 @@ export function usePostActions(post: PostResponseDto, emit: (event: 'open-detail
    * 게시글 홍보
    */
   const promotePost = async () => {
-    if (confirm("게시글을 홍보하면 '발견' 탭에서 모든 사용자에게 노출됩니다. 진행하시겠습니까?")) {
+    if (confirm("...")) {
       try {
-        await apiClient.post(`/api/Post/${post.id}/promote`);
-        alert('게시글이 성공적으로 홍보되었습니다! 발견 탭에서 확인할 수 있습니다.');
-      } catch (error) {
+        await apiClient.post(`/api/post/public-post/${post.id}`);
+        alert('게시글이 성공적으로 홍보되었습니다! ...');
+      } catch (error: any) { // error 타입을 any로 지정하여 response에 접근
         console.error('게시글 홍보 실패:', error);
-        alert('게시글 홍보에 실패했습니다.');
+  
+        // 429 에러(Too Many Requests)가 오면 시간제한 메시지를 보여줌
+        if (error.response && error.response.status === 429) {
+          alert('게시글 홍보는 24시간에 한 번만 가능합니다.');
+        } else {
+          alert('게시글 홍보에 실패했습니다.');
+        }
       }
     }
   };
