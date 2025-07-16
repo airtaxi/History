@@ -87,7 +87,7 @@ async function saveSettings() {
       <FriendSelector
         v-if="needsFriendSelection"
         v-model="currentSelectedIds"
-        :discovery-option="currentOption"
+        :discovery-option="currentOption === 'SelectedUsers' ? 'SelectedUsers' : 'UnselectedUsers'"
         :friends-list="friendsList"
       />
 
