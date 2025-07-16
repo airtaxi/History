@@ -21,26 +21,34 @@
   <div class="post-header">
     <div class="author-info">
       
-      <RouterLink :to="`/user/${user.userId}`">
+      <RouterLink :to="`/user/${post.user.userId}`">
         <img :src="profileImageUrl" alt="User Avatar" class="avatar" />
       </RouterLink>
 
       <div class="postinfo-container">
         
-        <RouterLink :to="`/user/${user.userId}`" class="nickname-link">
-          <span class="nickname">{{ user.nickname }}</span>
+        <RouterLink :to="`/user/${post.user.userId}`" class="nickname-link">
+          <span class="nickname">{{ post.user.nickname }}</span>
         </RouterLink>
         
-        <span class="created-at">{{ formatRelativeTime(createdAt) }}</span>
+        <span class="created-at">{{ formatRelativeTime(post.createdAt) }}</span>
       </div>
     </div>
 
     <div class="more-options" @click.stop>
       <button class="more-options" @click="toggleDropdown">...</button>
       <div v-if="showDropdown" class="dropdown-menu">
-        <button v-if="canEdit" @click="$emit('edit')">수정</button>
-        <button v-if="canEdit" @click="$emit('delete')">삭제</button>
-        <button @click="$emit('report')">신고</button>
+        <template v-if="canEdit">
+          <button @click="$emit('promote')">게시글 홍보</button>
+          <button @click="openDiscoveryModal">공개범위 설정</button>
+          <button @click="$emit('toggle-pin')">프로필에 고정/해제</button>
+          <button @click="$emit('delete')">게시글 삭제</button>
+        </template>
+        
+        <button @click="$emit('toggle-bookmark')">관심글로 저장/해제</button>
+        <button @click="$emit('toggle-notifications')">이 글 알림 끄기/켜기</button>
+        
+        <button v-if="!canEdit" @click="$emit('report')">게시글 신고</button>
       </div>
     </div>
   </div>
@@ -49,6 +57,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { formatRelativeTime } from '@/components/src/utils/timeUtils';
+import type { PostResponseDto } from '@/types';
 
 interface User {
   userId: string;
@@ -56,15 +65,11 @@ interface User {
 }
 
 const props = defineProps({
-  user: {
-    type: Object as () => User,
+  post: {
+    type: Object as () => PostResponseDto,
     required: true,
   },
   profileImageUrl: {
-    type: String,
-    required: true,
-  },
-  createdAt: {
     type: String,
     required: true,
   },
@@ -74,16 +79,21 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['edit', 'delete', 'report']);
+const emit = defineEmits([
+  'open-discovery-modal','promote', 'change-discovery', 'toggle-pin', 'toggle-bookmark', 
+  'toggle-notifications', 'delete', 'report'
+]);
 
 const showDropdown = ref(false);
 
-/**
- * "더보기" 드롭다운 메뉴의 표시 여부를 토글합니다.
- */
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value;
 };
+
+const openDiscoveryModal = () => {
+  emit('open-discovery-modal');
+}
+
 </script>
 
 <style scoped>

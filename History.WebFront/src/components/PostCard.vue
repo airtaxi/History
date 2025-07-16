@@ -25,12 +25,12 @@ import UserListModal from '@/components/src/components/modals/UserListModal.vue'
 import ReactionPopup from '@/components/src/components/modals/ReactionPopup.vue';
 import ReportModal from '@/components/src/components/modals/ReportModal.vue';
 import AccessDeniedModal from '@/components/src/components/modals/AccessDeniedModal.vue';
-
+import DiscoveryOptionModal from "@/components/src/components/modals/DiscoveryOptionModal.vue";
 import defaultProfileImage from '@/components/src/assets/images/default_profile_image.jpg';
 
 const props = defineProps<{
   post: PostResponseDto;
-  profileImageMap?: Record<string, string>; // Optional prop to accept the map
+  profileImageMap?: Record<string, string>;
 }>();
 
 const router = useRouter();
@@ -41,9 +41,10 @@ const handleHashtagNavigation = (hashtag: string) => {
 
 const emit = defineEmits<{
   (event: 'open-detail', ...args: any[]): void;
+  (event: 'post-updated', ...args: any[]): void;
 }>();
 
-const isDeleted = ref(false); // 게시글 삭제 여부 상태
+const isDeleted = ref(false);
 
 const postCardElement = ref(null);
 const isDataLoaded = ref(false);
@@ -53,13 +54,15 @@ const createCommentRef = ref<InstanceType<typeof CreateComment> | null>(null);
 const isRepost = computed(() => props.post.isRepost);
 const isQuotePost = computed(() => !props.post.isRepost && props.post.parentPost);
 
-// Composables 초기화
 const { mediaUrlMap, profileBlobUrlMap, getMediaBlobUrl } = useMediaLoader();
 const { reactionMap, myReaction, showReactionPopup, reactionPopupPosition, loadReactionData, selectReaction, startLongPress, endLongPress, handleReactionClick } = useReactions(props.post);
+
+// usePostActions에서 모든 기능 함수 가져오기
 const { 
   canEdit, openShareEditor, handleInstantRepost, deleteMyPost, submitReport, 
   navigateToProfile, goToOriginalPost, openReportDialog, cancelReport, showReportModal, 
-  showAccessDeniedModal, deniedUserId, deniedUserNickname, handleSendFriendRequest 
+  showAccessDeniedModal, deniedUserId, deniedUserNickname, handleSendFriendRequest,
+  promotePost, togglePinPost, toggleBookmark, toggleNotifications 
 } = usePostActions(props.post, emit);
 
 const { showImageModal, modalMediaSource, initialSlideIndex, openImageModal, closeImageModal } = useImageModal(mediaUrlMap.value);
@@ -78,9 +81,18 @@ const {
   commentsCount
 } = useComments(props.post);
 
-// UserListModal 관련 상태
 const showSharedUsersModal = ref(false);
 const showRepostedUsersModal = ref(false);
+
+const showDiscoveryModal = ref(false);
+
+const openDiscoveryModal = () => {
+  showDiscoveryModal.value = true;
+};
+
+const refreshPostData = () => {
+  emit('post-updated');
+};
 
 const handleShowSharedUsersModal = () => {
   showSharedUsersModal.value = true;
@@ -102,13 +114,15 @@ const handleDeletePost = async () => {
     isDeleted.value = true;
   }
 };
+const handlePromotePost = () => promotePost();
+const handleTogglePinPost = () => togglePinPost();
+const handleToggleBookmark = () => toggleBookmark();
+const handleToggleNotifications = () => toggleNotifications();
 
-// 데이터 로드 함수
+
 const loadPostData = async () => {
   if (isDataLoaded.value) return;
   isDataLoaded.value = true;
-
-  // 댓글 개수 초기 로드
   fetchInitialData();
 
   const allContents = [...props.post.contents];
@@ -144,13 +158,10 @@ const loadPostData = async () => {
   loadReactionData();
 };
 
-// Intersection Observer 설정
 useIntersectionObserver(postCardElement, loadPostData);
-
 </script>
 
 <template>
-  <!-- 순수 리포스트 -->
   <div v-if="isRepost && !isDeleted" ref="postCardElement"> 
     <OriginalPostCard
       :post="post"
@@ -160,19 +171,19 @@ useIntersectionObserver(postCardElement, loadPostData);
     />
   </div>
 
-  <!-- 일반 게시물 또는 인용(공유) 게시물 -->
   <div v-else-if="!isDeleted" class="post-card" ref="postCardElement">
     <div class="post-main-content">
       <PostHeader
-        :user="{
-          userId: post.user.userId,
-          nickname: post.user.nickname
-        }"
+        :post="post"
         :profile-image-url="profileBlobUrlMap[post.user.userId] || defaultProfileImage"
-        :created-at="post.createdAt"
         :can-edit="canEdit ?? false"
         @delete="handleDeletePost"
         @report="openReportDialog"
+        @promote="handlePromotePost"
+        @open-discovery-modal="openDiscoveryModal"
+        @toggle-pin="handleTogglePinPost"
+        @toggle-bookmark="handleToggleBookmark"
+        @toggle-notifications="handleToggleNotifications"
       />
 
       <PostContent
@@ -220,7 +231,6 @@ useIntersectionObserver(postCardElement, loadPostData);
       />
     </div>
 
-    <!-- 댓글 섹션 -->
     <div class="comments-container" :class="{ visible: isCommentsVisible }" @click.stop>
       <div class="comment-controls">
         <div class="sort-group">
@@ -228,9 +238,7 @@ useIntersectionObserver(postCardElement, loadPostData);
           <button @click="sortOrder = 'oldest'" :class="{ active: sortOrder === 'oldest' }">오래된순</button>
         </div>
       </div>
-
       <div v-if="isCommentsLoading" class="loading-indicator">댓글 로딩 중...</div>
-
       <div style="min-height: 1rem" v-else>
         <CommentItem
           v-for="comment in displayedComments"
@@ -246,7 +254,6 @@ useIntersectionObserver(postCardElement, loadPostData);
           <button @click="loadMoreComments">댓글 더보기</button>
         </div>
       </div>
-
       <CreateComment :post-id="post.id" @comment-created="refreshData" ref="createCommentRef" />
     </div>
   </div>
@@ -291,6 +298,15 @@ useIntersectionObserver(postCardElement, loadPostData);
     :denied-user-id="deniedUserId"
     @close="showAccessDeniedModal = false"
     @send-friend-request="handleSendFriendRequest"
+  />
+
+  <DiscoveryOptionModal
+    :show="showDiscoveryModal"
+    :post-id="post.id"
+    :initial-discovery-option="post.discoveryOption"
+    :initial-selected-user-ids="post.discoveryOptionSelectedUserIds || []"
+    @close="showDiscoveryModal = false"
+    @update-success="refreshPostData"
   />
 </template>
 
