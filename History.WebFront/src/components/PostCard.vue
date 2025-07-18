@@ -338,6 +338,7 @@ useIntersectionObserver(postCardElement, loadPostData);
 .comments-container.visible {
   max-height: 1000px; /* 충분히 큰 값으로 설정 */
   opacity: 1;
+  overflow-y: auto;
 }
 
 .comment-controls {

@@ -45,9 +45,6 @@
           <button @click="$emit('delete')">게시글 삭제</button>
         </template>
         
-        <button @click="$emit('toggle-bookmark')">관심글로 저장/해제</button>
-        <button @click="$emit('toggle-notifications')">이 글 알림 끄기/켜기</button>
-        
         <button v-if="!canEdit" @click="$emit('report')">게시글 신고</button>
       </div>
     </div>
@@ -155,7 +152,7 @@ button.more-options {
   position: absolute;
   top: 100%;
   right: 0;
-  width: 5rem;
+  width: 10rem;
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 5px;
