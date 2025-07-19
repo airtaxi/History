@@ -83,11 +83,11 @@ const fetchThreads = async () => {
 
     for (const msg of allMessages) {
       const otherUserId = msg.sender.userId === myProfile.value?.userId ? msg.receiver.userId : msg.sender.userId;
-      
+
       if (!threadsMap.has(otherUserId)) {
         threadsMap.set(otherUserId, { messages: [], unreadCount: 0 });
       }
-      
+
       const threadData = threadsMap.get(otherUserId)!;
       threadData.messages.push(msg);
 
@@ -101,7 +101,7 @@ const fetchThreads = async () => {
     for (const [userId, data] of threadsMap.entries()) {
       // 메시지를 시간순으로 정렬
       data.messages.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
-      
+
       const lastMessage = data.messages[0];
       const otherUser = lastMessage.sender.userId === myProfile.value?.userId ? lastMessage.receiver : lastMessage.sender;
 
@@ -122,40 +122,40 @@ const fetchThreads = async () => {
 };
 
 const selectThread = async (thread: Thread) => {
-  selectedThread.value = thread;
-  try {
-    const [sentRes, receivedRes] = await Promise.all([
-      apiClient.get<Message[]>('/api/Message/sent'),
-      apiClient.get<Message[]>('/api/Message/received'),
-    ]);
+  selectedThread.value = thread;
+  try {
+    const [sentRes, receivedRes] = await Promise.all([
+      apiClient.get<Message[]>('/api/Message/sent'),
+      apiClient.get<Message[]>('/api/Message/received'),
+    ]);
 
-    const otherUserId = thread.otherUser.userId;
+    const otherUserId = thread.otherUser.userId;
 
-    const conversationMessages = [
-      ...sentRes.data.filter(m => m.receiver.userId === otherUserId),
-      ...receivedRes.data.filter(m => m.sender.userId === otherUserId)
-    ]
-    .filter(m => m && m.content && m.content.trim() !== '') 
+    const conversationMessages = [
+      ...sentRes.data.filter(m => m.receiver.userId === otherUserId),
+      ...receivedRes.data.filter(m => m.sender.userId === otherUserId)
+    ]
+    .filter(m => m && m.content && m.content.trim() !== '')
     .sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
-    
-    messagesInSelectedThread.value = conversationMessages;
-    
-    if (thread.unreadCount > 0) {
-      const unreadMessageIds = conversationMessages
-        .filter(m => m.receiver.userId === myProfile.value?.userId && !m.readAt)
-        .map(m => m.messageId);
-      
-      if (unreadMessageIds.length > 0) {
+
+    messagesInSelectedThread.value = conversationMessages;
+
+    if (thread.unreadCount > 0) {
+      const unreadMessageIds = conversationMessages
+        .filter(m => m.receiver.userId === myProfile.value?.userId && !m.readAt)
+        .map(m => m.messageId);
+
+      if (unreadMessageIds.length > 0) {
         await Promise.all(unreadMessageIds.map(id => apiClient.post(`/api/Message/${id}/read`)));
       }
-      
-      thread.unreadCount = 0;
-    }
 
-    scrollToBottom();
-  } catch (error) {
-    console.error("메시지 내용 로딩 실패:", error);
-  }
+      thread.unreadCount = 0;
+    }
+
+    scrollToBottom();
+  } catch (error) {
+    console.error("메시지 내용 로딩 실패:", error);
+  }
 };
 
 // 메시지 전송
@@ -164,7 +164,7 @@ const sendMessage = async () => {
 
   const receiverId = selectedThread.value.otherUser.userId;
   const content = newMessageContent.value;
-  
+
   try {
     await apiClient.post('/api/Message/send', { receiverId, content });
     newMessageContent.value = '';
@@ -189,12 +189,12 @@ const formatTimestamp = (dateString: string | null) => {
   if (!dateString) {
     return '시간 정보 없음'; // 빈 문자열이나 기본 텍스트를 반환
   }
-  
+
   try {
     return format(new Date(dateString), 'yyyy-MM-dd HH:mm');
   } catch (error) {
     console.error("Invalid date value for formatting:", dateString);
-    return '시간 형식 오류'; 
+    return '시간 형식 오류';
   }
 };
 </script>
@@ -204,11 +204,11 @@ const formatTimestamp = (dateString: string | null) => {
     <div class="sidebar-card thread-list-container">
       <h2 class="thread-list-header">쪽지함</h2>
       <ul class="thread-list">
-        <li v-for="thread in threads" :key="thread.otherUser.userId" 
+        <li v-for="thread in threads" :key="thread.otherUser.userId"
             class="thread-item"
             :class="{ active: selectedThread?.otherUser.userId === thread.otherUser.userId }"
             @click="selectThread(thread)">
-          
+
           <img :src="profileImageMap[thread.otherUser.userId] || defaultProfile" class="friend-avatar" />
           <div class="thread-info">
             <div class="thread-user">
@@ -228,7 +228,7 @@ const formatTimestamp = (dateString: string | null) => {
           <h3>{{ selectedThread.otherUser.nickname }}</h3>
         </div>
         <div class="message-container" ref="messageContainer">
-          <div v-for="message in messagesInSelectedThread" :key="message.messageId" 
+          <div v-for="message in messagesInSelectedThread" :key="message.messageId"
                class="message-bubble"
                :class="{ 'sent': message.sender.userId === myProfile?.userId, 'received': message.sender.userId !== myProfile?.userId }">
             <div class="message-content">{{ message.content }}</div>
@@ -251,7 +251,7 @@ const formatTimestamp = (dateString: string | null) => {
 .message-view {
   display: flex;
   gap: 16px;
-  height: calc(100vh - 120px); 
+  height: calc(100vh - 120px);
 }
 
 .thread-list-container {
