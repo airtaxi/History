@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { PostResponseDto } from '@/types';
-import PostHeader from '@/components/src/components/PostHeader.vue';
-import PostContent from '@/components/src/components/PostContent.vue';
-import defaultProfileImage from '@/components/src/assets/images/default_profile_image.jpg';
+import PostHeader from '@/components/PostHeader.vue';
+import PostContent from '@/components/PostContent.vue';
+import defaultProfileImage from '@/assets/images/default_profile_image.jpg';
 
 defineProps<{
   post: PostResponseDto;

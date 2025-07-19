@@ -44,7 +44,45 @@ export function useReactions(post: PostResponseDto) {
   const longPress = useLongPress(500);
 
   /**
+   * 게시물의 반응 데이터를 초기화하고 상태를 업데이트합니다.
+   * API 호출 없이 PostResponseDto에서 직접 데이터를 가져옵니다.
+   */
+  const initializeReactionData = () => {
+    const postReactions = post.postReactions || [];
+    const counts: Record<string, number> = {};
+    const usersMap: Record<string, Array<any>> = {};
+    let currentUserReaction: string | null = null;
+
+    postReactions.forEach((reaction: any) => {
+      const reactionType = reaction.type || reaction.reactionType;
+      const user = reaction.user;
+
+      if (reactionType && user) {
+        counts[reactionType] = (counts[reactionType] || 0) + 1;
+
+        if (!usersMap[reactionType]) {
+          usersMap[reactionType] = [];
+        }
+        usersMap[reactionType].push({
+          userId: user.userId,
+          nickname: user.nickname || user.handle || 'Unknown',
+          profileImageUrl: user.profileThumbnailMediaId // Assuming this is handled by PostCard or parent
+        });
+
+        if (user.userId === authStore.user?.userId) { // Assuming authStore has current user info
+          currentUserReaction = reactionType;
+        }
+      }
+    });
+
+    reactionMap.value = counts;
+    myReaction.value = currentUserReaction;
+    reactionUsersMap.value = usersMap;
+  };
+
+  /**
    * 서버에서 게시물의 반응 데이터를 로드하고 상태를 업데이트합니다.
+   * 이 함수는 반응 변경 후 서버와 동기화할 때만 호출됩니다.
    */
   const loadReactionData = async () => {
     try {
@@ -79,7 +117,6 @@ export function useReactions(post: PostResponseDto) {
       });
 
       reactionMap.value = counts;
-
       myReaction.value = currentUserReaction;
       reactionUsersMap.value = usersMap;
 
@@ -213,7 +250,7 @@ export function useReactions(post: PostResponseDto) {
    * (현재는 콘솔 로그로 대체)
    * @param {string} emoji - 띄울 이모지 문자열.
    */
-  const createFloatingEmoji = (emoji: string) => {
+  const createFloatingEmoji = (_emoji: string) => {
     // 실제 구현에서는 DOM 요소를 생성하고 CSS 애니메이션을 적용합니다.
     // 예:
     // const emojiEl = document.createElement('div');
@@ -240,7 +277,7 @@ export function useReactions(post: PostResponseDto) {
   };
 
   onMounted(() => {
-    loadReactionData();
+    initializeReactionData(); // 초기 데이터 로드
     document.addEventListener('click', handleClickOutside);
   });
 

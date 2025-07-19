@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed, onMounted } from 'vue';
 import apiClient from '@/api';
-import type { PostResponseDto, CommentResponseDto, UserDto } from '@/types';
+import type { PostResponseDto, CommentResponseDto, UserDto, UserResponseDto } from '@/types';
 import { useAuthStore } from '@/stores/auth';
 import PostCard from '@/components/PostCard.vue';
 import CommentItem from '@/components/CommentItem.vue';
@@ -108,7 +108,7 @@ watch(processedComments, () => {
 
 onMounted(() => {
   const friends = authStore.user?.friends ?? [];
-  friendIds.value = new Set(friends.map((friend: any) => friend.userId));
+  friendIds.value = new Set(friends.map((friend: UserResponseDto) => friend.userId));
   // props.postId에 대한 watcher가 초기 데이터 로딩을 처리합니다.
 });
 
@@ -130,7 +130,7 @@ const fetchInitialData = async (currentPostId: string) => {
     while (true) {
         const fromParam: string = lastCommentId ? `&from=${lastCommentId}` : '';
         const requestUrl: string = `/api/Comment/${currentPostId}?limit=100${fromParam}`;
-        const response: { data: CommentResponseDto[] } = await apiClient.get(requestUrl);
+        const response = await apiClient.get(requestUrl);
         const newComments: CommentResponseDto[] = response.data;
       if (newComments.length === 0) break;
       
@@ -142,14 +142,14 @@ const fetchInitialData = async (currentPostId: string) => {
     if (post.value) {
       const usersToLoad = new Set<UserDto>();
       usersToLoad.add(post.value.user);
-      if ((post.value as any).isRepost && (post.value as any).parentPost?.user) {
-        usersToLoad.add((post.value as any).parentPost.user);
+      if (post.value.parentPost?.user && (post.value as any).isRepost) { // eslint-disable-line @typescript-eslint/no-explicit-any
+        usersToLoad.add(post.value.parentPost.user);
       }
       allComments.value.forEach(comment => usersToLoad.add(comment.user));
       await prepareProfileImageMapForUsers(Array.from(usersToLoad));
     }
     // fetchInitialData가 끝나면 watch가 알아서 첫 페이지를 로드해줍니다.
-  } catch (error) {
+      } catch (error: any) {
     console.error("초기 데이터 로딩 실패:", error);
     // 모달을 닫거나 에러 상태를 표시할 수 있습니다.
     // closeModal(); 
@@ -176,7 +176,7 @@ const getMediaBlobUrl = async (mediaId: string) => {
   }
 };
 
-const prepareProfileImageMapForUsers = async (users: (UserDto | undefined)[]) => {
+const prepareProfileImageMapForUsers = async (users: UserDto[]) => {
   const userIds = new Set<string>();
   users.forEach(user => {
     if (user?.profileThumbnailMediaId) userIds.add(user.userId);
@@ -198,7 +198,7 @@ const handleLikeComment = async (commentId: string) => {
     
     const displayIndex = displayedComments.value.findIndex(c => c.id === commentId);
     if (displayIndex !== -1) displayedComments.value[displayIndex] = updatedComment;
-  } catch (error) {
+  } catch (error: any) {
     console.error('좋아요 처리 실패:', error);
     alert('좋아요 처리에 실패했습니다.');
   }
@@ -212,7 +212,7 @@ const handleUpdateComment = async ({ commentId, newText }: { commentId: string, 
     await apiClient.put(`/api/Comment/${commentId}`, formData);
     alert('댓글이 수정되었습니다.');
     await refreshData();
-  } catch (error) {
+  } catch (error) {  
     console.warn('PUT API 실패, 삭제 후 재등록 방식으로 시도:', error);
     try {
       await apiClient.delete(`/api/Comment/${commentId}`);
@@ -222,7 +222,7 @@ const handleUpdateComment = async ({ commentId, newText }: { commentId: string, 
       await apiClient.post(`/api/Comment/${props.postId}`, formData); // props.postId 사용
       alert('댓글이 수정되었습니다.');
       await refreshData();
-    } catch (secondError) {
+    } catch (secondError) {  
       console.error('삭제 후 재등록 실패:', secondError);
       alert('댓글 수정에 실패했습니다.');
     }
@@ -233,7 +233,7 @@ const deleteMyComment = async (commentId: string) => {
   try {
     await apiClient.delete(`/api/Comment/${commentId}`);
     allComments.value = allComments.value.filter(c => c.id !== commentId);
-  } catch (error) {
+  } catch {
     alert('댓글 삭제에 실패했습니다.');
   }
 };

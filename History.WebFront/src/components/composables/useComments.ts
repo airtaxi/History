@@ -1,12 +1,12 @@
 import { ref, computed, watch } from 'vue';
 import apiClient from '@/api';
 import type { PostResponseDto, CommentResponseDto, UserDto } from '@/types';
-import { useAuthStore } from '@/stores/auth';
+
 
 type SortOrder = 'newest' | 'oldest';
 
 export function useComments(post: PostResponseDto) {
-  const authStore = useAuthStore();
+  
 
   // --- 상태 변수 ---
   const allComments = ref<CommentResponseDto[]>([]);
@@ -23,7 +23,7 @@ export function useComments(post: PostResponseDto) {
 
   // --- Computed ---
   const processedComments = computed(() => {
-    let commentsToProcess = [...allComments.value];
+    const commentsToProcess = [...allComments.value];
     commentsToProcess.sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime();
       const dateB = new Date(b.createdAt).getTime();
@@ -138,7 +138,7 @@ export function useComments(post: PostResponseDto) {
         commentsCount.value--; // 전체 개수를 다시 세는 대신 1 감소
       }
       resetAndLoadFirstPage();
-    } catch (error) {
+    } catch {
       alert('댓글 삭제에 실패했습니다.');
     }
   };

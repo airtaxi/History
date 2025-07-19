@@ -7,7 +7,8 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import apiClient from '@/api';
 import type { PostResponseDto } from '@/types';
-import PostCard from '@/components/PostCard.vue';
+import { defineAsyncComponent } from 'vue';
+const PostCard = defineAsyncComponent(() => import('@/components/PostCard.vue'));
 import RightSidebar from '@/components/layout/RightSidebar.vue';
 import CreatePost from '@/components/CreatePost.vue';
 
@@ -251,6 +252,10 @@ const handlePostCreated = async () => {
         </div>
 
         <div v-else class="post-list">
+          <!-- 
+            TODO: 게시물 목록이 매우 길어질 경우 성능 개선을 위해 가상화(Virtualization) 라이브러리(예: vue-virtual-scroller) 도입을 고려할 수 있습니다.
+            현재는 모든 게시물을 렌더링하지만, 가상화를 통해 화면에 보이는 게시물만 렌더링하여 DOM 요소 및 메모리 사용량을 줄일 수 있습니다.
+          -->
           <PostCard v-for="post in posts" :key="post.id" :post="post" :profile-image-map="profileImageMap" @open-detail="openModalWithPost" />
         </div>
 

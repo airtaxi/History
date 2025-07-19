@@ -23,28 +23,21 @@
           class="media-swiper"
           :spaceBetween="10"
           :slidesPerView="1"
-          :loop="content.media.length > 1"
-          :navigation="true"
-          :pagination="{ clickable: true }"
+          :loop="(content as MediaGroupContent).media.length > 1"
+          :navigation="true as any"
+          :pagination="{ clickable: true } as any"
           :modules="modules"
         >
-          <SwiperSlide v-for="(mediaItem, mediaIndex) in content.media" :key="mediaIndex">
+          <SwiperSlide v-for="(mediaItem, mediaIndex) in (content as MediaGroupContent).media" :key="mediaIndex">
             <div v-if="mediaUrlMap[mediaItem.mediaId || mediaItem.thumbnailMediaId]">
               <video
                 v-if="mediaItem.mimeType?.startsWith('video/')"
                 controls
                 class="post-vidio"
-                @click.stop="openImageModal(content.media, mediaIndex)"
+                @click.stop="openImageModal((content as MediaGroupContent).media, mediaIndex)"
               >
                 <source :src="mediaUrlMap[mediaItem.mediaId || mediaItem.thumbnailMediaId]" :type="mediaItem.mimeType" />
               </video>
-              <img
-                v-else
-                :src="mediaUrlMap[mediaItem.mediaId || mediaItem.thumbnailMediaId]"
-                alt="게시물 이미지"
-                class="post-image"
-                @click.stop="openImageModal(content.media, mediaIndex)"
-              />
             </div>
           </SwiperSlide>
         </Swiper>
@@ -72,9 +65,13 @@ import 'swiper/css/pagination';
 import PostText from './PostText.vue';
 import PostExternalLink from './PostExternalLink.vue';
 
+import type { TextContent, MediaContent, ProfileContent, UploadContent, ExternalUrlContent, MediaGroupContent } from '@/types';
+
+type PostContentItem = TextContent | MediaContent | ProfileContent | UploadContent | ExternalUrlContent | MediaGroupContent;
+
 const props = defineProps({
   contents: {
-    type: Array as () => Array<any>,
+    type: Array as () => PostContentItem[],
     required: true,
   },
   mediaUrlMap: {
@@ -90,7 +87,7 @@ const modules = [Navigation, Pagination];
 const mediaSwiperRef = ref(null); // Swiper 인스턴스를 참조할 ref 추가
 
 // Swiper 네비게이션 버튼의 클릭 이벤트 전파를 막는 헬퍼 함수
-  const addStopPropagationToSwiperNav = (swiperInstanceRef: any) => {
+  const addStopPropagationToSwiperNav = (swiperInstanceRef: typeof Swiper | null) => {
     if (!swiperInstanceRef) return;
 
     const swiperEl = swiperInstanceRef.$el;
@@ -121,8 +118,8 @@ const processedContents = computed(() => {
     sourceContents = props.contents.filter(content => content.$type !== 'externalUrl');
   }
 
-  const result: Array<any> = [];
-  let mediaGroup: Array<any> = [];
+  const result: PostContentItem[] = [];
+  let mediaGroup: MediaContent[] = [];
 
   sourceContents.forEach(content => {
     if (content.$type === 'media') {
@@ -142,7 +139,7 @@ const processedContents = computed(() => {
   return result;
 });
 
-const openImageModal = (mediaList: any[], index: number) => {
+const openImageModal = (mediaList: MediaContent[], index: number) => {
   emit('open-media-modal', mediaList, index);
 };
 </script>

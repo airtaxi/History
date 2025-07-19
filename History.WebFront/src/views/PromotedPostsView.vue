@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import apiClient from '@/api';
 import type { PostResponseDto } from '@/types';
-import PromotedPostItem from '@/components/src/components/PromotedPostItem.vue'; 
+import PromotedPostItem from '@/components/PromotedPostItem.vue'; 
 import RightSidebar from '@/components/layout/RightSidebar.vue';
 
 const posts = ref<PostResponseDto[]>([]);
