@@ -95,7 +95,7 @@
 			}, userConfig);
 
 			// Expand "target" if it's not a jQuery object already.
-				if (typeof config.target != 'jQuery')
+				if (typeof config.target !== 'object' || !(config.target instanceof jQuery))
 					config.target = $(config.target);
 
 		// Panel.
@@ -103,7 +103,7 @@
 			// Methods.
 				$this._hide = function(event) {
 
-					// Already hidden? Bail.
+					// Already hidden?
 						if (!config.target.hasClass(config.visibleClass))
 							return;
 
@@ -153,7 +153,8 @@
 								href = $a.attr('href'),
 								target = $a.attr('target');
 
-							if (!href || href == '#' || href == '' || href == '#' + id)
+							// If no href, or is a local anchor, or points to the panel itself, do nothing.
+								if (!href || href == '#' || href == '' || href == '#' + id)
 								return;
 
 							// Cancel original event.
@@ -392,7 +393,7 @@
 						x.hide();
 
 					i
-						.on('blur', function(event) {
+						.on('blur', function() {
 
 							event.preventDefault();
 
@@ -408,7 +409,7 @@
 						});
 
 					x
-						.on('focus', function(event) {
+						.on('focus', function() {
 
 							event.preventDefault();
 
@@ -421,7 +422,7 @@
 								.focus();
 
 						})
-						.on('keypress', function(event) {
+						.on('keypress', function() {
 
 							event.preventDefault();
 							x.val('');
@@ -435,7 +436,7 @@
 				.on('submit', function() {
 
 					$this.find('input[type=text],input[type=password],textarea')
-						.each(function(event) {
+						.each(function() {
 
 							var i = $(this);
 
@@ -452,7 +453,7 @@
 						});
 
 				})
-				.on('reset', function(event) {
+				.on('reset', function() {
 
 					event.preventDefault();
 
@@ -528,7 +529,7 @@
 		var key = '__prioritize';
 
 		// Expand $elements if it's not already a jQuery object.
-			if (typeof $elements != 'jQuery')
+			if (typeof $elements !== 'object' || !($elements instanceof jQuery))
 				$elements = $($elements);
 
 		// Step through elements.

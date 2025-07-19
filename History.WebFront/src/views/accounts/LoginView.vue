@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import apiClient from '@/api'; 
-import { useAuthStore } from '@/stores/auth'; 
+import apiClient from '@/api';
+import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
 const route = useRoute();
@@ -14,52 +14,52 @@ const errorMessage = ref('');
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 const handleGoogleLogin = () => {
-  isLoading.value = true;
-  sessionStorage.setItem('login_provider', 'Google');
-  const frontendRedirectUrl = `${window.location.origin}${route.path}`;
-  window.location.href = `${apiBaseUrl}/api/auth/google/login?redirectUrl=${encodeURIComponent(frontendRedirectUrl)}`;
+  isLoading.value = true;
+  sessionStorage.setItem('login_provider', 'Google');
+  const frontendRedirectUrl = `${window.location.origin}${route.path}`;
+  window.location.href = `${apiBaseUrl}/api/auth/google/login?redirectUrl=${encodeURIComponent(frontendRedirectUrl)}`;
 };
 
 const handleAppleLogin = () => {
-  isLoading.value = true;
-  sessionStorage.setItem('login_provider', 'Apple');
-  const frontendRedirectUrl = `${window.location.origin}${route.path}`;
-  window.location.href = `${apiBaseUrl}/api/auth/apple/login?redirectUrl=${encodeURIComponent(frontendRedirectUrl)}`;
+  isLoading.value = true;
+  sessionStorage.setItem('login_provider', 'Apple');
+  const frontendRedirectUrl = `${window.location.origin}${route.path}`;
+  window.location.href = `${apiBaseUrl}/api/auth/apple/login?redirectUrl=${encodeURIComponent(frontendRedirectUrl)}`;
 };
 
 onMounted(async () => {
-  const idToken = route.query.id_token as string;
+  const idToken = route.query.id_token as string;
   // 저장된 제공자 정보 읽기
-  const provider = sessionStorage.getItem('login_provider');
+  const provider = sessionStorage.getItem('login_provider');
 
-  if (idToken && provider) { // idToken과 provider가 모두 있을 때만 실행
-    isLoading.value = true;
+  if (idToken && provider) { // idToken과 provider가 모두 있을 때만 실행
+    isLoading.value = true;
     // 사용 후 즉시 삭제하여 다음 동작에 영향 없도록 함
-    sessionStorage.removeItem('login_provider'); 
+    sessionStorage.removeItem('login_provider');
 
-    try {
-      const response = await apiClient.post('/api/User/login', {
-        IdToken: idToken,
-        Provider: provider // 동적으로 가져온 provider 값 사용
-      });
-      
-      authStore.setTokens(response.data.accessToken, response.data.refreshToken);
-      await router.push('/');
+    try {
+      const response = await apiClient.post('/api/User/login', {
+        IdToken: idToken,
+        Provider: provider // 동적으로 가져온 provider 값 사용
+      });
 
-    } catch (error: any) {
-      if (error.response && error.response.status === 404) {
-        await router.push({ path: '/profile-setup', query: { id_token: idToken, provider: provider } }); // provider 정보도 함께 전달
-      } else if (error.response && error.response.status === 403) {
-        errorMessage.value = '가입 승인 대기 중입니다. 관리자에게 문의하세요.';
-      } else {
-        errorMessage.value = '로그인에 실패했습니다. 다시 시도해주세요.';
-        console.error('Login failed:', error);
-      }
-    } finally {
-      isLoading.value = false;
-      router.replace({ query: {} });
-    }
-  }
+      authStore.setTokens(response.data.accessToken, response.data.refreshToken);
+      await router.push('/');
+
+    } catch (error: any) {
+      if (error.response && error.response.status === 404) {
+        await router.push({ path: '/profile-setup', query: { id_token: idToken, provider: provider } }); // provider 정보도 함께 전달
+      } else if (error.response && error.response.status === 403) {
+        errorMessage.value = '가입 승인 대기 중입니다. 관리자에게 문의하세요.';
+      } else {
+        errorMessage.value = '로그인에 실패했습니다. 다시 시도해주세요.';
+        console.error('Login failed:', error);
+      }
+    } finally {
+      isLoading.value = false;
+      router.replace({ query: {} });
+    }
+  }
 });
 
 </script>
@@ -77,7 +77,7 @@ onMounted(async () => {
         <h1 class="app-title">History</h1>
       </div>
       <p class="tagline">당신의 이야기, 히스토리</p>
-      
+
       <p class="login-guide">
         구글/애플 계정으로 간편하게 로그인하세요.<br>
         기존 계정이 없을 경우 회원가입 페이지로 연동됩니다.

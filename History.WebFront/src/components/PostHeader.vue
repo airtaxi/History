@@ -45,6 +45,9 @@
           <button @click="$emit('delete')">게시글 삭제</button>
         </template>
         
+        <button @click="$emit('toggle-bookmark')">관심글로 저장/해제</button>
+        <button @click="$emit('toggle-notifications')">이 글 알림 끄기/켜기</button>
+        
         <button v-if="!canEdit" @click="$emit('report')">게시글 신고</button>
       </div>
     </div>
@@ -53,7 +56,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { formatRelativeTime } from '@/components/src/utils/timeUtils';
+import { formatRelativeTime } from '@/utils/timeUtils';
 import type { PostResponseDto } from '@/types';
 
 interface User {
@@ -152,7 +155,7 @@ button.more-options {
   position: absolute;
   top: 100%;
   right: 0;
-  width: 10rem;
+  width: 5rem;
   background-color: white;
   border: 1px solid #ccc;
   border-radius: 5px;

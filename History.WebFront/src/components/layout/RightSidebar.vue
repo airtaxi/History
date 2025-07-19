@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import apiClient from '@/api';
-import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import type { UserResponseDto } from '@/types';
 import defaultProfile from '@/assets/images/default_profile_image.jpg';
@@ -15,12 +14,8 @@ interface FriendUserResponseDto extends UserResponseDto {
   isFavorite: boolean;
 }
 const friends = ref<FriendUserResponseDto[]>([]);
-const router = useRouter();
-const waitingRequests = ref<UserResponseDto[]>([]);
 
-const goToMessages = () => {
-  router.push('/messages');
-};
+const waitingRequests = ref<UserResponseDto[]>([]);
 
 const cancelFriendRequest = async (userId: string) => {
   try {
@@ -84,6 +79,7 @@ const rejectFriendRequest = async (userId: string) => {
 const ignoreFriendRequest = async (userId: string) => {
   try {
     await apiClient.post(`/api/Friendship/ignore/${userId}`);
+    // 무시 후 해당 요청을 목록에서 제거
     pendingRequests.value = pendingRequests.value.filter(r => r.userId !== userId);
     alert('친구 요청을 무시했습니다.');
   } catch (error) {
@@ -181,7 +177,7 @@ onMounted(async () => {
       <div class="tabs">
         <button :class="{ active: activeTab === 'friends' }" @click="activeTab = 'friends'">친구</button>
         <button :class="{ active: activeTab === 'requests' }" @click="activeTab = 'requests'">신청</button>
-        <button @click="goToMessages">쪽지</button>
+        <button>쪽지</button>
       </div>
       
       <div v-if="activeTab === 'friends'">

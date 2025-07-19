@@ -3,30 +3,30 @@ import { defineProps, defineEmits, ref, computed } from 'vue';
 import type { PostResponseDto } from '@/types';
 
 // Composables
-import { useReactions } from '@/components/src/composables/useReactions';
-import { useMediaLoader } from '@/components/src/composables/useMediaLoader';
-import { usePostActions } from '@/components/src/composables/usePostActions';
-import { useImageModal } from '@/components/src/composables/useImageModal';
-import { useIntersectionObserver } from '@/components/src/composables/useIntersectionObserver';
-import { useComments } from '@/components/src/composables/useComments';
+import { useReactions } from '@/composables/useReactions';
+import { useMediaLoader } from '@/composables/useMediaLoader';
+import { usePostActions } from '@/composables/usePostActions';
+import { useImageModal } from '@/composables/useImageModal';
+import { useIntersectionObserver } from '@/composables/useIntersectionObserver';
+import { useComments } from '@/composables/useComments';
 import { useRouter } from 'vue-router'
 
 // Components
-import PostHeader from '@/components/src/components/PostHeader.vue';
-import PostContent from '@/components/src/components/PostContent.vue';
-import PostFooter from '@/components/src/components/PostFooter.vue';
-import OriginalPostCard from '@/components/src/components/OriginalPostCard.vue';
+import PostHeader from '@/components/PostHeader.vue';
+import PostContent from '@/components/PostContent.vue';
+import PostFooter from '@/components/PostFooter.vue';
+import OriginalPostCard from '@/components/OriginalPostCard.vue';
 import CommentItem from '@/components/CommentItem.vue';
 import CreateComment from '@/components/CreateComment.vue';
 
 // Modals
-import ImageModal from '@/components/src/components/modals/ImageModal.vue';
-import UserListModal from '@/components/src/components/modals/UserListModal.vue';
-import ReactionPopup from '@/components/src/components/modals/ReactionPopup.vue';
-import ReportModal from '@/components/src/components/modals/ReportModal.vue';
-import AccessDeniedModal from '@/components/src/components/modals/AccessDeniedModal.vue';
-import DiscoveryOptionModal from "@/components/src/components/modals/DiscoveryOptionModal.vue";
-import defaultProfileImage from '@/components/src/assets/images/default_profile_image.jpg';
+import ImageModal from '@/components/modals/ImageModal.vue';
+import UserListModal from '@/components/modals/UserListModal.vue';
+import ReactionPopup from '@/components/modals/ReactionPopup.vue';
+import ReportModal from '@/components/modals/ReportModal.vue';
+import AccessDeniedModal from '@/components/modals/AccessDeniedModal.vue';
+import DiscoveryOptionModal from "@/components/modals/DiscoveryOptionModal.vue";
+import defaultProfileImage from '@/assets/images/default_profile_image.jpg';
 
 const props = defineProps<{
   post: PostResponseDto;
@@ -150,7 +150,7 @@ const loadPostData = async () => {
 
   await Promise.all(Array.from(usersToFetch.entries()).map(async ([userId, mediaId]) => {
     if (!profileBlobUrlMap.value[userId]) {
-      const blobUrl = await getMediaBlobUrl(mediaId);
+      const blobUrl = await getMediaBlobUrl(mediaId, true);
       profileBlobUrlMap.value[userId] = blobUrl;
     }
   }));
@@ -338,7 +338,6 @@ useIntersectionObserver(postCardElement, loadPostData);
 .comments-container.visible {
   max-height: 1000px; /* 충분히 큰 값으로 설정 */
   opacity: 1;
-  overflow-y: auto;
 }
 
 .comment-controls {

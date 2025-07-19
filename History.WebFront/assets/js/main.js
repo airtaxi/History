@@ -147,10 +147,10 @@
 
 			$menu
 				.appendTo($body)
-				.on('click', function(event) {
+				.on('click', function() {
 					event.stopPropagation();
 				})
-				.on('click', 'a', function(event) {
+				.on('click', 'a', function() {
 
 					var href = $(this).attr('href');
 
@@ -172,7 +172,7 @@
 				.append('<a class="close" href="#menu">Close</a>');
 
 			$body
-				.on('click', 'a[href="#menu"]', function(event) {
+				.on('click', 'a[href="#menu"]', function() {
 
 					event.stopPropagation();
 					event.preventDefault();
@@ -181,7 +181,7 @@
 						$menu._toggle();
 
 				})
-				.on('click', function(event) {
+				.on('click', function() {
 
 					// Hide.
 						$menu._hide();

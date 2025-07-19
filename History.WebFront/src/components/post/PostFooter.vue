@@ -78,13 +78,13 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, ref } from 'vue';
-import { useLongPress } from '@/components/src/composables/useLongPress';
+import { defineProps, defineEmits } from 'vue';
+import { useLongPress } from '@/components/composables/useLongPress';
 import type { PostResponseDto } from '@/types';
 
-const props = defineProps<{
+const props = defineProps<{ // eslint-disable-line @typescript-eslint/no-unused-vars
   post: PostResponseDto;
-  myReaction: string | null;
+  myReaction: string | undefined;
   totalReactions: number;
   commentsCount: number; // commentsCount prop 추가
 }>();

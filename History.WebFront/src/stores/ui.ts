@@ -7,7 +7,7 @@
  * @since 2025-07-03
  */
 
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { PostResponseDto } from '@/types'
 

@@ -37,11 +37,11 @@
 import { defineProps, defineEmits, ref, onMounted, nextTick, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
-import { useImageModal } from '@/components/src/composables/useImageModal';
-import { formatRelativeTime } from '@/components/src/utils/timeUtils';
+import { useImageModal } from '@/composables/useImageModal';
+import { formatRelativeTime } from '@/utils/timeUtils';
 import defaultProfileImage from '@/assets/images/default_profile_image.jpg';
-import ImageModal from '@/components/src/components/modals/ImageModal.vue';
-import PostContent from './PostContent.vue';
+import ImageModal from '@/components/modals/ImageModal.vue';
+import PostContent from '@/components/PostContent.vue';
 import type { PostResponseDto } from '@/types';
 
 const props = defineProps<{

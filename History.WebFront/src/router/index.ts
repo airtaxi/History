@@ -2,8 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import TimelineView from '@/views/TimelineView.vue'
 import { useAuthStore } from '@/stores/auth' // Pinia store
 import PostDetailView from '@/views/PostDetailView.vue'
-import MessageView from '@/views/MessageView.vue'
-
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -69,12 +67,6 @@ const router = createRouter({
       path: '/promoted',
       name: 'PromotedPosts',
       component: () => import('@/views/PromotedPostsView.vue') 
-    },
-    {
-      path: '/messages',
-      name: 'messages',
-      component: MessageView,
-      meta: { requiresAuth: true } 
     },
   ]
 })

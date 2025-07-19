@@ -22,9 +22,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick, defineProps, defineEmits } from 'vue';
-import { splitTextWithLinksAndMentions } from '@/components/src/utils/textUtils';
+import { splitTextWithLinksAndMentions } from '@/components/utils/textUtils';
 
-const props = defineProps<{
+const props = defineProps<{ // eslint-disable-line @typescript-eslint/no-unused-vars
   text: string;
 }>();
 
