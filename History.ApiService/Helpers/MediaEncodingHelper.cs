@@ -6,7 +6,7 @@ namespace History.ApiService.Helpers;
 
 public static class MediaEncodingHelper
 {
-    public static MediaConvertResult ConvertImage(byte[] imageBytes, bool convertAnimatedImageToMp4, uint? maxWidth = null, bool noAlpha = false)
+    public static MediaConvertResult ConvertImage(byte[] imageBytes, bool convertAnimatedImageToMp4, bool noAlpha = false, uint? maxWidth = null, uint? maxHeight = null)
     {
         using var images = new MagickImageCollection();
         images.Read(imageBytes);
@@ -41,6 +41,11 @@ public static class MediaEncodingHelper
                     {
                         newWidth = maxWidth.Value;
                         newHeight = (uint)Math.Round((double)frame.Height * maxWidth.Value / frame.Width, 0);
+                    }
+                    if (maxHeight.HasValue && newHeight > maxHeight.Value)
+                    {
+                        newHeight = maxHeight.Value;
+                        newWidth = (uint)Math.Round((double)frame.Width * maxHeight.Value / frame.Height, 0);
                     }
 
                     if (newWidth % 8 != 0) newWidth -= newWidth % 8;
@@ -117,13 +122,26 @@ public static class MediaEncodingHelper
             image.AutoOrient(); // Pre-apply rotation
             if (noAlpha) image.Alpha(AlphaOption.Off); // Disable alpha channel for WebP
 
+            uint newWidth = image.Width;
+            uint newHeight = image.Height;
 
             if (maxWidth.HasValue && image.Width > maxWidth.Value)
             {
-                var newHeight = (uint)Math.Round((double)image.Height * maxWidth.Value / image.Width, 0);
-                var size = new MagickGeometry(maxWidth.Value, newHeight) { IgnoreAspectRatio = true };
+                newWidth = maxWidth.Value;
+                newHeight = (uint)Math.Round((double)image.Height * maxWidth.Value / image.Width, 0);
+            }
+            if (maxHeight.HasValue && newHeight > maxHeight.Value)
+            {
+                newHeight = maxHeight.Value;
+                newWidth = (uint)Math.Round((double)image.Width * maxHeight.Value / image.Height, 0);
+            }
+
+            if (newWidth != image.Width || newHeight != image.Height)
+            {
+                var size = new MagickGeometry(newWidth, newHeight) { IgnoreAspectRatio = true };
                 image.Resize(size);
             }
+
             image.Strip();
             using var ms = new MemoryStream();
             image.Write(ms);
