@@ -84,7 +84,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                     // Convert image if needed
                     if (isImage)
                     {
-                        var convertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, true);
+                        var convertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, true, maxWidth: 16383, maxHeight: 16383); // WebP supports up to 16383x16383
                         bytes = convertResult.Data;
                         contentType = convertResult.MimeType;
                         isImage = !convertResult.IsVideo;
@@ -110,7 +110,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                         MediaConvertResult thumbnailConvertResult;
                         if (wasImage)
                         {
-                            thumbnailConvertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, false, 512);
+                            thumbnailConvertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, false, maxWidth:512);
                         }
                         else
                         {
