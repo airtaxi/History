@@ -182,7 +182,7 @@ public static class MediaEncodingHelper
         return fps;
     }
 
-    public static MediaConvertResult ConvertVideo(byte[] videoBytes, uint? maxWidth = null)
+    public static MediaConvertResult ConvertVideo(byte[] videoBytes, uint? maxHeight = null)
     {
         // Create temporary directory
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -229,10 +229,10 @@ public static class MediaEncodingHelper
 
             // Calculate new dimensions if maxWidth is specified
             string scaleFilter = "";
-            if (maxWidth.HasValue && originalWidth > 0 && originalWidth > maxWidth.Value)
+            if (maxHeight.HasValue && originalHeight > 0 && originalHeight > maxHeight.Value)
             {
-                uint newWidth = maxWidth.Value;
-                uint newHeight = (uint)Math.Round((double)originalHeight * maxWidth.Value / originalWidth, 0);
+                uint newHeight = maxHeight.Value;
+                uint newWidth = (uint)Math.Round((double)originalWidth * newHeight / originalHeight, 0);
 
                 // Ensure dimensions are even (h264 requirement)
                 if (newWidth % 8 != 0) newWidth -= newWidth % 8;

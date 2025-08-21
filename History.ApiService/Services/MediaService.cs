@@ -91,7 +91,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                     }
                     else
                     {
-                        var convertResult = MediaEncodingHelper.ConvertVideo(originalFileBytes, null);
+                        var convertResult = MediaEncodingHelper.ConvertVideo(originalFileBytes, 1080);
                         bytes = convertResult.Data;
                         contentType = convertResult.MimeType;
                     }
