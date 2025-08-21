@@ -1,5 +1,6 @@
 ﻿using History.ApiService.DataTypes;
 using ImageMagick;
+using Org.BouncyCastle.Asn1.X509;
 using System.Diagnostics;
 
 namespace History.ApiService.Helpers;
@@ -182,7 +183,7 @@ public static class MediaEncodingHelper
         return fps;
     }
 
-    public static MediaConvertResult ConvertVideo(byte[] videoBytes, uint? maxHeight = null)
+    public static MediaConvertResult ConvertVideo(byte[] videoBytes, uint? maxDimension = null)
     {
         // Create temporary directory
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -227,12 +228,24 @@ public static class MediaEncodingHelper
                 }
             }
 
+            var shorterDimension = Math.Min(originalWidth, originalHeight);
+            var isLandscape = originalHeight > originalWidth;
+
             // Calculate new dimensions if maxWidth is specified
             string scaleFilter = "";
-            if (maxHeight.HasValue && originalHeight > 0 && originalHeight > maxHeight.Value)
+            if (maxDimension.HasValue && shorterDimension > 0 && shorterDimension > maxDimension.Value)
             {
-                uint newHeight = maxHeight.Value;
-                uint newWidth = (uint)Math.Round((double)originalWidth * newHeight / originalHeight, 0);
+                uint newWidth, newHeight;
+                if (isLandscape)
+                {
+                    newHeight = maxDimension.Value;
+                    newWidth = (uint)Math.Round((double)originalWidth * maxDimension.Value / originalHeight, 0);
+                }
+                else
+                {
+                    newWidth = maxDimension.Value;
+                    newHeight = (uint)Math.Round((double)originalHeight * maxDimension.Value / originalWidth, 0);
+                }
 
                 // Ensure dimensions are even (h264 requirement)
                 if (newWidth % 8 != 0) newWidth -= newWidth % 8;
