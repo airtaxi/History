@@ -75,7 +75,7 @@ public static class MediaEncodingHelper
                     {
                         FileName = "ffmpeg",
                         Arguments = $"-framerate {framerate} -i \"{Path.Combine(tempDir, "frame_%03d.png")}\" " +
-                                    $"-c:v libkvazaar -b:v 1M -maxrate 2M -tag:v hvc1 \"{outputMp4Path}\"",
+                                    $"-c:v libkvazaar -b:v 1M -maxrate 5M -tag:v hvc1 \"{outputMp4Path}\"",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
@@ -268,7 +268,7 @@ public static class MediaEncodingHelper
                     FileName = "ffmpeg",
                     Arguments = $"-i \"{inputVideoPath}\" " +
                                scaleFilter +
-                               "-c:v libkvazaar -b:v 1M -maxrate 2M -tag:v hvc1 -r 24 " +
+                               "-c:v libkvazaar -b:v 1M -maxrate 5M -tag:v hvc1 -r 24 " +
                                "-c:a aac -b:a 128k " +  // Add audio codec if present
                                $"\"{outputMp4Path}\"",
                     UseShellExecute = false,
