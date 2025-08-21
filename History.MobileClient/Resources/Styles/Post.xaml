@@ -453,7 +453,7 @@
                 </Grid.RowDefinitions>
                 <Label
                     Grid.Row="0"
-                    FontSize="12"
+                    FontSize="12.5"
                     LineBreakMode="TailTruncation"
                     MaxLines="3"
                     Text="{x:Binding PreviewText}" />
