@@ -8,7 +8,7 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
-		<MauiVersion>9.0.60</MauiVersion>
+		<MauiVersion>9.0.100</MauiVersion>
 	</PropertyGroup>
 	<PropertyGroup>
 		<!-- NuGet Package properties -->
@@ -24,8 +24,8 @@
 		<PackageIconUrl>https://cdn.githubraw.com/artemvalieiev/SpeakLink/main/logo.png</PackageIconUrl>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.100" />
+		<PackageReference Include="Microsoft.Maui.Core" Version="9.0.100" />
 	</ItemGroup>
 	<!-- Android -->
 	<ItemGroup Condition="$(TargetFramework.StartsWith('net9.0-android')) != true">
