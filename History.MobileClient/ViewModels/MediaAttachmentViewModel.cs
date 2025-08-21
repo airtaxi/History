@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using History.Commons.DataTypes.Contents;
-using SharpCompress.Common;
 
 namespace History.MobileClient.ViewModels;
 
