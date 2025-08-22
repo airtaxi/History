@@ -28,7 +28,7 @@ public partial class FriendshipViewModel(UserResponseDto user, InteractionViewMo
     public string Nickname => User.Nickname;
     public bool IsModerator => User.Rank == Rank.Moderator;
     public bool IsAdmin => User.Rank == Rank.Admin;
-    public DateTime CreatedAt => User.Friendship.CreatedAt;
+    public DateTime CreatedAt => User.Friendship?.CreatedAt ?? DateTime.MinValue;
     public IMediaViewModel ProfileMedia => new ImageViewModel(Utils.GenerateMediaUri(User.ProfileThumbnailMediaId) ?? Constants.DefaultProfileImageFileName);
 
     public Color FriendshipColor
