@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Maui.Core.Primitives;
 using CommunityToolkit.Maui.Views;
 using FFImageLoading.Maui;

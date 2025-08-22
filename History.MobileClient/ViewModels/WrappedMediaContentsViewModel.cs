@@ -1,15 +1,9 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices.Marshalling;
-using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Enums;
-using Microsoft.Maui.Handlers;
-using Microsoft.Maui.Platform;
-using ZstdSharp.Unsafe;
 
 namespace History.MobileClient.ViewModels;
 
