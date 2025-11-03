@@ -76,7 +76,7 @@ public static class MediaEncodingHelper
                     {
                         FileName = "ffmpeg",
                         Arguments = $"-framerate {framerate} -i \"{Path.Combine(tempDir, "frame_%03d.png")}\" " +
-                                    $"-c:v libkvazaar -b:v 3M -maxrate 5M -tag:v hvc1 \"{outputMp4Path}\"",
+                                    $"-c:v libx264 -profile:v high -level:v 4.0 -pix_fmt yuv420p -preset fast -crf 28 -movflags +faststart \"{outputMp4Path}\"",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
@@ -90,7 +90,7 @@ public static class MediaEncodingHelper
 
                 if (ffmpegProcess.ExitCode != 0)
                 {
-                    throw new Exception($"FFmpeg conversion failed: {error + ffmpegProcess.StandardError.ReadToEnd()}");
+                    throw new Exception($"FFmpeg conversion failed.");
                 }
                 else
                 {
@@ -281,7 +281,8 @@ public static class MediaEncodingHelper
                     FileName = "ffmpeg",
                     Arguments = $"-i \"{inputVideoPath}\" " +
                                scaleFilter +
-                               "-c:v libkvazaar -b:v 3M -maxrate 5M -tag:v hvc1 -r 24 " +
+                               "-c:v libx264 -profile:v high -level:v 4.0 -pix_fmt yuv420p -preset fast -crf 28 " +
+                               "-movflags +faststart " +
                                "-c:a aac -b:a 128k " +  // Add audio codec if present
                                $"\"{outputMp4Path}\"",
                     UseShellExecute = false,
@@ -297,7 +298,7 @@ public static class MediaEncodingHelper
 
             if (ffmpegProcess.ExitCode != 0)
             {
-                throw new Exception($"FFmpeg conversion failed: {error}");
+                throw new Exception($"FFmpeg conversion failed.");
             }
 
             Console.WriteLine($"FFmpeg conversion took: {stopwatch.ElapsedMilliseconds} ms");
@@ -357,7 +358,7 @@ public static class MediaEncodingHelper
 
             if (ffmpegProcess.ExitCode != 0)
             {
-                throw new Exception($"FFmpeg thumbnail generation failed: {error}");
+                throw new Exception($"FFmpeg thumbnail generation failed.");
             }
 
             Console.WriteLine($"Thumbnail extraction took: {stopwatch.ElapsedMilliseconds} ms");
