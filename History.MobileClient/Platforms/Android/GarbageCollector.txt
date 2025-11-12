@@ -1,1 +1,1 @@
-﻿MONO_GC_PARAMS=bridge-implementation=old,nursery-size=512m,soft-heap-limit=1024m
+﻿MONO_GC_PARAMS=nursery-size=512m,soft-heap-limit=1024m
