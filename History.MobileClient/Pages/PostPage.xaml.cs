@@ -310,7 +310,7 @@ public partial class PostPage : ContentPage
     private void OnKeyboardSizeMessageReceived(object recipient, KeyboardSizeMessage message)
     {
 #if IOS
-        MainGrid.Margin = new(0, message.Value, 0, 0);
+        MainGrid.Margin = new(0, 0, 0, message.Value);
 #else
         MainGrid.Margin = new(0, 0, 0, message.Value);
 #endif
