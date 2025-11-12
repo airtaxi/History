@@ -5,7 +5,7 @@ namespace History.MobileClient;
 
 public partial class AppShell : Shell
 {
-    public static new bool IsLoaded { get; private set; }
+    public static new bool IsLoaded { get; set; }
 
 	public AppShell()
 	{
