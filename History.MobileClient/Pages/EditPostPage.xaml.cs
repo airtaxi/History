@@ -196,7 +196,7 @@ public partial class EditPostPage : ContentPage
             var fillResult = await App.ExecuteRequestAsync(new FillExternalUrlContent(externalUrlContent), ErrorType.BadRequest);
             if (fillResult.IsFailure)
             {
-                if (fillResult.Error == ErrorType.BadRequest) await DisplayAlert("오류", fillResult.ErrorMessage, Constants.PromptOk);
+                if (fillResult.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", fillResult.ErrorMessage, Constants.PromptOk);
                 return;
             }
 
@@ -412,7 +412,7 @@ public partial class EditPostPage : ContentPage
         {
             if (_reservationTime.HasValue)
             {
-                var proceed = await DisplayAlert("안내", "예약 시간을 설정하셨습니다. 예약 게시글은 예약 시간이 지나야 게시되며, 게시가 되기 전 까지는 게시글을 수정할 수 없습니다. 예약 게시글을 작성하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+                var proceed = await DisplayAlertAsync("안내", "예약 시간을 설정하셨습니다. 예약 게시글은 예약 시간이 지나야 게시되며, 게시가 되기 전 까지는 게시글을 수정할 수 없습니다. 예약 게시글을 작성하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
                 if (!proceed) return;
             }
             var disallowShare = DisallowShareSwitch.IsToggled;
@@ -446,7 +446,7 @@ public partial class EditPostPage : ContentPage
 
             if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && !_isShare && Hashtags.Count == 0)
             {
-                await DisplayAlert("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
+                await DisplayAlertAsync("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
                 return;
             }
 
@@ -464,7 +464,7 @@ public partial class EditPostPage : ContentPage
                     var result = await selectUserPage.GetResultAsync();
                     if (result == null || result.Count == 0)
                     {
-                        await DisplayAlert("오류", "선택된 친구가 없습니다.", Constants.PromptOk);
+                        await DisplayAlertAsync("오류", "선택된 친구가 없습니다.", Constants.PromptOk);
                         return;
                     }
 
@@ -475,7 +475,7 @@ public partial class EditPostPage : ContentPage
                 if (_post != null && !_isShare)
                 {
                     var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, _commentPermission, disallowShare, discoveryOptionSelectedUserIds, files, Hashtags.ToList()), ErrorType.BadRequest);
-                    if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+                    if (result.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
                         WeakReferenceMessenger.Default.Send<ValueChangedMessage<PostResponseDto>>(new(result.Value));
@@ -489,7 +489,7 @@ public partial class EditPostPage : ContentPage
                         var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory");
                         if (!shouldWritePostToKakaoStory.HasValue)
                         {
-                            shouldWritePostToKakaoStory = await DisplayAlert("안내", "카카오스토리에도 게시글을 작성하는 옵션을 활성화하시겠습니까? 이 옵션은 글쓰기 하단의 설정을 펼쳐 언제든지 변경할 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
+                            shouldWritePostToKakaoStory = await DisplayAlertAsync("안내", "카카오스토리에도 게시글을 작성하는 옵션을 활성화하시겠습니까? 이 옵션은 글쓰기 하단의 설정을 펼쳐 언제든지 변경할 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
                             Configuration.SetValue("ShouldWritePostToKakaoStory", shouldWritePostToKakaoStory.Value);
                         }
 
@@ -529,7 +529,7 @@ public partial class EditPostPage : ContentPage
 
                             if (loginNeeded)
                             {
-                                await DisplayAlert("안내", "'카카오스토리에도 게시글 작성' 옵션을 활성화 하였으나, 카카오스토리 쿠키가 만료되어 카카오스토리 로그인이 필요합니다.\n'카카오스토리에도 게시글 작성' 옵션은 언제든지 우측 하단의 펼침 메뉴를 이용하여 비활성화 할 수 있습니다", Constants.PromptOk);
+                                await DisplayAlertAsync("안내", "'카카오스토리에도 게시글 작성' 옵션을 활성화 하였으나, 카카오스토리 쿠키가 만료되어 카카오스토리 로그인이 필요합니다.\n'카카오스토리에도 게시글 작성' 옵션은 언제든지 우측 하단의 펼침 메뉴를 이용하여 비활성화 할 수 있습니다", Constants.PromptOk);
 
                                 var kakaoStoryLoginPage = new KakaoStoryLoginPage();
                                 await App.PushModalAsync(kakaoStoryLoginPage);
@@ -541,7 +541,7 @@ public partial class EditPostPage : ContentPage
 
                                 if (cookies == null)
                                 {
-                                    await DisplayAlert("오류", "카카오스토리 로그인에 실패하였습니다.", Constants.PromptOk);
+                                    await DisplayAlertAsync("오류", "카카오스토리 로그인에 실패하였습니다.", Constants.PromptOk);
                                     return;
                                 }
 
@@ -556,13 +556,13 @@ public partial class EditPostPage : ContentPage
                             {
                                 if (text.Length > 4000)
                                 {
-                                    await DisplayAlert("오류", $"카카오스토리에도 업로드 기능이 활성화되어 있으나, 카카오스토리의 글자 수 제한은 4,000자입니다. 현재 작성하신 게시글은 {text.Length}자로 제한을 초과하여 업로드하실 수 없습니다. 게시글 내용을 수정하신 후 다시 시도해 주세요.", Constants.PromptOk);
+                                    await DisplayAlertAsync("오류", $"카카오스토리에도 업로드 기능이 활성화되어 있으나, 카카오스토리의 글자 수 제한은 4,000자입니다. 현재 작성하신 게시글은 {text.Length}자로 제한을 초과하여 업로드하실 수 없습니다. 게시글 내용을 수정하신 후 다시 시도해 주세요.", Constants.PromptOk);
                                     return;
                                 }
 
                                 if (_attachmentViewModels.Count > 0 && _externalUrlContentViewModel != null)
                                 {
-                                    var proceed = await DisplayAlert("경고", "카카오스토리 업로드 시, 외부 URL이 포함된 사진 및 동영상은 히스토리에서는 지원되지만, 카카오스토리에서는 지원되지 않습니다. 따라서 외부 URL은 카카오스토리에 게시되지 않습니다. 계속 진행하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+                                    var proceed = await DisplayAlertAsync("경고", "카카오스토리 업로드 시, 외부 URL이 포함된 사진 및 동영상은 히스토리에서는 지원되지만, 카카오스토리에서는 지원되지 않습니다. 따라서 외부 URL은 카카오스토리에 게시되지 않습니다. 계속 진행하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
                                     if (!proceed) return;
                                 }
                                 var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
@@ -660,7 +660,7 @@ public partial class EditPostPage : ContentPage
                                 }
 
                                 await KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, true, true, null, null, scrap, false, null, null);
-                                if (conversionFailedCount > 0) await DisplayAlert("오류", $"카키오스토리 업로드 도중 일부 webp 이미지를 png로 변환하는 데 실패하여 {conversionFailedCount}개의 이미지가 제외되었습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
+                                if (conversionFailedCount > 0) await DisplayAlertAsync("오류", $"카키오스토리 업로드 도중 일부 webp 이미지를 png로 변환하는 데 실패하여 {conversionFailedCount}개의 이미지가 제외되었습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
                             }
                             catch (WebException exception)
                             {
@@ -668,13 +668,13 @@ public partial class EditPostPage : ContentPage
                                 using var respReader = response.GetResponseStream();
                                 using var reader = new StreamReader(respReader, Encoding.UTF8);
                                 var message = await reader.ReadToEndAsync();
-                                await DisplayAlert("오류", $"카카오스토리 API 오류가 발생하였습니다: [{response.StatusCode}] {message}", Constants.PromptOk);
+                                await DisplayAlertAsync("오류", $"카카오스토리 API 오류가 발생하였습니다: [{response.StatusCode}] {message}", Constants.PromptOk);
                             }
                         }
                     }
 
                     var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null, Hashtags.ToList()), ErrorType.BadRequest);
-                    if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+                    if (result.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
                         if (!_isShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
@@ -751,7 +751,7 @@ public partial class EditPostPage : ContentPage
 
         if (_commentPermission.HasValue && (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers))
         {
-            await DisplayAlert("오류", "댓글 작성 권한을 설정한 경우, 공개 범위를 특정 친구 (비)공개로 설정할 수 없습니다.", Constants.PromptOk);
+            await DisplayAlertAsync("오류", "댓글 작성 권한을 설정한 경우, 공개 범위를 특정 친구 (비)공개로 설정할 수 없습니다.", Constants.PromptOk);
             DiscoveryOptionPicker.SelectedIndex = (int)Shared.LastUsedPostDiscoveryOption;
             return;
         }
@@ -764,7 +764,7 @@ public partial class EditPostPage : ContentPage
 
         if (discoveryOption > _post.DiscoveryOption)
         {
-            await DisplayAlert("오류", "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다.", Constants.PromptOk);
+            await DisplayAlertAsync("오류", "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다.", Constants.PromptOk);
             DiscoveryOptionPicker.SelectedIndex = (int)_post.DiscoveryOption;
             return;
         }
@@ -782,7 +782,7 @@ public partial class EditPostPage : ContentPage
 
         if (convertedCommentPermission > discoveryOption)
         {
-            await DisplayAlert("오류", "댓글 작성 권한은 공개 범위보다 클 수 없습니다.", Constants.PromptOk);
+            await DisplayAlertAsync("오류", "댓글 작성 권한은 공개 범위보다 클 수 없습니다.", Constants.PromptOk);
             CommentPermissionPicker.SelectedIndex = (int)_commentPermission;
             return;
         }
@@ -822,7 +822,7 @@ public partial class EditPostPage : ContentPage
             var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
             if (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers)
             {
-                await DisplayAlert("오류", "공개 범위를 특정 친구 (비)공개로 설정한 경우, 댓글 작성 권한을 설정할 수 없습니다.", Constants.PromptOk);
+                await DisplayAlertAsync("오류", "공개 범위를 특정 친구 (비)공개로 설정한 경우, 댓글 작성 권한을 설정할 수 없습니다.", Constants.PromptOk);
                 @switch.IsToggled = false;
                 return;
             }
@@ -830,7 +830,7 @@ public partial class EditPostPage : ContentPage
             var commentPermission = discoveryOption.ToAccessPermission();
             if (!commentPermission.HasValue)
             {
-                await DisplayAlert("오류", "로직 오류. 개발자에게 문의해주세요.", Constants.PromptOk);
+                await DisplayAlertAsync("오류", "로직 오류. 개발자에게 문의해주세요.", Constants.PromptOk);
                 @switch.IsToggled = false;
                 return;
             }
@@ -989,7 +989,7 @@ public partial class EditPostPage : ContentPage
         const string removeHashtag = "해시태그 삭제";
         const string cancel = "취소";
 
-        var action = await DisplayActionSheet($"'{hashtag}' 해시태그 관리", cancel, null, editHashtag, removeHashtag);
+        var action = await DisplayActionSheetAsync($"'{hashtag}' 해시태그 관리", cancel, null, editHashtag, removeHashtag);
 
         if (action == editHashtag)
         {
@@ -998,7 +998,7 @@ public partial class EditPostPage : ContentPage
 
             if (Hashtags.Contains(newHashtag))
             {
-                await DisplayAlert("오류", "이미 추가된 해시태그입니다.", Constants.PromptOk);
+                await DisplayAlertAsync("오류", "이미 추가된 해시태그입니다.", Constants.PromptOk);
                 return;
             }
 
@@ -1018,7 +1018,7 @@ public partial class EditPostPage : ContentPage
 		
 		if (Hashtags.Contains(hashtag))
 		{
-			await DisplayAlert("오류", "이미 추가된 해시태그입니다.", Constants.PromptOk);
+			await DisplayAlertAsync("오류", "이미 추가된 해시태그입니다.", Constants.PromptOk);
 			return;
 		}                                                                                                                                    
 		

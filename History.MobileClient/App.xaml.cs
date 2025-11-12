@@ -46,14 +46,14 @@ public partial class App : Application
                 {
                     Dispatcher.Dispatch(async () =>
                     {
-                        var result = await Page.DisplayAlert("오류", $"MAUI 코드베이스에서 버그가 발견되었습니다. 애플리케이션을 재시작해주세요.", "확인", "자세히 알아보기");
+                        var result = await Page.DisplayAlertAsync("오류", $"MAUI 코드베이스에서 버그가 발견되었습니다. 애플리케이션을 재시작해주세요.", "확인", "자세히 알아보기");
                         if (result) return;
 
-                        await Page.DisplayAlert("자세히 알아보기", "이 오류는 MAUI의 CarouselView에서 발생하는 버그로, History 애플리케이션과는 관련이 없습니다.", "확인");
+                        await Page.DisplayAlertAsync("자세히 알아보기", "이 오류는 MAUI의 CarouselView에서 발생하는 버그로, History 애플리케이션과는 관련이 없습니다.", "확인");
                     });
                 }
                 else if (!exception.Message.Contains("FFImageLoading.Maui.Platform.DroidImageView") && !exception.StackTrace.Contains("FFImageLoading.Maui.Platform.DroidImageView"))
-                    Dispatcher.Dispatch(() => Page.DisplayAlert("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk));
+                    Dispatcher.Dispatch(() => Page.DisplayAlertAsync("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk));
 
                 Debugger.BreakForUserUnhandledException(exception);
             }
@@ -193,7 +193,7 @@ public partial class App : Application
             var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
 
             if (!hiddenErrorTypes.Contains(errorType))
-                await TopPage.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
+                await TopPage.DisplayAlertAsync("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
         finally
@@ -219,7 +219,7 @@ public partial class App : Application
             var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
 
             if (!hiddenErrorTypes.Contains(errorType))
-                await TopPage.DisplayAlert("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
+                await TopPage.DisplayAlertAsync("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
         finally
@@ -299,10 +299,10 @@ public partial class App : Application
         }
         else if (type == NotificationType.Restriction)
         {
-            var accept = await Page.DisplayAlert("제재 내역", data["Body"], Constants.PromptOk, "소명 신청하기");
+            var accept = await Page.DisplayAlertAsync("제재 내역", data["Body"], Constants.PromptOk, "소명 신청하기");
             if (!accept)
             {
-                var copy = await Page.DisplayAlert("알림", "공식 디스코드에서 소명 신청을 받고 있습니다.", "디스코드 초대 URL 복사", "확인");
+                var copy = await Page.DisplayAlertAsync("알림", "공식 디스코드에서 소명 신청을 받고 있습니다.", "디스코드 초대 URL 복사", "확인");
                 if (copy)
                 {
                     await Clipboard.SetTextAsync(Constants.DiscordInviteUrl);

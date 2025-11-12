@@ -39,10 +39,10 @@ public partial class NotificationViewModel(NotificationResponseDto notification)
 
         if (type == NotificationType.Restriction)
         {
-            var accept = await App.Page.DisplayAlert("제재 내역", Notification.Body, Constants.PromptOk, "소명 신청하기");
+            var accept = await App.Page.DisplayAlertAsync("제재 내역", Notification.Body, Constants.PromptOk, "소명 신청하기");
             if (!accept)
             {
-                var copy = await App.Page.DisplayAlert("알림", "공식 디스코드에서 소명 신청을 받고 있습니다.", "디스코드 초대 URL 복사", "확인");
+                var copy = await App.Page.DisplayAlertAsync("알림", "공식 디스코드에서 소명 신청을 받고 있습니다.", "디스코드 초대 URL 복사", "확인");
                 if (copy)
                 {
                     await Clipboard.SetTextAsync(Constants.DiscordInviteUrl);

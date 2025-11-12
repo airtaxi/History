@@ -66,7 +66,7 @@ public partial class LoginPage : ContentPage
                 }
             });
         }
-        else if (meResult.Error == ErrorType.Unauthorized) await App.Page.DisplayAlert("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
+        else if (meResult.Error == ErrorType.Unauthorized) await App.Page.DisplayAlertAsync("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
 
         return meResult;
     }
@@ -93,11 +93,11 @@ public partial class LoginPage : ContentPage
         }
         else if (result.Error == ErrorType.NotFound)
         {
-            var willing = await App.Page.DisplayAlert("안내", "가입이 필요합니다. 가입하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var willing = await App.Page.DisplayAlertAsync("안내", "가입이 필요합니다. 가입하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (willing) await App.PushAsync(new RegisterPage(idToken, socialService, s_appleUserFullName));
-            else await App.Page.DisplayAlert("안내", "서비스 이용을 위해서는 가입이 필요합니다.", Constants.PromptOk);
+            else await App.Page.DisplayAlertAsync("안내", "서비스 이용을 위해서는 가입이 필요합니다.", Constants.PromptOk);
         }
-        else if (result.Error == ErrorType.Forbidden) await App.Page.DisplayAlert("안내", "서비스 이용이 제한되었습니다.", Constants.PromptOk);
+        else if (result.Error == ErrorType.Forbidden) await App.Page.DisplayAlertAsync("안내", "서비스 이용이 제한되었습니다.", Constants.PromptOk);
 
         return result;
     }
@@ -137,7 +137,7 @@ public partial class LoginPage : ContentPage
             var result = await page.GetResultAsync();
             if (result == null)
             {
-                await DisplayAlert("오류", "애플 로그인에 실패했습니다. 다시 시도해주세요.", Constants.PromptOk);
+                await DisplayAlertAsync("오류", "애플 로그인에 실패했습니다. 다시 시도해주세요.", Constants.PromptOk);
                 return;
             }
 

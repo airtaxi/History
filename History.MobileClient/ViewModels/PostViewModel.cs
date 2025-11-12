@@ -169,7 +169,7 @@ public partial class PostViewModel : ObservableObject
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, OnCommentChangedMessageReceived);
             WeakReferenceMessenger.Default.Register<ValueDeletedMessage<CommentResponseDto>>(this, OnCommentDeletedMessageReceived);
         }
-        catch (Exception exception) { App.Page.DisplayAlert("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk); }
+        catch (Exception exception) { App.Page.DisplayAlertAsync("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk); }
     }
 
     private void UpdatePost(PostResponseDto post)
@@ -240,7 +240,7 @@ public partial class PostViewModel : ObservableObject
         else if (Shared.MyRank >= Rank.Moderator) options.AddRange("게시글 삭제");
         else options.AddRange("게시글 신고");
 
-        var action = await App.Page.DisplayActionSheet("게시물 옵션", Constants.PromptCancel, null, [.. options]);
+        var action = await App.Page.DisplayActionSheetAsync("게시물 옵션", Constants.PromptCancel, null, [.. options]);
         if (action == null || action == Constants.PromptCancel) return;
 
         if (action == "게시글 삭제") await DeleteAsync(popModal);
@@ -252,13 +252,13 @@ public partial class PostViewModel : ObservableObject
         else if (action == "공개범위 설정")
         {
             var discoveryOptions = Enum.GetValues<DiscoveryOption>().Select(x => x.ToDisplayString());
-            var rawNewDiscoveryOption = await App.Page.DisplayActionSheet("공개범위 설정", Constants.PromptCancel, null, [.. discoveryOptions]);
+            var rawNewDiscoveryOption = await App.Page.DisplayActionSheetAsync("공개범위 설정", Constants.PromptCancel, null, [.. discoveryOptions]);
             if (rawNewDiscoveryOption == null || rawNewDiscoveryOption == Constants.PromptCancel) return;
 
             var newDiscoveryOption = DiscoveryOptionExtensions.FromDisplayString(rawNewDiscoveryOption);
             if (newDiscoveryOption == Post.DiscoveryOption)
             {
-                await App.Page.DisplayAlert("안내", "이미 선택된 공개범위입니다.", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("안내", "이미 선택된 공개범위입니다.", Constants.PromptOk);
                 return;
             }
 
@@ -267,13 +267,13 @@ public partial class PostViewModel : ObservableObject
         }
         else if (action == "프로필에 고정")
         {
-            var pin = await App.Page.DisplayAlert("안내", "프로필에 이 게시글을 고정하시겠습니까? 기존에 고정된 게시글은 해제됩니다. 또한, 고정된 게시글을 다시 고정하는 경우, 고정이 해제됩니다.", Constants.PromptOk, Constants.PromptCancel);
+            var pin = await App.Page.DisplayAlertAsync("안내", "프로필에 이 게시글을 고정하시겠습니까? 기존에 고정된 게시글은 해제됩니다. 또한, 고정된 게시글을 다시 고정하는 경우, 고정이 해제됩니다.", Constants.PromptOk, Constants.PromptCancel);
             if (!pin) return;
 
             var result = await App.ExecuteRequestAsync(new UpdatePinnedPost(Post.Id));
             if (result.IsSuccess)
             {
-                await App.Page.DisplayAlert("안내", "게시글 고정(해제) 요청이 성공적으로 전송되었습니다.", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("안내", "게시글 고정(해제) 요청이 성공적으로 전송되었습니다.", Constants.PromptOk);
                 WeakReferenceMessenger.Default.Send(new PostPinnedMessage());
             }
         }
@@ -283,7 +283,7 @@ public partial class PostViewModel : ObservableObject
         {
             var reportTypes = Enum.GetValues<ReportType>().Select(x => x.ToDisplayString()).ToArray();
 
-            var rawReportType = await App.Page.DisplayActionSheet("신고 카테고리", Constants.PromptCancel, null, reportTypes);
+            var rawReportType = await App.Page.DisplayActionSheetAsync("신고 카테고리", Constants.PromptCancel, null, reportTypes);
             if (rawReportType == null || rawReportType == Constants.PromptCancel) return;
             var reportType = ReportTypeExtensions.FromDisplayString(rawReportType);
 
@@ -294,21 +294,21 @@ public partial class PostViewModel : ObservableObject
                 AssociatedId = Post.Id
             }));
 
-            if (result.IsSuccess) await App.Page.DisplayAlert("안내", "게시글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다.", Constants.PromptOk);
+            if (result.IsSuccess) await App.Page.DisplayAlertAsync("안내", "게시글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다.", Constants.PromptOk);
         }
         else if (action == "게시글 홍보")
         {
-            var shouldWritePublicPost = await App.Page.DisplayAlert("안내", "게시글을 홍보하면 '발견' 탭에서 모든 사용자에게 노출됩니다. 단, 홍보는 24시간에 한 번만 가능합니다.", Constants.PromptOk, Constants.PromptCancel);
+            var shouldWritePublicPost = await App.Page.DisplayAlertAsync("안내", "게시글을 홍보하면 '발견' 탭에서 모든 사용자에게 노출됩니다. 단, 홍보는 24시간에 한 번만 가능합니다.", Constants.PromptOk, Constants.PromptCancel);
             if (!shouldWritePublicPost) return;
 
             var success = await App.ExecuteRequestAsync(new WritePublicPost(Post.Id));
             if (success.IsSuccess)
             {
                 PublicPostPage.ShouldRefresh = true;
-                await App.Page.DisplayAlert("안내", "게시글 홍보가 성공적으로 전송되었습니다. 발견탭에서 확인할 수 있습니다.", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("안내", "게시글 홍보가 성공적으로 전송되었습니다. 발견탭에서 확인할 수 있습니다.", Constants.PromptOk);
             }
         }
-        else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
+        else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
 
     public async Task<Result> RefreshAsync()
@@ -324,12 +324,12 @@ public partial class PostViewModel : ObservableObject
         {
             if (Shared.MyRank < Rank.Moderator)
             {
-                await App.Page.DisplayAlert("권한 부족", "게시글을 삭제할 권한이 없습니다.", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("권한 부족", "게시글을 삭제할 권한이 없습니다.", Constants.PromptOk);
                 return;
             }
 
             var reportTypes = Enum.GetValues<ReportType>().Select(x => x.ToDisplayString()).ToArray();
-            var action = await App.Page.DisplayActionSheet("제재 카테고리 선택", Constants.PromptCancel, null, reportTypes);
+            var action = await App.Page.DisplayActionSheetAsync("제재 카테고리 선택", Constants.PromptCancel, null, reportTypes);
             if (action == null || action == Constants.PromptCancel) return;
             var reportType = ReportTypeExtensions.FromDisplayString(action);
 
@@ -345,7 +345,7 @@ public partial class PostViewModel : ObservableObject
         }
         else
         {
-            var confirm = await App.Page.DisplayAlert("게시글 삭제", "정말로 게시글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+            var confirm = await App.Page.DisplayAlertAsync("게시글 삭제", "정말로 게시글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
             if (confirm)
             {
                 var deleteResult = await App.ExecuteRequestAsync(new DeletePost(Post.Id));
@@ -401,7 +401,7 @@ public partial class PostViewModel : ObservableObject
         }
 
         // Add reaction
-        var rawReaction = await App.Page.DisplayActionSheet("느낌 달기", Constants.PromptCancel, null, [.. Enum.GetValues<ReactionType>().Select(x => x.ToDisplayString())]);
+        var rawReaction = await App.Page.DisplayActionSheetAsync("느낌 달기", Constants.PromptCancel, null, [.. Enum.GetValues<ReactionType>().Select(x => x.ToDisplayString())]);
         if (rawReaction == null || rawReaction == Constants.PromptCancel) return;
 
         var reaction = ReactionTypeExtensions.FromDisplayString(rawReaction);
@@ -415,12 +415,12 @@ public partial class PostViewModel : ObservableObject
     {
         if (Post.DiscoveryOption == DiscoveryOption.SelectedUsers || Post.DiscoveryOption == DiscoveryOption.UnselectedUsers)
         {
-            await App.Page.DisplayAlert("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 공유할 수 없습니다.", Constants.PromptOk);
+            await App.Page.DisplayAlertAsync("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 공유할 수 없습니다.", Constants.PromptOk);
             return;
         }
         else if (Post.DisallowShare)
         {
-            await App.Page.DisplayAlert("안내", "이 게시글은 작성자가 공유를 허용하지 않은 관계로 공유할 수 없습니다.", Constants.PromptOk);
+            await App.Page.DisplayAlertAsync("안내", "이 게시글은 작성자가 공유를 허용하지 않은 관계로 공유할 수 없습니다.", Constants.PromptOk);
             return;
         }
 
@@ -433,7 +433,7 @@ public partial class PostViewModel : ObservableObject
     {
         if (Post.DiscoveryOption == DiscoveryOption.SelectedUsers || Post.DiscoveryOption == DiscoveryOption.UnselectedUsers)
         {
-            await App.Page.DisplayAlert("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 리포스트할 수 없습니다.", Constants.PromptOk);
+            await App.Page.DisplayAlertAsync("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 리포스트할 수 없습니다.", Constants.PromptOk);
             return;
         }
 
