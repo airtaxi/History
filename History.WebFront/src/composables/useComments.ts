@@ -1,12 +1,12 @@
 import { ref, computed, watch } from 'vue';
 import apiClient from '@/api';
 import type { PostResponseDto, CommentResponseDto, UserDto } from '@/types';
-import { useAuthStore } from '@/stores/auth';
+
 
 type SortOrder = 'newest' | 'oldest';
 
 export function useComments(post: PostResponseDto) {
-  const authStore = useAuthStore();
+  
 
   // --- 상태 변수 ---
   const allComments = ref<CommentResponseDto[]>([]);
@@ -23,7 +23,7 @@ export function useComments(post: PostResponseDto) {
 
   // --- Computed ---
   const processedComments = computed(() => {
-    let commentsToProcess = [...allComments.value];
+    const commentsToProcess = [...allComments.value];
     commentsToProcess.sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime();
       const dateB = new Date(b.createdAt).getTime();
@@ -62,7 +62,7 @@ export function useComments(post: PostResponseDto) {
 
       resetAndLoadFirstPage();
 
-    } catch (_error) {
+    } catch (error) {
       console.error("댓글 데이터 로딩 실패:", error);
     } finally {
       isLoading.value = false;
@@ -123,7 +123,7 @@ export function useComments(post: PostResponseDto) {
         // displayedComments도 업데이트되도록 강제
         resetAndLoadFirstPage();
       }
-    } catch (_error) {
+    } catch (error) {
       console.error('좋아요 처리 실패:', error);
       alert('좋아요 처리에 실패했습니다.');
     }
@@ -138,12 +138,12 @@ export function useComments(post: PostResponseDto) {
         commentsCount.value--; // 전체 개수를 다시 세는 대신 1 감소
       }
       resetAndLoadFirstPage();
-    } catch (_error) {
+    } catch {
       alert('댓글 삭제에 실패했습니다.');
     }
   };
   
-  const handleUpdateComment = async ({ _commentId }: { commentId: string }) => {
+  const handleUpdateComment = async ({ commentId }: { commentId: string }) => {
       // 수정 후에는 전체 데이터를 새로고침하여 변경사항을 반영
       await refreshData();
   };

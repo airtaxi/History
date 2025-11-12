@@ -91,13 +91,13 @@ public class MediaService(IMongoDatabase database) : IMediaService
                     }
                     else
                     {
-                        var convertResult = MediaEncodingHelper.ConvertVideo(originalFileBytes, null);
+                        var convertResult = MediaEncodingHelper.ConvertVideo(originalFileBytes, 1080);
                         bytes = convertResult.Data;
                         contentType = convertResult.MimeType;
                     }
 
                     // Check file size
-                    var isOverSize = bytes.Length > (wasImage ? CommonsConstants.MaxImageUploadFileSize : CommonsConstants.MaxUploadFileSize); // 25, 15 MB for images and videos respectively
+                    var isOverSize = bytes.Length > (wasImage ? CommonsConstants.MaxImageUploadFileSize : CommonsConstants.MaxUploadFileSize); // 100MB, 60MB for images and videos respectively
                     if (isOverSize)
                     {
                         return (Index: index, Result: Result.Failure(ErrorType.BadRequest, $"{file.FileName}: 파일 크기가 너무 큽니다."), MediaContent: null);
