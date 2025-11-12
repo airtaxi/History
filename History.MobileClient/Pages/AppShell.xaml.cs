@@ -13,18 +13,18 @@ public partial class AppShell : Shell
         IsLoaded = true;
     }
 
-    public static DateTime LastBackPressedTime = DateTime.MinValue;
-    //protected override bool OnBackButtonPressed()
-    //{
-    //    if (Navigation.NavigationStack.Count > 1) return base.OnBackButtonPressed();
+    public static DateTime s_lastBackPressedTime = DateTime.MinValue;
+    protected override bool OnBackButtonPressed()
+    {
+        if (Navigation.NavigationStack.Count > 1) return base.OnBackButtonPressed();
 
-    //    TimeSpan timeSinceLastBackPressed = DateTime.UtcNow - LastBackPressedTime;
-    //    if (timeSinceLastBackPressed.TotalMilliseconds > 2000)
-    //    {
-    //        LastBackPressedTime = DateTime.UtcNow;
-    //        Toast.Make("나가려면 한번 더 누르세요").Show();
-    //    }
-    //    else Environment.Exit(0);
-    //    return true;
-    //}
+        TimeSpan timeSinceLastBackPressed = DateTime.UtcNow - s_lastBackPressedTime;
+        if (timeSinceLastBackPressed.TotalMilliseconds > 2000)
+        {
+            s_lastBackPressedTime = DateTime.UtcNow;
+            Toast.Make("나가려면 한번 더 누르세요").Show();
+        }
+        else Environment.Exit(0);
+        return true;
+    }
 }
