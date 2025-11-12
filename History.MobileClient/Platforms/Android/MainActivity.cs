@@ -10,6 +10,7 @@ using Android.OS;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
+using AndroidX.Activity;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using AndroidX.Core.View;
@@ -64,6 +65,30 @@ public class MainActivity : MauiAppCompatActivity
         Window.SetSoftInputMode(SoftInput.AdjustResize | SoftInput.StateHidden);
 
         SetupKeyboardDetection();
+
+        OnBackPressedDispatcher.AddCallback(this, new OnBackPressedCallback(true)
+        {
+            public override void HandleOnBackPressed()
+            {
+                if (AppShell.IsLoaded && AppShell.Current != null)
+                {
+                    if (AppShell.Current.Navigation.NavigationStack.Count > 1)
+                    {
+                        AppShell.Current.Navigation.PopAsync();
+                    }
+                    else
+                    {
+                        TimeSpan timeSinceLastBackPressed = DateTime.UtcNow - AppShell.LastBackPressedTime;
+                        if (timeSinceLastBackPressed.TotalMilliseconds > 2000)
+                        {
+                            AppShell.LastBackPressedTime = DateTime.UtcNow;
+                            Toast.MakeText(Platform.AppContext, "나가려면 한번 더 누르세요", ToastLength.Short).Show();
+                        }
+                        else Environment.Exit(0);
+                    }
+                }
+            }
+        });
     }
 
     protected override void OnNewIntent(Intent intent)

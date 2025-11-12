@@ -18,6 +18,7 @@ public partial class LoginPage : ContentPage
     public LoginPage()
 	{
 		InitializeComponent();
+        AppShell.IsLoaded = false;
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
