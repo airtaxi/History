@@ -33,6 +33,10 @@ public partial class FriendListPage : ContentPage
     public FriendListPage(string userId) : this()
     {
         _userId = userId;
+
+        _sortByTime = false;
+        SortHorizontalStackLayout.IsVisible = false;
+        
         TitleGrid.IsVisible = true;
     }
 

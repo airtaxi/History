@@ -5,41 +5,22 @@ export interface UserResponseDto {
   profileThumbnailMediaId: string | null;
   backgroundThumbnailMediaId?: string | null;
   description?: string | null;
-  friends?: UserResponseDto[]; 
+  friends?: UserResponseDto[];
 }
 
-/**
- * 텍스트 콘텐츠를 나타내는 타입
- * 
- * 게시글이나 댓글의 텍스트 부분을 표현할 때 사용됩니다.
- * 
- * @interface TextContent
- */
-// 각 컨텐츠 타입을 구별하기 위한 속성들을 추가합니다.
+// --------------------
+// 콘텐츠 타입 정의
+// --------------------
 export interface TextContent {
-  /** 콘텐츠 타입 식별자 */
   $type: 'text';
-  /** 텍스트 내용 (클라이언트용) */
   text: string;
-  /** 텍스트 내용 (API 응답용, 대문자 T) */
-  Text?: string; // API 응답에서 사용하는 경우
+  Text?: string;
 }
 
-/**
- * 미디어 콘텐츠(이미지, 비디오 등)를 나타내는 타입
- * 
- * 게시글에 첨부된 이미지나 비디오 파일 정보를 표현합니다.
- * 
- * @interface MediaContent
- */
 export interface MediaContent {
-  /** 콘텐츠 타입 식별자 */
   $type: 'media';
-  /** 원본 미디어 파일의 미디어 ID */
   mediaId: string;
-  /** 썸네일 이미지의 미디어 ID */
   thumbnailMediaId: string;
-  /** 미디어 파일의 MIME 타입 (예: image/jpeg, video/mp4) */
   mimeType: string;
   description: string | null;
 }
@@ -56,27 +37,68 @@ export interface UploadContent {
   Description?: string;
 }
 
-export type AnyContent = TextContent | MediaContent | ProfileContent | UploadContent | any;
+export interface ExternalUrlContent {
+  $type: 'external' | 'externalUrl';
+  url?: string;
+  Url?: string;
+  sourceUrl?: string;
+  SourceUrl?: string;
+
+  title?: string;
+  Title?: string;
+
+  description?: string;
+  Description?: string;
+
+  thumbnailUrl?: string;
+  thumbnailImageUrl?: string;
+  ThumbnailImageUrl?: string;
+
+  image?: string;
+  Image?: string;
+}
+
+export interface MediaGroupContent {
+  $type: 'mediaGroup';
+  media: MediaContent[];
+}
+
+export type AnyContent =
+  | TextContent
+  | MediaContent
+  | ProfileContent
+  | UploadContent
+  | ExternalUrlContent
+  | MediaGroupContent
+  | any;
+
+// --------------------
+// 게시글 / 댓글 / 알림
+// --------------------
+export interface PostReaction {
+  type: 'like' | 'awesome' | 'happy' | 'sad' | 'support';
+  reactionType?: string; // ✅ 코드에서 reactionType도 쓰고 있어서 추가
+  user: UserResponseDto;
+}
 
 export interface PostResponseDto {
   id: string;
   user: any; // 또는 UserResponseDto
   discoveryOption: string;
-  contents: any[];
+  contents: AnyContent[];
   comments: any[];
   commentsCount: number;
-  postReactions: any[];
+  postReactions: PostReaction[];
   commentPermission: string | null;
   disallowShare: boolean;
   isRepost: boolean;
   createdAt: string;
   modifiedAt: string | null;
   parentPost?: PostResponseDto;
-  hashtags?: string[]; // ← 배열로 정의
-  discoveryOptionSelectedUserIds?: string[]; // ← 배열로 정의
-
+  hashtags?: string[];
+  discoveryOptionSelectedUserIds?: string[];
   sharedAndRepostedUsers?: {
-    user: any; 
+    user: any;
     postId: string;
     isRepost: boolean;
     sharedAt: string;
@@ -99,7 +121,7 @@ export interface NotificationResponseDto {
 export interface CommentResponseDto {
   id: string;
   user: UserResponseDto;
-  contents: AnyContent[]; 
+  contents: AnyContent[];
   createdAt: string;
   likedUsers?: UserResponseDto[];
 }
@@ -111,5 +133,5 @@ export interface UserDto {
   profileThumbnailMediaId: string | null;
   backgroundThumbnailMediaId?: string | null;
   description?: string | null;
-  friends?: UserDto[]; 
+  friends?: UserDto[];
 }

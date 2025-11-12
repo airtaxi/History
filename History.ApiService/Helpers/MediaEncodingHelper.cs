@@ -1,5 +1,6 @@
 ﻿using History.ApiService.DataTypes;
 using ImageMagick;
+using Org.BouncyCastle.Asn1.X509;
 using System.Diagnostics;
 
 namespace History.ApiService.Helpers;
@@ -75,7 +76,7 @@ public static class MediaEncodingHelper
                     {
                         FileName = "ffmpeg",
                         Arguments = $"-framerate {framerate} -i \"{Path.Combine(tempDir, "frame_%03d.png")}\" " +
-                                    $"-c:v libkvazaar -b:v 1M -maxrate 2M -tag:v hvc1 \"{outputMp4Path}\"",
+                                    $"-c:v libx264 -profile:v high -level:v 4.0 -pix_fmt yuv420p -preset fast -crf 28 -movflags +faststart \"{outputMp4Path}\"",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
@@ -89,7 +90,7 @@ public static class MediaEncodingHelper
 
                 if (ffmpegProcess.ExitCode != 0)
                 {
-                    throw new Exception($"FFmpeg conversion failed: {error + ffmpegProcess.StandardError.ReadToEnd()}");
+                    throw new Exception($"FFmpeg conversion failed.");
                 }
                 else
                 {
@@ -182,7 +183,7 @@ public static class MediaEncodingHelper
         return fps;
     }
 
-    public static MediaConvertResult ConvertVideo(byte[] videoBytes, uint? maxWidth = null)
+    public static MediaConvertResult ConvertVideo(byte[] videoBytes, uint? maxDimension = null)
     {
         // Create temporary directory
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -227,12 +228,24 @@ public static class MediaEncodingHelper
                 }
             }
 
+            var shorterDimension = Math.Min(originalWidth, originalHeight);
+            var isLandscape = originalHeight > originalWidth;
+
             // Calculate new dimensions if maxWidth is specified
             string scaleFilter = "";
-            if (maxWidth.HasValue && originalWidth > 0 && originalWidth > maxWidth.Value)
+            if (maxDimension.HasValue && shorterDimension > 0 && shorterDimension > maxDimension.Value)
             {
-                uint newWidth = maxWidth.Value;
-                uint newHeight = (uint)Math.Round((double)originalHeight * maxWidth.Value / originalWidth, 0);
+                uint newWidth, newHeight;
+                if (isLandscape)
+                {
+                    newHeight = maxDimension.Value;
+                    newWidth = (uint)Math.Round((double)originalWidth * maxDimension.Value / originalHeight, 0);
+                }
+                else
+                {
+                    newWidth = maxDimension.Value;
+                    newHeight = (uint)Math.Round((double)originalHeight * maxDimension.Value / originalWidth, 0);
+                }
 
                 // Ensure dimensions are even (h264 requirement)
                 if (newWidth % 8 != 0) newWidth -= newWidth % 8;
@@ -268,7 +281,8 @@ public static class MediaEncodingHelper
                     FileName = "ffmpeg",
                     Arguments = $"-i \"{inputVideoPath}\" " +
                                scaleFilter +
-                               "-c:v libkvazaar -b:v 1M -maxrate 2M -tag:v hvc1 -r 24 " +
+                               "-c:v libx264 -profile:v high -level:v 4.0 -pix_fmt yuv420p -preset fast -crf 28 " +
+                               "-movflags +faststart " +
                                "-c:a aac -b:a 128k " +  // Add audio codec if present
                                $"\"{outputMp4Path}\"",
                     UseShellExecute = false,
@@ -284,7 +298,7 @@ public static class MediaEncodingHelper
 
             if (ffmpegProcess.ExitCode != 0)
             {
-                throw new Exception($"FFmpeg conversion failed: {error}");
+                throw new Exception($"FFmpeg conversion failed.");
             }
 
             Console.WriteLine($"FFmpeg conversion took: {stopwatch.ElapsedMilliseconds} ms");
@@ -344,7 +358,7 @@ public static class MediaEncodingHelper
 
             if (ffmpegProcess.ExitCode != 0)
             {
-                throw new Exception($"FFmpeg thumbnail generation failed: {error}");
+                throw new Exception($"FFmpeg thumbnail generation failed.");
             }
 
             Console.WriteLine($"Thumbnail extraction took: {stopwatch.ElapsedMilliseconds} ms");

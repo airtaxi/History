@@ -21,6 +21,8 @@ using History.Commons;
 using Syncfusion.Maui.Toolkit.Hosting;
 using Syncfusion.Maui.Core.Hosting;
 using History.Commons.Api.Message;
+using CommunityToolkit.Maui.Core;
+
 
 
 
@@ -43,9 +45,9 @@ public static class MauiProgram
 
         var builder = MauiApp.CreateBuilder()
             .UseMauiApp<App>()
-            .UseMauiCommunityToolkitMediaElement()
-            .UseFFImageLoading()
             .UseMauiCommunityToolkit()
+            .UseMauiCommunityToolkitMediaElement((options) => options.SetDefaultAndroidViewType(AndroidViewType.TextureView))
+            .UseFFImageLoading()
             .UseUraniumUI()
             .UseUraniumUIMaterial()
             .UseSpeakLink()
