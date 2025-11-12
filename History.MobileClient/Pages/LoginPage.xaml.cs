@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
