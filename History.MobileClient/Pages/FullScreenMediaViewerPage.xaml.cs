@@ -56,7 +56,7 @@ public partial class FullScreenMediaViewerPage : ContentPage
         }
         catch
         {
-            await DisplayAlert("오류", "미디어 파일 저장 중 오류가 발생하였습니다.", Constants.PromptOk);
+            await DisplayAlertAsync("오류", "미디어 파일 저장 중 오류가 발생하였습니다.", Constants.PromptOk);
         }
         finally
         {

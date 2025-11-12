@@ -1,2 +1,2 @@
-dotnet publish -f net9.0-android -c Release -o ./publish
+dotnet publish -f net10.0-android -c Release -o ./publish
 pause

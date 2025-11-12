@@ -5,7 +5,6 @@ using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using Microsoft.OpenApi.Validations;
 using MongoDB.Driver;
 using Namotion.Reflection;
 

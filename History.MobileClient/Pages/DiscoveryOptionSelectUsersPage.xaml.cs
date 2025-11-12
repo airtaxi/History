@@ -128,7 +128,7 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
 
         if (userIds.Count == 0)
         {
-            await DisplayAlert("오류", "최소 한 명 이상의 친구를 선택해주세요", Constants.PromptOk);
+            await DisplayAlertAsync("오류", "최소 한 명 이상의 친구를 선택해주세요", Constants.PromptOk);
             return;
         }
 
@@ -184,14 +184,14 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
 
     private async void OnPresetButtonClicked(object sender, EventArgs e)
     {
-        var action = await DisplayActionSheet("프리셋", Constants.PromptCancel, null, "이 설정으로 프리셋 저장", "프리셋 불러오기", "프리셋 삭제");
+        var action = await DisplayActionSheetAsync("프리셋", Constants.PromptCancel, null, "이 설정으로 프리셋 저장", "프리셋 불러오기", "프리셋 삭제");
         if (action == null || action == Constants.PromptCancel) return;
 
         if (action == "이 설정으로 프리셋 저장")
         {
             if (_selectedViewModels.Count == 0)
             {
-                await DisplayAlert("오류", "프리셋을 저장하기 위해서는 최소 한 명 이상의 친구를 선택해야 합니다.", Constants.PromptOk);
+                await DisplayAlertAsync("오류", "프리셋을 저장하기 위해서는 최소 한 명 이상의 친구를 선택해야 합니다.", Constants.PromptOk);
                 return;
             }
 
@@ -201,21 +201,21 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
 
             if (key.Length < 1 || key.Length > 20)
             {
-                await DisplayAlert("오류", "프리셋 이름은 1자 이상 20자 이하로 입력해야 합니다.", Constants.PromptOk);
+                await DisplayAlertAsync("오류", "프리셋 이름은 1자 이상 20자 이하로 입력해야 합니다.", Constants.PromptOk);
                 return;
             }
 
             var result = CheckForSamePreset(userIds);
             if (result.IsFailure)
             {
-                await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+                await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                 return;
             }
 
             result = SavePreset(key, userIds);
             if (result.IsFailure)
             {
-                await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+                await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                 return;
             }
 
@@ -226,10 +226,10 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
             var presets = GetPresets();
             if (presets.Count == 0)
             {
-                await DisplayAlert("오류", "저장된 프리셋이 없습니다.", Constants.PromptOk);
+                await DisplayAlertAsync("오류", "저장된 프리셋이 없습니다.", Constants.PromptOk);
                 return;
             }
-            var key = await DisplayActionSheet("프리셋 선택", Constants.PromptCancel, null, [.. presets.Keys]);
+            var key = await DisplayActionSheetAsync("프리셋 선택", Constants.PromptCancel, null, [.. presets.Keys]);
             if (key == null || key == Constants.PromptCancel) return;
             var userIds = presets[key];
             foreach (var userId in userIds)
@@ -245,17 +245,17 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
             var presets = GetPresets();
             if (presets.Count == 0)
             {
-                await DisplayAlert("오류", "저장된 프리셋이 없습니다.", Constants.PromptOk);
+                await DisplayAlertAsync("오류", "저장된 프리셋이 없습니다.", Constants.PromptOk);
                 return;
             }
 
-            var key = await DisplayActionSheet("프리셋 삭제", Constants.PromptCancel, null, [.. presets.Keys]);
+            var key = await DisplayActionSheetAsync("프리셋 삭제", Constants.PromptCancel, null, [.. presets.Keys]);
             if (key == null || key == Constants.PromptCancel) return;
 
             var result = DeletePreset(key);
             if (result.IsFailure)
             {
-                await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+                await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                 return;
             }
 

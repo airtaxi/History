@@ -61,7 +61,7 @@ namespace History.MobileClient.Pages
             var result = await App.ExecuteRequestAsync(new Register(_idToken, _socialService, _name));
             if (result.IsSuccess)
             {
-                await App.Page.DisplayAlert("안내", "가입이 완료되었습니다.", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("안내", "가입이 완료되었습니다.", Constants.PromptOk);
                 await LoginPage.Login(_idToken, _socialService);
             }
         }

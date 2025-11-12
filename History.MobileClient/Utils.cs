@@ -416,7 +416,7 @@ public static partial class Utils
                 return;
             }
 #if ANDROID
-            var shouldDownload = await App.Page.DisplayAlert("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})\n업데이트 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var shouldDownload = await App.Page.DisplayAlertAsync("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})\n업데이트 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (!shouldDownload) return;
             var downloadUrl = "https://kagamine-rin.com/History/com.airtaxi.history-Signed.apk";
             var apkFilePath = Path.Combine(FileSystem.CacheDirectory, "History.apk");
@@ -437,13 +437,13 @@ public static partial class Utils
 
             context.StartActivity(intent);
 #else
-            await App.Page.DisplayAlert("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})", Constants.PromptOk);
+            await App.Page.DisplayAlertAsync("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})", Constants.PromptOk);
 #endif
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"History Update Error: {ex.Message}");
-            await App.Page.DisplayAlert("오류", $"업데이트 중 문제가 발생했습니다: {ex.Message}", "확인");
+            await App.Page.DisplayAlertAsync("오류", $"업데이트 중 문제가 발생했습니다: {ex.Message}", "확인");
         }
     }
 }

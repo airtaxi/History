@@ -109,7 +109,7 @@ public partial class ProfileViewModel : ObservableObject
     {
         HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
 
-        var shouldCopy = await App.Page.DisplayAlert("프로필 핸들", User.Handle, "복사", "닫기");
+        var shouldCopy = await App.Page.DisplayAlertAsync("프로필 핸들", User.Handle, "복사", "닫기");
         if (!shouldCopy) return;
 
         try
@@ -184,12 +184,12 @@ public partial class ProfileViewModel : ObservableObject
         {
             if (string.IsNullOrWhiteSpace(prompt))
             {
-                await App.Page.DisplayAlert("닉네임 변경 실패", "닉네임은 공백으로 설정할 수 없습니다", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("닉네임 변경 실패", "닉네임은 공백으로 설정할 수 없습니다", Constants.PromptOk);
                 return;
             }
             else if (prompt.Length > CommonsConstants.MaxNicknameLength)
             {
-                await App.Page.DisplayAlert("닉네임 변경 실패", $"닉네임은 {CommonsConstants.MaxNicknameLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("닉네임 변경 실패", $"닉네임은 {CommonsConstants.MaxNicknameLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
                 return;
             }
 
@@ -208,7 +208,7 @@ public partial class ProfileViewModel : ObservableObject
         {
             if (prompt.Length > CommonsConstants.MaxProfileDescriptionLength)
             {
-                await App.Page.DisplayAlert("한줄 소개 변경 실패", $"한줄 소개는 {CommonsConstants.MaxProfileDescriptionLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("한줄 소개 변경 실패", $"한줄 소개는 {CommonsConstants.MaxProfileDescriptionLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
                 return;
             }
 
@@ -223,7 +223,7 @@ public partial class ProfileViewModel : ObservableObject
         bool shouldUpload = true;
         if (User.ProfileMediaId != null)
         {
-            var action = await App.Page.DisplayActionSheet("프로필 이미지", Constants.PromptCancel, null, ["프로필 이미지 변경", "프로필 이미지 삭제"]);
+            var action = await App.Page.DisplayActionSheetAsync("프로필 이미지", Constants.PromptCancel, null, ["프로필 이미지 변경", "프로필 이미지 삭제"]);
             if (action == Constants.PromptCancel) return;
             else if (action == "프로필 이미지 변경") shouldUpload = true;
             else if (action == "프로필 이미지 삭제")
@@ -274,7 +274,7 @@ public partial class ProfileViewModel : ObservableObject
         bool shouldUpload = true;
         if (User.BackgroundMediaId != null)
         {
-            var action = await App.Page.DisplayActionSheet("배경 이미지", Constants.PromptCancel, null, ["배경 이미지 변경", "배경 이미지 삭제"]);
+            var action = await App.Page.DisplayActionSheetAsync("배경 이미지", Constants.PromptCancel, null, ["배경 이미지 변경", "배경 이미지 삭제"]);
             if (action == Constants.PromptCancel) return;
             else if (action == "배경 이미지 변경") shouldUpload = true;
             else if (action == "배경 이미지 삭제")
@@ -327,39 +327,39 @@ public partial class ProfileViewModel : ObservableObject
             var result = await App.ExecuteRequestAsync(new UpdateHandle(handle), [ErrorType.BadRequest, ErrorType.Conflict]);
             if (result.IsSuccess)
             {
-                await App.Page.DisplayAlert("안내", "핸들이 변경되었습니다.", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("안내", "핸들이 변경되었습니다.", Constants.PromptOk);
                 await RefreshAsync();
             }
-            else if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Conflict) await App.Page.DisplayAlert("핸들 변경 실패", result.ErrorMessage, Constants.PromptOk);
+            else if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Conflict) await App.Page.DisplayAlertAsync("핸들 변경 실패", result.ErrorMessage, Constants.PromptOk);
         }
     }
 
     [RelayCommand]
     private async Task HandleChangeProfileVisibilityAsync()
     {
-        var action = await App.Page.DisplayActionSheet("프로필 공개 설정", Constants.PromptCancel, null, "공개", "비공개");
+        var action = await App.Page.DisplayActionSheetAsync("프로필 공개 설정", Constants.PromptCancel, null, "공개", "비공개");
         if (action == null || action == Constants.PromptCancel) return;
 
         var allowSearch = action == "공개";
         var result = await App.ExecuteRequestAsync(new UpdateAllowSearch(allowSearch));
         if (result.IsSuccess)
         {
-            if (allowSearch) await App.Page.DisplayAlert("안내", "프로필 공개 설정이 완료되었습니다. 이제부터 다른 사용자가 닉네임이나 핸들을 통해 내 프로필을 검색할 수 있습니다.", Constants.PromptOk);
-            else await App.Page.DisplayAlert("안내", "프로필 비공개 설정이 완료되었습니다. 이제부터 다른 사용자가 닉네임이나 핸들을 통해 내 프로필을 검색할 수 없습니다.", Constants.PromptOk);
+            if (allowSearch) await App.Page.DisplayAlertAsync("안내", "프로필 공개 설정이 완료되었습니다. 이제부터 다른 사용자가 닉네임이나 핸들을 통해 내 프로필을 검색할 수 있습니다.", Constants.PromptOk);
+            else await App.Page.DisplayAlertAsync("안내", "프로필 비공개 설정이 완료되었습니다. 이제부터 다른 사용자가 닉네임이나 핸들을 통해 내 프로필을 검색할 수 없습니다.", Constants.PromptOk);
             await RefreshAsync();
         }
-        else await App.Page.DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+        else await App.Page.DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
     }
 
     [RelayCommand]
     public async Task HandleBanAsync()
     {
-        var action = await App.Page.DisplayActionSheet("사용자 차단 / 무시", Constants.PromptCancel, null, "차단", "무시");
+        var action = await App.Page.DisplayActionSheetAsync("사용자 차단 / 무시", Constants.PromptCancel, null, "차단", "무시");
         if (action == null || action == Constants.PromptCancel) return;
 
         async Task Block()
         {
-            var block = await App.Page.DisplayAlert("안내", $"정말로 {Nickname}님을 차단하시겠습니까? 차단하는 경우, 해제할 때 까지  히스토리에서 나와 상대방 모두 서로를 볼 수 없게 됩니다. 또한, 친구 관계인 경우 친구 삭제가 먼저 선행됩니다.", Constants.PromptYes, Constants.PromptNo);
+            var block = await App.Page.DisplayAlertAsync("안내", $"정말로 {Nickname}님을 차단하시겠습니까? 차단하는 경우, 해제할 때 까지  히스토리에서 나와 상대방 모두 서로를 볼 수 없게 됩니다. 또한, 친구 관계인 경우 친구 삭제가 먼저 선행됩니다.", Constants.PromptYes, Constants.PromptNo);
             if (block)
             {
                 var result = await App.ExecuteRequestAsync(new BlockUser(User.UserId));
@@ -373,7 +373,7 @@ public partial class ProfileViewModel : ObservableObject
 
         async Task Ignore()
         {
-            var block = await App.Page.DisplayAlert("안내", $"정말로 {Nickname}님을 무시하시겠습니까? 무시하는 경우, 해제할 때 까지 히스토리에서 상대방을 볼 수 없습니다. 다만, 상대방은 나를 볼 수 있습니다. 또한, 친구 관계인 경우 친구 삭제가 먼저 선행됩니다.", Constants.PromptYes, Constants.PromptNo);
+            var block = await App.Page.DisplayAlertAsync("안내", $"정말로 {Nickname}님을 무시하시겠습니까? 무시하는 경우, 해제할 때 까지 히스토리에서 상대방을 볼 수 없습니다. 다만, 상대방은 나를 볼 수 있습니다. 또한, 친구 관계인 경우 친구 삭제가 먼저 선행됩니다.", Constants.PromptYes, Constants.PromptNo);
             if (block)
             {
                 var result = await App.ExecuteRequestAsync(new IgnoreUser(User.UserId));
@@ -396,12 +396,12 @@ public partial class ProfileViewModel : ObservableObject
 
         if (User.Friendship == null)
         {
-            var send = await App.Page.DisplayAlert("안내", $"{Nickname}님에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var send = await App.Page.DisplayAlertAsync("안내", $"{Nickname}님에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (send) result = await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Accepted)
         {
-            var delete = await App.Page.DisplayAlert("안내", $"{Nickname}님와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var delete = await App.Page.DisplayAlertAsync("안내", $"{Nickname}님와의 친구 관계를 끊으시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (delete)
             {
                 result = await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
@@ -410,12 +410,12 @@ public partial class ProfileViewModel : ObservableObject
         }
         else if (User.Friendship.Status == FriendshipStatus.Requested)
         {
-            var cancel = await App.Page.DisplayAlert("안내", $"{Nickname}님에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
+            var cancel = await App.Page.DisplayAlertAsync("안내", $"{Nickname}님에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
             if (cancel) result = await App.ExecuteRequestAsync(new CancelFriendRequest(User.UserId));
         }
         else if (User.Friendship.Status == FriendshipStatus.Waiting)
         {
-            var accept = await App.Page.DisplayAlert("안내", $"{Nickname}님의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            var accept = await App.Page.DisplayAlertAsync("안내", $"{Nickname}님의 친구 신청을 수락하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (accept)
             {
                 result = await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
@@ -441,7 +441,7 @@ public partial class ProfileViewModel : ObservableObject
     [RelayCommand]
     private async Task HandleProfileSettingsAsync()
     {
-        var action = await App.Page.DisplayActionSheet("프로필 설정", Constants.PromptCancel, null, "닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정", "핸들 변경", "프로필 공개 설정");
+        var action = await App.Page.DisplayActionSheetAsync("프로필 설정", Constants.PromptCancel, null, "닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정", "핸들 변경", "프로필 공개 설정");
 
         if (action == null || action == Constants.PromptCancel) return;
 

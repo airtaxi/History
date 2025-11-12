@@ -109,7 +109,7 @@ public partial class CommentViewModel : ObservableObject
         };
         actions.RemoveAll(x => x == null);
 
-        var action = await App.Page.DisplayActionSheet("댓글 관리", Constants.PromptCancel, null, [.. actions]);
+        var action = await App.Page.DisplayActionSheetAsync("댓글 관리", Constants.PromptCancel, null, [.. actions]);
         if (action == null || action == Constants.PromptCancel) return;
 
         if (action.StartsWith("좋아요")) await HandleLikeAsync();
@@ -119,7 +119,7 @@ public partial class CommentViewModel : ObservableObject
         {
             var reportTypes = Enum.GetValues<ReportType>().Select(x => x.ToDisplayString()).ToArray();
 
-            var rawReportType = await App.Page.DisplayActionSheet("신고 카테고리", Constants.PromptCancel, null, reportTypes);
+            var rawReportType = await App.Page.DisplayActionSheetAsync("신고 카테고리", Constants.PromptCancel, null, reportTypes);
             if (rawReportType == null || rawReportType == Constants.PromptCancel) return;
             var reportType = ReportTypeExtensions.FromDisplayString(rawReportType);
 
@@ -130,9 +130,9 @@ public partial class CommentViewModel : ObservableObject
                 AssociatedId = Comment.Id
             }));
 
-            if (result.IsSuccess) await App.Page.DisplayAlert("안내", "댓글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다.", Constants.PromptOk);
+            if (result.IsSuccess) await App.Page.DisplayAlertAsync("안내", "댓글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다.", Constants.PromptOk);
         }
-        else await App.Page.DisplayAlert("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
+        else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
 
     [RelayCommand]
@@ -141,7 +141,7 @@ public partial class CommentViewModel : ObservableObject
         var users = Comment.LikedUsers;
         if (users.Count == 0)
         {
-            await App.Page.DisplayAlert("오류", "이 댓글에 좋아요를 누른 사용자가 없습니다.", Constants.PromptOk);
+            await App.Page.DisplayAlertAsync("오류", "이 댓글에 좋아요를 누른 사용자가 없습니다.", Constants.PromptOk);
             return;
         }
 
@@ -161,7 +161,7 @@ public partial class CommentViewModel : ObservableObject
         if (Comment.User.UserId != Shared.UserId && Shared.MyRank >= Rank.Moderator)
         {
             var reportTypes = Enum.GetValues<ReportType>().Select(x => x.ToDisplayString()).ToArray();
-            var action = await App.Page.DisplayActionSheet("제재 카테고리 선택", Constants.PromptCancel, null, reportTypes);
+            var action = await App.Page.DisplayActionSheetAsync("제재 카테고리 선택", Constants.PromptCancel, null, reportTypes);
             if (action == null || action == Constants.PromptCancel) return;
             var reportType = ReportTypeExtensions.FromDisplayString(action);
 
@@ -173,7 +173,7 @@ public partial class CommentViewModel : ObservableObject
         }
         else if(_isMyPost || Comment.User.UserId == Shared.UserId)
         {
-            var result = await App.Page.DisplayAlert("댓글 삭제", "정말로 댓글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+            var result = await App.Page.DisplayAlertAsync("댓글 삭제", "정말로 댓글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
             if (!result) return;
 
             var deleteResult = await App.ExecuteRequestAsync(new DeleteComment(Comment.Id));
@@ -181,7 +181,7 @@ public partial class CommentViewModel : ObservableObject
         }
         else
         {
-            await App.Page.DisplayAlert("권한 부족", "댓글을 삭제할 권한이 없습니다.", Constants.PromptOk);
+            await App.Page.DisplayAlertAsync("권한 부족", "댓글을 삭제할 권한이 없습니다.", Constants.PromptOk);
             return;
         }
     }

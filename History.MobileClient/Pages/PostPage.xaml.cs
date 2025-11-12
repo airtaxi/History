@@ -149,7 +149,7 @@ public partial class PostPage : ContentPage
     {
         if (!IsCommentAvailable)
         {
-            await DisplayAlert("오류", "빈 내용의 댓글은 작성할 수 없습니다", Constants.PromptOk);
+            await DisplayAlertAsync("오류", "빈 내용의 댓글은 작성할 수 없습니다", Constants.PromptOk);
             return;
         }
 
@@ -168,7 +168,7 @@ public partial class PostPage : ContentPage
         {
             MainActivityIndicator.IsRunning = true;
             var result = await App.ExecuteRequestAsync(new CreateComment(ViewModel.Post.Id, contents, files), ErrorType.BadRequest, ErrorType.Forbidden);
-            if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Forbidden) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+            if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Forbidden) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
             else if (result.IsSuccess)
             {
                 _commentMediaAttachmentViewModel?.Dispose();

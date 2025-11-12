@@ -66,7 +66,7 @@ public partial class EditCommentPage : ContentPage
 
         if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && _attachmentViewModel == null)
         {
-            await DisplayAlert("오류", "빈 내용의 댓글은 작성할 수 없습니다", Constants.PromptOk);
+            await DisplayAlertAsync("오류", "빈 내용의 댓글은 작성할 수 없습니다", Constants.PromptOk);
             return;
         }
 
@@ -74,7 +74,7 @@ public partial class EditCommentPage : ContentPage
         {
             MainActivityIndicator.IsRunning = true;
             var result = await App.ExecuteRequestAsync(new ModifyComment(_comment.Id, contents, files), ErrorType.BadRequest);
-            if (result.Error == ErrorType.BadRequest) await DisplayAlert("오류", result.ErrorMessage, Constants.PromptOk);
+            if (result.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
             else if (result.IsSuccess)
             {
                 WeakReferenceMessenger.Default.Send<ValueChangedMessage<CommentResponseDto>>(new(result.Value));

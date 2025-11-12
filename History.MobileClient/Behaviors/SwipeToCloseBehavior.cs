@@ -118,8 +118,8 @@ namespace History.MobileClient.Behaviors
                     }
                     else if (root2 != null)
                     {
-                        await root2.TranslateTo(0, 0, 200);
-                        await root2.FadeTo(1, 200);
+                        await root2.TranslateToAsync(0, 0, 200);
+                        await root2.FadeToAsync(1, 200);
                     }
 
                     _isPanning = false;
@@ -141,8 +141,8 @@ namespace History.MobileClient.Behaviors
             var targetY = isDownSwipe ? height : -height;
 
             await Task.WhenAll(
-                view.TranslateTo(0, targetY, 300, Easing.CubicIn),
-                view.FadeTo(0, 300)
+                view.TranslateToAsync(0, targetY, 300, Easing.CubicIn),
+                view.FadeToAsync(0, 300)
             );
 
             await App.PopAsync();

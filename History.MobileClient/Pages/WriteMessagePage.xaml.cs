@@ -7,8 +7,6 @@ using History.MobileClient.Helpers;
 
 #if IOS
 using NativeMedia;
-#else
-using History.MobileClient.Helpers;
 #endif
 
 namespace History.MobileClient.Pages;
@@ -82,12 +80,12 @@ public partial class WriteMessagePage : ContentPage
         var text = MessageEditor.Text?.Trim();
         if (string.IsNullOrEmpty(text))
         {
-            await DisplayAlert("오류", "쪽지 내용을 입력하세요.", "확인");
+            await DisplayAlertAsync("오류", "쪽지 내용을 입력하세요.", "확인");
             return;
         }
         if (text.Length > 100)
         {
-            await DisplayAlert("오류", "쪽지는 100자 이내로 작성해야 합니다.", "확인");
+            await DisplayAlertAsync("오류", "쪽지는 100자 이내로 작성해야 합니다.", "확인");
             return;
         }
         var contents = new List<BaseContent> { new TextContent { Text = text } };
@@ -101,7 +99,7 @@ public partial class WriteMessagePage : ContentPage
         var result = await App.ExecuteRequestAsync(new SendMessage(_receiverId, contents, files));
         if (result.IsSuccess)
         {
-            await DisplayAlert("성공", "쪽지가 전송되었습니다.", "확인");
+            await DisplayAlertAsync("성공", "쪽지가 전송되었습니다.", "확인");
             await App.PopModalAsync();
         }
     }
