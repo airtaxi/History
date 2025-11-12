@@ -436,7 +436,7 @@ public class MainActivity : MauiAppCompatActivity
                     AppShell.s_lastBackPressedTime = DateTime.UtcNow;
                     Toast.MakeText(Platform.AppContext, "나가려면 한번 더 누르세요", ToastLength.Short).Show();
                 }
-                else Environment.Exit(0);
+                else System.Environment.Exit(0);
             }
         }
         else base.OnBackPressed();
