@@ -10,7 +10,6 @@ using Android.OS;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
-using AndroidX.Activity;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using AndroidX.Core.View;
@@ -419,28 +418,6 @@ public class MainActivity : MauiAppCompatActivity
         return list;
     }
 #pragma warning restore CA1422, CA1416
-
-    public override void OnBackPressed()
-    {
-        if (AppShell.IsLoaded && AppShell.Current != null)
-        {
-            if (AppShell.Current.Navigation.NavigationStack.Count > 1)
-            {
-                AppShell.Current.Navigation.PopAsync();
-            }
-            else
-            {
-                TimeSpan timeSinceLastBackPressed = DateTime.UtcNow - AppShell.s_lastBackPressedTime;
-                if (timeSinceLastBackPressed.TotalMilliseconds > 2000)
-                {
-                    AppShell.s_lastBackPressedTime = DateTime.UtcNow;
-                    Toast.MakeText(Platform.AppContext, "나가려면 한번 더 누르세요", ToastLength.Short).Show();
-                }
-                else System.Environment.Exit(0);
-            }
-        }
-        else base.OnBackPressed();
-    }
 }
 
 public class WindowInsetsListener : Java.Lang.Object, IOnApplyWindowInsetsListener
