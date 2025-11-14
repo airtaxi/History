@@ -17,7 +17,7 @@
                 Padding="12"
                 Background="{AppThemeBinding Dark=Black,
                                              Light=White}"
-                Stroke="#808080">
+                StrokeThickness="0">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="16" />
                 </Border.StrokeShape>
