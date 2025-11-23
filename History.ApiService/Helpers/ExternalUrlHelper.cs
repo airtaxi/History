@@ -43,6 +43,7 @@ public static class ExternalUrlHelper
                 if (headerMatch.Success)
                 {
                     var charset = headerMatch.Groups[1].Value.Trim().Trim('"', '\'');
+                    Console.WriteLine($"Charset: {encoding.WebName}");
                     try { encoding = Encoding.GetEncoding(charset); } catch { encoding = null; }
                 }
             }
@@ -62,6 +63,7 @@ public static class ExternalUrlHelper
                 var metaCharset = tentativeDoc.DocumentNode.SelectSingleNode("//meta[@charset]")?.GetAttributeValue("charset", null);
                 if (!string.IsNullOrEmpty(metaCharset))
                 {
+                    Console.WriteLine($"metaCharset: {encoding.WebName}");
                     try { encoding = Encoding.GetEncoding(metaCharset.Trim()); } catch { encoding = null; }
                 }
 
