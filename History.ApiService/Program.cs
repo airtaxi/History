@@ -20,6 +20,8 @@ using MongoDB.Bson.Serialization.Serializers;
 using System.Text;
 using System.Text.Json.Serialization;
 
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
 var firebaseServiceAccountKeyJsonPath = Path.Combine(AppContext.BaseDirectory, "firebaseServiceAccountKey.json");
 FirebaseApp.Create(new AppOptions()
 {
