@@ -2,6 +2,8 @@
 using HtmlAgilityPack;
 using RestSharp;
 using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace History.ApiService.Helpers;
 
@@ -19,15 +21,79 @@ public static class ExternalUrlHelper
 
             var response = await client.ExecuteAsync(request);
 
-            if (!response.IsSuccessful || string.IsNullOrEmpty(response.Content))
-                return false;
+            if (!response.IsSuccessful) return false;
 
             if (response.ResponseUri != null
                 && !string.Equals(response.ResponseUri.ToString(), content.SourceUrl, StringComparison.OrdinalIgnoreCase))
                 content.SourceUrl = response.ResponseUri.ToString();
 
+            // Prefer raw bytes so we can decode using the charset declared by the server or the html meta tag
+            byte[] responseBytes = response.RawBytes ?? (response.Content != null ? Encoding.UTF8.GetBytes(response.Content) : null);
+            if (responseBytes == null || responseBytes.Length == 0) return false;
+
+            // Determine encoding: first from Content-Type header, then from meta tags in the HTML
+            Encoding encoding = null;
+
+            // Try parse charset from Content-Type header
+            var contentType = response.ContentType;
+            if (!string.IsNullOrEmpty(contentType))
+            {
+                var headerMatch = Regex.Match(contentType, @"charset\s*=\s*([^;,\r\n]+)", RegexOptions.IgnoreCase);
+                if (headerMatch.Success)
+                {
+                    var charset = headerMatch.Groups[1].Value.Trim().Trim('"', '\'');
+                    try { encoding = Encoding.GetEncoding(charset); } catch { encoding = null; }
+                }
+            }
+
+            string htmlText = null;
+
+            if (encoding == null)
+            {
+                // Decode as Latin1 (ISO-8859-1) to reliably search for meta charset declarations in the raw bytes
+                var latin1 = Encoding.Latin1;
+                var tentativeText = latin1.GetString(responseBytes);
+
+                // Use HtmlAgilityPack on tentative text to find meta charset attributes
+                var tentativeDoc = new HtmlDocument();
+                tentativeDoc.LoadHtml(tentativeText);
+
+                var metaCharset = tentativeDoc.DocumentNode.SelectSingleNode("//meta[@charset]")?.GetAttributeValue("charset", null);
+                if (!string.IsNullOrEmpty(metaCharset))
+                {
+                    try { encoding = Encoding.GetEncoding(metaCharset.Trim()); } catch { encoding = null; }
+                }
+
+                if (encoding == null)
+                {
+                    var metaContent = tentativeDoc.DocumentNode.SelectSingleNode("//meta[translate(@http-equiv, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='content-type']")?.GetAttributeValue("content", null);
+                    if (!string.IsNullOrEmpty(metaContent))
+                    {
+                        var metaMatch = Regex.Match(metaContent, @"charset\s*=\s*([^;,\r\n]+)", RegexOptions.IgnoreCase);
+                        if (metaMatch.Success)
+                        {
+                            var charset = metaMatch.Groups[1].Value.Trim().Trim('"', '\'');
+                            try { encoding = Encoding.GetEncoding(charset); } catch { encoding = null; }
+                        }
+                    }
+                }
+
+                if (encoding == null)
+                {
+                    // No charset found in headers or meta tags; default to UTF-8
+                    encoding = Encoding.UTF8;
+                }
+
+                htmlText = encoding.GetString(responseBytes);
+            }
+            else
+            {
+                // We have encoding from header
+                htmlText = encoding.GetString(responseBytes);
+            }
+
             var doc = new HtmlDocument();
-            doc.LoadHtml(response.Content);
+            doc.LoadHtml(htmlText);
 
             content.Title = HtmlDecode(GetMetaTagContent(doc, "og:title")
                          ?? GetDocumentTitle(doc)
