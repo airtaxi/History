@@ -1,6 +1,7 @@
 ﻿using History.Commons.DataTypes.Contents;
 using HtmlAgilityPack;
 using RestSharp;
+using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -50,9 +51,9 @@ public static class ExternalUrlHelper
 
             if (encoding == null)
             {
-                // Decode as Latin1 (ISO-8859-1) to reliably search for meta charset declarations in the raw bytes
-                var latin1 = Encoding.Latin1;
-                var tentativeText = latin1.GetString(responseBytes);
+                // Decode as UTF8 to reliably search for meta charset declarations in the raw bytes
+                var utf8 = Encoding.UTF8;
+                var tentativeText = utf8.GetString(responseBytes);
 
                 // Use HtmlAgilityPack on tentative text to find meta charset attributes
                 var tentativeDoc = new HtmlDocument();
@@ -84,11 +85,13 @@ public static class ExternalUrlHelper
                     encoding = Encoding.UTF8;
                 }
 
+                Console.WriteLine($"Encoding: {encoding.WebName}");
                 htmlText = encoding.GetString(responseBytes);
             }
             else
             {
                 // We have encoding from header
+                Console.WriteLine($"Encoding: {encoding.WebName}");
                 htmlText = encoding.GetString(responseBytes);
             }
 
