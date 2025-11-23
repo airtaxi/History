@@ -40,11 +40,17 @@ public static class ExternalUrlHelper
             if (!string.IsNullOrEmpty(contentType))
             {
                 var headerMatch = Regex.Match(contentType, @"charset\s*=\s*([^;,\r\n]+)", RegexOptions.IgnoreCase);
+                Console.WriteLine("charset header match: " + headerMatch.Success);
                 if (headerMatch.Success)
                 {
                     var charset = headerMatch.Groups[1].Value.Trim().Trim('"', '\'');
-                    Console.WriteLine($"Charset: {encoding.WebName}");
-                    try { encoding = Encoding.GetEncoding(charset); } catch { encoding = null; }
+                    try
+                    {
+                        var foundEncoding = Encoding.GetEncoding(charset);
+                        Console.WriteLine($"Charset from header: {foundEncoding.WebName}");
+                        encoding = foundEncoding;
+                    }
+                    catch { encoding = null; }
                 }
             }
 
@@ -53,8 +59,7 @@ public static class ExternalUrlHelper
             if (encoding == null)
             {
                 // Decode as UTF8 to reliably search for meta charset declarations in the raw bytes
-                var utf8 = Encoding.UTF8;
-                var tentativeText = utf8.GetString(responseBytes);
+                var tentativeText = Encoding.UTF8.GetString(responseBytes);
 
                 // Use HtmlAgilityPack on tentative text to find meta charset attributes
                 var tentativeDoc = new HtmlDocument();
@@ -65,8 +70,13 @@ public static class ExternalUrlHelper
                 var metaCharset = tentativeDoc.DocumentNode.SelectSingleNode("//meta[@charset]")?.GetAttributeValue("charset", null);
                 if (!string.IsNullOrEmpty(metaCharset))
                 {
-                    Console.WriteLine($"metaCharset: {encoding.WebName}");
-                    try { encoding = Encoding.GetEncoding(metaCharset.Trim()); } catch { encoding = null; }
+                    try
+                    {
+                        var foundEncoding = Encoding.GetEncoding(metaCharset.Trim());
+                        Console.WriteLine($"metaCharset: {foundEncoding.WebName}");
+                        encoding = foundEncoding;
+                    }
+                    catch { encoding = null; }
                 }
 
                 if (encoding == null)
@@ -75,10 +85,17 @@ public static class ExternalUrlHelper
                     if (!string.IsNullOrEmpty(metaContent))
                     {
                         var metaMatch = Regex.Match(metaContent, @"charset\s*=\s*([^;,\r\n]+)", RegexOptions.IgnoreCase);
+                        Console.WriteLine("meta charset header match: " + metaMatch.Success);
                         if (metaMatch.Success)
                         {
                             var charset = metaMatch.Groups[1].Value.Trim().Trim('"', '\'');
-                            try { encoding = Encoding.GetEncoding(charset); } catch { encoding = null; }
+                            try
+                            {
+                                var foundEncoding = Encoding.GetEncoding(charset);
+                                Console.WriteLine($"meta http-equiv charset: {foundEncoding.WebName}");
+                                encoding = foundEncoding;
+                            }
+                            catch { encoding = null; }
                         }
                     }
                 }
@@ -87,17 +104,12 @@ public static class ExternalUrlHelper
                 {
                     // No charset found in headers or meta tags; default to UTF-8
                     encoding = Encoding.UTF8;
+                    Console.WriteLine($"(Warning) Fallback to UTF-8");
                 }
+            }
 
-                Console.WriteLine($"Encoding: {encoding.WebName}");
-                htmlText = encoding.GetString(responseBytes);
-            }
-            else
-            {
-                // We have encoding from header
-                Console.WriteLine($"(Fallback) Encoding: {encoding.WebName}");
-                htmlText = encoding.GetString(responseBytes);
-            }
+            htmlText = encoding.GetString(responseBytes);
+            Console.WriteLine($"Encoding: {encoding.WebName}");
 
             var doc = new HtmlDocument();
             doc.LoadHtml(htmlText);
