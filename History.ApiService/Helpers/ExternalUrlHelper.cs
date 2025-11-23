@@ -60,6 +60,8 @@ public static class ExternalUrlHelper
                 var tentativeDoc = new HtmlDocument();
                 tentativeDoc.LoadHtml(tentativeText);
 
+                Console.WriteLine($"text: {tentativeText}");
+
                 var metaCharset = tentativeDoc.DocumentNode.SelectSingleNode("//meta[@charset]")?.GetAttributeValue("charset", null);
                 if (!string.IsNullOrEmpty(metaCharset))
                 {
@@ -93,7 +95,7 @@ public static class ExternalUrlHelper
             else
             {
                 // We have encoding from header
-                Console.WriteLine($"Encoding: {encoding.WebName}");
+                Console.WriteLine($"(Fallback) Encoding: {encoding.WebName}");
                 htmlText = encoding.GetString(responseBytes);
             }
 
