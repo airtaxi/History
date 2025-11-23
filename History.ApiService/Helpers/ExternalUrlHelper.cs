@@ -89,13 +89,18 @@ public static class ExternalUrlHelper
                         if (metaMatch.Success)
                         {
                             var charset = metaMatch.Groups[1].Value.Trim().Trim('"', '\'');
+                            Console.WriteLine("meta charset: " + charset);
                             try
                             {
                                 var foundEncoding = Encoding.GetEncoding(charset);
                                 Console.WriteLine($"meta http-equiv charset: {foundEncoding.WebName}");
                                 encoding = foundEncoding;
                             }
-                            catch { encoding = null; }
+                            catch (Exception exception)
+                            {
+                                Console.WriteLine("Exception while getting encoding from meta http-equiv: " + exception.Message);
+                                encoding = null;
+                            }
                         }
                     }
                 }
