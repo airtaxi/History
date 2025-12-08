@@ -184,9 +184,9 @@ public static partial class Utils
         string imageUrl = null;
 
         var mediaId = contents.OfType<MediaContent>().Select(x => x.ThumbnailMediaId).FirstOrDefault();
-        if (mediaId == null) mediaId = contents.OfType<ExternalUrlContent>().Select(x => x.ThumbnailImageUrl).FirstOrDefault();
+        if (mediaId == null) imageUrl = contents.OfType<ExternalUrlContent>().Select(x => x.ThumbnailImageUrl).FirstOrDefault();
 
-        if (mediaId != null) imageUrl = GenerateMediaUri(mediaId);
+        if (imageUrl == null && mediaId != null) imageUrl = GenerateMediaUri(mediaId);
 
         return imageUrl;
     }
