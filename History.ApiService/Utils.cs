@@ -16,8 +16,11 @@ public static partial class Utils
     public static string GenerateThumbnailUrlFromContents(IEnumerable<BaseContent> contents)
     {
         string imageUrl = null;
+
         var mediaId = contents.OfType<MediaContent>().Select(x => x.ThumbnailMediaId).FirstOrDefault();
-        if (mediaId != null) imageUrl = GenerateMediaUri(mediaId);
+        if (mediaId == null) imageUrl = contents.OfType<ExternalUrlContent>().Select(x => x.ThumbnailImageUrl).FirstOrDefault();
+
+        if (imageUrl == null && mediaId != null) imageUrl = GenerateMediaUri(mediaId);
 
         return imageUrl;
     }
