@@ -298,7 +298,7 @@ public partial class EditPostPage : ContentPage
             do
             {
                 randomFileName = Path.GetRandomFileName().Replace(".", string.Empty) + extension;
-                var isExists = _attachmentViewModels.Any(x => x.FileName.Equals(randomFileName, StringComparison.OrdinalIgnoreCase));
+                var isExists = _attachmentViewModels.Any(x => x.FileName != null && x.FileName.Equals(randomFileName, StringComparison.OrdinalIgnoreCase));
                 if (!isExists) break;
             }
             while (true);
