@@ -341,7 +341,7 @@ public static partial class Utils
         var theme = Application.Current.UserAppTheme;
         if (theme == AppTheme.Unspecified) theme = Application.Current.PlatformAppTheme;
         else if (theme == AppTheme.Light) theme = AppTheme.Light;
-        else if (theme == AppTheme.Dark) theme = AppTheme.Light;
+        else if (theme == AppTheme.Dark) theme = AppTheme.Dark;
         return theme;
     }
 
