@@ -196,16 +196,16 @@
 
                                 <Border
                                     BackgroundColor="#808080"
-                                    HeightRequest="20"
+                                    HeightRequest="24"
                                     HorizontalOptions="End"
                                     StrokeThickness="0"
                                     VerticalOptions="Start"
-                                    WidthRequest="20">
+                                    WidthRequest="24">
                                     <Border.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnDeleteAttachmentBorderTapped" />
                                     </Border.GestureRecognizers>
                                     <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="10" />
+                                        <RoundRectangle CornerRadius="12" />
                                     </Border.StrokeShape>
                                     <Image>
                                         <Image.Source>
@@ -218,17 +218,18 @@
                                 </Border>
 
                                 <Border
+                                    Margin="6"
                                     BackgroundColor="#808080"
-                                    HeightRequest="20"
+                                    HeightRequest="32"
                                     HorizontalOptions="Start"
                                     StrokeThickness="0"
                                     VerticalOptions="Start"
-                                    WidthRequest="20">
+                                    WidthRequest="32">
                                     <Border.GestureRecognizers>
                                         <TapGestureRecognizer Command="{x:Binding ToggleSpoilerCommand}" />
                                     </Border.GestureRecognizers>
                                     <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="10" />
+                                        <RoundRectangle CornerRadius="8" />
                                     </Border.StrokeShape>
                                     <Image>
                                         <Image.Source>
