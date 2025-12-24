@@ -62,6 +62,11 @@ public partial class App : Application
         UpdateSyncFusionTheme();
 
         RequestedThemeChanged += (_, __) => UpdateSyncFusionTheme();
+
+        var theme = Configuration.GetValue<string>("Theme");
+        if (theme == "Light") UserAppTheme = AppTheme.Light;
+        else if (theme == "Dark") UserAppTheme = AppTheme.Dark;
+        else UserAppTheme = AppTheme.Unspecified;
     }
 
     public static Page Page

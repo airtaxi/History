@@ -46,6 +46,14 @@ public partial class SettingsPage : ContentPage
         PostMentionPushNotificationPermissionLabel.Text = user.PostMentionPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
         IsFavoriteFriendNewPostPushNotificationEnabledLabel.Text = user.IsFavoriteFriendNewPostPushNotificationEnabled ? PushNotificationOn : PushNotificationOff;
 
+        var theme = Configuration.GetValue<string>("Theme");
+        ThemeLabel.Text = theme switch
+        {
+            "Light" => "라이트 모드",
+            "Dark" => "다크 모드",
+            _ => "시스템 설정 따름"
+        };
+
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
@@ -295,5 +303,29 @@ public partial class SettingsPage : ContentPage
             _user.IsFavoriteFriendNewPostPushNotificationEnabled = isEnabled;
             await DisplayAlertAsync("안내", $"즐겨찾기 친구 새 글 푸시 알림이 {action}으로 설정되었습니다.", Constants.PromptOk);
         }
+    }
+
+    private async void OnThemeGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("테마 설정", Constants.PromptCancel, null, "시스템 설정 따름", "라이트 모드", "다크 모드");
+        if (action == null || action == Constants.PromptCancel) return;
+
+        string themeValue = null;
+        AppTheme appTheme = AppTheme.Unspecified;
+
+        if (action == "라이트 모드")
+        {
+            themeValue = "Light";
+            appTheme = AppTheme.Light;
+        }
+        else if (action == "다크 모드")
+        {
+            themeValue = "Dark";
+            appTheme = AppTheme.Dark;
+        }
+
+        Configuration.SetValue("Theme", themeValue);
+        Application.Current.UserAppTheme = appTheme;
+        ThemeLabel.Text = action;
     }
 }
