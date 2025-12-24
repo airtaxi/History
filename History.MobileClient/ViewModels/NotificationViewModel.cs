@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.Api.Message;
 using History.Commons.Api.Post;
+using History.Commons.Api.Friendship;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.Enums;
@@ -21,12 +22,19 @@ public partial class NotificationViewModel(NotificationResponseDto notification)
     [NotifyPropertyChangedFor(nameof(ProfileMedia))]
     public partial NotificationResponseDto Notification { get; private set; } = notification;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAcceptButtonVisible))]
+    public partial bool IsAccepted { get; private set; }
+
     public string Title => Notification.Title;
     public string Body => Notification.Body;
     public bool IsBodyVisible => !string.IsNullOrEmpty(Notification.Body);
     public string TimestampText => Utils.GenerateFriendlyTimestamp(Notification.CreatedAt, null);
     public ImageViewModel ImageMedia => !string.IsNullOrEmpty(Notification.ImageUrl) ? new(Notification.ImageUrl) { Aspect = Aspect.AspectFill } : null;
-    public bool IsImageVisible => !string.IsNullOrEmpty(Notification.ImageUrl) && Notification.Type != NotificationType.FriendRequest;
+    public bool IsImageVisible => !string.IsNullOrEmpty(Notification.ImageUrl) && Notification.Type != NotificationType.FriendRequest && !IsAcceptButtonVisible;
+    public bool IsFriendRequest => Notification.Type == NotificationType.FriendRequest;
+    public bool IsAcceptButtonVisible => IsFriendRequest && !IsAccepted;
+
     public IMediaViewModel ProfileMedia => Notification.User.UsesAnimatedProfileMedia
         ? new VideoViewModel(Utils.GenerateMediaUri(Notification.User.ProfileMediaId))
         : new ImageViewModel(Utils.GenerateMediaUri(Notification.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
@@ -86,5 +94,19 @@ public partial class NotificationViewModel(NotificationResponseDto notification)
     {
         var profilePage = new UserPage(Notification.User.UserId);
         await App.PushAsync(profilePage);
+    }
+
+    [RelayCommand]
+    public async Task AcceptFriendRequestAsync()
+    {
+        if (Notification.Type != NotificationType.FriendRequest) return;
+        if (!Notification.Data.TryGetValue("UserId", out var userId)) return;
+
+        var result = await App.ExecuteRequestAsync(new AcceptFriendRequest(userId));
+        if (result.IsSuccess)
+        {
+            IsAccepted = true;
+            await Toast.Make("친구 요청을 수락했습니다.").Show();
+        }
     }
 }

@@ -83,6 +83,23 @@
                                     WidthRequest="40" />
                             </Border>
 
+                            <Image
+                                Grid.Column="2"
+                                HeightRequest="30"
+                                IsVisible="{x:Binding IsAcceptButtonVisible}"
+                                VerticalOptions="Center"
+                                WidthRequest="30">
+                                <Image.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{x:Binding AcceptFriendRequestCommand}" />
+                                </Image.GestureRecognizers>
+                                <Image.Source>
+                                    <FontImageSource
+                                        FontFamily="MaterialSharp"
+                                        Glyph="{x:Static m:MaterialSharp.Check}"
+                                        Color="{StaticResource Primary}" />
+                                </Image.Source>
+                            </Image>
+
                             <Rectangle
                                 Grid.ColumnSpan="3"
                                 Margin="-8"
