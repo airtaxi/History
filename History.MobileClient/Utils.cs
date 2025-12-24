@@ -152,7 +152,7 @@ public static partial class Utils
             result = $"방금 전";
         else if (time.TotalMinutes < 60)
             result = $"{time.TotalMinutes:N0}분 전";
-        else if (time.TotalHours < 24)
+        else if (time.TotalHours < 2)
             result = $"{time.TotalHours:N0}시간 전";
         else if (createdAt.Year == DateTime.UtcNow.Year) result = $"{createdAt.ToLocalTime():MM월 dd일 HH:mm}";
         else result = $"{createdAt.ToLocalTime():yyyy년 MM월dd일 HH:mm:ss}";
