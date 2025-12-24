@@ -220,16 +220,16 @@
                                 <Border
                                     Margin="6"
                                     BackgroundColor="#808080"
-                                    HeightRequest="32"
+                                    HeightRequest="24"
                                     HorizontalOptions="Start"
                                     StrokeThickness="0"
                                     VerticalOptions="Start"
-                                    WidthRequest="32">
+                                    WidthRequest="24">
                                     <Border.GestureRecognizers>
                                         <TapGestureRecognizer Command="{x:Binding ToggleSpoilerCommand}" />
                                     </Border.GestureRecognizers>
                                     <Border.StrokeShape>
-                                        <RoundRectangle CornerRadius="8" />
+                                        <RoundRectangle CornerRadius="0" />
                                     </Border.StrokeShape>
                                     <Image>
                                         <Image.Source>
