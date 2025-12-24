@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.Contents;
+using UraniumUI.Icons.MaterialSymbols;
 
 namespace History.MobileClient.ViewModels;
 
@@ -20,6 +22,12 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(IsDescriptionEmpty))]
     public partial string Description { get; set; } = string.Empty;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SpoilerGlyph))]
+    public partial bool IsSpoiler { get; set; }
+
+    public string SpoilerGlyph => IsSpoiler ? MaterialSharp.Visibility_off : MaterialSharp.Visibility;
+
     public bool IsDescriptionEmpty => string.IsNullOrEmpty(Description);
 
     public string FilePath { get; private set; }
@@ -27,6 +35,7 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
     public MediaAttachmentViewModel(MediaContent serverContent)
     {
         ServerContent = serverContent;
+        IsSpoiler = serverContent.IsSpoiler;
 
         // Set Description
         Description = serverContent.Description ?? string.Empty;
@@ -69,5 +78,11 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
     {
         if (File.Exists(FilePath)) File.Delete(FilePath);
         GC.SuppressFinalize(this);
+    }
+
+    [RelayCommand]
+    public void ToggleSpoiler()
+    {
+        IsSpoiler = !IsSpoiler;
     }
 }

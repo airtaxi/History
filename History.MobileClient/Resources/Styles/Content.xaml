@@ -52,6 +52,44 @@
                 </Image>
             </Grid>
 
+            <!--  Spoiler Overlay  -->
+            <Grid
+                HorizontalOptions="Fill"
+                IsVisible="{x:Binding IsSpoilerOverlayVisible}"
+                VerticalOptions="Fill">
+                <Grid.Background>
+                    <SolidColorBrush Color="#E6000000" />
+                </Grid.Background>
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Command="{x:Binding HandleSpoilerOverlayTapCommand}" />
+                </Grid.GestureRecognizers>
+                <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center">
+                    <Image
+                        HeightRequest="48"
+                        HorizontalOptions="Center"
+                        WidthRequest="48">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Visibility_off}"
+                                Size="48"
+                                Color="White" />
+                        </Image.Source>
+                    </Image>
+                    <Label
+                        Margin="0,8,0,0"
+                        FontAttributes="Bold"
+                        HorizontalOptions="Center"
+                        Text="가려진 미디어"
+                        TextColor="White" />
+                    <Label
+                        FontSize="12"
+                        HorizontalOptions="Center"
+                        Text="탭하여 확인하기"
+                        TextColor="#CCCCCC" />
+                </VerticalStackLayout>
+            </Grid>
+
             <!--  Description  -->
             <Grid
                 BackgroundColor="#80000000"

@@ -427,7 +427,8 @@ public partial class EditPostPage : ContentPage
                     var uploadContent = new UploadContent
                     {
                         Description = string.IsNullOrEmpty(viewModel.Description) ? null : viewModel.Description,
-                        FileName = viewModel.FileName
+                        FileName = viewModel.FileName,
+                        IsSpoiler = viewModel.IsSpoiler
                     };
                     mediaAndUploadContents.Add(uploadContent);
                     files.Add(viewModel.FileName, viewModel.Data);
@@ -436,6 +437,7 @@ public partial class EditPostPage : ContentPage
                 {
                     var mediaContent = viewModel.ServerContent;
                     mediaContent.Description = viewModel.Description;
+                    mediaContent.IsSpoiler = viewModel.IsSpoiler;
                     mediaAndUploadContents.Add(mediaContent);
                 }
             }

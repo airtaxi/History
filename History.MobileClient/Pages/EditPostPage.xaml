@@ -216,6 +216,29 @@
                                         </Image.Source>
                                     </Image>
                                 </Border>
+
+                                <Border
+                                    BackgroundColor="#808080"
+                                    HeightRequest="20"
+                                    HorizontalOptions="Start"
+                                    StrokeThickness="0"
+                                    VerticalOptions="Start"
+                                    WidthRequest="20">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{x:Binding ToggleSpoilerCommand}" />
+                                    </Border.GestureRecognizers>
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="10" />
+                                    </Border.StrokeShape>
+                                    <Image>
+                                        <Image.Source>
+                                            <FontImageSource
+                                                FontFamily="MaterialSharp"
+                                                Glyph="{x:Binding SpoilerGlyph}"
+                                                Color="White" />
+                                        </Image.Source>
+                                    </Image>
+                                </Border>
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
