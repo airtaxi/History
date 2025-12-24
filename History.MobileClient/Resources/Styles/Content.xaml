@@ -58,7 +58,7 @@
                 IsVisible="{x:Binding IsSpoilerOverlayVisible}"
                 VerticalOptions="Fill">
                 <Grid.Background>
-                    <SolidColorBrush Color="#E6000000" />
+                    <SolidColorBrush Color="#FF000000" />
                 </Grid.Background>
                 <Grid.GestureRecognizers>
                     <TapGestureRecognizer Command="{x:Binding HandleSpoilerOverlayTapCommand}" />
