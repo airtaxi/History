@@ -14,6 +14,8 @@ public class MediaContent : BaseContent
 
     public bool IsVideo => MimeType.StartsWith("video/");
 
+    public bool IsSpoiler { get; set; }
+
     [MaxLength(CommonsConstants.MaxMediaDescriptionLength)]
     public string Description { get; set; }
 }

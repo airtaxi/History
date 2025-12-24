@@ -23,6 +23,12 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
     public partial bool IsOverlayVisible { get; private set; }
 
     [ObservableProperty]
+    public partial bool IsSpoiler { get; private set; }
+
+    [ObservableProperty]
+    public partial bool IsSpoilerOverlayVisible { get; private set; }
+
+    [ObservableProperty]
     public partial IMediaViewModel Media { get; private set; }
 
     public IMediaViewModel ImageMedia { get; private set; }
@@ -36,6 +42,8 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
         PostType = postType;
         IsParentPost = isParentPost;
         IsVideo = mediaContent.IsVideo;
+        IsSpoiler = mediaContent.IsSpoiler;
+        IsSpoilerOverlayVisible = IsSpoiler;
         Description = mediaContent.Description ?? string.Empty;
         HasDescription = !string.IsNullOrEmpty(Description);
 
@@ -56,9 +64,16 @@ public partial class MediaContentViewModel : ObservableObject, IContentViewModel
         if (!MediaContent.IsVideo) return;
 
         SetMediaAndOverlay();
+        IsSpoilerOverlayVisible = IsSpoiler;
 #if IOS
         WeakReferenceMessenger.Default.Send(new AppleVideoUnloadedMessage());
 #endif
+    }
+
+    [RelayCommand]
+    public void HandleSpoilerOverlayTap()
+    {
+        IsSpoilerOverlayVisible = false;
     }
 
     [RelayCommand]

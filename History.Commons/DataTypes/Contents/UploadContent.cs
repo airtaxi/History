@@ -7,4 +7,5 @@ public class UploadContent : BaseContent
 {
     public string FileName { get; set; }
     public string Description { get; set; }
+    public bool IsSpoiler { get; set; }
 }

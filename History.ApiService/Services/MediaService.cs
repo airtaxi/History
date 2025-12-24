@@ -148,7 +148,8 @@ public class MediaService(IMongoDatabase database) : IMediaService
                         MediaId = mediaResult.Value.Id,
                         ThumbnailMediaId = thumbnailId,
                         Description = uploadContent.Description,
-                        MimeType = contentType
+                        MimeType = contentType,
+                        IsSpoiler = uploadContent.IsSpoiler
                     };
 
                     return (Index: index, Result: Result.Success(), MediaContent: mediaContent);
