@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/Dependencies/">
+    <Project Path="Dependencies/LinkedIn.Hakawai.Net/src/LinkedIn.Hakawai/LinkedIn.Hakawai.csproj" />
+    <Project Path="Dependencies/SpeakLink/SpeakLink/SpeakLink.csproj" />
+  </Folder>
+  <Project Path="History.ApiService/History.ApiService.csproj" />
+  <Project Path="History.AppHost/History.AppHost.csproj" />
+  <Project Path="History.Commons/History.Commons.csproj" />
+  <Project Path="History.MobileClient/History.MobileClient.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+  <Project Path="History.ServiceDefaults/History.ServiceDefaults.csproj" />
+</Solution>
