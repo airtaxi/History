@@ -78,12 +78,16 @@ public partial class FullScreenMediaViewerPage : ContentPage
             var statusBarHeight = LayoutHelper.GetStatusBarHeight();
             Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
         }
+
+        WeakReferenceMessenger.Default.Send(new FullScreenPageNavigationMessage(this, false));
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
         _isInForeground = false;
+
+        WeakReferenceMessenger.Default.Send(new FullScreenPageNavigationMessage(this, true));
     }
 
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
