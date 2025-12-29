@@ -109,7 +109,7 @@ public static class MauiProgram
                 return false;
             }));
 #elif ANDROID
-            events.AddAndroid(android => android.OnCreate((activity, _) => CrossFirebase.Initialize(activity)));
+            events.AddAndroid(android => android.OnCreate((activity, _) => CrossFirebase.Initialize(activity, () => Platform.CurrentActivity)));
 #endif
         });
 
