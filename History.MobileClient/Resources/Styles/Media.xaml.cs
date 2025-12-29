@@ -2,9 +2,11 @@
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Maui.Views;
+using CommunityToolkit.Mvvm.Messaging;
 using FFImageLoading.Maui;
 using FFImageLoading.Maui.Platform;
 using History.MobileClient.Behaviors;
+using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
 
 namespace History.MobileClient.Resources.Styles;
@@ -80,7 +82,20 @@ public partial class Media : ResourceDictionary
         mediaElement.Source = MediaSource.FromUri(viewModel.Uri);
         mediaElement.MediaFailed += OnMediaFailed;
 
-        if (viewModel.IsFullScreen) mediaElement.Behaviors.Add(new SwipeToCloseBehavior());
+        if (viewModel.IsFullScreen)
+        {
+            mediaElement.Behaviors.Add(new SwipeToCloseBehavior());
+
+            WeakReferenceMessenger.Default.Register<FullScreenPageNavigationMessage>(mediaElement, OnFullScreenPageNavigationMessageReceived);
+        }
+    }
+
+    private void OnFullScreenPageNavigationMessageReceived(object recipient, FullScreenPageNavigationMessage message)
+    {
+        var mediaElement = recipient as MediaElement;
+
+        if (message.Disappear && mediaElement.CurrentState == MediaElementState.Playing) mediaElement.Pause();
+        else if (!message.Disappear && mediaElement.CurrentState != MediaElementState.Playing) mediaElement.Play();
     }
 
     private void OnAppleMediaStateChanged(object sender, MediaStateChangedEventArgs e)
@@ -106,6 +121,9 @@ public partial class Media : ResourceDictionary
 #endif
             mediaElement.StateChanged -= OnMediaStateChanged;
             mediaElement.MediaFailed -= OnMediaFailed;
+
+            if (contentView.BindingContext is VideoViewModel viewModel && viewModel.IsFullScreen)
+                WeakReferenceMessenger.Default.Unregister<FullScreenPageNavigationMessage>(mediaElement);
         }
 
         if (MediaElementHandlerMap.TryGetValue(contentView, out var handler))
@@ -114,6 +132,7 @@ public partial class Media : ResourceDictionary
             catch (ObjectDisposedException) { }
             finally { MediaElementHandlerMap.TryRemove(contentView, out var _); }
         }
+
     }
 
     private void OnMediaStateChanged(object sender, MediaStateChangedEventArgs e)
