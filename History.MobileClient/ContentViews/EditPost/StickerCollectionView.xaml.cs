@@ -130,5 +130,16 @@ public partial class StickerCollectionView : ContentView
         await _viewModel.RecordStickerUsageAsync(viewModel.StickerContent.StickerId, viewModel.StickerContent.StickerContentId);
 
         _textContentView.InsertSticker(viewModel);
+
+        // Hide sticker UI after selection
+        _viewModel.HideStickerDisplay();
+    }
+
+    /// <summary>
+    /// Toggles the sticker collection view visibility.
+    /// </summary>
+    public async Task ToggleAsync()
+    {
+        await _viewModel.ToggleStickerDisplayAsync();
     }
 }

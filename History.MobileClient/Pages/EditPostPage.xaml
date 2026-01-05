@@ -435,6 +435,21 @@
                                                     Dark=White}" />
                     </Image.Source>
                 </Image>
+                <Image
+                    HeightRequest="40"
+                    VerticalOptions="Center"
+                    WidthRequest="40">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnStickerImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Mood}"
+                            Color="{AppThemeBinding Light=Black,
+                                                    Dark=White}" />
+                    </Image.Source>
+                </Image>
             </HorizontalStackLayout>
 
             <HorizontalStackLayout

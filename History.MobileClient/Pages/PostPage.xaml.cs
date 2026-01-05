@@ -1,5 +1,4 @@
-﻿
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
@@ -44,6 +43,7 @@ public partial class PostPage : ContentPage
         UpdateRepostStatus(viewModel.Post);
 
         CommentUserCollectionView.SetTextContentView(CommentTextContentView);
+        CommentStickerCollectionView.SetTextContentView(CommentTextContentView);
 
         // Should be registered once. Do not register in OnAppearing / OnNavigatedTo since it won't be unregistered in OnDisappearing / OnNavigatedFrom
         WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
@@ -330,5 +330,11 @@ public partial class PostPage : ContentPage
         CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
         AttachmentImage.BindingContext = null;
         AttachmentGrid.IsVisible = false;
+    }
+
+    private async void OnCommentStickerImageTapped(object sender, TappedEventArgs e)
+    {
+        CommentTextContentView.UnfocusEditor();
+        await CommentStickerCollectionView.ToggleAsync();
     }
 }

@@ -188,6 +188,11 @@
                 x:Name="CommentUserCollectionView"
                 HorizontalOptions="Fill"
                 VerticalOptions="End" />
+
+            <editPost:StickerCollectionView
+                x:Name="CommentStickerCollectionView"
+                HorizontalOptions="Fill"
+                VerticalOptions="End" />
         </Grid>
         <Grid
             Grid.Row="2"
@@ -196,6 +201,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
@@ -226,6 +232,19 @@
 
             <Image Grid.Column="2" VerticalOptions="End">
                 <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnCommentStickerImageTapped" />
+                </Image.GestureRecognizers>
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Mood}"
+                        Color="{AppThemeBinding Light=#000000,
+                                                Dark=#FFFFFF}" />
+                </Image.Source>
+            </Image>
+
+            <Image Grid.Column="3" VerticalOptions="End">
+                <Image.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnCommentAttachmentImageTapped" />
                 </Image.GestureRecognizers>
                 <Image.Source>
@@ -238,7 +257,8 @@
                 </Image.Source>
             </Image>
 
-            <Image Grid.Column="3" VerticalOptions="End">
+            <Image Grid.Column="4" VerticalOptions="End">
+
                 <Image.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnSendCommentImageTapped" />
                 </Image.GestureRecognizers>
@@ -252,7 +272,7 @@
             </Image>
 
             <Rectangle
-                Grid.ColumnSpan="4"
+                Grid.ColumnSpan="5"
                 Margin="-12"
                 Fill="#808080"
                 HeightRequest="{OnPlatform iOS=1.5,

@@ -19,7 +19,7 @@
             x:Name="MainMentionEditor"
             AutoSize="TextChanges"
             BackgroundColor="Transparent"
-            ExplicitCharacters="@%"
+            ExplicitCharacters="@"
             HorizontalOptions="Fill"
             ImageInputCommand="{x:Binding ImageInputCommand}"
             IsSuggestionsPopupVisible="{x:Binding IsDisplayingMentions}"

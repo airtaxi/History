@@ -185,7 +185,49 @@ public partial class MentionsViewModel : ObservableObject
         }
     }
 
-    private async void OnMentionSearch(MentionSearchEventArgs mentionSearchEventArgs)
+    /// <summary>
+    /// Toggles the sticker UI visibility.
+    /// </summary>
+    public async Task ToggleStickerDisplayAsync()
+    {
+        if (IsDisplayingStickerMentions)
+        {
+            // Hide sticker UI
+            IsDisplayingStickerMentions = false;
+            IsDisplayingMentions = false;
+        }
+        else
+        {
+            // Show sticker UI
+            IsDisplayingMentions = true;
+            IsDisplayingStickerMentions = true;
+            IsDisplayingUserMentions = false;
+
+            // Load sticker tabs if not initialized
+            if (!_stickersInitialized)
+            {
+                IsLoadingStickerMentions = true;
+                await LoadStickerTabsAsync();
+
+                // Start with recent usage tab
+                await SelectRecentTabAsync();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Hides the sticker UI.
+    /// </summary>
+    public void HideStickerDisplay()
+    {
+        IsDisplayingStickerMentions = false;
+        if (!IsDisplayingUserMentions)
+        {
+            IsDisplayingMentions = false;
+        }
+    }
+
+    private void OnMentionSearch(MentionSearchEventArgs mentionSearchEventArgs)
     {
         if (mentionSearchEventArgs.ControlCharacter == "@")
         {
@@ -201,22 +243,6 @@ public partial class MentionsViewModel : ObservableObject
             IsDisplayingMentions = viewModels.Count > 0;
             IsDisplayingUserMentions = IsDisplayingMentions;
             IsDisplayingStickerMentions = false;
-        }
-        else if (mentionSearchEventArgs.ControlCharacter == "%")
-        {
-            IsDisplayingMentions = true;
-            IsDisplayingStickerMentions = true;
-            IsDisplayingUserMentions = false;
-
-            // Load sticker tabs
-            if (!_stickersInitialized)
-            {
-                IsLoadingStickerMentions = true;
-                await LoadStickerTabsAsync();
-
-                // Start with recent usage tab
-                await SelectRecentTabAsync();
-            }
         }
         else
         {
