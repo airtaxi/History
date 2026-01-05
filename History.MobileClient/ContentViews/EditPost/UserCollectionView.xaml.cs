@@ -19,9 +19,9 @@ public partial class UserCollectionView : ContentView
     private void OnUserGridTapped(object sender, TappedEventArgs e)
     {
         var element = sender as Element;
-        var viewModel = element.BindingContext as MentionViewModel;
+        var viewModel = element.BindingContext as MentionUserViewModel;
         if (viewModel == null) return;
 
-        _textContentView.InsertMention(viewModel.UserId, viewModel.Nickname);
+        _textContentView.InsertUser(viewModel);
     }
 }

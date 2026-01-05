@@ -31,11 +31,11 @@
             <ShellContent Title="무시한 친구" ContentTemplate="{DataTemplate pages:IgnoredFriendsPage}" />
             <ShellContent Title="차단한 친구" ContentTemplate="{DataTemplate pages:BlockedFriendsPage}" />
         </Tab>
-        <Tab Title="발견">
+        <Tab Title="더보기">
             <Tab.Icon>
-                <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Explore}" />
+                <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.More_horiz}" />
             </Tab.Icon>
-            <ShellContent ContentTemplate="{DataTemplate pages:PublicPostPage}" />
+            <ShellContent ContentTemplate="{DataTemplate pages:MorePage}" />
         </Tab>
         <Tab Title="프로필">
             <Tab.Icon>

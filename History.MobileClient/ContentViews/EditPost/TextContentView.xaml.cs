@@ -42,14 +42,6 @@ public partial class TextContentView : ContentView
 
     private void OnImageInputRequested(object sender, string path) => ImageInputRequested?.Invoke(this, path);
 
-    private void OnUserGridTapped(object sender, TappedEventArgs e)
-    {
-		var element = sender as Element;
-		var viewModel = element.BindingContext as MentionViewModel;
-
-        MentionHelper.InsertMention(MainMentionEditor, viewModel.UserId, viewModel.Nickname);
-    }
-
     public List<BaseContent> GetContents()
     {
         var result = new List<BaseContent>();
@@ -57,7 +49,26 @@ public partial class TextContentView : ContentView
         {
             foreach (var span in MainMentionEditor.FormattedText.Spans)
             {
-                if (span is MentionSpan mentionSpan) result.Add(new ProfileContent() { UserId = MentionHelper.MentionIdMap[int.Parse(mentionSpan.MentionId)] });
+                if (span is MentionSpan mentionSpan)
+                {
+                    var index = int.Parse(mentionSpan.MentionId);
+                    var isUser = MentionHelper.IsUser(index);
+
+                    if (isUser)
+                    {
+                        var profileContent = MentionHelper.GetProfileContent(index);
+                        if (profileContent == null) continue;
+
+                        result.Add(profileContent);
+                    }
+                    else
+                    {
+                        var stickerContent = MentionHelper.GetStickerContent(index);
+                        if (stickerContent == null) continue;
+
+                        result.Add(stickerContent);
+                    }
+                }
                 else result.Add(new TextContent() { Text = span.Text });
             }
         }
@@ -70,7 +81,8 @@ public partial class TextContentView : ContentView
 
         foreach (var content in contents)
         {
-            if (content is ProfileContent profileContent) MentionHelper.AppendMention(MainMentionEditor, profileContent.UserId, profileContent.Nickname);
+            if (content is ProfileContent profileContent) MentionHelper.AppendUser(MainMentionEditor, profileContent.UserId, profileContent.Nickname);
+            if (content is StickerContent stickerContent) MentionHelper.AppendSticker(MainMentionEditor, stickerContent.StickerId, stickerContent.StickerContentId);
             else if (content is TextContent textContent) MentionHelper.AppendText(MainMentionEditor, textContent.Text);
         }
     }
@@ -83,14 +95,22 @@ public partial class TextContentView : ContentView
 
     public void UnfocusEditor() => MainMentionEditor.Unfocus();
 
-    public void InsertMention(MentionViewModel viewModel)
+    public void InsertUser(MentionUserViewModel viewModel)
     {
         if (viewModel == null) return;
 
-        MentionHelper.InsertMention(MainMentionEditor, viewModel.UserId, viewModel.Nickname);
+        MentionHelper.InsertUser(MainMentionEditor, viewModel.UserId, viewModel.Nickname);
     }
 
-    public void InsertMention(string userId, string nickname) => MentionHelper.InsertMention(MainMentionEditor, userId, nickname);
+    public void InsertSticker(MentionStickerViewModel viewModel)
+    {
+        if (viewModel == null) return;
+
+        MentionHelper.InsertSticker(MainMentionEditor, viewModel.StickerId, viewModel.StickerContentId);
+
+        // Send sticker usage record (process in background)
+        _ = MentionsViewModel.RecordStickerUsageAsync(viewModel.StickerId, viewModel.StickerContentId);
+    }
 
     private void OnUnloaded(object sender, EventArgs e)
     {

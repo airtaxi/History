@@ -1038,6 +1038,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var userService = serviceProvider.GetRequiredService<IUserService>();
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
         var commentService = serviceProvider.GetRequiredService<ICommentService>();
+        var stickerService = serviceProvider.GetRequiredService<IStickerService>();
 
         var userResult = await userService.GenerateUserResponseDtoAsync(post.UserId, requesterId);
         if (userResult.IsFailure) return userResult.CastFailure<Result<PostResponseDto>>();
@@ -1049,6 +1050,17 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == profileContent.UserId);
             profileContent.UserId = user?.UserId;
             profileContent.Nickname = (user?.Nickname ?? "탈퇴한 사용자") + ' ';
+        }
+
+        // Fill StickerMediaId for StickerContents
+        var stickerContents = post.Contents.OfType<StickerContent>();
+        foreach (var stickerContent in stickerContents)
+        {
+            var assetResult = await stickerService.GetStickerAssetByIdAsync(stickerContent.StickerContentId);
+            if (assetResult.IsSuccess)
+            {
+                stickerContent.StickerMediaId = assetResult.Value.MediaId;
+            }
         }
 
         if (post.IsPublicPost)
@@ -1121,6 +1133,17 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                 var user = parentPostProfileContentUsersResult.Value.FirstOrDefault(x => x.UserId == parentPostProfileContent.UserId);
                 parentPostProfileContent.UserId = user?.UserId;
                 parentPostProfileContent.Nickname = (user?.Nickname ?? "탈퇴한 사용자") + ' ';
+            }
+
+            // Fill StickerMediaId for parent post StickerContents
+            var parentPostStickerContents = parentPostResult.Value.Contents.OfType<StickerContent>();
+            foreach (var parentPostStickerContent in parentPostStickerContents)
+            {
+                var assetResult = await stickerService.GetStickerAssetByIdAsync(parentPostStickerContent.StickerContentId);
+                if (assetResult.IsSuccess)
+                {
+                    parentPostStickerContent.StickerMediaId = assetResult.Value.MediaId;
+                }
             }
 
             if (!isBanned && parentPostUserResult.IsSuccess)

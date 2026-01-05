@@ -38,6 +38,15 @@ public static class AndroidMediaPickerHelper
         return LaunchPickerAsync(includeImage, includeVideo);
     }
 
+    public static Task<List<FileResult>> PickMultipleImagesAsync()
+    {
+        return FilePicker.PickMultipleAsync(new PickOptions
+        {
+            PickerTitle = "이미지 선택",
+            FileTypes = FilePickerFileType.Images
+        }).ContinueWith(t => t.Result?.ToList() ?? []);
+    }
+
     public static async Task<MediaFile> PickMediaAsync(bool includeImage, bool includeVideo)
     {
         _maxSelection = 1;

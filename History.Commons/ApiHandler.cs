@@ -70,6 +70,24 @@ public class ApiHandler(string accessToken = null, string refreshToken = null)
             }
         }
 
+        // Add form data with files (for sticker creation, etc.)
+        if (request is IRequestWithFormData requestWithFormData)
+        {
+            restRequest.AlwaysMultipartFormData = true;
+            foreach (var formField in requestWithFormData.FormData)
+            {
+                restRequest.AddParameter(formField.Key, formField.Value);
+            }
+            foreach (var file in requestWithFormData.Files)
+            {
+                // File key format: "paramName|fileName"
+                var parts = file.Key.Split('|');
+                var paramName = parts[0];
+                var fileName = parts.Length > 1 ? parts[1] : file.Key;
+                restRequest.AddFile(paramName, file.Value, fileName, MimeTypes.GetMimeType(fileName));
+            }
+        }
+
         if (request is IRequestWithBody requestWithBody) restRequest.AddJsonBody(requestWithBody.Body);
         if (request is IRequestWithForm requestWithForm)
         {

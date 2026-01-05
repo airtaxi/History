@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.StickersPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
+    Loaded="OnLoaded"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,0,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout Spacing="8">
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="스티커"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout HorizontalOptions="End" Spacing="8">
+                <Image
+                    Margin="0,0,12,0"
+                    HeightRequest="24"
+                    WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSearchImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Search}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+            </HorizontalStackLayout>
+        </Grid>
+
+        <!--  Search bar (hidden by default)  -->
+        <Grid
+            x:Name="SearchGrid"
+            Grid.Row="1"
+            Padding="12,8"
+            BackgroundColor="{AppThemeBinding Light=#FFFFFF,
+                                              Dark=#1A1A1A}"
+            IsVisible="False">
+            <Border
+                Padding="8,4"
+                BackgroundColor="{AppThemeBinding Light=#F0F0F0,
+                                                  Dark=#333333}"
+                StrokeThickness="0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8" />
+                </Border.StrokeShape>
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Image
+                        Grid.Column="0"
+                        HeightRequest="20"
+                        VerticalOptions="Center"
+                        WidthRequest="20">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Search}"
+                                Color="#808080" />
+                        </Image.Source>
+                    </Image>
+                    <Entry
+                        x:Name="SearchEntry"
+                        Grid.Column="1"
+                        Completed="OnSearchEntryCompleted"
+                        Placeholder="스티커 검색..."
+                        VerticalOptions="Center" />
+                    <Image
+                        Grid.Column="2"
+                        HeightRequest="20"
+                        VerticalOptions="Center"
+                        WidthRequest="20">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnCloseSearchImageTapped" />
+                        </Image.GestureRecognizers>
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Close}"
+                                Color="#808080" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!--  Sticker list  -->
+        <RefreshView Grid.Row="2" Refreshing="OnRefreshing">
+            <CollectionView
+                x:Name="MainCollectionView"
+                ItemsUpdatingScrollMode="KeepItemsInView"
+                RemainingItemsThreshold="3"
+                RemainingItemsThresholdReached="OnRemainingItemsThresholdReached"
+                SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:StickerViewModel">
+                        <Grid Padding="12,8">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnStickerGridTapped" />
+                            </Grid.GestureRecognizers>
+                            <Border
+                                Padding="12"
+                                BackgroundColor="{AppThemeBinding Light=#FFFFFF,
+                                                                  Dark=#1A1A1A}"
+                                StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="12" />
+                                </Border.StrokeShape>
+                                <Border.Shadow>
+                                    <Shadow
+                                        Brush="Black"
+                                        Opacity="0.1"
+                                        Radius="4"
+                                        Offset="0,2" />
+                                </Border.Shadow>
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="64" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!--  Icon  -->
+                                    <Border
+                                        Grid.Column="0"
+                                        HeightRequest="64"
+                                        StrokeThickness="0"
+                                        WidthRequest="64">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="8" />
+                                        </Border.StrokeShape>
+                                        <ffimageloading:CachedImage
+                                            Aspect="AspectFill"
+                                            DownsampleToViewSize="True"
+                                            Source="{x:Binding IconUri}" />
+                                    </Border>
+
+                                    <!--  Info  -->
+                                    <VerticalStackLayout
+                                        Grid.Column="1"
+                                        Spacing="4"
+                                        VerticalOptions="Center">
+                                        <HorizontalStackLayout Spacing="8">
+                                            <Label
+                                                FontAttributes="Bold"
+                                                FontSize="16"
+                                                LineBreakMode="TailTruncation"
+                                                MaxLines="1"
+                                                Text="{x:Binding Name}" />
+                                            <Border
+                                                Padding="6,2"
+                                                BackgroundColor="{StaticResource Primary}"
+                                                IsVisible="{x:Binding IsPrivate}"
+                                                StrokeThickness="0"
+                                                VerticalOptions="Center">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="4" />
+                                                </Border.StrokeShape>
+                                                <Label
+                                                    FontSize="10"
+                                                    Text="비공개"
+                                                    TextColor="White" />
+                                            </Border>
+                                        </HorizontalStackLayout>
+                                        <Label
+                                            FontSize="12"
+                                            LineBreakMode="TailTruncation"
+                                            MaxLines="1"
+                                            Text="{x:Binding Category}"
+                                            TextColor="#808080" />
+                                        <Label
+                                            FontSize="12"
+                                            LineBreakMode="TailTruncation"
+                                            MaxLines="1"
+                                            Text="{x:Binding AuthorName}"
+                                            TextColor="#808080" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!--  Create button  -->
+        <Border
+            Grid.Row="2"
+            Margin="16"
+            Padding="16"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="56"
+            HorizontalOptions="End"
+            StrokeThickness="0"
+            VerticalOptions="End"
+            WidthRequest="56">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnCreateStickerBorderTapped" />
+            </Border.GestureRecognizers>
+            <Border.Shadow>
+                <Shadow
+                    Brush="Black"
+                    Opacity="0.3"
+                    Radius="8"
+                    Offset="0,4" />
+            </Border.Shadow>
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="28" />
+            </Border.StrokeShape>
+            <Image HeightRequest="24" WidthRequest="24">
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Add}"
+                        Color="White" />
+                </Image.Source>
+            </Image>
+        </Border>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="3"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
+    </Grid>
+</ContentPage>

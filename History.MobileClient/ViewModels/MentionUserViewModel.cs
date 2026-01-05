@@ -3,7 +3,7 @@ using History.Commons.Enums;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class MentionViewModel(UserResponseDto user)
+public partial class MentionUserViewModel(UserResponseDto user)
 {
     public string UserId => user.UserId;
 

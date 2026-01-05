@@ -179,7 +179,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
         var userService = serviceProvider.GetRequiredService<IUserService>();
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
 
-        // 차단/차단당함/무시 관계만 확인
+        // Check blocked/blocking/ignored relationships only
         var bannedResult = await friendshipService.GetBannedUserIdsAsync(senderId);
         if (bannedResult.IsFailure) return bannedResult.CastFailure();
         if (bannedResult.Value.Contains(receiverId))
@@ -187,7 +187,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
             return (ErrorType.Forbidden, "상대방과의 관계로 인해 쪽지를 보낼 수 없습니다.");
         }
 
-        // 수신자 존재 여부 및 AccessPermission 확인
+        // Check receiver existence and AccessPermission
         var receiverResult = await userService.GetUserByIdAsync(receiverId);
         if (receiverResult.IsFailure) return receiverResult.CastFailure();
         var receiver = receiverResult.Value;
@@ -223,6 +223,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
     public async Task<Result<MessageResponseDto>> GenerateMessageResponseDtoAsync(Message message, string requesterId)
     {
         var userService = serviceProvider.GetRequiredService<IUserService>();
+        var stickerService = serviceProvider.GetRequiredService<IStickerService>();
 
         var senderResult = await userService.GenerateUserResponseDtoAsync(message.SenderId);
         if (senderResult.IsFailure) return senderResult.CastFailure<MessageResponseDto>();
@@ -235,6 +236,17 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
 
         // Check if the requester is either the sender or receiver
         if (sender.UserId != requesterId && receiver.UserId != requesterId) return (ErrorType.Forbidden, "이 쪽지를 조회할 권한이 없습니다.");
+
+        // Fill StickerMediaId for StickerContents
+        var stickerContents = message.Contents.OfType<StickerContent>();
+        foreach (var stickerContent in stickerContents)
+        {
+            var assetResult = await stickerService.GetStickerAssetByIdAsync(stickerContent.StickerContentId);
+            if (assetResult.IsSuccess)
+            {
+                stickerContent.StickerMediaId = assetResult.Value.MediaId;
+            }
+        }
 
         var result = new MessageResponseDto
         {
@@ -253,6 +265,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
     public async Task<Result<List<MessageResponseDto>>> GenerateMessageResponseDtosAsync(List<Message> messages, string requesterId)
     {
         var userService = serviceProvider.GetRequiredService<IUserService>();
+        var stickerService = serviceProvider.GetRequiredService<IStickerService>();
 
         var allUserIds = messages.SelectMany(m => new[] { m.SenderId, m.ReceiverId }).Distinct().ToList();
         var usersResult = await userService.GenerateUserResponseDtosAsync(allUserIds, requesterId);
@@ -267,6 +280,17 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
             var receiver = users.FirstOrDefault(u => u.UserId == message.ReceiverId);
 
             if (sender == null || receiver == null) continue;
+
+            // Fill StickerMediaId for StickerContents
+            var stickerContents = message.Contents.OfType<StickerContent>();
+            foreach (var stickerContent in stickerContents)
+            {
+                var assetResult = await stickerService.GetStickerAssetByIdAsync(stickerContent.StickerContentId);
+                if (assetResult.IsSuccess)
+                {
+                    stickerContent.StickerMediaId = assetResult.Value.MediaId;
+                }
+            }
 
             var result = new MessageResponseDto
             {

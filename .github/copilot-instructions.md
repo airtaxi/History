@@ -1,9 +1,11 @@
 # History.ApiService용 Copilot 지침
 
 ## 프로젝트 개요
+
 History.ApiService는 "History"라는 소셜 미디어 애플리케이션의 백엔드로 사용되는 .NET ASP.NET Core Web API 프로젝트입니다. MongoDB를 데이터베이스로 사용하며, JWT 인증을 구현하고, Firebase를 통해 푸시 알림과 Google/Apple OAuth 로그인을 통합합니다.
 
 ## 아키텍처
+
 - **프레임워크**: .NET 10, ASP.NET Core
 - **데이터베이스**: 공식 MongoDB.Driver를 사용한 MongoDB
 - **인증**: JWT Bearer 토큰, Firebase, Apple/Google OAuth
@@ -12,6 +14,7 @@ History.ApiService는 "History"라는 소셜 미디어 애플리케이션의 백
 - **결과 패턴**: Result<T> 및 Result 타입을 사용한 작업 결과
 
 ## 주요 구성 요소
+
 - **컨트롤러**: 표준 HTTP 상태 코드를 사용하는 REST API 엔드포인트
 - **서비스**: 인터페이스를 구현한 비즈니스 로직
 - **DataTypes**: 요청/응답 DTO 및 내부 데이터 구조
@@ -19,6 +22,7 @@ History.ApiService는 "History"라는 소셜 미디어 애플리케이션의 백
 - **Enums/Constants**: History.Commons에 정의됨
 
 ## 컨트롤러
+
 API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정 도메인을 처리합니다:
 
 - **PostController**: 포스트 CRUD 작업, 타임라인/공개 포스트, 리액션, 리포스트, 공유, 발견 옵션, 검색, 외부 URL 콘텐츠 채우기
@@ -31,10 +35,12 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 - **AppleController**: Apple OAuth 인증 흐름, JWT 토큰 생성
 - **ModerationController**: 조정자에 의한 포스트/댓글 삭제, 조정 기록 검색
 - **MessageController**: 개인 메시징 (보내기, 검색, 읽음 상태, 권한 확인)
+- **StickerController**: 스티커 CRUD 작업 (생성, 조회, 검색, 삭제), 스티커 에셋 관리, 구독/구독취소, 최근 사용 기록
 
 모든 컨트롤러는 속도 제한, 적절한 권한 부여, 일관된 오류 처리 패턴을 사용합니다.
 
 ## 서비스
+
 서비스는 비즈니스 로직을 구현하며, 인터페이스를 통해 추상화됩니다. 주요 서비스는 다음과 같습니다:
 
 - **UserService**: 사용자 CRUD, 프로필 업데이트 (닉네임, 설명, 생일, 미디어), 검색 허용 설정, 핸들 관리, 메모, 푸시 알림 권한, 메시지 수신 권한, 회원 탈퇴 처리
@@ -48,12 +54,14 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 - **ModerationService**: 포스트/댓글 삭제, 조정 기록 관리
 - **RefreshTokenService**: JWT 리프레시 토큰 관리
 - **BirthdayService**: 생일 알림 처리 (호스티드 서비스)
+- **StickerService**: 스티커 CRUD, 스티커 에셋 관리, 스티커 검색, 비공개 스티커 액세스 제어, 구독/구독취소, 최근 사용 기록
 
 서비스는 Result 패턴을 사용하며, 데이터베이스 작업은 async/await로 처리됩니다.
 
 ## 코딩 표준
 
 ### 명명 규칙
+
 - 클래스: PascalCase
 - 메서드: PascalCase
 - 속성: PascalCase
@@ -62,6 +70,7 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 - 열거형: PascalCase
 
 ### 코드 스타일
+
 - 암시적 using 사용 (`ImplicitUsings` 활성화)
 - nullable 참조 타입 비활성화 (`Nullable` disable)
 - C# 12 기능 허용 (`LangVersion` preview)
@@ -71,34 +80,41 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 - 주석은 영어로 작성
 
 ### 오류 처리
+
 - 서비스 메서드에 Result<T> 사용
 - 컨트롤러는 Result.Error에 따라 적절한 HTTP 상태 코드 반환
 - 오류 로그 기록하지만 클라이언트에 내부 세부 사항 노출하지 않음
 
 ### 데이터베이스 작업
+
 - MongoDB.Driver를 사용한 타입화된 컬렉션
 - 복잡한 쿼리에 Builders 사용
 - 모든 작업에 async 사용
 - Program.cs에서 열거형을 문자열로 직렬화 구성
 
 ### 보안
+
 - 미들웨어에서 JWT 검증
 - User.FindFirst(ClaimTypes.NameIdentifier)를 통한 사용자 클레임 액세스
 - 서비스에서 액세스 제어 확인
 - DotNet.RateLimiter를 사용한 속도 제한
 
 ### 미디어 처리
+
 - 폼 데이터를 통한 미디어 업로드
 - 고유 ID로 처리 및 저장
 - 비디오/이미지에 썸네일 생성
 - MIME 타입 검증
+- MediaId만 있으면 URL 생성 가능 /api/{mediaId}
 
 ### 알림
+
 - Firebase Cloud Messaging을 통한 푸시 알림
 - 열거형으로 정의된 알림 타입
 - 작업 후 비동기 전송
 
 ### 검증
+
 - Utils.cs에서 입력 정화
 - 서비스에서 비즈니스 규칙 검증
 - 길이 제한 및 콘텐츠 확인
@@ -106,23 +122,25 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 ## 일반 패턴
 
 ### 서비스 메서드 구조
+
 ```csharp
 public async Task<Result<T>> MethodNameAsync(params)
 {
     // 검증
     if (invalid) return (ErrorType.BadRequest, "message");
-    
+
     // 데이터베이스 작업
     var data = await _collection.Find(filter).ToListAsync();
-    
+
     // 비즈니스 로직
     // ...
-    
+
     return result;
 }
 ```
 
 ### 컨트롤러 메서드 구조
+
 ```csharp
 [HttpVerb("route")]
 [ProducesResponseType<T>(200)] // T: result.Value 타입
@@ -131,7 +149,7 @@ public async Task<IActionResult> MethodName(params)
 {
     var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     if (requesterId == null) return Unauthorized();
-    
+
     var result = await _service.MethodAsync(params);
     if (result.IsSuccess) return Ok(result.Value);
     else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
@@ -141,16 +159,19 @@ public async Task<IActionResult> MethodName(params)
 ```
 
 ### MongoDB 쿼리
+
 - 필터, 업데이트, 정렬에 Builders 사용
 - 성능을 위해 필요한 필드만 프로젝션
 - fromPostId 및 CreatedAt 비교로 페이지네이션 처리
 
 ### 액세스 제어
+
 - 프라이버시 설정에 대한 친구 관계 확인
 - 조정자 (Rank >= Moderator)는 제한 우회
 - CheckAccessAsync 메서드를 사용한 권한
 
 ## 종속성
+
 - Microsoft.AspNetCore.* 웹 프레임워크용
 - MongoDB.Driver 데이터베이스용
 - FirebaseAdmin 알림용
@@ -159,17 +180,20 @@ public async Task<IActionResult> MethodName(params)
 - BouncyCastle 암호화용
 
 ## 테스트
+
 - 단위 테스트는 서비스 및 데이터베이스 모킹
 - 통합 테스트는 전체 API 흐름
 - 테스트 MongoDB 인스턴스 사용
 
 ## 배포
+
 - Docker/Aspire용 구성
 - appsettings.json의 환경별 설정
 - Firebase 서비스 계정 키 필요
 - MongoDB 연결 문자열 구성 필요
 
 ## 중요한 참고 사항
+
 - 보안을 위해 모든 텍스트 콘텐츠 정화
 - 미디어 ID는 GUID 문자열
 - 타임스탬프는 DateTime.UtcNow 사용
@@ -179,9 +203,11 @@ public async Task<IActionResult> MethodName(params)
 - 새로운 컨트롤러 또는 서비스를 추가할 때는 이 지침 파일(.github/copilot-instructions.md)을 업데이트하여 새로운 구성 요소를 문서화하십시오.
 
 ## MAUI (모바일 클라이언트)
+
 History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애플리케이션입니다.
 
 ### 아키텍처
+
 - **패턴**: MVVM (Model-View-ViewModel) with CommunityToolkit.Mvvm
 - **네비게이션**: Shell 기반 탭 네비게이션
 - **메시징**: WeakReferenceMessenger 사용하는 중
@@ -189,15 +215,49 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 - **플랫폼별 코드**: Platforms 폴더에 iOS/Android 특정 구현
 
 ### 주요 구성 요소
-- **Pages**: XAML 기반 UI 페이지 (예: TimelinePage, UserPage)
+
+- **Pages**: XAML 기반 UI 페이지 (예: TimelinePage, UserPage, StickersPage, StickerDetailPage)
 - **ViewModels**: CommunityToolkit.Mvvm ObservableObject 상속, 명령 및 속성 바인딩
-- **ContentViews**: 재사용 가능한 UI 컴포넌트
+- **ContentViews**: 재사용 가능한 UI 컴포넌트 (UserCollectionView, StickerCollectionView)
 - **Behaviors**: 사용자 상호작용 처리 (예: SwipeToCloseBehavior)
 - **Helpers**: 플랫폼별 유틸리티 (미디어 피커, 웹뷰 쿠키)
 - **DataTypes**: 메시징 및 데이터 전송용 클래스
 - **Enums**: 상호작용 타입, 포스트 타입 등
 
-### 코딩 표준 (MAUI)
+### 앱 구조
+
+앱쉘(AppShell.xaml)은 다음 탭으로 구성됩니다:
+- **타임라인**: 친구들의 포스트 피드
+- **알림/쪽지**: 알림 및 개인 메시지
+- **친구**: 친구 관리 (목록, 추가, 요청 등)
+- **더보기**: 발견(공개 포스트), 스티커 등 추가 기능
+- **프로필**: 사용자 프로필
+
+### 스티커 시스템
+
+스티커는 게시글 및 댓글에서 사용 가능한 커스텀 이미지 에셋입니다:
+- **StickersPage**: 스티커 목록 및 검색
+- **StickerDetailPage**: 스티커 상세 정보, 에셋 보기, 구독/구독취소 버튼
+- **CreateStickerPage**: 새 스티커 생성 (아이콘, 이름, 카테고리, 에셋 업로드)
+- **StickerCollectionView**: 글쓰기/댓글에서 스티커 선택 UI (탭 바 + 에셋 그리드)
+- **MentionsViewModel**: % 문자로 스티커 표시, 탭 선택 및 최근 사용 로드
+
+스티커 특징:
+- 누구나 생성 가능, 비공개 옵션 지원
+- 최대 384x384 크기, 정적 이미지만 (움짤, 동영상 불가)
+- 최대 50개 에셋, 각 파일 5MB 이하
+- 삭제는 본인 또는 모더레이터만 가능
+- **구독 기능**: 다른 사용자의 공개 스티커를 구독하여 빠르게 접근
+- **최근 사용**: 스티커 에셋 사용 시 자동 기록, 최대 50개 저장
+
+스티커 선택 UI (StickerCollectionView):
+- 상단 탭 바: 최근 사용(시계 아이콘) + 구독/본인 스티커 아이콘 탭
+- 스티커 이름 라벨: 현재 선택된 스티커 이름 표시
+- 에셋 그리드: 4열 그리드로 스티커 에셋 표시
+- 스티커 선택 시 사용 기록 자동 전송
+
+## 코딩 표준 (MAUI)
+
 - **XAML**: 명명된 스타일 사용, 바인딩 모드 명시적 지정, FontImageSource로 아이콘, DataTemplate로 재사용 가능한 UI, x:DataType로 타입화된 바인딩
 - **ViewModels**: ObservableProperty, RelayCommand 사용, API 호출을 위한 async 메서드 (반드시 PostViewModel.cs 참고)
 - **네비게이션**: App.PushAsync/PopAsync 정적 메서드 사용
@@ -210,6 +270,7 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 - **ContentViews**: x:Name으로 코드 비하인드 액세스를 위한 재사용 가능한 컴포넌트
 
 ### 일반 패턴 (MAUI)
+
 - **페이지 구조**: 레이아웃을 위한 XAML, 초기화 및 이벤트 처리를 위한 코드 비하인드, 설정을 위한 Loaded 이벤트
 - **ViewModel 구조**: 데이터 바인딩을 위한 속성, 액션을 위한 명령, API 호출을 위한 async 메서드, 목록을 위한 ObservableCollection
 - **데이터 템플릿**: 포스트, 프로필, 댓글 같은 다른 아이템 타입을 위한 DataTemplateSelector, 동적 콘텐츠를 위한 BindableLayout
@@ -226,6 +287,7 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 - **반응형 디자인**: 폰/태블릿 적응형 레이아웃을 위한 SizeChanged 이벤트 (반드시 TimelinePage 참고)
 
 ### 종속성 (MAUI)
+
 - MVVM 지원을 위한 CommunityToolkit.Maui/Mvvm
 - 아이콘을 위한 UraniumUI.Icons/Material
 - 고급 컨트롤을 위한 Syncfusion.Maui.Toolkit
@@ -233,5 +295,6 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 - 푸시 알림을 위한 Plugin.Firebase.CloudMessaging
 
 ## 응답 지침
+
 해당하는 프로젝트의 파일 구조를 먼저 읽은 뒤 진행하십시오.
 모든 응답은 한국어로 제공하십시오.

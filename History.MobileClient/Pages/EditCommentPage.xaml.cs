@@ -26,6 +26,7 @@ public partial class EditCommentPage : ContentPage
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         UserCollectionView.SetTextContentView(MainTextContent);
+        StickerCollectionView.SetTextContentView(MainTextContent);
     }
 
     private void LoadComment(CommentResponseDto comment)

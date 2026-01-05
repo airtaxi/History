@@ -121,6 +121,12 @@
             HorizontalOptions="Fill"
             VerticalOptions="End" />
 
+        <editPost:StickerCollectionView
+            x:Name="StickerCollectionView"
+            Grid.Row="1"
+            HorizontalOptions="Fill"
+            VerticalOptions="End" />
+
         <ActivityIndicator
             x:Name="MainActivityIndicator"
             Grid.RowSpan="2"
