@@ -5,15 +5,19 @@ using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using Microsoft.Maui.Controls.Shapes;
 using UraniumUI.Icons.MaterialSymbols;
-using Path = System.IO.Path;
+
+#if IOS
+using NativeMedia;
+#endif
 
 namespace History.MobileClient.Pages;
 
 public partial class CreateStickerPage : ContentPage
 {
     private bool _isInForeground;
-    private string _iconFilePath;
-    private readonly List<string> _assetFilePaths = [];
+    private string _iconFileName;
+    private MemoryStream _iconStream;
+    private readonly Dictionary<string, MemoryStream> _assets = [];
     private const int MaxAssets = 50;
 
     public CreateStickerPage()
@@ -47,6 +51,11 @@ public partial class CreateStickerPage : ContentPage
     {
         base.OnDisappearing();
         _isInForeground = false;
+
+        foreach (var asset in _assets) asset.Value.Dispose();
+        _iconStream?.Dispose();
+
+        _assets.Clear();
     }
 
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
@@ -65,72 +74,110 @@ public partial class CreateStickerPage : ContentPage
 
     private async void OnIconGridTapped(object sender, TappedEventArgs e)
     {
-        var result = await MediaPicker.PickPhotosAsync(new MediaPickerOptions
-        {
-            Title = "아이콘 선택",
-            SelectionLimit = 1
-        });
+        string fileName;
+        byte[] bytes;
 
-        if (result == null || result.Count == 0) return;
+#if ANDROID
+        var image = await AndroidMediaPickerHelper.PickMediaAsync(true, false);
+
+        fileName = image.FileName;
+        bytes = image.Bytes;
+#else
+        var request = new MediaPickRequest(1, MediaFileType.Image)
+        {
+            Title = "아이콘 선택"
+        };
+
+        var results = await MediaGallery.PickAsync(request);
+        var files = results?.Files?.ToArray();
+        if (files == null || files.Length == 0) return;
+
+        using var file = files[0];
+        using var stream = await file.OpenReadAsync();
+        var memoryStream = new MemoryStream(); // Keep the stream open (do not use 'using' here)
+        await stream.CopyToAsync(memoryStream);
+
+        fileName = file.GenerateFileName();
+        bytes = memoryStream.ToArray();
+#endif
 
         // Validation
-        var mimeType = History.Commons.MimeTypes.GetMimeType(result[0].FileName);
+        var mimeType = Commons.MimeTypes.GetMimeType(fileName);
         if (!mimeType.StartsWith("image/"))
         {
             await DisplayAlertAsync("오류", "이미지 파일만 선택할 수 있습니다.", "확인");
             return;
         }
-        if (mimeType.Contains("gif"))
+        else if (mimeType.Contains("gif"))
         {
             await DisplayAlertAsync("오류", "정적 이미지만 사용 가능합니다. (움짤 불가)", "확인");
             return;
         }
 
-        _iconFilePath = result[0].FullPath;
-        IconImage.Source = ImageSource.FromFile(result[0].FullPath);
+        _iconFileName = fileName;
+
+        _iconStream?.Dispose();
+#if ANDROID
+        var memoryStream = new MemoryStream(bytes);
+#endif
+        _iconStream = memoryStream;
+
+        IconImage.Source = ImageSource.FromStream(() => memoryStream);
         IconImage.IsVisible = true;
         IconPlaceholderImage.IsVisible = false;
     }
 
     private async void OnAddAssetsButtonClicked(object sender, EventArgs e)
     {
-        if (_assetFilePaths.Count >= MaxAssets)
+        var maxCount = MaxAssets - _assets.Count;
+        if (maxCount <= 0)
         {
             await DisplayAlertAsync("오류", $"스티커 에셋은 최대 {MaxAssets}개까지 추가할 수 있습니다.", "확인");
             return;
         }
 
-        var remainingSlots = MaxAssets - _assetFilePaths.Count;
-
 #if ANDROID
-        var results = await AndroidMediaPickerHelper.PickMultipleImagesAsync();
-#else
-        var results = await FilePicker.PickMultipleAsync(new PickOptions
-        {
-            PickerTitle = "이미지 선택",
-            FileTypes = FilePickerFileType.Images
-        });
-#endif
-
-        if (results == null) return;
+        var images = await AndroidMediaPickerHelper.PickMediasAsync(maxCount, true, false);
+        if (images == null || images.Count == 0) return;
 
         var addedCount = 0;
-        foreach (var result in results)
+        foreach (var image in images)
         {
-            if (addedCount >= remainingSlots) break;
-
-            var mimeType = History.Commons.MimeTypes.GetMimeType(result.FileName);
+            var mimeType = Commons.MimeTypes.GetMimeType(image.FileName);
             if (!mimeType.StartsWith("image/") || mimeType.Contains("gif")) continue;
 
-            _assetFilePaths.Add(result.FullPath);
-            AddAssetToUI(result.FullPath);
+            var memoryStream = new MemoryStream(image.Bytes);
+            _assets.Add(image.FileName, memoryStream);
+            AddAssetToUI(image.FileName, memoryStream);
             addedCount++;
         }
+#else
+        var request = new MediaPickRequest(maxCount, MediaFileType.Image) { Title = "이미지 추가" };
+
+        var results = await MediaGallery.PickAsync(request);
+        var files = results?.Files?.ToArray();
+        if (files == null || files.Length == 0) return;
+            
+        foreach (var file in files)
+        {
+            using var stream = await file.OpenReadAsync();
+            var memoryStream = new MemoryStream(); // Keep the stream open (do not use 'using' here)
+            await stream.CopyToAsync(memoryStream); 
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            var fileName = file.GenerateFileName();
+            var mimeType = Commons.MimeTypes.GetMimeType(fileName);
+            if (!mimeType.StartsWith("image/") || mimeType.Contains("gif")) continue;
+
+            _assets.Add(fileName, memoryStream);
+            AddAssetToUI(fileName, memoryStream);
+        }
+#endif
 
         UpdateAssetCount();
     }
 
-    private void AddAssetToUI(string filePath)
+    private void AddAssetToUI(string fileName, MemoryStream stream)
     {
         var grid = new Grid
         {
@@ -141,7 +188,7 @@ public partial class CreateStickerPage : ContentPage
 
         var image = new CachedImage
         {
-            Source = ImageSource.FromFile(filePath),
+            Source = ImageSource.FromStream(() => stream),
             Aspect = Aspect.AspectFill,
             DownsampleToViewSize = true,
             HeightRequest = 80,
@@ -167,14 +214,16 @@ public partial class CreateStickerPage : ContentPage
                 },
                 HeightRequest = 16,
                 WidthRequest = 16
-            }
+            },
+            StrokeShape = new RoundRectangle { CornerRadius = 12 }
         };
-        deleteButton.StrokeShape = new RoundRectangle { CornerRadius = 12 };
 
         var tapGesture = new TapGestureRecognizer();
         tapGesture.Tapped += (s, e) =>
         {
-            _assetFilePaths.Remove(filePath);
+            _assets.Remove(fileName);
+            stream.Dispose();
+
             AssetsFlexLayout.Children.Remove(grid);
             UpdateAssetCount();
         };
@@ -188,13 +237,13 @@ public partial class CreateStickerPage : ContentPage
 
     private void UpdateAssetCount()
     {
-        AssetCountLabel.Text = $"({_assetFilePaths.Count}/{MaxAssets})";
+        AssetCountLabel.Text = $"({_assets.Count}/{MaxAssets})";
     }
 
     private async void OnCreateButtonClicked(object sender, EventArgs e)
     {
         // Validation
-        if (string.IsNullOrWhiteSpace(_iconFilePath))
+        if (string.IsNullOrWhiteSpace(_iconFileName))
         {
             await DisplayAlertAsync("오류", "아이콘을 선택해주세요.", "확인");
             return;
@@ -212,7 +261,7 @@ public partial class CreateStickerPage : ContentPage
             return;
         }
 
-        if (_assetFilePaths.Count == 0)
+        if (_assets.Count == 0)
         {
             await DisplayAlertAsync("오류", "스티커 에셋을 최소 1개 이상 추가해주세요.", "확인");
             return;
@@ -224,16 +273,10 @@ public partial class CreateStickerPage : ContentPage
         try
         {
             // Read files
-            var iconBytes = await File.ReadAllBytesAsync(_iconFilePath);
-            var iconFileName = Path.GetFileName(_iconFilePath);
+            var iconBytes = _iconStream.ToArray();
 
             var assetFiles = new Dictionary<string, byte[]>();
-            foreach (var assetPath in _assetFilePaths)
-            {
-                var assetBytes = await File.ReadAllBytesAsync(assetPath);
-                var assetFileName = Path.GetFileName(assetPath);
-                assetFiles[assetFileName] = assetBytes;
-            }
+            foreach (var asset in _assets) assetFiles[asset.Key] = asset.Value.ToArray();
 
             var result = await App.ExecuteRequestAsync(new CreateSticker(
                 NameEntry.Text.Trim(),
@@ -241,7 +284,7 @@ public partial class CreateStickerPage : ContentPage
                 DescriptionEditor.Text?.Trim(),
                 PrivateSwitch.IsToggled,
                 iconBytes,
-                iconFileName,
+                _iconFileName,
                 assetFiles
             ));
 
