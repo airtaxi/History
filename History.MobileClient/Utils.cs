@@ -183,7 +183,8 @@ public static partial class Utils
     {
         string imageUrl = null;
 
-        var mediaId = contents.OfType<MediaContent>().Where(x => !x.IsSpoiler).Select(x => x.ThumbnailMediaId).FirstOrDefault();
+        var mediaId = contents.OfType<MediaContent>().Where(x => !x.IsSpoiler).Select(x => x.ThumbnailMediaId).FirstOrDefault()
+            ?? contents.OfType<StickerContent>().Select(x => x.StickerMediaId).FirstOrDefault();
         if (mediaId == null) imageUrl = contents.OfType<ExternalUrlContent>().Select(x => x.ThumbnailImageUrl).FirstOrDefault();
 
         if (imageUrl == null && mediaId != null) imageUrl = GenerateMediaUri(mediaId);

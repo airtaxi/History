@@ -19,12 +19,14 @@ public static class MentionHelper
     {
         var stickerMapId = GetStickerMapId(stickerId) + "_" + stickerContentId;
 
-        if (!MentionIdMap.Any(x => GetStickerMapId(x.Value) == stickerId)) MentionIdMap[MentionIdMap.Count] = stickerMapId;
-        mentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => x.Value == stickerMapId).Key.ToString(), '\n' + "스티커" + '\n');
+        AppendText(mentionEditor, " @");
+
+        if (!MentionIdMap.Any(x => x.Value == stickerId)) MentionIdMap[MentionIdMap.Count] = stickerMapId;
+        mentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => x.Value == stickerMapId).Key.ToString(), " * " + "스티커" + " * ");
     }
 
-    private static string GetStickerMapId(string stickerId) => $"!_s" + stickerId;
-    private static string GetUserMapId(string userId) => $"!_u" + userId;
+    private static string GetStickerMapId(string stickerId) => "!_s" + stickerId;
+    private static string GetUserMapId(string userId) => "!_u" + userId;
 
     public static void AppendText(MentionEditor mentionEditor, string text, bool showKeyboard = false)
     {
@@ -73,17 +75,17 @@ public static class MentionHelper
     {
         var stickerMapId = GetStickerMapId(stickerId) + "_" + stickerContentId;
 
-        if (!MentionIdMap.Any(x => x.Value == stickerId)) MentionIdMap[MentionIdMap.Count] = stickerMapId;
+        if (!MentionIdMap.Any(x => x.Value == stickerMapId)) MentionIdMap[MentionIdMap.Count] = stickerMapId;
 
         // Add " " to the end of the text to allow InsertMention to work properly
         var formattedText = mentionEditor.FormattedText?.Spans?.ToList() ?? [];
         mentionEditor.Text ??= string.Empty;
-        mentionEditor.Text += ' ';
+        mentionEditor.Text += " @";
         mentionEditor.CursorPosition = mentionEditor.Text.Length;
         mentionEditor.SelectionLength = 0;
 
         // Call InsertMention to insert the mention span
-        mentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => GetStickerMapId(x.Value) == stickerMapId).Key.ToString(), '\n' + "스티커" + '\n');
+        mentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => x.Value == stickerMapId).Key.ToString(), " * " + "스티커" + " * ");
 
         // Insert newly added mention span to previous formatted text
         var newFormattedText = mentionEditor.FormattedText;
