@@ -47,6 +47,17 @@
                 <Image HeightRequest="32" WidthRequest="32">
                     <Image.Source>
                         <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Mood}"
+                            Color="White" />
+                    </Image.Source>
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnStickerImageTapped" />
+                    </Image.GestureRecognizers>
+                </Image>
+                <Image HeightRequest="32" WidthRequest="32">
+                    <Image.Source>
+                        <FontImageSource
                             x:Name="CommentMediaFontImageSource"
                             FontFamily="MaterialSharp"
                             Color="White" />

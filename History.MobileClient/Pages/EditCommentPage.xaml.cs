@@ -190,4 +190,10 @@ public partial class EditCommentPage : ContentPage
         AttachmentImage.BindingContext = null;
         AttachmentGrid.IsVisible = false;
     }
+
+    private async void OnStickerImageTapped(object sender, TappedEventArgs e)
+    {
+        MainTextContent.UnfocusEditor();
+        await StickerCollectionView.ToggleAsync();
+    }
 }

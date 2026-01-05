@@ -1056,4 +1056,10 @@ public partial class EditPostPage : ContentPage
         }
         finally { _preventDispose = false; }
     }
+
+    private async void OnStickerImageTapped(object sender, TappedEventArgs e)
+    {
+        MainTextContent.UnfocusEditor();
+        await StickerCollectionView.ToggleAsync();
+    }
 }
