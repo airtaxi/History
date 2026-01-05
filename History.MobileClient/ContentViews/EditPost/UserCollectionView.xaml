@@ -13,12 +13,12 @@
                                           Dark=#222222}"
         HorizontalOptions="Fill"
         IsVisible="{x:Binding IsDisplayingMentions}"
-        ItemsSource="{x:Binding ViewModels}"
+        ItemsSource="{x:Binding UserViewModels}"
         MaximumHeightRequest="200"
         SelectionMode="None"
         VerticalOptions="End">
         <CollectionView.ItemTemplate>
-            <DataTemplate x:DataType="vm:MentionViewModel">
+            <DataTemplate x:DataType="vm:MentionUserViewModel">
                 <Grid HeightRequest="44">
                     <HorizontalStackLayout
                         Padding="8"

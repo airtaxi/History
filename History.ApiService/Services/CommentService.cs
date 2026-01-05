@@ -316,6 +316,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
     public async Task<Result<CommentResponseDto>> GenerateCommentResponseDtoAsync(Comment comment, string requesterId)
     {
         var userService = serviceProvider.GetRequiredService<IUserService>();
+        var stickerService = serviceProvider.GetRequiredService<IStickerService>();
 
         var userResult = await userService.GenerateUserResponseDtoAsync(comment.UserId, requesterId);
         if (userResult.IsFailure) return userResult.CastFailure<CommentResponseDto>();
@@ -327,7 +328,6 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
 
         var likedUserResults = await userService.GenerateUserResponseDtosAsync(likedUserIds.Distinct(), requesterId);
 
-
         var profileContents = comment.Contents.OfType<ProfileContent>();
         var profileContentUsersResult = await userService.GenerateUserResponseDtosAsync(profileContents.Select(x => x.UserId), requesterId);
         foreach (var profileContent in profileContents)
@@ -335,6 +335,17 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
             var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == profileContent.UserId);
             profileContent.UserId = user?.UserId;
             profileContent.Nickname = (user?.Nickname ?? "탈퇴한 사용자") + ' ';
+        }
+
+        // Fill StickerMediaId for StickerContents
+        var stickerContents = comment.Contents.OfType<StickerContent>();
+        foreach (var stickerContent in stickerContents)
+        {
+            var assetResult = await stickerService.GetStickerAssetByIdAsync(stickerContent.StickerContentId);
+            if (assetResult.IsSuccess)
+            {
+                stickerContent.StickerMediaId = assetResult.Value.MediaId;
+            }
         }
 
         return new CommentResponseDto

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="History.MobileClient.ContentViews.EditPost.StickerCollectionView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:views="clr-namespace:History.MobileClient.ContentViews"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient"
+    x:DataType="vm:MentionsViewModel">
+    <Grid
+        x:Name="MainGrid"
+        BackgroundColor="{AppThemeBinding Light=#EEEEEE,
+                                          Dark=#222222}"
+        IsVisible="{x:Binding IsDisplayingStickerMentions}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Sticker tab bar  -->
+        <ScrollView
+            Grid.Row="0"
+            HorizontalScrollBarVisibility="Never"
+            Orientation="Horizontal">
+            <HorizontalStackLayout
+                x:Name="StickerTabBar"
+                Padding="8,4"
+                Spacing="4">
+                <!--  Recent/Favorites tab  -->
+                <Border
+                    x:Name="RecentTab"
+                    Padding="4"
+                    BackgroundColor="{AppThemeBinding Light=#E0E0E0,
+                                                      Dark=#555555}"
+                    HeightRequest="44"
+                    StrokeThickness="0"
+                    WidthRequest="44">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnRecentTabTapped" />
+                    </Border.GestureRecognizers>
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8" />
+                    </Border.StrokeShape>
+                    <Image
+                        HeightRequest="28"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"
+                        WidthRequest="28">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Schedule}"
+                                Color="{StaticResource Primary}" />
+                        </Image.Source>
+                    </Image>
+                </Border>
+                <!--  Sticker tabs will be added dynamically  -->
+            </HorizontalStackLayout>
+        </ScrollView>
+
+        <!--  Current sticker name  -->
+        <Label
+            x:Name="StickerNameLabel"
+            Grid.Row="1"
+            Padding="12,4"
+            FontSize="13"
+            Text="{x:Binding CurrentStickerName}"
+            TextColor="#808080" />
+
+        <!--  Loading indicator  -->
+        <ActivityIndicator
+            x:Name="LoadingIndicator"
+            Grid.Row="2"
+            HeightRequest="50"
+            HorizontalOptions="Center"
+            IsRunning="{x:Binding IsLoadingStickerMentions}"
+            IsVisible="{x:Binding IsLoadingStickerMentions}"
+            VerticalOptions="Center"
+            WidthRequest="50"
+            Color="{StaticResource Primary}" />
+
+        <!--  Sticker asset grid  -->
+        <CollectionView
+            x:Name="CollectionView"
+            Grid.Row="2"
+            HorizontalOptions="Fill"
+            IsVisible="{x:Binding InvertIsLoadingStickerMentions}"
+            ItemsSource="{x:Binding StickerViewModels}"
+            MaximumHeightRequest="200"
+            SelectionMode="None"
+            VerticalOptions="End">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout
+                    HorizontalItemSpacing="4"
+                    Orientation="Vertical"
+                    Span="4"
+                    VerticalItemSpacing="4" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:MentionStickerViewModel">
+                    <Grid
+                        Padding="4"
+                        HeightRequest="80"
+                        WidthRequest="80">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnStickerGridTapped" />
+                        </Grid.GestureRecognizers>
+                        <views:DataTemplatePresenter
+                            HeightRequest="72"
+                            HorizontalOptions="Center"
+                            Template="{StaticResource MediaTemplateSelector}"
+                            VerticalOptions="Center"
+                            ViewModel="{x:Binding Media}"
+                            WidthRequest="72" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentView>

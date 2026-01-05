@@ -6,5 +6,5 @@ namespace History.Commons.DataTypes.Contents;
 public class ProfileContent : BaseContent
 {
     public string UserId { get; set; }
-    public string Nickname { get; set; }
+    public string Nickname { get; set; } // Read only, must be set when creating dto
 }

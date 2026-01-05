@@ -68,7 +68,7 @@ public partial class PostPage : ContentPage
         var user = message.Value;
         if (user.UserId == Shared.UserId) return;
 
-        MentionHelper.AppendMention(CommentTextContentView.MentionEditor, user.UserId, user.Nickname, true);
+        MentionHelper.AppendUser(CommentTextContentView.MentionEditor, user.UserId, user.Nickname, true);
     }
 
     private void OnAppleVideoUnloadedMessageMessageReceived(object recipient, AppleVideoUnloadedMessage message)

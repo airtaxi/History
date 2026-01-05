@@ -43,4 +43,9 @@ public class Sticker
     /// modification date.
     /// </summary>
     public DateTime? ModifiedAt { get; set; }
+
+    /// <summary>
+    /// Indicates whether the sticker is private. (Author only)
+    /// </summary>
+    public bool IsPrivate { get; set; }
 }

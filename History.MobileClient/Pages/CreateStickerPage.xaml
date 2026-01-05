@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.CreateStickerPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Loaded="OnLoaded"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,0,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout Spacing="8">
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="스티커 만들기"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <Button
+                x:Name="CreateButton"
+                Padding="12,0"
+                Clicked="OnCreateButtonClicked"
+                FontAttributes="Bold"
+                HorizontalOptions="End"
+                Text="만들기"
+                TextColor="{StaticResource White}"
+                VerticalOptions="Center" />
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16" Spacing="16">
+                <!--  Icon selection  -->
+                <VerticalStackLayout Spacing="8">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="14"
+                        Text="아이콘 *" />
+                    <Grid
+                        HeightRequest="100"
+                        HorizontalOptions="Start"
+                        WidthRequest="100">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnIconGridTapped" />
+                        </Grid.GestureRecognizers>
+                        <Border
+                            BackgroundColor="{AppThemeBinding Light=#F5F5F5,
+                                                              Dark=#2A2A2A}"
+                            HeightRequest="100"
+                            Stroke="#808080"
+                            StrokeThickness="1"
+                            WidthRequest="100">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12" />
+                            </Border.StrokeShape>
+                            <Image
+                                x:Name="IconPlaceholderImage"
+                                HeightRequest="40"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                WidthRequest="40">
+                                <Image.Source>
+                                    <FontImageSource
+                                        FontFamily="MaterialSharp"
+                                        Glyph="{x:Static m:MaterialSharp.Add_photo_alternate}"
+                                        Color="#808080" />
+                                </Image.Source>
+                            </Image>
+                        </Border>
+                        <ffimageloading:CachedImage
+                            x:Name="IconImage"
+                            Aspect="AspectFill"
+                            DownsampleToViewSize="True"
+                            IsVisible="False">
+                            <ffimageloading:CachedImage.Clip>
+                                <RoundRectangleGeometry CornerRadius="12" Rect="0,0,100,100" />
+                            </ffimageloading:CachedImage.Clip>
+                        </ffimageloading:CachedImage>
+                    </Grid>
+                    <Label
+                        FontSize="12"
+                        Text="스티커 목록에 표시될 대표 이미지입니다."
+                        TextColor="#808080" />
+                </VerticalStackLayout>
+
+                <!--  Name  -->
+                <VerticalStackLayout Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="14"
+                        Text="이름 *" />
+                    <Border
+                        Padding="12,8"
+                        BackgroundColor="{AppThemeBinding Light=#F5F5F5,
+                                                          Dark=#2A2A2A}"
+                        StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Entry
+                            x:Name="NameEntry"
+                            MaxLength="50"
+                            Placeholder="스티커 이름" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <!--  Category  -->
+                <VerticalStackLayout Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="14"
+                        Text="카테고리 *" />
+                    <Border
+                        Padding="12,8"
+                        BackgroundColor="{AppThemeBinding Light=#F5F5F5,
+                                                          Dark=#2A2A2A}"
+                        StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Entry
+                            x:Name="CategoryEntry"
+                            MaxLength="30"
+                            Placeholder="예: 귀여운, 웃긴, 동물" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <!--  Description  -->
+                <VerticalStackLayout Spacing="4">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="14"
+                        Text="설명" />
+                    <Border
+                        Padding="12,8"
+                        BackgroundColor="{AppThemeBinding Light=#F5F5F5,
+                                                          Dark=#2A2A2A}"
+                        StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Editor
+                            x:Name="DescriptionEditor"
+                            AutoSize="TextChanges"
+                            MaxLength="200"
+                            MinimumHeightRequest="80"
+                            Placeholder="스티커에 대한 설명 (선택)" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <!--  Private toggle  -->
+                <Grid>
+                    <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="14"
+                            Text="비공개" />
+                        <Label
+                            FontSize="12"
+                            Text="비공개 스티커는 본인만 사용할 수 있습니다."
+                            TextColor="#808080" />
+                    </VerticalStackLayout>
+                    <Switch
+                        x:Name="PrivateSwitch"
+                        HorizontalOptions="End"
+                        ThumbColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+                </Grid>
+
+                <!--  Assets  -->
+                <VerticalStackLayout Spacing="8">
+                    <HorizontalStackLayout Spacing="8">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="14"
+                            Text="스티커 에셋 *"
+                            VerticalOptions="Center" />
+                        <Label
+                            x:Name="AssetCountLabel"
+                            FontSize="12"
+                            Text="(0/50)"
+                            TextColor="#808080"
+                            VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+
+                    <FlexLayout
+                        x:Name="AssetsFlexLayout"
+                        Direction="Row"
+                        Wrap="Wrap" />
+
+                    <Button
+                        BackgroundColor="{StaticResource Primary}"
+                        Clicked="OnAddAssetsButtonClicked"
+                        Text="이미지 추가"
+                        TextColor="White" />
+
+                    <Label
+                        FontSize="12"
+                        Text="최대 50개, 각 파일 5MB 이하, 정적 이미지만 가능&#10;이미지는 384x384 크기로 자동 조정됩니다."
+                        TextColor="#808080" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="2"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
+    </Grid>
+</ContentPage>
