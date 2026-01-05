@@ -194,7 +194,14 @@
     </DataTemplate>
 
     <DataTemplate x:Key="StickerContentTemplate" x:DataType="vm:StickerContentViewModel">
-        <views:DataTemplatePresenter Template="{StaticResource MediaTemplateSelector}" ViewModel="{x:Binding Media}" />
+        <Image
+            Aspect="AspectFit"
+            HeightRequest="120"
+            HorizontalOptions="Start"
+            Source="{x:Binding Media.Uri,
+                               Mode=OneTime}"
+            VerticalOptions="Start"
+            WidthRequest="120" />
     </DataTemplate>
 
     <DataTemplate x:Key="TextAndProfileContentsTemplate" x:DataType="vm:TextAndProfileContentsViewModel">

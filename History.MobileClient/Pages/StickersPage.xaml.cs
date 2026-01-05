@@ -81,10 +81,9 @@ public partial class StickersPage : ContentPage
 #if IOS
         AppleSwipeGestureHelper.ApplyToPage(this);
 #endif
-        await RefreshAsync();
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
         _isInForeground = true;
@@ -95,6 +94,8 @@ public partial class StickersPage : ContentPage
             var statusBarHeight = LayoutHelper.GetStatusBarHeight();
             Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
         }
+
+        await RefreshAsync();
     }
 
     protected override void OnDisappearing()
