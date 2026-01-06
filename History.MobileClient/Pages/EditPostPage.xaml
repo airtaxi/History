@@ -271,6 +271,37 @@
                         </Image>
                     </Grid>
                 </Border>
+
+                <!--  Poll preview  -->
+                <Border
+                    x:Name="PollContentBorder"
+                    Margin="6"
+                    IsVisible="False"
+                    Stroke="#808080"
+                    StrokeThickness="1">
+                    <Grid>
+                        <views:DataTemplatePresenter
+                            x:Name="PollContentDataTemplatePresenter"
+                            InputTransparent="True"
+                            Template="{StaticResource PollContentTemplate}" />
+                        <Image
+                            Margin="6"
+                            HeightRequest="32"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start"
+                            WidthRequest="32">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDeletePollContentTapped" />
+                            </Image.GestureRecognizers>
+                            <Image.Source>
+                                <FontImageSource
+                                    FontFamily="MaterialSharp"
+                                    Glyph="{x:Static m:MaterialSharp.Close}"
+                                    Color="White" />
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                </Border>
             </VerticalStackLayout>
         </ScrollView>
 
@@ -433,6 +464,24 @@
                                                     Dark=White}" />
                     </Image.Source>
                 </Image>
+
+                <!--  Poll button  -->
+                <Image
+                    HeightRequest="40"
+                    VerticalOptions="Center"
+                    WidthRequest="40">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnInsertPollTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.How_to_vote}"
+                            Color="{AppThemeBinding Light=Black,
+                                                    Dark=White}" />
+                    </Image.Source>
+                </Image>
+
                 <Image
                     HeightRequest="40"
                     VerticalOptions="Center"
@@ -470,6 +519,20 @@
                     </Image.Source>
                 </Image>
                 <Grid>
+                    <sf:SfDateTimePicker
+                        x:Name="PollEndTimeDateTimePicker"
+                        BackgroundColor="Transparent"
+                        CancelButtonClicked="OnPollEndTimeDateTimePickerCancelButtonClicked"
+                        Mode="Dialog"
+                        OkButtonClicked="OnPollEndTimeDateTimePickerOkButtonClicked"
+                        Opacity="0">
+                        <sf:SfDateTimePicker.HeaderView>
+                            <sf:DateTimePickerHeaderView DateFormat="yyyy년 MM월 dd일" TimeFormat="HH시 mm분 ss초" />
+                        </sf:SfDateTimePicker.HeaderView>
+                        <sf:SfDateTimePicker.FooterView>
+                            <sf:PickerFooterView Height="40" OkButtonText="확인" />
+                        </sf:SfDateTimePicker.FooterView>
+                    </sf:SfDateTimePicker>
                     <sf:SfDateTimePicker
                         x:Name="ReservationDateTimePicker"
                         BackgroundColor="Transparent"

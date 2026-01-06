@@ -36,7 +36,7 @@ public static partial class Utils
         return $"https://api.history.cenox.io/api/media/{mediaId}";
     }
 
-    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, PostType postType, bool isParentPost = false)
+    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, PostType postType, bool isParentPost = false, string postId = null)
     {
         var contentViewModels = new List<IContentViewModel>();
 
@@ -80,6 +80,12 @@ public static partial class Utils
                 FlushMediaContents();
                 FlushTextAndProfileContents();
                 contentViewModels.Add(new ExternalUrlContentViewModel(externalUrlContent));
+            }
+            else if (content is PollContent pollContent)
+            {
+                FlushMediaContents();
+                FlushTextAndProfileContents();
+                contentViewModels.Add(new PollContentViewModel(pollContent, postId));
             }
             else if (content is MediaContent mediaContent)
             {

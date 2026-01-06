@@ -1,5 +1,4 @@
-﻿
-using History.Commons.DataTypes;
+﻿using History.Commons.DataTypes;
 using MongoDB.Driver;
 
 namespace History.ApiService.Services;
@@ -20,6 +19,13 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         var refreshTokenCollection = database.GetCollection<RefreshToken>("RefreshTokens");
         var firebaseTokenCollection = database.GetCollection<FirebaseToken>("FirebaseTokens");
         var notificationCollection = database.GetCollection<Notification>("Notifications");
+
+        // Poll / Sticker
+        var pollVoteCollection = database.GetCollection<PollVote>("PollVotes");
+        var stickerCollection = database.GetCollection<Sticker>("Stickers");
+        var stickerAssetCollection = database.GetCollection<StickerAsset>("StickerAssets");
+        var stickerSubscriptionCollection = database.GetCollection<StickerSubscription>("StickerSubscriptions");
+        var recentStickerUsageCollection = database.GetCollection<RecentStickerUsage>("RecentStickerUsages");
 
         // Create indexes
         logger.LogInformation("Creating indexes...");
@@ -50,10 +56,10 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
 
         logger.LogInformation("Creating indexes for PublicPost collection...");
-        await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
-        await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.ParentPostId)), cancellationToken: cancellationToken);
-        await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.SearchIndex)), cancellationToken: cancellationToken);
-        await postCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
+        await publicPostCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
+        await publicPostCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.ParentPostId)), cancellationToken: cancellationToken);
+        await publicPostCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Ascending(x => x.SearchIndex)), cancellationToken: cancellationToken);
+        await publicPostCollection.Indexes.CreateOneAsync(new CreateIndexModel<Post>(Builders<Post>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
 
         logger.LogInformation("Creating indexes for Friendship collection...");
         await friendshipCollection.Indexes.CreateOneAsync(new CreateIndexModel<Friendship>(Builders<Friendship>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
@@ -106,6 +112,55 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         await reportRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<ReportRecord>(Builders<ReportRecord>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
         await reportRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<ReportRecord>(Builders<ReportRecord>.IndexKeys.Ascending(x => x.ReporterId)), cancellationToken: cancellationToken);
         await reportRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<ReportRecord>(Builders<ReportRecord>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
+
+        logger.LogInformation("Creating indexes for PollVote collection...");
+        await pollVoteCollection.Indexes.CreateOneAsync(new CreateIndexModel<PollVote>(Builders<PollVote>.IndexKeys.Ascending(x => x.PollId)), cancellationToken: cancellationToken);
+        await pollVoteCollection.Indexes.CreateOneAsync(new CreateIndexModel<PollVote>(Builders<PollVote>.IndexKeys.Ascending(x => x.PostId)), cancellationToken: cancellationToken);
+        await pollVoteCollection.Indexes.CreateOneAsync(new CreateIndexModel<PollVote>(Builders<PollVote>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
+        await pollVoteCollection.Indexes.CreateOneAsync(new CreateIndexModel<PollVote>(Builders<PollVote>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
+        await pollVoteCollection.Indexes.CreateOneAsync(
+            new CreateIndexModel<PollVote>(
+                Builders<PollVote>.IndexKeys.Combine(
+                    Builders<PollVote>.IndexKeys.Ascending(x => x.PollId),
+                    Builders<PollVote>.IndexKeys.Ascending(x => x.UserId)),
+                new CreateIndexOptions { Unique = true }),
+            cancellationToken: cancellationToken);
+
+        logger.LogInformation("Creating indexes for Sticker collection...");
+        await stickerCollection.Indexes.CreateOneAsync(new CreateIndexModel<Sticker>(Builders<Sticker>.IndexKeys.Ascending(x => x.AuthorId)), cancellationToken: cancellationToken);
+        await stickerCollection.Indexes.CreateOneAsync(new CreateIndexModel<Sticker>(Builders<Sticker>.IndexKeys.Ascending(x => x.Category)), cancellationToken: cancellationToken);
+        await stickerCollection.Indexes.CreateOneAsync(new CreateIndexModel<Sticker>(Builders<Sticker>.IndexKeys.Ascending(x => x.IsPrivate)), cancellationToken: cancellationToken);
+        await stickerCollection.Indexes.CreateOneAsync(new CreateIndexModel<Sticker>(Builders<Sticker>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
+        await stickerCollection.Indexes.CreateOneAsync(new CreateIndexModel<Sticker>(Builders<Sticker>.IndexKeys.Text(x => x.Name)), cancellationToken: cancellationToken);
+
+        logger.LogInformation("Creating indexes for StickerAsset collection...");
+        await stickerAssetCollection.Indexes.CreateOneAsync(new CreateIndexModel<StickerAsset>(Builders<StickerAsset>.IndexKeys.Ascending(x => x.StickerId)), cancellationToken: cancellationToken);
+        await stickerAssetCollection.Indexes.CreateOneAsync(new CreateIndexModel<StickerAsset>(Builders<StickerAsset>.IndexKeys.Ascending(x => x.MediaId)), cancellationToken: cancellationToken);
+
+        logger.LogInformation("Creating indexes for StickerSubscription collection...");
+        await stickerSubscriptionCollection.Indexes.CreateOneAsync(new CreateIndexModel<StickerSubscription>(Builders<StickerSubscription>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
+        await stickerSubscriptionCollection.Indexes.CreateOneAsync(new CreateIndexModel<StickerSubscription>(Builders<StickerSubscription>.IndexKeys.Ascending(x => x.StickerId)), cancellationToken: cancellationToken);
+        await stickerSubscriptionCollection.Indexes.CreateOneAsync(new CreateIndexModel<StickerSubscription>(Builders<StickerSubscription>.IndexKeys.Descending(x => x.SubscribedAt)), cancellationToken: cancellationToken);
+        await stickerSubscriptionCollection.Indexes.CreateOneAsync(
+            new CreateIndexModel<StickerSubscription>(
+                Builders<StickerSubscription>.IndexKeys.Combine(
+                    Builders<StickerSubscription>.IndexKeys.Ascending(x => x.UserId),
+                    Builders<StickerSubscription>.IndexKeys.Ascending(x => x.StickerId)),
+                new CreateIndexOptions { Unique = true }),
+            cancellationToken: cancellationToken);
+
+        logger.LogInformation("Creating indexes for RecentStickerUsage collection...");
+        await recentStickerUsageCollection.Indexes.CreateOneAsync(new CreateIndexModel<RecentStickerUsage>(Builders<RecentStickerUsage>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
+        await recentStickerUsageCollection.Indexes.CreateOneAsync(new CreateIndexModel<RecentStickerUsage>(Builders<RecentStickerUsage>.IndexKeys.Ascending(x => x.StickerId)), cancellationToken: cancellationToken);
+        await recentStickerUsageCollection.Indexes.CreateOneAsync(new CreateIndexModel<RecentStickerUsage>(Builders<RecentStickerUsage>.IndexKeys.Ascending(x => x.StickerAssetId)), cancellationToken: cancellationToken);
+        await recentStickerUsageCollection.Indexes.CreateOneAsync(new CreateIndexModel<RecentStickerUsage>(Builders<RecentStickerUsage>.IndexKeys.Descending(x => x.LastUsedAt)), cancellationToken: cancellationToken);
+        await recentStickerUsageCollection.Indexes.CreateOneAsync(
+            new CreateIndexModel<RecentStickerUsage>(
+                Builders<RecentStickerUsage>.IndexKeys.Combine(
+                    Builders<RecentStickerUsage>.IndexKeys.Ascending(x => x.UserId),
+                    Builders<RecentStickerUsage>.IndexKeys.Ascending(x => x.StickerAssetId)),
+                new CreateIndexOptions { Unique = true }),
+            cancellationToken: cancellationToken);
 
         logger.LogInformation("Indexes created successfully.");
     }
