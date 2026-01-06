@@ -126,10 +126,6 @@
                                     Margin="6"
                                     Stroke="#808080"
                                     StrokeThickness="1">
-                                    <Border.GestureRecognizers>
-                                        <DragGestureRecognizer CanDrag="True" DragStarting="OnMediaDragStarting" />
-                                        <DropGestureRecognizer AllowDrop="True" Drop="OnMediaDrop" />
-                                    </Border.GestureRecognizers>
                                     <Grid HeightRequest="200">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="150" />
@@ -143,6 +139,8 @@
                                                                Mode=OneWay}" />
                                         <Grid Grid.Row="0" IsVisible="{x:Binding IsEditImageVisible}">
                                             <Grid.GestureRecognizers>
+                                                <DragGestureRecognizer CanDrag="True" DragStarting="OnMediaDragStarting" />
+                                                <DropGestureRecognizer AllowDrop="True" Drop="OnMediaDrop" />
                                                 <TapGestureRecognizer Tapped="OnEditAttachmentGridTapped" />
                                             </Grid.GestureRecognizers>
                                             <Rectangle
