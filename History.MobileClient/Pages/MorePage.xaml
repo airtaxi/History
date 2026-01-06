@@ -136,6 +136,69 @@
                         </Image.Source>
                     </Image>
                 </Grid>
+
+                <!--  제재 내역 (관리자 전용)  -->
+                <Rectangle
+                    x:Name="ModerationDivider"
+                    Fill="#808080"
+                    HeightRequest="0.5"
+                    HorizontalOptions="Fill"
+                    IsVisible="False"
+                    Opacity="0.5" />
+
+                <Grid
+                    x:Name="ModerationRecordsGrid"
+                    Padding="16,12"
+                    BackgroundColor="{AppThemeBinding Light=#FFFFFF,
+                                                      Dark=#1A1A1A}"
+                    IsVisible="False">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnModerationRecordsGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="48" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Image
+                        Grid.Column="0"
+                        HeightRequest="32"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Center"
+                        WidthRequest="32">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Shield}"
+                                Color="{StaticResource Primary}" />
+                        </Image.Source>
+                    </Image>
+                    <VerticalStackLayout
+                        Grid.Column="1"
+                        Spacing="2"
+                        VerticalOptions="Center">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="제재 내역" />
+                        <Label
+                            FontSize="12"
+                            Text="관리자 제재 기록 확인"
+                            TextColor="#808080" />
+                    </VerticalStackLayout>
+                    <Image
+                        Grid.Column="2"
+                        HeightRequest="24"
+                        VerticalOptions="Center"
+                        WidthRequest="24">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Chevron_right}"
+                                Color="#808080" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
             </VerticalStackLayout>
         </ScrollView>
     </Grid>

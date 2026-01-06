@@ -150,6 +150,9 @@
 		<MauiXaml Update="Pages\MessagesPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Pages\ModerationRecordsPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Pages\MorePage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
