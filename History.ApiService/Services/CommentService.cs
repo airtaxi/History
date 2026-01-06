@@ -146,11 +146,21 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, comment.Id, requesterId, contents, files);
         if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
+        // Fill external URL contents
         var externalUrlContents = comment.Contents.OfType<ExternalUrlContent>();
         foreach (var externalUrlContent in externalUrlContents.ToList())
         {
             var fillResult = await postService.FillExternalUrlContentAsync(externalUrlContent);
             if (fillResult.IsFailure) comment.Contents.Remove(externalUrlContent);
+        }
+
+        // Fill sticker contents
+        var stickerService = serviceProvider.GetRequiredService<IStickerService>();
+        var emptyStickerContents = contents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
+        foreach (var emptyStickerContent in emptyStickerContents)
+        {
+            var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
+            if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
         }
 
         // Insert the comment
@@ -208,11 +218,21 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Comment, originalComment.Id, requesterId, contents, files);
         if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
+        // Fill external URL contents
         var externalUrlContents = contents.OfType<ExternalUrlContent>();
         foreach (var externalUrlContent in externalUrlContents.ToList())
         {
             var fillResult = await postService.FillExternalUrlContentAsync(externalUrlContent);
             if (fillResult.IsFailure) contents.Remove(externalUrlContent);
+        }
+
+        // Fill sticker contents
+        var stickerService = serviceProvider.GetRequiredService<IStickerService>();
+        var emptyStickerContents = contents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
+        foreach (var emptyStickerContent in emptyStickerContents)
+        {
+            var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
+            if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
         }
 
         // Update Comment

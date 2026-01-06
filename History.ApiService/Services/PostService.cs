@@ -468,11 +468,21 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Post, postId, userId, contents, files);
         if (uploadResult.IsFailure) return uploadResult;
 
+        // Fill external URL contents
         var externalUrlContents = contents.OfType<ExternalUrlContent>();
         foreach (var externalUrlContent in externalUrlContents.ToList())
         {
             var fillResult = await FillExternalUrlContentAsync(externalUrlContent);
             if (fillResult.IsFailure) contents.Remove(externalUrlContent);
+        }
+
+        // Fill sticker contents
+        var stickerService = serviceProvider.GetRequiredService<IStickerService>();
+        var emptyStickerContents = contents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
+        foreach (var emptyStickerContent in emptyStickerContents)
+        {
+            var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
+            if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
         }
 
         var post = new Post
@@ -597,11 +607,21 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Post, postId, userId, contents, files);
         if (uploadResult.IsFailure) return uploadResult.CastFailure<Comment>();
 
+        // Fill external URL contents
         var externalUrlContents = contents.OfType<ExternalUrlContent>();
         foreach (var externalUrlContent in externalUrlContents.ToList())
         {
             var fillResult = await FillExternalUrlContentAsync(externalUrlContent);
             if (fillResult.IsFailure) contents.Remove(externalUrlContent);
+        }
+
+        // Fill sticker contents
+        var stickerService = serviceProvider.GetRequiredService<IStickerService>();
+        var emptyStickerContents = contents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
+        foreach (var emptyStickerContent in emptyStickerContents)
+        {
+            var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
+            if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
         }
 
         // Update the post contents
@@ -1053,14 +1073,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         }
 
         // Fill StickerMediaId for StickerContents
-        var stickerContents = post.Contents.OfType<StickerContent>();
-        foreach (var stickerContent in stickerContents)
+        var emptyStickerContents = post.Contents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
+        foreach (var emptyStickerContent in emptyStickerContents)
         {
-            var assetResult = await stickerService.GetStickerAssetByIdAsync(stickerContent.StickerContentId);
-            if (assetResult.IsSuccess)
-            {
-                stickerContent.StickerMediaId = assetResult.Value.MediaId;
-            }
+            var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
+            if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
         }
 
         if (post.IsPublicPost)
@@ -1136,14 +1153,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             }
 
             // Fill StickerMediaId for parent post StickerContents
-            var parentPostStickerContents = parentPostResult.Value.Contents.OfType<StickerContent>();
-            foreach (var parentPostStickerContent in parentPostStickerContents)
+            var empryParentPostStickerContents = parentPostResult.Value.Contents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
+            foreach (var emptyParentPostStickerContent in empryParentPostStickerContents)
             {
-                var assetResult = await stickerService.GetStickerAssetByIdAsync(parentPostStickerContent.StickerContentId);
-                if (assetResult.IsSuccess)
-                {
-                    parentPostStickerContent.StickerMediaId = assetResult.Value.MediaId;
-                }
+                var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyParentPostStickerContent.StickerContentId);
+                if (assetResult.IsSuccess) emptyParentPostStickerContent.StickerMediaId = assetResult.Value.MediaId;
             }
 
             if (!isBanned && parentPostUserResult.IsSuccess)

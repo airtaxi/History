@@ -110,7 +110,6 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
             }
         }
 
-
         var finalTextContent = new TextContent() { Text = text };
         var finalMediaConent = mediaContents.FirstOrDefault();
         var finalContents = new List<BaseContent>() { finalTextContent };
@@ -237,15 +236,12 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
         // Check if the requester is either the sender or receiver
         if (sender.UserId != requesterId && receiver.UserId != requesterId) return (ErrorType.Forbidden, "이 쪽지를 조회할 권한이 없습니다.");
 
-        // Fill StickerMediaId for StickerContents
-        var stickerContents = message.Contents.OfType<StickerContent>();
-        foreach (var stickerContent in stickerContents)
+        // Fill sticker contents
+        var emptyStickerContents = message.Contents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
+        foreach (var emptyStickerContent in emptyStickerContents)
         {
-            var assetResult = await stickerService.GetStickerAssetByIdAsync(stickerContent.StickerContentId);
-            if (assetResult.IsSuccess)
-            {
-                stickerContent.StickerMediaId = assetResult.Value.MediaId;
-            }
+            var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
+            if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
         }
 
         var result = new MessageResponseDto
