@@ -6,7 +6,9 @@
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Loaded="OnLoaded"
     Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False"
     SizeChanged="OnSizeChanged">
     <ContentPage.Behaviors>
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
@@ -26,12 +28,23 @@
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnTitleGridTapped" />
             </Grid.GestureRecognizers>
-            <Label
-                FontAttributes="Bold"
-                FontSize="20"
-                Text="발견"
-                TextColor="White"
-                VerticalOptions="Center" />
+
+            <HorizontalStackLayout Spacing="8">
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="발견"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
         </Grid>
 
         <Grid Grid.Row="1">
