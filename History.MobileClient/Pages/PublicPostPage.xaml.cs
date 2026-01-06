@@ -209,4 +209,13 @@ public partial class PublicPostPage : ContentPage
     }
 
     private void OnScrollToTopBorderTapped(object sender, TappedEventArgs e) => MainCollectionView.SetScrollOffsetY(0, false);
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+#if IOS
+        AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
+    }
+
+    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 }
