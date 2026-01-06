@@ -1,8 +1,10 @@
 ﻿using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes;
+using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
 
 namespace History.ApiService.Services;
@@ -19,6 +21,9 @@ public class ModerationService(IMongoDatabase database, INotificationService not
 
     public async Task<Result<List<ModerationRecord>>> GetModerationRecordsAsync(string fromRecordId = null, int limit = 10)
     {
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+        var stickerService = serviceProvider.GetRequiredService<IStickerService>();
+
         var filter = Builders<ModerationRecord>.Filter.Empty;
         if (!string.IsNullOrEmpty(fromRecordId))
         {
@@ -31,6 +36,27 @@ public class ModerationService(IMongoDatabase database, INotificationService not
             .SortByDescending(r => r.CreatedAt)
             .Limit(limit)
             .ToListAsync();
+
+        foreach(var record in records)
+        {
+            // Fill profile content user info
+            var profileContents = record.AssociatedContents.OfType<ProfileContent>();
+            var profileContentUsersResult = await userService.GenerateUserResponseDtosAsync(profileContents.Select(x => x.UserId), requesterId);
+            foreach (var profileContent in profileContents)
+            {
+                var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == profileContent.UserId);
+                profileContent.UserId = user?.UserId;
+                profileContent.Nickname = (user?.Nickname ?? "탈퇴한 사용자") + ' ';
+            }
+
+            // Fill in missing sticker media IDs
+            var emptyStickerContents = record.AssociatedContents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
+            foreach (var emptyStickerContent in emptyStickerContents)
+            {
+                var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
+                if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+            }
+        }
 
         return records;
     }
