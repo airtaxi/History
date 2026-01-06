@@ -27,9 +27,9 @@ public class ModerationService(IMongoDatabase database, INotificationService not
         var filter = Builders<ModerationRecord>.Filter.Empty;
         if (!string.IsNullOrEmpty(fromRecordId))
         {
-            var fromRecord = _moderationRecordCollection.Find(r => r.Id == fromRecordId).FirstOrDefaultAsync();
+            var fromRecord = await _moderationRecordCollection.Find(r => r.Id == fromRecordId).FirstOrDefaultAsync();
             if (fromRecord == null) return (ErrorType.NotFound, "제재 내역을 찾을 수 없습니다.");
-            filter = Builders<ModerationRecord>.Filter.Gt(r => r.CreatedAt, fromRecord.Result.CreatedAt);
+            filter = Builders<ModerationRecord>.Filter.Lt(r => r.CreatedAt, fromRecord.CreatedAt);
         }
 
         var records = await _moderationRecordCollection.Find(filter)
