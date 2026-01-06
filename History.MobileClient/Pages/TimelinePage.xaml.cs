@@ -217,7 +217,6 @@ public partial class TimelinePage : ContentPage
         var firstViewModel = _viewModels.FirstOrDefault();
         if (firstViewModel == null) return;
 
-        MainCollectionView.SetScrollOffsetY(0, false); // Cancel scroll animation
         MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
     }
 
