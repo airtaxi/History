@@ -76,7 +76,7 @@ public partial class StickersPage : ContentPage
         finally { _fetchSemaphore.Release(); }
     }
 
-    private async void OnLoaded(object sender, EventArgs e)
+    private void OnLoaded(object sender, EventArgs e)
     {
 #if IOS
         AppleSwipeGestureHelper.ApplyToPage(this);
