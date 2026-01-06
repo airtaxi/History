@@ -177,7 +177,7 @@ public partial class PostViewModel : ObservableObject
         try
         {
             Post = post;
-            Contents = Utils.GenerateContentViewModels(Post.Contents, PostType, IsParentPost);
+            Contents = Utils.GenerateContentViewModels(Post.Contents, PostType, IsParentPost, Post.Id);
             ParentPost = Post.ParentPost != null ? new(Post.ParentPost, PostType, true) : null;
             User = post?.User;
 

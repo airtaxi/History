@@ -20,6 +20,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     private readonly IMongoCollection<Post> _publicPostCollection = database.GetCollection<Post>("PublicPosts");
     private readonly IMongoCollection<IgnoredPost> _ignoredPostCollection = database.GetCollection<IgnoredPost>("IgnoredPosts");
     private readonly IMongoCollection<PostReaction> _postReactionCollection = database.GetCollection<PostReaction>("PostReactions");
+    private readonly IMongoCollection<PollVote> _pollVoteCollection = database.GetCollection<PollVote>("PollVotes");
 
     /// <inheritdoc />
     public async Task<Result<Post>> GetPostByIdAsync(string postId)
@@ -624,6 +625,16 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
         }
 
+        // If poll content is removed or changed, delete existing poll votes
+        var oldPollContents = post.Contents.OfType<PollContent>();
+        var newPollContents = contents.OfType<PollContent>();
+        var removedPollIds = oldPollContents
+            .Where(oldPoll => !newPollContents.Any(newPoll => newPoll.PollId == oldPoll.PollId))
+            .Select(oldPoll => oldPoll.PollId)
+            .ToList();
+
+        foreach (var pollId in removedPollIds) await _pollVoteCollection.DeleteManyAsync(v => v.PollId == pollId);
+
         // Update the post contents
         post.Contents = contents;
         post.SearchIndex = GenerateSearchIndexFromContents(contents, requestDto.Hashtags);
@@ -682,6 +693,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Delete post reactions associated with the post
         await _postReactionCollection.DeleteManyAsync(r => r.PostId == postId);
+
+        // Delete poll votes associated with the post
+        var pollContents = post.Contents.OfType<PollContent>();
+        foreach (var pollContent in pollContents) await _pollVoteCollection.DeleteManyAsync(v => v.PollId == pollContent.PollId);
 
         // Delete media files associated with the post
         await mediaService.DeleteMediaByAssociatedIdAsync(postId);
@@ -1080,6 +1095,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
         }
 
+        // Fill PollContent with vote statistics
+        var pollContents = post.Contents.OfType<PollContent>();
+        foreach (var pollContent in pollContents) await FillPollContentAsync(pollContent, requesterId);
+
         if (post.IsPublicPost)
         {
             return new PostResponseDto
@@ -1318,5 +1337,111 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         }
 
         return results;
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> VotePollAsync(string postId, string pollId, string requesterId, VotePollRequestDto requestDto)
+    {
+        // Check post access
+        var accessResult = await CheckAccessAsync(postId, requesterId);
+        if (accessResult.IsFailure) return accessResult;
+
+        var postResult = await GetPostByIdAsync(postId);
+        if (postResult.IsFailure) return postResult.CastFailure();
+
+        // Find poll content
+        var pollContent = postResult.Value.Contents.OfType<PollContent>().FirstOrDefault(p => p.PollId == pollId);
+        if (pollContent == null) return (ErrorType.NotFound, "투표를 찾을 수 없습니다.");
+
+        // Check if poll is expired
+        if (pollContent.IsExpired) return (ErrorType.BadRequest, "투표가 마감되었습니다.");
+
+        // Validate selected options
+        if (requestDto.SelectedOptionIndices == null || requestDto.SelectedOptionIndices.Count == 0)
+            return (ErrorType.BadRequest, "선택된 항목이 없습니다.");
+
+        if (!pollContent.AllowMultipleSelection && requestDto.SelectedOptionIndices.Count > 1)
+            return (ErrorType.BadRequest, "이 투표는 단일 선택만 가능합니다.");
+
+        foreach (var index in requestDto.SelectedOptionIndices)
+        {
+            if (index < 0 || index >= pollContent.Options.Count)
+                return (ErrorType.BadRequest, "유효하지 않은 선택 항목입니다.");
+        }
+
+        // Check if user already voted
+        var existingVote = await _pollVoteCollection
+            .Find(v => v.PollId == pollId && v.UserId == requesterId)
+            .FirstOrDefaultAsync();
+
+        if (existingVote != null)
+        {
+            // Update existing vote
+            var filter = Builders<PollVote>.Filter.Eq(v => v.Id, existingVote.Id);
+            var update = Builders<PollVote>.Update.Set(v => v.SelectedOptionIndices, requestDto.SelectedOptionIndices);
+            await _pollVoteCollection.UpdateOneAsync(filter, update);
+        }
+        else
+        {
+            // Create new vote
+            var vote = new PollVote
+            {
+                PollId = pollId,
+                PostId = postId,
+                UserId = requesterId,
+                SelectedOptionIndices = requestDto.SelectedOptionIndices,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            while (true)
+            {
+                vote.Id = Guid.NewGuid().ToString("N");
+                var existing = await _pollVoteCollection.Find(v => v.Id == vote.Id).FirstOrDefaultAsync();
+                if (existing == null) break;
+            }
+
+            await _pollVoteCollection.InsertOneAsync(vote);
+        }
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<List<PollVote>>> GetPollVotesAsync(string pollId)
+    {
+        var votes = await _pollVoteCollection
+            .Find(v => v.PollId == pollId)
+            .ToListAsync();
+        return votes;
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<PollVote>> GetPollVoteAsync(string pollId, string userId)
+    {
+        var vote = await _pollVoteCollection
+            .Find(v => v.PollId == pollId && v.UserId == userId)
+            .FirstOrDefaultAsync();
+
+        if (vote == null) return (ErrorType.NotFound, "투표 기록을 찾을 수 없습니다.");
+        return vote;
+    }
+
+    private async Task FillPollContentAsync(PollContent pollContent, string requesterId)
+    {
+        var votes = await _pollVoteCollection
+            .Find(v => v.PollId == pollContent.PollId)
+            .ToListAsync();
+
+        // Calculate total votes and option counts
+        pollContent.TotalVotes = votes.Count;
+
+        for (int i = 0; i < pollContent.Options.Count; i++)
+        {
+            pollContent.Options[i].VoteCount = votes.Count(v => v.SelectedOptionIndices.Contains(i));
+        }
+
+        // Get current user's vote
+        var myVote = votes.FirstOrDefault(v => v.UserId == requesterId);
+        pollContent.MyVotedOptionIndices = myVote?.SelectedOptionIndices;
     }
 }

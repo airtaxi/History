@@ -3,11 +3,12 @@ using System.Text.Json.Serialization;
 
 namespace History.Commons.DataTypes.Contents;
 
-[BsonKnownTypes(typeof(ProfileContent), typeof(ExternalUrlContent), typeof(MediaContent), typeof(UploadContent), typeof(TextContent), typeof(StickerContent))]
+[BsonKnownTypes(typeof(ProfileContent), typeof(ExternalUrlContent), typeof(MediaContent), typeof(UploadContent), typeof(TextContent), typeof(StickerContent), typeof(PollContent))]
 [JsonDerivedType(typeof(ProfileContent), "profile")]
 [JsonDerivedType(typeof(ExternalUrlContent), "externalUrl")]
 [JsonDerivedType(typeof(MediaContent), "media")]
 [JsonDerivedType(typeof(UploadContent), "upload")]
 [JsonDerivedType(typeof(TextContent), "text")]
 [JsonDerivedType(typeof(StickerContent), "sticker")]
+[JsonDerivedType(typeof(PollContent), "poll")]
 public class BaseContent;

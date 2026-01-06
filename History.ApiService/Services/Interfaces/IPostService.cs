@@ -204,4 +204,29 @@ public interface IPostService
     /// <param name="userId">The ID of the user whose posts and reactions are to be deleted.</param>
     /// <returns>A task that represents the asynchronous operation, containing the result of the withdrawal process.</returns>
     public Task<Result> HandleWithdrawAsync(string userId);
+
+    /// <summary>
+    /// Handles voting on a poll in a post.
+    /// </summary>
+    /// <param name="postId">The ID of the post containing the poll.</param>
+    /// <param name="pollId">The ID of the poll.</param>
+    /// <param name="requesterId">The ID of the user voting.</param>
+    /// <param name="requestDto">The vote request containing selected option indices.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the vote.</returns>
+    public Task<Result> VotePollAsync(string postId, string pollId, string requesterId, VotePollRequestDto requestDto);
+
+    /// <summary>
+    /// Gets poll votes for a specific poll.
+    /// </summary>
+    /// <param name="pollId">The ID of the poll.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the list of poll votes.</returns>
+    public Task<Result<List<PollVote>>> GetPollVotesAsync(string pollId);
+
+    /// <summary>
+    /// Gets poll vote for a specific user on a poll.
+    /// </summary>
+    /// <param name="pollId">The ID of the poll.</param>
+    /// <param name="userId">The ID of the user.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the poll vote if exists.</returns>
+    public Task<Result<PollVote>> GetPollVoteAsync(string pollId, string userId);
 }

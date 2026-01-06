@@ -48,8 +48,10 @@ public partial class EditPostPage : ContentPage
     private ExternalUrlContentViewModel _externalUrlContentViewModel;
 
     private readonly ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
+    private PollContentViewModel _pollContentViewModel;
+    private TaskCompletionSource<DateTime?> _pollEndTimeTaskCompletionSource;
 
-	public EditPostPage()
+    public EditPostPage()
     {
         InitializeComponent();
         Initialize();
@@ -133,6 +135,13 @@ public partial class EditPostPage : ContentPage
                 ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
                 ExternalUrlContentBorder.IsVisible = true;
                 ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
+            }
+            var pollContent = _post.Contents.OfType<PollContent>().FirstOrDefault();
+            if (pollContent != null)
+            {
+                _pollContentViewModel = new(pollContent, _post.Id);
+                PollContentDataTemplatePresenter.ViewModel = _pollContentViewModel;
+                PollContentBorder.IsVisible = true;
             }
             if(_post.ParentPost != null)
             {
@@ -380,8 +389,7 @@ public partial class EditPostPage : ContentPage
     private async void OnMediaDescriptionGridTapped(object sender, TappedEventArgs e)
     {
         var element = sender as Element;
-        var viewModel = element.BindingContext as MediaAttachmentViewModel;
-        if (viewModel == null) return;
+        if (element.BindingContext is not MediaAttachmentViewModel viewModel) return;
 
         var description = await DisplayPromptAsync("설명 입력", "이 미디어에 대한 설명을 입력해주세요", Constants.PromptOk, "설명 삭제", "이 미디어에 대한 설명 입력", CommonsConstants.MaxMediaDescriptionLength, null, viewModel.Description);
         viewModel.Description = description?.Trim() ?? string.Empty;
@@ -392,9 +400,8 @@ public partial class EditPostPage : ContentPage
     private void OnMediaDrop(object sender, DropEventArgs e)
     {
         var itemToMove = _attachmentViewModelBeingDragged;
-        var itemToInsertBefore = (sender as Element).BindingContext as MediaAttachmentViewModel;
-        if (itemToMove == null || itemToInsertBefore == null || itemToMove == itemToInsertBefore)
-            return;
+        if (itemToMove == null || (sender as Element).BindingContext is not MediaAttachmentViewModel itemToInsertBefore || itemToMove == itemToInsertBefore) return;
+
         int insertAtIndex = _attachmentViewModels.IndexOf(itemToInsertBefore);
         if (insertAtIndex >= 0 && insertAtIndex < _attachmentViewModels.Count)
         {
@@ -446,8 +453,9 @@ public partial class EditPostPage : ContentPage
             var contents = editorContents.Concat(mediaAndUploadContents).ToList();
 
             if (_externalUrlContentViewModel != null) contents.Add(_externalUrlContentViewModel.ExternalUrlContent);
+            if (_pollContentViewModel != null) contents.Add(_pollContentViewModel.PollContent);
 
-            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && !_isShare && Hashtags.Count == 0)
+            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && _pollContentViewModel == null && !_isShare && Hashtags.Count == 0)
             {
                 await DisplayAlertAsync("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
                 return;
@@ -477,7 +485,7 @@ public partial class EditPostPage : ContentPage
 
                 if (_post != null && !_isShare)
                 {
-                    var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, _commentPermission, disallowShare, discoveryOptionSelectedUserIds, files, Hashtags.ToList()), ErrorType.BadRequest);
+                    var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, _commentPermission, disallowShare, discoveryOptionSelectedUserIds, files, [.. Hashtags]), ErrorType.BadRequest);
                     if (result.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
@@ -676,7 +684,7 @@ public partial class EditPostPage : ContentPage
                         }
                     }
 
-                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null, Hashtags.ToList()), ErrorType.BadRequest);
+                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null, [.. Hashtags]), ErrorType.BadRequest);
                     if (result.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
@@ -973,6 +981,20 @@ public partial class EditPostPage : ContentPage
 
     private void OnReservationDateTimePickerCancelButtonClicked(object sender, EventArgs e) => ReservationDateTimePicker.IsOpen = false;
 
+    private void OnPollEndTimeDateTimePickerOkButtonClicked(object sender, EventArgs e)
+    {
+        var dateTime = PollEndTimeDateTimePicker.SelectedDate;
+        if (dateTime.HasValue) _pollEndTimeTaskCompletionSource.TrySetResult(dateTime.Value);
+        else _pollEndTimeTaskCompletionSource.TrySetResult(null);
+        PollEndTimeDateTimePicker.IsOpen = false;
+    }
+
+    private void OnPollEndTimeDateTimePickerCancelButtonClicked(object sender, EventArgs e)
+    {
+        _pollEndTimeTaskCompletionSource.TrySetResult(null);
+        PollEndTimeDateTimePicker.IsOpen = false;
+    }
+
     private static string ExtractUrlFromText(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return null;
@@ -985,8 +1007,7 @@ public partial class EditPostPage : ContentPage
 
     private async void OnHashtagBorderTapped(object sender, TappedEventArgs e)
     {
-        var hashtag = e.Parameter as string;
-        if (hashtag == null) return;
+        if (e.Parameter is not string hashtag) return;
 
         const string editHashtag = "해시태그 수정";
         const string removeHashtag = "해시태그 삭제";
@@ -1031,8 +1052,7 @@ public partial class EditPostPage : ContentPage
     private async void OnEditAttachmentGridTapped(object sender, TappedEventArgs e)
     {
         var view = sender as View;
-        var viewModel = view?.BindingContext as MediaAttachmentViewModel;
-        if (viewModel == null) return;
+        if (view?.BindingContext is not MediaAttachmentViewModel viewModel) return;
 
         if (!viewModel.IsUpload)
         {
@@ -1061,5 +1081,75 @@ public partial class EditPostPage : ContentPage
     {
         MainTextContent.UnfocusEditor();
         await StickerCollectionView.ToggleAsync();
+    }
+
+    private async void OnInsertPollTapped(object sender, TappedEventArgs e)
+    {
+        MainTextContent.UnfocusEditor();
+
+        if (_pollContentViewModel != null)
+        {
+            var replace = await DisplayAlertAsync("투표 수정", "이미 추가된 투표가 있습니다. 새로 만들까요?", Constants.PromptOk, Constants.PromptCancel);
+            if (!replace) return;
+        }
+
+        var question = await DisplayPromptAsync("투표 질문", "투표 질문을 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "질문", 200, Keyboard.Text);
+        if (string.IsNullOrWhiteSpace(question)) return;
+
+        var options = new List<string>();
+        while (true)
+        {
+            var option = await DisplayPromptAsync("투표 옵션", options.Count < 2 ? "옵션을 2개 이상 입력해주세요. 취소를 누르면 종료됩니다." : "옵션 추가 (취소 시 종료)", Constants.PromptOk, options.Count < 2 ? null : Constants.PromptCancel, "옵션", 100, Keyboard.Text);
+            if (string.IsNullOrWhiteSpace(option))
+            {
+                if (options.Count >= 2) break;
+                else continue;
+            }
+
+            if (options.Contains(option))
+            {
+                await DisplayAlertAsync("오류", "중복된 옵션입니다.", Constants.PromptOk);
+                continue;
+            }
+            options.Add(option);
+        }
+
+        if (options.Count < 2)
+        {
+            await DisplayAlertAsync("오류", "옵션은 최소 2개 이상이어야 합니다.", Constants.PromptOk);
+            return;
+        }
+
+        var allowMultiple = await DisplayAlertAsync("투표 설정", "복수 선택을 허용할까요?", "예", "아니오");
+
+        DateTime? expiresAt = null;
+        var setExpire = await DisplayAlertAsync("마감 설정", "마감 시간을 설정하시겠습니까?", "예", "아니오");
+        if (setExpire)
+        {
+            _pollEndTimeTaskCompletionSource = new();
+            PollEndTimeDateTimePicker.MinimumDate = DateTime.Now.AddHours(1);
+            PollEndTimeDateTimePicker.IsOpen = true;
+            expiresAt = await _pollEndTimeTaskCompletionSource.Task;
+        }
+
+        var pollContent = new PollContent
+        {
+            PollId = Guid.NewGuid().ToString("N"),
+            Question = question.Trim(),
+            AllowMultipleSelection = allowMultiple,
+            ExpiresAt = expiresAt,
+            Options = [.. options.Select(o => new PollOption { Text = o.Trim() })]
+        };
+
+        _pollContentViewModel = new PollContentViewModel(pollContent, _post?.Id ?? Guid.NewGuid().ToString("N"));
+        PollContentDataTemplatePresenter.ViewModel = _pollContentViewModel;
+        PollContentBorder.IsVisible = true;
+    }
+
+    private void OnDeletePollContentTapped(object sender, TappedEventArgs e)
+    {
+        _pollContentViewModel = null;
+        PollContentDataTemplatePresenter.ViewModel = null;
+        PollContentBorder.IsVisible = false;
     }
 }

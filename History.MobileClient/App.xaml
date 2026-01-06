@@ -3,6 +3,7 @@
     x:Class="History.MobileClient.App"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:History.MobileClient.Converters"
     xmlns:local="clr-namespace:History.MobileClient"
     xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
     xmlns:syncCoreTheme="clr-namespace:Syncfusion.Maui.Themes;assembly=Syncfusion.Maui.Core"
@@ -27,6 +28,9 @@
 
                 <material:StyleResource BasedOn="{x:Reference appStyles}" ColorsOverride="{x:Reference appColors}" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!--  Converters  -->
+            <converters:BoolToPrimaryColorConverter x:Key="BoolToPrimaryColorConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

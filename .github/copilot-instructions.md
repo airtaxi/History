@@ -25,7 +25,7 @@ History.ApiService는 "History"라는 소셜 미디어 애플리케이션의 백
 
 API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정 도메인을 처리합니다:
 
-- **PostController**: 포스트 CRUD 작업, 타임라인/공개 포스트, 리액션, 리포스트, 공유, 발견 옵션, 검색, 외부 URL 콘텐츠 채우기
+- **PostController**: 포스트 CRUD 작업, 타임라인/공개 포스트, 리액션, 리포스트, 공유, 발견 옵션, 검색, 외부 URL 콘텐츠 채우기, 투표 기능
 - **GoogleController**: Google OAuth 인증 흐름 (로그인 URL 생성, 콜백 처리)
 - **ReportController**: 신고 기록 관리 (생성, 보기, 삭제) 조정자 액세스 포함
 - **CommentController**: 댓글 CRUD 작업, 좋아요, 포스트 권한 기반 액세스 제어
@@ -44,9 +44,9 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 서비스는 비즈니스 로직을 구현하며, 인터페이스를 통해 추상화됩니다. 주요 서비스는 다음과 같습니다:
 
 - **UserService**: 사용자 CRUD, 프로필 업데이트 (닉네임, 설명, 생일, 미디어), 검색 허용 설정, 핸들 관리, 메모, 푸시 알림 권한, 메시지 수신 권한, 회원 탈퇴 처리
-- **MediaService**: 미디어 업로드/변환/저장 (GridFS 사용), 썸네일 생성, 파일 삭제, 사용자별 미디어 관리
+- **MediaService**: 미디어 업로드/변환/저장 (GridFS 사용), 썸네일 생성, 파일 삭제, 사용자별 미edia 관리
 - **FriendshipService**: 친구 요청/수락/거절/취소, 차단/무시, 친구 목록 검색, 친구 관계 확인, 즐겨찾기 친구 관리
-- **PostService**: 포스트 CRUD, 타임라인/공개 포스트 검색, 리액션/리포스트 처리, 발견 옵션 변경, 액세스 제어, 검색, 외부 URL 채우기
+- **PostService**: 포스트 CRUD, 타임라인/공개 포스트 검색, 리액션/리포스트 처리, 발견 옵션 변경, 액세스 제어, 검색, 외부 URL 채우기, 투표 기능 (PollVote 관리)
 - **CommentService**: 댓글 CRUD, 좋아요, 액세스 제어, 응답 DTO 생성
 - **NotificationService**: 푸시 알림 전송/삭제, Firebase 토큰 관리, 알림 필터링
 - **MessageService**: 메시지 전송/검색/읽음 처리, 권한 확인, 응답 DTO 생성
@@ -54,7 +54,7 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 - **ModerationService**: 포스트/댓글 삭제, 조정 기록 관리
 - **RefreshTokenService**: JWT 리프레시 토큰 관리
 - **BirthdayService**: 생일 알림 처리 (호스티드 서비스)
-- **StickerService**: 스티커 CRUD, 스티커 에셋 관리, 스티커 검색, 비공개 스티커 액세스 제어, 구독/구독취소, 최근 사용 기록
+- **StickerService**: 스티커 CRUD, 스티커 에셋 관리, 스티커 검색, 비공식 스티커 액세스 제어, 구독/구독취소, 최근 사용 기록
 
 서비스는 Result 패턴을 사용하며, 데이터베이스 작업은 async/await로 처리됩니다.
 
