@@ -41,7 +41,7 @@ public class ModerationService(IMongoDatabase database, INotificationService not
         {
             // Fill profile content user info
             var profileContents = record.AssociatedContents.OfType<ProfileContent>();
-            var profileContentUsersResult = await userService.GenerateUserResponseDtosAsync(profileContents.Select(x => x.UserId), requesterId);
+            var profileContentUsersResult = await userService.GenerateUserResponseDtosAsync(profileContents.Select(x => x.UserId));
             foreach (var profileContent in profileContents)
             {
                 var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == profileContent.UserId);
