@@ -99,6 +99,8 @@ public partial class CreateStickerPage : ContentPage
 
         fileName = file.GenerateFileName();
         bytes = memoryStream.ToArray();
+
+        memoryStream.Seek(0, SeekOrigin.Begin);
 #endif
 
         // Validation
@@ -106,20 +108,26 @@ public partial class CreateStickerPage : ContentPage
         if (!mimeType.StartsWith("image/"))
         {
             await DisplayAlertAsync("오류", "이미지 파일만 선택할 수 있습니다.", "확인");
+#if IOS
+            memoryStream.Dispose();
+#endif
             return;
         }
         else if (mimeType.Contains("gif"))
         {
             await DisplayAlertAsync("오류", "정적 이미지만 사용 가능합니다. (움짤 불가)", "확인");
+#if IOS
+            memoryStream.Dispose();
+#endif
             return;
         }
 
         _iconFileName = fileName;
 
-        _iconStream?.Dispose();
 #if ANDROID
         var memoryStream = new MemoryStream(bytes);
 #endif
+        _iconStream?.Dispose();
         _iconStream = memoryStream;
 
         IconImage.Source = ImageSource.FromStream(() => memoryStream);
