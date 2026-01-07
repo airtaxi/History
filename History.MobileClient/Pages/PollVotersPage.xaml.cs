@@ -4,6 +4,10 @@ using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.ViewModels;
 
+#if IOS
+using History.MobileClient.Helpers;
+#endif
+
 namespace History.MobileClient.Pages;
 
 public partial class PollVotersPage : ContentPage
@@ -53,6 +57,13 @@ public partial class PollVotersPage : ContentPage
             LoadingIndicator.IsRunning = false;
             LoadingIndicator.IsVisible = false;
         }
+    }
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+#if IOS
+        AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();

@@ -7,6 +7,7 @@
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
+    Loaded="OnLoaded"
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False">
 
@@ -16,7 +17,7 @@
     </ContentPage.Behaviors>
 
     <Grid RowDefinitions="Auto,*">
-        <!-- Header -->
+        <!--  Header  -->
         <Grid
             Grid.Row="0"
             Padding="12,0"
@@ -49,7 +50,7 @@
                 VerticalOptions="Center" />
         </Grid>
 
-        <!-- Content -->
+        <!--  Content  -->
         <CollectionView
             x:Name="VotersCollectionView"
             Grid.Row="1"
@@ -94,7 +95,7 @@
                             <TapGestureRecognizer Command="{x:Binding NavigateToProfileCommand}" />
                         </Border.GestureRecognizers>
                         <Grid ColumnDefinitions="48,*,Auto" ColumnSpacing="12">
-                            <!-- Profile Image -->
+                            <!--  Profile Image  -->
                             <Border
                                 Grid.Column="0"
                                 HeightRequest="48"
@@ -109,7 +110,7 @@
                                     Source="{x:Binding ProfileImageUri}" />
                             </Border>
 
-                            <!-- Nickname -->
+                            <!--  Nickname  -->
                             <Label
                                 Grid.Column="1"
                                 FontAttributes="Bold"
@@ -117,7 +118,7 @@
                                 Text="{x:Binding Nickname}"
                                 VerticalOptions="Center" />
 
-                            <!-- Voted At -->
+                            <!--  Voted At  -->
                             <Label
                                 Grid.Column="2"
                                 FontSize="12"
@@ -131,7 +132,7 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <!-- Loading Indicator -->
+        <!--  Loading Indicator  -->
         <ActivityIndicator
             x:Name="LoadingIndicator"
             Grid.RowSpan="2"

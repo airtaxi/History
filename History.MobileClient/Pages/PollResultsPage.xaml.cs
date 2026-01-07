@@ -5,6 +5,10 @@ using History.Commons.DataTypes.Contents;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 
+#if IOS
+using History.MobileClient.Helpers;
+#endif
+
 namespace History.MobileClient.Pages;
 
 public partial class PollResultsPage : ContentPage
@@ -85,6 +89,13 @@ public partial class PollResultsPage : ContentPage
             .ToList();
 
         OptionsCollectionView.ItemsSource = options;
+    }
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+#if IOS
+        AppleSwipeGestureHelper.ApplyToPage(this);
+#endif
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();

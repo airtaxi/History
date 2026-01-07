@@ -6,6 +6,7 @@
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
+    Loaded="OnLoaded"
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False">
 
@@ -15,7 +16,7 @@
     </ContentPage.Behaviors>
 
     <Grid RowDefinitions="Auto,*">
-        <!-- Header -->
+        <!--  Header  -->
         <Grid
             Grid.Row="0"
             Padding="12,0"
@@ -47,10 +48,10 @@
                 VerticalOptions="Center" />
         </Grid>
 
-        <!-- Content -->
+        <!--  Content  -->
         <ScrollView Grid.Row="1" Padding="16">
             <VerticalStackLayout Spacing="16">
-                <!-- Question -->
+                <!--  Question  -->
                 <Label
                     x:Name="QuestionLabel"
                     FontAttributes="Bold"
@@ -58,14 +59,14 @@
                     TextColor="{AppThemeBinding Light=Black,
                                                 Dark=White}" />
 
-                <!-- Total Votes -->
+                <!--  Total Votes  -->
                 <Label
                     x:Name="TotalVotesLabel"
                     FontSize="14"
                     TextColor="{AppThemeBinding Light=#666666,
                                                 Dark=#AAAAAA}" />
 
-                <!-- Options List -->
+                <!--  Options List  -->
                 <CollectionView x:Name="OptionsCollectionView" SelectionMode="None">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="vm:PollResultOptionViewModel">
@@ -79,7 +80,7 @@
                                     <RoundRectangle CornerRadius="8" />
                                 </Border.StrokeShape>
                                 <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
-                                    <!-- Option Header -->
+                                    <!--  Option Header  -->
                                     <Grid
                                         Grid.Row="0"
                                         ColumnDefinitions="*,Auto"
@@ -99,14 +100,14 @@
                                             VerticalOptions="Center" />
                                     </Grid>
 
-                                    <!-- Progress Bar -->
+                                    <!--  Progress Bar  -->
                                     <ProgressBar
                                         Grid.Row="1"
                                         HeightRequest="8"
                                         Progress="{x:Binding Percentage}"
                                         ProgressColor="{StaticResource Primary}" />
 
-                                    <!-- Vote Count and Voters Preview -->
+                                    <!--  Vote Count and Voters Preview  -->
                                     <Grid
                                         Grid.Row="2"
                                         ColumnDefinitions="*,Auto"
@@ -134,7 +135,7 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
 
-                <!-- Expiry Info -->
+                <!--  Expiry Info  -->
                 <Label
                     x:Name="ExpiresAtLabel"
                     FontSize="14"
@@ -144,7 +145,7 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- Loading Indicator -->
+        <!--  Loading Indicator  -->
         <ActivityIndicator
             x:Name="LoadingIndicator"
             Grid.RowSpan="2"
