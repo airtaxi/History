@@ -1432,8 +1432,12 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             .Find(v => v.PollId == pollContent.PollId)
             .ToListAsync();
 
+        // Calculate total voters (unique users who voted)
+        pollContent.TotalVoters = votes.Count;
+
         // Calculate total votes and option counts
         pollContent.TotalVotes = votes.Sum(x => x.SelectedOptionIndices.Count);
+
 
         for (int i = 0; i < pollContent.Options.Count; i++)
         {

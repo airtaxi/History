@@ -42,6 +42,11 @@ public class PollContent : BaseContent
     public int TotalVotes { get; set; }
 
     /// <summary>
+    /// Total number of unique voters.
+    /// </summary>
+    public int TotalVoters { get; set; }
+
+    /// <summary>
     /// Current user's selected option indices. Null if not voted.
     /// </summary>
     public List<int> MyVotedOptionIndices { get; set; }

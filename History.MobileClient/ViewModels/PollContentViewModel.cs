@@ -17,19 +17,21 @@ public partial class PollContentViewModel : ObservableObject, IContentViewModel
     [NotifyPropertyChangedFor(nameof(Question))]
     [NotifyPropertyChangedFor(nameof(Options))]
     [NotifyPropertyChangedFor(nameof(TotalVotes))]
+    [NotifyPropertyChangedFor(nameof(TotalVoters))]
     [NotifyPropertyChangedFor(nameof(TotalVotesText))]
     [NotifyPropertyChangedFor(nameof(IsExpired))]
     [NotifyPropertyChangedFor(nameof(ExpiresAtText))]
     [NotifyPropertyChangedFor(nameof(HasVoted))]
     [NotifyPropertyChangedFor(nameof(CanVote))]
     [NotifyPropertyChangedFor(nameof(ShowResultsButton))]
-    public partial PollContent PollContent { get; set; }
+    public partial PollContent PollContent { get; private set; }
 
     public string PollId => PollContent.PollId;
     public string Question => PollContent.Question;
     public List<PollOptionViewModel> Options { get; private set; }
     public int TotalVotes => PollContent.TotalVotes;
-    public string TotalVotesText => $"{TotalVotes}명 참여";
+    public int TotalVoters => PollContent.TotalVoters;
+    public string TotalVotesText => $"{TotalVoters}명 참여";
     public bool IsExpired => PollContent.IsExpired;
     public bool HasVoted => PollContent.MyVotedOptionIndices != null && PollContent.MyVotedOptionIndices.Count > 0;
     public bool CanVote => !IsExpired;
@@ -64,7 +66,6 @@ public partial class PollContentViewModel : ObservableObject, IContentViewModel
                 opt,
                 index,
                 PollContent.MyVotedOptionIndices?.Contains(index) ?? false,
-                TotalVotes,
                 this))
             .ToList();
         OnPropertyChanged(nameof(Options));
@@ -113,39 +114,5 @@ public partial class PollContentViewModel : ObservableObject, IContentViewModel
     private async Task ViewResultsAsync()
     {
         await App.PushAsync(new PollResultsPage(_postId, PollId));
-    }
-}
-
-public partial class PollOptionViewModel : ObservableObject
-{
-    private readonly PollContentViewModel _parent;
-
-    public PollOption Option { get; }
-    public int Index { get; }
-
-    [ObservableProperty]
-    public partial bool IsSelected { get; set; }
-
-    public string Text => Option.Text;
-    public int VoteCount => Option.VoteCount;
-    public double Percentage => _parent.TotalVotes > 0 ? (double)VoteCount / _parent.TotalVotes : 0;
-    public string PercentageText => $"{Percentage:P0}";
-    public double ProgressWidth => Percentage;
-
-    public bool ShowResults => _parent.HasVoted || _parent.IsExpired;
-
-    public PollOptionViewModel(PollOption option, int index, bool isSelected, int totalVotes, PollContentViewModel parent)
-    {
-        Option = option;
-        Index = index;
-        IsSelected = isSelected;
-        _parent = parent;
-    }
-
-    [RelayCommand]
-    public async Task SelectAsync()
-    {
-        if (_parent.IsExpired) return;
-        await _parent.VoteAsync(Index);
     }
 }
