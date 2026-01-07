@@ -1444,4 +1444,47 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var myVote = votes.FirstOrDefault(v => v.UserId == requesterId);
         pollContent.MyVotedOptionIndices = myVote?.SelectedOptionIndices;
     }
+
+    /// <inheritdoc />
+    public async Task<Result<List<PollVoterResponseDto>>> GetPollVotersAsync(string postId, string pollId, int optionIndex, string requesterId)
+    {
+        // Check post access
+        var accessResult = await CheckAccessAsync(postId, requesterId);
+        if (accessResult.IsFailure) return accessResult.CastFailure<List<PollVoterResponseDto>>();
+
+        var postResult = await GetPostByIdAsync(postId);
+        if (postResult.IsFailure) return postResult.CastFailure<List<PollVoterResponseDto>>();
+
+        // Find poll content
+        var pollContent = postResult.Value.Contents.OfType<PollContent>().FirstOrDefault(p => p.PollId == pollId);
+        if (pollContent == null) return (ErrorType.NotFound, "투표를 찾을 수 없습니다.");
+
+        // Validate option index
+        if (optionIndex < 0 || optionIndex >= pollContent.Options.Count)
+            return (ErrorType.BadRequest, "유효하지 않은 선택 항목입니다.");
+
+        // Get votes for this option
+        var votes = await _pollVoteCollection
+            .Find(v => v.PollId == pollId && v.SelectedOptionIndices.Contains(optionIndex))
+            .SortByDescending(v => v.CreatedAt)
+            .ToListAsync();
+
+        var userService = serviceProvider.GetRequiredService<IUserService>();
+
+        var voterDtos = new List<PollVoterResponseDto>();
+        foreach (var vote in votes)
+        {
+            var userResult = await userService.GenerateUserResponseDtoAsync(vote.UserId, requesterId);
+            if (userResult.IsSuccess)
+            {
+                voterDtos.Add(new PollVoterResponseDto
+                {
+                    User = userResult.Value,
+                    VotedAt = vote.CreatedAt
+                });
+            }
+        }
+
+        return voterDtos;
+    }
 }

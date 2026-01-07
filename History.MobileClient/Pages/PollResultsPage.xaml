@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.PollResultsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header -->
+        <Grid
+            Grid.Row="0"
+            Padding="12,0"
+            BackgroundColor="{StaticResource Primary}"
+            ColumnDefinitions="Auto,*"
+            HeightRequest="48">
+            <Image
+                Grid.Column="0"
+                HeightRequest="24"
+                VerticalOptions="Center"
+                WidthRequest="24">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                </Image.GestureRecognizers>
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}"
+                        Color="White" />
+                </Image.Source>
+            </Image>
+            <Label
+                Grid.Column="1"
+                Margin="12,0,0,0"
+                FontAttributes="Bold"
+                FontSize="18"
+                Text="투표 결과"
+                TextColor="White"
+                VerticalOptions="Center" />
+        </Grid>
+
+        <!-- Content -->
+        <ScrollView Grid.Row="1" Padding="16">
+            <VerticalStackLayout Spacing="16">
+                <!-- Question -->
+                <Label
+                    x:Name="QuestionLabel"
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    TextColor="{AppThemeBinding Light=Black,
+                                                Dark=White}" />
+
+                <!-- Total Votes -->
+                <Label
+                    x:Name="TotalVotesLabel"
+                    FontSize="14"
+                    TextColor="{AppThemeBinding Light=#666666,
+                                                Dark=#AAAAAA}" />
+
+                <!-- Options List -->
+                <CollectionView x:Name="OptionsCollectionView" SelectionMode="None">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:PollResultOptionViewModel">
+                            <Border
+                                Margin="0,4"
+                                Padding="12"
+                                BackgroundColor="{AppThemeBinding Light=#F5F5F5,
+                                                                  Dark=#2A2A2A}"
+                                StrokeThickness="0">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="8" />
+                                </Border.StrokeShape>
+                                <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                                    <!-- Option Header -->
+                                    <Grid
+                                        Grid.Row="0"
+                                        ColumnDefinitions="*,Auto"
+                                        ColumnSpacing="12">
+                                        <Label
+                                            Grid.Column="0"
+                                            FontAttributes="Bold"
+                                            FontSize="16"
+                                            Text="{x:Binding Text}"
+                                            VerticalOptions="Center" />
+                                        <Label
+                                            Grid.Column="1"
+                                            FontAttributes="Bold"
+                                            FontSize="16"
+                                            Text="{x:Binding PercentageText}"
+                                            TextColor="{StaticResource Primary}"
+                                            VerticalOptions="Center" />
+                                    </Grid>
+
+                                    <!-- Progress Bar -->
+                                    <ProgressBar
+                                        Grid.Row="1"
+                                        HeightRequest="8"
+                                        Progress="{x:Binding Percentage}"
+                                        ProgressColor="{StaticResource Primary}" />
+
+                                    <!-- Vote Count and Voters Preview -->
+                                    <Grid
+                                        Grid.Row="2"
+                                        ColumnDefinitions="*,Auto"
+                                        ColumnSpacing="8">
+                                        <Label
+                                            Grid.Column="0"
+                                            FontSize="12"
+                                            Text="{x:Binding VoteCountText}"
+                                            TextColor="{AppThemeBinding Light=#666666,
+                                                                        Dark=#AAAAAA}" />
+                                        <Label
+                                            Grid.Column="1"
+                                            FontSize="12"
+                                            IsVisible="{x:Binding HasVoters}"
+                                            Text="투표자 보기 →"
+                                            TextColor="{StaticResource Primary}">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{x:Binding ShowVotersCommand}" />
+                                            </Label.GestureRecognizers>
+                                        </Label>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- Expiry Info -->
+                <Label
+                    x:Name="ExpiresAtLabel"
+                    FontSize="14"
+                    HorizontalOptions="End"
+                    TextColor="{AppThemeBinding Light=#666666,
+                                                Dark=#AAAAAA}" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator
+            x:Name="LoadingIndicator"
+            Grid.RowSpan="2"
+            HeightRequest="50"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            IsVisible="False"
+            VerticalOptions="Center"
+            WidthRequest="50"
+            Color="{StaticResource Primary}" />
+    </Grid>
+</ContentPage>
