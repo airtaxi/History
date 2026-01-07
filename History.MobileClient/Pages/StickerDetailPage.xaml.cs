@@ -167,4 +167,18 @@ public partial class StickerDetailPage : ContentPage
         var page = new UserPage(_sticker.Author.UserId);
         await App.PushAsync(page);
     }
+
+    private void OnAssetTapped(object sender, TappedEventArgs e)
+    {
+        if (e.Parameter is not StickerAssetViewModel asset) return;
+
+        FullScreenStickerImage.Source = asset.MediaUri;
+        StickerOverlay.IsVisible = true;
+    }
+
+    private void OnStickerOverlayTapped(object sender, TappedEventArgs e)
+    {
+        StickerOverlay.IsVisible = false;
+        FullScreenStickerImage.Source = null;
+    }
 }
