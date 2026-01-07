@@ -1433,7 +1433,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             .ToListAsync();
 
         // Calculate total votes and option counts
-        pollContent.TotalVotes = votes.Count;
+        pollContent.TotalVotes = votes.Sum(x => x.SelectedOptionIndices.Count);
 
         for (int i = 0; i < pollContent.Options.Count; i++)
         {
