@@ -413,93 +413,103 @@
             Padding="12"
             BackgroundColor="{AppThemeBinding Light=#FFFFFF,
                                               Dark=#000000}"
+            ColumnSpacing="12"
             HeightRequest="60">
-            <HorizontalStackLayout
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <ScrollView
+                Grid.Column="0"
                 HorizontalOptions="Start"
-                Spacing="12"
-                VerticalOptions="Center">
-                <Image
-                    HeightRequest="40"
-                    VerticalOptions="Center"
-                    WidthRequest="40">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnInsertImageTapped" />
-                    </Image.GestureRecognizers>
-                    <Image.Source>
-                        <FontImageSource
-                            FontFamily="MaterialSharp"
-                            Glyph="{x:Static m:MaterialSharp.Photo_library}"
-                            Color="{AppThemeBinding Light=Black,
-                                                    Dark=White}" />
-                    </Image.Source>
-                </Image>
-                <Image
-                    HeightRequest="40"
-                    VerticalOptions="Center"
-                    WidthRequest="40">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnInsertVideoTapped" />
-                    </Image.GestureRecognizers>
-                    <Image.Source>
-                        <FontImageSource
-                            FontFamily="MaterialSharp"
-                            Glyph="{x:Static m:MaterialSharp.Video_library}"
-                            Color="{AppThemeBinding Light=Black,
-                                                    Dark=White}" />
-                    </Image.Source>
-                </Image>
-                <Image
-                    HeightRequest="40"
-                    VerticalOptions="Center"
-                    WidthRequest="40">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnInsertOrDeleteExternalUrlTapped" />
-                    </Image.GestureRecognizers>
-                    <Image.Source>
-                        <FontImageSource
-                            x:Name="ExternalUrlFontImageSource"
-                            FontFamily="MaterialSharp"
-                            Glyph="{x:Static m:MaterialSharp.Link}"
-                            Color="{AppThemeBinding Light=Black,
-                                                    Dark=White}" />
-                    </Image.Source>
-                </Image>
+                VerticalOptions="Center"
+                VerticalScrollBarVisibility="Never">
+                <HorizontalStackLayout Spacing="12">
+                    <Image
+                        HeightRequest="40"
+                        VerticalOptions="Center"
+                        WidthRequest="40">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnInsertImageTapped" />
+                        </Image.GestureRecognizers>
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Photo_library}"
+                                Color="{AppThemeBinding Light=Black,
+                                                        Dark=White}" />
+                        </Image.Source>
+                    </Image>
+                    <Image
+                        HeightRequest="40"
+                        VerticalOptions="Center"
+                        WidthRequest="40">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnInsertVideoTapped" />
+                        </Image.GestureRecognizers>
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Video_library}"
+                                Color="{AppThemeBinding Light=Black,
+                                                        Dark=White}" />
+                        </Image.Source>
+                    </Image>
+                    <Image
+                        HeightRequest="40"
+                        VerticalOptions="Center"
+                        WidthRequest="40">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnInsertOrDeleteExternalUrlTapped" />
+                        </Image.GestureRecognizers>
+                        <Image.Source>
+                            <FontImageSource
+                                x:Name="ExternalUrlFontImageSource"
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Link}"
+                                Color="{AppThemeBinding Light=Black,
+                                                        Dark=White}" />
+                        </Image.Source>
+                    </Image>
 
-                <!--  Poll button  -->
-                <Image
-                    HeightRequest="40"
-                    VerticalOptions="Center"
-                    WidthRequest="40">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnInsertPollTapped" />
-                    </Image.GestureRecognizers>
-                    <Image.Source>
-                        <FontImageSource
-                            FontFamily="MaterialSharp"
-                            Glyph="{x:Static m:MaterialSharp.How_to_vote}"
-                            Color="{AppThemeBinding Light=Black,
-                                                    Dark=White}" />
-                    </Image.Source>
-                </Image>
+                    <!--  Poll button  -->
+                    <Image
+                        HeightRequest="40"
+                        VerticalOptions="Center"
+                        WidthRequest="40">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnInsertPollTapped" />
+                        </Image.GestureRecognizers>
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.How_to_vote}"
+                                Color="{AppThemeBinding Light=Black,
+                                                        Dark=White}" />
+                        </Image.Source>
+                    </Image>
 
-                <Image
-                    HeightRequest="40"
-                    VerticalOptions="Center"
-                    WidthRequest="40">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnStickerImageTapped" />
-                    </Image.GestureRecognizers>
-                    <Image.Source>
-                        <FontImageSource
-                            FontFamily="MaterialSharp"
-                            Glyph="{x:Static m:MaterialSharp.Mood}"
-                            Color="{AppThemeBinding Light=Black,
-                                                    Dark=White}" />
-                    </Image.Source>
-                </Image>
-            </HorizontalStackLayout>
+                    <Image
+                        HeightRequest="40"
+                        VerticalOptions="Center"
+                        WidthRequest="40">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnStickerImageTapped" />
+                        </Image.GestureRecognizers>
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Mood}"
+                                Color="{AppThemeBinding Light=Black,
+                                                        Dark=White}" />
+                        </Image.Source>
+                    </Image>
+                </HorizontalStackLayout>
+            </ScrollView>
 
             <HorizontalStackLayout
+                Grid.Column="1"
                 HorizontalOptions="End"
                 Spacing="12"
                 VerticalOptions="Center">
