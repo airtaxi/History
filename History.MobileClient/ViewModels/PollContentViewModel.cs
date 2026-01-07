@@ -17,7 +17,6 @@ public partial class PollContentViewModel : ObservableObject, IContentViewModel
     [NotifyPropertyChangedFor(nameof(Question))]
     [NotifyPropertyChangedFor(nameof(Options))]
     [NotifyPropertyChangedFor(nameof(TotalVotes))]
-    [NotifyPropertyChangedFor(nameof(TotalVoters))]
     [NotifyPropertyChangedFor(nameof(TotalVotesText))]
     [NotifyPropertyChangedFor(nameof(IsExpired))]
     [NotifyPropertyChangedFor(nameof(ExpiresAtText))]
@@ -30,8 +29,7 @@ public partial class PollContentViewModel : ObservableObject, IContentViewModel
     public string Question => PollContent.Question;
     public List<PollOptionViewModel> Options { get; private set; }
     public int TotalVotes => PollContent.TotalVotes;
-    public int TotalVoters => PollContent.TotalVoters;
-    public string TotalVotesText => $"{TotalVoters}명 참여";
+    public string TotalVotesText => $"{PollContent.TotalVoters}명 참여";
     public bool IsExpired => PollContent.IsExpired;
     public bool HasVoted => PollContent.MyVotedOptionIndices != null && PollContent.MyVotedOptionIndices.Count > 0;
     public bool CanVote => !IsExpired;
