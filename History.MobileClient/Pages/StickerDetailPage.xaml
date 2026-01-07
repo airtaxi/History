@@ -185,6 +185,11 @@
                                     <Border.StrokeShape>
                                         <RoundRectangle CornerRadius="8" />
                                     </Border.StrokeShape>
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            CommandParameter="{x:Binding}"
+                                            Tapped="OnAssetTapped" />
+                                    </Border.GestureRecognizers>
                                     <ffimageloading:CachedImage
                                         Aspect="AspectFit"
                                         DownsampleToViewSize="True"
@@ -206,5 +211,23 @@
             VerticalOptions="Center"
             WidthRequest="100"
             Color="{StaticResource Primary}" />
+
+        <!--  Full Screen Sticker Overlay  -->
+        <Grid
+            x:Name="StickerOverlay"
+            Grid.RowSpan="2"
+            BackgroundColor="#CC000000"
+            IsVisible="False">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnStickerOverlayTapped" />
+            </Grid.GestureRecognizers>
+            <ffimageloading:CachedImage
+                x:Name="FullScreenStickerImage"
+                Aspect="AspectFit"
+                HeightRequest="300"
+                HorizontalOptions="Center"
+                VerticalOptions="Center"
+                WidthRequest="300" />
+        </Grid>
     </Grid>
 </ContentPage>

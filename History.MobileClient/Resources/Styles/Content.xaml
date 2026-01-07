@@ -201,7 +201,11 @@
             Source="{x:Binding Media.Uri,
                                Mode=OneTime}"
             VerticalOptions="Start"
-            WidthRequest="120" />
+            WidthRequest="120">
+            <Image.GestureRecognizers>
+                <TapGestureRecognizer Command="{x:Binding NavigateToStickerDetailCommand}" />
+            </Image.GestureRecognizers>
+        </Image>
     </DataTemplate>
 
     <DataTemplate x:Key="TextAndProfileContentsTemplate" x:DataType="vm:TextAndProfileContentsViewModel">
