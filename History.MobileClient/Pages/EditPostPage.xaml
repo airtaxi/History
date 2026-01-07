@@ -423,8 +423,8 @@
             <ScrollView
                 Grid.Column="0"
                 HorizontalOptions="Start"
-                VerticalOptions="Center"
-                VerticalScrollBarVisibility="Never">
+                Orientation="Horizontal"
+                VerticalOptions="Center">
                 <HorizontalStackLayout Spacing="12">
                     <Image
                         HeightRequest="40"
