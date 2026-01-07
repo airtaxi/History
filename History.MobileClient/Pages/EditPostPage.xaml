@@ -595,6 +595,7 @@
                 </Image>
             </HorizontalStackLayout>
             <Rectangle
+                Grid.ColumnSpan="2"
                 Margin="-12"
                 Fill="#808080"
                 HeightRequest="{OnPlatform iOS=1.5,
