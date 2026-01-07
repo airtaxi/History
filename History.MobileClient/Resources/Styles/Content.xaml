@@ -223,7 +223,7 @@
         <Border
             Margin="0,8"
             Padding="12"
-            BackgroundColor="{AppThemeBinding Light=#F5F5F5,
+            BackgroundColor="{AppThemeBinding Light=#F0F0F0,
                                               Dark=#2A2A2A}"
             StrokeThickness="0">
             <Border.StrokeShape>
