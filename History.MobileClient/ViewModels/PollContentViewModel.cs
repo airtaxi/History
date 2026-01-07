@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
+using History.MobileClient.Pages;
 
 namespace History.MobileClient.ViewModels;
 
@@ -21,6 +22,7 @@ public partial class PollContentViewModel : ObservableObject, IContentViewModel
     [NotifyPropertyChangedFor(nameof(ExpiresAtText))]
     [NotifyPropertyChangedFor(nameof(HasVoted))]
     [NotifyPropertyChangedFor(nameof(CanVote))]
+    [NotifyPropertyChangedFor(nameof(ShowResultsButton))]
     public partial PollContent PollContent { get; set; }
 
     public string PollId => PollContent.PollId;
@@ -31,6 +33,7 @@ public partial class PollContentViewModel : ObservableObject, IContentViewModel
     public bool IsExpired => PollContent.IsExpired;
     public bool HasVoted => PollContent.MyVotedOptionIndices != null && PollContent.MyVotedOptionIndices.Count > 0;
     public bool CanVote => !IsExpired;
+    public bool ShowResultsButton => HasVoted || IsExpired;
 
     public string ExpiresAtText
     {
@@ -104,6 +107,12 @@ public partial class PollContentViewModel : ObservableObject, IContentViewModel
             // Notify post update
             WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
         }
+    }
+
+    [RelayCommand]
+    private async Task ViewResultsAsync()
+    {
+        await App.PushAsync(new PollResultsPage(_postId, PollId));
     }
 }
 

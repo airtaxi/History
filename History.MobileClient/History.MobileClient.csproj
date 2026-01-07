@@ -156,6 +156,12 @@
 		<MauiXaml Update="Pages\MorePage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Pages\PollResultsPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="Pages\PollVotersPage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Pages\SearchPostsPage.xaml">
 		  <Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

@@ -229,4 +229,14 @@ public interface IPostService
     /// <param name="userId">The ID of the user.</param>
     /// <returns>A task that represents the asynchronous operation, containing the poll vote if exists.</returns>
     public Task<Result<PollVote>> GetPollVoteAsync(string pollId, string userId);
+
+    /// <summary>
+    /// Gets voters who voted for a specific option in a poll.
+    /// </summary>
+    /// <param name="postId">The ID of the post containing the poll.</param>
+    /// <param name="pollId">The ID of the poll.</param>
+    /// <param name="optionIndex">The index of the poll option.</param>
+    /// <param name="requesterId">The ID of the user requesting the voters list.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the list of poll voters.</returns>
+    public Task<Result<List<PollVoterResponseDto>>> GetPollVotersAsync(string postId, string pollId, int optionIndex, string requesterId);
 }

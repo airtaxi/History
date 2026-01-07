@@ -313,19 +313,34 @@
                 </VerticalStackLayout>
 
                 <!--  Footer Info  -->
-                <Grid Margin="0,4,0,0" ColumnDefinitions="*,Auto">
+                <Grid Margin="0,4,0,0" ColumnDefinitions="*,Auto,Auto">
                     <Label
                         Grid.Column="0"
                         FontSize="12"
                         Text="{x:Binding TotalVotesText}"
                         TextColor="{AppThemeBinding Light=#666666,
-                                                    Dark=#AAAAAA}" />
+                                                    Dark=#AAAAAA}"
+                        VerticalOptions="Center" />
+                    <!--  View Results Button  -->
                     <Label
                         Grid.Column="1"
+                        Margin="0,0,12,0"
+                        FontSize="12"
+                        IsVisible="{x:Binding ShowResultsButton}"
+                        Text="결과보기"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{x:Binding ViewResultsCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label
+                        Grid.Column="2"
                         FontSize="12"
                         Text="{x:Binding ExpiresAtText}"
                         TextColor="{AppThemeBinding Light=#666666,
-                                                    Dark=#AAAAAA}" />
+                                                    Dark=#AAAAAA}"
+                        VerticalOptions="Center" />
                 </Grid>
             </VerticalStackLayout>
         </Border>

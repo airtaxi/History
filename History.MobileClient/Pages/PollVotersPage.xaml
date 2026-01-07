@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.PollVotersPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Header -->
+        <Grid
+            Grid.Row="0"
+            Padding="12,0"
+            BackgroundColor="{StaticResource Primary}"
+            ColumnDefinitions="Auto,*"
+            HeightRequest="48">
+            <Image
+                Grid.Column="0"
+                HeightRequest="24"
+                VerticalOptions="Center"
+                WidthRequest="24">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                </Image.GestureRecognizers>
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}"
+                        Color="White" />
+                </Image.Source>
+            </Image>
+            <Label
+                x:Name="TitleLabel"
+                Grid.Column="1"
+                Margin="12,0,0,0"
+                FontAttributes="Bold"
+                FontSize="18"
+                LineBreakMode="TailTruncation"
+                TextColor="White"
+                VerticalOptions="Center" />
+        </Grid>
+
+        <!-- Content -->
+        <CollectionView
+            x:Name="VotersCollectionView"
+            Grid.Row="1"
+            SelectionMode="None">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout
+                    HorizontalOptions="Center"
+                    Spacing="8"
+                    VerticalOptions="Center">
+                    <Image
+                        HeightRequest="64"
+                        HorizontalOptions="Center"
+                        WidthRequest="64">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.How_to_vote}"
+                                Size="64"
+                                Color="{AppThemeBinding Light=#CCCCCC,
+                                                        Dark=#666666}" />
+                        </Image.Source>
+                    </Image>
+                    <Label
+                        HorizontalOptions="Center"
+                        Text="아직 투표한 사람이 없습니다."
+                        TextColor="{AppThemeBinding Light=#666666,
+                                                    Dark=#AAAAAA}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:PollVoterViewModel">
+                    <Border
+                        Margin="16,8"
+                        Padding="12"
+                        BackgroundColor="{AppThemeBinding Light=#F5F5F5,
+                                                          Dark=#2A2A2A}"
+                        StrokeThickness="0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8" />
+                        </Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{x:Binding NavigateToProfileCommand}" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="48,*,Auto" ColumnSpacing="12">
+                            <!-- Profile Image -->
+                            <Border
+                                Grid.Column="0"
+                                HeightRequest="48"
+                                StrokeThickness="0"
+                                WidthRequest="48">
+                                <Border.StrokeShape>
+                                    <Ellipse />
+                                </Border.StrokeShape>
+                                <ffimageloading:CachedImage
+                                    Aspect="AspectFill"
+                                    DownsampleToViewSize="True"
+                                    Source="{x:Binding ProfileImageUri}" />
+                            </Border>
+
+                            <!-- Nickname -->
+                            <Label
+                                Grid.Column="1"
+                                FontAttributes="Bold"
+                                FontSize="16"
+                                Text="{x:Binding Nickname}"
+                                VerticalOptions="Center" />
+
+                            <!-- Voted At -->
+                            <Label
+                                Grid.Column="2"
+                                FontSize="12"
+                                Text="{x:Binding VotedAtText}"
+                                TextColor="{AppThemeBinding Light=#666666,
+                                                            Dark=#AAAAAA}"
+                                VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator
+            x:Name="LoadingIndicator"
+            Grid.RowSpan="2"
+            HeightRequest="50"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            IsVisible="False"
+            VerticalOptions="Center"
+            WidthRequest="50"
+            Color="{StaticResource Primary}" />
+    </Grid>
+</ContentPage>
