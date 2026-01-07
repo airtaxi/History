@@ -65,7 +65,7 @@ public partial class PollResultsPage : ContentPage
     private void UpdateUI()
     {
         QuestionLabel.Text = _pollContent.Question;
-        TotalVotesLabel.Text = $"총 {_pollContent.TotalVotes}명 참여";
+        TotalVotesLabel.Text = $"총 {_pollContent.TotalVoters}명 참여";
 
         if (_pollContent.ExpiresAt == null) ExpiresAtLabel.Text = "마감 없음";
         else if (_pollContent.IsExpired) ExpiresAtLabel.Text = "마감됨";
