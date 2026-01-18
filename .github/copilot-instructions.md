@@ -1,4 +1,20 @@
-# History.ApiService용 Copilot 지침
+# History 프로젝트 Copilot 지침
+
+replace_code_string 실행 시 한번에 여러개를 동시에 실행하면 파일 수정이 되지 않습니다. 가능하면 한번에 하나씩 실행하거나, multiple_replace_code_string을 사용하세요.
+
+## 중요 코드 스타일
+- 모든 주석은 영어로 작성해주세요.
+- 기존 코드베이스의 코딩 컨벤션과 스타일을 따라주세요.
+- 한줄짜리 if 문이나 for 문 같이 괄호를 사용하는 경우, if (condition) myValue = true; 처럼 중괄호 없이 작성하며, 너무 긴 경우에는 (약 100자 이상) 한줄 넘김을 해주세요.
+- 한줄짜리 메소드는 => 표현식을 사용해주세요.
+- try-catch-finally도 마찬가지로 한줄인 경우 각 구문별로 한줄로 작성해주세요.
+예:
+try { /* code */ }
+catch (Exception exception) { /* handle */ }
+- 변수는 가능하면 줄임말을 사용하지 말아주세요. 예: ex -> exception, req -> request
+- 가능하면 반드시 primary constructor를 사용해주세요.
+- 가능하면 반드시 collection expression을 사용해주세요.
+- C# 최신 문법을 적극 활용해주세요.
 
 ## 프로젝트 개요
 
@@ -77,7 +93,6 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 - 모든 I/O 작업에 async/await 사용
 - LINQ를 사용한 데이터 조작
 - 문자열 보간 `$"{variable}"`
-- 주석은 영어로 작성
 
 ### 오류 처리
 
