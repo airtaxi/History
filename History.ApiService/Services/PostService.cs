@@ -661,6 +661,8 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     /// <inheritdoc/>
     public async Task<Result> DeletePostAsync(string postId, string requesterId)
     {
+        // NOTE: If you change deletion/cleanup logic here, update DeletePostsAsync as well.
+        // DeletePostsAsync performs the same cleanup in batches for performance.
         var reportService = serviceProvider.GetRequiredService<IReportService>();
         var userService = serviceProvider.GetRequiredService<IUserService>();
         var userResult = await userService.GetUserByIdAsync(requesterId);
@@ -1490,5 +1492,89 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         }
 
         return voterDtos;
+    }
+
+    public async Task<Result<long>> BulkChangeDiscoveryOptionAsync(string userId, DiscoveryOption? from, DiscoveryOption to)
+    {
+        if (userId == null) return (ErrorType.BadRequest, "유저 ID가 제공되지 않았습니다.");
+
+        var filter = Builders<Post>.Filter.Eq(p => p.UserId, userId)
+            & Builders<Post>.Filter.Lte(p => p.CreatedAt, DateTime.UtcNow);
+
+        if (from.HasValue) filter &= Builders<Post>.Filter.Eq(p => p.DiscoveryOption, from);
+
+        var update = Builders<Post>.Update.Set(p => p.DiscoveryOption, to);
+        var result = await _postCollection.UpdateManyAsync(filter, update);
+        return result.ModifiedCount;
+    }
+
+    public async Task<Result<long>> BulkDeletePostsAsync(string userId, DiscoveryOption? discoveryOption)
+    {
+        if (userId == null) return (ErrorType.BadRequest, "유저 ID가 제공되지 않았습니다.");
+
+        var filter = Builders<Post>.Filter.Eq(p => p.UserId, userId)
+            & Builders<Post>.Filter.Lte(p => p.CreatedAt, DateTime.UtcNow);
+
+        if (discoveryOption.HasValue) filter &= Builders<Post>.Filter.Eq(p => p.DiscoveryOption, discoveryOption);
+
+        return await DeletePostsAsync(filter);
+    }
+
+    private async Task<Result<long>> DeletePostsAsync(FilterDefinition<Post> filter)
+    {
+        // NOTE: Keep cleanup scope in sync with DeletePostAsync.
+        var totalDeleted = 0L;
+
+        var posts = await _postCollection
+            .Find(filter)
+            .Project(p => new { p.Id, p.Contents })
+            .ToListAsync();
+
+        var postIds = posts.Select(x => x.Id).ToList();
+
+        var commentIds = await _commentCollection
+            .Find(c => postIds.Contains(c.PostId))
+            .Project(c => c.Id)
+            .ToListAsync();
+
+        if (commentIds.Count > 0)
+        {
+            await _commentCollection.DeleteManyAsync(c => postIds.Contains(c.PostId));
+            await _commentLikeCollection.DeleteManyAsync(c => commentIds.Contains(c.CommentId));
+        }
+
+        await _ignoredPostCollection.DeleteManyAsync(i => postIds.Contains(i.PostId));
+        await _postReactionCollection.DeleteManyAsync(r => postIds.Contains(r.PostId));
+
+        var pollIds = posts
+            .SelectMany(p => p.Contents.OfType<PollContent>().Select(pc => pc.PollId))
+            .Distinct()
+            .ToList();
+        if (pollIds.Count > 0) await _pollVoteCollection.DeleteManyAsync(v => pollIds.Contains(v.PollId));
+
+        // Delete reposts associated with deleted originals
+        await _postCollection.DeleteManyAsync(p => postIds.Contains(p.ParentPostId) && p.IsRepost);
+
+        // Delete public post shadow documents
+        await _publicPostCollection.DeleteManyAsync(p => postIds.Contains(p.ParentPostId));
+
+        // Media delete can be heavy; batch by ids
+        await mediaService.DeleteMediasByAssociatedIdsAsync(postIds);
+        if (commentIds.Count > 0) await mediaService.DeleteMediasByAssociatedIdsAsync(commentIds);
+
+        // Notifications
+        await notificationService.DeleteNotificationsAsync("Data.PostId", postIds);
+        if (commentIds.Count > 0) await notificationService.DeleteNotificationsAsync("Data.CommentId", commentIds);
+
+            // Reports
+            var reportService = serviceProvider.GetRequiredService<IReportService>();
+            await reportService.DeleteReportRecordByPostIdsAsync(postIds);
+
+        // Finally delete posts themselves
+        await _postCollection.DeleteManyAsync(p => postIds.Contains(p.Id));
+
+        totalDeleted += postIds.Count;
+
+        return totalDeleted;
     }
 }

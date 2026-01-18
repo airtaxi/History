@@ -14,6 +14,7 @@ public interface IReportService
     public Task<Result> ProcessReportAsync(string recordId, string moderatorId, string reason);
     public Task<Result> DeleteReportRecordByIdAsync(string recordId);
     public Task<Result> DeleteReportRecordByPostIdAsync(string postId);
+    public Task<Result> DeleteReportRecordByPostIdsAsync(IEnumerable<string> postIds);
     public Task<Result> DeleteReportRecordByCommentIdAsync(string commentId);
     public Task<Result> DeleteReportRecordByUserIdAsync(string userId);
 
