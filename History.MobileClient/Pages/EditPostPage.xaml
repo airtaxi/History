@@ -30,6 +30,21 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <sf:SfDateTimePicker
+            x:Name="DateTimePicker"
+            BackgroundColor="Transparent"
+            CancelButtonClicked="OnDateTimePickerCancelButtonClicked"
+            Mode="Dialog"
+            OkButtonClicked="OnDateTimePickerOkButtonClicked"
+            Opacity="0">
+            <sf:SfDateTimePicker.HeaderView>
+                <sf:DateTimePickerHeaderView DateFormat="yyyy년 MM월 dd일" TimeFormat="HH시 mm분 ss초" />
+            </sf:SfDateTimePicker.HeaderView>
+            <sf:SfDateTimePicker.FooterView>
+                <sf:PickerFooterView Height="40" OkButtonText="확인" />
+            </sf:SfDateTimePicker.FooterView>
+        </sf:SfDateTimePicker>
+
         <Grid
             Grid.Row="0"
             Padding="12,0,0,0"
@@ -305,6 +320,18 @@
             </VerticalStackLayout>
         </ScrollView>
 
+        <editPost:UserCollectionView
+            x:Name="UserCollectionView"
+            Grid.Row="1"
+            HorizontalOptions="Fill"
+            VerticalOptions="End" />
+
+        <editPost:StickerCollectionView
+            x:Name="StickerCollectionView"
+            Grid.Row="1"
+            HorizontalOptions="Fill"
+            VerticalOptions="End" />
+
         <Grid
             x:Name="SettingsGrid"
             Grid.Row="1"
@@ -408,18 +435,6 @@
                 HorizontalOptions="Fill"
                 VerticalOptions="Start" />
         </Grid>
-
-        <editPost:UserCollectionView
-            x:Name="UserCollectionView"
-            Grid.Row="1"
-            HorizontalOptions="Fill"
-            VerticalOptions="End" />
-
-        <editPost:StickerCollectionView
-            x:Name="StickerCollectionView"
-            Grid.Row="1"
-            HorizontalOptions="Fill"
-            VerticalOptions="End" />
 
         <Grid
             Grid.Row="2"
@@ -542,18 +557,6 @@
                     </Image.Source>
                 </Image>
                 <Grid>
-                    <sf:SfDateTimePicker
-                        x:Name="DateTimePicker"
-                        CancelButtonClicked="OnDateTimePickerCancelButtonClicked"
-                        Mode="Dialog"
-                        OkButtonClicked="OnDateTimePickerOkButtonClicked">
-                        <sf:SfDateTimePicker.HeaderView>
-                            <sf:DateTimePickerHeaderView DateFormat="yyyy년 MM월 dd일" TimeFormat="HH시 mm분 ss초" />
-                        </sf:SfDateTimePicker.HeaderView>
-                        <sf:SfDateTimePicker.FooterView>
-                            <sf:PickerFooterView Height="40" OkButtonText="확인" />
-                        </sf:SfDateTimePicker.FooterView>
-                    </sf:SfDateTimePicker>
                     <Image
                         x:Name="ReservationImage"
                         HeightRequest="40"
