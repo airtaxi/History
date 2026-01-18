@@ -49,7 +49,7 @@ public partial class EditPostPage : ContentPage
 
     private readonly ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
     private PollContentViewModel _pollContentViewModel;
-    private TaskCompletionSource<DateTime?> _pollEndTimeTaskCompletionSource;
+    private TaskCompletionSource<DateTime?> _dateTimePickerTaskCompletionSource;
 
     public EditPostPage()
     {
@@ -949,7 +949,7 @@ public partial class EditPostPage : ContentPage
         else ExpandCollapseSettingsFontImageSource.Glyph = MaterialSharp.Keyboard_arrow_up;
     }
 
-    private void OnReservationImageTapped(object sender, TappedEventArgs e)
+    private async void OnReservationImageTapped(object sender, TappedEventArgs e)
     {
         if (_reservationTime.HasValue)
         {
@@ -958,53 +958,36 @@ public partial class EditPostPage : ContentPage
         }
         else
         {
-#if IOS
-            ReservationDateTimePicker.IsVisible = true;
-#endif
-            ReservationDateTimePicker.MinimumDate = DateTime.Now.AddMinutes(1);
-            ReservationDateTimePicker.IsOpen = true;
+            _dateTimePickerTaskCompletionSource = new();
+            DateTimePicker.MinimumDate = DateTime.Now.AddMinutes(1);
+            DateTimePicker.IsOpen = true;
+
+            var time = await _dateTimePickerTaskCompletionSource.Task;
+            if (time.HasValue)
+            {
+                _reservationTime = time.Value;
+                ReservationFontImageSource.Glyph = MaterialSharp.Alarm_on;
+            }
+            else
+            {
+                _reservationTime = null;
+                ReservationFontImageSource.Glyph = MaterialSharp.Alarm_off;
+            }
         }
     }
 
-    private void OnReservationDateTimePickerOkButtonClicked(object sender, EventArgs e)
+    private void OnDateTimePickerOkButtonClicked(object sender, EventArgs e)
     {
-        var dateTime = ReservationDateTimePicker.SelectedDate;
-        if (dateTime.HasValue)
-        {
-            _reservationTime = dateTime.Value;
-            ReservationFontImageSource.Glyph = MaterialSharp.Alarm_on;
-        }
-        else
-        {
-            _reservationTime = null;
-            ReservationFontImageSource.Glyph = MaterialSharp.Alarm_off;
-        }
-        ReservationDateTimePicker.IsOpen = false;
-#if IOS
-        ReservationDateTimePicker.IsVisible = false;
-#endif
+        var dateTime = DateTimePicker.SelectedDate;
+        if (dateTime.HasValue) _dateTimePickerTaskCompletionSource.TrySetResult(dateTime.Value);
+        else _dateTimePickerTaskCompletionSource.TrySetResult(null);
+        DateTimePicker.IsOpen = false;
     }
 
-    private void OnReservationDateTimePickerCancelButtonClicked(object sender, EventArgs e)
+    private void OnDateTimePickerCancelButtonClicked(object sender, EventArgs e)
     {
-        ReservationDateTimePicker.IsOpen = false;
-#if IOS
-        ReservationDateTimePicker.IsVisible = false;
-#endif
-    }
-
-    private void OnPollEndTimeDateTimePickerOkButtonClicked(object sender, EventArgs e)
-    {
-        var dateTime = PollEndTimeDateTimePicker.SelectedDate;
-        if (dateTime.HasValue) _pollEndTimeTaskCompletionSource.TrySetResult(dateTime.Value);
-        else _pollEndTimeTaskCompletionSource.TrySetResult(null);
-        PollEndTimeDateTimePicker.IsOpen = false;
-    }
-
-    private void OnPollEndTimeDateTimePickerCancelButtonClicked(object sender, EventArgs e)
-    {
-        _pollEndTimeTaskCompletionSource.TrySetResult(null);
-        PollEndTimeDateTimePicker.IsOpen = false;
+        _dateTimePickerTaskCompletionSource.TrySetResult(null);
+        DateTimePicker.IsOpen = false;
     }
 
     private static string ExtractUrlFromText(string text)
@@ -1142,13 +1125,10 @@ public partial class EditPostPage : ContentPage
         var setExpire = await DisplayAlertAsync("마감 설정", "마감 시간을 설정하시겠습니까?", "예", "아니오");
         if (setExpire)
         {
-            _pollEndTimeTaskCompletionSource = new();
-#if IOS
-            PollEndTimeDateTimePicker.IsVisible = true;
-#endif
-            PollEndTimeDateTimePicker.MinimumDate = DateTime.Now.AddHours(1);
-            PollEndTimeDateTimePicker.IsOpen = true;
-            expiresAt = await _pollEndTimeTaskCompletionSource.Task;
+            _dateTimePickerTaskCompletionSource = new();
+            DateTimePicker.MinimumDate = DateTime.Now.AddHours(1);
+            DateTimePicker.IsOpen = true;
+            expiresAt = await _dateTimePickerTaskCompletionSource.Task;
         }
 
         var pollContent = new PollContent
