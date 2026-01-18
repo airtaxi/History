@@ -107,6 +107,12 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 - 모든 작업에 async 사용
 - Program.cs에서 열거형을 문자열로 직렬화 구성
 
+### 삭제 로직 동기화 규칙
+
+- `History.ApiService`의 `PostService.DeletePostAsync(...)`는 단건 삭제, `PostService.DeletePostsAsync(...)`는 대량 삭제(배치) 경로입니다.
+- 단건 삭제 로직(`DeletePostAsync`)을 수정할 때는 **반드시** 대량 삭제 로직(`DeletePostsAsync`)도 함께 업데이트하여,
+  삭제 대상 컬렉션/외부 리소스(미디어/알림/신고 등) 정리 범위가 서로 일치하도록 유지합니다.
+
 ### 보안
 
 - 미들웨어에서 JWT 검증

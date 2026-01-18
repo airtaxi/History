@@ -116,6 +116,16 @@ public class ReportService(IMongoDatabase database, IServiceProvider serviceProv
         return Result.Success();
     }
 
+    public async Task<Result> DeleteReportRecordByPostIdsAsync(IEnumerable<string> postIds)
+    {
+        if (postIds == null) return Result.Success();
+        var postIdList = postIds.Distinct().ToList();
+        if (postIdList.Count == 0) return Result.Success();
+
+        await _reportRecordCollection.DeleteManyAsync(r => r.Target == ReportTarget.Post && postIdList.Contains(r.AssociatedId));
+        return Result.Success();
+    }
+
     public async Task<Result> DeleteReportRecordByCommentIdAsync(string commentId)
     {
         var result = await _reportRecordCollection.DeleteManyAsync(r => r.Target == ReportTarget.Comment && r.AssociatedId == commentId);

@@ -239,4 +239,21 @@ public interface IPostService
     /// <param name="requesterId">The ID of the user requesting the voters list.</param>
     /// <returns>A task that represents the asynchronous operation, containing the list of poll voters.</returns>
     public Task<Result<List<PollVoterResponseDto>>> GetPollVotersAsync(string postId, string pollId, int optionIndex, string requesterId);
+
+    /// <summary>
+    /// Bulk changes discovery option for posts of the requester.
+    /// </summary>
+    /// <param name="userId">The ID of the user who requests the operation.</param>
+    /// <param name="from">Optional current discovery option filter.</param>
+    /// <param name="to">New discovery option to set.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the count of affected posts.</returns>
+    public Task<Result<long>> BulkChangeDiscoveryOptionAsync(string userId, DiscoveryOption? from, DiscoveryOption to);
+
+    /// <summary>
+    /// Bulk deletes posts of the requester.
+    /// </summary>
+    /// <param name="userId">The ID of the user who requests the operation.</param>
+    /// <param name="discoveryOption">Optional discovery option filter.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the count of deleted posts.</returns>
+    public Task<Result<long>> BulkDeletePostsAsync(string userId, DiscoveryOption? discoveryOption);
 }
