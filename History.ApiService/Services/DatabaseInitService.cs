@@ -40,6 +40,15 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.LastUsedPostDiscoveryOption)), cancellationToken: cancellationToken);
         await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.AllowSearch)), cancellationToken: cancellationToken);
         await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.PinnedPostId)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.MessageReceivingPermission)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.CommentPushNotificationPermission)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.CommentMentionPushNotificationPermission)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.CommentLikePushNotificationPermission)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.SharedPostCommentPushNotificationPermission)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.PostReactionPushNotificationPermission)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.PostMentionPushNotificationPermission)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.MessagePushNotificationPermission)), cancellationToken: cancellationToken);
+        await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Ascending(x => x.IsFavoriteFriendNewPostPushNotificationEnabled)), cancellationToken: cancellationToken);
         await userCollection.Indexes.CreateOneAsync(new CreateIndexModel<User>(Builders<User>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
 
         logger.LogInformation("Creating indexes for UserMemo collection...");
