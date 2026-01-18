@@ -408,6 +408,19 @@
                 HorizontalOptions="Fill"
                 VerticalOptions="Start" />
         </Grid>
+
+        <editPost:UserCollectionView
+            x:Name="UserCollectionView"
+            Grid.Row="1"
+            HorizontalOptions="Fill"
+            VerticalOptions="End" />
+
+        <editPost:StickerCollectionView
+            x:Name="StickerCollectionView"
+            Grid.Row="1"
+            HorizontalOptions="Fill"
+            VerticalOptions="End" />
+
         <Grid
             Grid.Row="2"
             Padding="12"
@@ -603,18 +616,6 @@
                 HorizontalOptions="Fill"
                 VerticalOptions="Start" />
         </Grid>
-
-        <editPost:UserCollectionView
-            x:Name="UserCollectionView"
-            Grid.Row="1"
-            HorizontalOptions="Fill"
-            VerticalOptions="End" />
-
-        <editPost:StickerCollectionView
-            x:Name="StickerCollectionView"
-            Grid.Row="1"
-            HorizontalOptions="Fill"
-            VerticalOptions="End" />
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"
