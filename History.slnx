@@ -3,6 +3,9 @@
     <Project Path="Dependencies/LinkedIn.Hakawai.Net/src/LinkedIn.Hakawai/LinkedIn.Hakawai.csproj" />
     <Project Path="Dependencies/SpeakLink/SpeakLink/SpeakLink.csproj" />
   </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
   <Project Path="History.ApiService/History.ApiService.csproj" />
   <Project Path="History.AppHost/History.AppHost.csproj" />
   <Project Path="History.Commons/History.Commons.csproj" />
