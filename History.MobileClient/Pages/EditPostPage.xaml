@@ -546,6 +546,7 @@
                         x:Name="PollEndTimeDateTimePicker"
                         BackgroundColor="Transparent"
                         CancelButtonClicked="OnPollEndTimeDateTimePickerCancelButtonClicked"
+                        InputTransparent="True"
                         Mode="Dialog"
                         OkButtonClicked="OnPollEndTimeDateTimePickerOkButtonClicked"
                         Opacity="0">
@@ -560,6 +561,7 @@
                         x:Name="ReservationDateTimePicker"
                         BackgroundColor="Transparent"
                         CancelButtonClicked="OnReservationDateTimePickerCancelButtonClicked"
+                        InputTransparent="True"
                         Mode="Dialog"
                         OkButtonClicked="OnReservationDateTimePickerOkButtonClicked"
                         Opacity="0">

@@ -958,6 +958,9 @@ public partial class EditPostPage : ContentPage
         }
         else
         {
+#if IOS
+            ReservationDateTimePicker.InputTransparent = false;
+#endif
             ReservationDateTimePicker.MinimumDate = DateTime.Now.AddMinutes(1);
             ReservationDateTimePicker.IsOpen = true;
         }
@@ -977,9 +980,18 @@ public partial class EditPostPage : ContentPage
             ReservationFontImageSource.Glyph = MaterialSharp.Alarm_off;
         }
         ReservationDateTimePicker.IsOpen = false;
+#if IOS
+        ReservationDateTimePicker.InputTransparent = true;
+#endif
     }
 
-    private void OnReservationDateTimePickerCancelButtonClicked(object sender, EventArgs e) => ReservationDateTimePicker.IsOpen = false;
+    private void OnReservationDateTimePickerCancelButtonClicked(object sender, EventArgs e)
+    {
+        ReservationDateTimePicker.IsOpen = false;
+#if IOS
+        ReservationDateTimePicker.InputTransparent = true;
+#endif
+    }
 
     private void OnPollEndTimeDateTimePickerOkButtonClicked(object sender, EventArgs e)
     {
@@ -1131,6 +1143,9 @@ public partial class EditPostPage : ContentPage
         if (setExpire)
         {
             _pollEndTimeTaskCompletionSource = new();
+#if IOS
+            PollEndTimeDateTimePicker.InputTransparent = false;
+#endif
             PollEndTimeDateTimePicker.MinimumDate = DateTime.Now.AddHours(1);
             PollEndTimeDateTimePicker.IsOpen = true;
             expiresAt = await _pollEndTimeTaskCompletionSource.Task;
