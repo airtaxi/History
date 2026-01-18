@@ -959,7 +959,7 @@ public partial class EditPostPage : ContentPage
         else
         {
 #if IOS
-            ReservationDateTimePicker.InputTransparent = false;
+            ReservationDateTimePicker.IsVisible = true;
 #endif
             ReservationDateTimePicker.MinimumDate = DateTime.Now.AddMinutes(1);
             ReservationDateTimePicker.IsOpen = true;
@@ -981,7 +981,7 @@ public partial class EditPostPage : ContentPage
         }
         ReservationDateTimePicker.IsOpen = false;
 #if IOS
-        ReservationDateTimePicker.InputTransparent = true;
+        ReservationDateTimePicker.IsVisible = false;
 #endif
     }
 
@@ -989,7 +989,7 @@ public partial class EditPostPage : ContentPage
     {
         ReservationDateTimePicker.IsOpen = false;
 #if IOS
-        ReservationDateTimePicker.InputTransparent = true;
+        ReservationDateTimePicker.IsVisible = false;
 #endif
     }
 
@@ -1144,7 +1144,7 @@ public partial class EditPostPage : ContentPage
         {
             _pollEndTimeTaskCompletionSource = new();
 #if IOS
-            PollEndTimeDateTimePicker.InputTransparent = false;
+            PollEndTimeDateTimePicker.IsVisible = true;
 #endif
             PollEndTimeDateTimePicker.MinimumDate = DateTime.Now.AddHours(1);
             PollEndTimeDateTimePicker.IsOpen = true;
