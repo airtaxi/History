@@ -163,6 +163,48 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
             cancellationToken: cancellationToken);
 
         logger.LogInformation("Indexes created successfully.");
+
+        // Migrate users with missing permission fields to default values
+        logger.LogInformation("Migrating users with missing permission fields...");
+
+        var permissionFields = new (string FieldName, object DefaultValue)[]
+        {
+            (nameof(User.MessageReceivingPermission), Commons.Enums.AccessPermission.Everyone),
+            (nameof(User.CommentPushNotificationPermission), Commons.Enums.AccessPermission.Everyone),
+            (nameof(User.CommentMentionPushNotificationPermission), Commons.Enums.AccessPermission.Everyone),
+            (nameof(User.CommentLikePushNotificationPermission), Commons.Enums.AccessPermission.Everyone),
+            (nameof(User.SharedPostCommentPushNotificationPermission), Commons.Enums.AccessPermission.Everyone),
+            (nameof(User.PostReactionPushNotificationPermission), Commons.Enums.AccessPermission.Everyone),
+            (nameof(User.PostMentionPushNotificationPermission), Commons.Enums.AccessPermission.Everyone),
+            (nameof(User.MessagePushNotificationPermission), Commons.Enums.AccessPermission.Everyone),
+            (nameof(User.IsFavoriteFriendNewPostPushNotificationEnabled), true)
+        };
+
+        // Find users with any missing permission field
+        var filterBuilder = Builders<User>.Filter;
+        var missingFieldFilters = permissionFields.Select(f => filterBuilder.Exists(f.FieldName, false)).ToArray();
+        var anyMissingFieldFilter = filterBuilder.Or(missingFieldFilters);
+
+        // Build update definition for all missing fields
+        var updateBuilder = Builders<User>.Update;
+        var updates = permissionFields.Select(f => updateBuilder.SetOnInsert(f.FieldName, f.DefaultValue)).ToArray();
+        var combinedUpdate = updateBuilder.Combine(updates);
+
+        // Update all fields at once for each user with any missing field
+        foreach (var (fieldName, defaultValue) in permissionFields)
+        {
+            var filter = filterBuilder.Exists(fieldName, false);
+            var update = updateBuilder.Set(fieldName, defaultValue);
+            var result = await userCollection.UpdateManyAsync(filter, update, cancellationToken: cancellationToken);
+            if (result.ModifiedCount > 0)
+            {
+                logger.LogInformation("Set {FieldName} for {Count} users.", fieldName, result.ModifiedCount);
+            }
+        }
+
+        // Count unique users that were updated
+        var usersWithMissingFields = await userCollection.CountDocumentsAsync(anyMissingFieldFilter, cancellationToken: cancellationToken);
+        logger.LogInformation("Migration completed. Total users with missing permission fields: {TotalCount}", usersWithMissingFields);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
