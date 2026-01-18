@@ -1099,11 +1099,15 @@ public partial class EditPostPage : ContentPage
         var options = new List<string>();
         while (true)
         {
-            var option = await DisplayPromptAsync("투표 옵션", options.Count < 2 ? "옵션을 2개 이상 입력해주세요. 취소를 누르면 종료됩니다." : "옵션 추가 (취소 시 종료)", Constants.PromptOk, options.Count < 2 ? string.Empty : Constants.PromptCancel, "옵션", 100, Keyboard.Text);
+#if IOS
+            var option = await DisplayPromptAsync("투표 옵션", options.Count < 2 ? "옵션을 2개 이상 입력해주세요. 취소를 누르면 종료됩니다." : "옵션 추가 (취소 시 종료)", Constants.PromptOk, Constants.PromptCancel, "옵션", 100, Keyboard.Text);
+#else
+            var option = await DisplayPromptAsync("투표 옵션", options.Count < 2 ? "옵션을 2개 이상 입력해주세요. 취소를 누르면 종료됩니다." : "옵션 추가 (취소 시 종료)", Constants.PromptOk, options.Count < 2 ? null : Constants.PromptCancel, "옵션", 100, Keyboard.Text);
+#endif
             if (string.IsNullOrWhiteSpace(option))
             {
                 if (options.Count >= 2) break;
-                else continue;
+                else return;
             }
 
             if (options.Contains(option))
