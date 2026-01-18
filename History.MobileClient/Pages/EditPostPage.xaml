@@ -544,11 +544,9 @@
                 <Grid>
                     <sf:SfDateTimePicker
                         x:Name="DateTimePicker"
-                        BackgroundColor="Transparent"
                         CancelButtonClicked="OnDateTimePickerCancelButtonClicked"
                         Mode="Dialog"
-                        OkButtonClicked="OnDateTimePickerOkButtonClicked"
-                        Opacity="0">
+                        OkButtonClicked="OnDateTimePickerOkButtonClicked">
                         <sf:SfDateTimePicker.HeaderView>
                             <sf:DateTimePickerHeaderView DateFormat="yyyy년 MM월 dd일" TimeFormat="HH시 mm분 ss초" />
                         </sf:SfDateTimePicker.HeaderView>
