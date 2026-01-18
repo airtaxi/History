@@ -57,6 +57,14 @@ public partial class EditPostPage : ContentPage
         Initialize();
 #if IOS
         MediaCollectionView.ItemsLayout = new GridItemsLayout(3, ItemsLayoutOrientation.Vertical);
+        DateTimePicker.WidthRequest = 300;
+        DateTimePicker.HeightRequest = 300;
+        DateTimePicker.HorizontalOptions = LayoutOptions.Center;
+        DateTimePicker.VerticalOptions = LayoutOptions.Center;
+#else
+        DateTimePicker.IsVisible = true;
+        DateTimePicker.Opacity = 0;
+        DateTimePicker.Mode = PickerMode.Dialog;
 #endif
         BindableLayout.SetItemsSource(HashtagFlexLayout, Hashtags);
 
@@ -960,6 +968,9 @@ public partial class EditPostPage : ContentPage
         {
             _dateTimePickerTaskCompletionSource = new();
             DateTimePicker.MinimumDate = DateTime.Now.AddMinutes(1);
+#if IOS
+            DateTimePicker.IsVisible = true;
+#endif
             DateTimePicker.IsOpen = true;
 
             var time = await _dateTimePickerTaskCompletionSource.Task;
@@ -981,12 +992,18 @@ public partial class EditPostPage : ContentPage
         var dateTime = DateTimePicker.SelectedDate;
         if (dateTime.HasValue) _dateTimePickerTaskCompletionSource.TrySetResult(dateTime.Value);
         else _dateTimePickerTaskCompletionSource.TrySetResult(null);
+#if IOS
+        DateTimePicker.IsVisible = false;
+#endif
         DateTimePicker.IsOpen = false;
     }
 
     private void OnDateTimePickerCancelButtonClicked(object sender, EventArgs e)
     {
         _dateTimePickerTaskCompletionSource.TrySetResult(null);
+#if IOS
+        DateTimePicker.IsVisible = false;
+#endif
         DateTimePicker.IsOpen = false;
     }
 
@@ -1127,6 +1144,9 @@ public partial class EditPostPage : ContentPage
         {
             _dateTimePickerTaskCompletionSource = new();
             DateTimePicker.MinimumDate = DateTime.Now.AddHours(1);
+#if IOS
+            DateTimePicker.IsVisible = true;
+#endif
             DateTimePicker.IsOpen = true;
             expiresAt = await _dateTimePickerTaskCompletionSource.Task;
         }

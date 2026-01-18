@@ -28,10 +28,12 @@
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0.73</ApplicationDisplayVersion>
-		<ApplicationVersion>103</ApplicationVersion>
+		<ApplicationVersion>104</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
+
+		<ValidateXcodeVersion>false</ValidateXcodeVersion>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
@@ -44,7 +46,7 @@
 	<!--<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' and '$(Configuration)' == 'Release'">
 		<UseMonoRuntime>false</UseMonoRuntime>
 	</PropertyGroup>-->
-	
+
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-android' AND '$(Configuration)' == 'Release'">
 		<AndroidEnableSGenConcurrent>true</AndroidEnableSGenConcurrent>
 		<!--<EnableLLVM>True</EnableLLVM>
@@ -55,19 +57,23 @@
 		<!--<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>-->
 		<!--<AndroidEnableMarshalMethods>true</AndroidEnableMarshalMethods>-->
 	</PropertyGroup>
-	
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">	
-		<ProvisioningType>manual</ProvisioningType>
-			<CodesignKey>Apple Distribution: Byeong-Su Kang (UP6EXS2HJJ)</CodesignKey>
-			<CodesignProvision>History iOS (Dist)</CodesignProvision>
-		<!--<CodesignKey>Apple Development: Created via API (VDW7YD8BQC)</CodesignKey>
-		<CodesignProvision>VS: com.airtaxi.history Development</CodesignProvision>-->
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-ios' AND '$(Configuration)' == 'Debug'">
+		<ProvisioningType>automatic</ProvisioningType>
+		<CodesignKey>Apple Development: Created via API (VDW7YD8BQC)</CodesignKey>
+		<CodesignProvision>VS: com.airtaxi.history Development</CodesignProvision>
 	</PropertyGroup>
-	
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-ios' AND '$(Configuration)' == 'Release'">
+		<ProvisioningType>manual</ProvisioningType>
+		<CodesignKey>Apple Distribution: Byeong-Su Kang (UP6EXS2HJJ)</CodesignKey>
+		<CodesignProvision>History iOS (Dist)</CodesignProvision>
+	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-ios' And '$(RuntimeIdentifier)' == 'iossimulator-arm64'">
 		<CodesignEntitlements>Platforms\iOS\Entitlements.plist</CodesignEntitlements>
 	</PropertyGroup>
-	
+
 	<PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
 		<!-- The AndroidKeyStore property is used to specify if the application should be signed with a key store.
       If set to true, the AndroidSigningKeyStore, AndroidSigningStorePass, AndroidSigningKeyAlias and AndroidSigningKeyPass properties must be set.-->
@@ -91,7 +97,7 @@
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
-	
+
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.png" Color="#fff112" BaseSize="1024,1024" ForegroundScale="0.7" />
@@ -100,18 +106,18 @@
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.png" Color="#fff112" BaseSize="1024,1024" ForegroundScale="1" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<None Remove="Platforms\Android\Resources\xml\provider_paths.xml" />
 		<AndroidResource Include="Platforms\Android\Resources\xml\provider_paths.xml" />
 	</ItemGroup>
-		
+
 	<ItemGroup>
-	  <AndroidEnvironment Include="Platforms\Android\GarbageCollector.txt" />
+		<AndroidEnvironment Include="Platforms\Android\GarbageCollector.txt" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <GoogleServicesJson Include="google-services.json" />
+		<GoogleServicesJson Include="google-services.json" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
@@ -119,159 +125,159 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="ViewModels\MentionStickerViewModel.cs" />
+		<None Include="ViewModels\MentionStickerViewModel.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<MauiXaml Update="ContentViews\DataTemplatePresenter.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="ContentViews\EditPost\StickerCollectionView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="ContentViews\EditPost\TextContentView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="ContentViews\EditPost\UserCollectionView.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\AddFriendsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\CreateStickerPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\ImageEditorPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\MessagePage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\MessagesPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\ModerationRecordsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\MorePage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\PollResultsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\PollVotersPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\SearchPostsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\IgnoredFriendsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\DiscoveryOptionSelectUsersPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\EditCommentPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\EditPostPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\AppShell.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\FriendListPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\FullScreenMediaViewerPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\AppleLoginPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\KakaoStoryLoginPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\InAppBrowserPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\LoginPage.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\MainPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\NotificationsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\BlockedFriendsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\PendingFriendRequestsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\PostPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\InteractionsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\PublicPostPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\RegisterPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\SettingsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\StickerDetailPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\StickersPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\TimelinePage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\UserPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\WaitingFriendRequestsPage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Pages\WriteMessagePage.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Comment.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Friendship.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Content.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Media.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\PublicPost.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Repost.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Post.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Interaction.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\Profile.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 		<MauiXaml Update="Resources\Styles\SharedPost.xaml">
-		  <Generator>MSBuild:Compile</Generator>
+			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 	</ItemGroup>
 
@@ -283,9 +289,9 @@
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
 		<PackageReference Include="AdamE.Google.iOS.SignIn" Version="8.0.0.4" />
 	</ItemGroup>
-	
+
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
-	  <PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.4.0.2" />
+		<PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.4.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
