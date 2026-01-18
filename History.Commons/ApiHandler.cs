@@ -111,6 +111,9 @@ public class ApiHandler(string accessToken = null, string refreshToken = null)
 
             accessToken = refreshResponse.AccessToken;
             refreshToken = refreshResponse.RefreshToken;
+            Configuration.SetValue("AccessToken", accessToken);
+            Configuration.SetValue("RefreshToken", refreshToken);
+			
             return await ExecuteRequestAsync(request);
         }
         else throw new HttpRequestException(response.Content, response.ErrorException, response.StatusCode);
