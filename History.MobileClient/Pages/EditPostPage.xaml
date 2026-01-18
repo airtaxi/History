@@ -9,7 +9,7 @@
     xmlns:local="clr-namespace:History.MobileClient.Pages"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:mention="clr-namespace:SpeakLink.Mention;assembly=SpeakLink"
-    xmlns:sf="http://schemas.syncfusion.com/maui/toolkit"
+    xmlns:picker="clr-namespace:Syncfusion.Maui.Toolkit.Picker;assembly=Syncfusion.Maui.Toolkit"
     xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
@@ -29,21 +29,6 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-
-        <sf:SfDateTimePicker
-            x:Name="DateTimePicker"
-            BackgroundColor="Transparent"
-            CancelButtonClicked="OnDateTimePickerCancelButtonClicked"
-            Mode="Dialog"
-            OkButtonClicked="OnDateTimePickerOkButtonClicked"
-            Opacity="0">
-            <sf:SfDateTimePicker.HeaderView>
-                <sf:DateTimePickerHeaderView DateFormat="yyyy년 MM월 dd일" TimeFormat="HH시 mm분 ss초" />
-            </sf:SfDateTimePicker.HeaderView>
-            <sf:SfDateTimePicker.FooterView>
-                <sf:PickerFooterView Height="40" OkButtonText="확인" />
-            </sf:SfDateTimePicker.FooterView>
-        </sf:SfDateTimePicker>
 
         <Grid
             Grid.Row="0"
@@ -281,7 +266,8 @@
                                 <FontImageSource
                                     FontFamily="MaterialSharp"
                                     Glyph="{x:Static m:MaterialSharp.Close}"
-                                    Color="White" />
+                                    Color="{AppThemeBinding Light=Black,
+                                                            Dark=White}" />
                             </Image.Source>
                         </Image>
                     </Grid>
@@ -312,7 +298,8 @@
                                 <FontImageSource
                                     FontFamily="MaterialSharp"
                                     Glyph="{x:Static m:MaterialSharp.Close}"
-                                    Color="White" />
+                                    Color="{AppThemeBinding Light=Black,
+                                                            Dark=White}" />
                             </Image.Source>
                         </Image>
                     </Grid>
@@ -613,5 +600,19 @@
             VerticalOptions="Center"
             WidthRequest="100"
             Color="{StaticResource Primary}" />
+
+        <picker:SfDateTimePicker
+            x:Name="DateTimePicker"
+            Grid.RowSpan="3"
+            CancelButtonClicked="OnDateTimePickerCancelButtonClicked"
+            IsVisible="False"
+            OkButtonClicked="OnDateTimePickerOkButtonClicked">
+            <picker:SfDateTimePicker.HeaderView>
+                <picker:DateTimePickerHeaderView DateFormat="yyyy년 MM월 dd일" TimeFormat="HH시 mm분 ss초" />
+            </picker:SfDateTimePicker.HeaderView>
+            <picker:SfDateTimePicker.FooterView>
+                <picker:PickerFooterView Height="40" OkButtonText="확인" />
+            </picker:SfDateTimePicker.FooterView>
+        </picker:SfDateTimePicker>
     </Grid>
 </ContentPage>
