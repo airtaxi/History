@@ -543,27 +543,11 @@
                 </Image>
                 <Grid>
                     <sf:SfDateTimePicker
-                        x:Name="PollEndTimeDateTimePicker"
+                        x:Name="DateTimePicker"
                         BackgroundColor="Transparent"
-                        CancelButtonClicked="OnPollEndTimeDateTimePickerCancelButtonClicked"
-                        IsVisible="False"
+                        CancelButtonClicked="OnDateTimePickerCancelButtonClicked"
                         Mode="Dialog"
-                        OkButtonClicked="OnPollEndTimeDateTimePickerOkButtonClicked"
-                        Opacity="0">
-                        <sf:SfDateTimePicker.HeaderView>
-                            <sf:DateTimePickerHeaderView DateFormat="yyyy년 MM월 dd일" TimeFormat="HH시 mm분 ss초" />
-                        </sf:SfDateTimePicker.HeaderView>
-                        <sf:SfDateTimePicker.FooterView>
-                            <sf:PickerFooterView Height="40" OkButtonText="확인" />
-                        </sf:SfDateTimePicker.FooterView>
-                    </sf:SfDateTimePicker>
-                    <sf:SfDateTimePicker
-                        x:Name="ReservationDateTimePicker"
-                        BackgroundColor="Transparent"
-                        CancelButtonClicked="OnReservationDateTimePickerCancelButtonClicked"
-                        IsVisible="False"
-                        Mode="Dialog"
-                        OkButtonClicked="OnReservationDateTimePickerOkButtonClicked"
+                        OkButtonClicked="OnDateTimePickerOkButtonClicked"
                         Opacity="0">
                         <sf:SfDateTimePicker.HeaderView>
                             <sf:DateTimePickerHeaderView DateFormat="yyyy년 MM월 dd일" TimeFormat="HH시 mm분 ss초" />
