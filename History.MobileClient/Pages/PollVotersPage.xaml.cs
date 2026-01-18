@@ -44,7 +44,7 @@ public partial class PollVotersPage : ContentPage
             var result = await App.ExecuteRequestAsync(new GetPollVoters(_postId, _pollId, _optionIndex));
             if (result.IsFailure)
             {
-                await DisplayAlert("오류", result.ErrorMessage ?? "투표자 목록을 불러올 수 없습니다.", "확인");
+                await DisplayAlertAsync("오류", result.ErrorMessage ?? "투표자 목록을 불러올 수 없습니다.", "확인");
                 await App.PopAsync();
                 return;
             }
