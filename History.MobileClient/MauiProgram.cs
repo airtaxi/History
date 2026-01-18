@@ -38,7 +38,7 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
-        Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1JGaF5cXGpCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWH1ceXRXQmReVEx1X0VWYEs=");
+        Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1JGaF5cXGpCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdlWX5feHRdQ2lcV0Z+X0VWYEs=");
 
         ApiHandler.ApplicationVersion = AppInfo.Current.VersionString;
         ApiHandler.Platform = DeviceInfo.Platform.ToString();
