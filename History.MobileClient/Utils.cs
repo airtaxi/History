@@ -71,6 +71,10 @@ public static partial class Utils
             }
             else if (content is StickerContent stickerContent)
             {
+                // Prevent multiple stickers in a single post for non-unwrapped posts
+                // To prevent abusing stickers in timeline or discovery
+                if (postType != PostType.Unwrapped && contentViewModels.Any(x => x is StickerContentViewModel)) continue;
+
                 FlushMediaContents();
                 FlushTextAndProfileContents();
                 contentViewModels.Add(new StickerContentViewModel(stickerContent));
