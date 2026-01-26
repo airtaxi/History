@@ -331,6 +331,7 @@ public partial class PostViewModel : ObservableObject
         var result = await App.ExecuteRequestAsync(new UnbookmarkPost(Post.Id));
         if (result.IsSuccess)
         {
+            WeakReferenceMessenger.Default.Send(new PostUnbookmarkedMessage(Post.Id));
             await App.Page.DisplayAlertAsync("안내", "관심글에서 삭제되었습니다.", Constants.PromptOk);
             await RefreshAsync();
         }

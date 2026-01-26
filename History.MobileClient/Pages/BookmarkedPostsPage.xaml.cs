@@ -21,10 +21,18 @@ public partial class BookmarkedPostsPage : ContentPage
         InitializeComponent();
         MainCollectionView.ItemsSource = _viewModels;
 
+        WeakReferenceMessenger.Default.Register<PostUnbookmarkedMessage>(this, OnPostUnbookmarkedMessageMessageReceived);
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
+    private void OnPostUnbookmarkedMessageMessageReceived(object recipient, PostUnbookmarkedMessage message)
+    {
+        var viewModel = _viewModels.Where(x => x.Post.Id == message.Value).FirstOrDefault();
+        if (viewModel == null) return;
+
+        _viewModels.Remove(viewModel);
+    }
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {
         var viewModels = _viewModels.Where(x => x.Post.Id == message.Value.Id).ToList();
