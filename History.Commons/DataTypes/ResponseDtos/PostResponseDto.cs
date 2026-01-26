@@ -29,4 +29,6 @@ public class PostResponseDto
     public DateTime? ModifiedAt { get; set; }
 
     public List<string> Hashtags { get; set; } = [];
+
+    public bool IsBookmarked { get; set; }
 }

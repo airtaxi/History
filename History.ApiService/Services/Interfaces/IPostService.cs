@@ -256,4 +256,37 @@ public interface IPostService
     /// <param name="discoveryOption">Optional discovery option filter.</param>
     /// <returns>A task that represents the asynchronous operation, containing the count of deleted posts.</returns>
     public Task<Result<long>> BulkDeletePostsAsync(string userId, DiscoveryOption? discoveryOption);
+
+    /// <summary>
+    /// Bookmarks a post for the user.
+    /// </summary>
+    /// <param name="postId">The ID of the post to bookmark.</param>
+    /// <param name="userId">The ID of the user who bookmarks the post.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the bookmark action.</returns>
+    public Task<Result> BookmarkPostAsync(string postId, string userId);
+
+    /// <summary>
+    /// Removes a bookmark from a post for the user.
+    /// </summary>
+    /// <param name="postId">The ID of the post to unbookmark.</param>
+    /// <param name="userId">The ID of the user who unbookmarks the post.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the unbookmark action.</returns>
+    public Task<Result> UnbookmarkPostAsync(string postId, string userId);
+
+    /// <summary>
+    /// Gets the bookmarked posts for the user.
+    /// </summary>
+    /// <param name="userId">The ID of the user who requests the bookmarks.</param>
+    /// <param name="fromPostId">The ID of the post to start from for pagination.</param>
+    /// <param name="limit">The maximum number of posts to return.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the list of bookmarked posts.</returns>
+    public Task<Result<List<Post>>> GetBookmarkedPostsAsync(string userId, string fromPostId = null, int limit = 20);
+
+    /// <summary>
+    /// Checks if a post is bookmarked by the user.
+    /// </summary>
+    /// <param name="postId">The ID of the post to check.</param>
+    /// <param name="userId">The ID of the user.</param>
+    /// <returns>A task that represents the asynchronous operation, containing true if bookmarked, false otherwise.</returns>
+    public Task<Result<bool>> IsPostBookmarkedAsync(string postId, string userId);
 }

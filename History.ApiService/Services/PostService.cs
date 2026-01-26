@@ -8,6 +8,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using MongoDB.Driver;
 
+
 namespace History.ApiService.Services;
 
 public class PostService(IMongoDatabase database, IMediaService mediaService, INotificationService notificationService, IServiceProvider serviceProvider) : IPostService
@@ -19,6 +20,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     private readonly IMongoCollection<Post> _postCollection = database.GetCollection<Post>("Posts");
     private readonly IMongoCollection<Post> _publicPostCollection = database.GetCollection<Post>("PublicPosts");
     private readonly IMongoCollection<IgnoredPost> _ignoredPostCollection = database.GetCollection<IgnoredPost>("IgnoredPosts");
+    private readonly IMongoCollection<BookmarkedPost> _bookmarkedPostCollection = database.GetCollection<BookmarkedPost>("BookmarkedPosts");
     private readonly IMongoCollection<PostReaction> _postReactionCollection = database.GetCollection<PostReaction>("PostReactions");
     private readonly IMongoCollection<PollVote> _pollVoteCollection = database.GetCollection<PollVote>("PollVotes");
 
@@ -693,6 +695,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         // Delete ignored posts associated with the post
         await _ignoredPostCollection.DeleteManyAsync(i => i.PostId == postId);
 
+        // Delete bookmarked posts associated with the post
+        await _bookmarkedPostCollection.DeleteManyAsync(b => b.PostId == postId);
+
         // Delete post reactions associated with the post
         await _postReactionCollection.DeleteManyAsync(r => r.PostId == postId);
 
@@ -1132,6 +1137,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var postReactionDtos = await GeneratePostReactionDtosAsync(post.Id, requesterId);
         var sharedAndRepostedUserDtos = await GenerateSharedAndRepostedUserDtosAsync(post.Id, requesterId);
 
+        // Check if the post is bookmarked by the requester
+        var isBookmarkedResult = await IsPostBookmarkedAsync(post.Id, requesterId);
+        var isBookmarked = isBookmarkedResult.IsSuccess && isBookmarkedResult.Value;
+
         var postResponse = new PostResponseDto
         {
             Id = post.Id,
@@ -1147,6 +1156,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             DisallowShare = post.DisallowShare,
             Hashtags = post.Hashtags ?? [],
             IsRepost = post.IsRepost,
+            IsBookmarked = isBookmarked,
             CreatedAt = post.CreatedAt,
             ModifiedAt = post.ModifiedAt
         };
@@ -1274,6 +1284,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Delete ignored posts associated with the posts
         await _ignoredPostCollection.DeleteManyAsync(i => postIds.Contains(i.PostId));
+
+        // Delete bookmarked posts for the user (user's own bookmarks) and bookmarks pointing to user's posts
+        await _bookmarkedPostCollection.DeleteManyAsync(b => b.UserId == userId || postIds.Contains(b.PostId));
 
         // Delete post reactions associated with the posts
         await _postReactionCollection.DeleteManyAsync(r => postIds.Contains(r.PostId));
@@ -1543,7 +1556,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             await _commentLikeCollection.DeleteManyAsync(c => commentIds.Contains(c.CommentId));
         }
 
+
         await _ignoredPostCollection.DeleteManyAsync(i => postIds.Contains(i.PostId));
+        await _bookmarkedPostCollection.DeleteManyAsync(b => postIds.Contains(b.PostId));
         await _postReactionCollection.DeleteManyAsync(r => postIds.Contains(r.PostId));
 
         var pollIds = posts
@@ -1576,5 +1591,83 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         totalDeleted += postIds.Count;
 
         return totalDeleted;
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> BookmarkPostAsync(string postId, string userId)
+    {
+        var postResult = await GetPostByIdAsync(postId);
+        if (postResult.IsFailure) return postResult.CastFailure();
+
+        var accessResult = await CheckAccessAsync(postId, userId);
+        if (accessResult.IsFailure) return accessResult;
+
+        var existingBookmark = await _bookmarkedPostCollection
+            .Find(b => b.PostId == postId && b.UserId == userId)
+            .FirstOrDefaultAsync();
+
+        if (existingBookmark != null) return (ErrorType.BadRequest, "이미 관심글로 등록된 게시글입니다.");
+
+        var bookmark = new BookmarkedPost
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            UserId = userId,
+            PostId = postId,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _bookmarkedPostCollection.InsertOneAsync(bookmark);
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result> UnbookmarkPostAsync(string postId, string userId)
+    {
+        var result = await _bookmarkedPostCollection.DeleteOneAsync(b => b.PostId == postId && b.UserId == userId);
+        if (result.DeletedCount == 0) return (ErrorType.NotFound, "관심글로 등록되지 않은 게시글입니다.");
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<List<Post>>> GetBookmarkedPostsAsync(string userId, string fromPostId = null, int limit = 20)
+    {
+        var bookmarksQuery = _bookmarkedPostCollection
+            .Find(b => b.UserId == userId)
+            .SortByDescending(b => b.CreatedAt);
+
+        if (!string.IsNullOrEmpty(fromPostId))
+        {
+            var fromBookmark = await _bookmarkedPostCollection
+                .Find(b => b.UserId == userId && b.PostId == fromPostId)
+                .FirstOrDefaultAsync();
+
+            if (fromBookmark != null) bookmarksQuery = _bookmarkedPostCollection
+                .Find(b => b.UserId == userId && b.CreatedAt < fromBookmark.CreatedAt)
+                .SortByDescending(b => b.CreatedAt);
+        }
+
+        var bookmarks = await bookmarksQuery.Limit(limit).ToListAsync();
+        var postIds = bookmarks.Select(b => b.PostId).ToList();
+
+        var posts = await _postCollection
+            .Find(p => postIds.Contains(p.Id))
+            .ToListAsync();
+
+        // Maintain bookmark order
+        var orderedPosts = postIds
+            .Select(id => posts.FirstOrDefault(p => p.Id == id))
+            .Where(p => p != null)
+            .ToList();
+
+        return orderedPosts;
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<bool>> IsPostBookmarkedAsync(string postId, string userId)
+    {
+        var bookmark = await _bookmarkedPostCollection
+            .Find(b => b.PostId == postId && b.UserId == userId)
+            .FirstOrDefaultAsync();
+
+        return bookmark != null;
     }
 }

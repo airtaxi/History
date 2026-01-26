@@ -30,6 +30,12 @@ public partial class MorePage : ContentPage
         ModerationRecordsGrid.IsVisible = isModerator;
     }
 
+    private async void OnBookmarkedPostsGridTapped(object sender, TappedEventArgs e)
+    {
+        var page = new BookmarkedPostsPage();
+        await App.PushAsync(page);
+    }
+
     private async void OnPublicPostGridTapped(object sender, TappedEventArgs e)
     {
         var page = new PublicPostPage();

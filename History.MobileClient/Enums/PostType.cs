@@ -10,5 +10,6 @@ public enum PostType
 {
     Timeline,
     Unwrapped,
-    Discovery
+    Discovery,
+    Bookmarked
 }

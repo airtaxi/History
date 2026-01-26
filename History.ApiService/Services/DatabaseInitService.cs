@@ -27,6 +27,9 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         var stickerSubscriptionCollection = database.GetCollection<StickerSubscription>("StickerSubscriptions");
         var recentStickerUsageCollection = database.GetCollection<RecentStickerUsage>("RecentStickerUsages");
 
+        // Bookmarks
+        var bookmarkedPostCollection = database.GetCollection<BookmarkedPost>("BookmarkedPosts");
+
         // Create indexes
         logger.LogInformation("Creating indexes...");
 
@@ -168,6 +171,18 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
                 Builders<RecentStickerUsage>.IndexKeys.Combine(
                     Builders<RecentStickerUsage>.IndexKeys.Ascending(x => x.UserId),
                     Builders<RecentStickerUsage>.IndexKeys.Ascending(x => x.StickerAssetId)),
+                new CreateIndexOptions { Unique = true }),
+            cancellationToken: cancellationToken);
+
+        logger.LogInformation("Creating indexes for BookmarkedPost collection...");
+        await bookmarkedPostCollection.Indexes.CreateOneAsync(new CreateIndexModel<BookmarkedPost>(Builders<BookmarkedPost>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
+        await bookmarkedPostCollection.Indexes.CreateOneAsync(new CreateIndexModel<BookmarkedPost>(Builders<BookmarkedPost>.IndexKeys.Ascending(x => x.PostId)), cancellationToken: cancellationToken);
+        await bookmarkedPostCollection.Indexes.CreateOneAsync(new CreateIndexModel<BookmarkedPost>(Builders<BookmarkedPost>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
+        await bookmarkedPostCollection.Indexes.CreateOneAsync(
+            new CreateIndexModel<BookmarkedPost>(
+                Builders<BookmarkedPost>.IndexKeys.Combine(
+                    Builders<BookmarkedPost>.IndexKeys.Ascending(x => x.UserId),
+                    Builders<BookmarkedPost>.IndexKeys.Ascending(x => x.PostId)),
                 new CreateIndexOptions { Unique = true }),
             cancellationToken: cancellationToken);
 
