@@ -237,7 +237,7 @@ public partial class PostViewModel : ObservableObject
         if (Post.IsBookmarked) options.Add("관심글 삭제");
         else options.Add("관심글로 저장");
 
-        options.Add("이 글 알림 끄기");
+        if (User.UserId != Shared.UserId) options.Add("이 글 숨기기");
 
         if (User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제", "프로필에 고정", "게시글 홍보"]);
         else if (Shared.MyRank >= Rank.Moderator) options.AddRange("게시글 삭제");
@@ -313,6 +313,7 @@ public partial class PostViewModel : ObservableObject
         }
         else if (action == "관심글로 저장") await HandleBookmarkAsync();
         else if (action == "관심글 삭제") await HandleUnbookmarkAsync();
+        else if (action == "이 글 숨기기") await HandleHidePostAsync();
         else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
 
@@ -335,6 +336,15 @@ public partial class PostViewModel : ObservableObject
             await App.Page.DisplayAlertAsync("안내", "관심글에서 삭제되었습니다.", Constants.PromptOk);
             await RefreshAsync();
         }
+    }
+
+    private async Task HandleHidePostAsync()
+    {
+        var confirm = await App.Page.DisplayAlertAsync("이 글 숨기기", "이 글을 숨기면 타임라인에서 더 이상 보이지 않습니다. 이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+        if (!confirm) return;
+
+        var result = await App.ExecuteRequestAsync(new IgnorePost(Post.Id));
+        if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostResponseDto>(Post));
     }
 
     public async Task<Result> RefreshAsync()
