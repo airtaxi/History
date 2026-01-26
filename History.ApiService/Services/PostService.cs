@@ -375,9 +375,20 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         var ignoredPost = new IgnoredPost
         {
+            Id = Guid.NewGuid().ToString("N"),
             UserId = userId,
-            PostId = postId
+            PostId = postId,
+            CreatedAt = DateTime.UtcNow
         };
+
+        while (true)
+        {
+            var conflict = await _ignoredPostCollection
+                .Find(i => i.Id == ignoredPost.Id).AnyAsync();
+            if (conflict) ignoredPost.Id = Guid.NewGuid().ToString("N");
+            else break;
+        }
+
         await _ignoredPostCollection.InsertOneAsync(ignoredPost);
         return Result.Success();
     }
