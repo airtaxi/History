@@ -1163,6 +1163,14 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         if (post.ParentPostId != null)
         {
+            // Check if the parent post is ignored by the requester
+            var isParentPostIgnored = await _ignoredPostCollection
+                .Find(i => i.UserId == requesterId && i.PostId == post.ParentPostId)
+                .AnyAsync();
+
+            // If parent post is ignored, skip setting ParentPost (leave it null)
+            if (isParentPostIgnored) return postResponse;
+
             var parentPostResult = await GetPostByIdAsync(post.ParentPostId);
             if (parentPostResult.IsFailure) return postResponse;
 
@@ -1253,7 +1261,16 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var bannedUserIds = new List<string>();
         if (requesterId != null) bannedUserIds = await friendshipService.GetBannedUserIdsAsync(requesterId);
 
-        var tasks = posts.Select(x => GeneratePostResponseDtoAsync(x, requesterId)).ToList();
+        // Get ignored post IDs for the requester to filter out reposts with ignored parent posts
+        var ignoredPostIds = await _ignoredPostCollection
+            .Find(i => i.UserId == requesterId)
+            .Project(i => i.PostId)
+            .ToListAsync();
+
+        // Filter out reposts where the parent post is ignored
+        var filteredPosts = posts.Where(p => !ignoredPostIds.Contains(p.ParentPostId) && !ignoredPostIds.Contains(p.Id)).ToList();
+
+        var tasks = filteredPosts.Select(x => GeneratePostResponseDtoAsync(x, requesterId)).ToList();
         await Task.WhenAll(tasks);
 
         return tasks.Where(x => x.Result.IsSuccess).Select(x => x.Result.Value).ToList();
