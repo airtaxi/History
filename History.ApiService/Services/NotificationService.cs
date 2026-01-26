@@ -14,6 +14,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 {
     private readonly IMongoCollection<FirebaseToken> _firebaseTokenCollection = database.GetCollection<FirebaseToken>("FirebaseTokens");
     private readonly IMongoCollection<Notification> _notificationCollection = database.GetCollection<Notification>("Notifications");
+    private readonly IMongoCollection<IgnoredPost> _ignoredPostCollection = database.GetCollection<IgnoredPost>("IgnoredPosts");
 
     public async Task<Result<List<Notification>>> GetNotificationsAsync(string userId, string fromNotificationId = null, int limit = 30)
     {
@@ -785,6 +786,14 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
     private async Task<Result<List<string>>> FilterRecipientsByAccessAsync(IEnumerable<string> recipients, Post post)
     {
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
+
+        // Filter out users who have ignored this post
+        var ignoredUserIds = await _ignoredPostCollection
+            .Find(i => i.PostId == post.Id)
+            .Project(i => i.UserId)
+            .ToListAsync();
+        recipients = recipients.Except(ignoredUserIds);
+
         if (post.DiscoveryOption == DiscoveryOption.Everyone) return recipients.ToList();
         else if (post.DiscoveryOption == DiscoveryOption.FriendsOfFriends)
         {
