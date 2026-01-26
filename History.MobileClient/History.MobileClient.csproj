@@ -298,7 +298,7 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
 		<PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.4.0.2" />
-		<PackageReference Update="Xamarin.AndroidX.Compose.Runtime.Annotation.Jvm" ExcludeAssets="runtime;build" />
+		<PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Annotation.Jvm" ExcludeAssets="all" Version="1.10.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
