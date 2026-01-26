@@ -31,6 +31,62 @@
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="0,12" Spacing="0">
+                <!--  관심글  -->
+                <Grid Padding="16,12" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1A1A1A}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBookmarkedPostsGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="48" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Image
+                        Grid.Column="0"
+                        HeightRequest="32"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Center"
+                        WidthRequest="32">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Bookmark}"
+                                Color="{StaticResource Primary}" />
+                        </Image.Source>
+                    </Image>
+                    <VerticalStackLayout
+                        Grid.Column="1"
+                        Spacing="2"
+                        VerticalOptions="Center">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="관심글" />
+                        <Label
+                            FontSize="12"
+                            Text="관심글로 저장한 게시글 모아보기"
+                            TextColor="#808080" />
+                    </VerticalStackLayout>
+                    <Image
+                        Grid.Column="2"
+                        HeightRequest="24"
+                        VerticalOptions="Center"
+                        WidthRequest="24">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Chevron_right}"
+                                Color="#808080" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
+
+                <Rectangle
+                    Fill="#808080"
+                    HeightRequest="0.5"
+                    HorizontalOptions="Fill"
+                    Opacity="0.5" />
+
                 <!--  발견  -->
                 <Grid Padding="16,12" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1A1A1A}">
                     <Grid.GestureRecognizers>

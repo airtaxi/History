@@ -234,7 +234,10 @@ public partial class PostViewModel : ObservableObject
             options.AddRange(["게시글 공유", isReposted ? "리포스트 해제" : "리포스트"]);
         }
 
-        options.AddRange(["관심글로 저장", "이 글 알림 끄기"]);
+        if (Post.IsBookmarked) options.Add("관심글 삭제");
+        else options.Add("관심글로 저장");
+
+        options.Add("이 글 알림 끄기");
 
         if (User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제", "프로필에 고정", "게시글 홍보"]);
         else if (Shared.MyRank >= Rank.Moderator) options.AddRange("게시글 삭제");
@@ -308,7 +311,29 @@ public partial class PostViewModel : ObservableObject
                 await App.Page.DisplayAlertAsync("안내", "게시글 홍보가 성공적으로 전송되었습니다. 발견탭에서 확인할 수 있습니다.", Constants.PromptOk);
             }
         }
+        else if (action == "관심글로 저장") await HandleBookmarkAsync();
+        else if (action == "관심글 삭제") await HandleUnbookmarkAsync();
         else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
+    }
+
+    private async Task HandleBookmarkAsync()
+    {
+        var result = await App.ExecuteRequestAsync(new BookmarkPost(Post.Id));
+        if (result.IsSuccess)
+        {
+            await App.Page.DisplayAlertAsync("안내", "관심글로 저장되었습니다.", Constants.PromptOk);
+            await RefreshAsync();
+        }
+    }
+
+    private async Task HandleUnbookmarkAsync()
+    {
+        var result = await App.ExecuteRequestAsync(new UnbookmarkPost(Post.Id));
+        if (result.IsSuccess)
+        {
+            await App.Page.DisplayAlertAsync("안내", "관심글에서 삭제되었습니다.", Constants.PromptOk);
+            await RefreshAsync();
+        }
     }
 
     public async Task<Result> RefreshAsync()

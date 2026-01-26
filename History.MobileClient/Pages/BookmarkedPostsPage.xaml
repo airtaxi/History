@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.BookmarkedPostsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Loaded="OnLoaded"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,0,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout Spacing="8">
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="관심글"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <RefreshView Refreshing="OnRefreshing">
+                <CollectionView
+                    x:Name="MainCollectionView"
+                    ItemTemplate="{StaticResource TimelineTemplateSelector}"
+                    ItemsUpdatingScrollMode="KeepItemsInView"
+                    RemainingItemsThreshold="5"
+                    RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
+                    SelectionMode="None" />
+            </RefreshView>
+
+            <VerticalStackLayout
+                x:Name="EmptyStateLayout"
+                HorizontalOptions="Center"
+                IsVisible="False"
+                Spacing="8"
+                VerticalOptions="Center">
+                <Image HeightRequest="64" WidthRequest="64">
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Bookmark}"
+                            Color="#808080" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontSize="16"
+                    HorizontalOptions="Center"
+                    Text="관심글이 없습니다"
+                    TextColor="#808080" />
+                <Label
+                    FontSize="12"
+                    HorizontalOptions="Center"
+                    Text="게시글 옵션에서 '관심글로 저장'을 선택하세요"
+                    TextColor="#808080" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="2"
+            HorizontalOptions="Center"
+            VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

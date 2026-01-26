@@ -153,6 +153,75 @@ public class PostController(IPostService postService, IFriendshipService friends
         else return StatusCode(500, result.FullErrorMessage);
     }
 
+    [HttpPost("bookmark/{postId}")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> BookmarkPost(string postId)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var result = await postService.BookmarkPostAsync(postId, requesterId);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpDelete("bookmark/{postId}")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> UnbookmarkPost(string postId)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var result = await postService.UnbookmarkPostAsync(postId, requesterId);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpGet("bookmarks")]
+    [Authorize]
+    [ProducesResponseType<List<PostResponseDto>>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> GetBookmarkedPosts([FromQuery] int limit = 20, [FromQuery] string from = null)
+    {
+        limit = Math.Clamp(limit, 1, 100);
+
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var postsResult = await postService.GetBookmarkedPostsAsync(requesterId, from, limit);
+        if (postsResult.IsFailure)
+        {
+            if (postsResult.Error == ErrorType.BadRequest) return BadRequest(postsResult.ErrorMessage);
+            else return StatusCode(500, postsResult.FullErrorMessage);
+        }
+
+        var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
+        return Ok(postResponses.Value);
+    }
+
     [HttpPost]
     [Authorize]
     [ProducesResponseType<string>(200)]

@@ -41,7 +41,7 @@ History.ApiService는 "History"라는 소셜 미디어 애플리케이션의 백
 
 API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정 도메인을 처리합니다:
 
-- **PostController**: 포스트 CRUD 작업, 타임라인/공개 포스트, 리액션, 리포스트, 공유, 발견 옵션, 검색, 외부 URL 콘텐츠 채우기, 투표 기능
+- **PostController**: 포스트 CRUD 작업, 타임라인/공개 포스트, 리액션, 리포스트, 공유, 발견 옵션, 검색, 외부 URL 콘텐츠 채우기, 투표 기능, 관심글 (북마크)
 - **GoogleController**: Google OAuth 인증 흐름 (로그인 URL 생성, 콜백 처리)
 - **ReportController**: 신고 기록 관리 (생성, 보기, 삭제) 조정자 액세스 포함
 - **CommentController**: 댓글 CRUD 작업, 좋아요, 포스트 권한 기반 액세스 제어
@@ -62,7 +62,7 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 - **UserService**: 사용자 CRUD, 프로필 업데이트 (닉네임, 설명, 생일, 미디어), 검색 허용 설정, 핸들 관리, 메모, 푸시 알림 권한, 메시지 수신 권한, 회원 탈퇴 처리
 - **MediaService**: 미디어 업로드/변환/저장 (GridFS 사용), 썸네일 생성, 파일 삭제, 사용자별 미edia 관리
 - **FriendshipService**: 친구 요청/수락/거절/취소, 차단/무시, 친구 목록 검색, 친구 관계 확인, 즐겨찾기 친구 관리
-- **PostService**: 포스트 CRUD, 타임라인/공개 포스트 검색, 리액션/리포스트 처리, 발견 옵션 변경, 액세스 제어, 검색, 외부 URL 채우기, 투표 기능 (PollVote 관리)
+- **PostService**: 포스트 CRUD, 타임라인/공개 포스트 검색, 리액션/리포스트 처리, 발견 옵션 변경, 액세스 제어, 검색, 외부 URL 채우기, 투표 기능 (PollVote 관리), 관심글 (북마크) 관리
 - **CommentService**: 댓글 CRUD, 좋아요, 액세스 제어, 응답 DTO 생성
 - **NotificationService**: 푸시 알림 전송/삭제, Firebase 토큰 관리, 알림 필터링
 - **MessageService**: 메시지 전송/검색/읽음 처리, 권한 확인, 응답 DTO 생성
@@ -111,7 +111,7 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 
 - `History.ApiService`의 `PostService.DeletePostAsync(...)`는 단건 삭제, `PostService.DeletePostsAsync(...)`는 대량 삭제(배치) 경로입니다.
 - 단건 삭제 로직(`DeletePostAsync`)을 수정할 때는 **반드시** 대량 삭제 로직(`DeletePostsAsync`)도 함께 업데이트하여,
-  삭제 대상 컬렉션/외부 리소스(미디어/알림/신고 등) 정리 범위가 서로 일치하도록 유지합니다.
+  삭제 대상 컬렉션/외부 리소스(미디어/알림/신고/관심글 등) 정리 범위가 서로 일치하도록 유지합니다.
 
 ### 보안
 
