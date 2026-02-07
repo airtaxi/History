@@ -156,6 +156,9 @@
 		<MauiXaml Update="Pages\ImageEditorPage.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
+		<MauiXaml Update="Pages\KakaoStoryRewritePage.xaml">
+		  <Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 		<MauiXaml Update="Pages\MessagePage.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

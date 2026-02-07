@@ -527,6 +527,42 @@ public partial class EditPostPage : ContentPage
                                 text += string.Join(" ", Hashtags.Select(x => $"#{x}"));
                             }
 
+                            // Check for profanity before uploading to KakaoStory
+                            var isKakaoStoryProfanityCheckEnabled = Configuration.GetValue<bool?>("KakaoStoryProfanityCheckEnabled") ?? true;
+                            if (isKakaoStoryProfanityCheckEnabled)
+                            {
+                                await ProfanityFilterHelper.LoadAsync();
+                                var profanityWords = ProfanityFilterHelper.FindProfanity(text);
+                                if (profanityWords.Count > 0)
+                                {
+                                    var wordList = string.Join(", ", profanityWords.Take(20));
+                                    if (profanityWords.Count > 20) wordList += $" 외 {profanityWords.Count - 20}개";
+
+                                    var rewrite = await DisplayAlertAsync(
+                                        "욕설 감지",
+                                        $"카카오스토리에 미러링할 글에서 다음 욕설이 감지되었습니다:\n\n{wordList}\n\n자동화된 계정 정지를 방지하기 위해 카카오스토리용 글 내용을 수정하시겠습니까?",
+                                        "글 수정",
+                                        "그대로 게시");
+
+                                    if (rewrite)
+                                    {
+                                        IsEnabled = true;
+                                        MainActivityIndicator.IsRunning = false;
+
+                                        var rewritePage = new KakaoStoryRewritePage(text);
+                                        await App.PushAsync(rewritePage);
+
+                                        var rewrittenText = await rewritePage.GetResultAsync();
+
+                                        IsEnabled = false;
+                                        MainActivityIndicator.IsRunning = true;
+
+                                        if (rewrittenText == null) return;
+                                        text = rewrittenText;
+                                    }
+                                }
+                            }
+
                             //if (!string.IsNullOrWhiteSpace(text)) text += "\n----------------------\n";
                             //text += $"이 게시글은 대체 SNS인 히스토리를 통하여 작성되었습니다.\n히스토리 디스코드 채널에 참여하여 히스토리 베타에 참여해보세요.\n베타 참여 디스코드: {Constants.DiscordInviteUrl}";
 
