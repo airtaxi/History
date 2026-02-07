@@ -105,6 +105,11 @@ public partial class KakaoStoryLoginPage : ContentPage
                     passInput.dispatchEvent(new Event('input',  {{ bubbles: true }}));
                     passInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
 
+                    var saveSignedIn = document.querySelector('input#saveSignedIn--4[name=""saveSignedIn""]');
+                    if (saveSignedIn && saveSignedIn.checked) {{
+                        saveSignedIn.click();
+                    }}
+
                     var btn = document.querySelector('button.submit[type=""submit""]');
                     if (btn) btn.click();
 
