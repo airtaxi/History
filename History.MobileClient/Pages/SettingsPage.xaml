@@ -569,6 +569,25 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnKakaoStoryCredentialResetGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="카카오스토리 저장된 로그인 정보 초기화"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
             </VerticalStackLayout>
         </ScrollView>
 
