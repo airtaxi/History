@@ -14,6 +14,7 @@ var api = builder.AddProject<Projects.History_ApiService>("ApiService")
     .WaitFor(mongodb);
 
 builder.AddDockerfile("vue", "../History.WebFront")
+    .WithLifetime(ContainerLifetime.Persistent)
     .WaitFor(api)
     .WithContainerRuntimeArgs("-p", "5173:80");
 
