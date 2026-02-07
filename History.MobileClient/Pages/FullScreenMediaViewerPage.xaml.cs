@@ -23,6 +23,8 @@ public partial class FullScreenMediaViewerPage : ContentPage
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<FullScreenMediaTappedMessage>(this, OnFullScreenMediaTappedMessageReceived);
+
+        if (_viewModel.FullScreenMedias.Count >= 2) DownloadAllImage.IsVisible = true;
 #if IOS
         var carouselView = MainDataTemplatePresenter.FindInChildrenHierarchy<CarouselView>();
         if (carouselView != null) carouselView.Behaviors.Add(new SwipeToCloseBehavior());
@@ -40,7 +42,7 @@ public partial class FullScreenMediaViewerPage : ContentPage
         if (status != PermissionStatus.Granted) return;
 
         IsEnabled = false;
-        IsBusy = true;
+        MainActivityIndicator.IsRunning = true;
 
         var viewModel = _viewModel.CurrentMedia;
         var isImage = viewModel is ImageViewModel;
@@ -62,9 +64,69 @@ public partial class FullScreenMediaViewerPage : ContentPage
         {
             if (File.Exists(filePath)) File.Delete(filePath);
             IsEnabled = true;
-            IsBusy = false;
+            MainActivityIndicator.IsRunning = false;
             await Toast.Make("미디어 파일이 저장되었습니다.").Show();
         }
+    }
+
+    private async void OnDownloadAllImageTapped(object sender, TappedEventArgs e)
+    {
+        var status = await Permissions.RequestAsync<SaveMediaPermission>();
+        if (status != PermissionStatus.Granted) return;
+
+        var allMedias = _viewModel.FullScreenMedias;
+        var hasImages = allMedias.Any(x => x is ImageViewModel);
+        var hasVideos = allMedias.Any(x => x is VideoViewModel);
+
+        List<IMediaViewModel> targets;
+        if (hasImages && hasVideos)
+        {
+            const string downloadAll = "전체 다운로드";
+            const string downloadImagesOnly = "사진만 다운로드";
+            const string downloadVideosOnly = "동영상만 다운로드";
+
+            var action = await DisplayActionSheetAsync("다운로드 옵션", Constants.PromptCancel, null, downloadAll, downloadImagesOnly, downloadVideosOnly);
+            if (action == null || action == Constants.PromptCancel) return;
+
+            if (action == downloadImagesOnly) targets = allMedias.Where(x => x is ImageViewModel).ToList();
+            else if (action == downloadVideosOnly) targets = allMedias.Where(x => x is VideoViewModel).ToList();
+            else targets = allMedias.ToList();
+        }
+        else targets = allMedias.ToList();
+
+        IsEnabled = false;
+        MainActivityIndicator.IsRunning = true;
+
+        var failedCount = 0;
+        var tempPath = Path.GetTempPath();
+        try
+        {
+            foreach (var media in targets)
+            {
+                var isImage = media is ImageViewModel;
+                var fileName = isImage ? $"{media.Uri.GetHashCode()}.webp" : $"{media.Uri.GetHashCode()}.mp4";
+                var filePath = Path.Combine(tempPath, fileName);
+
+                try
+                {
+                    await Downloader.DownloadFileAsync(media.Uri, filePath);
+                    await MediaGallery.SaveAsync(isImage ? MediaFileType.Image : MediaFileType.Video, filePath);
+                }
+                catch { failedCount++; }
+                finally
+                {
+                    if (File.Exists(filePath)) File.Delete(filePath);
+                }
+            }
+        }
+        finally
+        {
+            IsEnabled = true;
+            MainActivityIndicator.IsRunning = false;
+        }
+
+        if (failedCount > 0) await DisplayAlertAsync("오류", $"{targets.Count}개 중 {failedCount}개의 미디어 파일 저장에 실패하였습니다.", Constants.PromptOk);
+        else await Toast.Make($"{targets.Count}개의 미디어 파일이 저장되었습니다.").Show();
     }
 
     protected override void OnAppearing()
