@@ -88,6 +88,21 @@
                 HorizontalOptions="End"
                 Spacing="12"
                 VerticalOptions="Start">
+                <Image
+                    x:Name="DownloadAllImage"
+                    HeightRequest="36"
+                    IsVisible="False"
+                    WidthRequest="36">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnDownloadAllImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Download_for_offline}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
                 <Image HeightRequest="36" WidthRequest="36">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnDownloadImageTapped" />
