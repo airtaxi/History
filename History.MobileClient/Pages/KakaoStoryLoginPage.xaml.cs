@@ -15,7 +15,6 @@ public partial class KakaoStoryLoginPage : ContentPage
     public Task<List<Cookie>> GetResultAsync() => _taskCompletionSource.Task;
 
     private System.Timers.Timer _timer;
-    private bool _autoFillAttempted;
 
     protected override void OnAppearing()
     {
@@ -70,8 +69,6 @@ public partial class KakaoStoryLoginPage : ContentPage
 
     private async Task TryAutoFillCredentialsAsync()
     {
-        if (_autoFillAttempted) return;
-
         var savedEmail = Configuration.GetValue<string>("KakaoStoryEmail");
         var savedEncryptedPassword = Configuration.GetValue<string>("KakaoStoryPassword");
         if (string.IsNullOrEmpty(savedEmail) || string.IsNullOrEmpty(savedEncryptedPassword)) return;
@@ -79,7 +76,6 @@ public partial class KakaoStoryLoginPage : ContentPage
         try
         {
             var password = AesCryptoHelper.Decrypt(savedEncryptedPassword, Constants.KakaoStoryCredentialEncryptionKey);
-            _autoFillAttempted = true;
 
             await Task.Delay(500);
 
@@ -93,13 +89,18 @@ public partial class KakaoStoryLoginPage : ContentPage
 
                     var emailInput = document.querySelector('input[name=""loginId""]');
                     if (!emailInput) return false;
+
+                    var passInput = document.querySelector('input[name=""password""]');
+                    if (!passInput) return false;
+
+                    var btn = document.querySelector('button.submit[type=""submit""]');
+                    if (!btn) return false;
+
                     emailInput.focus();
                     nativeSetter.call(emailInput, ""{escapedEmail}"");
                     emailInput.dispatchEvent(new Event('input',  {{ bubbles: true }}));
                     emailInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
 
-                    var passInput = document.querySelector('input[name=""password""]');
-                    if (!passInput) return false;
                     passInput.focus();
                     nativeSetter.call(passInput, ""{escapedPassword}"");
                     passInput.dispatchEvent(new Event('input',  {{ bubbles: true }}));
@@ -110,8 +111,7 @@ public partial class KakaoStoryLoginPage : ContentPage
                         saveSignedIn.click();
                     }}
 
-                    var btn = document.querySelector('button.submit[type=""submit""]');
-                    if (btn) btn.click();
+                    btn.click();
 
                     return true;
                 }})();
