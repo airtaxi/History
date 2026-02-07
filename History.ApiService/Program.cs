@@ -71,7 +71,6 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IModerationService, ModerationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IStickerService, StickerService>();
-builder.Services.AddScoped<IKakaoStoryCookieService, KakaoStoryCookieService>();
 builder.Services.AddHostedService<DatabaseInitService>();
 builder.Services.AddHostedService<BirthdayService>();
 builder.Services.AddRateLimitService(builder.Configuration);

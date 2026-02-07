@@ -11,6 +11,4 @@ public static class CommonsConstants
     public const int MaxMediaDescriptionLength = 80;
     public const int MaxUploadFileSize = 100 * 1024 * 1024;
     public const int MaxImageUploadFileSize = 60 * 1024 * 1024;
-    public const string KakaoStoryAesKeyBase64 = "ST5bH/zq0lARykANgHhjb+RL5GsaCGyzJycHfAAtJtY=";
-    public const string KakaoStoryAesIvBase64 = "zH3Vq8H0JhN4ll/8kZzCAQ==";
 }
