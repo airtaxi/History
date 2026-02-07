@@ -64,7 +64,20 @@ public partial class KakaoStoryLoginPage : ContentPage
         MainActivityIndicator.IsRunning = false;
 
         await CheckCookies();
+        await UncheckSaveSignedInAsync();
         await TryAutoFillCredentialsAsync();
+    }
+
+    private async Task UncheckSaveSignedInAsync()
+    {
+        var script = @"
+            (function() {
+                var saveSignedIn = document.querySelector('input[name=""saveSignedIn""]');
+                if (saveSignedIn && saveSignedIn.checked) saveSignedIn.click();
+            })();
+        ";
+        try { await BrowserWebView.EvaluateJavaScriptAsync(script); }
+        catch { }
     }
 
     private async Task TryAutoFillCredentialsAsync()
@@ -105,11 +118,6 @@ public partial class KakaoStoryLoginPage : ContentPage
                     nativeSetter.call(passInput, ""{escapedPassword}"");
                     passInput.dispatchEvent(new Event('input',  {{ bubbles: true }}));
                     passInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
-
-                    var saveSignedIn = document.querySelector('input#saveSignedIn--4[name=""saveSignedIn""]');
-                    if (saveSignedIn && saveSignedIn.checked) {{
-                        saveSignedIn.click();
-                    }}
 
                     btn.click();
 
