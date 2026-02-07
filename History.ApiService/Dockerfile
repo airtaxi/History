@@ -1,12 +1,16 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY . .
-RUN dotnet restore "History.ApiService.csproj"
-RUN dotnet publish "History.ApiService.csproj" -c Release -o /app/publish
+COPY History.ApiService/ History.ApiService/
+COPY History.Commons/ History.Commons/
+COPY History.ServiceDefaults/ History.ServiceDefaults/
+RUN dotnet restore "History.ApiService/History.ApiService.csproj"
+RUN dotnet publish "History.ApiService/History.ApiService.csproj" -c Release -o /app/publish
 
-FROM mcr.microsoft.com/playwright/dotnet:v1.52.0-jammy AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble AS final
 WORKDIR /app
 COPY --from=build /app/publish .
+
+# Install Playwright dependencies and Chrome
 RUN apt-get update \
     && apt-get install -y --no-install-recommends wget gnupg ca-certificates \
     && wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor > /usr/share/keyrings/google-linux-signing-keyring.gpg \
@@ -14,6 +18,7 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install -y --no-install-recommends google-chrome-stable \
     && rm -rf /var/lib/apt/lists/*
-ENV ASPNETCORE_URLS=http://+:8080
-EXPOSE 8080
+
+ENV ASPNETCORE_URLS=http://0.0.0.0:31227
+EXPOSE 31227
 ENTRYPOINT ["dotnet", "History.ApiService.dll"]
