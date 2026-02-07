@@ -15,6 +15,7 @@ public partial class KakaoStoryLoginPage : ContentPage
     public Task<List<Cookie>> GetResultAsync() => _taskCompletionSource.Task;
 
     private System.Timers.Timer _timer;
+    private bool _autoFillAttempted;
 
     protected override void OnAppearing()
     {
@@ -64,6 +65,59 @@ public partial class KakaoStoryLoginPage : ContentPage
         MainActivityIndicator.IsRunning = false;
 
         await CheckCookies();
+        await TryAutoFillCredentialsAsync();
+    }
+
+    private async Task TryAutoFillCredentialsAsync()
+    {
+        if (_autoFillAttempted) return;
+
+        var savedEmail = Configuration.GetValue<string>("KakaoStoryEmail");
+        var savedEncryptedPassword = Configuration.GetValue<string>("KakaoStoryPassword");
+        if (string.IsNullOrEmpty(savedEmail) || string.IsNullOrEmpty(savedEncryptedPassword)) return;
+
+        try
+        {
+            var password = AesCryptoHelper.Decrypt(savedEncryptedPassword, Constants.KakaoStoryCredentialEncryptionKey);
+            _autoFillAttempted = true;
+
+            await Task.Delay(500);
+
+            var escapedEmail = savedEmail.Replace("\\", "\\\\").Replace("\"", "\\\"");
+            var escapedPassword = password.Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+            var script = $@"
+                (function() {{
+                    var nativeSetter = Object.getOwnPropertyDescriptor(
+                        window.HTMLInputElement.prototype, 'value').set;
+
+                    var emailInput = document.querySelector('input[name=""loginId""]');
+                    if (!emailInput) return false;
+                    emailInput.focus();
+                    nativeSetter.call(emailInput, ""{escapedEmail}"");
+                    emailInput.dispatchEvent(new Event('input',  {{ bubbles: true }}));
+                    emailInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
+
+                    var passInput = document.querySelector('input[name=""password""]');
+                    if (!passInput) return false;
+                    passInput.focus();
+                    nativeSetter.call(passInput, ""{escapedPassword}"");
+                    passInput.dispatchEvent(new Event('input',  {{ bubbles: true }}));
+                    passInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
+
+                    var btn = document.querySelector('button.submit[type=""submit""]');
+                    if (btn) btn.click();
+
+                    return true;
+                }})();
+            ";
+
+            await BrowserWebView.EvaluateJavaScriptAsync(script);
+        }
+        catch
+        {
+            await Toast.Make("저장된 로그인 정보 자동 입력에 실패하였습니다. 수동으로 로그인해주세요.").Show();
+        }
     }
 
     private bool _gotCookies = false;
