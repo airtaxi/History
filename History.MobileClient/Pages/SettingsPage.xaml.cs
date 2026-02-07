@@ -54,6 +54,9 @@ public partial class SettingsPage : ContentPage
             _ => "시스템 설정 따름"
         };
 
+        var isKakaoStoryProfanityCheckEnabled = Configuration.GetValue<bool?>("KakaoStoryProfanityCheckEnabled") ?? true;
+        KakaoStoryProfanityCheckLabel.Text = isKakaoStoryProfanityCheckEnabled ? PushNotificationOn : PushNotificationOff;
+
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
@@ -297,6 +300,16 @@ public partial class SettingsPage : ContentPage
         Configuration.SetValue("KakaoStoryEmail", null);
         Configuration.SetValue("KakaoStoryPassword", null);
         await DisplayAlertAsync("안내", "카카오스토리 로그인 정보가 초기화되었습니다.", Constants.PromptOk);
+    }
+
+    private async void OnKakaoStoryProfanityCheckGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("카카오스토리 업로드 시 욕설 체크", Constants.PromptCancel, null, PushNotificationOn, PushNotificationOff);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == PushNotificationOn;
+        Configuration.SetValue("KakaoStoryProfanityCheckEnabled", isEnabled);
+        KakaoStoryProfanityCheckLabel.Text = isEnabled ? PushNotificationOn : PushNotificationOff;
     }
 
     private async void OnCheckForUpdateGridTapped(object sender, TappedEventArgs e) => await Utils.CheckForUpdateAsync();
