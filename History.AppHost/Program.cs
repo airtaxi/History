@@ -11,7 +11,8 @@ var mongodb = builder.AddMongoDB("MongoDB", 27017, username, password)
 
 var api = builder.AddProject<Projects.History_ApiService>("ApiService")
     .WithReference(mongodb)
-    .WaitFor(mongodb);
+    .WaitFor(mongodb)
+    .WithDockerfile("../History.ApiService");
 
 builder.AddDockerfile("vue", "../History.WebFront")
     .WaitFor(api)
