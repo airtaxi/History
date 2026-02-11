@@ -296,7 +296,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
-		<PackageReference Include="AdamE.Google.iOS.SignIn" Version="8.0.0.4" />
+		<PackageReference Include="AdamE.Google.iOS.SignIn" Version="9.0.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
