@@ -585,13 +585,11 @@ public partial class EditPostPage : ContentPage
 
                             if (loginNeeded)
                             {
-                                await DisplayAlertAsync("안내", "'카카오스토리에도 게시글 작성' 옵션을 활성화 하였으나, 카카오스토리 쿠키가 만료되어 카카오스토리 로그인이 필요합니다.\n'카카오스토리에도 게시글 작성' 옵션은 언제든지 우측 하단의 펼침 메뉴를 이용하여 비활성화 할 수 있습니다", Constants.PromptOk);
-
                                 var savedEmail = Configuration.GetValue<string>("KakaoStoryEmail");
                                 var savedEncryptedPassword = Configuration.GetValue<string>("KakaoStoryPassword");
                                 if (savedEmail == null || savedEncryptedPassword == null)
                                 {
-                                    var useAutoFill = await DisplayAlertAsync("자동 입력", "카카오스토리 로그인 정보를 저장하여 자동 입력하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+                                    var useAutoFill = await DisplayAlertAsync("자동 입력", "쿠키 만료로 인해 로그인이 필요합니다. 카카오스토리 로그인 정보를 저장하여 자동 입력하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
                                     if (useAutoFill)
                                     {
                                         var email = await DisplayPromptAsync("이메일 입력", "카카오 계정 이메일을 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "이메일", -1, Keyboard.Email);
