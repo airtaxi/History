@@ -133,35 +133,37 @@ public partial class KakaoStoryLoginPage : ContentPage
         }
     }
 
-    private bool _gotCookies = false;
+    private readonly SemaphoreSlim _checkCookiesSemaphore = new(1, 1);
+    private bool _gotCookies;
     private async Task CheckCookies()
     {
-        var cookies = await WebViewCookieHelper.GetCookieListAsync(BrowserWebView, "https://story.kakao.com");
-        if (cookies == null) return;
-
         if (_gotCookies) return;
-
-        bool isSuccess = cookies.Any(x => x.Name == "_karmt");
-        if (isSuccess)
+        if (!await _checkCookiesSemaphore.WaitAsync(0)) return;
+        try
         {
-            // Prevent concurrent CheckCookies calls from proceeding past this point
-            _gotCookies = true;
+            if (_gotCookies) return;
+
+            var cookies = await WebViewCookieHelper.GetCookieListAsync(BrowserWebView, "https://story.kakao.com");
+            if (cookies == null) return;
+
+            bool isSuccess = cookies.Any(x => x.Name == "_karmt");
+            if (!isSuccess) return;
 
             var cookieContainer = new CookieContainer();
             foreach (var cookie in cookies) cookieContainer.Add(cookie);
 
             KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
-            try
-            {
-                var friends = await KakaoStoryApiHandler.GetFriends();
 
-                Configuration.SetValue("KakaoStoryCookies", cookies);
-                _taskCompletionSource.TrySetResult(cookies);
+            await KakaoStoryApiHandler.GetFriends();
 
-                await App.PopModalAsync();
-            }
-            catch { _gotCookies = false; }
+            _gotCookies = true;
+            Configuration.SetValue("KakaoStoryCookies", cookies);
+            _taskCompletionSource.TrySetResult(cookies);
+
+            await App.PopModalAsync();
         }
+        catch { }
+        finally { _checkCookiesSemaphore.Release(); }
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();

@@ -48,6 +48,7 @@ public partial class EditPostPage : ContentPage
     private ExternalUrlContentViewModel _externalUrlContentViewModel;
 
     private readonly ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
+    private readonly SemaphoreSlim _uploadSemaphore = new(1, 1);
     private PollContentViewModel _pollContentViewModel;
     private TaskCompletionSource<DateTime?> _dateTimePickerTaskCompletionSource;
 
@@ -422,7 +423,7 @@ public partial class EditPostPage : ContentPage
 
     private async void OnUploadButtonClicked(object sender, EventArgs e)
     {
-        if (_preventDispose) return;
+        if (!await _uploadSemaphore.WaitAsync(0)) return;
         _preventDispose = true;
         try
         {
@@ -769,7 +770,11 @@ public partial class EditPostPage : ContentPage
                 IsEnabled = true;
             }
         }
-        finally { _preventDispose = false; }
+        finally
+        {
+            _preventDispose = false;
+            _uploadSemaphore.Release();
+        }
     }
 
     protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
