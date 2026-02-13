@@ -46,7 +46,11 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder()
             .UseMauiApp<App>()
             .UseMauiCommunityToolkit()
-            .UseMauiCommunityToolkitMediaElement(false, (options) => options.SetDefaultAndroidViewType(AndroidViewType.TextureView))
+            .UseMauiCommunityToolkitMediaElement(false, (options) =>
+            {
+                options.SetDefaultAndroidViewType(AndroidViewType.TextureView);
+                options.SetIsAndroidForegroundServiceEnabled(false);
+            })
             .UseFFImageLoading()
             .UseUraniumUI()
             .UseUraniumUIMaterial()
