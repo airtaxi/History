@@ -96,33 +96,31 @@ public partial class KakaoStoryLoginPage : ContentPage
             var escapedPassword = password.Replace("\\", "\\\\").Replace("\"", "\\\"");
 
             var script = $@"
-                (function() {{
-                    var nativeSetter = Object.getOwnPropertyDescriptor(
-                        window.HTMLInputElement.prototype, 'value').set;
+                (function tryFill(attempts) {{
+                    var proto = Object.getOwnPropertyDescriptor(
+                        window.HTMLInputElement.prototype, 'value');
+                    var nativeSetter = proto && proto.set;
 
                     var emailInput = document.querySelector('input[name=""loginId""]');
-                    if (!emailInput) return false;
-
                     var passInput = document.querySelector('input[name=""password""]');
-                    if (!passInput) return false;
-
                     var btn = document.querySelector('button.submit[type=""submit""]');
-                    if (!btn) return false;
 
-                    emailInput.focus();
+                    if (!nativeSetter || !emailInput || !passInput || !btn) {{
+                        if (attempts > 0) setTimeout(function() {{ tryFill(attempts - 1); }}, 500);
+                        return false;
+                    }}
+
                     nativeSetter.call(emailInput, ""{escapedEmail}"");
-                    emailInput.dispatchEvent(new Event('input',  {{ bubbles: true }}));
+                    emailInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
                     emailInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
 
-                    passInput.focus();
                     nativeSetter.call(passInput, ""{escapedPassword}"");
-                    passInput.dispatchEvent(new Event('input',  {{ bubbles: true }}));
+                    passInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
                     passInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
 
-                    btn.click();
-
+                    setTimeout(function() {{ btn.click(); }}, 300);
                     return true;
-                }})();
+                }})(5);
             ";
 
             await BrowserWebView.EvaluateJavaScriptAsync(script);
