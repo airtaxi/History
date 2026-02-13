@@ -957,7 +957,7 @@ public partial class EditPostPage : ContentPage
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
         var isLoading = message.Value;
-        if (!_isInForeground && message.Value) return;
+        if ((!_isInForeground && message.Value) || _preventDispose) return;
 
         Dispatcher.Dispatch(() =>
         {
