@@ -199,6 +199,8 @@ public static partial class Utils
 
         if (imageUrl == null && mediaId != null) imageUrl = GenerateMediaUri(mediaId);
 
+        if (!Uri.IsWellFormedUriString(imageUrl, UriKind.Absolute)) imageUrl = null;
+
         return imageUrl;
     }
 
