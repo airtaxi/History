@@ -196,6 +196,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
     public async Task<Result> SendFirebaseNotificationAsync(IEnumerable<string> recipientUserIds, string title, string body, string imageUrl, Dictionary<string, string> data)
     {
+        if (!Uri.IsWellFormedUriString(imageUrl, UriKind.Absolute)) imageUrl = null;
+
         var tokensResult = await GetFirebaseTokensFromUserIdsAsync(recipientUserIds);
         var tokens = tokensResult.Value;
 
