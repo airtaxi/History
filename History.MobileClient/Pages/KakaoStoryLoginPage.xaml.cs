@@ -144,6 +144,9 @@ public partial class KakaoStoryLoginPage : ContentPage
         bool isSuccess = cookies.Any(x => x.Name == "_karmt");
         if (isSuccess)
         {
+            // Prevent concurrent CheckCookies calls from proceeding past this point
+            _gotCookies = true;
+
             var cookieContainer = new CookieContainer();
             foreach (var cookie in cookies) cookieContainer.Add(cookie);
 
@@ -152,14 +155,12 @@ public partial class KakaoStoryLoginPage : ContentPage
             {
                 var friends = await KakaoStoryApiHandler.GetFriends();
 
-                _gotCookies = true; // Successfully got cookies, prevent further checks
-
                 Configuration.SetValue("KakaoStoryCookies", cookies);
                 _taskCompletionSource.TrySetResult(cookies);
 
                 await App.PopModalAsync();
             }
-            catch { }
+            catch { _gotCookies = false; }
         }
     }
 
