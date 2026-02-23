@@ -108,6 +108,11 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         await notificationCollection.Indexes.CreateOneAsync(new CreateIndexModel<Notification>(Builders<Notification>.IndexKeys.Ascending("Data.$**")), cancellationToken: cancellationToken);
         await notificationCollection.Indexes.CreateOneAsync(new CreateIndexModel<Notification>(Builders<Notification>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
 
+        logger.LogInformation("Creating indexes for NotificationRead collection...");
+        var notificationReadCollection = database.GetCollection<NotificationRead>("NotificationReads");
+        await notificationReadCollection.Indexes.CreateOneAsync(new CreateIndexModel<NotificationRead>(Builders<NotificationRead>.IndexKeys.Ascending(x => x.NotificationId)), cancellationToken: cancellationToken);
+        await notificationReadCollection.Indexes.CreateOneAsync(new CreateIndexModel<NotificationRead>(Builders<NotificationRead>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
+
         logger.LogInformation("Creating indexes for ModerationRecord collection...");
         var moderationRecordCollection = database.GetCollection<ModerationRecord>("ModerationRecords");
         await moderationRecordCollection.Indexes.CreateOneAsync(new CreateIndexModel<ModerationRecord>(Builders<ModerationRecord>.IndexKeys.Ascending(x => x.RestrictionType)), cancellationToken: cancellationToken);
@@ -189,6 +194,41 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         logger.LogInformation("Indexes created successfully.");
 
         // Use below code if migration is needed in future versions.
+
+        //// Migrate Notification.IsUnread to per-user NotificationRead collection
+        //// Run once after deploying the NotificationRead refactoring, then comment out.
+        //logger.LogInformation("Migrating Notification.IsUnread to NotificationRead collection...");
+        //var rawNotificationCollection = database.GetCollection<MongoDB.Bson.BsonDocument>("Notifications");
+        //var readNotifications = await rawNotificationCollection
+        //    .Find(new MongoDB.Bson.BsonDocument("IsUnread", false))
+        //    .ToListAsync(cancellationToken);
+        //
+        //var bulkOps = new List<WriteModel<NotificationRead>>();
+        //foreach (var doc in readNotifications)
+        //{
+        //    var notifId = doc["_id"].AsString;
+        //    var recipients = doc.Contains("Recipients") ? doc["Recipients"].AsBsonArray.Select(x => x.AsString) : [];
+        //    foreach (var recipientId in recipients)
+        //    {
+        //        var compositeId = $"{notifId}_{recipientId}";
+        //        var filter = Builders<NotificationRead>.Filter.Eq(r => r.Id, compositeId);
+        //        var update = Builders<NotificationRead>.Update
+        //            .SetOnInsert(r => r.NotificationId, notifId)
+        //            .SetOnInsert(r => r.UserId, recipientId)
+        //            .SetOnInsert(r => r.ReadAt, DateTime.UtcNow);
+        //        bulkOps.Add(new UpdateOneModel<NotificationRead>(filter, update) { IsUpsert = true });
+        //    }
+        //}
+        //if (bulkOps.Count > 0)
+        //{
+        //    await notificationReadCollection.BulkWriteAsync(bulkOps, new BulkWriteOptions { IsOrdered = false }, cancellationToken);
+        //    logger.LogInformation("Migrated {Count} NotificationRead records.", bulkOps.Count);
+        //}
+        //
+        //// Remove legacy IsUnread field from Notification documents
+        //var unsetUpdate = Builders<MongoDB.Bson.BsonDocument>.Update.Unset("IsUnread");
+        //await rawNotificationCollection.UpdateManyAsync(MongoDB.Bson.BsonDocument.Parse("{}"), unsetUpdate, cancellationToken: cancellationToken);
+        //logger.LogInformation("Removed legacy IsUnread field from Notification documents.");
 
         //// Migrate users with missing permission fields to default values
         //logger.LogInformation("Migrating users with missing permission fields...");

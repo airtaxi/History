@@ -117,4 +117,13 @@ public partial class NotificationsPage : ContentPage
             IsEnabled = !isLoading;
         });
     }
+
+    private async void OnReadAllImageTapped(object sender, TappedEventArgs e)
+    {
+        var hasUnread = _viewModels.Any(x => x.IsUnread);
+        if (!hasUnread) return;
+
+        var result = await App.ExecuteRequestAsync(new ReadAllNotifications());
+        if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new NotificationsReadAllMessage());
+    }
 }

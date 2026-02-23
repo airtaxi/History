@@ -13,6 +13,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 {
     private readonly IMongoCollection<FirebaseToken> _firebaseTokenCollection = database.GetCollection<FirebaseToken>("FirebaseTokens");
     private readonly IMongoCollection<Notification> _notificationCollection = database.GetCollection<Notification>("Notifications");
+    private readonly IMongoCollection<NotificationRead> _notificationReadCollection = database.GetCollection<NotificationRead>("NotificationReads");
     private readonly IMongoCollection<IgnoredPost> _ignoredPostCollection = database.GetCollection<IgnoredPost>("IgnoredPosts");
 
     public async Task<Result<List<Notification>>> GetNotificationsAsync(string userId, string fromNotificationId = null, int limit = 30)
@@ -31,6 +32,17 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             .SortByDescending(n => n.CreatedAt)
             .Limit(limit)
             .ToListAsync();
+
+        // Compute per-user read status from NotificationRead collection
+        var notificationIds = notifications.Select(n => n.Id).ToList();
+        var readNotificationIds = await _notificationReadCollection
+            .Find(r => r.UserId == userId && notificationIds.Contains(r.NotificationId))
+            .Project(r => r.NotificationId)
+            .ToListAsync();
+
+        var readSet = new HashSet<string>(readNotificationIds);
+        foreach (var notification in notifications)
+            notification.IsUnread = !readSet.Contains(notification.Id);
 
         return notifications;
     }
@@ -753,7 +765,67 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         var dataFIlter = Builders<Notification>.Filter.Eq("Data.UserId", userId);
         await _notificationCollection.DeleteManyAsync(dataFIlter);
 
+        await _notificationReadCollection.DeleteManyAsync(r => r.UserId == userId);
+
         return Result.Success();
+    }
+
+    public async Task<Result> MarkNotificationsAsReadAsync(string userId, IEnumerable<string> notificationIds)
+    {
+        var validIds = await _notificationCollection
+            .Find(Builders<Notification>.Filter.In(n => n.Id, notificationIds)
+                & Builders<Notification>.Filter.AnyEq(n => n.Recipients, userId))
+            .Project(n => n.Id)
+            .ToListAsync();
+
+        await InsertNotificationReadsAsync(userId, validIds);
+        return Result.Success();
+    }
+
+    public async Task<Result> MarkAllNotificationsAsReadAsync(string userId)
+    {
+        var notificationIds = await _notificationCollection
+            .Find(Builders<Notification>.Filter.AnyEq(n => n.Recipients, userId))
+            .Project(n => n.Id)
+            .ToListAsync();
+
+        await InsertNotificationReadsAsync(userId, notificationIds);
+        return Result.Success();
+    }
+
+    public async Task<Result> MarkNotificationsByDataAsReadAsync(string userId, string dataKey, string dataValue, NotificationType? type = null)
+    {
+        var filter = Builders<Notification>.Filter.AnyEq(n => n.Recipients, userId)
+            & Builders<Notification>.Filter.Eq($"Data.{dataKey}", dataValue);
+        if (type.HasValue) filter &= Builders<Notification>.Filter.Eq(n => n.Type, type.Value);
+
+        var notificationIds = await _notificationCollection
+            .Find(filter)
+            .Project(n => n.Id)
+            .ToListAsync();
+
+        await InsertNotificationReadsAsync(userId, notificationIds);
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Bulk upsert NotificationRead records. Duplicates are handled gracefully via upsert.
+    /// </summary>
+    private async Task InsertNotificationReadsAsync(string userId, IEnumerable<string> notificationIds)
+    {
+        var operations = notificationIds.Select(notificationId =>
+        {
+            var id = $"{notificationId}_{userId}";
+            var filter = Builders<NotificationRead>.Filter.Eq(r => r.Id, id);
+            var update = Builders<NotificationRead>.Update
+                .SetOnInsert(r => r.NotificationId, notificationId)
+                .SetOnInsert(r => r.UserId, userId)
+                .SetOnInsert(r => r.ReadAt, DateTime.UtcNow);
+            return new UpdateOneModel<NotificationRead>(filter, update) { IsUpsert = true };
+        }).ToList();
+
+        if (operations.Count > 0)
+            await _notificationReadCollection.BulkWriteAsync(operations, new BulkWriteOptions { IsOrdered = false });
     }
 
     private async Task SetPushNotificationRecipientsAsync(Notification notification, PushNotificationType pushNotificationType)

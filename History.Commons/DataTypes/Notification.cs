@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace History.Commons.DataTypes;
 
+[BsonIgnoreExtraElements]
 public class Notification
 {
     [BsonId]
@@ -23,6 +24,9 @@ public class Notification
 
     public Dictionary<string, string> Data { get; set; }
 
+    [BsonIgnore]
+    public bool IsUnread { get; set; } = true;
+
     public DateTime CreatedAt { get; set; }
 
     public Notification Clone()
@@ -39,6 +43,7 @@ public class Notification
             ImageUrl = ImageUrl,
             PushNotificationDisabled = PushNotificationDisabled,
             Data = Data != null ? new Dictionary<string, string>(Data) : null,
+            IsUnread = IsUnread,
             CreatedAt = CreatedAt
         };
     }

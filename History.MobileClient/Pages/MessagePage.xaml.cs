@@ -1,5 +1,8 @@
 ﻿using System.IO;
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Message;
+using History.Commons.Api.User;
+using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls;
@@ -22,6 +25,8 @@ public partial class MessagePage : ContentPage
     {
         base.OnAppearing();
 
+        _ = MarkMessageNotificationsAsReadAsync();
+
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
         if (safeAreaTopHeight != 0)
         {
@@ -36,6 +41,13 @@ public partial class MessagePage : ContentPage
         {
             await App.ExecuteRequestAsync(new MarkMessageAsRead(_viewModel.Id));
         }
+    }
+
+    private async Task MarkMessageNotificationsAsReadAsync()
+    {
+        var messageId = _viewModel.Id;
+        var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByMessageId(messageId));
+        if (success) WeakReferenceMessenger.Default.Send(new NotificationMessageReadMessage(messageId));
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
