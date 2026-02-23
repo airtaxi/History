@@ -23,6 +23,8 @@ public class NotificationResponseDto()
 
     public Dictionary<string, string> Data { get; set; }
 
+    public bool IsUnread { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public NotificationResponseDto(Notification notification) : this()
@@ -36,6 +38,8 @@ public class NotificationResponseDto()
         ImageUrl = notification.ImageUrl;
 
         Data = notification.Data;
+
+        IsUnread = notification.IsUnread;
 
         CreatedAt = notification.CreatedAt;
     }

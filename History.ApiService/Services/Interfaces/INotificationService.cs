@@ -23,4 +23,10 @@ public interface INotificationService
     public Task<Result> SendFirebaseNotificationAsync(IEnumerable<string> recipientUserIds, string title, string body, string imageUrl, Dictionary<string, string> data);
 
     public Task<Result> HandleWithdrawAsync(string userId);
+
+    public Task<Result> MarkNotificationsAsReadAsync(string userId, IEnumerable<string> notificationIds);
+
+    public Task<Result> MarkAllNotificationsAsReadAsync(string userId);
+
+    public Task<Result> MarkNotificationsByDataAsReadAsync(string userId, string dataKey, string dataValue, NotificationType? type = null);
 }

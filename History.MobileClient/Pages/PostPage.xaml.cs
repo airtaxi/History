@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.Api.Comment;
 using History.Commons.Api.Post;
+using History.Commons.Api.User;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
@@ -273,6 +274,8 @@ public partial class PostPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
+        _ = MarkPostNotificationsAsReadAsync();
+
         BindingContext = ViewModel;
 
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
@@ -281,6 +284,13 @@ public partial class PostPage : ContentPage
             var statusBarHeight = LayoutHelper.GetStatusBarHeight();
             Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
         }
+    }
+
+    private async Task MarkPostNotificationsAsReadAsync()
+    {
+        var postId = ViewModel.Post.Id;
+        var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByPostId(postId));
+        if (success) WeakReferenceMessenger.Default.Send(new NotificationPostReadMessage(postId));
     }
 
     protected override void OnDisappearing()

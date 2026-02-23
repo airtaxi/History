@@ -180,6 +180,8 @@ public partial class UserPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
+        if (UserId != Shared.UserId) _ = MarkFriendNotificationsAsReadAsync();
+
         if (_isFirstLoad || (ShouldRefresh && UserId == Shared.UserId))
         {
             ShouldRefresh = false;
@@ -193,6 +195,12 @@ public partial class UserPage : ContentPage
             var statusBarHeight = LayoutHelper.GetStatusBarHeight();
             Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
         }
+    }
+
+    private async Task MarkFriendNotificationsAsReadAsync()
+    {
+        var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByFriendUserId(UserId));
+        if (success) WeakReferenceMessenger.Default.Send(new NotificationFriendUserReadMessage(UserId));
     }
 
     protected override void OnDisappearing()

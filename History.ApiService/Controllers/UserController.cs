@@ -668,6 +668,86 @@ public class UserController(IUserService userService, IFriendshipService friends
         return Ok(dtos);
     }
 
+    [HttpPost("notifications/read")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> ReadNotifications([FromBody] ReadNotificationsRequestDto request)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var result = await notificationService.MarkNotificationsAsReadAsync(requesterId, request.NotificationIds);
+        if (result.IsSuccess) return Ok();
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpPost("notifications/read-all")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> ReadAllNotifications()
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var result = await notificationService.MarkAllNotificationsAsReadAsync(requesterId);
+        if (result.IsSuccess) return Ok();
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpPost("notifications/read-by-post/{postId}")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> ReadNotificationsByPostId(string postId)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var result = await notificationService.MarkNotificationsByDataAsReadAsync(requesterId, "PostId", postId);
+        if (result.IsSuccess) return Ok();
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpPost("notifications/read-by-message/{messageId}")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> ReadNotificationsByMessageId(string messageId)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var result = await notificationService.MarkNotificationsByDataAsReadAsync(requesterId, "MessageId", messageId);
+        if (result.IsSuccess) return Ok();
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpPost("notifications/read-by-friend/{friendUserId}")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> ReadNotificationsByFriendUserId(string friendUserId)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var result = await notificationService.MarkNotificationsByDataAsReadAsync(requesterId, "UserId", friendUserId, NotificationType.FriendRequest);
+        if (result.IsSuccess) return Ok();
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
     [HttpPost("register-firebase-token")]
     [Authorize]
     [ProducesResponseType<string>(200)]

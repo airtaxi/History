@@ -13,7 +13,41 @@
         <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
     </ContentPage.Behaviors>
     <Grid RowSpacing="6">
-        <RefreshView Refreshing="OnRefreshing">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid
+            Grid.Row="0"
+            Padding="12,8,12,8"
+            BackgroundColor="{AppThemeBinding Light={StaticResource White},
+                                              Dark={StaticResource OffBlack}}">
+            <Label
+                FontAttributes="Bold"
+                FontSize="18"
+                HorizontalOptions="Start"
+                Text="알림"
+                VerticalOptions="Center" />
+            <Image
+                HeightRequest="28"
+                HorizontalOptions="End"
+                VerticalOptions="Center"
+                WidthRequest="28">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnReadAllImageTapped" />
+                </Image.GestureRecognizers>
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Done_all}"
+                        Color="{AppThemeBinding Light={StaticResource Gray600},
+                                                Dark={StaticResource Gray300}}" />
+                </Image.Source>
+            </Image>
+        </Grid>
+
+        <RefreshView Grid.Row="1" Refreshing="OnRefreshing">
             <CollectionView
                 x:Name="MainCollectionView"
                 RemainingItemsThreshold="0"
@@ -21,7 +55,7 @@
                 SelectionMode="None">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:NotificationViewModel">
-                        <Grid Padding="12,8,12,8" ColumnSpacing="8">
+                        <Grid Padding="12,8,12,8" BackgroundColor="{x:Binding IsUnread, Converter={StaticResource UnreadBackgroundConverter}}" ColumnSpacing="8">
                             <Grid.GestureRecognizers>
                                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
                             </Grid.GestureRecognizers>
@@ -116,7 +150,7 @@
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"
-            Grid.RowSpan="2"
+            Grid.Row="1"
             HeightRequest="100"
             HorizontalOptions="Center"
             IsRunning="False"
