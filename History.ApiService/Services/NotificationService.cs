@@ -118,10 +118,12 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         var firstNotification = notificationResult.Value.FirstOrDefault();
         if (firstNotification == null) return Result.Success();
 
-        var allRecipients = notificationResult.Value.SelectMany(x => x.Recipients).Distinct().ToList();
+        var allRecipients = notificationResult.Value
+            .SelectMany(n => n.Type != NotificationType.Birthday ? n.Recipients.Except([n.UserId]) : n.Recipients)
+            .Distinct()
+            .ToList();
         if ((type == NotificationType.Comment
             || type == NotificationType.CommentMention
-            || type == NotificationType.Share
             || type == NotificationType.Repost
             || type == NotificationType.PostReaction)
             && firstNotification.Data.TryGetValue("PostId", out var postId))
