@@ -14,7 +14,7 @@ namespace History.ApiService.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PostController(IPostService postService, IFriendshipService friendshipService) : ControllerBase
+public class PostController(IPostService postService, IFriendshipService friendshipService, INotificationService notificationService) : ControllerBase
 {
     [HttpGet("user/{userId}")]
     [ProducesResponseType<List<PostResponseDto>>(200)]
@@ -31,6 +31,17 @@ public class PostController(IPostService postService, IFriendshipService friends
 
         var postsResult = await postService.GetUserPostsAsync(userId, requesterId, from, limit);
         var postResponses = await postService.GeneratePostResponseDtosAsync(postsResult.Value, requesterId);
+
+        // Mark posts with unread notifications for self profile
+        if (userId == requesterId)
+        {
+            var postIds = postResponses.Value.Select(p => p.Id);
+            var unreadPostIdsResult = await notificationService.GetPostIdsWithUnreadNotificationsAsync(requesterId, postIds);
+            if (unreadPostIdsResult.IsSuccess)
+                foreach (var postResponse in postResponses.Value)
+                    postResponse.HasUnreadNotification = unreadPostIdsResult.Value.Contains(postResponse.Id);
+        }
+
         return Ok(postResponses.Value);
     }
 

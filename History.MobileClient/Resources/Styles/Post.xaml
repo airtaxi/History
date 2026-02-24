@@ -472,6 +472,28 @@
                     IsVisible="{x:Binding PreviewThumbnailVisible}"
                     Template="{StaticResource ImageTemplate}"
                     ViewModel="{x:Binding PreviewThumbnail}" />
+                <Border
+                    Grid.RowSpan="2"
+                    Margin="0,0,4,4"
+                    Padding="0"
+                    BackgroundColor="{StaticResource Primary}"
+                    HeightRequest="24"
+                    HorizontalOptions="End"
+                    IsVisible="{x:Binding HasUnreadNotification}"
+                    StrokeThickness="0"
+                    VerticalOptions="End"
+                    WidthRequest="24">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="12"
+                        HorizontalOptions="Center"
+                        Text="N"
+                        TextColor="White"
+                        VerticalOptions="Center" />
+                </Border>
             </Grid>
         </views:SquareView>
     </DataTemplate>

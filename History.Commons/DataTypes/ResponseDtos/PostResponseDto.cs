@@ -31,4 +31,7 @@ public class PostResponseDto
     public List<string> Hashtags { get; set; } = [];
 
     public bool IsBookmarked { get; set; }
+
+    // For self post only
+    public bool HasUnreadNotification { get; set; }
 }
