@@ -749,8 +749,8 @@ public partial class EditPostPage : ContentPage
                     }
 
                     var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null, [.. Hashtags]), ErrorType.BadRequest);
-                    if (result.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
-                    else if (result.IsSuccess)
+                    if (!result.IsSuccess) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
+                    else
                     {
                         if (!_isShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
                         if (_reservationTime == null)
