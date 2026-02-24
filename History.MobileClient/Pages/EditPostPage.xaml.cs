@@ -51,6 +51,7 @@ public partial class EditPostPage : ContentPage
     private readonly SemaphoreSlim _uploadSemaphore = new(1, 1);
     private PollContentViewModel _pollContentViewModel;
     private TaskCompletionSource<DateTime?> _dateTimePickerTaskCompletionSource;
+    private bool _draftSaved;
 
     public EditPostPage()
     {
@@ -419,7 +420,10 @@ public partial class EditPostPage : ContentPage
         }
     }
 
-    private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
+    private async void OnBackImageTapped(object sender, TappedEventArgs e)
+    {
+        if (await TryNavigateBackAsync()) await App.PopAsync();
+    }
 
     private async void OnUploadButtonClicked(object sender, EventArgs e)
     {
@@ -498,6 +502,7 @@ public partial class EditPostPage : ContentPage
                     if (result.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
+                        PostDraft.Delete();
                         WeakReferenceMessenger.Default.Send<ValueChangedMessage<PostResponseDto>>(new(result.Value));
                         await App.PopAsync();
                     }
@@ -758,6 +763,7 @@ public partial class EditPostPage : ContentPage
                             TimelinePage.ShouldRefresh = RefreshSwitch.IsToggled;
                             UserPage.ShouldRefresh = RefreshSwitch.IsToggled;
                         }
+                        PostDraft.Delete();
                         await App.PopAsync();
                     }
                 }
@@ -778,9 +784,134 @@ public partial class EditPostPage : ContentPage
     protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
     {
         base.OnNavigatedFrom(args);
-        if (_preventDispose) return;
+        if (_preventDispose || _draftSaved) return;
 
         foreach (var viewModel in _attachmentViewModels) viewModel.Dispose();
+    }
+
+    /// <summary>
+    /// Checks whether the editor has any content worth saving as a draft.
+    /// </summary>
+    private bool HasDraftableContent()
+    {
+        var hasText = !string.IsNullOrWhiteSpace(MainTextContent.Text?.Trim());
+        var hasMedia = _attachmentViewModels.Count > 0;
+        var hasExternalUrl = _externalUrlContentViewModel != null;
+        var hasPoll = _pollContentViewModel != null;
+        var hasHashtags = Hashtags.Count > 0;
+        return hasText || hasMedia || hasExternalUrl || hasPoll || hasHashtags;
+    }
+
+    /// <summary>
+    /// Saves the current editor state as a draft to disk.
+    /// Media files are copied to a dedicated draft directory to avoid disposal.
+    /// </summary>
+    private void SaveDraft()
+    {
+        var draftDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "History", "Drafts", "Media");
+        if (!Directory.Exists(draftDirectoryPath)) Directory.CreateDirectory(draftDirectoryPath);
+
+        var draft = new PostDraft
+        {
+            TextContents = MainTextContent.GetContents(),
+            DiscoveryOptionIndex = DiscoveryOptionPicker.SelectedIndex,
+            CommentPermission = _commentPermission,
+            DisallowShare = DisallowShareSwitch.IsToggled,
+            Hashtags = [.. Hashtags],
+            SavedAtUtc = DateTime.UtcNow
+        };
+
+        if (_externalUrlContentViewModel != null) draft.ExternalUrlContent = _externalUrlContentViewModel.ExternalUrlContent;
+        if (_pollContentViewModel != null) draft.PollContent = _pollContentViewModel.PollContent;
+
+        foreach (var viewModel in _attachmentViewModels)
+        {
+            if (!viewModel.IsUpload) continue;
+
+            // Copy media data to draft directory to prevent loss on Dispose
+            var draftMediaPath = Path.Combine(draftDirectoryPath, viewModel.FileName);
+            File.WriteAllBytes(draftMediaPath, viewModel.Data);
+
+            draft.MediaAttachments.Add(new PostDraftMediaAttachment
+            {
+                FilePath = draftMediaPath,
+                FileName = viewModel.FileName,
+                IsVideo = viewModel.IsVideo,
+                Description = viewModel.Description,
+                IsSpoiler = viewModel.IsSpoiler
+            });
+        }
+
+        PostDraft.Save(draft);
+        _draftSaved = true;
+    }
+
+    /// <summary>
+    /// Restores a saved draft into the editor.
+    /// </summary>
+    private void RestoreDraft(PostDraft draft)
+    {
+        if (draft.TextContents.Count > 0) MainTextContent.SetContents(draft.TextContents);
+
+        foreach (var attachment in draft.MediaAttachments)
+        {
+            if (!File.Exists(attachment.FilePath)) continue;
+
+            var bytes = File.ReadAllBytes(attachment.FilePath);
+            var viewModel = new MediaAttachmentViewModel(attachment.FileName, bytes, attachment.IsVideo)
+            {
+                Description = attachment.Description ?? string.Empty,
+                IsSpoiler = attachment.IsSpoiler
+            };
+            _attachmentViewModels.Add(viewModel);
+        }
+
+        if (draft.ExternalUrlContent != null)
+        {
+            _externalUrlContentViewModel = new ExternalUrlContentViewModel(draft.ExternalUrlContent);
+            ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
+            ExternalUrlContentBorder.IsVisible = true;
+            ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
+        }
+
+        if (draft.PollContent != null)
+        {
+            _pollContentViewModel = new PollContentViewModel(draft.PollContent, Guid.NewGuid().ToString("N"));
+            PollContentDataTemplatePresenter.ViewModel = _pollContentViewModel;
+            PollContentBorder.IsVisible = true;
+        }
+
+        foreach (var hashtag in draft.Hashtags) Hashtags.Add(hashtag);
+
+        if (draft.DiscoveryOptionIndex >= 0 && draft.DiscoveryOptionIndex < DiscoveryOptionPicker.ItemsSource.Count)
+            DiscoveryOptionPicker.SelectedIndex = draft.DiscoveryOptionIndex;
+
+        if (draft.CommentPermission.HasValue)
+        {
+            _commentPermission = draft.CommentPermission.Value;
+            CommentPermissionSwitch.IsToggled = true;
+            CommentPermissionPicker.SelectedIndex = (int)_commentPermission;
+        }
+
+        DisallowShareSwitch.IsToggled = draft.DisallowShare;
+
+        PostDraft.Delete();
+    }
+
+    /// <summary>
+    /// Prompts the user to save draft before navigating back. Returns true if navigation should proceed.
+    /// </summary>
+    private async Task<bool> TryNavigateBackAsync()
+    {
+        // Only prompt for new posts (not editing or sharing existing posts)
+        if (_post != null) return true;
+
+        if (!HasDraftableContent()) return true;
+
+        var saveDraft = await DisplayAlertAsync("임시 저장", "작성 중인 내용이 있습니다. 임시 저장하시겠습니까?", "임시 저장", "저장하지 않음");
+        if (saveDraft) SaveDraft();
+
+        return true;
     }
 
     private void OnSizeChanged(object sender, EventArgs e)
@@ -976,11 +1107,26 @@ public partial class EditPostPage : ContentPage
 #endif
         await Task.Delay(100);
         MainTextContent.FocusEditor();
+
+        // Prompt to restore draft only for new posts (not editing/sharing)
+        if (_post == null && _sharedTextContent == null && _attachmentViewModels.Count == 0 && PostDraft.Exists())
+        {
+            var draft = PostDraft.Load();
+            if (draft != null)
+            {
+                var restore = await DisplayAlertAsync("임시 저장", "임시 저장된 글이 있습니다. 복원하시겠습니까?", "복원", "삭제");
+                if (restore) RestoreDraft(draft);
+                else PostDraft.Delete();
+            }
+        }
     }
 
     protected override bool OnBackButtonPressed()
     {
-        _ = App.PopAsync();
+        Dispatcher.Dispatch(async () =>
+        {
+            if (await TryNavigateBackAsync()) await App.PopAsync();
+        });
         return true;
     }
 
