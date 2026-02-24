@@ -808,6 +808,38 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         return Result.Success();
     }
 
+    public async Task<Result<HashSet<string>>> GetPostIdsWithUnreadNotificationsAsync(string userId, IEnumerable<string> postIds)
+    {
+        var postIdList = postIds.ToList();
+        if (postIdList.Count == 0) return new HashSet<string>();
+
+        // Find notifications for these posts where the user is a recipient
+        var filter = Builders<Notification>.Filter.AnyEq(n => n.Recipients, userId)
+            & Builders<Notification>.Filter.In("Data.PostId", postIdList);
+
+        var notifications = await _notificationCollection
+            .Find(filter)
+            .Project(n => new { n.Id, PostId = n.Data["PostId"] })
+            .ToListAsync();
+
+        if (notifications.Count == 0) return new HashSet<string>();
+
+        // Check which of these notifications are unread
+        var notificationIds = notifications.Select(n => n.Id).ToList();
+        var readNotificationIds = await _notificationReadCollection
+            .Find(r => r.UserId == userId && notificationIds.Contains(r.NotificationId))
+            .Project(r => r.NotificationId)
+            .ToListAsync();
+
+        var readSet = new HashSet<string>(readNotificationIds);
+        var unreadPostIds = notifications
+            .Where(n => !readSet.Contains(n.Id))
+            .Select(n => n.PostId)
+            .ToHashSet();
+
+        return unreadPostIds;
+    }
+
     /// <summary>
     /// Bulk upsert NotificationRead records. Duplicates are handled gracefully via upsert.
     /// </summary>

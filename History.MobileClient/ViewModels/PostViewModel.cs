@@ -56,6 +56,7 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(PreviewThumbnail))]
     [NotifyPropertyChangedFor(nameof(PreviewThumbnailVisible))]
     [NotifyPropertyChangedFor(nameof(PreviewTimestamp))]
+    [NotifyPropertyChangedFor(nameof(HasUnreadNotification))]
     public partial PostResponseDto Post { get; private set; }
 
     [ObservableProperty]
@@ -140,6 +141,7 @@ public partial class PostViewModel : ObservableObject
     public string PreviewText => Utils.GenerateTextPreviewFromPost(Post);
     public string PreviewTimestamp => Post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd");
     public bool PreviewThumbnailVisible => PreviewThumbnail != null;
+    public bool HasUnreadNotification => Post.HasUnreadNotification;
     public ImageViewModel PreviewThumbnail
     {
         get
@@ -168,8 +170,17 @@ public partial class PostViewModel : ObservableObject
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, OnUserChangedMessageReceived);
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, OnCommentChangedMessageReceived);
             WeakReferenceMessenger.Default.Register<ValueDeletedMessage<CommentResponseDto>>(this, OnCommentDeletedMessageReceived);
+            WeakReferenceMessenger.Default.Register<NotificationPostReadMessage>(this, OnNotificationPostReadMessage);
         }
         catch (Exception exception) { App.Page.DisplayAlertAsync("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk); }
+    }
+
+    private void OnNotificationPostReadMessage(object recipient, NotificationPostReadMessage message)
+    {
+        if (Post.Id != message.Value) return;
+
+        Post.HasUnreadNotification = false;
+        OnPropertyChanged(nameof(HasUnreadNotification));
     }
 
     private void UpdatePost(PostResponseDto post)
