@@ -474,6 +474,9 @@ public partial class EditPostPage : ContentPage
                 return;
             }
 
+            // Save draft before upload to prevent data loss on crash or error
+            if (_post == null && HasDraftableContent()) SaveDraft();
+
             try
             {
                 MainActivityIndicator.IsRunning = true;
