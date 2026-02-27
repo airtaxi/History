@@ -292,7 +292,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SuggestingBox.Maui" Version="1.0.3" />
+		<PackageReference Include="SuggestingBox.Maui" Version="1.0.4" />
 		<ProjectReference Include="..\History.Commons\History.Commons.csproj" />
 	</ItemGroup>
 

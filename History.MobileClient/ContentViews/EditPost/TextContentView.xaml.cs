@@ -53,25 +53,16 @@ public partial class TextContentView : ContentView
                         || KoreanHelper.SplitToChosung(friendUser.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase))
                     .Select(friendUser => new MentionUserViewModel(friendUser))];
             ViewModel.UserViewModels = viewModels;
-            ViewModel.IsDisplayingMentions = viewModels.Count > 0;
-            ViewModel.IsDisplayingUserMentions = ViewModel.IsDisplayingMentions;
-            ViewModel.IsDisplayingStickerMentions = false;
 
-            // Set as display names for the suggestion popup
-            sender.ItemsSource = viewModels.Select(viewModel => viewModel.Nickname).ToList();
+            sender.ItemTemplate = (DataTemplate)Resources["UserMentionTemplate"];
+            sender.ItemsSource = viewModels;
         }
         else if (args.Prefix == "#")
         {
-            // For hashtags, offer the typed text as a suggestion
             var query = args.QueryText.Trim();
+            sender.ItemTemplate = (DataTemplate)Resources["HashtagTemplate"];
             if (!string.IsNullOrEmpty(query)) sender.ItemsSource = new List<string> { query };
             else sender.ItemsSource = null;
-        }
-        else
-        {
-            ViewModel.IsDisplayingMentions = false;
-            ViewModel.IsDisplayingUserMentions = false;
-            ViewModel.IsDisplayingStickerMentions = false;
         }
     }
 
@@ -79,18 +70,14 @@ public partial class TextContentView : ContentView
     {
         if (args.Prefix == "@")
         {
-            // Find the matching user viewmodel by nickname
-            var nickname = args.SelectedItem as string;
-            var userViewModel = ViewModel.UserViewModels?.FirstOrDefault(viewModel => viewModel.Nickname == nickname);
+            var userViewModel = args.SelectedItem as MentionUserViewModel;
             if (userViewModel != null)
             {
                 args.DisplayText = userViewModel.Nickname;
+                args.Item = userViewModel;
                 args.Format.ForegroundColor = Color.FromArgb("#6750A4");
                 args.Format.Bold = FormatEffect.On;
             }
-
-            ViewModel.IsDisplayingMentions = false;
-            ViewModel.IsDisplayingUserMentions = false;
         }
         else if (args.Prefix == "#")
         {
