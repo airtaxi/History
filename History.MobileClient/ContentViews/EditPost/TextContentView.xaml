@@ -14,6 +14,73 @@
         <vm:MentionsViewModel x:Name="ViewModel" />
     </ContentView.BindingContext>
 
+    <ContentView.Resources>
+        <DataTemplate x:Key="UserMentionTemplate" x:DataType="vm:MentionUserViewModel">
+            <Grid HeightRequest="44">
+                <HorizontalStackLayout
+                    Padding="8"
+                    HeightRequest="44"
+                    Spacing="8">
+                    <views:DataTemplatePresenter
+                        HeightRequest="32"
+                        Template="{StaticResource MediaTemplateSelector}"
+                        VerticalOptions="Center"
+                        ViewModel="{x:Binding ProfileMedia}"
+                        WidthRequest="32">
+                        <views:DataTemplatePresenter.Clip>
+                            <EllipseGeometry
+                                Center="16,16"
+                                RadiusX="16"
+                                RadiusY="16" />
+                        </views:DataTemplatePresenter.Clip>
+                    </views:DataTemplatePresenter>
+                    <HorizontalStackLayout
+                        HorizontalOptions="Start"
+                        Spacing="4"
+                        VerticalOptions="Center">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="20"
+                            LineBreakMode="TailTruncation"
+                            Text="{x:Binding Nickname}" />
+                        <Image
+                            HeightRequest="20"
+                            IsVisible="{x:Binding IsAdmin}"
+                            WidthRequest="20">
+                            <Image.Source>
+                                <FontImageSource
+                                    FontFamily="FASolid"
+                                    Glyph="{x:Static fa:Solid.Crown}"
+                                    Color="#f78501" />
+                            </Image.Source>
+                        </Image>
+                        <Image
+                            HeightRequest="20"
+                            IsVisible="{x:Binding IsModerator}"
+                            WidthRequest="20">
+                            <Image.Source>
+                                <FontImageSource
+                                    FontFamily="FASolid"
+                                    Glyph="{x:Static fa:Solid.Gavel}"
+                                    Color="#1a5bf3" />
+                            </Image.Source>
+                        </Image>
+                    </HorizontalStackLayout>
+                </HorizontalStackLayout>
+                <Grid
+                    BackgroundColor="#808080"
+                    HeightRequest="{OnPlatform iOS=1.5, Android=1}"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="End" />
+            </Grid>
+        </DataTemplate>
+        <DataTemplate x:Key="HashtagTemplate">
+            <VerticalStackLayout Padding="8,4">
+                <Label Text="{Binding .}" />
+            </VerticalStackLayout>
+        </DataTemplate>
+    </ContentView.Resources>
+
     <Grid Padding="4,0,4,0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#000000}">
         <suggestingBox:SuggestingBox
             x:Name="MainSuggestingBox"
@@ -24,14 +91,6 @@
             SuggestionChosen="OnSuggestionChosen"
             ImageInserted="OnImageInserted"
             HorizontalOptions="Fill"
-            VerticalOptions="Start">
-            <suggestingBox:SuggestingBox.ItemTemplate>
-                <DataTemplate>
-                    <VerticalStackLayout Padding="8,4">
-                        <Label Text="{Binding .}" />
-                    </VerticalStackLayout>
-                </DataTemplate>
-            </suggestingBox:SuggestingBox.ItemTemplate>
-        </suggestingBox:SuggestingBox>
+            VerticalOptions="Start" />
     </Grid>
 </ContentView>
