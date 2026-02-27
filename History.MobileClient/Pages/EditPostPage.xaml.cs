@@ -129,8 +129,8 @@ public partial class EditPostPage : ContentPage
                 MentionHelper.InsertToken(MainTextContent.SuggestingBoxControl, "#", hashtag, hashtag,
                     new SuggestionFormat
                     {
-                        BackgroundColor = Colors.LightSlateGray,
-                        ForegroundColor = Colors.White,
+                        BackgroundColor = Colors.Transparent,
+                        ForegroundColor = Application.Current.Resources["Primary"] as Color,
                         Bold = FormatEffect.On
                     });
         };
@@ -168,8 +168,8 @@ public partial class EditPostPage : ContentPage
                 MentionHelper.InsertToken(MainTextContent.SuggestingBoxControl, "#", hashtag, hashtag,
                     new SuggestionFormat
                     {
-                        BackgroundColor = Colors.LightSlateGray,
-                        ForegroundColor = Colors.White,
+                        BackgroundColor = Colors.Transparent,
+                        ForegroundColor = Application.Current.Resources["Primary"] as Color,
                         Bold = FormatEffect.On
                     });
         }
@@ -901,8 +901,8 @@ public partial class EditPostPage : ContentPage
             MentionHelper.InsertToken(MainTextContent.SuggestingBoxControl, "#", hashtag, hashtag,
                 new SuggestionFormat
                 {
-                    BackgroundColor = Colors.LightSlateGray,
-                    ForegroundColor = Colors.White,
+                    BackgroundColor = Colors.Transparent,
+                    ForegroundColor = Application.Current.Resources["Primary"] as Color,
                     Bold = FormatEffect.On
                 });
 
@@ -1245,27 +1245,6 @@ public partial class EditPostPage : ContentPage
 
         return null;
     }
-
-    private async void OnInsertHashtagImageTapped(object sender, TappedEventArgs e)
-    {
-        var hashtag = await DisplayPromptAsync("해시태그 추가", "추가할 해시태그를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "해시태그 (최대 20자)", 20, Keyboard.Text, string.Empty);
-		if (string.IsNullOrWhiteSpace(hashtag)) return;
-
-		var existingHashtags = MainTextContent.GetHashtags();
-		if (existingHashtags.Contains(hashtag))
-		{
-			await DisplayAlertAsync("오류", "이미 추가된 해시태그입니다.", Constants.PromptOk);
-			return;
-		}
-
-        MentionHelper.InsertToken(MainTextContent.SuggestingBoxControl, "#", hashtag, hashtag,
-            new SuggestionFormat
-            {
-                BackgroundColor = Colors.LightSlateGray,
-                ForegroundColor = Colors.White,
-                Bold = FormatEffect.On
-            });
-	}
 
     private async void OnEditAttachmentGridTapped(object sender, TappedEventArgs e)
     {

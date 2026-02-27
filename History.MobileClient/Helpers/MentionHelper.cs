@@ -7,13 +7,15 @@ public static class MentionHelper
 {
     private static readonly SuggestionFormat mentionFormat = new()
     {
-        ForegroundColor = Color.FromArgb("#6750A4"),
+        ForegroundColor = Colors.White,
+        BackgroundColor = Application.Current.Resources["Primary"] as Color,
         Bold = FormatEffect.On
     };
 
     private static readonly SuggestionFormat stickerFormat = new()
     {
-        BackgroundColor = Colors.LightGray,
+        ForegroundColor = Colors.White,
+        BackgroundColor = Application.Current.Resources["Primary"] as Color,
         Bold = FormatEffect.On
     };
 
