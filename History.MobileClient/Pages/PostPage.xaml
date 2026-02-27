@@ -183,11 +183,6 @@
                 </Grid>
             </Grid>
 
-            <editPost:UserCollectionView
-                x:Name="CommentUserCollectionView"
-                HorizontalOptions="Fill"
-                VerticalOptions="End" />
-
             <editPost:StickerCollectionView
                 x:Name="CommentStickerCollectionView"
                 HorizontalOptions="Fill"

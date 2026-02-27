@@ -139,9 +139,6 @@
 		<MauiXaml Update="ContentViews\EditPost\TextContentView.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="ContentViews\EditPost\UserCollectionView.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
 		<MauiXaml Update="Pages\AddFriendsPage.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

@@ -42,7 +42,6 @@ public partial class PostPage : ContentPage
         InitializeComponent();
         UpdateRepostStatus(viewModel.Post);
 
-        CommentUserCollectionView.SetTextContentView(CommentTextContentView);
         CommentStickerCollectionView.SetTextContentView(CommentTextContentView);
 
         // Should be registered once. Do not register in OnAppearing / OnNavigatedTo since it won't be unregistered in OnDisappearing / OnNavigatedFrom

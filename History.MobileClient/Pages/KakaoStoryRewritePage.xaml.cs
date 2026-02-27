@@ -18,7 +18,6 @@ public partial class KakaoStoryRewritePage : ContentPage
         InitializeComponent();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
-        UserCollectionView.SetTextContentView(MainTextContent);
         StickerCollectionView.SetTextContentView(MainTextContent);
     }
 
