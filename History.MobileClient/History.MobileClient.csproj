@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-android;net10.0-ios</TargetFrameworks>
@@ -292,7 +292,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SuggestingBox.Maui" Version="1.0.2" />
+		<PackageReference Include="SuggestingBox.Maui" Version="1.0.3" />
 		<ProjectReference Include="..\History.Commons\History.Commons.csproj" />
 	</ItemGroup>
 
