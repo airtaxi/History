@@ -74,7 +74,7 @@ public partial class TextContentView : ContentView
             if (userViewModel != null)
             {
                 args.DisplayText = userViewModel.Nickname;
-                args.Item = userViewModel;
+                args.Item = new ProfileContent { UserId = userViewModel.UserId, Nickname = userViewModel.Nickname };
                 args.Format.ForegroundColor = Color.FromArgb("#6750A4");
                 args.Format.Bold = FormatEffect.On;
             }
