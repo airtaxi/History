@@ -70,12 +70,6 @@
                 Placeholder="카카오스토리에 게시할 내용을 수정해주세요" />
         </VerticalStackLayout>
 
-        <editPost:UserCollectionView
-            x:Name="UserCollectionView"
-            Grid.Row="1"
-            HorizontalOptions="Fill"
-            VerticalOptions="End" />
-
         <editPost:StickerCollectionView
             x:Name="StickerCollectionView"
             Grid.Row="1"

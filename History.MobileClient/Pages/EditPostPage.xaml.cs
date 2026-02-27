@@ -71,7 +71,6 @@ public partial class EditPostPage : ContentPage
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
         WeakReferenceMessenger.Default.Register<MentionEditorNewLineMessage>(this, OnMentionEditorNewLineMessageReceived);
-        UserCollectionView.SetTextContentView(MainTextContent);
         StickerCollectionView.SetTextContentView(MainTextContent);
     }
 
