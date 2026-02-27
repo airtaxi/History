@@ -1,4 +1,4 @@
-﻿#if ANDROID
+#if ANDROID
 using History.MobileClient.ThirdParty.StaggeredLayout;
 #elif IOS
 using NativeMedia;
@@ -16,6 +16,7 @@ using History.Commons.Enums;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
+using SuggestingBox.Maui;
 using System.Collections.ObjectModel;
 using UraniumUI.Icons.MaterialSymbols;
 using System.Net;
@@ -33,8 +34,6 @@ namespace History.MobileClient.Pages;
 
 public partial class EditPostPage : ContentPage
 {
-    public ObservableCollection<string> Hashtags { get; } = [];
-
     private bool _isInForeground;
     private bool _preventDispose;
 
@@ -68,7 +67,6 @@ public partial class EditPostPage : ContentPage
         DateTimePicker.Opacity = 0;
         DateTimePicker.Mode = PickerMode.Dialog;
 #endif
-        BindableLayout.SetItemsSource(HashtagFlexLayout, Hashtags);
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<KeyboardSizeMessage>(this, OnKeyboardSizeMessageReceived);
@@ -125,10 +123,18 @@ public partial class EditPostPage : ContentPage
 
     public EditPostPage(List<string> hashtags) : this()
     {
-        foreach (var hashtag in hashtags ?? [])
+        // Insert hashtags as inline tokens after the view is loaded
+        Loaded += (sender, eventArgs) =>
         {
-            Hashtags.Add(hashtag);
-        }
+            foreach (var hashtag in hashtags ?? [])
+                MentionHelper.InsertToken(MainTextContent.SuggestingBoxControl, "#", hashtag, hashtag,
+                    new SuggestionFormat
+                    {
+                        BackgroundColor = Colors.LightSlateGray,
+                        ForegroundColor = Colors.White,
+                        Bold = FormatEffect.On
+                    });
+        };
     }
 
     private void LoadPost()
@@ -159,7 +165,14 @@ public partial class EditPostPage : ContentPage
                 ShareTargetPostDataTemplatePresenter.IsVisible = true;
             }
 
-            foreach (var hashtag in _post.Hashtags ?? []) Hashtags.Add(hashtag);
+            foreach (var hashtag in _post.Hashtags ?? [])
+                MentionHelper.InsertToken(MainTextContent.SuggestingBoxControl, "#", hashtag, hashtag,
+                    new SuggestionFormat
+                    {
+                        BackgroundColor = Colors.LightSlateGray,
+                        ForegroundColor = Colors.White,
+                        Bold = FormatEffect.On
+                    });
         }
         else
         {
@@ -468,7 +481,7 @@ public partial class EditPostPage : ContentPage
             if (_externalUrlContentViewModel != null) contents.Add(_externalUrlContentViewModel.ExternalUrlContent);
             if (_pollContentViewModel != null) contents.Add(_pollContentViewModel.PollContent);
 
-            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && _pollContentViewModel == null && !_isShare && Hashtags.Count == 0)
+            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && _pollContentViewModel == null && !_isShare && MainTextContent.GetHashtags().Count == 0)
             {
                 await DisplayAlertAsync("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
                 return;
@@ -501,7 +514,7 @@ public partial class EditPostPage : ContentPage
 
                 if (_post != null && !_isShare)
                 {
-                    var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, _commentPermission, disallowShare, discoveryOptionSelectedUserIds, files, [.. Hashtags]), ErrorType.BadRequest);
+                    var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, _commentPermission, disallowShare, discoveryOptionSelectedUserIds, files, MainTextContent.GetHashtags()), ErrorType.BadRequest);
                     if (result.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
@@ -527,13 +540,14 @@ public partial class EditPostPage : ContentPage
                             IsEnabled = false;
 
                             // Samsung pass will overwrite the text content, fetch the text content before logging in to KakaoStory
-                            var text = MainTextContent.MentionEditor.Text;
+                            var text = MainTextContent.Text;
                             text = text?.Trim() ?? string.Empty;
 
-                            if (Hashtags.Count > 0)
+                            var inlineHashtags = MainTextContent.GetHashtags();
+                            if (inlineHashtags.Count > 0)
                             {
                                 text += "\n\n";
-                                text += string.Join(" ", Hashtags.Select(x => $"#{x}"));
+                                text += string.Join(" ", inlineHashtags.Select(hashtagText => $"#{hashtagText}"));
                             }
 
                             // Check for profanity before uploading to KakaoStory
@@ -756,7 +770,7 @@ public partial class EditPostPage : ContentPage
                         }
                     }
 
-                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null, [.. Hashtags]), ErrorType.BadRequest);
+                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null, MainTextContent.GetHashtags()), ErrorType.BadRequest);
                     if (!result.IsSuccess) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                     else
                     {
@@ -801,7 +815,7 @@ public partial class EditPostPage : ContentPage
         var hasMedia = _attachmentViewModels.Count > 0;
         var hasExternalUrl = _externalUrlContentViewModel != null;
         var hasPoll = _pollContentViewModel != null;
-        var hasHashtags = Hashtags.Count > 0;
+        var hasHashtags = MainTextContent.GetHashtags().Count > 0;
         return hasText || hasMedia || hasExternalUrl || hasPoll || hasHashtags;
     }
 
@@ -820,7 +834,7 @@ public partial class EditPostPage : ContentPage
             DiscoveryOptionIndex = DiscoveryOptionPicker.SelectedIndex,
             CommentPermission = _commentPermission,
             DisallowShare = DisallowShareSwitch.IsToggled,
-            Hashtags = [.. Hashtags],
+            Hashtags = MainTextContent.GetHashtags(),
             SavedAtUtc = DateTime.UtcNow
         };
 
@@ -884,7 +898,14 @@ public partial class EditPostPage : ContentPage
             PollContentBorder.IsVisible = true;
         }
 
-        foreach (var hashtag in draft.Hashtags) Hashtags.Add(hashtag);
+        foreach (var hashtag in draft.Hashtags)
+            MentionHelper.InsertToken(MainTextContent.SuggestingBoxControl, "#", hashtag, hashtag,
+                new SuggestionFormat
+                {
+                    BackgroundColor = Colors.LightSlateGray,
+                    ForegroundColor = Colors.White,
+                    Bold = FormatEffect.On
+                });
 
         if (draft.DiscoveryOptionIndex >= 0 && draft.DiscoveryOptionIndex < DiscoveryOptionPicker.ItemsSource.Count)
             DiscoveryOptionPicker.SelectedIndex = draft.DiscoveryOptionIndex;
@@ -1226,48 +1247,25 @@ public partial class EditPostPage : ContentPage
         return null;
     }
 
-    private async void OnHashtagBorderTapped(object sender, TappedEventArgs e)
-    {
-        if (e.Parameter is not string hashtag) return;
-
-        const string editHashtag = "해시태그 수정";
-        const string removeHashtag = "해시태그 삭제";
-        const string cancel = "취소";
-
-        var action = await DisplayActionSheetAsync($"'{hashtag}' 해시태그 관리", cancel, null, editHashtag, removeHashtag);
-
-        if (action == editHashtag)
-        {
-            var newHashtag = await DisplayPromptAsync("해시태그 수정", "수정할 해시태그를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "해시태그  (최대 20자)", 20, Keyboard.Text, hashtag);
-            if (string.IsNullOrWhiteSpace(newHashtag)) return;
-
-            if (Hashtags.Contains(newHashtag))
-            {
-                await DisplayAlertAsync("오류", "이미 추가된 해시태그입니다.", Constants.PromptOk);
-                return;
-            }
-
-            var index = Hashtags.IndexOf(hashtag);
-            Hashtags[index] = newHashtag;
-        }
-        else if (action == removeHashtag)
-        {
-            Hashtags.Remove(hashtag);
-        }
-    }
-	
     private async void OnInsertHashtagImageTapped(object sender, TappedEventArgs e)
     {
         var hashtag = await DisplayPromptAsync("해시태그 추가", "추가할 해시태그를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "해시태그 (최대 20자)", 20, Keyboard.Text, string.Empty);
 		if (string.IsNullOrWhiteSpace(hashtag)) return;
-		
-		if (Hashtags.Contains(hashtag))
+
+		var existingHashtags = MainTextContent.GetHashtags();
+		if (existingHashtags.Contains(hashtag))
 		{
 			await DisplayAlertAsync("오류", "이미 추가된 해시태그입니다.", Constants.PromptOk);
 			return;
-		}                                                                                                                                    
-		
-		Hashtags.Add(hashtag);
+		}
+
+        MentionHelper.InsertToken(MainTextContent.SuggestingBoxControl, "#", hashtag, hashtag,
+            new SuggestionFormat
+            {
+                BackgroundColor = Colors.LightSlateGray,
+                ForegroundColor = Colors.White,
+                Bold = FormatEffect.On
+            });
 	}
 
     private async void OnEditAttachmentGridTapped(object sender, TappedEventArgs e)

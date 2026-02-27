@@ -8,7 +8,6 @@
     xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
     xmlns:local="clr-namespace:History.MobileClient.Pages"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
-    xmlns:mention="clr-namespace:SpeakLink.Mention;assembly=SpeakLink"
     xmlns:picker="clr-namespace:Syncfusion.Maui.Toolkit.Picker;assembly=Syncfusion.Maui.Toolkit"
     xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
@@ -82,30 +81,6 @@
             Orientation="Vertical">
             <VerticalStackLayout Padding="6" Spacing="8">
                 <editPost:TextContentView x:Name="MainTextContent" Loaded="OnMainTextContentLoaded" />
-                <FlexLayout x:Name="HashtagFlexLayout" Wrap="Wrap">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                            <Border
-                                Margin="0,0,4,0"
-                                Padding="8,4"
-                                Stroke="#808080"
-                                StrokeShape="RoundRectangle 8"
-                                StrokeThickness="1.5">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer CommandParameter="{Binding .}" Tapped="OnHashtagBorderTapped" />
-                                </Border.GestureRecognizers>
-                                <Label>
-                                    <Label.FormattedText>
-                                        <FormattedString>
-                                            <Span Text="#" />
-                                            <Span Text="{Binding .}" />
-                                        </FormattedString>
-                                    </Label.FormattedText>
-                                </Label>
-                            </Border>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </FlexLayout>
                 <views:DataTemplatePresenter
                     x:Name="ShareTargetPostDataTemplatePresenter"
                     x:DataType="vm:PostViewModel"

@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Maui;
 using FFImageLoading.Maui;
 using History.MobileClient.ThirdParty.StaggeredLayout;
-using SpeakLink;
+using SuggestingBox.Maui;
 using UraniumUI;
 using Microsoft.Maui.LifecycleEvents;
 using Plugin.Firebase.CloudMessaging;
@@ -54,7 +54,7 @@ public static class MauiProgram
             .UseFFImageLoading()
             .UseUraniumUI()
             .UseUraniumUIMaterial()
-            .UseSpeakLink()
+            .UseSuggestingBox()
             .ConfigureSyncfusionToolkit()
             .ConfigureSyncfusionCore()
             .ConfigureFonts(fonts =>

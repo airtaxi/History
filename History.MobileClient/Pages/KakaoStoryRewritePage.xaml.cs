@@ -41,7 +41,7 @@ public partial class KakaoStoryRewritePage : ContentPage
 
     private async void OnSubmitButtonClicked(object sender, EventArgs e)
     {
-        var text = MainTextContent.MentionEditor.Text?.Trim() ?? string.Empty;
+        var text = MainTextContent.SuggestingBoxControl.Text?.Trim() ?? string.Empty;
 
         if (string.IsNullOrEmpty(text))
         {
