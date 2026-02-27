@@ -12,7 +12,6 @@ using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls.Platform.Compatibility;
 using NativeMedia;
-using SpeakLink.Mention;
 using System.Diagnostics;
 using UraniumUI.Icons.MaterialSymbols;
 
@@ -69,7 +68,7 @@ public partial class PostPage : ContentPage
         var user = message.Value;
         if (user.UserId == Shared.UserId) return;
 
-        MentionHelper.AppendUser(CommentTextContentView.MentionEditor, user.UserId, user.Nickname, true);
+        MentionHelper.AppendUser(CommentTextContentView.SuggestingBoxControl, user.UserId, user.Nickname, true);
     }
 
     private void OnAppleVideoUnloadedMessageMessageReceived(object recipient, AppleVideoUnloadedMessage message)

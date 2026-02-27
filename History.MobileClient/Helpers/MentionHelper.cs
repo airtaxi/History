@@ -1,152 +1,131 @@
 ﻿using History.Commons.DataTypes.Contents;
-using SpeakLink.Mention;
+using SuggestingBox.Maui;
 
 namespace History.MobileClient.Helpers;
 
 public static class MentionHelper
 {
-    public static readonly Dictionary<int, string> MentionIdMap = [];
-
-    public static void InsertUser(MentionEditor mentionEditor, string userId, string nickname)
+    private static readonly SuggestionFormat mentionFormat = new()
     {
-        var userMapId = GetUserMapId(userId);
+        ForegroundColor = Color.FromArgb("#6750A4"),
+        Bold = FormatEffect.On
+    };
 
-        if (!MentionIdMap.Any(x => GetUserMapId(x.Value) == userId)) MentionIdMap[MentionIdMap.Count] = userMapId;
-        mentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => x.Value == userMapId).Key.ToString(), nickname + ' ');
+    private static readonly SuggestionFormat stickerFormat = new()
+    {
+        BackgroundColor = Colors.LightGray,
+        Bold = FormatEffect.On
+    };
+
+    public static void InsertToken(SuggestingBox.Maui.SuggestingBox suggestingBox, string prefix, string displayText, object item, SuggestionFormat format)
+    {
+        string currentText = suggestingBox.Text ?? string.Empty;
+        var existingTokens = suggestingBox.GetTokens().ToList();
+
+        // Append the token text at the end of the current text
+        string tokenText = prefix + displayText;
+        string newText = currentText + tokenText + " ";
+        int tokenStartIndex = currentText.Length;
+
+        existingTokens.Add(new SuggestingBoxTokenInfo(tokenStartIndex, prefix, displayText, format, item));
+        suggestingBox.SetContent(newText, existingTokens);
     }
 
-    public static void InsertSticker(MentionEditor mentionEditor, string stickerId, string stickerContentId)
+    public static void InsertUser(SuggestingBox.Maui.SuggestingBox suggestingBox, string userId, string nickname)
     {
-        var stickerMapId = GetStickerMapId(stickerId) + "_" + stickerContentId;
-
-        AppendText(mentionEditor, " @");
-
-        if (!MentionIdMap.Any(x => x.Value == stickerId)) MentionIdMap[MentionIdMap.Count] = stickerMapId;
-        mentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => x.Value == stickerMapId).Key.ToString(), " * " + "스티커" + " * ");
+        var profileContent = new ProfileContent { UserId = userId, Nickname = nickname };
+        InsertToken(suggestingBox, "@", nickname, profileContent, mentionFormat);
     }
 
-    private static string GetStickerMapId(string stickerId) => "!_s" + stickerId;
-    private static string GetUserMapId(string userId) => "!_u" + userId;
-
-    public static void AppendText(MentionEditor mentionEditor, string text, bool showKeyboard = false)
+    public static void InsertSticker(SuggestingBox.Maui.SuggestingBox suggestingBox, string stickerId, string stickerContentId)
     {
-        var formattedText = mentionEditor.FormattedText?.Spans?.ToList() ?? [];
-        formattedText.Add(new Span() { Text = text });
-
-        var result = new FormattedString();
-        formattedText.ForEach(result.Spans.Add);
-        mentionEditor.SendFormattedTextChanged(result);
-
-        MoveCursorToEnd(mentionEditor, showKeyboard);
+        var stickerContent = new StickerContent { StickerId = stickerId, StickerContentId = stickerContentId };
+        InsertToken(suggestingBox, "@", " * 스티커 * ", stickerContent, stickerFormat);
     }
 
-    public static void AppendUser(MentionEditor mentionEditor, string userId, string nickname, bool showKeyboard = false)
+    public static void AppendText(SuggestingBox.Maui.SuggestingBox suggestingBox, string text)
+    {
+        string currentText = suggestingBox.Text ?? string.Empty;
+        var existingTokens = suggestingBox.GetTokens();
+        suggestingBox.SetContent(currentText + text, existingTokens);
+    }
+
+    public static void AppendUser(SuggestingBox.Maui.SuggestingBox suggestingBox, string userId, string nickname, bool showKeyboard = false)
     {
         if (userId == Shared.UserId) return;
 
-        var userMapId = GetUserMapId(userId);
+        var profileContent = new ProfileContent { UserId = userId, Nickname = nickname };
+        string currentText = suggestingBox.Text ?? string.Empty;
+        if (currentText.Length > 0 && !currentText.EndsWith(' ')) currentText += " ";
 
-        if (!MentionIdMap.Any(x => x.Value == userId)) MentionIdMap[MentionIdMap.Count] = userMapId;
+        var existingTokens = suggestingBox.GetTokens().ToList();
+        string tokenText = "@" + nickname;
+        int tokenStartIndex = currentText.Length;
+        string newText = currentText + tokenText + " ";
 
-        // Add " @" to the end of the text to allow InsertMention to work properly
-        var formattedText = mentionEditor.FormattedText?.Spans?.ToList() ?? [];
-        mentionEditor.Text ??= string.Empty;
-        mentionEditor.Text += " @";
-        mentionEditor.CursorPosition = mentionEditor.Text.Length;
-        mentionEditor.SelectionLength = 0;
+        existingTokens.Add(new SuggestingBoxTokenInfo(tokenStartIndex, "@", nickname, mentionFormat, profileContent));
+        suggestingBox.SetContent(newText, existingTokens);
 
-        // Call InsertMention to insert the mention span
-        mentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => x.Value == userMapId).Key.ToString(), nickname + ' ');
-
-        // Insert newly added mention span to previous formatted text
-        var newFormattedText = mentionEditor.FormattedText;
-        var newSpan = newFormattedText.Spans.LastOrDefault();
-        formattedText.Add(newSpan);
-
-        // Update the formatted text with the new mention span
-        var result = new FormattedString();
-        formattedText.ForEach(result.Spans.Add);
-        mentionEditor.SendFormattedTextChanged(result);
-
-        MoveCursorToEnd(mentionEditor, showKeyboard);
+        if (showKeyboard) suggestingBox.Focus();
     }
 
-    public static void AppendSticker(MentionEditor mentionEditor, string stickerId, string stickerContentId, bool showKeyboard = false)
+    public static void AppendSticker(SuggestingBox.Maui.SuggestingBox suggestingBox, string stickerId, string stickerContentId, bool showKeyboard = false)
     {
-        var stickerMapId = GetStickerMapId(stickerId) + "_" + stickerContentId;
+        var stickerContent = new StickerContent { StickerId = stickerId, StickerContentId = stickerContentId };
+        string currentText = suggestingBox.Text ?? string.Empty;
+        if (currentText.Length > 0 && !currentText.EndsWith(' ')) currentText += " ";
 
-        if (!MentionIdMap.Any(x => x.Value == stickerMapId)) MentionIdMap[MentionIdMap.Count] = stickerMapId;
+        var existingTokens = suggestingBox.GetTokens().ToList();
+        string tokenText = "@" + " * 스티커 * ";
+        int tokenStartIndex = currentText.Length;
+        string newText = currentText + tokenText + " ";
 
-        // Add " " to the end of the text to allow InsertMention to work properly
-        var formattedText = mentionEditor.FormattedText?.Spans?.ToList() ?? [];
-        mentionEditor.Text ??= string.Empty;
-        mentionEditor.Text += " @";
-        mentionEditor.CursorPosition = mentionEditor.Text.Length;
-        mentionEditor.SelectionLength = 0;
+        existingTokens.Add(new SuggestingBoxTokenInfo(tokenStartIndex, "@", " * 스티커 * ", stickerFormat, stickerContent));
+        suggestingBox.SetContent(newText, existingTokens);
 
-        // Call InsertMention to insert the mention span
-        mentionEditor.InsertMention(MentionIdMap.FirstOrDefault(x => x.Value == stickerMapId).Key.ToString(), " * " + "스티커" + " * ");
-
-        // Insert newly added mention span to previous formatted text
-        var newFormattedText = mentionEditor.FormattedText;
-        var newSpan = newFormattedText.Spans.LastOrDefault();
-        formattedText.Add(newSpan);
-
-        // Update the formatted text with the new mention span
-        var result = new FormattedString();
-        formattedText.ForEach(result.Spans.Add);
-        mentionEditor.SendFormattedTextChanged(result);
-
-        MoveCursorToEnd(mentionEditor, showKeyboard);
+        if (showKeyboard) suggestingBox.Focus();
     }
 
-    public static bool IsUser(int index)
+    public static List<BaseContent> GetContents(SuggestingBox.Maui.SuggestingBox suggestingBox)
     {
-        var mentionMapId = MentionIdMap.GetValueOrDefault(index);
-        return mentionMapId != null && mentionMapId.StartsWith("!_u");
-    }
+        var result = new List<BaseContent>();
+        string fullText = suggestingBox.Text ?? string.Empty;
+        var tokens = suggestingBox.GetTokens();
+        int currentIndex = 0;
 
-    public static ProfileContent GetProfileContent(int index)
-    {
-        var userMapId = MentionIdMap.GetValueOrDefault(index);
-        return userMapId != null && userMapId.StartsWith("!_u") ? new ProfileContent() { UserId = userMapId[3..] } : null;
-    }
-
-    public static StickerContent GetStickerContent(int index)
-    {
-        var stickerMapId = MentionIdMap.GetValueOrDefault(index);
-        if (stickerMapId != null && stickerMapId.StartsWith("!_s"))
+        foreach (var token in tokens.OrderBy(token => token.StartIndex))
         {
-            var parts = stickerMapId[3..].Split('_');
-            if (parts.Length == 2)
+            // Add plain text before this token
+            if (token.StartIndex > currentIndex)
             {
-                return new() { StickerId = parts[0], StickerContentId = parts[1] };
+                string plainText = fullText[currentIndex..token.StartIndex];
+                if (!string.IsNullOrEmpty(plainText)) result.Add(new TextContent { Text = plainText });
             }
+
+            // Add the token content based on Item type
+            if (token.Item is ProfileContent profileContent)
+                result.Add(profileContent);
+            else if (token.Item is StickerContent stickerContent)
+                result.Add(stickerContent);
+            else
+                result.Add(new TextContent { Text = token.Prefix + token.DisplayText });
+
+            currentIndex = token.StartIndex + token.Prefix.Length + token.DisplayText.Length;
         }
-        return null;
+
+        // Add remaining text after last token
+        if (currentIndex < fullText.Length)
+        {
+            string remainingText = fullText[currentIndex..];
+            if (!string.IsNullOrEmpty(remainingText)) result.Add(new TextContent { Text = remainingText });
+        }
+
+        return result;
     }
 
-    private static void MoveCursorToEnd(MentionEditor mentionEditor, bool showKeyboard)
-    {
-        // Focus to show the keyboard
-        if (showKeyboard) mentionEditor.Focus();
-
-        // Set the cursor position to the end of the text
-        var handler = mentionEditor.Handler;
-#if ANDROID
-        var editText = handler.PlatformView as AndroidX.AppCompat.Widget.AppCompatEditText;
-        editText?.SetSelection(editText.Text.Length);
-        if (showKeyboard)
-        {
-            var imm = Platform.AppContext.GetSystemService(Android.Content.Context.InputMethodService) as Android.Views.InputMethods.InputMethodManager;
-            imm.ShowSoftInput(editText, Android.Views.InputMethods.ShowFlags.Forced);
-        }
-#elif IOS
-        if (handler.PlatformView is UIKit.UITextView nativeView)
-        {
-            nativeView.SelectedRange = new Foundation.NSRange(nativeView.Text.Length, 0);
-            if (showKeyboard) nativeView.BecomeFirstResponder();
-        }
-#endif
-    }
+    public static List<string> GetHashtags(SuggestingBox.Maui.SuggestingBox suggestingBox) =>
+        suggestingBox.GetTokens()
+            .Where(token => token.Prefix == "#")
+            .Select(token => token.DisplayText)
+            .ToList();
 }

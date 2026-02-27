@@ -3,7 +3,6 @@ using History.Commons.Api.Sticker;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.Helpers;
-using SpeakLink.Mention;
 
 namespace History.MobileClient.ViewModels;
 
@@ -15,7 +14,6 @@ public partial class MentionsViewModel : ObservableObject
 
     public MentionsViewModel()
     {
-        MentionSearchCommand = new Command<MentionSearchEventArgs>(OnMentionSearch);
         ImageInputCommand = new Command(OnImageInput);
     }
 
@@ -60,7 +58,6 @@ public partial class MentionsViewModel : ObservableObject
 
     public bool InvertIsLoadingStickerMentions => !IsLoadingStickerMentions;
 
-    public Command<MentionSearchEventArgs> MentionSearchCommand { get; }
     public Command ImageInputCommand { get; }
 
     private bool _stickersInitialized;
@@ -224,32 +221,6 @@ public partial class MentionsViewModel : ObservableObject
         if (!IsDisplayingUserMentions)
         {
             IsDisplayingMentions = false;
-        }
-    }
-
-    private void OnMentionSearch(MentionSearchEventArgs mentionSearchEventArgs)
-    {
-        if (mentionSearchEventArgs.ControlCharacter == "@")
-        {
-            List<MentionUserViewModel> viewModels;
-            var query = mentionSearchEventArgs.MentionQuery.Trim();
-            if (string.IsNullOrEmpty(query)) viewModels = [.. Shared.Friends.Select(x => new MentionUserViewModel(x))];
-            else viewModels = [.. Shared.Friends
-                    .Where(x => x.Handle.Contains(query, StringComparison.InvariantCultureIgnoreCase)
-                        || x.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase)
-                        || KoreanHelper.SplitToChosung(x.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase))
-                    .Select(x => new MentionUserViewModel(x))];
-            UserViewModels = viewModels;
-            IsDisplayingMentions = viewModels.Count > 0;
-            IsDisplayingUserMentions = IsDisplayingMentions;
-            IsDisplayingStickerMentions = false;
-        }
-        else
-        {
-            // Hide all displays for other control characters
-            IsDisplayingMentions = false;
-            IsDisplayingUserMentions = false;
-            IsDisplayingStickerMentions = false;
         }
     }
 

@@ -1,112 +1,172 @@
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
-using SpeakLink.Mention;
+using SuggestingBox.Maui;
 using History.MobileClient.DataTypes;
 using CommunityToolkit.Mvvm.Messaging;
-
-
-
-#if ANDROID
-using Android.Views;
-using AndroidX.AppCompat.Widget;
-#elif IOS
-using UIKit;
-#endif
 
 namespace History.MobileClient.ContentViews.EditPost;
 
 public partial class TextContentView : ContentView
 {
     public MentionsViewModel MentionsViewModel => ViewModel;
-    public MentionEditor MentionEditor => MainMentionEditor;
+    public SuggestingBox.Maui.SuggestingBox SuggestingBoxControl => MainSuggestingBox;
 
     public string Text
     {
-        get => MainMentionEditor.Text;
-        set => MainMentionEditor.Text = value;
+        get => MainSuggestingBox.Text;
+        set => MainSuggestingBox.Text = value;
     }
 
     public string Placeholder
     {
-        get => MainMentionEditor.Placeholder;
-        set => MainMentionEditor.Placeholder = value;
+        get => MainSuggestingBox.Placeholder;
+        set => MainSuggestingBox.Placeholder = value;
     }
 
     public event EventHandler<string> ImageInputRequested;
+
     public TextContentView()
 	{
 		InitializeComponent();
-        ViewModel.ImageInputRequested += OnImageInputRequested;
+        MainSuggestingBox.TextChanged += OnSuggestingBoxTextChanged;
     }
 
-    private void OnImageInputRequested(object sender, string path) => ImageInputRequested?.Invoke(this, path);
-
-    public List<BaseContent> GetContents()
+    private void OnSuggestingBoxTextChanged(object sender, TextChangedEventArgs eventArgs)
     {
-        var result = new List<BaseContent>();
-        if (MainMentionEditor?.FormattedText?.Spans != null)
-        {
-            foreach (var span in MainMentionEditor.FormattedText.Spans)
-            {
-                if (span is MentionSpan mentionSpan)
-                {
-                    var index = int.Parse(mentionSpan.MentionId);
-                    var isUser = MentionHelper.IsUser(index);
-
-                    if (isUser)
-                    {
-                        var profileContent = MentionHelper.GetProfileContent(index);
-                        if (profileContent == null) continue;
-
-                        result.Add(profileContent);
-                    }
-                    else
-                    {
-                        var stickerContent = MentionHelper.GetStickerContent(index);
-                        if (stickerContent == null) continue;
-
-                        result.Add(stickerContent);
-                    }
-                }
-                else result.Add(new TextContent() { Text = span.Text });
-            }
-        }
-        return result;
+        var previousLineCount = (eventArgs.OldTextValue ?? string.Empty).Split('\n').Length;
+        var currentLineCount = (eventArgs.NewTextValue ?? string.Empty).Split('\n').Length;
+        if (currentLineCount > previousLineCount)
+            WeakReferenceMessenger.Default.Send(new MentionEditorNewLineMessage());
     }
+
+    private void OnSuggestionRequested(SuggestingBox.Maui.SuggestingBox sender, SuggestionRequestedEventArgs args)
+    {
+        if (args.Prefix == "@")
+        {
+            var query = args.QueryText.Trim();
+            List<MentionUserViewModel> viewModels;
+            if (string.IsNullOrEmpty(query)) viewModels = [.. Shared.Friends.Select(friendUser => new MentionUserViewModel(friendUser))];
+            else viewModels = [.. Shared.Friends
+                    .Where(friendUser => friendUser.Handle.Contains(query, StringComparison.InvariantCultureIgnoreCase)
+                        || friendUser.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase)
+                        || KoreanHelper.SplitToChosung(friendUser.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase))
+                    .Select(friendUser => new MentionUserViewModel(friendUser))];
+            ViewModel.UserViewModels = viewModels;
+            ViewModel.IsDisplayingMentions = viewModels.Count > 0;
+            ViewModel.IsDisplayingUserMentions = ViewModel.IsDisplayingMentions;
+            ViewModel.IsDisplayingStickerMentions = false;
+
+            // Set as display names for the suggestion popup
+            sender.ItemsSource = viewModels.Select(viewModel => viewModel.Nickname).ToList();
+        }
+        else if (args.Prefix == "#")
+        {
+            // For hashtags, offer the typed text as a suggestion
+            var query = args.QueryText.Trim();
+            if (!string.IsNullOrEmpty(query)) sender.ItemsSource = new List<string> { query };
+            else sender.ItemsSource = null;
+        }
+        else
+        {
+            ViewModel.IsDisplayingMentions = false;
+            ViewModel.IsDisplayingUserMentions = false;
+            ViewModel.IsDisplayingStickerMentions = false;
+        }
+    }
+
+    private void OnSuggestionChosen(SuggestingBox.Maui.SuggestingBox sender, SuggestionChosenEventArgs args)
+    {
+        if (args.Prefix == "@")
+        {
+            // Find the matching user viewmodel by nickname
+            var nickname = args.SelectedItem as string;
+            var userViewModel = ViewModel.UserViewModels?.FirstOrDefault(viewModel => viewModel.Nickname == nickname);
+            if (userViewModel != null)
+            {
+                args.DisplayText = userViewModel.Nickname;
+                args.Format.ForegroundColor = Color.FromArgb("#6750A4");
+                args.Format.Bold = FormatEffect.On;
+            }
+
+            ViewModel.IsDisplayingMentions = false;
+            ViewModel.IsDisplayingUserMentions = false;
+        }
+        else if (args.Prefix == "#")
+        {
+            args.DisplayText = args.SelectedItem as string;
+            args.Format.BackgroundColor = Colors.LightSlateGray;
+            args.Format.ForegroundColor = Colors.White;
+            args.Format.Bold = FormatEffect.On;
+        }
+    }
+
+    private void OnImageInserted(SuggestingBox.Maui.SuggestingBox sender, ImageInsertedEventArgs args)
+    {
+        // Save the image data to a temporary file and raise the event
+        var tempPath = Path.Combine(FileSystem.CacheDirectory, $"paste_{DateTime.Now:yyyyMMddHHmmss}.png");
+        File.WriteAllBytes(tempPath, args.ImageData);
+        ImageInputRequested?.Invoke(this, tempPath);
+    }
+
+    public List<BaseContent> GetContents() => MentionHelper.GetContents(MainSuggestingBox);
+
+    public List<string> GetHashtags() => MentionHelper.GetHashtags(MainSuggestingBox);
 
     public void SetContents(List<BaseContent> contents)
     {
-        MainMentionEditor.Text = "";
+        var tokens = new List<SuggestingBoxTokenInfo>();
+        string text = string.Empty;
 
         foreach (var content in contents)
         {
-            if (content is ProfileContent profileContent) MentionHelper.AppendUser(MainMentionEditor, profileContent.UserId, profileContent.Nickname);
-            if (content is StickerContent stickerContent) MentionHelper.AppendSticker(MainMentionEditor, stickerContent.StickerId, stickerContent.StickerContentId);
-            else if (content is TextContent textContent) MentionHelper.AppendText(MainMentionEditor, textContent.Text);
+            if (content is ProfileContent profileContent)
+            {
+                string tokenText = "@" + profileContent.Nickname;
+                tokens.Add(new SuggestingBoxTokenInfo(text.Length, "@", profileContent.Nickname,
+                    new SuggestionFormat
+                    {
+                        ForegroundColor = Color.FromArgb("#6750A4"),
+                        Bold = FormatEffect.On
+                    }, profileContent));
+                text += tokenText;
+            }
+            else if (content is StickerContent stickerContent)
+            {
+                string displayText = " * 스티커 * ";
+                string tokenText = "@" + displayText;
+                tokens.Add(new SuggestingBoxTokenInfo(text.Length, "@", displayText,
+                    new SuggestionFormat
+                    {
+                        BackgroundColor = Colors.LightGray,
+                        Bold = FormatEffect.On
+                    }, stickerContent));
+                text += tokenText;
+            }
+            else if (content is TextContent textContent)
+                text += textContent.Text;
         }
+
+        MainSuggestingBox.SetContent(text, tokens);
     }
 
     public void FocusEditor()
     {
-        MainMentionEditor.Focus();
-        MainMentionEditor.CursorPosition = MainMentionEditor.Text?.Length ?? 0;
+        MainSuggestingBox.Focus();
     }
 
-    public void UnfocusEditor() => MainMentionEditor.Unfocus();
+    public void UnfocusEditor() => MainSuggestingBox.Unfocus();
 
     public void InsertUser(MentionUserViewModel viewModel)
     {
         if (viewModel == null) return;
-
-        MentionHelper.InsertUser(MainMentionEditor, viewModel.UserId, viewModel.Nickname);
+        MentionHelper.InsertUser(MainSuggestingBox, viewModel.UserId, viewModel.Nickname);
     }
 
     public void InsertSticker(MentionStickerViewModel viewModel)
     {
         if (viewModel == null) return;
-
-        MentionHelper.InsertSticker(MainMentionEditor, viewModel.StickerId, viewModel.StickerContentId);
+        MentionHelper.InsertSticker(MainSuggestingBox, viewModel.StickerId, viewModel.StickerContentId);
 
         // Send sticker usage record (process in background)
         _ = MentionsViewModel.RecordStickerUsageAsync(viewModel.StickerId, viewModel.StickerContentId);
@@ -114,16 +174,6 @@ public partial class TextContentView : ContentView
 
     private void OnUnloaded(object sender, EventArgs e)
     {
-        ViewModel.ImageInputRequested -= OnImageInputRequested;
         ImageInputRequested = null;
-    }
-
-    private string _lastTextValue;
-    private void OnMainMentionEditorTextChanged(object sender, TextChangedEventArgs e)
-    {
-        var newTextValue = e.NewTextValue;
-        if (_lastTextValue != null && newTextValue.Length > 0 &&  newTextValue.Last() == '\n' && newTextValue[..(newTextValue.Length - 1)] == _lastTextValue)
-            WeakReferenceMessenger.Default.Send(new MentionEditorNewLineMessage());
-        _lastTextValue = e.NewTextValue;
     }
 }

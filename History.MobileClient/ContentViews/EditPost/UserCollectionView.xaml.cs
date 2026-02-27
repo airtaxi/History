@@ -1,6 +1,5 @@
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
-using SpeakLink.Mention;
 
 namespace History.MobileClient.ContentViews.EditPost;
 

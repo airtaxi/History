@@ -292,7 +292,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Dependencies\SpeakLink\SpeakLink\SpeakLink.csproj" />
+		<ProjectReference Include="..\Dependencies\SuggestingBox.Maui\SuggestingBox.Maui\SuggestingBox.Maui.csproj" />
 		<ProjectReference Include="..\History.Commons\History.Commons.csproj" />
 	</ItemGroup>
 
