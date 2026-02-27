@@ -16,7 +16,7 @@
 
     <ContentView.Resources>
         <DataTemplate x:Key="UserMentionTemplate" x:DataType="vm:MentionUserViewModel">
-            <Grid HeightRequest="44">
+            <Grid>
                 <HorizontalStackLayout
                     Padding="8"
                     HeightRequest="44"
@@ -69,14 +69,15 @@
                 </HorizontalStackLayout>
                 <Grid
                     BackgroundColor="#808080"
-                    HeightRequest="{OnPlatform iOS=1.5, Android=1}"
+                    HeightRequest="{OnPlatform iOS=1.5,
+                                               Android=1}"
                     HorizontalOptions="Fill"
                     VerticalOptions="End" />
             </Grid>
         </DataTemplate>
-        <DataTemplate x:Key="HashtagTemplate">
+        <DataTemplate x:Key="HashtagTemplate" x:DataType="x:String">
             <VerticalStackLayout Padding="8,4">
-                <Label Text="{Binding .}" />
+                <Label Text="{x:Binding}" />
             </VerticalStackLayout>
         </DataTemplate>
     </ContentView.Resources>
@@ -84,13 +85,13 @@
     <Grid Padding="4,0,4,0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#000000}">
         <suggestingBox:SuggestingBox
             x:Name="MainSuggestingBox"
-            Prefixes="@#"
-            Placeholder="무슨 일이 일어나고 있나요?"
-            MaxSuggestionHeight="200"
-            SuggestionRequested="OnSuggestionRequested"
-            SuggestionChosen="OnSuggestionChosen"
-            ImageInserted="OnImageInserted"
             HorizontalOptions="Fill"
+            ImageInserted="OnImageInserted"
+            MaxSuggestionHeight="200"
+            Placeholder="무슨 일이 일어나고 있나요?"
+            Prefixes="@#"
+            SuggestionChosen="OnSuggestionChosen"
+            SuggestionRequested="OnSuggestionRequested"
             VerticalOptions="Start" />
     </Grid>
 </ContentView>
