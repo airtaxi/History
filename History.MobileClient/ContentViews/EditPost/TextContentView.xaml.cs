@@ -75,15 +75,16 @@ public partial class TextContentView : ContentView
             {
                 args.DisplayText = userViewModel.Nickname;
                 args.Item = new ProfileContent { UserId = userViewModel.UserId, Nickname = userViewModel.Nickname };
-                args.Format.ForegroundColor = Color.FromArgb("#6750A4");
+                args.Format.ForegroundColor = Colors.White;
+                args.Format.BackgroundColor = Application.Current.Resources["Primary"] as Color;
                 args.Format.Bold = FormatEffect.On;
             }
         }
         else if (args.Prefix == "#")
         {
             args.DisplayText = args.SelectedItem as string;
-            args.Format.BackgroundColor = Colors.LightSlateGray;
-            args.Format.ForegroundColor = Colors.White;
+            args.Format.BackgroundColor = Colors.Transparent;
+            args.Format.ForegroundColor = Application.Current.Resources["Primary"] as Color;
             args.Format.Bold = FormatEffect.On;
         }
     }
@@ -113,7 +114,8 @@ public partial class TextContentView : ContentView
                 tokens.Add(new SuggestingBoxTokenInfo(text.Length, "@", profileContent.Nickname,
                     new SuggestionFormat
                     {
-                        ForegroundColor = Color.FromArgb("#6750A4"),
+                        ForegroundColor = Colors.White,
+                        BackgroundColor = Application.Current.Resources["Primary"] as Color,
                         Bold = FormatEffect.On
                     }, profileContent));
                 text += tokenText;
@@ -125,7 +127,8 @@ public partial class TextContentView : ContentView
                 tokens.Add(new SuggestingBoxTokenInfo(text.Length, "@", displayText,
                     new SuggestionFormat
                     {
-                        BackgroundColor = Colors.LightGray,
+                        ForegroundColor = Colors.White,
+                        BackgroundColor = Application.Current.Resources["Primary"] as Color,
                         Bold = FormatEffect.On
                     }, stickerContent));
                 text += tokenText;

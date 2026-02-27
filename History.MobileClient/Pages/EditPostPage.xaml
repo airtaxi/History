@@ -497,21 +497,6 @@
                 HorizontalOptions="End"
                 Spacing="12"
                 VerticalOptions="Center">
-                <Image
-                    HeightRequest="40"
-                    VerticalOptions="Center"
-                    WidthRequest="40">
-                    <Image.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnInsertHashtagImageTapped" />
-                    </Image.GestureRecognizers>
-                    <Image.Source>
-                        <FontImageSource
-                            FontFamily="MaterialSharp"
-                            Glyph="{x:Static m:MaterialSharp.Tag}"
-                            Color="{AppThemeBinding Light=Black,
-                                                    Dark=White}" />
-                    </Image.Source>
-                </Image>
                 <Grid>
                     <Image
                         x:Name="ReservationImage"
