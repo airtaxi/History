@@ -46,7 +46,7 @@ public class ModerationService(IMongoDatabase database, INotificationService not
             {
                 var user = profileContentUsersResult.Value.FirstOrDefault(x => x.UserId == profileContent.UserId);
                 profileContent.UserId = user?.UserId;
-                profileContent.Nickname = (user?.Nickname ?? "탈퇴한 사용자") + ' ';
+                profileContent.Nickname = (user?.Nickname ?? "탈퇴한 사용자");
             }
 
             // Fill in missing sticker media IDs
