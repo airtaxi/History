@@ -70,12 +70,12 @@ public static partial class Utils
         }
         FlushTextContentBuffer();
 
-        var textAndProfileContent = contents.Where(x => x is TextContent || x is ProfileContent);
+        var textTypeContent = contents.Where(x => x is TextContent || x is ProfileContent || x is HashtagContent);
 
-        var firstContent = textAndProfileContent.FirstOrDefault();
+        var firstContent = textTypeContent.FirstOrDefault();
         if (firstContent is TextContent firstTextContent) firstTextContent.Text = firstTextContent.Text.TrimStart();
 
-        var lastContent = textAndProfileContent.LastOrDefault();
+        var lastContent = textTypeContent.LastOrDefault();
         if (lastContent is TextContent lastTextContent) lastTextContent.Text = lastTextContent.Text.TrimEnd();
 
         contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrEmpty(textContent.Text));

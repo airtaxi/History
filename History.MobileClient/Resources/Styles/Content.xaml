@@ -208,13 +208,13 @@
         </Image>
     </DataTemplate>
 
-    <DataTemplate x:Key="TextAndProfileContentsTemplate" x:DataType="vm:TextAndProfileContentsViewModel">
-        <Label FormattedText="{x:Binding FormattedString}" SizeChanged="OnTextAndProfileContentsLabelSizeChanged">
+    <DataTemplate x:Key="TextTypeContentsTemplate" x:DataType="vm:TextTypeContentsViewModel">
+        <Label FormattedText="{x:Binding FormattedString}" SizeChanged="OnTextTypeContentsLabelSizeChanged">
             <Label.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnTextAndProfileContentsLabelTapped" />
+                <TapGestureRecognizer Tapped="OnTextTypeContentsLabelTapped" />
             </Label.GestureRecognizers>
             <Label.Behaviors>
-                <toolkit:TouchBehavior LongPressCompleted="OnTextAndProfileContentsLabelLongPressed" />
+                <toolkit:TouchBehavior LongPressCompleted="OnTextTypeContentsLabelLongPressed" />
             </Label.Behaviors>
         </Label>
     </DataTemplate>
@@ -409,5 +409,5 @@
         MediaContentTemplate="{StaticResource MediaContentTemplate}"
         PollContentTemplate="{StaticResource PollContentTemplate}"
         StickerContentTemplate="{StaticResource StickerContentTemplate}"
-        TextAndProfileContentsTemplate="{StaticResource TextAndProfileContentsTemplate}" />
+        TextTypeContentsTemplate="{StaticResource TextTypeContentsTemplate}" />
 </ResourceDictionary>
