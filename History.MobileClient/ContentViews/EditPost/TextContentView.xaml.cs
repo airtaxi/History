@@ -122,9 +122,9 @@ public partial class TextContentView : ContentView
             }
             else if (content is StickerContent stickerContent)
             {
-                string displayText = " * 스티커 * ";
-                string tokenText = "@" + displayText;
-                tokens.Add(new SuggestingBoxTokenInfo(text.Length, "@", displayText,
+                string displayText = "스티커 * ";
+                string tokenText = " * " + displayText;
+                tokens.Add(new SuggestingBoxTokenInfo(text.Length, " * ", displayText,
                     new SuggestionFormat
                     {
                         ForegroundColor = Colors.White,

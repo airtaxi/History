@@ -42,7 +42,7 @@ public static class MentionHelper
     public static void InsertSticker(SuggestingBox.Maui.SuggestingBox suggestingBox, string stickerId, string stickerContentId)
     {
         var stickerContent = new StickerContent { StickerId = stickerId, StickerContentId = stickerContentId };
-        InsertToken(suggestingBox, "@", " * 스티커 * ", stickerContent, stickerFormat);
+        InsertToken(suggestingBox, " * ", "스티커 * ", stickerContent, stickerFormat);
     }
 
     public static void AppendText(SuggestingBox.Maui.SuggestingBox suggestingBox, string text)
@@ -78,11 +78,11 @@ public static class MentionHelper
         if (currentText.Length > 0 && !currentText.EndsWith(' ')) currentText += " ";
 
         var existingTokens = suggestingBox.GetTokens().ToList();
-        string tokenText = "@" + " * 스티커 * ";
+        string tokenText = " * 스티커 * ";
         int tokenStartIndex = currentText.Length;
         string newText = currentText + tokenText + " ";
 
-        existingTokens.Add(new SuggestingBoxTokenInfo(tokenStartIndex, "@", " * 스티커 * ", stickerFormat, stickerContent));
+        existingTokens.Add(new SuggestingBoxTokenInfo(tokenStartIndex, " * ", "스티커 * ", stickerFormat, stickerContent));
         suggestingBox.SetContent(newText, existingTokens);
 
         if (showKeyboard) suggestingBox.Focus();
