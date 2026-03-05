@@ -240,6 +240,8 @@ public partial class EditPostPage : ContentPage
 
     private async void OnImageInputRequested(object sender, string path)
     {
+        Console.WriteLine($"[TextContentView] OnImageInputRequested called");
+
         if (_attachmentViewModels.Count == 20)
         {
             await Toast.Make("미디어는 최대 20개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
