@@ -4,7 +4,7 @@ namespace History.MobileClient.ViewModels;
 
 internal class ContentTemplateSelector : DataTemplateSelector
 {
-    public DataTemplate TextAndProfileContentsTemplate { get; set; }
+    public DataTemplate TextTypeContentsTemplate { get; set; }
     public DataTemplate StickerContentTemplate { get; set; }
     public DataTemplate MediaContentTemplate { get; set; }
     public DataTemplate ExternalUrlContentTemplate { get; set; }
@@ -14,7 +14,7 @@ internal class ContentTemplateSelector : DataTemplateSelector
 
     protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
     {
-        if (item is TextAndProfileContentsViewModel) return TextAndProfileContentsTemplate;
+        if (item is TextTypeContentsViewModel) return TextTypeContentsTemplate;
         else if (item is StickerContentViewModel) return StickerContentTemplate;
         else if (item is MediaContentViewModel) return MediaContentTemplate;
         else if (item is ExternalUrlContentViewModel) return ExternalUrlContentTemplate;

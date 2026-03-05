@@ -461,26 +461,30 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     {
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
 
-        var textAndProfileContents = contents.Where(x => x is TextContent || x is ProfileContent);
-        var profileContents = textAndProfileContents.OfType<ProfileContent>();
+        var textTypeContents = contents.Where(x => x is TextContent || x is ProfileContent || x is HashtagContent);
+        var profileContents = textTypeContents.OfType<ProfileContent>();
         var profileUserIds = profileContents.Select(x => x.UserId).Distinct();
         var users = await GetUsersByIdsAsync(profileUserIds);
         var bannedUsers = await friendshipService.GetBannedUserIdsAsync(requesterId);
         users.Value.RemoveAll(x => bannedUsers.Value.Contains(x.Id));
 
         var builder = new StringBuilder();
-        foreach (var textAndProfileContent in textAndProfileContents)
+        foreach (var textTypeContent in textTypeContents)
         {
-            if (textAndProfileContent is TextContent textContent)
+            if (textTypeContent is TextContent textContent)
             {
                 var text = textContent.Text.ReplaceLineEndings().Replace(Environment.NewLine, "");
                 builder.Append(text);
             }
-            else if (textAndProfileContent is ProfileContent profileContent)
+            else if (textTypeContent is ProfileContent profileContent)
             {
                 var user = users.Value.FirstOrDefault(x => x.Id == profileContent.UserId);
                 var nickname = user?.Nickname ?? "탈퇴한 사용자";
                 builder.Append(nickname + ' ');
+            }
+            else if (textTypeContent is HashtagContent hashtagContent)
+            {
+                builder.Append('#' + hashtagContent.Tag + ' ');
             }
         }
         return builder.ToString();

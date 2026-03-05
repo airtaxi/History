@@ -19,17 +19,18 @@ public partial class Content : ResourceDictionary
 		InitializeComponent();
 	}
 
-    private async void OnTextAndProfileContentsLabelLongPressed(object sender, LongPressCompletedEventArgs e)
+    private async void OnTextTypeContentsLabelLongPressed(object sender, LongPressCompletedEventArgs e)
     {
         var label = sender as Label;
-        var viewModel = label.BindingContext as TextAndProfileContentsViewModel;
-        var contents = viewModel.TextAndProfileContents;
+        var viewModel = label.BindingContext as TextTypeContentsViewModel;
+        var contents = viewModel.TextTypeContents;
 
         var builder = new StringBuilder();
         foreach(var content in contents)
         {
             if (content is TextContent textContent) builder.Append(textContent.Text);
             else if (content is ProfileContent profileContent) builder.Append(profileContent.Nickname);
+            else if (content is HashtagContent hashtagContent) builder.Append($"#{hashtagContent.Tag}");
         }
         var text = builder.ToString().Trim();
 
@@ -38,7 +39,7 @@ public partial class Content : ResourceDictionary
         await Toast.Make("텍스트가 클립보드에 복사되었습니다.").Show();
     }
 
-    private async void OnTextAndProfileContentsLabelTapped(object sender, TappedEventArgs e)
+    private async void OnTextTypeContentsLabelTapped(object sender, TappedEventArgs e)
     {
         var label = sender as Label;
         var parent = label.Parent;
@@ -49,10 +50,10 @@ public partial class Content : ResourceDictionary
         else if (parent.BindingContext is PostViewModel postViewModel && (postViewModel.PostType != Enums.PostType.Unwrapped || postViewModel.IsParentPost)) await postViewModel.HandleTapAsync();
     }
 
-    private void OnTextAndProfileContentsLabelSizeChanged(object sender, EventArgs e)
+    private void OnTextTypeContentsLabelSizeChanged(object sender, EventArgs e)
     {
         var label = sender as Label;
-        var viewModel = label.BindingContext as TextAndProfileContentsViewModel;
+        var viewModel = label.BindingContext as TextTypeContentsViewModel;
         Application.Current.Dispatcher.Dispatch(() =>
         {
             Application.Current.Dispatcher.Dispatch(() =>

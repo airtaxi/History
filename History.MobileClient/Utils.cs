@@ -51,13 +51,13 @@ public static partial class Utils
             }
         }
 
-        var textAndProfileContents = new List<BaseContent>();
-        void FlushTextAndProfileContents()
+        var textTypeContents = new List<BaseContent>();
+        void FlushTextTypeContents()
         {
-            if (textAndProfileContents.Count > 0)
+            if (textTypeContents.Count > 0)
             {
-                contentViewModels.Add(new TextAndProfileContentsViewModel(textAndProfileContents, postType, contents.OfType<MediaContent>().Any() || contents.OfType<ExternalUrlContent>().Any()));
-                textAndProfileContents = [];
+                contentViewModels.Add(new TextTypeContentsViewModel(textTypeContents, postType, contents.OfType<MediaContent>().Any() || contents.OfType<ExternalUrlContent>().Any()));
+                textTypeContents = [];
             }
         }
 
@@ -67,7 +67,7 @@ public static partial class Utils
             if (content is TextContent or ProfileContent)
             {
                 FlushMediaContents();
-                textAndProfileContents.Add(content);
+                textTypeContents.Add(content);
             }
             else if (content is StickerContent stickerContent)
             {
@@ -76,24 +76,24 @@ public static partial class Utils
                 if (postType != PostType.Unwrapped && contentViewModels.Any(x => x is StickerContentViewModel)) continue;
 
                 FlushMediaContents();
-                FlushTextAndProfileContents();
+                FlushTextTypeContents();
                 contentViewModels.Add(new StickerContentViewModel(stickerContent));
             }
             else if (content is ExternalUrlContent externalUrlContent)
             {
                 FlushMediaContents();
-                FlushTextAndProfileContents();
+                FlushTextTypeContents();
                 contentViewModels.Add(new ExternalUrlContentViewModel(externalUrlContent));
             }
             else if (content is PollContent pollContent)
             {
                 FlushMediaContents();
-                FlushTextAndProfileContents();
+                FlushTextTypeContents();
                 contentViewModels.Add(new PollContentViewModel(pollContent, postId));
             }
             else if (content is MediaContent mediaContent)
             {
-                FlushTextAndProfileContents();
+                FlushTextTypeContents();
 #if ANDROID
                 mediaContents.Add(mediaContent);
 #else
@@ -104,7 +104,7 @@ public static partial class Utils
         }
 
         // Flush remaining contents
-        FlushTextAndProfileContents();
+        FlushTextTypeContents();
         FlushMediaContents();
 
         return contentViewModels;
@@ -143,12 +143,12 @@ public static partial class Utils
         }
         FlushTextContentBuffer();
 
-        var textAndProfileContent = contents.Where(x => x is TextContent || x is ProfileContent);
+        var textTypeContents = contents.Where(x => x is TextContent || x is ProfileContent || x is HashtagContent);
 
-        var firstContent = textAndProfileContent.FirstOrDefault();
+        var firstContent = textTypeContents.FirstOrDefault();
         if (firstContent is TextContent firstTextContent) firstTextContent.Text = firstTextContent.Text.TrimStart();
 
-        var lastContent = textAndProfileContent.LastOrDefault();
+        var lastContent = textTypeContents.LastOrDefault();
         if (lastContent is TextContent lastTextContent) lastTextContent.Text = lastTextContent.Text.TrimEnd();
 
         contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrEmpty(textContent.Text));
@@ -174,13 +174,13 @@ public static partial class Utils
 
     public static string GenerateTextPreviewFromContents(IEnumerable<BaseContent> contents)
     {
-        var textAndProfileContents = contents.Where(x => x is TextContent || x is ProfileContent);
-
+        var textTypeContents = contents.Where(x => x is TextContent || x is ProfileContent || x is HashtagContent);
         var builder = new StringBuilder();
-        foreach (var content in textAndProfileContents)
+        foreach (var content in textTypeContents)
         {
             if (content is TextContent textContent) builder.Append(textContent.Text);
             else if (content is ProfileContent profileContent) builder.Append(profileContent.Nickname);
+            else if (content is HashtagContent hashtagContent) builder.Append($"#{hashtagContent.Tag}");
         }
 
         var result = builder.ToString();
@@ -223,7 +223,7 @@ public static partial class Utils
         return preview;
     }
 
-    public static FormattedString GenerateSpanFromTextAndProfileContents(List<BaseContent> contents, PostType postType, bool hasMedias)
+    public static FormattedString GenerateSpanFromTextTypeContents(List<BaseContent> contents, PostType postType, bool hasMedias)
     {
         var formattedString = new FormattedString();
         var maxLength = postType == PostType.Timeline ? (hasMedias ? TimelineMaxTextLengthWithMedias : TimelineMaxTextLengthWithoutMedias) : DiscoveryMaxTextLength;
