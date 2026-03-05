@@ -64,7 +64,7 @@ public static partial class Utils
         // Fill contentViewModels with contents
         foreach (var content in contents)
         {
-            if (content is TextContent or ProfileContent)
+            if (content is TextContent or ProfileContent or HashtagContent)
             {
                 FlushMediaContents();
                 textTypeContents.Add(content);
