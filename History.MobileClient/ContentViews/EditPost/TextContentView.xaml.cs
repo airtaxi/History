@@ -91,11 +91,8 @@ public partial class TextContentView : ContentView
 
     private void OnImageInserted(SuggestingBox.Maui.SuggestingBox sender, ImageInsertedEventArgs args)
     {
-        Console.WriteLine($"[TextContentView] OnImageInserted called, {args.ImageData.Length} bytes, subscribers={ImageInputRequested?.GetInvocationList()?.Length ?? 0}");
-        // Save the image data to a temporary file and raise the event
         var tempPath = Path.Combine(FileSystem.CacheDirectory, $"paste_{DateTime.Now:yyyyMMddHHmmss}.jpg");
         File.WriteAllBytes(tempPath, args.ImageData);
-        Console.WriteLine($"[TextContentView] Saved to {tempPath}, invoking ImageInputRequested");
         ImageInputRequested?.Invoke(this, tempPath);
     }
 
@@ -176,9 +173,5 @@ public partial class TextContentView : ContentView
         _ = MentionsViewModel.RecordStickerUsageAsync(viewModel.StickerId, viewModel.StickerContentId);
     }
 
-    private void OnUnloaded(object sender, EventArgs e)
-    {
-        System.Diagnostics.Debug.WriteLine("[TextContentView] Unloaded, clearing ImageInputRequested subscribers");
-        ImageInputRequested = null;
-    }
+    private void OnUnloaded(object sender, EventArgs e) => ImageInputRequested = null;
 }
