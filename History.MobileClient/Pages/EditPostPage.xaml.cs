@@ -533,13 +533,6 @@ public partial class EditPostPage : ContentPage
                             var text = MainTextContent.Text;
                             text = text?.Trim() ?? string.Empty;
 
-                            var inlineHashtags = editorContents.OfType<HashtagContent>().Select(hashtagContent => hashtagContent.Tag).ToList();
-                            if (inlineHashtags.Count > 0)
-                            {
-                                text += "\n\n";
-                                text += string.Join(" ", inlineHashtags.Select(hashtagText => $"#{hashtagText}"));
-                            }
-
                             // Check for profanity before uploading to KakaoStory
                             var isKakaoStoryProfanityCheckEnabled = Configuration.GetValue<bool?>("KakaoStoryProfanityCheckEnabled") ?? true;
                             if (isKakaoStoryProfanityCheckEnabled)
