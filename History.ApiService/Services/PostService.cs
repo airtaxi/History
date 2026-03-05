@@ -417,8 +417,13 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var contents = requestDto.Contents ?? [];
         Utils.SanitizeContents(contents);
 
+        // Sanitize hashtag contents
+        var hashtagValidationResult = ValidateHashtagContents(contents);
+        if (hashtagValidationResult.IsFailure) return hashtagValidationResult;
+
         // Check if the post has any content
-        if (requestDto.ParentPostId == null && (requestDto.Hashtags ?? []).Count == 0 && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
+        var hasHashtagContent = contents.OfType<HashtagContent>().Any();
+        if (requestDto.ParentPostId == null&& !hasHashtagContent && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
             return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
 
         // Validate media contents
@@ -460,15 +465,6 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                 return (ErrorType.BadRequest, "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다.");
         }
 
-        // Sanitize hashtags and check length
-        for (int i = 0; i < requestDto.Hashtags.Count; i++)
-        {
-            var hashtag = requestDto.Hashtags[i];
-            requestDto.Hashtags[i] = Utils.SanitizeText(hashtag);
-            hashtag = requestDto.Hashtags[i];
-            if (hashtag.Length > 20) return (ErrorType.BadRequest, "해시태그는 최대 20자까지 입력할 수 있습니다.");
-        }
-
         string postId;
         while (true)
         {
@@ -508,10 +504,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             DiscoveryOption = requestDto.DiscoveryOption,
             DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? (requestDto.DiscoveryOptionSelectedUserIds ?? []) : null,
             ParentPostId = requestDto.ParentPostId,
-            SearchIndex = GenerateSearchIndexFromContents(contents, requestDto.Hashtags),
+            SearchIndex = GenerateSearchIndexFromContents(contents),
             CommentPermission = requestDto.CommentPermission,
             DisallowShare = requestDto.DisallowShare,
-            Hashtags = requestDto.Hashtags ?? [],
+            Hashtags = [],
             IsRepost = false
         };
 
@@ -557,8 +553,13 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var contents = requestDto.Contents ?? [];
         Utils.SanitizeContents(contents);
 
+        // Sanitize hashtag contents
+        var hashtagValidationResult = ValidateHashtagContents(contents);
+        if (hashtagValidationResult.IsFailure) return hashtagValidationResult;
+
         // Check if the post has any content
-        if (postResult.Value.ParentPostId == null && (requestDto.Hashtags ?? []).Count == 0 && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
+        var hasHashtagContent = contents.OfType<HashtagContent>().Any();
+        if (postResult.Value.ParentPostId == null&& !hasHashtagContent && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
             return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
 
         if (postResult.Value.ParentPostId != null)
@@ -569,15 +570,6 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             var parentPost = parentPostResult.Value;
             if (requestDto.DiscoveryOption > parentPost.DiscoveryOption)
                 return (ErrorType.BadRequest, "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다.");
-        }
-
-        // Sanitize hashtags and check length
-        for (int i = 0; i < requestDto.Hashtags.Count; i++)
-        {
-            var hashtag = requestDto.Hashtags[i];
-            requestDto.Hashtags[i] = Utils.SanitizeText(hashtag);
-            hashtag = requestDto.Hashtags[i];
-            if (hashtag.Length > 20) return (ErrorType.BadRequest, "해시태그는 최대 20자까지 입력할 수 있습니다.");
         }
 
         var post = postResult.Value;
@@ -650,10 +642,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Update the post contents
         post.Contents = contents;
-        post.SearchIndex = GenerateSearchIndexFromContents(contents, requestDto.Hashtags);
+        post.SearchIndex = GenerateSearchIndexFromContents(contents);
         post.CommentPermission = requestDto.CommentPermission;
         post.DisallowShare = requestDto.DisallowShare;
-        post.Hashtags = requestDto.Hashtags ?? [];
+        post.Hashtags = [];
 
         post.ModifiedAt = DateTime.UtcNow;
 
@@ -969,7 +961,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             SearchIndex = originalPost.SearchIndex,
             CommentPermission = AccessPermission.OnlyMe,
             DisallowShare = true,
-            Hashtags = originalPost.Hashtags ?? [],
+            Hashtags = [],
             IsRepost = false,
             IsPublicPost = true
         };
@@ -1165,7 +1157,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             SharedAndRepostedUsers = sharedAndRepostedUserDtos.Value,
             CommentPermission = post.CommentPermission,
             DisallowShare = post.DisallowShare,
-            Hashtags = post.Hashtags ?? [],
+            Hashtags = ExtractHashtagsFromContents(post.Contents),
             IsRepost = post.IsRepost,
             IsBookmarked = isBookmarked,
             CreatedAt = post.CreatedAt,
@@ -1222,7 +1214,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                     SharedAndRepostedUsers = parentPostSharedAndRepostedUserDtos,
                     CommentPermission = parentPostResult.Value.CommentPermission,
                     DisallowShare = parentPostResult.Value.DisallowShare,
-                    Hashtags = parentPostResult.Value.Hashtags ?? [],
+                    Hashtags = ExtractHashtagsFromContents(parentPostResult.Value.Contents),
                     IsRepost = parentPostResult.Value.IsRepost,
                     CreatedAt = parentPostResult.Value.CreatedAt,
                     ModifiedAt = parentPostResult.Value.ModifiedAt
@@ -1338,19 +1330,34 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         return Result.Success();
     }
 
-    private static string GenerateSearchIndexFromContents(IEnumerable<BaseContent> contents, IEnumerable<string> hashtags)
+    private static string GenerateSearchIndexFromContents(IEnumerable<BaseContent> contents)
     {
         var body = string.Join(" ", contents.OfType<TextContent>().Select(s => s.Text))
         .ReplaceLineEndings()
         .ToLower()
         .Replace(Environment.NewLine, " ");
 
-        hashtags = hashtags.Select(x => $"#{x}").ToList();
-        var hashtag = string.Join(" ", hashtags ?? [])
-            .ToLower();
+        var hashtagTexts = contents.OfType<HashtagContent>().Select(x => $"#{x.Tag}");
+        var hashtag = string.Join(" ", hashtagTexts).ToLower();
 
         return $"{body} {hashtag}".Trim();
     }
+
+    /// <summary>
+    /// Sanitizes and validates HashtagContent entries in contents.
+    /// </summary>
+    private static Result ValidateHashtagContents(List<BaseContent> contents)
+    {
+        foreach (var hashtagContent in contents.OfType<HashtagContent>())
+        {
+            hashtagContent.Tag = Utils.SanitizeText(hashtagContent.Tag);
+            if (hashtagContent.Tag.Length > 20) return (ErrorType.BadRequest, "해시태그는 최대 20자까지 입력할 수 있습니다.");
+        }
+        return Result.Success();
+    }
+
+    private static List<string> ExtractHashtagsFromContents(IEnumerable<BaseContent> contents) =>
+        contents.OfType<HashtagContent>().Select(x => x.Tag).ToList();
 
     private async Task<Result<List<PostReactionDto>>> GeneratePostReactionDtosAsync(string postId, string requesterId = null)
     {

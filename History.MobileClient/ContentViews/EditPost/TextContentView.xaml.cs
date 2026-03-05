@@ -133,6 +133,18 @@ public partial class TextContentView : ContentView
                     }, stickerContent));
                 text += tokenText;
             }
+            else if (content is HashtagContent hashtagContent)
+            {
+                string tokenText = "#" + hashtagContent.Tag;
+                tokens.Add(new SuggestingBoxTokenInfo(text.Length, "#", hashtagContent.Tag,
+                    new SuggestionFormat
+                    {
+                        BackgroundColor = Colors.Transparent,
+                        ForegroundColor = Application.Current.Resources["Primary"] as Color,
+                        Bold = FormatEffect.On
+                    }, hashtagContent));
+                text += tokenText;
+            }
             else if (content is TextContent textContent)
                 text += textContent.Text;
         }

@@ -215,7 +215,11 @@ public static partial class Utils
     {
         var preview = GenerateTextPreviewFromContents(post.Contents);
         if (string.IsNullOrWhiteSpace(preview) && post.ParentPost != null) preview = GenerateTextPreviewFromContents(post.ParentPost.Contents);
-        else if (string.IsNullOrWhiteSpace(preview) && post.Hashtags.Count > 0) preview = string.Join(" ", post.Hashtags.Select(x => $"#{x}"));
+        if (string.IsNullOrWhiteSpace(preview))
+        {
+            var hashtagContents = post.Contents.OfType<HashtagContent>().ToList();
+            if (hashtagContents.Count > 0) preview = string.Join(" ", hashtagContents.Select(x => $"#{x.Tag}"));
+        }
         return preview;
     }
 
@@ -344,6 +348,27 @@ public static partial class Utils
                 }
                 else formattedString.Spans.Add(span);
             }
+            else if (content is HashtagContent hashtagContent)
+            {
+                var span = new Span
+                {
+                    Text = $"#{hashtagContent.Tag}",
+                    TextColor = Application.Current.Resources["Primary"] as Color,
+                    FontAttributes = FontAttributes.Bold,
+                };
+
+                AddTapGestureRecognizerToHashtagSpan(span, hashtagContent.Tag);
+
+                currentLength += span.Text.Length;
+                currentLines += span.Text.Count(x => x == '\n');
+                if (postType != PostType.Unwrapped && (currentLength > maxLength || currentLines > maxLines))
+                {
+                    TrimSpan(span);
+                    AddMoreSpan(span);
+                    break;
+                }
+                else formattedString.Spans.Add(span);
+            }
         }
 
         return formattedString;
@@ -370,6 +395,13 @@ public static partial class Utils
     {
         var tapGestureRecognizer = new TapGestureRecognizer();
         tapGestureRecognizer.Tapped += async (s, e) => await App.PushAsync(new UserPage(userId));
+        span.GestureRecognizers.Add(tapGestureRecognizer);
+    }
+
+    private static void AddTapGestureRecognizerToHashtagSpan(Span span, string hashtag)
+    {
+        var tapGestureRecognizer = new TapGestureRecognizer();
+        tapGestureRecognizer.Tapped += async (s, e) => await App.PushAsync(new EditPostPage([hashtag]));
         span.GestureRecognizers.Add(tapGestureRecognizer);
     }
 

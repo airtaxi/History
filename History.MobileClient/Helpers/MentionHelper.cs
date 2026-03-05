@@ -109,6 +109,8 @@ public static class MentionHelper
                 result.Add(profileContent);
             else if (token.Item is StickerContent stickerContent)
                 result.Add(stickerContent);
+            else if (token.Prefix == "#")
+                result.Add(new HashtagContent { Tag = token.DisplayText });
             else
                 result.Add(new TextContent { Text = token.Prefix + token.DisplayText });
 

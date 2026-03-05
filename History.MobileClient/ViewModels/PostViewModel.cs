@@ -50,8 +50,6 @@ public partial class PostViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CreatedAt))]
     [NotifyPropertyChangedFor(nameof(ModifiedAt))]
     [NotifyPropertyChangedFor(nameof(TimestampText))]
-    [NotifyPropertyChangedFor(nameof(Hashtags))]
-    [NotifyPropertyChangedFor(nameof(IsHashtagVisible))]
     [NotifyPropertyChangedFor(nameof(PreviewText))]
     [NotifyPropertyChangedFor(nameof(PreviewThumbnail))]
     [NotifyPropertyChangedFor(nameof(PreviewThumbnailVisible))]
@@ -134,9 +132,6 @@ public partial class PostViewModel : ObservableObject
     public DateTime? ModifiedAt => Post.ModifiedAt;
 
     public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
-
-    public List<string> Hashtags => Post.Hashtags;
-    public bool IsHashtagVisible => Hashtags != null && Hashtags.Count > 0;
 
     public string PreviewText => Utils.GenerateTextPreviewFromPost(Post);
     public string PreviewTimestamp => Post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd");

@@ -97,34 +97,6 @@
                     BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
                     BindableLayout.ItemsSource="{x:Binding Contents}"
                     Spacing="8" />
-                <FlexLayout
-                    Margin="0,4,0,0"
-                    BindableLayout.ItemsSource="{x:Binding Hashtags}"
-                    IsVisible="{x:Binding IsHashtagVisible}"
-                    Wrap="Wrap">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                            <Border
-                                Margin="0,0,4,0"
-                                Padding="8,4"
-                                Stroke="#808080"
-                                StrokeShape="RoundRectangle 8"
-                                StrokeThickness="1.5">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Tapped="OnHashtagBorderTapped" />
-                                </Border.GestureRecognizers>
-                                <Label>
-                                    <Label.FormattedText>
-                                        <FormattedString>
-                                            <Span Text="#" />
-                                            <Span Text="{x:Binding .}" />
-                                        </FormattedString>
-                                    </Label.FormattedText>
-                                </Label>
-                            </Border>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </FlexLayout>
             </VerticalStackLayout>
         </Grid>
     </DataTemplate>
