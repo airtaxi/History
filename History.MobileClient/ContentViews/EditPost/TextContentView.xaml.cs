@@ -178,6 +178,7 @@ public partial class TextContentView : ContentView
 
     private void OnUnloaded(object sender, EventArgs e)
     {
+        System.Diagnostics.Debug.WriteLine("[TextContentView] Unloaded, clearing ImageInputRequested subscribers");
         ImageInputRequested = null;
     }
 }
