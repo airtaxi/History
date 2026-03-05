@@ -93,7 +93,7 @@ public partial class TextContentView : ContentView
     {
         Console.WriteLine($"[TextContentView] OnImageInserted called, {args.ImageData.Length} bytes, subscribers={ImageInputRequested?.GetInvocationList()?.Length ?? 0}");
         // Save the image data to a temporary file and raise the event
-        var tempPath = Path.Combine(FileSystem.CacheDirectory, $"paste_{DateTime.Now:yyyyMMddHHmmss}.png");
+        var tempPath = Path.Combine(FileSystem.CacheDirectory, $"paste_{DateTime.Now:yyyyMMddHHmmss}.jpg");
         File.WriteAllBytes(tempPath, args.ImageData);
         Console.WriteLine($"[TextContentView] Saved to {tempPath}, invoking ImageInputRequested");
         ImageInputRequested?.Invoke(this, tempPath);
