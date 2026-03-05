@@ -188,6 +188,7 @@ public partial class EditPostPage : ContentPage
         DiscoveryOptionPicker.ItemsSource = Enum.GetValues<DiscoveryOption>().Select(x => x.ToDisplayString()).ToList();
         DiscoveryOptionPicker.SelectedIndex = (int)Shared.LastUsedPostDiscoveryOption;
         MainTextContent.ImageInputRequested += OnImageInputRequested;
+        System.Diagnostics.Debug.WriteLine($"[EditPostPage] Initialize called");
     }
 
     private async Task ToggleExternalMediaAsync()
