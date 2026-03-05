@@ -480,11 +480,11 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
             {
                 var user = users.Value.FirstOrDefault(x => x.Id == profileContent.UserId);
                 var nickname = user?.Nickname ?? "탈퇴한 사용자";
-                builder.Append(nickname + ' ');
+                builder.Append(nickname);
             }
             else if (textTypeContent is HashtagContent hashtagContent)
             {
-                builder.Append('#' + hashtagContent.Tag + ' ');
+                builder.Append('#' + hashtagContent.Tag);
             }
         }
         return builder.ToString();
