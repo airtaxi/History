@@ -39,11 +39,6 @@ public class PostDraft
     public PollContent PollContent { get; set; }
 
     /// <summary>
-    /// Hashtags attached to the draft.
-    /// </summary>
-    public List<string> Hashtags { get; set; } = [];
-
-    /// <summary>
     /// Selected discovery option index.
     /// </summary>
     public int DiscoveryOptionIndex { get; set; }

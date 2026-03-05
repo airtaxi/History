@@ -72,6 +72,7 @@ builder.Services.AddScoped<IModerationService, ModerationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IStickerService, StickerService>();
 builder.Services.AddHostedService<DatabaseInitService>();
+builder.Services.AddHostedService<MigrationService>();
 builder.Services.AddHostedService<BirthdayService>();
 builder.Services.AddRateLimitService(builder.Configuration);
 

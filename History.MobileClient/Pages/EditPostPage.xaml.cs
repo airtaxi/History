@@ -163,15 +163,6 @@ public partial class EditPostPage : ContentPage
                 ShareTargetPostDataTemplatePresenter.ViewModel = new PostViewModel(_post.ParentPost, PostType.Timeline);
                 ShareTargetPostDataTemplatePresenter.IsVisible = true;
             }
-
-            foreach (var hashtag in _post.Hashtags ?? [])
-                MentionHelper.InsertToken(MainTextContent.SuggestingBoxControl, "#", hashtag, hashtag,
-                    new SuggestionFormat
-                    {
-                        BackgroundColor = Colors.Transparent,
-                        ForegroundColor = Application.Current.Resources["Primary"] as Color,
-                        Bold = FormatEffect.On
-                    });
         }
         else
         {
@@ -480,7 +471,7 @@ public partial class EditPostPage : ContentPage
             if (_externalUrlContentViewModel != null) contents.Add(_externalUrlContentViewModel.ExternalUrlContent);
             if (_pollContentViewModel != null) contents.Add(_pollContentViewModel.PollContent);
 
-            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && _pollContentViewModel == null && !_isShare && MainTextContent.GetHashtags().Count == 0)
+            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && _pollContentViewModel == null && !_isShare && !editorContents.OfType<HashtagContent>().Any())
             {
                 await DisplayAlertAsync("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
                 return;
@@ -513,7 +504,7 @@ public partial class EditPostPage : ContentPage
 
                 if (_post != null && !_isShare)
                 {
-                    var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, _commentPermission, disallowShare, discoveryOptionSelectedUserIds, files, MainTextContent.GetHashtags()), ErrorType.BadRequest);
+                    var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, _commentPermission, disallowShare, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
                     if (result.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                     else if (result.IsSuccess)
                     {
@@ -542,7 +533,7 @@ public partial class EditPostPage : ContentPage
                             var text = MainTextContent.Text;
                             text = text?.Trim() ?? string.Empty;
 
-                            var inlineHashtags = MainTextContent.GetHashtags();
+                            var inlineHashtags = editorContents.OfType<HashtagContent>().Select(hashtagContent => hashtagContent.Tag).ToList();
                             if (inlineHashtags.Count > 0)
                             {
                                 text += "\n\n";
@@ -769,7 +760,7 @@ public partial class EditPostPage : ContentPage
                         }
                     }
 
-                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null, MainTextContent.GetHashtags()), ErrorType.BadRequest);
+                    var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null), ErrorType.BadRequest);
                     if (!result.IsSuccess) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                     else
                     {
@@ -814,7 +805,7 @@ public partial class EditPostPage : ContentPage
         var hasMedia = _attachmentViewModels.Count > 0;
         var hasExternalUrl = _externalUrlContentViewModel != null;
         var hasPoll = _pollContentViewModel != null;
-        var hasHashtags = MainTextContent.GetHashtags().Count > 0;
+        var hasHashtags = MainTextContent.GetContents().OfType<HashtagContent>().Any();
         return hasText || hasMedia || hasExternalUrl || hasPoll || hasHashtags;
     }
 
@@ -833,7 +824,6 @@ public partial class EditPostPage : ContentPage
             DiscoveryOptionIndex = DiscoveryOptionPicker.SelectedIndex,
             CommentPermission = _commentPermission,
             DisallowShare = DisallowShareSwitch.IsToggled,
-            Hashtags = MainTextContent.GetHashtags(),
             SavedAtUtc = DateTime.UtcNow
         };
 
@@ -896,15 +886,6 @@ public partial class EditPostPage : ContentPage
             PollContentDataTemplatePresenter.ViewModel = _pollContentViewModel;
             PollContentBorder.IsVisible = true;
         }
-
-        foreach (var hashtag in draft.Hashtags)
-            MentionHelper.InsertToken(MainTextContent.SuggestingBoxControl, "#", hashtag, hashtag,
-                new SuggestionFormat
-                {
-                    BackgroundColor = Colors.Transparent,
-                    ForegroundColor = Application.Current.Resources["Primary"] as Color,
-                    Bold = FormatEffect.On
-                });
 
         if (draft.DiscoveryOptionIndex >= 0 && draft.DiscoveryOptionIndex < DiscoveryOptionPicker.ItemsSource.Count)
             DiscoveryOptionPicker.SelectedIndex = draft.DiscoveryOptionIndex;
