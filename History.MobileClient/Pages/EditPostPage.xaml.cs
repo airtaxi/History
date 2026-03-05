@@ -187,8 +187,6 @@ public partial class EditPostPage : ContentPage
         CommentPermissionPicker.ItemsSource = Enum.GetValues<AccessPermission>().Select(x => x.ToDisplayString()).ToList();
         DiscoveryOptionPicker.ItemsSource = Enum.GetValues<DiscoveryOption>().Select(x => x.ToDisplayString()).ToList();
         DiscoveryOptionPicker.SelectedIndex = (int)Shared.LastUsedPostDiscoveryOption;
-        MainTextContent.ImageInputRequested += OnImageInputRequested;
-        System.Diagnostics.Debug.WriteLine($"[EditPostPage] Initialize called");
     }
 
     private async Task ToggleExternalMediaAsync()
@@ -241,8 +239,6 @@ public partial class EditPostPage : ContentPage
 
     private async void OnImageInputRequested(object sender, string path)
     {
-        Console.WriteLine($"[TextContentView] OnImageInputRequested called");
-
         if (_attachmentViewModels.Count == 20)
         {
             await Toast.Make("미디어는 최대 20개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
@@ -934,6 +930,8 @@ public partial class EditPostPage : ContentPage
     private bool _loaded;
     private void OnMainTextContentLoaded(object sender, EventArgs e)
     {
+        MainTextContent.ImageInputRequested += OnImageInputRequested;
+
         if (_post != null && !_loaded)
         {
             _loaded = true;
