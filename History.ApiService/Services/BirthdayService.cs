@@ -1,12 +1,15 @@
 ﻿using History.ApiService.Services.Interfaces;
+using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.Enums;
+using MongoDB.Driver;
 
 namespace History.ApiService.Services
 {
-    public class BirthdayService(ILogger<BirthdayService> logger, IUserService userService, IPostService postService) : IHostedService, IDisposable
+    public class BirthdayService(ILogger<BirthdayService> logger, IUserService userService, IPostService postService, IMongoDatabase database) : IHostedService, IDisposable
     {
+        private readonly IMongoCollection<Post> _postCollection = database.GetCollection<Post>("Posts");
         private Timer _timer;
         private DateTime _lastTaskRun = DateTime.MinValue;
 
@@ -29,6 +32,7 @@ namespace History.ApiService.Services
             {
                 _lastTaskRun = currentTime;
                 Configuration.SetValue("LastBirthdayServiceRun", currentTime.Date);
+                Configuration.WriteBuffer();
                 RunTask();
             }
         }
@@ -43,8 +47,24 @@ namespace History.ApiService.Services
                 var birthdayUsersResult = await userService.GetUsersByBirthdayAsync(today);
                 var birthdayUsers = birthdayUsersResult.Value;
 
+                // Skip users who already have a birthday post today
+                var oneDayAgo = DateTime.UtcNow.AddDays(-1);
+                var existingBirthdayPostFilter = Builders<Post>.Filter.And(
+                    Builders<Post>.Filter.In(p => p.UserId, birthdayUsers.Select(u => u.Id)),
+                    Builders<Post>.Filter.Gte(p => p.CreatedAt, oneDayAgo),
+                    Builders<Post>.Filter.Eq("Contents.MediaId", "birthday")
+                );
+                var existingBirthdayPosts = await _postCollection.Find(existingBirthdayPostFilter).ToListAsync();
+                var usersWithExistingBirthdayPost = new HashSet<string>(existingBirthdayPosts.Select(p => p.UserId));
+
                 foreach (var user in birthdayUsers)
                 {
+                    if (usersWithExistingBirthdayPost.Contains(user.Id))
+                    {
+                        logger.LogInformation("Skipping birthday post for user {UserId} - already exists", user.Id);
+                        continue;
+                    }
+
                     var contents = new List<BaseContent>
                     {
                         new TextContent() { Text = "안녕하세요, " },
