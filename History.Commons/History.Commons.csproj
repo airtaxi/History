@@ -8,13 +8,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="Google.Apis.Auth" Version="1.73.0" />
-		<PackageReference Include="Aspire.MongoDB.Driver" Version="13.1.0" />
+		<PackageReference Include="Aspire.MongoDB.Driver" Version="13.2.2" />
 		<PackageReference Include="MimeTypes" Version="2.5.2">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="MongoDB.Bson" Version="3.6.0" />
-		<PackageReference Include="RestSharp" Version="113.1.0" />
+		<PackageReference Include="MongoDB.Bson" Version="3.7.1" />
+		<PackageReference Include="RestSharp" Version="114.0.0" />
 	</ItemGroup>
 
 </Project>
