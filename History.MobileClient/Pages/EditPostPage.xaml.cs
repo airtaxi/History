@@ -193,7 +193,11 @@ public partial class EditPostPage : ContentPage
     {
         if (_externalUrlContentViewModel == null)
         {
+#if IOS
             var url = await DisplayPromptAsync("URL 입력", "URL을 입력해주세요", Constants.PromptOk, Constants.PromptCancel, "URL 입력", -1, Keyboard.Url, string.Empty);
+#else
+            var url = await DisplayPromptAsync("URL 입력", "URL을 입력해주세요", Constants.PromptOk, Constants.PromptCancel, "URL 입력", -1, default(Keyboard), string.Empty);
+#endif
             if (url == null) return;
 
             await HandleExternalUrl(url);
