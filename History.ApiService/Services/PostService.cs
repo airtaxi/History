@@ -1551,7 +1551,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         if (from.HasValue) filter &= Builders<Post>.Filter.Eq(p => p.DiscoveryOption, from);
 
-        var update = Builders<Post>.Update.Set(p => p.DiscoveryOption, to);
+        var update = Builders<Post>.Update
+            .Set(p => p.DiscoveryOption, to)
+            .Set(p => p.DiscoveryOptionSelectedUserIds, null);
         var result = await _postCollection.UpdateManyAsync(filter, update);
         return result.ModifiedCount;
     }
