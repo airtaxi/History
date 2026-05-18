@@ -98,7 +98,11 @@ public partial class MorePage : ContentPage
         if (!confirm) return;
 
         var result = await App.ExecuteRequestAsync(new BulkChangeDiscoveryOption(from, to));
-        if (result.IsSuccess) await App.Page.DisplayAlertAsync("완료", "일괄 변경이 완료되었습니다.", Constants.PromptOk);
+        if (result.IsSuccess)
+        {
+            InvalidatePostPages();
+            await App.Page.DisplayAlertAsync("완료", "일괄 변경이 완료되었습니다.", Constants.PromptOk);
+        }
     }
 
     private async Task DeletePostsByFilterAsync()
@@ -118,7 +122,11 @@ public partial class MorePage : ContentPage
         if (!confirm) return;
 
         var result = await App.ExecuteRequestAsync(new BulkDeletePosts(discoveryOption: permission));
-        if (result.IsSuccess) await App.Page.DisplayAlertAsync("완료", "일괄 삭제가 완료되었습니다.", Constants.PromptOk);
+        if (result.IsSuccess)
+        {
+            InvalidatePostPages();
+            await App.Page.DisplayAlertAsync("완료", "일괄 삭제가 완료되었습니다.", Constants.PromptOk);
+        }
     }
 
     private async Task ChangeAllDiscoveryOptionsAsync()
@@ -138,7 +146,11 @@ public partial class MorePage : ContentPage
         if (!confirm) return;
 
         var result = await App.ExecuteRequestAsync(new BulkChangeDiscoveryOption(null, to));
-        if (result.IsSuccess) await App.Page.DisplayAlertAsync("완료", "일괄 변경이 완료되었습니다.", Constants.PromptOk);
+        if (result.IsSuccess)
+        {
+            InvalidatePostPages();
+            await App.Page.DisplayAlertAsync("완료", "일괄 변경이 완료되었습니다.", Constants.PromptOk);
+        }
     }
 
     private async Task DeleteAllPostsAsync()
@@ -151,6 +163,17 @@ public partial class MorePage : ContentPage
         if (!confirm) return;
 
         var result = await App.ExecuteRequestAsync(new BulkDeletePosts());
-        if (result.IsSuccess) await App.Page.DisplayAlertAsync("완료", "일괄 삭제가 완료되었습니다.", Constants.PromptOk);
+        if (result.IsSuccess)
+        {
+            InvalidatePostPages();
+            await App.Page.DisplayAlertAsync("완료", "일괄 삭제가 완료되었습니다.", Constants.PromptOk);
+        }
+    }
+
+    private static void InvalidatePostPages()
+    {
+        TimelinePage.ShouldRefresh = true;
+        UserPage.ShouldRefresh = true;
+        PublicPostPage.ShouldRefresh = true;
     }
 }
