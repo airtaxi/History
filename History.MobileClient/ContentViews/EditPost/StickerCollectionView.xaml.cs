@@ -135,6 +135,7 @@ public partial class StickerCollectionView : ContentView
 
         // Hide sticker UI after selection
         _viewModel.HideStickerDisplay();
+        Dispatcher.Dispatch(_textContentView.FocusEditor);
     }
 
     /// <summary>
