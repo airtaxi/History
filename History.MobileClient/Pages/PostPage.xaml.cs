@@ -247,7 +247,7 @@ public partial class PostPage : ContentPage
         WeakReferenceMessenger.Default.Register<AppleVideoUnloadedMessage>(this, OnAppleVideoUnloadedMessageMessageReceived);
         WeakReferenceMessenger.Default.Register<CommentTappedMessage>(this, OnCommentTappedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
-        CommentTextContentView.MentionsViewModel.ImageInputRequested += OnImageInputRequested;
+        CommentTextContentView.ImageInputRequested += OnImageInputRequested;
     }
 
     protected override void OnNavigatedFrom(NavigatedFromEventArgs args)
@@ -264,7 +264,7 @@ public partial class PostPage : ContentPage
         WeakReferenceMessenger.Default.Unregister<CommentTappedMessage>(this);
         WeakReferenceMessenger.Default.Unregister<LoadingStateChangedMessage>(this);
         // Do not unregister KeyboardSizeMessage, if keyboard is still open, page layout will be broken
-        CommentTextContentView.MentionsViewModel.ImageInputRequested -= OnImageInputRequested;
+        CommentTextContentView.ImageInputRequested -= OnImageInputRequested;
     }
 
     protected override void OnAppearing()

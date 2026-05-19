@@ -136,15 +136,15 @@ public partial class EditPostPage : ContentPage
         };
     }
 
-    private void LoadPost()
+    private async Task LoadPostAsync()
     {
         if (!_isShare)
         {
             ButtonUpload.Text = "수정";
-            MainTextContent.SetContents(_post.Contents);
+            await MainTextContent.SetContentsAsync(_post.Contents);
             foreach (var mediaContent in _post.Contents.OfType<MediaContent>()) _attachmentViewModels.Add(new(mediaContent));
             var externalUrlContent = _post.Contents.OfType<ExternalUrlContent>().FirstOrDefault();
-            if(externalUrlContent != null)
+            if (externalUrlContent != null)
             {
                 _externalUrlContentViewModel = new(externalUrlContent);
                 ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
@@ -158,7 +158,7 @@ public partial class EditPostPage : ContentPage
                 PollContentDataTemplatePresenter.ViewModel = _pollContentViewModel;
                 PollContentBorder.IsVisible = true;
             }
-            if(_post.ParentPost != null)
+            if (_post.ParentPost != null)
             {
                 ShareTargetPostDataTemplatePresenter.ViewModel = new PostViewModel(_post.ParentPost, PostType.Timeline);
                 ShareTargetPostDataTemplatePresenter.IsVisible = true;
@@ -533,8 +533,7 @@ public partial class EditPostPage : ContentPage
                             IsEnabled = false;
 
                             // Samsung pass will overwrite the text content, fetch the text content before logging in to KakaoStory
-                            var text = MainTextContent.Text;
-                            text = text?.Trim() ?? string.Empty;
+                            var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
 
                             // Check for profanity before uploading to KakaoStory
                             var isKakaoStoryProfanityCheckEnabled = Configuration.GetValue<bool?>("KakaoStoryProfanityCheckEnabled") ?? true;
@@ -851,9 +850,9 @@ public partial class EditPostPage : ContentPage
     /// <summary>
     /// Restores a saved draft into the editor.
     /// </summary>
-    private void RestoreDraft(PostDraft draft)
+    private async Task RestoreDraftAsync(PostDraft draft)
     {
-        if (draft.TextContents.Count > 0) MainTextContent.SetContents(draft.TextContents);
+        if (draft.TextContents.Count > 0) await MainTextContent.SetContentsAsync(draft.TextContents);
 
         foreach (var attachment in draft.MediaAttachments)
         {
@@ -932,19 +931,19 @@ public partial class EditPostPage : ContentPage
     }
 
     private bool _loaded;
-    private void OnMainTextContentLoaded(object sender, EventArgs e)
+    private async void OnMainTextContentLoaded(object sender, EventArgs e)
     {
         MainTextContent.ImageInputRequested += OnImageInputRequested;
 
         if (_post != null && !_loaded)
         {
             _loaded = true;
-            LoadPost();
+            await LoadPostAsync();
         }
-        else if(_sharedTextContent != null && !_loaded)
+        else if (_sharedTextContent != null && !_loaded)
         {
             _loaded = true;
-            MainTextContent.SetContents([_sharedTextContent]);
+            await MainTextContent.SetContentsAsync([_sharedTextContent]);
         }
     }
 
@@ -1117,7 +1116,7 @@ public partial class EditPostPage : ContentPage
             if (draft != null)
             {
                 var restore = await DisplayAlertAsync("임시 저장", "임시 저장된 글이 있습니다. 복원하시겠습니까?", "복원", "삭제");
-                if (restore) RestoreDraft(draft);
+                if (restore) await RestoreDraftAsync(draft);
                 else PostDraft.Delete();
             }
         }

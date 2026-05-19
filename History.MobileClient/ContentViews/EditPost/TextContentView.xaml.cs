@@ -15,7 +15,7 @@ public partial class TextContentView : ContentView
     public string Text
     {
         get => MainSuggestingBox.Text;
-        set => MainSuggestingBox.Text = value;
+        set => MainSuggestingBox.SetContent(value ?? string.Empty, []);
     }
 
     public string Placeholder
@@ -27,8 +27,8 @@ public partial class TextContentView : ContentView
     public event EventHandler<string> ImageInputRequested;
 
     public TextContentView()
-	{
-		InitializeComponent();
+    {
+        InitializeComponent();
         MainSuggestingBox.TextChanged += OnSuggestingBoxTextChanged;
     }
 
@@ -36,8 +36,7 @@ public partial class TextContentView : ContentView
     {
         var previousLineCount = (eventArgs.OldTextValue ?? string.Empty).Split('\n').Length;
         var currentLineCount = (eventArgs.NewTextValue ?? string.Empty).Split('\n').Length;
-        if (currentLineCount > previousLineCount)
-            WeakReferenceMessenger.Default.Send(new MentionEditorNewLineMessage());
+        if (currentLineCount > previousLineCount) WeakReferenceMessenger.Default.Send(new MentionEditorNewLineMessage());
     }
 
     private void OnSuggestionRequested(SuggestingBox.Maui.SuggestingBox sender, SuggestionRequestedEventArgs args)
@@ -89,18 +88,30 @@ public partial class TextContentView : ContentView
         }
     }
 
-    private void OnImageInserted(SuggestingBox.Maui.SuggestingBox sender, ImageInsertedEventArgs args)
+    private void OnImagePasteRequested(SuggestingBox.Maui.SuggestingBox sender, ImagePasteRequestedEventArgs args)
     {
-        var tempPath = Path.Combine(FileSystem.CacheDirectory, $"paste_{DateTime.Now:yyyyMMddHHmmss}.jpg");
+        var tempPath = Path.Combine(FileSystem.CacheDirectory, $"paste_{DateTime.Now:yyyyMMddHHmmssfff}{GetImageFileExtension(args.ContentType)}");
         File.WriteAllBytes(tempPath, args.ImageData);
         ImageInputRequested?.Invoke(this, tempPath);
     }
+
+    private static string GetImageFileExtension(string contentType) =>
+        contentType switch
+        {
+            "image/png" => ".png",
+            "image/gif" => ".gif",
+            "image/bmp" => ".bmp",
+            "image/webp" => ".webp",
+            _ => ".jpg"
+        };
 
     public List<BaseContent> GetContents() => MentionHelper.GetContents(MainSuggestingBox);
 
     public List<string> GetHashtags() => MentionHelper.GetHashtags(MainSuggestingBox);
 
-    public void SetContents(List<BaseContent> contents)
+    public string GetTextWithImageTokenReplacement(string replacementText) => (MainSuggestingBox.Text ?? string.Empty).Replace(SuggestingBoxText.ImagePlaceholderString, replacementText ?? string.Empty);
+
+    public async Task SetContentsAsync(List<BaseContent> contents)
     {
         var tokens = new List<SuggestingBoxTokenInfo>();
         string text = string.Empty;
@@ -110,42 +121,43 @@ public partial class TextContentView : ContentView
             if (content is ProfileContent profileContent)
             {
                 string tokenText = "@" + profileContent.Nickname;
-                tokens.Add(new SuggestingBoxTokenInfo(text.Length, "@", profileContent.Nickname,
-                    new SuggestionFormat
-                    {
-                        ForegroundColor = Colors.White,
-                        BackgroundColor = Application.Current.Resources["Primary"] as Color,
-                        Bold = FormatEffect.On
-                    }, profileContent));
+                var mentionFormat = new SuggestionFormat
+                {
+                    ForegroundColor = Colors.White,
+                    BackgroundColor = Application.Current.Resources["Primary"] as Color,
+                    Bold = FormatEffect.On
+                };
+                tokens.Add(new SuggestingBoxTokenInfo(text.Length, "@", profileContent.Nickname, mentionFormat, profileContent));
                 text += tokenText;
             }
             else if (content is StickerContent stickerContent)
             {
-                string displayText = "스티커 * ";
-                string tokenText = " * " + displayText;
-                tokens.Add(new SuggestingBoxTokenInfo(text.Length, " * ", displayText,
-                    new SuggestionFormat
-                    {
-                        ForegroundColor = Colors.White,
-                        BackgroundColor = Application.Current.Resources["Primary"] as Color,
-                        Bold = FormatEffect.On
-                    }, stickerContent));
-                text += tokenText;
+                var stickerToken = await MentionHelper.CreateStickerImageTokenAsync(text.Length, stickerContent);
+                if (stickerToken != null)
+                {
+                    tokens.Add(stickerToken);
+                    text += SuggestingBoxText.ImagePlaceholderString;
+                }
+                else
+                {
+                    var fallbackToken = MentionHelper.CreateStickerFallbackToken(text.Length, stickerContent);
+                    tokens.Add(fallbackToken);
+                    text += fallbackToken.FullText;
+                }
             }
             else if (content is HashtagContent hashtagContent)
             {
                 string tokenText = "#" + hashtagContent.Tag;
-                tokens.Add(new SuggestingBoxTokenInfo(text.Length, "#", hashtagContent.Tag,
-                    new SuggestionFormat
-                    {
-                        BackgroundColor = Colors.Transparent,
-                        ForegroundColor = Application.Current.Resources["Primary"] as Color,
-                        Bold = FormatEffect.On
-                    }, hashtagContent));
+                var hashtagFormat = new SuggestionFormat
+                {
+                    BackgroundColor = Colors.Transparent,
+                    ForegroundColor = Application.Current.Resources["Primary"] as Color,
+                    Bold = FormatEffect.On
+                };
+                tokens.Add(new SuggestingBoxTokenInfo(text.Length, "#", hashtagContent.Tag, hashtagFormat, hashtagContent));
                 text += tokenText;
             }
-            else if (content is TextContent textContent)
-                text += textContent.Text;
+            else if (content is TextContent textContent) text += textContent.Text;
         }
 
         MainSuggestingBox.SetContent(text, tokens);
@@ -164,13 +176,16 @@ public partial class TextContentView : ContentView
         MentionHelper.InsertUser(MainSuggestingBox, viewModel.UserId, viewModel.Nickname);
     }
 
-    public void InsertSticker(MentionStickerViewModel viewModel)
+    public async Task<bool> InsertStickerAsync(MentionStickerViewModel viewModel)
     {
-        if (viewModel == null) return;
-        MentionHelper.InsertSticker(MainSuggestingBox, viewModel.StickerId, viewModel.StickerContentId);
+        if (viewModel == null) return false;
+
+        var inserted = await MentionHelper.InsertStickerAsync(MainSuggestingBox, viewModel.StickerContent);
+        if (!inserted) return false;
 
         // Send sticker usage record (process in background)
         _ = MentionsViewModel.RecordStickerUsageAsync(viewModel.StickerId, viewModel.StickerContentId);
+        return true;
     }
 
     private void OnUnloaded(object sender, EventArgs e) => ImageInputRequested = null;

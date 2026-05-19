@@ -126,10 +126,12 @@ public partial class StickerCollectionView : ContentView
         var viewModel = element.BindingContext as MentionStickerViewModel;
         if (viewModel == null) return;
 
-        // Record sticker usage
-        await _viewModel.RecordStickerUsageAsync(viewModel.StickerContent.StickerId, viewModel.StickerContent.StickerContentId);
-
-        _textContentView.InsertSticker(viewModel);
+        var inserted = await _textContentView.InsertStickerAsync(viewModel);
+        if (!inserted)
+        {
+            await App.TopPage.DisplayAlertAsync("오류", "스티커 이미지를 불러올 수 없습니다.", Constants.PromptOk);
+            return;
+        }
 
         // Hide sticker UI after selection
         _viewModel.HideStickerDisplay();

@@ -26,10 +26,10 @@ public partial class KakaoStoryRewritePage : ContentPage
     /// </summary>
     public Task<string> GetResultAsync() => _taskCompletionSource.Task;
 
-    private void LoadOriginalText()
+    private async Task LoadOriginalTextAsync()
     {
         var textContent = new TextContent { Text = _originalText };
-        MainTextContent.SetContents([textContent]);
+        await MainTextContent.SetContentsAsync([textContent]);
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e)
@@ -40,7 +40,7 @@ public partial class KakaoStoryRewritePage : ContentPage
 
     private async void OnSubmitButtonClicked(object sender, EventArgs e)
     {
-        var text = MainTextContent.SuggestingBoxControl.Text?.Trim() ?? string.Empty;
+        var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
 
         if (string.IsNullOrEmpty(text))
         {
@@ -72,7 +72,7 @@ public partial class KakaoStoryRewritePage : ContentPage
         await App.PopAsync();
     }
 
-    private void OnMainTextContentLoaded(object sender, EventArgs e) => LoadOriginalText();
+    private async void OnMainTextContentLoaded(object sender, EventArgs e) => await LoadOriginalTextAsync();
 
     protected override void OnAppearing()
     {

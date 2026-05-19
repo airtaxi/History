@@ -20,7 +20,7 @@ public partial class EditCommentPage : ContentPage
     private MediaAttachmentViewModel _attachmentViewModel;
 
     public EditCommentPage(CommentResponseDto comment)
-	{
+    {
         _comment = comment;
         InitializeComponent();
 
@@ -28,9 +28,9 @@ public partial class EditCommentPage : ContentPage
         StickerCollectionView.SetTextContentView(MainTextContent);
     }
 
-    private void LoadComment(CommentResponseDto comment)
+    private async Task LoadCommentAsync(CommentResponseDto comment)
     {
-        MainTextContent.SetContents(comment.Contents);
+        await MainTextContent.SetContentsAsync(comment.Contents);
         var mediaContent = comment.Contents.OfType<MediaContent>().FirstOrDefault();
 
         var hasMediaContent = mediaContent != null;
@@ -133,7 +133,7 @@ public partial class EditCommentPage : ContentPage
         }
     }
 
-    private void OnMainTextContentLoaded(object sender, EventArgs e) => LoadComment(_comment);
+    private async void OnMainTextContentLoaded(object sender, EventArgs e) => await LoadCommentAsync(_comment);
 
     protected override void OnAppearing()
     {
