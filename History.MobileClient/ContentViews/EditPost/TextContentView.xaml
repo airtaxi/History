@@ -86,7 +86,7 @@
         <suggestingBox:SuggestingBox
             x:Name="MainSuggestingBox"
             HorizontalOptions="Fill"
-            ImageInserted="OnImageInserted"
+            ImagePasteRequested="OnImagePasteRequested"
             MaxSuggestionHeight="200"
             Placeholder="무슨 일이 일어나고 있나요?"
             Prefixes="@#"
