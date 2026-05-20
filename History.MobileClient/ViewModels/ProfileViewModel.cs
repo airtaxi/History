@@ -220,7 +220,7 @@ public partial class ProfileViewModel : ObservableObject
     [RelayCommand]
     private async Task HandleChangeProfileMediaAsync()
     {
-        bool shouldUpload = true;
+        var shouldUpload = true;
         if (User.ProfileMediaId != null)
         {
             var action = await App.Page.DisplayActionSheetAsync("프로필 이미지", Constants.PromptCancel, null, ["프로필 이미지 변경", "프로필 이미지 삭제"]);
@@ -263,6 +263,9 @@ public partial class ProfileViewModel : ObservableObject
             fileName = image.FileName;
             bytes = image.Bytes;
 #endif
+            bytes = await TryEditStillImageAsync(fileName, bytes);
+            if (bytes == null) return;
+
             var result = await App.ExecuteRequestAsync(new UpdateProfileMedia(fileName, bytes));
             if (result.IsSuccess) await RefreshAsync();
         }
@@ -271,7 +274,7 @@ public partial class ProfileViewModel : ObservableObject
     [RelayCommand]
     private async Task HandleChangeBackgroundMediaAsync()
     {
-        bool shouldUpload = true;
+        var shouldUpload = true;
         if (User.BackgroundMediaId != null)
         {
             var action = await App.Page.DisplayActionSheetAsync("배경 이미지", Constants.PromptCancel, null, ["배경 이미지 변경", "배경 이미지 삭제"]);
@@ -311,10 +314,31 @@ public partial class ProfileViewModel : ObservableObject
             fileName = media.FileName;
             bytes = media.Bytes;
 #endif
+            bytes = await TryEditStillImageAsync(fileName, bytes);
+            if (bytes == null) return;
 
             var result = await App.ExecuteRequestAsync(new UpdateBackgroundMedia(fileName, bytes));
             if (result.IsSuccess) await RefreshAsync();
         }
+    }
+
+    private static async Task<byte[]> TryEditStillImageAsync(string fileName, byte[] bytes)
+    {
+        if (!CanEditStillImage(fileName)) return bytes;
+
+        var editorPage = new ImageEditorPage(ImageSource.FromStream(() => new MemoryStream(bytes)));
+        await App.PushModalAsync(editorPage);
+
+        return await editorPage.GetResultAsync();
+    }
+
+    private static bool CanEditStillImage(string fileName)
+    {
+        var mimeType = MimeTypes.GetMimeType(fileName);
+        if (!mimeType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)) return false;
+        if (mimeType.Equals("image/gif", StringComparison.OrdinalIgnoreCase)) return false;
+
+        return true;
     }
 
     [RelayCommand]
