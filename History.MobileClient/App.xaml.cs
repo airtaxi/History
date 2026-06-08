@@ -197,8 +197,7 @@ public partial class App : Application
         {
             var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
 
-            if (!hiddenErrorTypes.Contains(errorType))
-                await TopPage.DisplayAlertAsync("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
+            if (!hiddenErrorTypes.Contains(errorType)) await TopPage.DisplayAlertAsync("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
         finally
@@ -223,8 +222,7 @@ public partial class App : Application
         {
             var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
 
-            if (!hiddenErrorTypes.Contains(errorType))
-                await TopPage.DisplayAlertAsync("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
+            if (!hiddenErrorTypes.Contains(errorType)) await TopPage.DisplayAlertAsync("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
         finally
