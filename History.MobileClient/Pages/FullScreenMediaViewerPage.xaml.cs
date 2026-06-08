@@ -90,9 +90,9 @@ public partial class FullScreenMediaViewerPage : ContentPage
 
             if (action == downloadImagesOnly) targets = allMedias.Where(x => x is ImageViewModel).ToList();
             else if (action == downloadVideosOnly) targets = allMedias.Where(x => x is VideoViewModel).ToList();
-            else targets = allMedias.ToList();
+            else targets = [.. allMedias];
         }
-        else targets = allMedias.ToList();
+        else targets = [.. allMedias];
 
         IsEnabled = false;
         MainActivityIndicator.IsRunning = true;

@@ -70,19 +70,13 @@ public partial class EditCommentPage : ContentPage
             return;
         }
 
-        try
+        var result = await App.ExecuteRequestAsync(new ModifyComment(_comment.Id, contents, files), ErrorType.BadRequest);
+        if (result.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
+        else if (result.IsSuccess)
         {
-            MainActivityIndicator.IsRunning = true;
-            var result = await App.ExecuteRequestAsync(new ModifyComment(_comment.Id, contents, files), ErrorType.BadRequest);
-            if (result.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
-            else if (result.IsSuccess)
-            {
-                WeakReferenceMessenger.Default.Send<ValueChangedMessage<CommentResponseDto>>(new(result.Value));
-                await App.PopAsync();
-            }
-
+            WeakReferenceMessenger.Default.Send<ValueChangedMessage<CommentResponseDto>>(new(result.Value));
+            await App.PopAsync();
         }
-        finally { MainActivityIndicator.IsRunning = false; }
     }
 
     private async void OnCommentMediaImageTapped(object sender, TappedEventArgs e)

@@ -163,32 +163,27 @@ public partial class PostPage : ContentPage
             files.Add(_commentMediaAttachmentViewModel.FileName, _commentMediaAttachmentViewModel.Data);
         }
 
-        try
+        var result = await App.ExecuteRequestAsync(new CreateComment(ViewModel.Post.Id, contents, files), ErrorType.BadRequest, ErrorType.Forbidden);
+        if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Forbidden) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
+        else if (result.IsSuccess)
         {
-            MainActivityIndicator.IsRunning = true;
-            var result = await App.ExecuteRequestAsync(new CreateComment(ViewModel.Post.Id, contents, files), ErrorType.BadRequest, ErrorType.Forbidden);
-            if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Forbidden) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
-            else if (result.IsSuccess)
+            _commentMediaAttachmentViewModel?.Dispose();
+            _commentMediaAttachmentViewModel = null;
+            CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
+            AttachmentImage.BindingContext = null;
+            AttachmentGrid.IsVisible = false;
+
+            CommentTextContentView.Text = string.Empty;
+            CommentTextContentView.UnfocusEditor();
+
+            await ViewModel.RefreshAsync();
+            Dispatcher.Dispatch(async () =>
             {
-                _commentMediaAttachmentViewModel?.Dispose();
-                _commentMediaAttachmentViewModel = null;
-                CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
-                AttachmentImage.BindingContext = null;
-                AttachmentGrid.IsVisible = false;
-
-                CommentTextContentView.Text = string.Empty;
-                CommentTextContentView.UnfocusEditor();
-
-                await ViewModel.RefreshAsync();
-                Dispatcher.Dispatch(async () =>
-                {
-                    await Task.Delay(100);
-                    if (ViewModel.IsWideMode) await CommentsScrollToEnd(TabletCommentScrollView);
-                    else await CommentsScrollToEnd(PhoneScrollView);
-                });
-            }
+                await Task.Delay(100);
+                if (ViewModel.IsWideMode) await CommentsScrollToEnd(TabletCommentScrollView);
+                else await CommentsScrollToEnd(PhoneScrollView);
+            });
         }
-        finally { MainActivityIndicator.IsRunning = false; }
     }
 
     private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await ViewModel.DisplayActionSheetAsync(true);

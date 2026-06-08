@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using FFImageLoading.Maui;
 using History.Commons.Api.Sticker;
 using History.MobileClient.DataTypes;
@@ -279,8 +279,6 @@ public partial class CreateStickerPage : ContentPage
         }
 
         CreateButton.IsEnabled = false;
-        MainActivityIndicator.IsRunning = true;
-
         try
         {
             // Read files
@@ -309,10 +307,6 @@ public partial class CreateStickerPage : ContentPage
         {
             await DisplayAlertAsync("오류", $"스티커 생성 중 오류가 발생했습니다: {ex.Message}", "확인");
         }
-        finally
-        {
-            CreateButton.IsEnabled = true;
-            MainActivityIndicator.IsRunning = false;
-        }
+        finally { CreateButton.IsEnabled = true; }
     }
 }
