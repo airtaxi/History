@@ -109,13 +109,16 @@ public partial class NotificationsPage : ContentPage
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
         var isLoading = message.Value;
-        if (!_isInForeground && message.Value) return;
+        if (!_isInForeground && isLoading) return;
 
+        // Since MAUI 10.0.70, Dispatcher.Dispatch and MainThread.BeginInvokeOnMainThread can hang the UI on iOS after async work.
+#if ANDROID
         Dispatcher.Dispatch(() =>
         {
             MainActivityIndicator.IsRunning = isLoading;
             IsEnabled = !isLoading;
         });
+#endif
     }
 
     private async void OnReadAllImageTapped(object sender, TappedEventArgs e)
