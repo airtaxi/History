@@ -1,4 +1,4 @@
-#if ANDROID
+﻿#if ANDROID
 using History.MobileClient.ThirdParty.StaggeredLayout;
 #elif IOS
 using NativeMedia;
@@ -215,28 +215,18 @@ public partial class EditPostPage : ContentPage
     {
         var externalUrlContent = new ExternalUrlContent { SourceUrl = url };
 
-        IsEnabled = false;
-        MainActivityIndicator.IsRunning = true;
-        try
+        var fillResult = await App.ExecuteRequestAsync(new FillExternalUrlContent(externalUrlContent), ErrorType.BadRequest);
+        if (fillResult.IsFailure)
         {
-            var fillResult = await App.ExecuteRequestAsync(new FillExternalUrlContent(externalUrlContent), ErrorType.BadRequest);
-            if (fillResult.IsFailure)
-            {
-                if (fillResult.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", fillResult.ErrorMessage, Constants.PromptOk);
-                return;
-            }
+            if (fillResult.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", fillResult.ErrorMessage, Constants.PromptOk);
+            return;
+        }
 
-            externalUrlContent = fillResult.Value;
-            _externalUrlContentViewModel = new ExternalUrlContentViewModel(externalUrlContent);
-            ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
-            ExternalUrlContentBorder.IsVisible = true;
-            ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
-        }
-        finally
-        {
-            IsEnabled = true;
-            MainActivityIndicator.IsRunning = false;
-        }
+        externalUrlContent = fillResult.Value;
+        _externalUrlContentViewModel = new ExternalUrlContentViewModel(externalUrlContent);
+        ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
+        ExternalUrlContentBorder.IsVisible = true;
+        ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
 
         return;
     }
@@ -485,8 +475,6 @@ public partial class EditPostPage : ContentPage
 
             try
             {
-                MainActivityIndicator.IsRunning = true;
-
                 List<string> discoveryOptionSelectedUserIds = null;
                 var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
                 if (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers)
@@ -529,9 +517,6 @@ public partial class EditPostPage : ContentPage
 
                         if (shouldWritePostToKakaoStory.Value)
                         {
-                            MainActivityIndicator.IsRunning = true;
-                            IsEnabled = false;
-
                             // Samsung pass will overwrite the text content, fetch the text content before logging in to KakaoStory
                             var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
 
@@ -554,17 +539,10 @@ public partial class EditPostPage : ContentPage
 
                                     if (rewrite)
                                     {
-                                        IsEnabled = true;
-                                        MainActivityIndicator.IsRunning = false;
-
                                         var rewritePage = new KakaoStoryRewritePage(text);
                                         await App.PushAsync(rewritePage);
 
                                         var rewrittenText = await rewritePage.GetResultAsync();
-
-                                        IsEnabled = false;
-                                        MainActivityIndicator.IsRunning = true;
-
                                         if (rewrittenText == null) return;
                                         text = rewrittenText;
                                     }
@@ -617,10 +595,6 @@ public partial class EditPostPage : ContentPage
                                 await App.PushModalAsync(kakaoStoryLoginPage);
 
                                 cookies = await kakaoStoryLoginPage.GetResultAsync();
-
-                                IsEnabled = false;
-                                MainActivityIndicator.IsRunning = true;
-
                                 if (cookies == null)
                                 {
                                     await DisplayAlertAsync("오류", "카카오스토리 로그인에 실패하였습니다.", Constants.PromptOk);
@@ -769,11 +743,6 @@ public partial class EditPostPage : ContentPage
                         await App.PopAsync();
                     }
                 }
-            }
-            finally
-            {
-                MainActivityIndicator.IsRunning = false;
-                IsEnabled = true;
             }
         }
         finally
