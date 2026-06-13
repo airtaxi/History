@@ -2,9 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:resizeableActivity="true" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true">
 		<meta-data android:name="android.allow_multiple_resume" android:value="true" />
-		<provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.fileprovider" android:exported="false" android:grantUriPermissions="true">
-			<meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/provider_paths" />
-		</provider>
 		<receiver
 			android:name="com.google.firebase.iid.FirebaseInstanceIdInternalReceiver"
 			android:exported="false" />

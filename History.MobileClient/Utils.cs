@@ -14,10 +14,6 @@ using UraniumUI.Icons.FontAwesome;
 using History.Commons.DataTypes.ResponseDtos;
 
 
-#if ANDROID
-using Android.Content;
-#endif
-
 namespace History.MobileClient;
 
 public static partial class Utils
@@ -461,26 +457,7 @@ public static partial class Utils
                 return;
             }
 #if ANDROID
-            var shouldDownload = await App.Page.DisplayAlertAsync("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})\n업데이트 하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-            if (!shouldDownload) return;
-            var downloadUrl = "https://kagamine-rin.com/History/com.airtaxi.history-Signed.apk";
-            var apkFilePath = Path.Combine(FileSystem.CacheDirectory, "History.apk");
-
-            await Toast.Make("업데이트를 다운로드 중입니다. 잠시만 기다려 주세요.").Show();
-            await Downloader.DownloadFileAsync(downloadUrl, apkFilePath);
-
-            var context = Platform.CurrentActivity ?? Android.App.Application.Context;
-
-            var file = new Java.IO.File(apkFilePath);
-            var uri = AndroidX.Core.Content.FileProvider.GetUriForFile(context, context.PackageName + ".fileprovider", file);
-
-#pragma warning disable CA1422 // Validate platform compatibility
-            var intent = new Intent(Intent.ActionInstallPackage);
-#pragma warning restore CA1422 // Validate platform compatibility
-            intent.SetData(uri);
-            intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.GrantReadUriPermission);
-
-            context.StartActivity(intent);
+            await App.Page.DisplayAlertAsync("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})\nGoogle Play에서 업데이트해 주세요.", Constants.PromptOk);
 #else
             await App.Page.DisplayAlertAsync("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})", Constants.PromptOk);
 #endif

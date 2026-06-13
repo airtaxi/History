@@ -109,11 +109,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="Platforms\Android\Resources\xml\provider_paths.xml" />
-		<AndroidResource Include="Platforms\Android\Resources\xml\provider_paths.xml" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<AndroidEnvironment Include="Platforms\Android\GarbageCollector.txt" />
 	</ItemGroup>
 
