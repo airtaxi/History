@@ -144,7 +144,7 @@ public partial class KakaoStoryLoginPage : ContentPage
             var cookies = await WebViewCookieHelper.GetCookieListAsync(BrowserWebView, "https://story.kakao.com");
             if (cookies == null) return;
 
-            bool isSuccess = cookies.Any(x => x.Name == "_karmt");
+            bool isSuccess = cookies.Any(x => x.Name == "_kau");
             if (!isSuccess) return;
 
             var cookieContainer = new CookieContainer();
