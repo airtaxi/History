@@ -305,11 +305,11 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.71" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.9" />
 		<PackageReference Include="Plugin.Firebase.CloudMessaging" Version="4.0.1" />
-		<PackageReference Include="Syncfusion.Maui.ImageEditor" Version="33.2.12" />
+		<PackageReference Include="Syncfusion.Maui.ImageEditor" Version="33.2.13" />
 		<PackageReference Include="Syncfusion.Maui.Toolkit" Version="1.0.10" />
-		<PackageReference Include="UraniumUI.Icons.FontAwesome" Version="2.16.0" />
-		<PackageReference Include="UraniumUI.Icons.MaterialSymbols" Version="2.16.0" />
-		<PackageReference Include="UraniumUI.Material" Version="2.16.0" />
+		<PackageReference Include="UraniumUI.Icons.FontAwesome" Version="3.0.0" />
+		<PackageReference Include="UraniumUI.Icons.MaterialSymbols" Version="3.0.0" />
+		<PackageReference Include="UraniumUI.Material" Version="3.0.0" />
 		<PackageReference Include="Xamarin.Build.Download" Version="0.11.4" />
 		<PackageReference Include="Xamarin.MediaGallery" Version="3.0.0" />
 	</ItemGroup>
