@@ -191,6 +191,16 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
                 new CreateIndexOptions { Unique = true }),
             cancellationToken: cancellationToken);
 
+        logger.LogInformation("Creating indexes for DailyFortuneRecord collection...");
+        var dailyFortuneRecordCollection = database.GetCollection<DailyFortuneRecord>("DailyFortuneRecords");
+        await dailyFortuneRecordCollection.Indexes.CreateOneAsync(
+            new CreateIndexModel<DailyFortuneRecord>(
+                Builders<DailyFortuneRecord>.IndexKeys.Combine(
+                    Builders<DailyFortuneRecord>.IndexKeys.Ascending(x => x.UserId),
+                    Builders<DailyFortuneRecord>.IndexKeys.Ascending(x => x.Date)),
+                new CreateIndexOptions { Unique = true }),
+            cancellationToken: cancellationToken);
+
         logger.LogInformation("Indexes created successfully.");
 
         // Use below code if migration is needed in future versions.

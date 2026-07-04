@@ -426,6 +426,34 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         if (requestDto.ParentPostId == null&& !hasHashtagContent && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
             return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
 
+        // Fortune hashtag interception: when the post contains only the "오늘의운세" hashtag (optionally with blank text), replace contents with a fortune message.
+        if (requestDto.ParentPostId == null)
+        {
+            var fortuneHashtag = contents.OfType<HashtagContent>().FirstOrDefault(x => x.Tag == "오늘의운세");
+            if (fortuneHashtag != null && contents.All(x => x is HashtagContent || (x is TextContent blankText && string.IsNullOrWhiteSpace(blankText.Text))))
+            {
+                var fortuneService = serviceProvider.GetRequiredService<IFortuneService>();
+
+                if (await fortuneService.HasDrawnTodayAsync(userId))
+                {
+                    contents.Clear();
+                    contents.Add(new TextContent { Text = "오늘의운세는 하루에 한번만 뽑을 수 있어요.\n" });
+                    contents.Add(new HashtagContent { Tag = "오늘의운세" });
+                }
+                else
+                {
+                    var fortuneMessage = fortuneService.CreateFortuneMessage(user.Value.Nickname);
+                    if (!string.IsNullOrEmpty(fortuneMessage))
+                    {
+                        await fortuneService.RecordDrawAsync(userId);
+                        contents.Clear();
+                        contents.Add(new TextContent { Text = fortuneMessage });
+                        contents.Add(new HashtagContent { Tag = "오늘의운세" });
+                    }
+                }
+            }
+        }
+
         // Validate media contents
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
         if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
