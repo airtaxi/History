@@ -536,15 +536,14 @@
                     </Image.Source>
                 </Image>
             </HorizontalStackLayout>
-            <Rectangle
-                Grid.ColumnSpan="2"
-                Margin="-12"
-                Fill="#808080"
-                HeightRequest="{OnPlatform iOS=1.5,
-                                           Android=1}"
-                HorizontalOptions="Fill"
-                VerticalOptions="Start" />
         </Grid>
+        <Rectangle
+            Grid.Row="2"
+            Fill="#808080"
+            HeightRequest="{OnPlatform iOS=1.5,
+                                       Android=1}"
+            HorizontalOptions="Fill"
+            VerticalOptions="Start" />
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"
