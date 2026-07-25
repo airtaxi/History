@@ -384,7 +384,7 @@
             </VerticalStackLayout>
 
             <Rectangle
-                Margin="-12"
+                Margin="-12,0"
                 Fill="#808080"
                 HeightRequest="{OnPlatform iOS=1.5,
                                            Android=1}"
