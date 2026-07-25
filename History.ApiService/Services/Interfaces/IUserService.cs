@@ -149,16 +149,18 @@ public interface IUserService
     /// </summary>
     /// <param name="userId">The ID of user to update</param>
     /// <param name="image">The image to update. Null if user want to delete profile media</param>
+    /// <param name="contentType">The MIME type of the image (e.g. "image/webp"). Used to determine animated WebP handling.</param>
     /// <returns>A task that represents the asynchronous operation. with result of update success</returns>
-    public Task<Result> UpdateProfileMediaAsync(string userId, byte[] image);
+    public Task<Result> UpdateProfileMediaAsync(string userId, byte[] image, string contentType = null);
 
     /// <summary>
     /// Update user's background media
     /// </summary>
     /// <param name="userId">The ID of user to update</param>
     /// <param name="image">The image to update. Null if user want to delete background media</param>
+    /// <param name="contentType">The MIME type of the image (e.g. "image/webp"). Used to determine animated WebP handling.</param>
     /// <returns>A task that represents the asynchronous operation. with result of update success</returns>
-    public Task<Result> UpdateBackgroundMediaAsync(string userId, byte[] image);
+    public Task<Result> UpdateBackgroundMediaAsync(string userId, byte[] image, string contentType = null);
 
     /// <summary>
     /// Update user's profile thumbnail media

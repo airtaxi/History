@@ -32,8 +32,8 @@ public partial class InteractionViewModel
         ReactionType = reaction.Type;
 
         ProfileMedia = reaction.User.UsesAnimatedProfileMedia
-        ? new VideoViewModel(Utils.GenerateMediaUri(reaction.User.ProfileMediaId))
-        : new ImageViewModel(Utils.GenerateMediaUri(reaction.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+            ? new ImageViewModel(Utils.GenerateMediaUri(reaction.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
+            : new ImageViewModel(Utils.GenerateMediaUri(reaction.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
         FontFamily = "FASolid";
         Glyph = reaction.Type switch
         {
@@ -66,8 +66,8 @@ public partial class InteractionViewModel
         ReactionType = Commons.Enums.ReactionType.Like;
 
         ProfileMedia = user.UsesAnimatedProfileMedia
-        ? new VideoViewModel(Utils.GenerateMediaUri(user.ProfileMediaId))
-        : new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+            ? new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
+            : new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
         FontFamily = "FASolid";
         Glyph = Solid.Heart;
@@ -82,8 +82,8 @@ public partial class InteractionViewModel
         TargetPostId = !sharedUser.IsRepost ? sharedUser.PostId : null;
 
         ProfileMedia = sharedUser.User.UsesAnimatedProfileMedia
-        ? new VideoViewModel(Utils.GenerateMediaUri(sharedUser.User.ProfileMediaId))
-        : new ImageViewModel(Utils.GenerateMediaUri(sharedUser.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+            ? new ImageViewModel(Utils.GenerateMediaUri(sharedUser.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
+            : new ImageViewModel(Utils.GenerateMediaUri(sharedUser.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
         FontFamily = "MaterialSharp";
         Glyph = isShare ? MaterialSharp.Share : MaterialSharp.Shift_lock;
         Color = isShare ? Color.FromRgb(0x65, 0x52, 0xdf) : Color.FromRgb(0x99, 0x99, 0x99);

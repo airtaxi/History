@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -86,7 +86,7 @@ public partial class NotificationViewModel : ObservableObject
     public bool IsAcceptButtonVisible => IsFriendRequest && !IsAccepted;
 
     public IMediaViewModel ProfileMedia => Notification.User.UsesAnimatedProfileMedia
-        ? new VideoViewModel(Utils.GenerateMediaUri(Notification.User.ProfileMediaId))
+        ? new ImageViewModel(Utils.GenerateMediaUri(Notification.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
         : new ImageViewModel(Utils.GenerateMediaUri(Notification.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
     [RelayCommand]

@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.DataTypes.ResponseDtos;
@@ -38,7 +38,7 @@ namespace History.MobileClient.ViewModels
         public string Nickname => User.Nickname;
 
         public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia
-        ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
+        ? new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
         : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
         public bool IsModerator => User.Rank == Rank.Moderator;

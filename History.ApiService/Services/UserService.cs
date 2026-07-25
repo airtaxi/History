@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using History.ApiService.Helpers;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
@@ -211,7 +211,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
-    public async Task<Result> UpdateProfileMediaAsync(string userId, byte[] image)
+    public async Task<Result> UpdateProfileMediaAsync(string userId, byte[] image, string contentType = null)
     {
         var userResult = await GetUserByIdAsync(userId);
         if (userResult.Error != null) return userResult.CastFailure();
@@ -231,19 +231,21 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         }
         else
         {
-            var thumbnailConvertResult = MediaEncodingHelper.ConvertImage(image, false, true, 256);
+            var isWebP = contentType != null && contentType.Contains("webp", StringComparison.OrdinalIgnoreCase);
+
+            var thumbnailConvertResult = isWebP ? MediaEncodingHelper.ConvertAnimatedWebP(image, true, 256, 256) : MediaEncodingHelper.ConvertImage(image, false, true, 256);
             var thumbnailBytes = thumbnailConvertResult.Data;
             var thumbnailContentType = thumbnailConvertResult.MimeType;
 
             var thumbnailMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, thumbnailBytes, thumbnailContentType);
             if (thumbnailMediaResult.IsFailure) return thumbnailMediaResult.CastFailure<bool>();
 
-            var convertResult = MediaEncodingHelper.ConvertImage(image, false, true, 512);
-            var usesAnimatedProfileMedia = convertResult.IsVideo;
+            var convertResult = isWebP ? MediaEncodingHelper.ConvertAnimatedWebP(image, true, 512, 512) : MediaEncodingHelper.ConvertImage(image, false, true, 512);
+            var usesAnimatedProfileMedia = convertResult.IsAnimated;
             var bytes = convertResult.Data;
-            var contentType = convertResult.MimeType;
+            var contentTypeHeader = convertResult.MimeType;
 
-            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, bytes, contentType, thumbnailMediaResult.Value.Id);
+            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, bytes, contentTypeHeader, thumbnailMediaResult.Value.Id);
             if (mediaResult.IsFailure) return mediaResult.CastFailure<bool>();
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
@@ -256,7 +258,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
-    public async Task<Result> UpdateBackgroundMediaAsync(string userId, byte[] image)
+    public async Task<Result> UpdateBackgroundMediaAsync(string userId, byte[] image, string contentType = null)
     {
         var userResult = await GetUserByIdAsync(userId);
         if (userResult.Error != null) return userResult.CastFailure<bool>();
@@ -276,19 +278,25 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         }
         else
         {
-            var thumbnailConvertResult = MediaEncodingHelper.ConvertImage(image, false, true, 1000);
+            var isWebP = contentType != null && contentType.Contains("webp", StringComparison.OrdinalIgnoreCase);
+
+            var thumbnailConvertResult = isWebP
+                ? MediaEncodingHelper.ConvertAnimatedWebP(image, true, 1000, 1000)
+                : MediaEncodingHelper.ConvertImage(image, false, true, 1000);
             var thumbnailBytes = thumbnailConvertResult.Data;
             var thumbnailContentType = thumbnailConvertResult.MimeType;
 
             var thumbnailMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, thumbnailBytes, thumbnailContentType);
             if (thumbnailMediaResult.IsFailure) return thumbnailMediaResult.CastFailure<bool>();
 
-            var convertResult = MediaEncodingHelper.ConvertImage(image, false, true, 1000);
-            var usesAnimatedBackgroundMedia = convertResult.IsVideo;
-            var contentType = convertResult.MimeType;
+            var convertResult = isWebP
+                ? MediaEncodingHelper.ConvertAnimatedWebP(image, true, 1000, 1000)
+                : MediaEncodingHelper.ConvertImage(image, false, true, 1000);
+            var usesAnimatedBackgroundMedia = convertResult.IsAnimated;
+            var contentTypeHeader = convertResult.MimeType;
             var bytes = convertResult.Data;
 
-            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, bytes, contentType, thumbnailMediaResult.Value.Id);
+            var mediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, bytes, contentTypeHeader, thumbnailMediaResult.Value.Id);
             if (mediaResult.IsFailure) return mediaResult.CastFailure<bool>();
 
             var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
