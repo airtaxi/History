@@ -14,7 +14,8 @@ public partial class StickerContentViewModel(StickerContent stickerContent) : Ob
     {
         HorizontalContentOptions = LayoutOptions.Fill,
         VerticalContentOptions = LayoutOptions.Fill,
-        Aspect = Aspect.AspectFit
+        Aspect = Aspect.AspectFit,
+        IsAnimated = stickerContent.IsAnimated
     };
 
     [RelayCommand]

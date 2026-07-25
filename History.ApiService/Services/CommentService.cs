@@ -160,7 +160,11 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         foreach (var emptyStickerContent in emptyStickerContents)
         {
             var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
-            if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+            if (assetResult.IsSuccess)
+            {
+                emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+                emptyStickerContent.IsAnimated = assetResult.Value.IsAnimated;
+            }
         }
 
         // Insert the comment
@@ -232,7 +236,11 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         foreach (var emptyStickerContent in emptyStickerContents)
         {
             var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
-            if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+            if (assetResult.IsSuccess)
+            {
+                emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+                emptyStickerContent.IsAnimated = assetResult.Value.IsAnimated;
+            }
         }
 
         // Update Comment
@@ -365,6 +373,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
             if (assetResult.IsSuccess)
             {
                 stickerContent.StickerMediaId = assetResult.Value.MediaId;
+                stickerContent.IsAnimated = assetResult.Value.IsAnimated;
             }
         }
 

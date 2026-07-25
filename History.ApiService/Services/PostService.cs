@@ -520,7 +520,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         foreach (var emptyStickerContent in emptyStickerContents)
         {
             var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
-            if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+            if (assetResult.IsSuccess)
+            {
+                emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+                emptyStickerContent.IsAnimated = assetResult.Value.IsAnimated;
+            }
         }
 
         var post = new Post
@@ -655,7 +659,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         foreach (var emptyStickerContent in emptyStickerContents)
         {
             var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
-            if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+            if (assetResult.IsSuccess)
+            {
+                emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+                emptyStickerContent.IsAnimated = assetResult.Value.IsAnimated;
+            }
         }
 
         // If poll content is removed or changed, delete existing poll votes
@@ -1130,7 +1138,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         foreach (var emptyStickerContent in emptyStickerContents)
         {
             var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
-            if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+            if (assetResult.IsSuccess)
+            {
+                emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+                emptyStickerContent.IsAnimated = assetResult.Value.IsAnimated;
+            }
         }
 
         // Fill PollContent with vote statistics
@@ -1227,7 +1239,11 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             foreach (var emptyParentPostStickerContent in empryParentPostStickerContents)
             {
                 var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyParentPostStickerContent.StickerContentId);
-                if (assetResult.IsSuccess) emptyParentPostStickerContent.StickerMediaId = assetResult.Value.MediaId;
+                if (assetResult.IsSuccess)
+                {
+                    emptyParentPostStickerContent.StickerMediaId = assetResult.Value.MediaId;
+                    emptyParentPostStickerContent.IsAnimated = assetResult.Value.IsAnimated;
+                }
             }
 
             if (!isBanned && parentPostUserResult.IsSuccess)

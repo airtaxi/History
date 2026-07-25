@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Mvvm.Messaging;
 using FFImageLoading.Maui;
 using History.Commons.Api.Sticker;
 using History.MobileClient.DataTypes;
@@ -127,6 +128,8 @@ public partial class CreateStickerPage : ContentPage
 
         _iconFileName = fileName;
 
+        if (fileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase)) _ = Toast.Make("WebP 움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
+
 #if ANDROID
         var memoryStream = new MemoryStream(bytes);
 #endif
@@ -157,6 +160,9 @@ public partial class CreateStickerPage : ContentPage
             var mimeType = Commons.MimeTypes.GetMimeType(image.FileName);
             if (!mimeType.StartsWith("image/") || mimeType.Contains("gif")) continue;
 
+            if (image.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) && addedCount == 0)
+                _ = Toast.Make("WebP 움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
+
             var memoryStream = new MemoryStream(image.Bytes);
             _assets.Add(image.FileName, memoryStream);
             AddAssetToUI(image.FileName, memoryStream);
@@ -168,6 +174,8 @@ public partial class CreateStickerPage : ContentPage
         var results = await MediaGallery.PickAsync(request);
         var files = results?.Files?.ToArray();
         if (files == null || files.Length == 0) return;
+
+        if (files.Any(x => x.Extension.Equals("webp", StringComparison.OrdinalIgnoreCase))) _ = Toast.Make("WebP 움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
             
         foreach (var file in files)
         {

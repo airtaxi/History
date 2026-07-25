@@ -150,6 +150,51 @@ public static class MediaEncodingHelper
         }
     }
 
+    public static MediaConvertResult ConvertAnimatedWebP(byte[] imageBytes, uint? maxWidth = null, uint? maxHeight = null)
+    {
+        using var images = new MagickImageCollection();
+        images.Read(imageBytes);
+        var isAnimated = images.Count > 1;
+
+        // Not animated — fall back to static conversion
+        if (!isAnimated) return ConvertImage(imageBytes, false, maxWidth: maxWidth, maxHeight: maxHeight);
+
+        images.Coalesce();
+
+        foreach (var frame in images)
+        {
+            frame.AutoOrient();
+
+            uint newWidth = frame.Width;
+            uint newHeight = frame.Height;
+
+            if (maxWidth.HasValue && frame.Width > maxWidth.Value)
+            {
+                newWidth = maxWidth.Value;
+                newHeight = (uint)Math.Round((double)frame.Height * maxWidth.Value / frame.Width, 0);
+            }
+            if (maxHeight.HasValue && newHeight > maxHeight.Value)
+            {
+                newHeight = maxHeight.Value;
+                newWidth = (uint)Math.Round((double)frame.Width * maxHeight.Value / frame.Height, 0);
+            }
+
+            if (newWidth != frame.Width || newHeight != frame.Height)
+            {
+                var size = new MagickGeometry(newWidth, newHeight) { IgnoreAspectRatio = false };
+                frame.Resize(size);
+            }
+
+            frame.Format = MagickFormat.WebP;
+            frame.Quality = 50;
+            frame.Strip();
+        }
+
+        using var memoryStream = new MemoryStream();
+        images.Write(memoryStream, MagickFormat.WebP);
+        return new MediaConvertResult(false, memoryStream.ToArray(), isAnimated: true);
+    }
+
     // Helper method to determine the frame rate of animated images
     private static double DetermineFramerate(MagickImageCollection images)
     {

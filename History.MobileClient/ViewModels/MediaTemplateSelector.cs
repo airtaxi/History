@@ -16,6 +16,7 @@ internal class MediaTemplateSelector : DataTemplateSelector
         if (item is ImageViewModel imageViewModel)
         {
             if (imageViewModel.IsFullScreen) return FullScreenImageTemplate;
+            else if (imageViewModel.IsAnimated) return ImageTemplate;
             else if (imageViewModel.PostType != PostType.Unwrapped) return ImageTemplate;
             else return AppleImageTemplate;
         }

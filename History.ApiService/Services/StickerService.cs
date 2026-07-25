@@ -17,7 +17,7 @@ public class StickerService(IMongoDatabase database, IMediaService mediaService,
 
     private const int MaxStickerSize = 384;
     private const int MaxAssetCount = 50;
-    private const long MaxFileSize = 5 * 1024 * 1024; // 5MB
+    private const long MaxFileSize = 10 * 1024 * 1024; // 10MB
     private const int MaxRecentUsageCount = 50;
 
     /// <inheritdoc />
@@ -32,7 +32,7 @@ public class StickerService(IMongoDatabase database, IMediaService mediaService,
 
         if (iconFile == null) return (ErrorType.BadRequest, "스티커 아이콘을 업로드해주세요.");
         if (!iconFile.ContentType.StartsWith("image/")) return (ErrorType.BadRequest, "스티커 아이콘은 이미지 파일만 가능합니다.");
-        if (iconFile.Length > MaxFileSize) return (ErrorType.BadRequest, "스티커 아이콘 파일 크기가 너무 큽니다. 5MB 이하로 업로드해주세요.");
+        if (iconFile.Length > MaxFileSize) return (ErrorType.BadRequest, $"스티커 아이콘 파일 크기가 너무 큽니다. {MaxFileSize / 1024 / 1024}MB 이하로 업로드해주세요.");
 
         var assetFileList = assetFiles?.ToList() ?? [];
         if (assetFileList.Count == 0) return (ErrorType.BadRequest, "스티커 에셋을 최소 1개 이상 업로드해주세요.");
@@ -42,7 +42,7 @@ public class StickerService(IMongoDatabase database, IMediaService mediaService,
         {
             if (!assetFile.ContentType.StartsWith("image/")) return (ErrorType.BadRequest, $"스티커 에셋 '{assetFile.FileName}'은(는) 이미지 파일만 가능합니다.");
             if (assetFile.ContentType.Contains("gif")) return (ErrorType.BadRequest, $"스티커 에셋 '{assetFile.FileName}'은(는) 정적 이미지만 가능합니다. (움짤 불가)");
-            if (assetFile.Length > MaxFileSize) return (ErrorType.BadRequest, $"스티커 에셋 '{assetFile.FileName}' 파일 크기가 너무 큽니다. 5MB 이하로 업로드해주세요.");
+            if (assetFile.Length > MaxFileSize) return (ErrorType.BadRequest, $"스티커 에셋 '{assetFile.FileName}' 파일 크기가 너무 큽니다. {MaxFileSize / 1024 / 1024}MB 이하로 업로드해주세요.");
         }
 
         // Create sticker
@@ -90,9 +90,10 @@ public class StickerService(IMongoDatabase database, IMediaService mediaService,
                 await assetFile.CopyToAsync(assetStream);
                 var assetBytes = assetStream.ToArray();
 
-                // Convert image (384x384 limit, no GIF conversion)
-                var assetConvertResult = MediaEncodingHelper.ConvertImage(assetBytes, false, maxWidth: MaxStickerSize, maxHeight: MaxStickerSize);
-                if (assetConvertResult.IsVideo) throw new InvalidOperationException("스티커 에셋은 정적 이미지만 가능합니다.");
+                // Use animated WebP conversion for WebP files, static conversion for others
+                var isWebP = assetFile.ContentType.Contains("webp", StringComparison.OrdinalIgnoreCase);
+                var assetConvertResult = isWebP ? MediaEncodingHelper.ConvertAnimatedWebP(assetBytes, maxWidth: MaxStickerSize, maxHeight: MaxStickerSize) : MediaEncodingHelper.ConvertImage(assetBytes, false, maxWidth: MaxStickerSize, maxHeight: MaxStickerSize);
+                if (assetConvertResult.IsVideo) throw new InvalidOperationException("스티커 에셋은 정적 이미지 또는 WebP 움짤만 가능합니다.");
 
                 var assetMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Sticker, sticker.Id, authorId, assetConvertResult.Data, assetConvertResult.MimeType);
                 if (assetMediaResult.IsFailure) throw new InvalidOperationException(assetMediaResult.ErrorMessage);
@@ -101,7 +102,8 @@ public class StickerService(IMongoDatabase database, IMediaService mediaService,
                 {
                     Id = Guid.NewGuid().ToString("N"),
                     StickerId = sticker.Id,
-                    MediaId = assetMediaResult.Value.Id
+                    MediaId = assetMediaResult.Value.Id,
+                    IsAnimated = assetConvertResult.IsAnimated
                 };
 
                 return stickerAsset;
