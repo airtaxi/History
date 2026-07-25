@@ -50,14 +50,14 @@ public class ModerationService(IMongoDatabase database, INotificationService not
             }
 
             // Fill in missing sticker media IDs
-            var emptyStickerContents = record.AssociatedContents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
-            foreach (var emptyStickerContent in emptyStickerContents)
+            var stickerContents = record.AssociatedContents.OfType<StickerContent>();
+            foreach (var stickerContent in stickerContents)
             {
-                var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
+                var assetResult = await stickerService.GetStickerAssetByIdAsync(stickerContent.StickerContentId);
                 if (assetResult.IsSuccess)
                 {
-                    emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
-                    emptyStickerContent.IsAnimated = assetResult.Value.IsAnimated;
+                    stickerContent.StickerMediaId = assetResult.Value.MediaId;
+                    stickerContent.IsAnimated = assetResult.Value.IsAnimated;
                 }
             }
         }
