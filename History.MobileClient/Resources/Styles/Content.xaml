@@ -3,6 +3,7 @@
     x:Class="History.MobileClient.Resources.Styles.Content"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
@@ -194,18 +195,19 @@
     </DataTemplate>
 
     <DataTemplate x:Key="StickerContentTemplate" x:DataType="vm:StickerContentViewModel">
-        <Image
+        <ffimageloading:CachedImage
             Aspect="AspectFit"
+            DownsampleToViewSize="True"
             HeightRequest="120"
             HorizontalOptions="Start"
             Source="{x:Binding Media.Uri,
                                Mode=OneTime}"
             VerticalOptions="Start"
             WidthRequest="120">
-            <Image.GestureRecognizers>
+            <ffimageloading:CachedImage.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding NavigateToStickerDetailCommand}" />
-            </Image.GestureRecognizers>
-        </Image>
+            </ffimageloading:CachedImage.GestureRecognizers>
+        </ffimageloading:CachedImage>
     </DataTemplate>
 
     <DataTemplate x:Key="TextTypeContentsTemplate" x:DataType="vm:TextTypeContentsViewModel">
