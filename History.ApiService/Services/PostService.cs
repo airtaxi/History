@@ -1134,14 +1134,14 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         }
 
         // Fill StickerMediaId for StickerContents
-        var emptyStickerContents = post.Contents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
-        foreach (var emptyStickerContent in emptyStickerContents)
+        var stickerContents = post.Contents.OfType<StickerContent>();
+        foreach (var stickerContent in stickerContents)
         {
-            var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
+            var assetResult = await stickerService.GetStickerAssetByIdAsync(stickerContent.StickerContentId);
             if (assetResult.IsSuccess)
             {
-                emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
-                emptyStickerContent.IsAnimated = assetResult.Value.IsAnimated;
+                stickerContent.StickerMediaId = assetResult.Value.MediaId;
+                stickerContent.IsAnimated = assetResult.Value.IsAnimated;
             }
         }
 
@@ -1235,14 +1235,14 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             }
 
             // Fill StickerMediaId for parent post StickerContents
-            var empryParentPostStickerContents = parentPostResult.Value.Contents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
-            foreach (var emptyParentPostStickerContent in empryParentPostStickerContents)
+            var parentPostStickerContents = parentPostResult.Value.Contents.OfType<StickerContent>();
+            foreach (var parentPostStickerContent in parentPostStickerContents)
             {
-                var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyParentPostStickerContent.StickerContentId);
+                var assetResult = await stickerService.GetStickerAssetByIdAsync(parentPostStickerContent.StickerContentId);
                 if (assetResult.IsSuccess)
                 {
-                    emptyParentPostStickerContent.StickerMediaId = assetResult.Value.MediaId;
-                    emptyParentPostStickerContent.IsAnimated = assetResult.Value.IsAnimated;
+                    parentPostStickerContent.StickerMediaId = assetResult.Value.MediaId;
+                    parentPostStickerContent.IsAnimated = assetResult.Value.IsAnimated;
                 }
             }
 
