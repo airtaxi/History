@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -36,7 +36,7 @@ public partial class CommentViewModel : ObservableObject
     public bool IsModerator => Comment.User.Rank == Rank.Moderator;
     public bool IsAdmin => Comment.User.Rank == Rank.Admin;
     public IMediaViewModel ProfileMedia => Comment.User.UsesAnimatedProfileMedia
-        ? new VideoViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId))
+        ? new ImageViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
         : new ImageViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
     [ObservableProperty]

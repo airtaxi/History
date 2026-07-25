@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -34,14 +34,14 @@ public partial class MessageViewModel : ObservableObject
     public bool IsSenderAdmin => Sender?.Rank == Commons.Enums.Rank.Admin;
     public bool IsSenderModerator => Sender?.Rank == Commons.Enums.Rank.Moderator;
     public IMediaViewModel SenderProfileMedia => Sender.UsesAnimatedProfileMedia
-        ? new VideoViewModel(Utils.GenerateMediaUri(Sender.ProfileMediaId))
+        ? new ImageViewModel(Utils.GenerateMediaUri(Sender.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
         : new ImageViewModel(Utils.GenerateMediaUri(Sender.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
     public string ReceiverName => Receiver?.Nickname ?? Receiver?.Handle ?? Receiver?.UserId;
     public bool IsReceiverAdmin => Receiver?.Rank == Commons.Enums.Rank.Admin;
     public bool IsReceiverModerator => Receiver?.Rank == Commons.Enums.Rank.Moderator;
     public IMediaViewModel ReceiverProfileMedia => Receiver.UsesAnimatedProfileMedia
-        ? new VideoViewModel(Utils.GenerateMediaUri(Receiver.ProfileMediaId))
+        ? new ImageViewModel(Utils.GenerateMediaUri(Receiver.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
         : new ImageViewModel(Utils.GenerateMediaUri(Receiver.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
     public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, null);

@@ -515,7 +515,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         }
 
         // Call the service to update the profile media
-        var result = await userService.UpdateProfileMediaAsync(userId, imageData);
+        var result = await userService.UpdateProfileMediaAsync(userId, imageData, file.ContentType);
 
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
@@ -583,7 +583,7 @@ public class UserController(IUserService userService, IFriendshipService friends
         }
 
         // Call the service to update the background media
-        var result = await userService.UpdateBackgroundMediaAsync(userId, imageData);
+        var result = await userService.UpdateBackgroundMediaAsync(userId, imageData, file.ContentType);
 
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);

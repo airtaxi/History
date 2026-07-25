@@ -150,20 +150,21 @@ public static class MediaEncodingHelper
         }
     }
 
-    public static MediaConvertResult ConvertAnimatedWebP(byte[] imageBytes, uint? maxWidth = null, uint? maxHeight = null)
+    public static MediaConvertResult ConvertAnimatedWebP(byte[] imageBytes, bool noAlpha = false, uint? maxWidth = null, uint? maxHeight = null)
     {
         using var images = new MagickImageCollection();
         images.Read(imageBytes);
         var isAnimated = images.Count > 1;
 
         // Not animated — fall back to static conversion
-        if (!isAnimated) return ConvertImage(imageBytes, false, maxWidth: maxWidth, maxHeight: maxHeight);
+        if (!isAnimated) return ConvertImage(imageBytes, false, noAlpha, maxWidth, maxHeight);
 
         images.Coalesce();
 
         foreach (var frame in images)
         {
             frame.AutoOrient();
+            if (noAlpha) frame.Alpha(AlphaOption.Off);
 
             uint newWidth = frame.Width;
             uint newHeight = frame.Height;

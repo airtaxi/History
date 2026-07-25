@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -66,7 +66,7 @@ public partial class PostViewModel : ObservableObject
     public bool IsModerator => User.Rank == Rank.Moderator;
     public bool IsAdmin => User.Rank == Rank.Admin;
     public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia
-        ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
+        ? new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
         : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
     public string DiscoveryOptionGlyph => Utils.GetDiscoveryOptionGlyph(Post.DiscoveryOption);

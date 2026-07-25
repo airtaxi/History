@@ -84,7 +84,7 @@ public partial class ProfileViewModel : ObservableObject
     public IMediaViewModel BackgroundMedia => new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundThumbnailMediaId) ?? Constants.DefaultBackgroundImageFileName);
 
     public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia
-        ? new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId))
+        ? new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
         : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
     public ProfileViewModel(UserResponseDto user)
@@ -124,14 +124,14 @@ public partial class ProfileViewModel : ObservableObject
     private async Task HandleProfileTapAsync()
     {
         IMediaViewModel media = User.UsesAnimatedProfileMedia ?
-        new VideoViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName)
+        new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName)
         {
             Aspect = Aspect.AspectFit,
-            ShouldAutoPlay = true,
-            ShouldLoopPlayback = true,
-            ShouldMute = false,
-            ShouldShowPlaybackControls = true,
+            HorizontalContentOptions = LayoutOptions.Fill,
+            VerticalContentOptions = LayoutOptions.Fill,
             FullScreenSwipeable = false,
+            IsFullScreen = true,
+            IsAnimated = true,
         }
         : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName)
         {
@@ -153,14 +153,14 @@ public partial class ProfileViewModel : ObservableObject
     private async Task HandleBackgroundTapAsync()
     {
         IMediaViewModel media = User.UsesAnimatedBackgroundMedia ?
-        new VideoViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId) ?? Constants.DefaultBackgroundImageFileName)
+        new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId) ?? Constants.DefaultBackgroundImageFileName)
         {
             Aspect = Aspect.AspectFit,
-            ShouldAutoPlay = true,
-            ShouldLoopPlayback = true,
-            ShouldMute = false,
-            ShouldShowPlaybackControls = true,
+            HorizontalContentOptions = LayoutOptions.Fill,
+            VerticalContentOptions = LayoutOptions.Fill,
             FullScreenSwipeable = false,
+            IsFullScreen = true,
+            IsAnimated = true,
         }
         : new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId) ?? Constants.DefaultBackgroundImageFileName)
         {
@@ -337,6 +337,7 @@ public partial class ProfileViewModel : ObservableObject
         var mimeType = MimeTypes.GetMimeType(fileName);
         if (!mimeType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)) return false;
         if (mimeType.Equals("image/gif", StringComparison.OrdinalIgnoreCase)) return false;
+        if (mimeType.Equals("image/webp", StringComparison.OrdinalIgnoreCase)) return false;
 
         return true;
     }
