@@ -302,7 +302,7 @@
 		<PackageReference Include="CommunityToolkit.Maui" Version="14.2.0" />
 		<PackageReference Include="CommunityToolkit.Maui.MediaElement" Version="10.0.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-		<PackageReference Include="FFImageLoading.Maui" Version="1.3.2" />
+		<PackageReference Include="AnimatedWebP.FFImageLoading.Maui" Version="1.4.1" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.80" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.9" />
 		<PackageReference Include="Plugin.Firebase.CloudMessaging" Version="4.0.1" />

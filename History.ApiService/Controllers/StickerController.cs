@@ -205,7 +205,8 @@ public class StickerController(IStickerService stickerService) : ControllerBase
             {
                 Id = a.Id,
                 StickerId = a.StickerId,
-                MediaId = a.MediaId
+                MediaId = a.MediaId,
+                IsAnimated = a.IsAnimated
             }).ToList();
             return Ok(dtos);
         }
@@ -330,7 +331,8 @@ public class StickerController(IStickerService stickerService) : ControllerBase
             {
                 Id = a.Id,
                 StickerId = a.StickerId,
-                MediaId = a.MediaId
+                MediaId = a.MediaId,
+                IsAnimated = a.IsAnimated
             }).ToList();
             return Ok(dtos);
         }

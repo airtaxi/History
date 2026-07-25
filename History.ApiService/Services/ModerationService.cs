@@ -54,7 +54,11 @@ public class ModerationService(IMongoDatabase database, INotificationService not
             foreach (var emptyStickerContent in emptyStickerContents)
             {
                 var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
-                if (assetResult.IsSuccess) emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+                if (assetResult.IsSuccess)
+                {
+                    emptyStickerContent.StickerMediaId = assetResult.Value.MediaId;
+                    emptyStickerContent.IsAnimated = assetResult.Value.IsAnimated;
+                }
             }
         }
 

@@ -8,4 +8,5 @@ public class StickerAssetViewModel(StickerAssetResponseDto asset)
     public string StickerId => asset.StickerId;
     public string MediaId => asset.MediaId;
     public string MediaUri => Utils.GenerateMediaUri(asset.MediaId);
+    public bool IsAnimated => asset.IsAnimated;
 }

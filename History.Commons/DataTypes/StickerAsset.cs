@@ -10,4 +10,5 @@ public class StickerAsset
 
     public string MediaId { get; set; }
     public string StickerId { get; set; }
+    public bool IsAnimated { get; set; }
 }

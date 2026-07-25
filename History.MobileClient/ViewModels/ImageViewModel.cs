@@ -34,6 +34,9 @@ public partial class ImageViewModel(string uri, PostType postType = PostType.Unw
     [ObservableProperty]
     public partial bool FullScreenSwipeable { get; set; } = true;
 
+    [ObservableProperty]
+    public partial bool IsAnimated { get; set; }
+
     public double MaxWidth { get; set; } = double.PositiveInfinity;
 
     public CarouselView CarouselView;
