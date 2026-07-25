@@ -1058,7 +1058,7 @@ public partial class EditPostPage : ContentPage
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
         var isLoading = message.Value;
-        if ((!_isInForeground && isLoading) || _preventDispose) return;
+        if (!_isInForeground && isLoading) return;
 
         // Since MAUI 10.0.70, Dispatcher.Dispatch and MainThread.BeginInvokeOnMainThread can hang the UI on iOS after async work.
 #if ANDROID
