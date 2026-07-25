@@ -215,18 +215,32 @@ public partial class EditPostPage : ContentPage
     {
         var externalUrlContent = new ExternalUrlContent { SourceUrl = url };
 
-        var fillResult = await App.ExecuteRequestAsync(new FillExternalUrlContent(externalUrlContent), ErrorType.BadRequest);
-        if (fillResult.IsFailure)
+#if ANDROID
+        IsEnabled = false;
+        MainActivityIndicator.IsRunning = true;
+#endif
+        try
         {
-            if (fillResult.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", fillResult.ErrorMessage, Constants.PromptOk);
-            return;
-        }
+            var fillResult = await App.ExecuteRequestAsync(new FillExternalUrlContent(externalUrlContent), ErrorType.BadRequest);
+            if (fillResult.IsFailure)
+            {
+                if (fillResult.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", fillResult.ErrorMessage, Constants.PromptOk);
+                return;
+            }
 
-        externalUrlContent = fillResult.Value;
-        _externalUrlContentViewModel = new ExternalUrlContentViewModel(externalUrlContent);
-        ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
-        ExternalUrlContentBorder.IsVisible = true;
-        ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
+            externalUrlContent = fillResult.Value;
+            _externalUrlContentViewModel = new ExternalUrlContentViewModel(externalUrlContent);
+            ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
+            ExternalUrlContentBorder.IsVisible = true;
+            ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
+        }
+        finally
+        {
+#if ANDROID
+            IsEnabled = true;
+            MainActivityIndicator.IsRunning = false;
+#endif
+        }
 
         return;
     }
@@ -473,6 +487,10 @@ public partial class EditPostPage : ContentPage
             // Save draft before upload to prevent data loss on crash or error
             if (_post == null && HasDraftableContent()) SaveDraft();
 
+#if ANDROID
+            MainActivityIndicator.IsRunning = true;
+#endif
+
             List<string> discoveryOptionSelectedUserIds = null;
             var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
             if (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers)
@@ -515,6 +533,11 @@ public partial class EditPostPage : ContentPage
 
                     if (shouldWritePostToKakaoStory.Value)
                     {
+#if ANDROID
+                        MainActivityIndicator.IsRunning = true;
+                        IsEnabled = false;
+#endif
+
                         // Samsung pass will overwrite the text content, fetch the text content before logging in to KakaoStory
                         var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
 
@@ -537,10 +560,21 @@ public partial class EditPostPage : ContentPage
 
                                 if (rewrite)
                                 {
+#if ANDROID
+                                    IsEnabled = true;
+                                    MainActivityIndicator.IsRunning = false;
+#endif
+
                                     var rewritePage = new KakaoStoryRewritePage(text);
                                     await App.PushAsync(rewritePage);
 
                                     var rewrittenText = await rewritePage.GetResultAsync();
+
+#if ANDROID
+                                    IsEnabled = false;
+                                    MainActivityIndicator.IsRunning = true;
+#endif
+
                                     if (rewrittenText == null) return;
                                     text = rewrittenText;
                                 }
@@ -593,6 +627,12 @@ public partial class EditPostPage : ContentPage
                             await App.PushModalAsync(kakaoStoryLoginPage);
 
                             cookies = await kakaoStoryLoginPage.GetResultAsync();
+
+#if ANDROID
+                            IsEnabled = false;
+                            MainActivityIndicator.IsRunning = true;
+#endif
+
                             if (cookies == null)
                             {
                                 await DisplayAlertAsync("오류", "카카오스토리 로그인에 실패하였습니다.", Constants.PromptOk);
@@ -744,6 +784,10 @@ public partial class EditPostPage : ContentPage
         }
         finally
         {
+#if ANDROID
+            MainActivityIndicator.IsRunning = false;
+            IsEnabled = true;
+#endif
             _preventDispose = false;
             _uploadSemaphore.Release();
         }
@@ -1058,7 +1102,7 @@ public partial class EditPostPage : ContentPage
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
         var isLoading = message.Value;
-        if (!_isInForeground && isLoading) return;
+        if ((!_isInForeground && isLoading) || _preventDispose) return;
 
         // Since MAUI 10.0.70, Dispatcher.Dispatch and MainThread.BeginInvokeOnMainThread can hang the UI on iOS after async work.
 #if ANDROID
