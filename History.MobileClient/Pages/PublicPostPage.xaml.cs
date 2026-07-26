@@ -52,7 +52,8 @@ public partial class PublicPostPage : ContentPage
                 var firstViewModel = _viewModels.FirstOrDefault();
                 if (firstViewModel == null) return;
 
-                MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+                try { MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false); }
+                catch (Exception exception) { Debug.WriteLine($"[PP] ScrollTo failed: {exception.Message}"); }
 
                 await Task.Delay(100);
             }
