@@ -225,7 +225,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
 
         var message = new MulticastMessage
         {
-            Tokens = tokensResult.Value,
+            Fids = tokensResult.Value,
             Notification = new()
             {
                 Title = title,
