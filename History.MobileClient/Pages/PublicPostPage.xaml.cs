@@ -173,6 +173,8 @@ public partial class PublicPostPage : ContentPage
         {
             if (newSpan == 1) MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
             else MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
+
+            WeakReferenceMessenger.Default.Send(new SpanChangedMessage());
         }
     }
 
