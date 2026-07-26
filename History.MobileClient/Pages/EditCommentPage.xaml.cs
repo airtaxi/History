@@ -153,14 +153,11 @@ public partial class EditCommentPage : ContentPage
         var isLoading = message.Value;
         if (!_isInForeground && isLoading) return;
 
-        // Since MAUI 10.0.70, Dispatcher.Dispatch and MainThread.BeginInvokeOnMainThread can hang the UI on iOS after async work.
-#if ANDROID
-        Dispatcher.Dispatch(() =>
+        Application.Current.Dispatcher.Dispatch(() =>
         {
             MainActivityIndicator.IsRunning = isLoading;
             IsEnabled = !isLoading;
         });
-#endif
     }
 
     private async void OnLoaded(object sender, EventArgs e)

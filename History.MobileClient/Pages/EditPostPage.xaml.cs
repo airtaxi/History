@@ -215,10 +215,8 @@ public partial class EditPostPage : ContentPage
     {
         var externalUrlContent = new ExternalUrlContent { SourceUrl = url };
 
-#if ANDROID
         IsEnabled = false;
         MainActivityIndicator.IsRunning = true;
-#endif
         try
         {
             var fillResult = await App.ExecuteRequestAsync(new FillExternalUrlContent(externalUrlContent), ErrorType.BadRequest);
@@ -236,10 +234,8 @@ public partial class EditPostPage : ContentPage
         }
         finally
         {
-#if ANDROID
             IsEnabled = true;
             MainActivityIndicator.IsRunning = false;
-#endif
         }
 
         return;
@@ -487,9 +483,7 @@ public partial class EditPostPage : ContentPage
             // Save draft before upload to prevent data loss on crash or error
             if (_post == null && HasDraftableContent()) SaveDraft();
 
-#if ANDROID
             MainActivityIndicator.IsRunning = true;
-#endif
 
             List<string> discoveryOptionSelectedUserIds = null;
             var discoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
@@ -573,10 +567,8 @@ public partial class EditPostPage : ContentPage
         }
         finally
         {
-#if ANDROID
             MainActivityIndicator.IsRunning = false;
             IsEnabled = true;
-#endif
             _preventDispose = false;
             _uploadSemaphore.Release();
         }
@@ -893,14 +885,11 @@ public partial class EditPostPage : ContentPage
         var isLoading = message.Value;
         if ((!_isInForeground && isLoading) || _preventDispose) return;
 
-        // Since MAUI 10.0.70, Dispatcher.Dispatch and MainThread.BeginInvokeOnMainThread can hang the UI on iOS after async work.
-#if ANDROID
-        Dispatcher.Dispatch(() =>
+        Application.Current.Dispatcher.Dispatch(() =>
         {
             MainActivityIndicator.IsRunning = isLoading;
             IsEnabled = !isLoading;
         });
-#endif
     }
 
     private async void OnLoaded(object sender, EventArgs e)
@@ -1176,10 +1165,8 @@ public partial class EditPostPage : ContentPage
         ExternalUrlContentViewModel externalUrlContentViewModel,
         DiscoveryOption discoveryOption)
     {
-#if ANDROID
         MainActivityIndicator.IsRunning = true;
         IsEnabled = false;
-#endif
 
         try
         {
@@ -1202,20 +1189,16 @@ public partial class EditPostPage : ContentPage
 
                     if (rewrite)
                     {
-#if ANDROID
                         IsEnabled = true;
                         MainActivityIndicator.IsRunning = false;
-#endif
 
                         var rewritePage = new KakaoStoryRewritePage(text);
                         await App.PushAsync(rewritePage);
 
                         var rewrittenText = await rewritePage.GetResultAsync();
 
-#if ANDROID
                         IsEnabled = false;
                         MainActivityIndicator.IsRunning = true;
-#endif
 
                         if (rewrittenText == null) return false;
                         text = rewrittenText;
@@ -1267,10 +1250,8 @@ public partial class EditPostPage : ContentPage
 
                 cookies = await kakaoStoryLoginPage.GetResultAsync();
 
-#if ANDROID
                 IsEnabled = false;
                 MainActivityIndicator.IsRunning = true;
-#endif
 
                 if (cookies == null)
                 {
@@ -1406,10 +1387,8 @@ public partial class EditPostPage : ContentPage
         }
         finally
         {
-#if ANDROID
             MainActivityIndicator.IsRunning = false;
             IsEnabled = true;
-#endif
         }
 
         return true;
