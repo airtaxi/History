@@ -394,7 +394,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     }
 
     /// <inheritdoc/>
-    public async Task<Result> WritePostAsync(string userId, WritePostRequestDto requestDto, IEnumerable<IFormFile> files)
+    public async Task<Result<Post>> WritePostAsync(string userId, WritePostRequestDto requestDto, IEnumerable<IFormFile> files)
     {
         if (requestDto.CommentPermission.HasValue)
         {
@@ -411,7 +411,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var userService = serviceProvider.GetRequiredService<IUserService>();
 
         var user = await userService.GetUserByIdAsync(userId);
-        if (user.IsFailure) return user.CastFailure();
+        if (user.IsFailure) return user.CastFailure<Post>();
 
         // Sanitize contents
         var contents = requestDto.Contents ?? [];
@@ -419,7 +419,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Sanitize hashtag contents
         var hashtagValidationResult = ValidateHashtagContents(contents);
-        if (hashtagValidationResult.IsFailure) return hashtagValidationResult;
+        if (hashtagValidationResult.IsFailure) return hashtagValidationResult.CastFailure<Post>();
 
         // Check if the post has any content
         var hasHashtagContent = contents.OfType<HashtagContent>().Any();
@@ -477,10 +477,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         if (requestDto.ParentPostId != null)
         {
             var accessResult = await CheckAccessAsync(requestDto.ParentPostId, userId);
-            if (accessResult.IsFailure) return accessResult;
+            if (accessResult.IsFailure) return accessResult.CastFailure<Post>();
 
             var parentPostResult = await GetPostByIdAsync(requestDto.ParentPostId);
-            if (parentPostResult.IsFailure) return parentPostResult.CastFailure();
+            if (parentPostResult.IsFailure) return parentPostResult;
 
             if (parentPostResult.Value.DisallowShare)
                 return (ErrorType.BadRequest, "원본 게시글이 공유를 비허용하고 있는 관계로 이 게시글을 공유할 수 없습니다.");
@@ -504,7 +504,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Upload medias
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Post, postId, userId, contents, files);
-        if (uploadResult.IsFailure) return uploadResult;
+        if (uploadResult.IsFailure) return uploadResult.CastFailure<Post>();
 
         // Fill external URL contents
         var externalUrlContents = contents.OfType<ExternalUrlContent>();
@@ -563,7 +563,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         await notificationService.SendNotificationsAsync(NotificationType.FavoriteFriendNewPost, post.Id);
 
-        return Result.Success();
+        return post;
     }
 
     /// <inheritdoc/>
@@ -1400,8 +1400,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         return Result.Success();
     }
 
-    private static List<string> ExtractHashtagsFromContents(IEnumerable<BaseContent> contents) =>
-        contents.OfType<HashtagContent>().Select(x => x.Tag).ToList();
+    private static List<string> ExtractHashtagsFromContents(IEnumerable<BaseContent> contents) => [.. contents.OfType<HashtagContent>().Select(x => x.Tag)];
 
     private async Task<Result<List<PostReactionDto>>> GeneratePostReactionDtosAsync(string postId, string requesterId = null)
     {
@@ -1451,16 +1450,13 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         if (pollContent.IsExpired) return (ErrorType.BadRequest, "투표가 마감되었습니다.");
 
         // Validate selected options
-        if (requestDto.SelectedOptionIndices == null || requestDto.SelectedOptionIndices.Count == 0)
-            return (ErrorType.BadRequest, "선택된 항목이 없습니다.");
+        if (requestDto.SelectedOptionIndices == null || requestDto.SelectedOptionIndices.Count == 0) return (ErrorType.BadRequest, "선택된 항목이 없습니다.");
 
-        if (!pollContent.AllowMultipleSelection && requestDto.SelectedOptionIndices.Count > 1)
-            return (ErrorType.BadRequest, "이 투표는 단일 선택만 가능합니다.");
+        if (!pollContent.AllowMultipleSelection && requestDto.SelectedOptionIndices.Count > 1) return (ErrorType.BadRequest, "이 투표는 단일 선택만 가능합니다.");
 
         foreach (var index in requestDto.SelectedOptionIndices)
         {
-            if (index < 0 || index >= pollContent.Options.Count)
-                return (ErrorType.BadRequest, "유효하지 않은 선택 항목입니다.");
+            if (index < 0 || index >= pollContent.Options.Count) return (ErrorType.BadRequest, "유효하지 않은 선택 항목입니다.");
         }
 
         // Check if user already voted
@@ -1533,10 +1529,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         pollContent.TotalVotes = votes.Sum(x => x.SelectedOptionIndices.Count);
 
 
-        for (int i = 0; i < pollContent.Options.Count; i++)
-        {
-            pollContent.Options[i].VoteCount = votes.Count(v => v.SelectedOptionIndices.Contains(i));
-        }
+        for (int i = 0; i < pollContent.Options.Count; i++) pollContent.Options[i].VoteCount = votes.Count(v => v.SelectedOptionIndices.Contains(i));
 
         // Get current user's vote
         var myVote = votes.FirstOrDefault(v => v.UserId == requesterId);
@@ -1642,10 +1635,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         await _bookmarkedPostCollection.DeleteManyAsync(b => postIds.Contains(b.PostId));
         await _postReactionCollection.DeleteManyAsync(r => postIds.Contains(r.PostId));
 
-        var pollIds = posts
-            .SelectMany(p => p.Contents.OfType<PollContent>().Select(pc => pc.PollId))
-            .Distinct()
-            .ToList();
+        var pollIds = posts.SelectMany(p => p.Contents.OfType<PollContent>().Select(pc => pc.PollId)).Distinct().ToList();
         if (pollIds.Count > 0) await _pollVoteCollection.DeleteManyAsync(v => pollIds.Contains(v.PollId));
 
         // Delete reposts associated with deleted originals
@@ -1662,9 +1652,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         await notificationService.DeleteNotificationsAsync("Data.PostId", postIds);
         if (commentIds.Count > 0) await notificationService.DeleteNotificationsAsync("Data.CommentId", commentIds);
 
-            // Reports
-            var reportService = serviceProvider.GetRequiredService<IReportService>();
-            await reportService.DeleteReportRecordByPostIdsAsync(postIds);
+        // Reports
+        var reportService = serviceProvider.GetRequiredService<IReportService>();
+        await reportService.DeleteReportRecordByPostIdsAsync(postIds);
 
         // Finally delete posts themselves
         await _postCollection.DeleteManyAsync(p => postIds.Contains(p.Id));
@@ -1734,10 +1724,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             .ToListAsync();
 
         // Maintain bookmark order
-        var orderedPosts = postIds
-            .Select(id => posts.FirstOrDefault(p => p.Id == id))
-            .Where(p => p != null)
-            .ToList();
+        var orderedPosts = postIds.Select(id => posts.FirstOrDefault(p => p.Id == id)).Where(p => p != null).ToList();
 
         return orderedPosts;
     }

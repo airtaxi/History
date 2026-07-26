@@ -235,7 +235,7 @@ public class PostController(IPostService postService, IFriendshipService friends
 
     [HttpPost]
     [Authorize]
-    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<PostResponseDto>(200)]
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
@@ -249,7 +249,12 @@ public class PostController(IPostService postService, IFriendshipService friends
 
         var data = JsonSerializer.Deserialize<WritePostRequestDto>(request.JsonData);
         var result = await postService.WritePostAsync(requesterId, data, request.Files);
-        if (result.IsSuccess) return Ok();
+        if (result.IsSuccess)
+        {
+            var postDtoResult = await postService.GeneratePostResponseDtoAsync(result.Value, requesterId);
+            if (postDtoResult.IsSuccess) return Ok(postDtoResult.Value);
+            return Ok();
+        }
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
         else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
