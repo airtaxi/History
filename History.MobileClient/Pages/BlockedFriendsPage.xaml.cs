@@ -1,8 +1,9 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Friendship;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Platform;
 
 namespace History.MobileClient.Pages;
 
@@ -15,6 +16,11 @@ public partial class BlockedFriendsPage : ContentPage
 		InitializeComponent();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+#if IOS
+        WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
+
+        RootGrid.SafeAreaEdges = new(SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.SoftInput);
+#endif
     }
 
     private async Task RefreshAsync()
@@ -40,6 +46,11 @@ public partial class BlockedFriendsPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
+#if IOS
+        var tabBarHeight = LayoutHelper.GetTabBarHeight();
+        MainCollectionView.Footer = new Grid { HeightRequest = tabBarHeight };
+
+#endif
         if (!_isInitialized)
         {
             _isInitialized = true;
@@ -59,6 +70,10 @@ public partial class BlockedFriendsPage : ContentPage
         base.OnDisappearing();
         _isInForeground = false;
     }
+
+#if IOS
+    private void OnTabBarHeightChangedMessageReceived(object recipient, TabBarHeightChangedMessage message) => MainCollectionView.Footer = new Grid { HeightRequest = message.Value };
+#endif
 
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {

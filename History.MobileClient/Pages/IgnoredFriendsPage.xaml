@@ -9,7 +9,7 @@
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
         <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
     </ContentPage.Behaviors>
-    <Grid>
+    <Grid x:Name="RootGrid">
         <RefreshView Refreshing="OnRefreshing">
             <Grid>
                 <CollectionView

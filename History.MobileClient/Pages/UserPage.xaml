@@ -18,7 +18,7 @@
         <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
     </ContentPage.Behaviors>
 
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -147,8 +147,8 @@
             </HorizontalStackLayout>
         </Grid>
 
-        <Grid Grid.Row="1">
-            <RefreshView Refreshing="OnRefreshing">
+        <Grid Grid.Row="1" SafeAreaEdges="None">
+            <RefreshView Refreshing="OnRefreshing" SafeAreaEdges="None">
                 <CollectionView
                     x:Name="MainCollectionView"
                     ChildAdded="OnMainCollectionViewChildAdded"

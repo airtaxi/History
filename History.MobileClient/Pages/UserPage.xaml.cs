@@ -7,6 +7,7 @@ using History.MobileClient.DataTypes;
 using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Platform;
 using System.Collections.ObjectModel;
 using History.Commons;
 using UraniumUI.Icons.MaterialSymbols;
@@ -29,6 +30,8 @@ public partial class UserPage : ContentPage
     private bool _useGridLayout = true;
 #if IOS
     private double _lastScrollOffsetY;
+    private Thickness _scrollToTopBorderBaseMargin;
+    private Thickness _writePostBorderBaseMargin;
 #endif
     private object _lastViewModel;
     private ProfileViewModel _viewModel;
@@ -65,6 +68,15 @@ public partial class UserPage : ContentPage
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+#if IOS
+        WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
+
+        RootGrid.SafeAreaEdges = new(SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.SoftInput);
+
+        // Capture the original XAML margins before any tab bar inset is applied.
+        _scrollToTopBorderBaseMargin = ScrollToTopBorder.Margin;
+        _writePostBorderBaseMargin = WritePostBorder.Margin;
+#endif
     }
 
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
@@ -194,6 +206,21 @@ public partial class UserPage : ContentPage
             var statusBarHeight = LayoutHelper.GetStatusBarHeight();
             Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
         }
+
+#if IOS
+        // Only apply tab bar inset when the tab bar is visible (my profile).
+        // Other users' profiles hide the tab bar (Shell.TabBarIsVisible="False"),
+        // so the floating borders and collection footer must not be offset.
+        if (_isMyProfile)
+        {
+            var tabBarHeight = LayoutHelper.GetTabBarHeight();
+
+            ScrollToTopBorder.Margin = new Thickness(_scrollToTopBorderBaseMargin.Left, _scrollToTopBorderBaseMargin.Top, _scrollToTopBorderBaseMargin.Right, _scrollToTopBorderBaseMargin.Bottom + tabBarHeight);
+            WritePostBorder.Margin = new Thickness(_writePostBorderBaseMargin.Left, _writePostBorderBaseMargin.Top, _writePostBorderBaseMargin.Right, _writePostBorderBaseMargin.Bottom + tabBarHeight);
+
+            MainCollectionView.Footer = new Grid { HeightRequest = tabBarHeight };
+        }
+#endif
     }
 
     private async Task MarkFriendNotificationsAsReadAsync()
@@ -207,6 +234,18 @@ public partial class UserPage : ContentPage
         base.OnDisappearing();
         _isInForeground = false;
     }
+
+#if IOS
+    private void OnTabBarHeightChangedMessageReceived(object recipient, TabBarHeightChangedMessage message)
+    {
+        if (!_isMyProfile) return;
+
+        MainCollectionView.Footer = new Grid { HeightRequest = message.Value };
+
+        ScrollToTopBorder.Margin = new Thickness(_scrollToTopBorderBaseMargin.Left, _scrollToTopBorderBaseMargin.Top, _scrollToTopBorderBaseMargin.Right, _scrollToTopBorderBaseMargin.Bottom + message.Value);
+        WritePostBorder.Margin = new Thickness(_writePostBorderBaseMargin.Left, _writePostBorderBaseMargin.Top, _writePostBorderBaseMargin.Right, _writePostBorderBaseMargin.Bottom + message.Value);
+    }
+#endif
 
 #if IOS
     protected override void OnNavigatedTo(NavigatedToEventArgs args)

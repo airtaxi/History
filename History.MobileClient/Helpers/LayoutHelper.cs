@@ -27,6 +27,23 @@ public static class LayoutHelper
     }
 
     public static double GetStatusBarHeight() => UIApplication.SharedApplication.StatusBarFrame.Height;
+
+    // Returns the full tab bar frame height, including the home indicator inset.
+    // Prefers the value captured by CustomTabBarAppearanceTracker, then falls back
+    // to the live window RootViewController, then to the UIKit default (49pt).
+    public static double GetTabBarHeight()
+    {
+        if (CustomTabBarAppearanceTracker.TabBarHeight > 0) return CustomTabBarAppearanceTracker.TabBarHeight;
+
+        var window = UIApplication.SharedApplication.Delegate.GetWindow();
+        if (window?.RootViewController is UITabBarController tabBarController)
+        {
+            var height = tabBarController.TabBar.Frame.Height;
+            if (height > 0) return height;
+        }
+
+        return 49d;
+    }
 }
 #else
 public static class LayoutHelper

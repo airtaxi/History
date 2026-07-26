@@ -1,9 +1,10 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Platform;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
@@ -23,6 +24,11 @@ public partial class NotificationsPage : ContentPage
         MainCollectionView.ItemsSource = _viewModels;
         WeakReferenceMessenger.Default.Register<NotificationsMessage>(this, OnNotificationsMessage);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+#if IOS
+        WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
+
+        RootGrid.SafeAreaEdges = new(SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.SoftInput);
+#endif
     }
 
     public async Task RefreshAsync()
@@ -80,6 +86,11 @@ public partial class NotificationsPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
+#if IOS
+        var tabBarHeight = LayoutHelper.GetTabBarHeight();
+        MainCollectionView.Footer = new Grid { HeightRequest = tabBarHeight };
+
+#endif
         Dispatcher.Dispatch(async () => await RefreshAsync());
 
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
@@ -95,6 +106,10 @@ public partial class NotificationsPage : ContentPage
         base.OnDisappearing();
         _isInForeground = false;
     }
+
+#if IOS
+    private void OnTabBarHeightChangedMessageReceived(object recipient, TabBarHeightChangedMessage message) => MainCollectionView.Footer = new Grid { HeightRequest = message.Value };
+#endif
 
     private void OnNotificationsMessage(object recipient, NotificationsMessage message)
     {
