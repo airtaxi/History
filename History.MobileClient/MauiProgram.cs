@@ -64,6 +64,9 @@ public static class MauiProgram
             .ConfigureMauiHandlers(c =>
             {
                 c.AddHandler<CollectionView, StaggeredStructuredItemsViewHandler>();
+#if IOS
+                c.AddHandler(typeof(Shell), typeof(CustomShellRenderer));
+#endif
             })
             .RegisterFirebaseServices();
 

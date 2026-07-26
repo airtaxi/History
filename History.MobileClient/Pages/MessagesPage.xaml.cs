@@ -3,6 +3,7 @@ using History.Commons.Api.Message;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Platform;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
@@ -20,6 +21,11 @@ public partial class MessagesPage : ContentPage
         InitializeComponent();
         MainCollectionView.ItemsSource = _viewModels;
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+#if IOS
+        WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
+
+        RootGrid.SafeAreaEdges = new(SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.SoftInput);
+#endif
     }
 
     public async Task RefreshAsync()
@@ -86,6 +92,12 @@ public partial class MessagesPage : ContentPage
     {
         base.OnAppearing();
         _isInForeground = true;
+
+#if IOS
+        var tabBarHeight = LayoutHelper.GetTabBarHeight();
+        MainCollectionView.Footer = new Grid { HeightRequest = tabBarHeight };
+
+#endif
         Dispatcher.Dispatch(async () => await RefreshAsync());
 
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
@@ -101,6 +113,10 @@ public partial class MessagesPage : ContentPage
         base.OnDisappearing();
         _isInForeground = false;
     }
+
+#if IOS
+    private void OnTabBarHeightChangedMessageReceived(object recipient, TabBarHeightChangedMessage message) => MainCollectionView.Footer = new Grid { HeightRequest = message.Value };
+#endif
 
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {

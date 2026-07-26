@@ -6,6 +6,7 @@ using History.Commons.Api.Friendship;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Platform;
 using UraniumUI.Icons.FontAwesome;
 
 namespace History.MobileClient.Pages;
@@ -28,6 +29,11 @@ public partial class FriendListPage : ContentPage
         InitializeComponent();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+#if IOS
+        WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
+
+        RootGrid.SafeAreaEdges = new(SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.SoftInput);
+#endif
     }
 
     public FriendListPage(string userId) : this()
@@ -106,6 +112,11 @@ public partial class FriendListPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
+#if IOS
+        var tabBarHeight = LayoutHelper.GetTabBarHeight();
+        MainCollectionView.Footer = new Grid { HeightRequest = tabBarHeight };
+
+#endif
         if (!_isFirstLoad)
         {
             _isFirstLoad = true;
@@ -125,6 +136,10 @@ public partial class FriendListPage : ContentPage
         base.OnDisappearing();
         _isInForeground = false;
     }
+
+#if IOS
+    private void OnTabBarHeightChangedMessageReceived(object recipient, TabBarHeightChangedMessage message) => MainCollectionView.Footer = new Grid { HeightRequest = message.Value };
+#endif
 
     protected override void OnNavigatedTo(NavigatedToEventArgs args)
     {

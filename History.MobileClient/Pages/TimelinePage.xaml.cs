@@ -6,8 +6,11 @@ using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;
+using Microsoft.Maui.Platform;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Application = Microsoft.Maui.Controls.Application;
 
 namespace History.MobileClient.Pages;
 
@@ -19,6 +22,8 @@ public partial class TimelinePage : ContentPage
     private bool _areThereNoMorePostsToLoad;
 #if IOS
     private double _lastScrollOffsetY;
+    private Thickness _scrollToTopBorderBaseMargin;
+    private Thickness _writePostBorderBaseMargin;
 #endif
     private PostViewModel _lastViewModel;
     private readonly ObservableCollection<PostViewModel> _viewModels = [];
@@ -31,6 +36,15 @@ public partial class TimelinePage : ContentPage
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+#if IOS
+        WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
+
+        RootGrid.SafeAreaEdges = new(SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.SoftInput);
+
+        // Capture the original XAML margins before any tab bar inset is applied.
+        _scrollToTopBorderBaseMargin = ScrollToTopBorder.Margin;
+        _writePostBorderBaseMargin = WritePostBorder.Margin;
+#endif
     }
 
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
@@ -125,6 +139,18 @@ public partial class TimelinePage : ContentPage
             var statusBarHeight = LayoutHelper.GetStatusBarHeight();
             Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
         }
+
+#if IOS
+        // Apply the tab bar height as bottom margin/padding here, once the native
+        // tab bar has been laid out and CustomTabBarAppearanceTracker has captured
+        // its height. Falls back to 49pt when the tab bar cannot be resolved yet.
+        var tabBarHeight = LayoutHelper.GetTabBarHeight();
+
+        ScrollToTopBorder.Margin = new Thickness(_scrollToTopBorderBaseMargin.Left, _scrollToTopBorderBaseMargin.Top, _scrollToTopBorderBaseMargin.Right, _scrollToTopBorderBaseMargin.Bottom + tabBarHeight);
+        WritePostBorder.Margin = new Thickness(_writePostBorderBaseMargin.Left, _writePostBorderBaseMargin.Top, _writePostBorderBaseMargin.Right, _writePostBorderBaseMargin.Bottom + tabBarHeight);
+
+        MainCollectionView.Footer = new Grid { HeightRequest = tabBarHeight };
+#endif
     }
 
     protected override void OnDisappearing()
@@ -132,6 +158,16 @@ public partial class TimelinePage : ContentPage
         base.OnDisappearing();
         _isInForeground = false;
     }
+
+#if IOS
+    private void OnTabBarHeightChangedMessageReceived(object recipient, TabBarHeightChangedMessage message)
+    {
+        MainCollectionView.Footer = new Grid { HeightRequest = message.Value };
+
+        ScrollToTopBorder.Margin = new Thickness(_scrollToTopBorderBaseMargin.Left, _scrollToTopBorderBaseMargin.Top, _scrollToTopBorderBaseMargin.Right, _scrollToTopBorderBaseMargin.Bottom + message.Value);
+        WritePostBorder.Margin = new Thickness(_writePostBorderBaseMargin.Left, _writePostBorderBaseMargin.Top, _writePostBorderBaseMargin.Right, _writePostBorderBaseMargin.Bottom + message.Value);
+    }
+#endif
 
 #if IOS
     protected override void OnNavigatedTo(NavigatedToEventArgs args)
@@ -182,6 +218,8 @@ public partial class TimelinePage : ContentPage
     {
         var view = e.Element as View;
         var viewModel = view.BindingContext as PostViewModel;
+        if (viewModel == null) return;
+
         Debug.WriteLine($"[TL] Child Added {viewModel.Post.Id == _lastViewModel?.Post.Id}");
 
         if (viewModel.Post.Id == _lastViewModel?.Post.Id)

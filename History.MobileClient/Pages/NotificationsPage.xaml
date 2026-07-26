@@ -12,7 +12,7 @@
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
         <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
     </ContentPage.Behaviors>
-    <Grid RowSpacing="6">
+    <Grid x:Name="RootGrid" RowSpacing="6">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -47,7 +47,10 @@
             </Image>
         </Grid>
 
-        <RefreshView Grid.Row="1" Refreshing="OnRefreshing">
+        <RefreshView
+            Grid.Row="1"
+            Refreshing="OnRefreshing"
+            SafeAreaEdges="None">
             <CollectionView
                 x:Name="MainCollectionView"
                 RemainingItemsThreshold="0"

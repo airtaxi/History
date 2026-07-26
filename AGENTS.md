@@ -1,7 +1,5 @@
 # History 프로젝트 Copilot 지침
 
-replace_code_string 실행 시 한번에 여러개를 동시에 실행하면 파일 수정이 되지 않습니다. 가능하면 한번에 하나씩 실행하거나, multiple_replace_code_string을 사용하세요.
-
 ## 중요: CSharpStyleGuard 실행 금지
 - 이 레포에서는 CSharpStyleGuard(`--fix`/`--check`)를 실행하지 마세요. 가드가 삼항 연산자(CSG0001) 등을 무조건 한 줄로 합쳐버려서 320자를 초과하는 가독성 없는 줄이 만들어지는 문제가 있습니다. 수동 포맷팅만 사용하세요.
 
