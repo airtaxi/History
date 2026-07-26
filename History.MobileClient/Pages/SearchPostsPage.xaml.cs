@@ -34,9 +34,6 @@ public partial class SearchPostsPage : ContentPage
     {
         InitializeComponent();
         MainCollectionView.ItemsSource = _viewModels;
-#if IOS
-        MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
-#endif
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
@@ -166,7 +163,6 @@ public partial class SearchPostsPage : ContentPage
 
     private void OnSizeChanged(object sender, EventArgs e)
     {
-#if ANDROID
         var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
 
         var previousSpan = staggeredItemsLayout?.Span ?? 1;
@@ -176,7 +172,6 @@ public partial class SearchPostsPage : ContentPage
             if (newSpan == 1) MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
             else MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
         }
-#endif
     }
 
     private async void OnChildAdded(object sender, ElementEventArgs e)

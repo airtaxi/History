@@ -11,13 +11,10 @@ using System.Collections.ObjectModel;
 using History.Commons;
 using UraniumUI.Icons.MaterialSymbols;
 using History.Commons.Api.Message;
-
-
-
-
-#if ANDROID
 using History.MobileClient.ThirdParty.StaggeredLayout;
-#endif
+
+
+
 
 namespace History.MobileClient.Pages;
 
@@ -161,7 +158,6 @@ public partial class UserPage : ContentPage
     {
         if (_useGridLayout) return;
 
-#if ANDROID
         var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
 
         var previousSpan = staggeredItemsLayout?.Span ?? 1;
@@ -171,7 +167,6 @@ public partial class UserPage : ContentPage
             if (newSpan == 1) MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
             else MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = newSpan };
         }
-#endif
     }
 
     private bool _isFirstLoad = true;
@@ -327,13 +322,9 @@ public partial class UserPage : ContentPage
             LayoutFontImageSource.Glyph = MaterialSharp.Dataset;
 
             MainCollectionView.ItemTemplate = App.Current.Resources["TimelineTemplateSelector"] as DataTemplateSelector;
-#if IOS
-            MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
-#else
             var span = ((int)Width / 700) + 1;
             if (span == 1) MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
             else MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = span };
-#endif
         }
         else
         {
