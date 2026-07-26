@@ -385,14 +385,6 @@
 
         </Grid>
 
-        <Rectangle
-            Grid.Row="1"
-            Fill="#808080"
-            HeightRequest="{OnPlatform iOS=1.5,
-                                       Android=1}"
-            HorizontalOptions="Fill"
-            VerticalOptions="Start" />
-
         <Grid
             Grid.Row="2"
             Padding="12"
