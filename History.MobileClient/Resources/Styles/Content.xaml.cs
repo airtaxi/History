@@ -42,13 +42,17 @@ public partial class Content : ResourceDictionary
     }
 
     // Must set TouchGesture to invoke TapGestureCommand for Comment.xaml
-    // No need to call HandleTapAsync here. CommentViewModel's HandleTapCommand will do their job.
+    // For iOS, No need to call HandleTapAsync here. CommentViewModel's HandleTapCommand will do their job.
     private async void OnTextTypeContentsLabelTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e)
     {
         var label = sender as Label;
         var parent = label.Parent;
         if (parent?.BindingContext is null) return;
 
+#if ANDROID
+        // For Android, CommentViewModel's HandleTapCommand doesn't fire automatically. still needs manaual event fire
+        if (parent.BindingContext is CommentViewModel commentModel) await commentModel.HandleTapAsync();
+#endif
         if (parent.BindingContext is PublicPostViewModel publicPostViewModel) await publicPostViewModel.HandleProfileTapAsync();
         else if (parent.BindingContext is PostViewModel postViewModel && (postViewModel.PostType != Enums.PostType.Unwrapped || postViewModel.IsParentPost)) await postViewModel.HandleTapAsync();
     }
