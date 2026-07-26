@@ -53,7 +53,8 @@ public partial class TimelinePage : ContentPage
                 var firstViewModel = _viewModels.FirstOrDefault();
                 if (firstViewModel == null) return;
 
-                MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+                try { MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false); }
+                catch (Exception exception) { Debug.WriteLine($"[TL] ScrollTo failed: {exception.Message}"); }
 
                 await Task.Delay(100);
             }
@@ -217,7 +218,8 @@ public partial class TimelinePage : ContentPage
         var firstViewModel = _viewModels.FirstOrDefault();
         if (firstViewModel == null) return;
 
-        MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+        try { MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false); }
+        catch (Exception exception) { Debug.WriteLine($"[TL] ScrollTo failed: {exception.Message}"); }
     }
 
     private async void OnSearchPostImageTapped(object sender, TappedEventArgs e)

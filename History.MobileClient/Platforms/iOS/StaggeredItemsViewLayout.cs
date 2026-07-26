@@ -126,7 +126,9 @@ public class StaggeredItemsViewLayout(StaggeredItemsLayout itemsLayout, ItemSizi
         var row = indexPath.Row;
         if (row >= 0 && row < cache.Count) return cache[row];
 
-        // Fallback to base during initial PrepareLayout before cache is built
-        return base.LayoutAttributesForItem(indexPath);
+        // Return null (not base fallback) so UICollectionView gracefully no-ops ScrollTo
+        // when the layout hasn't been prepared yet after an ItemsLayout swap.
+        Debug.WriteLine($"{Tag} LayoutAttributesForItem: out-of-range row={row}, cache={cache.Count}");
+        return null;
     }
 }

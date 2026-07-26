@@ -12,6 +12,7 @@ using History.Commons;
 using UraniumUI.Icons.MaterialSymbols;
 using History.Commons.Api.Message;
 using History.MobileClient.ThirdParty.StaggeredLayout;
+using System.Diagnostics;
 
 
 
@@ -86,7 +87,8 @@ public partial class UserPage : ContentPage
                 var firstViewModel = _viewModels.FirstOrDefault();
                 if (firstViewModel == null) return;
 
-                MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+                try { MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false); }
+                catch (Exception exception) { Debug.WriteLine($"[User] ScrollTo failed: {exception.Message}"); }
 
                 await Task.Delay(100);
             }
@@ -284,7 +286,8 @@ public partial class UserPage : ContentPage
         var firstViewModel = _viewModels.FirstOrDefault();
         if (firstViewModel == null) return;
 
-        MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+        try { MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false); }
+        catch (Exception exception) { Debug.WriteLine($"[User] ScrollTo failed: {exception.Message}"); }
     }
 
     protected override bool OnBackButtonPressed()
