@@ -74,8 +74,8 @@ public interface IPostService
     /// <param name="userId">Identifies the user who is creating the post.</param>
     /// <param name="requestDto">Contains the details and content of the post being created.</param>
     /// <param name="files">Represents the files that are to be uploaded along with the post.</param>
-    /// <returns>Returns a task that represents the asynchronous operation, yielding a result indicating success or failure.</returns>
-    public Task<Result> WritePostAsync(string userId, WritePostRequestDto requestDto, IEnumerable<IFormFile> files);
+    /// <returns>Returns a task that represents the asynchronous operation, yielding the created post on success or a failure result.</returns>
+    public Task<Result<Post>> WritePostAsync(string userId, WritePostRequestDto requestDto, IEnumerable<IFormFile> files);
 
     /// <summary>
     /// Asynchronously modifies a post based on the provided details and files.

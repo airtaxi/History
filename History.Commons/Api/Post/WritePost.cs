@@ -1,12 +1,13 @@
 ﻿using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.RequestDtos;
+using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.Commons.Interfaces;
 using RestSharp;
 
 namespace History.Commons.Api.Post;
 
-public class WritePost : IAuthRequiredRequest, IRequestWithForm, IRequestWithFiles
+public class WritePost : IBaseRequest<PostResponseDto>, IAuthRequiredRequest, IRequestWithForm, IRequestWithFiles
 {
     public string Path => "/api/post";
     public Method Method => Method.Post;
