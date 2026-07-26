@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -10,6 +10,7 @@ using History.Commons.Enums;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Enums;
 using History.MobileClient.Pages;
+using Syncfusion.Maui.Toolkit.Picker;
 
 namespace History.MobileClient.ViewModels;
 
@@ -41,6 +42,11 @@ public partial class CommentViewModel : ObservableObject
 
     [ObservableProperty]
     public partial List<IContentViewModel> Contents { get; private set; }
+
+    /// <summary>
+    /// See OnTextTypeContentsLabelTouchGestureCompleted of Content.xaml.cs and HandleTapAsync method for why this needed
+    /// </summary>
+    public bool IsLongPressed { get; set; }
 
     public bool IsMyComment => Comment.User.UserId == Shared.UserId;
 
@@ -189,7 +195,12 @@ public partial class CommentViewModel : ObservableObject
     [RelayCommand]
     public async Task HandleTapAsync()
     {
-        if (_postType == PostType.Unwrapped) WeakReferenceMessenger.Default.Send<CommentTappedMessage>(new(Comment.User));
+        if (_postType == PostType.Unwrapped)
+        {
+            // As TouchGestureCompleted is set to Label, LongPress will also raise Tap event which we doesn't count as Tap event.
+            if (!IsLongPressed) WeakReferenceMessenger.Default.Send<CommentTappedMessage>(new(Comment.User));
+            else IsLongPressed = false; // Reset the flag and never raise the event
+        }
         else await _parentViewModel.HandleTapAsync();
     }
 
