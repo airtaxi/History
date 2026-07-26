@@ -23,9 +23,6 @@ using Syncfusion.Maui.Core.Hosting;
 using History.Commons.Api.Message;
 using CommunityToolkit.Maui.Core;
 
-
-
-
 #if IOS
 using Plugin.Firebase.Core.Platforms.iOS;
 #elif ANDROID
