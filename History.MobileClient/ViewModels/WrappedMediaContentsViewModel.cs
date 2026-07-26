@@ -124,6 +124,7 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
         Medias = medias;
 
         WeakReferenceMessenger.Default.Register<ResizeCarouselViewMessage>(this, OnCarouselViewHeightChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<SpanChangedMessage>(this, OnSpanChangedMessageReceived);
     }
 
     public void UpdateCarouselViewSize()
@@ -134,6 +135,14 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
             Debug.WriteLine($"UpdateCarouselViewHeight {_lastCarouselViewHeight}");
             OnPropertyChanged(nameof(CarouselViewHeight));
         }
+    }
+
+    private void OnSpanChangedMessageReceived(object recipient, SpanChangedMessage message)
+    {
+        _lastCarouselViewHeight = 0;
+        CarouselViewWidth = -1;
+        CarouselViewHorizontalOptions = LayoutOptions.Fill;
+        OnPropertyChanged(nameof(CarouselViewHeight));
     }
 
     private double CalculateNewHeight()
