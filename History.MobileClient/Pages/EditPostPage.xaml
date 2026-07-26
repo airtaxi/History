@@ -92,7 +92,7 @@
                     CanReorderItems="True"
                     SelectionMode="None">
                     <CollectionView.ItemsLayout>
-                        <staggered:StaggeredItemsLayout Span="1" />
+                        <staggered:StaggeredItemsLayout Span="10000" />
                     </CollectionView.ItemsLayout>
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="vm:MediaAttachmentViewModel">
