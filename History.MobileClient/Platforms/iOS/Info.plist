@@ -51,5 +51,7 @@
 	<string>이 앱은 사진과 비디오를 저장하기 위해 사진 갤러리에 대한 액세스 권한이 필요합니다.</string>
 	<key>CFBundleIdentifier</key>
 	<string></string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
