@@ -169,7 +169,6 @@
                                                  Mode=OneWay}"
                 Position="{x:Binding CarouselPosition,
                                      Mode=OneWayToSource}"
-                PositionChanged="OnWrappedMediaContentsCarouselViewPositionChanged"
                 SizeChanged="OnWrappedMediaContentsCarouselViewSizeChanged">
                 <CarouselView.Clip>
                     <RoundRectangleGeometry CornerRadius="6" />
@@ -212,11 +211,8 @@
 
     <DataTemplate x:Key="TextTypeContentsTemplate" x:DataType="vm:TextTypeContentsViewModel">
         <Label FormattedText="{x:Binding FormattedString}" SizeChanged="OnTextTypeContentsLabelSizeChanged">
-            <Label.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnTextTypeContentsLabelTapped" />
-            </Label.GestureRecognizers>
             <Label.Behaviors>
-                <toolkit:TouchBehavior LongPressCompleted="OnTextTypeContentsLabelLongPressed" />
+                <toolkit:TouchBehavior LongPressCompleted="OnTextTypeContentsLabelLongPressed" TouchGestureCompleted="OnTextTypeContentsLabelTouchGestureCompleted" />
             </Label.Behaviors>
         </Label>
     </DataTemplate>

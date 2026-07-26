@@ -39,7 +39,7 @@ public partial class Content : ResourceDictionary
         await Toast.Make("텍스트가 클립보드에 복사되었습니다.").Show();
     }
 
-    private async void OnTextTypeContentsLabelTapped(object sender, TappedEventArgs e)
+    private async void OnTextTypeContentsLabelTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e)
     {
         var label = sender as Label;
         var parent = label.Parent;
@@ -72,17 +72,10 @@ public partial class Content : ResourceDictionary
 
         clip.Rect = new Rect(0, 0, carouselView.Width, carouselView.Height);
 
-        var viewModel = carouselView.BindingContext as WrappedMediaContentsViewModel;
-        if(viewModel != null)
+        if (carouselView.BindingContext is WrappedMediaContentsViewModel viewModel)
         {
             viewModel.CarouselViewWidth = -1;
             viewModel.UpdateCarouselViewSize();
         }
-    }
-
-    private void OnWrappedMediaContentsCarouselViewPositionChanged(object sender, PositionChangedEventArgs e)
-    {
-        var carouselView = sender as CarouselView;
-        carouselView.ScrollTo(carouselView.Position, animate: false);
     }
 }
