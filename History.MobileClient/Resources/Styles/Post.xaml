@@ -185,204 +185,203 @@
     </DataTemplate>
 
     <DataTemplate x:Key="PostTemplate" x:DataType="vm:PostViewModel">
-        <views:PostCellView PostViewModel="{x:Binding}">
-            <Grid Padding="6">
-                <Grid.GestureRecognizers>
-                    <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
-                </Grid.GestureRecognizers>
-                <Border
-                    Padding="12"
-                    Background="Transparent"
-                    StrokeThickness="0">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="16" />
-                    </Border.StrokeShape>
-                    <VerticalStackLayout Spacing="8">
-                        <Grid Grid.Row="0" HeightRequest="48">
-                            <HorizontalStackLayout Spacing="6">
-                                <views:DataTemplatePresenter
-                                    HeightRequest="36"
-                                    Template="{StaticResource MediaTemplateSelector}"
-                                    ViewModel="{x:Binding ProfileMedia,
-                                                          Mode=OneWay}"
-                                    WidthRequest="36">
-                                    <views:DataTemplatePresenter.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
-                                    </views:DataTemplatePresenter.GestureRecognizers>
-                                    <views:DataTemplatePresenter.Clip>
-                                        <EllipseGeometry
-                                            Center="18,18"
-                                            RadiusX="18"
-                                            RadiusY="18" />
-                                    </views:DataTemplatePresenter.Clip>
-                                </views:DataTemplatePresenter>
-                                <VerticalStackLayout VerticalOptions="Center">
-                                    <HorizontalStackLayout Spacing="4">
-                                        <Label
-                                            FontAttributes="Bold"
-                                            FontSize="14"
-                                            LineBreakMode="TailTruncation"
-                                            Text="{x:Binding Nickname}" />
-                                        <Image
-                                            HeightRequest="14"
-                                            IsVisible="{x:Binding IsAdmin}"
-                                            WidthRequest="14">
-                                            <Image.Source>
-                                                <FontImageSource
-                                                    FontFamily="FASolid"
-                                                    Glyph="{x:Static fa:Solid.Crown}"
-                                                    Color="#f78501" />
-                                            </Image.Source>
-                                        </Image>
-                                        <Image
-                                            HeightRequest="14"
-                                            IsVisible="{x:Binding IsModerator}"
-                                            WidthRequest="14">
-                                            <Image.Source>
-                                                <FontImageSource
-                                                    FontFamily="FASolid"
-                                                    Glyph="{x:Static fa:Solid.Gavel}"
-                                                    Color="#1a5bf3" />
-                                            </Image.Source>
-                                        </Image>
-                                    </HorizontalStackLayout>
-                                    <HorizontalStackLayout>
-                                        <Label FontSize="12" TextColor="#808080">
-                                            <Label.FormattedText>
-                                                <FormattedString>
-                                                    <Span Text="{x:Binding TimestampText}" />
-                                                    <Span Text=" · " />
-                                                </FormattedString>
-                                            </Label.FormattedText>
-                                        </Label>
-                                        <Image HeightRequest="12" WidthRequest="12">
-                                            <Image.Source>
-                                                <FontImageSource
-                                                    FontFamily="FASolid"
-                                                    Glyph="{x:Binding DiscoveryOptionGlyph}"
-                                                    Color="#808080" />
-                                            </Image.Source>
-                                        </Image>
-                                    </HorizontalStackLayout>
-                                </VerticalStackLayout>
-                            </HorizontalStackLayout>
-                            <Image
-                                HeightRequest="28"
-                                HorizontalOptions="End"
-                                VerticalOptions="Center"
-                                WidthRequest="28">
+        <Grid Padding="6">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+            </Grid.GestureRecognizers>
+            <Border
+                Padding="12"
+                Background="{AppThemeBinding Dark=Black,
+                                             Light=White}"
+                StrokeThickness="0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <VerticalStackLayout Spacing="8">
+                    <Grid Grid.Row="0" HeightRequest="48">
+                        <HorizontalStackLayout Spacing="6">
+                            <views:DataTemplatePresenter
+                                HeightRequest="36"
+                                Template="{StaticResource MediaTemplateSelector}"
+                                ViewModel="{x:Binding ProfileMedia,
+                                                      Mode=OneWay}"
+                                WidthRequest="36">
+                                <views:DataTemplatePresenter.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
+                                </views:DataTemplatePresenter.GestureRecognizers>
+                                <views:DataTemplatePresenter.Clip>
+                                    <EllipseGeometry
+                                        Center="18,18"
+                                        RadiusX="18"
+                                        RadiusY="18" />
+                                </views:DataTemplatePresenter.Clip>
+                            </views:DataTemplatePresenter>
+                            <VerticalStackLayout VerticalOptions="Center">
+                                <HorizontalStackLayout Spacing="4">
+                                    <Label
+                                        FontAttributes="Bold"
+                                        FontSize="14"
+                                        LineBreakMode="TailTruncation"
+                                        Text="{x:Binding Nickname}" />
+                                    <Image
+                                        HeightRequest="14"
+                                        IsVisible="{x:Binding IsAdmin}"
+                                        WidthRequest="14">
+                                        <Image.Source>
+                                            <FontImageSource
+                                                FontFamily="FASolid"
+                                                Glyph="{x:Static fa:Solid.Crown}"
+                                                Color="#f78501" />
+                                        </Image.Source>
+                                    </Image>
+                                    <Image
+                                        HeightRequest="14"
+                                        IsVisible="{x:Binding IsModerator}"
+                                        WidthRequest="14">
+                                        <Image.Source>
+                                            <FontImageSource
+                                                FontFamily="FASolid"
+                                                Glyph="{x:Static fa:Solid.Gavel}"
+                                                Color="#1a5bf3" />
+                                        </Image.Source>
+                                    </Image>
+                                </HorizontalStackLayout>
+                                <HorizontalStackLayout>
+                                    <Label FontSize="12" TextColor="#808080">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <Span Text="{x:Binding TimestampText}" />
+                                                <Span Text=" · " />
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                    <Image HeightRequest="12" WidthRequest="12">
+                                        <Image.Source>
+                                            <FontImageSource
+                                                FontFamily="FASolid"
+                                                Glyph="{x:Binding DiscoveryOptionGlyph}"
+                                                Color="#808080" />
+                                        </Image.Source>
+                                    </Image>
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </HorizontalStackLayout>
+                        <Image
+                            HeightRequest="28"
+                            HorizontalOptions="End"
+                            VerticalOptions="Center"
+                            WidthRequest="28">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Command="{x:Binding HandleMoreTapCommand}" />
+                            </Image.GestureRecognizers>
+                            <Image.Source>
+                                <FontImageSource
+                                    FontFamily="MaterialSharp"
+                                    Glyph="{x:Static m:MaterialSharp.More_horiz}"
+                                    Color="{AppThemeBinding Dark=White,
+                                                            Light=Black}" />
+                            </Image.Source>
+                        </Image>
+                    </Grid>
+                    <VerticalStackLayout
+                        BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
+                        BindableLayout.ItemsSource="{x:Binding Contents}"
+                        Spacing="8" />
+                    <views:DataTemplatePresenter
+                        IsVisible="{x:Binding IsShare}"
+                        Template="{StaticResource SharedPostTemplate}"
+                        ViewModel="{x:Binding ParentPost,
+                                              Mode=OneWay}" />
+                    <HorizontalStackLayout
+                        Margin="0,4,0,0"
+                        Spacing="10"
+                        VerticalOptions="Center">
+                        <HorizontalStackLayout Spacing="8">
+                            <Image HeightRequest="24" WidthRequest="24">
                                 <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{x:Binding HandleMoreTapCommand}" />
+                                    <TapGestureRecognizer Command="{x:Binding HandleReactionCommand}" />
                                 </Image.GestureRecognizers>
                                 <Image.Source>
                                     <FontImageSource
+                                        FontFamily="{x:Binding ReactionFontFamily}"
+                                        Glyph="{x:Binding ReactionGlyph}"
+                                        Color="{x:Binding ReactionColor}" />
+                                </Image.Source>
+                            </Image>
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="16"
+                                Text="{x:Binding ReactionsCount}"
+                                VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                            <Image HeightRequest="24" WidthRequest="24">
+                                <Image.Source>
+                                    <FontImageSource
+                                        FontFamily="FARegular"
+                                        Glyph="{x:Static fa:Regular.Comments}"
+                                        Color="{AppThemeBinding Dark=#FFFFFF,
+                                                                Light=#000000}" />
+                                </Image.Source>
+                            </Image>
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="16"
+                                Text="{x:Binding CommentsCount}"
+                                VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout
+                            IsVisible="{x:Binding HasSharedUsers}"
+                            Spacing="4"
+                            VerticalOptions="Center">
+                            <Image HeightRequest="24" WidthRequest="24">
+                                <Image.Source>
+                                    <FontImageSource
                                         FontFamily="MaterialSharp"
-                                        Glyph="{x:Static m:MaterialSharp.More_horiz}"
+                                        Glyph="{x:Static m:MaterialSharp.Share}"
                                         Color="{AppThemeBinding Dark=White,
                                                                 Light=Black}" />
                                 </Image.Source>
                             </Image>
-                        </Grid>
-                        <VerticalStackLayout
-                            BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
-                            BindableLayout.ItemsSource="{x:Binding Contents}"
-                            Spacing="8" />
-                        <views:DataTemplatePresenter
-                            IsVisible="{x:Binding IsShare}"
-                            Template="{StaticResource SharedPostTemplate}"
-                            ViewModel="{x:Binding ParentPost,
-                                                  Mode=OneWay}" />
-                        <HorizontalStackLayout
-                            Margin="0,4,0,0"
-                            Spacing="10"
-                            VerticalOptions="Center">
-                            <HorizontalStackLayout Spacing="8">
-                                <Image HeightRequest="24" WidthRequest="24">
-                                    <Image.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{x:Binding HandleReactionCommand}" />
-                                    </Image.GestureRecognizers>
-                                    <Image.Source>
-                                        <FontImageSource
-                                            FontFamily="{x:Binding ReactionFontFamily}"
-                                            Glyph="{x:Binding ReactionGlyph}"
-                                            Color="{x:Binding ReactionColor}" />
-                                    </Image.Source>
-                                </Image>
-                                <Label
-                                    FontAttributes="Bold"
-                                    FontSize="16"
-                                    Text="{x:Binding ReactionsCount}"
-                                    VerticalOptions="Center" />
-                            </HorizontalStackLayout>
-                            <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                                <Image HeightRequest="24" WidthRequest="24">
-                                    <Image.Source>
-                                        <FontImageSource
-                                            FontFamily="FARegular"
-                                            Glyph="{x:Static fa:Regular.Comments}"
-                                            Color="{AppThemeBinding Dark=#FFFFFF,
-                                                                    Light=#000000}" />
-                                    </Image.Source>
-                                </Image>
-                                <Label
-                                    FontAttributes="Bold"
-                                    FontSize="16"
-                                    Text="{x:Binding CommentsCount}"
-                                    VerticalOptions="Center" />
-                            </HorizontalStackLayout>
-                            <HorizontalStackLayout
-                                IsVisible="{x:Binding HasSharedUsers}"
-                                Spacing="4"
-                                VerticalOptions="Center">
-                                <Image HeightRequest="24" WidthRequest="24">
-                                    <Image.Source>
-                                        <FontImageSource
-                                            FontFamily="MaterialSharp"
-                                            Glyph="{x:Static m:MaterialSharp.Share}"
-                                            Color="{AppThemeBinding Dark=White,
-                                                                    Light=Black}" />
-                                    </Image.Source>
-                                </Image>
-                                <Label
-                                    FontAttributes="Bold"
-                                    FontSize="16"
-                                    Text="{x:Binding SharedUsersCount}"
-                                    VerticalOptions="Center" />
-                            </HorizontalStackLayout>
-                            <HorizontalStackLayout IsVisible="{x:Binding HasRepostedUsers}" Spacing="4">
-                                <Image HeightRequest="24" WidthRequest="24">
-                                    <Image.Source>
-                                        <FontImageSource
-                                            FontFamily="MaterialSharp"
-                                            Glyph="{x:Static m:MaterialSharp.Shift_lock}"
-                                            Color="{AppThemeBinding Dark=White,
-                                                                    Light=Black}" />
-                                    </Image.Source>
-                                </Image>
-                                <Label
-                                    FontAttributes="Bold"
-                                    FontSize="16"
-                                    Text="{x:Binding RepostedUsersCount}"
-                                    VerticalOptions="Center" />
-                            </HorizontalStackLayout>
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="16"
+                                Text="{x:Binding SharedUsersCount}"
+                                VerticalOptions="Center" />
                         </HorizontalStackLayout>
-                        <Grid Margin="0,4,0,0" IsVisible="{x:Binding HasComments}">
-                            <Rectangle
-                                Fill="#808080"
-                                HeightRequest="{OnPlatform iOS=1.5,
-                                                           Android=1}"
-                                HorizontalOptions="Fill"
-                                VerticalOptions="Start" />
-                            <views:DataTemplatePresenter
-                                Margin="0,12,0,0"
-                                Template="{StaticResource CommentTemplate}"
-                                ViewModel="{x:Binding LatestComment,
-                                                      Mode=OneWay}" />
-                        </Grid>
-                    </VerticalStackLayout>
-                </Border>
-            </Grid>
-        </views:PostCellView>
+                        <HorizontalStackLayout IsVisible="{x:Binding HasRepostedUsers}" Spacing="4">
+                            <Image HeightRequest="24" WidthRequest="24">
+                                <Image.Source>
+                                    <FontImageSource
+                                        FontFamily="MaterialSharp"
+                                        Glyph="{x:Static m:MaterialSharp.Shift_lock}"
+                                        Color="{AppThemeBinding Dark=White,
+                                                                Light=Black}" />
+                                </Image.Source>
+                            </Image>
+                            <Label
+                                FontAttributes="Bold"
+                                FontSize="16"
+                                Text="{x:Binding RepostedUsersCount}"
+                                VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </HorizontalStackLayout>
+                    <Grid Margin="0,4,0,0" IsVisible="{x:Binding HasComments}">
+                        <Rectangle
+                            Fill="#808080"
+                            HeightRequest="{OnPlatform iOS=1.5,
+                                                       Android=1}"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Start" />
+                        <views:DataTemplatePresenter
+                            Margin="0,12,0,0"
+                            Template="{StaticResource CommentTemplate}"
+                            ViewModel="{x:Binding LatestComment,
+                                                  Mode=OneWay}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
     </DataTemplate>
 
     <DataTemplate x:Key="PostPreviewTemplate" x:DataType="vm:PostViewModel">
