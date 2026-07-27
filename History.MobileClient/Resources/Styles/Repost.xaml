@@ -9,142 +9,143 @@
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
 
     <DataTemplate x:Key="RepostTemplate" x:DataType="vm:RepostViewModel">
-        <Grid Padding="6">
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
-            </Grid.GestureRecognizers>
+        <views:PostCellView PostViewModel="{x:Binding}">
+            <Grid Padding="6">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+                </Grid.GestureRecognizers>
 
-            <Border
-                Padding="12"
-                Background="{AppThemeBinding Dark=Black,
-                                             Light=White}"
-                StrokeThickness="0">
-                <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="16" />
-                </Border.StrokeShape>
-                <VerticalStackLayout Spacing="8">
-                    <Grid Grid.Row="0" HeightRequest="36">
-                        <HorizontalStackLayout Spacing="6">
-                            <views:DataTemplatePresenter
-                                HeightRequest="36"
-                                Template="{StaticResource MediaTemplateSelector}"
-                                ViewModel="{x:Binding ProfileMedia,
-                                                      Mode=OneWay}"
-                                WidthRequest="36">
-                                <views:DataTemplatePresenter.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
-                                </views:DataTemplatePresenter.GestureRecognizers>
-                                <views:DataTemplatePresenter.Clip>
-                                    <EllipseGeometry
-                                        Center="18,18"
-                                        RadiusX="18"
-                                        RadiusY="18" />
-                                </views:DataTemplatePresenter.Clip>
-                            </views:DataTemplatePresenter>
-                            <VerticalStackLayout VerticalOptions="Center">
-                                <HorizontalStackLayout Spacing="4">
-                                    <Label
-                                        FontAttributes="Bold"
-                                        FontSize="14"
-                                        LineBreakMode="TailTruncation"
-                                        Text="{x:Binding Nickname}" />
-                                    <Image
-                                        HeightRequest="14"
-                                        IsVisible="{x:Binding IsAdmin}"
-                                        WidthRequest="14">
-                                        <Image.Source>
-                                            <FontImageSource
-                                                FontFamily="FASolid"
-                                                Glyph="{x:Static fa:Solid.Crown}"
-                                                Color="#f78501" />
-                                        </Image.Source>
-                                    </Image>
-                                    <Image
-                                        HeightRequest="14"
-                                        IsVisible="{x:Binding IsModerator}"
-                                        WidthRequest="14">
-                                        <Image.Source>
-                                            <FontImageSource
-                                                FontFamily="FASolid"
-                                                Glyph="{x:Static fa:Solid.Gavel}"
-                                                Color="#1a5bf3" />
-                                        </Image.Source>
-                                    </Image>
-                                </HorizontalStackLayout>
-                                <HorizontalStackLayout>
-                                    <Label FontSize="12" TextColor="#808080">
-                                        <Label.FormattedText>
-                                            <FormattedString>
-                                                <Span Text="{x:Binding TimestampText}" />
-                                                <Span Text=" · " />
-                                            </FormattedString>
-                                        </Label.FormattedText>
-                                    </Label>
-                                    <Image HeightRequest="12" WidthRequest="12">
-                                        <Image.Source>
-                                            <FontImageSource
-                                                FontFamily="FASolid"
-                                                Glyph="{x:Binding DiscoveryOptionGlyph}"
-                                                Color="#808080" />
-                                        </Image.Source>
-                                    </Image>
-                                </HorizontalStackLayout>
-                            </VerticalStackLayout>
-                        </HorizontalStackLayout>
-                    </Grid>
-                    <VerticalStackLayout
-                        BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
-                        BindableLayout.ItemsSource="{x:Binding Contents}"
-                        Spacing="8" />
-                    <Grid Margin="0,4,0,0">
-                        <Rectangle
-                            Fill="#808080"
-                            HeightRequest="{OnPlatform iOS=1.5,
-                                                       Android=1}"
-                            HorizontalOptions="Fill"
-                            VerticalOptions="Start" />
-                        <Grid
-                            Margin="0,12,0,0"
-                            Padding="6,0,0,6"
-                            ColumnSpacing="6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="36" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Border
-                                Background="{AppThemeBinding Dark=#AAAAAA,
-                                                             Light=#555555}"
-                                HeightRequest="36"
-                                WidthRequest="36">
-                                <Border.StrokeShape>
-                                    <RoundRectangle CornerRadius="18" />
-                                </Border.StrokeShape>
-                                <Image HeightRequest="28" WidthRequest="28">
-                                    <Image.Source>
-                                        <FontImageSource
-                                            FontFamily="MaterialSharp"
-                                            Glyph="{x:Static m:MaterialSharp.Shift_lock}"
-                                            Color="{AppThemeBinding Dark=#000000,
-                                                                    Light=#FFFFFF}" />
-                                    </Image.Source>
-                                </Image>
-                            </Border>
-                            <Label Grid.Column="1" VerticalOptions="Center">
-                                <Label.FormattedText>
-                                    <FormattedString>
-                                        <Span FontAttributes="Bold" Text="{x:Binding RepostedUserNickname}">
-                                            <Span.GestureRecognizers>
-                                                <TapGestureRecognizer Command="{x:Binding HandleRepostedUserTapCommand}" />
-                                            </Span.GestureRecognizers>
-                                        </Span>
-                                        <Span>님이 리포스트 했어요</Span>
-                                    </FormattedString>
-                                </Label.FormattedText>
-                            </Label>
+                <Border
+                    Padding="12"
+                    Background="Transparent"
+                    StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="16" />
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="8">
+                        <Grid Grid.Row="0" HeightRequest="36">
+                            <HorizontalStackLayout Spacing="6">
+                                <views:DataTemplatePresenter
+                                    HeightRequest="36"
+                                    Template="{StaticResource MediaTemplateSelector}"
+                                    ViewModel="{x:Binding ProfileMedia,
+                                                          Mode=OneWay}"
+                                    WidthRequest="36">
+                                    <views:DataTemplatePresenter.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
+                                    </views:DataTemplatePresenter.GestureRecognizers>
+                                    <views:DataTemplatePresenter.Clip>
+                                        <EllipseGeometry
+                                            Center="18,18"
+                                            RadiusX="18"
+                                            RadiusY="18" />
+                                    </views:DataTemplatePresenter.Clip>
+                                </views:DataTemplatePresenter>
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <HorizontalStackLayout Spacing="4">
+                                        <Label
+                                            FontAttributes="Bold"
+                                            FontSize="14"
+                                            LineBreakMode="TailTruncation"
+                                            Text="{x:Binding Nickname}" />
+                                        <Image
+                                            HeightRequest="14"
+                                            IsVisible="{x:Binding IsAdmin}"
+                                            WidthRequest="14">
+                                            <Image.Source>
+                                                <FontImageSource
+                                                    FontFamily="FASolid"
+                                                    Glyph="{x:Static fa:Solid.Crown}"
+                                                    Color="#f78501" />
+                                            </Image.Source>
+                                        </Image>
+                                        <Image
+                                            HeightRequest="14"
+                                            IsVisible="{x:Binding IsModerator}"
+                                            WidthRequest="14">
+                                            <Image.Source>
+                                                <FontImageSource
+                                                    FontFamily="FASolid"
+                                                    Glyph="{x:Static fa:Solid.Gavel}"
+                                                    Color="#1a5bf3" />
+                                            </Image.Source>
+                                        </Image>
+                                    </HorizontalStackLayout>
+                                    <HorizontalStackLayout>
+                                        <Label FontSize="12" TextColor="#808080">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{x:Binding TimestampText}" />
+                                                    <Span Text=" · " />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                        <Image HeightRequest="12" WidthRequest="12">
+                                            <Image.Source>
+                                                <FontImageSource
+                                                    FontFamily="FASolid"
+                                                    Glyph="{x:Binding DiscoveryOptionGlyph}"
+                                                    Color="#808080" />
+                                            </Image.Source>
+                                        </Image>
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </HorizontalStackLayout>
                         </Grid>
-                    </Grid>
-                </VerticalStackLayout>
-            </Border>
-        </Grid>
+                        <VerticalStackLayout
+                            BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
+                            BindableLayout.ItemsSource="{x:Binding Contents}"
+                            Spacing="8" />
+                        <Grid Margin="0,4,0,0">
+                            <Rectangle
+                                Fill="#808080"
+                                HeightRequest="{OnPlatform iOS=1.5,
+                                                           Android=1}"
+                                HorizontalOptions="Fill"
+                                VerticalOptions="Start" />
+                            <Grid
+                                Margin="0,12,0,0"
+                                Padding="6,0,0,6"
+                                ColumnSpacing="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="36" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border
+                                    Background="{AppThemeBinding Dark=#AAAAAA,
+                                                                 Light=#555555}"
+                                    HeightRequest="36"
+                                    WidthRequest="36">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="18" />
+                                    </Border.StrokeShape>
+                                    <Image HeightRequest="28" WidthRequest="28">
+                                        <Image.Source>
+                                            <FontImageSource
+                                                FontFamily="MaterialSharp"
+                                                Glyph="{x:Static m:MaterialSharp.Shift_lock}"
+                                                Color="{AppThemeBinding Dark=#000000,
+                                                                        Light=#FFFFFF}" />
+                                        </Image.Source>
+                                    </Image>
+                                </Border>
+                                <Label Grid.Column="1" VerticalOptions="Center">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span FontAttributes="Bold" Text="{x:Binding RepostedUserNickname}">
+                                                <Span.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{x:Binding HandleRepostedUserTapCommand}" />
+                                                </Span.GestureRecognizers>
+                                            </Span>
+                                            <Span>님이 리포스트 했어요</Span>
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                            </Grid>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+        </views:PostCellView>
     </DataTemplate>
 </ResourceDictionary>

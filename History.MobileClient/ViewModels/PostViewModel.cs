@@ -189,6 +189,7 @@ public partial class PostViewModel : ObservableObject
 
             Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, PostType, this)).OrderBy(x => x.CreatedAt)];
             HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
+            WeakReferenceMessenger.Default.Send(new PostCellMeasureInvalidationMessage(Post.Id));
         }
         catch (ObjectDisposedException) { } // The view is disposed. this view model also will be removed on next GC
         catch (Exception) { } // Ignore any exceptions during update, as the view might be in the foreground.
