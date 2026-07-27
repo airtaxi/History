@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Maui;
 using FFImageLoading.Maui;
 using History.MobileClient.ThirdParty.StaggeredLayout;
+using Microsoft.Maui;
+using Nalu;
 using SuggestingBox.Maui;
 using UraniumUI;
 using Microsoft.Maui.LifecycleEvents;
@@ -52,6 +54,7 @@ public static class MauiProgram
             .UseUraniumUI()
             .UseUraniumUIMaterial()
             .UseSuggestingBox()
+            .UseNaluVirtualScroll()
             .ConfigureSyncfusionToolkit()
             .ConfigureSyncfusionCore()
             .ConfigureFonts(fonts =>

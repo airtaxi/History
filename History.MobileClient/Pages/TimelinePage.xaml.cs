@@ -8,6 +8,7 @@ using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;
 using Microsoft.Maui.Platform;
+using Nalu;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Application = Microsoft.Maui.Controls.Application;
@@ -29,10 +30,19 @@ public partial class TimelinePage : ContentPage
     private readonly ObservableCollection<PostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
+#if ANDROID
+    private bool _isLoadingMore;
+#endif
+
     public TimelinePage()
 	{
         InitializeComponent();
+
+#if ANDROID
+        MainVirtualScroll.ItemsSource = _viewModels;
+#else
         MainCollectionView.ItemsSource = _viewModels;
+#endif
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
@@ -67,7 +77,15 @@ public partial class TimelinePage : ContentPage
                 var firstViewModel = _viewModels.FirstOrDefault();
                 if (firstViewModel == null) return;
 
-                try { MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false); }
+                try
+                {
+#if ANDROID
+                    var firstIndex = _viewModels.IndexOf(firstViewModel);
+                    MainVirtualScroll.ScrollTo(0, firstIndex, ScrollToPosition.Start, false);
+#else
+                    MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+#endif
+                }
                 catch (Exception exception) { Debug.WriteLine($"[TL] ScrollTo failed: {exception.Message}"); }
 
                 await Task.Delay(100);
@@ -117,7 +135,12 @@ public partial class TimelinePage : ContentPage
     private async void OnRefreshing(object sender, EventArgs e)
     {
         await RefreshAsync();
+
+#if ANDROID
+        // VirtualScroll handles its own refresh indicator via IsRefreshing; nothing to set here.
+#else
         (sender as RefreshView).IsRefreshing = false;
+#endif
     }
 
     private bool _isFirstLoad = true;
@@ -201,10 +224,27 @@ public partial class TimelinePage : ContentPage
 
     private void OnSizeChanged(object sender, EventArgs e)
     {
+        var newSpan = ((int)Width / 700) + 1;
+
+#if ANDROID
+        var previousSpan = MainStaggeredLayout.Span;
+        if (newSpan != previousSpan)
+        {
+            // StaggeredVirtualScrollLayout supports runtime span changes: the platform handler
+            // rebuilds the StaggeredGridLayoutManager automatically via LayoutInvalidated event.
+            MainStaggeredLayout.Span = newSpan;
+
+            // Fall back to a plain vertical linear layout when only one column is needed.
+            MainVirtualScroll.ItemsLayout = newSpan == 1
+                ? new VerticalVirtualScrollLayout()
+                : MainStaggeredLayout;
+
+            WeakReferenceMessenger.Default.Send(new SpanChangedMessage());
+        }
+#else
         var staggeredItemsLayout = MainCollectionView.ItemsLayout as StaggeredItemsLayout;
 
         var previousSpan = staggeredItemsLayout?.Span ?? 1;
-        var newSpan = ((int)Width / 700) + 1;
         if (newSpan != previousSpan)
         {
             if (newSpan == 1) MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
@@ -212,10 +252,57 @@ public partial class TimelinePage : ContentPage
 
             WeakReferenceMessenger.Default.Send(new SpanChangedMessage());
         }
+#endif
     }
 
+#if ANDROID
+    private async void OnMainVirtualScrollScrolled(object sender, VirtualScrollScrolledEventArgs e)
+    {
+        // Show/hide scroll-to-top button based on vertical offset.
+        if (e.ScrollY > 0) ScrollToTopBorder.IsVisible = true;
+        else ScrollToTopBorder.IsVisible = false;
+
+        // Trigger LoadMore when the user is near the bottom.
+        await TryLoadMoreWhenNearBottomAsync();
+    }
+
+    private async Task TryLoadMoreWhenNearBottomAsync()
+    {
+        if (_isLoadingMore || _areThereNoMorePostsToLoad || _fetchSemaphore.CurrentCount == 0) return;
+
+        var range = MainVirtualScroll.GetVisibleItemsRange();
+        if (range is null) return;
+
+        // Trigger when the last visible item is within 5 positions of the end.
+        if (range.Value.EndItemIndex >= _viewModels.Count - 5)
+        {
+            _isLoadingMore = true;
+            try
+            {
+                // Use the last added viewmodel as the load-more anchor, mirroring the iOS ChildAdded path.
+                if (_lastViewModel is not null)
+                {
+                    await LoadMoreAsync();
+                    _lastViewModel = _viewModels.LastOrDefault();
+                }
+            }
+            finally
+            {
+                _isLoadingMore = false;
+            }
+        }
+    }
+#else
+    // iOS / MacCatalyst stub: VirtualScroll is hidden on Apple platforms, but XAML still references
+    // the handler so it must exist with the correct signature.
+    private void OnMainVirtualScrollScrolled(object sender, VirtualScrollScrolledEventArgs e) { }
+#endif
+
+    // iOS CollectionView event handlers. Defined on both platforms so XAML parses cleanly;
+    // only wired up to the iOS CollectionView via OnPlatform visibility.
     private async void OnChildAdded(object sender, ElementEventArgs e)
     {
+#if IOS
         var view = e.Element as View;
         var viewModel = view.BindingContext as PostViewModel;
         if (viewModel == null) return;
@@ -227,33 +314,44 @@ public partial class TimelinePage : ContentPage
             _lastViewModel = null;
             await LoadMoreAsync();
         }
+#endif
     }
 
+    private async void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e)
+    {
 #if IOS
-    private async void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e) => await LoadMoreAsync();
-#else
-    // Not used on Android, but required for compatibility
-    private void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e) { }
+        await LoadMoreAsync();
 #endif
-
-    private async void OnTitleGridTapped(object sender, TappedEventArgs e) => await RefreshAsync();
-
-    private async void OnWritePostBorderTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
+    }
 
     private void OnMainCollectionViewScrolled(object sender, ItemsViewScrolledEventArgs e)
     {
+#if IOS
         var collectionView = sender as CollectionView;
         var scrollOffsetY = collectionView.GetScrollOffsetY();
         if (scrollOffsetY > 0) ScrollToTopBorder.IsVisible = true;
         else ScrollToTopBorder.IsVisible = false;
+#endif
     }
+
+    private async void OnTitleGridTapped(object sender, TappedEventArgs e) => await RefreshAsync();
+
+    private async void OnWritePostBorderTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
 
     private void OnScrollToTopBorderTapped(object sender, TappedEventArgs e)
     {
         var firstViewModel = _viewModels.FirstOrDefault();
         if (firstViewModel == null) return;
 
-        try { MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false); }
+        try
+        {
+#if ANDROID
+            var firstIndex = _viewModels.IndexOf(firstViewModel);
+            MainVirtualScroll.ScrollTo(0, firstIndex, ScrollToPosition.Start, false);
+#else
+            MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false);
+#endif
+        }
         catch (Exception exception) { Debug.WriteLine($"[TL] ScrollTo failed: {exception.Message}"); }
     }
 
