@@ -290,7 +290,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\SuggestingBox.Maui\SuggestingBox.Maui\SuggestingBox.Maui.csproj" />
 		<ProjectReference Include="..\History.Commons\History.Commons.csproj" />
-		<ProjectReference Include="..\..\Nalu.StaggeredLayout\Source\Nalu.Maui.VirtualScroll\Nalu.Maui.VirtualScroll.csproj" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
