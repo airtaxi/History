@@ -4,7 +4,6 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
-    xmlns:nalu="https://nalu-development.github.com/nalu/virtualscroll"
     xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     Shell.NavBarIsVisible="False"
@@ -52,25 +51,10 @@
         </Grid>
 
         <Grid Grid.Row="1" SafeAreaEdges="None">
-            <!-- Android: Nalu VirtualScroll with StaggeredVirtualScrollLayout -->
-            <nalu:VirtualScroll
-                x:Name="MainVirtualScroll"
-                IsRefreshEnabled="True"
-                ItemTemplate="{StaticResource TimelineTemplateSelector}"
-                OnRefresh="OnRefreshing"
-                OnScrolled="OnMainVirtualScrollScrolled"
-                IsVisible="{OnPlatform Android=True, iOS=False, MacCatalyst=False}">
-                <nalu:VirtualScroll.ItemsLayout>
-                    <nalu:VerticalStaggeredVirtualScrollLayout x:Name="MainStaggeredLayout" Span="1" />
-                </nalu:VirtualScroll.ItemsLayout>
-            </nalu:VirtualScroll>
-
-            <!-- iOS / MacCatalyst: original CollectionView (unchanged) -->
             <RefreshView
                 x:Name="MainRefreshView"
                 Refreshing="OnRefreshing"
-                SafeAreaEdges="None"
-                IsVisible="{OnPlatform Android=False, iOS=True, MacCatalyst=True}">
+                SafeAreaEdges="None">
                 <CollectionView
                     x:Name="MainCollectionView"
                     ChildAdded="OnChildAdded"
