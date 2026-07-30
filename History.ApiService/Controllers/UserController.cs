@@ -22,7 +22,7 @@ namespace History.ApiService.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [RateLimit(Limit = 6, PeriodInSec = 1)]
-public class UserController(IUserService userService, IFriendshipService friendshipService, IRefreshTokenService refreshTokenService, INotificationService notificationService) : ControllerBase
+public class UserController(IUserService userService, IFriendshipService friendshipService, IRefreshTokenService refreshTokenService, INotificationService notificationService, IInviteCodeService inviteCodeService) : ControllerBase
 {
     /// <summary>
     /// `ter with OAuth
@@ -31,7 +31,9 @@ public class UserController(IUserService userService, IFriendshipService friends
     /// <returns>An action result indicating success or failure</returns>
     [HttpPost("register")]
     [ProducesResponseType<OAuthLoginResponseDto>(200)]
+    [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
     [ProducesResponseType<string>(409)]
     [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
@@ -40,11 +42,24 @@ public class UserController(IUserService userService, IFriendshipService friends
         var payload = await VerifyIdTokenAsync(request);
         if (payload == null) return Unauthorized("ID 토큰이 유효하지 않습니다.");
 
-        //var isCodeValid = request.Code == "alpha" || request.Code == "hypermaxsupersecurestoretesterregistercode3920070831";
-        //if (!isCodeValid) return BadRequest("가입 코드가 올바르지 않습니다.");
-
         var existingUserResult = await userService.GetUserByIdAsync(payload.Id);
         if (existingUserResult.IsSuccess) return Conflict("이미 등록된 사용자입니다.");
+
+        // Invite code validation: the very first user (empty DB) is exempt
+        var isUserCollectionEmpty = await userService.IsUserCollectionEmptyAsync();
+        if (!isUserCollectionEmpty)
+        {
+            if (string.IsNullOrWhiteSpace(request.InviteCode)) return BadRequest("초대 코드가 필요합니다.");
+
+            var validateResult = await inviteCodeService.ValidateInviteCodeAsync(request.InviteCode);
+            if (validateResult.IsFailure)
+            {
+                if (validateResult.Error == ErrorType.NotFound) return NotFound(validateResult.ErrorMessage);
+                else if (validateResult.Error == ErrorType.Conflict) return Conflict(validateResult.ErrorMessage);
+                else if (validateResult.Error == ErrorType.BadRequest) return BadRequest(validateResult.ErrorMessage);
+                else return StatusCode(500, validateResult.FullErrorMessage);
+            }
+        }
 
         var newUser = new User
         {
@@ -66,7 +81,23 @@ public class UserController(IUserService userService, IFriendshipService friends
             if (existingHandleUserResult.IsFailure) break;
         }
 
-        await userService.CreateUserAsync(newUser);
+        var createResult = await userService.CreateUserAsync(newUser);
+        if (createResult.IsFailure) return StatusCode(500, createResult.FullErrorMessage);
+
+        // Consume the invite code only after the user was created successfully
+        if (!isUserCollectionEmpty)
+        {
+            var consumeResult = await inviteCodeService.ConsumeInviteCodeAsync(request.InviteCode, payload.Id);
+            // If consumption fails (e.g. code was used by a concurrent registration), undo user creation
+            if (consumeResult.IsFailure)
+            {
+                var rollbackResult = await userService.DeleteUserAsync(newUser.Id);
+                if (rollbackResult.IsFailure) return StatusCode(500, "초대 코드 소비 실패 및 사용자 롤백 실패가 발생했습니다. 관리자에게 문의하세요.");
+                if (consumeResult.Error == ErrorType.Conflict) return Conflict(consumeResult.ErrorMessage);
+                else if (consumeResult.Error == ErrorType.NotFound) return NotFound(consumeResult.ErrorMessage);
+                else return StatusCode(500, consumeResult.FullErrorMessage);
+            }
+        }
 
         var accessToken = GenerateJwt(newUser, false);
         var refreshToken = GenerateJwt(newUser, true);

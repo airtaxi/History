@@ -153,6 +153,35 @@
                     TextDecorations="Underline"
                     VerticalOptions="Center" />
             </Grid>
+
+            <!--  Invite code input  -->
+            <Label
+                Margin="0,16,0,0"
+                FontAttributes="Bold"
+                FontSize="16"
+                Text="초대 코드" />
+            <Border
+                Margin="0,4,0,0"
+                BackgroundColor="{AppThemeBinding Light=#F5F5F5,
+                                                  Dark=#2A2A2A}"
+                StrokeShape="RoundRectangle"
+                StrokeThickness="0">
+                <Entry
+                    x:Name="InviteCodeEntry"
+                    Margin="12,8"
+                    CharacterSpacing="2"
+                    FontAttributes="Bold"
+                    FontSize="18"
+                    IsTextPredictionEnabled="False"
+                    MaxLength="8"
+                    Placeholder="초대 코드를 입력하세요"
+                    TextChanged="OnInviteCodeTextChanged" />
+            </Border>
+            <Label
+                Margin="0,4,0,0"
+                FontSize="12"
+                Text="초대 코드가 있어야 가입할 수 있습니다."
+                TextColor="#808080" />
         </VerticalStackLayout>
         <Button
             x:Name="RegisterButton"

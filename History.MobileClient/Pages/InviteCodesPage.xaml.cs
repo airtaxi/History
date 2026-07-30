@@ -1,0 +1,131 @@
+using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
+using History.Commons.Api.InviteCode;
+using History.MobileClient.DataTypes;
+using History.MobileClient.ViewModels;
+using System.Collections.ObjectModel;
+
+namespace History.MobileClient.Pages;
+
+public partial class InviteCodesPage : ContentPage
+{
+    private readonly ObservableCollection<InviteCodeViewModel> _viewModels = [];
+    private bool _areThereNoMoreCodesToLoad;
+    private bool _isInForeground;
+    private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
+
+    public InviteCodesPage()
+    {
+        InitializeComponent();
+        InviteCodesCollectionView.ItemsSource = _viewModels;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _isInForeground = true;
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChanged);
+        _ = RefreshAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _isInForeground = false;
+        WeakReferenceMessenger.Default.Unregister<LoadingStateChangedMessage>(this);
+    }
+
+    private void OnLoadingStateChanged(object recipient, LoadingStateChangedMessage message)
+    {
+        MainActivityIndicator.IsVisible = message.Value;
+        MainActivityIndicator.IsRunning = message.Value;
+    }
+
+    private async Task RefreshAsync()
+    {
+        if (_fetchSemaphore.CurrentCount == 0) return;
+        try
+        {
+            await _fetchSemaphore.WaitAsync();
+            _areThereNoMoreCodesToLoad = false;
+            _viewModels.Clear();
+            var result = await App.ExecuteRequestAsync(new GetMyInviteCodes());
+            if (result.IsSuccess)
+                foreach (var code in result.Value) _viewModels.Add(new InviteCodeViewModel(code));
+        }
+        finally { _fetchSemaphore.Release(); }
+    }
+
+    private async void OnRemainingItemsThresholdReached(object sender, EventArgs e)
+    {
+        if (_fetchSemaphore.CurrentCount == 0 || _areThereNoMoreCodesToLoad) return;
+        try
+        {
+            await _fetchSemaphore.WaitAsync();
+            var lastViewModel = _viewModels.LastOrDefault();
+            if (lastViewModel == null) return;
+            var result = await App.ExecuteRequestAsync(new GetMyInviteCodes(lastViewModel.Id));
+            if (result.IsSuccess)
+            {
+                _areThereNoMoreCodesToLoad = result.Value.Count == 0;
+                foreach (var code in result.Value) _viewModels.Add(new InviteCodeViewModel(code));
+            }
+        }
+        finally { _fetchSemaphore.Release(); }
+    }
+
+    private async void OnRequestInviteCodesTapped(object sender, TappedEventArgs e)
+    {
+        // Check active code count first; only allow requesting when zero active codes remain
+        var countResult = await App.ExecuteRequestAsync(new GetActiveInviteCodeCount());
+        if (countResult.IsSuccess && countResult.Value > 0)
+        {
+            await App.Page.DisplayAlertAsync("안내", $"유효한 초대 코드가 {countResult.Value}개 남아있습니다. 모두 사용한 후에 요청할 수 있습니다.", Constants.PromptOk);
+            return;
+        }
+
+        await ShowRequestDialogAsync();
+    }
+
+    private async Task ShowRequestDialogAsync()
+    {
+        var countStr = await App.Page.DisplayPromptAsync(
+            "초대 코드 요청",
+            "요청할 초대 코드 갯수를 입력하세요 (1-50)",
+            initialValue: "1",
+            maxLength: 2,
+            keyboard: Keyboard.Numeric);
+
+        if (string.IsNullOrEmpty(countStr)) return;
+        if (!int.TryParse(countStr, out var count) || count < 1 || count > 50)
+        {
+            await App.Page.DisplayAlertAsync("오류", "1~50 사이의 숫자를 입력해주세요.", Constants.PromptOk);
+            return;
+        }
+
+        var reasonStr = await App.Page.DisplayPromptAsync(
+            "초대 코드 요청",
+            "요청 사유를 입력하세요 (선택사항)",
+            maxLength: 500);
+
+        var result = await App.ExecuteRequestAsync(new RequestInviteCodes(reasonStr, count), [ErrorType.BadRequest, ErrorType.Conflict]);
+        if (result.IsSuccess)
+        {
+            await App.Page.DisplayAlertAsync("안내", "초대 코드 요청이 전송되었습니다.", Constants.PromptOk);
+            await RefreshAsync();
+        }
+        else
+        {
+            await App.Page.DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
+        }
+    }
+
+    private async void OnBackTapped(object sender, TappedEventArgs e) => await App.PopAsync();
+
+    private async void OnRefreshViewRefreshing(object sender, EventArgs e)
+    {
+        await RefreshAsync();
+        RefreshView.IsRefreshing = false;
+    }
+}

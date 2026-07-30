@@ -28,6 +28,8 @@ public partial class MorePage : ContentPage
         var isModerator = Shared.MyRank >= Rank.Moderator;
         ModerationDivider.IsVisible = isModerator;
         ModerationRecordsGrid.IsVisible = isModerator;
+        InviteCodeRequestDivider.IsVisible = isModerator;
+        InviteCodeRequestsGrid.IsVisible = isModerator;
     }
 
     private async void OnBookmarkedPostsGridTapped(object sender, TappedEventArgs e)
@@ -51,6 +53,18 @@ public partial class MorePage : ContentPage
     private async void OnModerationRecordsGridTapped(object sender, TappedEventArgs e)
     {
         var page = new ModerationRecordsPage();
+        await App.PushAsync(page);
+    }
+
+    private async void OnInviteCodesGridTapped(object sender, TappedEventArgs e)
+    {
+        var page = new InviteCodesPage();
+        await App.PushAsync(page);
+    }
+
+    private async void OnInviteCodeRequestsGridTapped(object sender, TappedEventArgs e)
+    {
+        var page = new InviteCodeRequestsPage();
         await App.PushAsync(page);
     }
 

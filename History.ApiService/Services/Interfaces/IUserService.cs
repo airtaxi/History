@@ -16,6 +16,15 @@ public interface IUserService
     public Task<Result> CreateUserAsync(User user);
 
     /// <summary>
+    /// Deletes a user by ID. Used for rollback when invite code consumption fails after user creation.
+    /// </summary>
+    /// <param name="userId">The ID of the user to delete.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public Task<Result> DeleteUserAsync(string userId);
+
+    public Task<bool> IsUserCollectionEmptyAsync();
+
+    /// <summary>
     /// Get user by ID
     /// </summary>
     /// <param name="userId">The ID of user to get</param>

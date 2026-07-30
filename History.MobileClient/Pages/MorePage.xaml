@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="History.MobileClient.Pages.MorePage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -177,6 +177,125 @@
                         <Label
                             FontSize="12"
                             Text="스티커 둘러보기 및 만들기"
+                            TextColor="#808080" />
+                    </VerticalStackLayout>
+                    <Image
+                        Grid.Column="2"
+                        HeightRequest="24"
+                        VerticalOptions="Center"
+                        WidthRequest="24">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Chevron_right}"
+                                Color="#808080" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
+
+                <!--  초대 코드  -->
+                <Rectangle
+                    Fill="#808080"
+                    HeightRequest="0.5"
+                    HorizontalOptions="Fill"
+                    Opacity="0.5" />
+
+                <Grid Padding="16,12" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1A1A1A}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnInviteCodesGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="48" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Image
+                        Grid.Column="0"
+                        HeightRequest="32"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Center"
+                        WidthRequest="32">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Featured_seasonal_and_gifts}"
+                                Color="{StaticResource Primary}" />
+                        </Image.Source>
+                    </Image>
+                    <VerticalStackLayout
+                        Grid.Column="1"
+                        Spacing="2"
+                        VerticalOptions="Center">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="초대 코드" />
+                        <Label
+                            FontSize="12"
+                            Text="내 초대 코드 조회 및 요청"
+                            TextColor="#808080" />
+                    </VerticalStackLayout>
+                    <Image
+                        Grid.Column="2"
+                        HeightRequest="24"
+                        VerticalOptions="Center"
+                        WidthRequest="24">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Chevron_right}"
+                                Color="#808080" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
+
+                <!--  초대 코드 요청 관리 (관리자 전용)  -->
+                <Rectangle
+                    x:Name="InviteCodeRequestDivider"
+                    Fill="#808080"
+                    HeightRequest="0.5"
+                    HorizontalOptions="Fill"
+                    IsVisible="False"
+                    Opacity="0.5" />
+
+                <Grid
+                    x:Name="InviteCodeRequestsGrid"
+                    Padding="16,12"
+                    BackgroundColor="{AppThemeBinding Light=#FFFFFF,
+                                                      Dark=#1A1A1A}"
+                    IsVisible="False">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnInviteCodeRequestsGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="48" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Image
+                        Grid.Column="0"
+                        HeightRequest="32"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Center"
+                        WidthRequest="32">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Pending_actions}"
+                                Color="{StaticResource Primary}" />
+                        </Image.Source>
+                    </Image>
+                    <VerticalStackLayout
+                        Grid.Column="1"
+                        Spacing="2"
+                        VerticalOptions="Center">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="초대 코드 요청 관리" />
+                        <Label
+                            FontSize="12"
+                            Text="사용자 초대 코드 요청 수락/거부"
                             TextColor="#808080" />
                     </VerticalStackLayout>
                     <Image
