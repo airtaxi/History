@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -23,6 +23,7 @@ public partial class NotificationViewModel : ObservableObject
         WeakReferenceMessenger.Default.Register<NotificationPostReadMessage>(this, OnNotificationPostReadMessage);
         WeakReferenceMessenger.Default.Register<NotificationMessageReadMessage>(this, OnNotificationMessageReadMessage);
         WeakReferenceMessenger.Default.Register<NotificationFriendUserReadMessage>(this, OnNotificationFriendUserReadMessage);
+        WeakReferenceMessenger.Default.Register<NotificationTypeReadMessage>(this, OnNotificationTypeReadMessage);
     }
 
     private void OnNotificationsReadAllMessage(object recipient, NotificationsReadAllMessage message)
@@ -56,6 +57,14 @@ public partial class NotificationViewModel : ObservableObject
         if (Notification.Type != NotificationType.FriendRequest) return;
         if (Notification.Data == null || !Notification.Data.TryGetValue("UserId", out var userId)) return;
         if (userId != message.Value) return;
+        Notification.IsUnread = false;
+        OnPropertyChanged(nameof(IsUnread));
+    }
+
+    private void OnNotificationTypeReadMessage(object recipient, NotificationTypeReadMessage message)
+    {
+        if (!IsUnread) return;
+        if (Notification.Type != message.Value) return;
         Notification.IsUnread = false;
         OnPropertyChanged(nameof(IsUnread));
     }
@@ -126,6 +135,8 @@ public partial class NotificationViewModel : ObservableObject
             var page = new UserPage(userId);
             await App.PushAsync(page);
         }
+        else if (type == NotificationType.InviteCodeRequest) await App.PushAsync(new InviteCodeRequestsPage());
+        else if (type == NotificationType.InviteCodeRequestResult) await App.PushAsync(new InviteCodesPage());
         else
         {
             if (!Notification.Data.TryGetValue("PostId", out var postId)) return;

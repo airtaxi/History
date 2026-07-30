@@ -779,6 +779,38 @@ public class UserController(IUserService userService, IFriendshipService friends
         else return StatusCode(500, result.FullErrorMessage);
     }
 
+    [HttpPost("notifications/read-by-type/invite-code-request")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> ReadNotificationsByInviteCodeRequest()
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var result = await notificationService.MarkNotificationsByTypeAsReadAsync(requesterId, NotificationType.InviteCodeRequest);
+        if (result.IsSuccess) return Ok();
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpPost("notifications/read-by-type/invite-code-request-result")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> ReadNotificationsByInviteCodeRequestResult()
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var result = await notificationService.MarkNotificationsByTypeAsReadAsync(requesterId, NotificationType.InviteCodeRequestResult);
+        if (result.IsSuccess) return Ok();
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
     [HttpPost("register-firebase-token")]
     [Authorize]
     [ProducesResponseType<string>(200)]

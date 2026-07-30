@@ -313,6 +313,8 @@ public partial class App : Application
                 }
             }
         }
+        else if (type == NotificationType.InviteCodeRequest) await PushAsync(new InviteCodeRequestsPage());
+        else if (type == NotificationType.InviteCodeRequestResult) await PushAsync(new InviteCodesPage());
         else
         {
             if (!data.TryGetValue("PostId", out var postId)) return;

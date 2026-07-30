@@ -30,6 +30,8 @@ public interface INotificationService
 
     public Task<Result> MarkNotificationsByDataAsReadAsync(string userId, string dataKey, string dataValue, NotificationType? type = null);
 
+    public Task<Result> MarkNotificationsByTypeAsReadAsync(string userId, NotificationType type);
+
     /// <summary>
     /// Returns the set of post IDs that have unread notifications for the given user.
     /// </summary>

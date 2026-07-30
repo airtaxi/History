@@ -2,6 +2,8 @@
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.InviteCode;
+using History.Commons.Api.User;
+using History.Commons.Enums;
 using History.MobileClient.DataTypes;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
@@ -26,7 +28,14 @@ public partial class InviteCodesPage : ContentPage
     {
         base.OnAppearing();
         _isInForeground = true;
+        _ = MarkNotificationsAsReadAsync();
         _ = RefreshAsync();
+    }
+
+    private async Task MarkNotificationsAsReadAsync()
+    {
+        var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByInviteCodeRequestResult());
+        if (success) WeakReferenceMessenger.Default.Send(new NotificationTypeReadMessage(NotificationType.InviteCodeRequestResult));
     }
 
     protected override void OnDisappearing()

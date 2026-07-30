@@ -869,6 +869,20 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         return Result.Success();
     }
 
+    public async Task<Result> MarkNotificationsByTypeAsReadAsync(string userId, NotificationType type)
+    {
+        var filter = Builders<Notification>.Filter.AnyEq(n => n.Recipients, userId)
+            & Builders<Notification>.Filter.Eq(n => n.Type, type);
+
+        var notificationIds = await _notificationCollection
+            .Find(filter)
+            .Project(n => n.Id)
+            .ToListAsync();
+
+        await InsertNotificationReadsAsync(userId, notificationIds);
+        return Result.Success();
+    }
+
     public async Task<Result<HashSet<string>>> GetPostIdsWithUnreadNotificationsAsync(string userId, IEnumerable<string> postIds)
     {
         var postIdList = postIds.ToList();
