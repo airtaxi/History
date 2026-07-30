@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.InviteCode;
@@ -19,13 +19,13 @@ public partial class InviteCodesPage : ContentPage
     {
         InitializeComponent();
         InviteCodesCollectionView.ItemsSource = _viewModels;
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChanged);
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
         _isInForeground = true;
-        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChanged);
         _ = RefreshAsync();
     }
 
@@ -33,13 +33,18 @@ public partial class InviteCodesPage : ContentPage
     {
         base.OnDisappearing();
         _isInForeground = false;
-        WeakReferenceMessenger.Default.Unregister<LoadingStateChangedMessage>(this);
     }
 
     private void OnLoadingStateChanged(object recipient, LoadingStateChangedMessage message)
     {
-        MainActivityIndicator.IsVisible = message.Value;
-        MainActivityIndicator.IsRunning = message.Value;
+        var isLoading = message.Value;
+        if (!_isInForeground && isLoading) return;
+
+        Application.Current.Dispatcher.Dispatch(() =>
+        {
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 
     private async Task RefreshAsync()
@@ -119,6 +124,19 @@ public partial class InviteCodesPage : ContentPage
         {
             await App.Page.DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
         }
+    }
+
+    private async void OnCopyButtonTapped(object sender, TappedEventArgs e)
+    {
+        if (sender is not BindableObject bindable) return;
+        if (bindable.BindingContext is not InviteCodeViewModel viewModel || !viewModel.IsActive) return;
+
+        try
+        {
+            await Clipboard.SetTextAsync(viewModel.Code);
+            await Toast.Make("초대 코드가 클립보드에 복사되었습니다.").Show();
+        }
+        catch { await Toast.Make("초대 코드 복사에 실패했습니다.").Show(); }
     }
 
     private async void OnBackTapped(object sender, TappedEventArgs e) => await App.PopAsync();
