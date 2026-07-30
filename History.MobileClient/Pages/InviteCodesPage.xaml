@@ -123,11 +123,32 @@
                                     StrokeShape="RoundRectangle 12"
                                     StrokeThickness="0"
                                     VerticalOptions="Start">
-                                    <Label
-                                        FontAttributes="Bold"
-                                        FontSize="12"
-                                        Text="{Binding StatusText}"
-                                        TextColor="{Binding IsActive, Converter={StaticResource BoolToPrimaryColorConverter}}" />
+                                    <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="4">
+                                        <Image
+                                            Grid.Column="0"
+                                            HeightRequest="20"
+                                            HorizontalOptions="Center"
+                                            IsVisible="{Binding IsActive}"
+                                            VerticalOptions="Center"
+                                            WidthRequest="20">
+                                            <Image.Source>
+                                                <FontImageSource
+                                                    FontFamily="MaterialSharp"
+                                                    Glyph="{x:Static m:MaterialSharp.Content_copy}"
+                                                    Color="{StaticResource Primary}" />
+                                            </Image.Source>
+                                            <Image.GestureRecognizers>
+                                                <TapGestureRecognizer Tapped="OnCopyButtonTapped" />
+                                            </Image.GestureRecognizers>
+                                        </Image>
+                                        <Label
+                                            Grid.Column="1"
+                                            FontAttributes="Bold"
+                                            FontSize="12"
+                                            Text="{Binding StatusText}"
+                                            TextColor="{Binding IsActive, Converter={StaticResource BoolToPrimaryColorConverter}}"
+                                            VerticalOptions="Center" />
+                                    </Grid>
                                 </Border>
                             </Grid>
                         </Border>
@@ -162,9 +183,12 @@
         <!--  Loading indicator  -->
         <ActivityIndicator
             x:Name="MainActivityIndicator"
-            Grid.Row="0"
             Grid.RowSpan="2"
-            IsVisible="False"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
             Color="{StaticResource Primary}" />
     </Grid>
 </ContentPage>

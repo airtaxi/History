@@ -194,9 +194,12 @@
         <!--  Loading indicator  -->
         <ActivityIndicator
             x:Name="MainActivityIndicator"
-            Grid.Row="0"
             Grid.RowSpan="2"
-            IsVisible="False"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
             Color="{StaticResource Primary}" />
     </Grid>
 </ContentPage>

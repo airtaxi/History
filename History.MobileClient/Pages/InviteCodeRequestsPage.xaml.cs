@@ -18,13 +18,13 @@ public partial class InviteCodeRequestsPage : ContentPage
     {
         InitializeComponent();
         RequestsCollectionView.ItemsSource = _viewModels;
+        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChanged);
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
         _isInForeground = true;
-        WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChanged);
         _ = RefreshAsync();
     }
 
@@ -32,13 +32,18 @@ public partial class InviteCodeRequestsPage : ContentPage
     {
         base.OnDisappearing();
         _isInForeground = false;
-        WeakReferenceMessenger.Default.Unregister<LoadingStateChangedMessage>(this);
     }
 
     private void OnLoadingStateChanged(object recipient, LoadingStateChangedMessage message)
     {
-        MainActivityIndicator.IsVisible = message.Value;
-        MainActivityIndicator.IsRunning = message.Value;
+        var isLoading = message.Value;
+        if (!_isInForeground && isLoading) return;
+
+        Application.Current.Dispatcher.Dispatch(() =>
+        {
+            MainActivityIndicator.IsRunning = isLoading;
+            IsEnabled = !isLoading;
+        });
     }
 
     private async Task RefreshAsync()
