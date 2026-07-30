@@ -220,7 +220,7 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         await inviteCodeRequestCollection.Indexes.CreateOneAsync(new CreateIndexModel<InviteCodeRequest>(Builders<InviteCodeRequest>.IndexKeys.Ascending(x => x.Status)), cancellationToken: cancellationToken);
         await inviteCodeRequestCollection.Indexes.CreateOneAsync(new CreateIndexModel<InviteCodeRequest>(Builders<InviteCodeRequest>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
         // Partial unique index: a user may have at most one Pending request at a time
-        var partialIndexCommand = MongoDB.Bson.BsonDocument.Parse("{ 'createIndexes': 'InviteCodeRequests', 'indexes': [{ 'key': { 'RequesterId': 1 }, 'unique': true, 'partialFilterExpression': { 'Status': 'Pending' } }] }");
+        var partialIndexCommand = MongoDB.Bson.BsonDocument.Parse("{ 'createIndexes': 'InviteCodeRequests', 'indexes': [{ 'key': { 'RequesterId': 1 }, 'name': 'UniquePendingRequesterId', 'unique': true, 'partialFilterExpression': { 'Status': 'Pending' } }] }");
         await database.RunCommandAsync<MongoDB.Bson.BsonDocument>(partialIndexCommand, cancellationToken: cancellationToken);
 
         logger.LogInformation("Indexes created successfully.");
