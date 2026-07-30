@@ -17,5 +17,7 @@ public enum NotificationType
     Birthday,
     Restriction,
     Report,
-    Message
+    Message,
+    InviteCodeRequest,
+    InviteCodeRequestResult
 }

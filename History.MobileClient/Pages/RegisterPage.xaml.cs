@@ -58,17 +58,28 @@ namespace History.MobileClient.Pages
 
         private async void OnRegisterButtonClicked(object sender, EventArgs e)
         {
-            var result = await App.ExecuteRequestAsync(new Register(_idToken, _socialService, _name));
+            var inviteCode = InviteCodeEntry.Text?.Trim();
+            var result = await App.ExecuteRequestAsync(new Register(_idToken, _socialService, _name, inviteCode), [ErrorType.BadRequest, ErrorType.NotFound, ErrorType.Conflict]);
             if (result.IsSuccess)
             {
                 await App.Page.DisplayAlertAsync("안내", "가입이 완료되었습니다.", Constants.PromptOk);
                 await LoginPage.Login(_idToken, _socialService);
+            }
+            else if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.NotFound || result.Error == ErrorType.Conflict)
+            {
+                await App.Page.DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
             }
         }
 
         private void OnTermsLabelTapped(object sender, TappedEventArgs e) => TermsCheckBox.IsChecked = !TermsCheckBox.IsChecked;
         private void OnPrivacyAgreementLabelTapped(object sender, TappedEventArgs e) => PrivacyAgreementCheckBox.IsChecked = !PrivacyAgreementCheckBox.IsChecked;
         private void OnAgeLabelTapped(object sender, TappedEventArgs e) => AgeCheckBox.IsChecked = !AgeCheckBox.IsChecked;
+
+        private void OnInviteCodeTextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is Entry entry && !string.IsNullOrEmpty(e.NewTextValue) && e.NewTextValue != e.NewTextValue.ToUpper())
+                entry.Text = e.NewTextValue.ToUpper();
+        }
 
         protected override void OnAppearing()
         {

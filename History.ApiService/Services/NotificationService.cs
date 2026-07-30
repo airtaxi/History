@@ -741,6 +741,67 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             core.Data.Add("UserId", senderResult.Value.Id);
             core.Data.Add("MessageId", messageResult.Value.Id);
         }
+        else if (type == NotificationType.InviteCodeRequest)
+        {
+            var userService = serviceProvider.GetRequiredService<IUserService>();
+            var inviteCodeService = serviceProvider.GetRequiredService<IInviteCodeService>();
+
+            var requestResult = await inviteCodeService.GetInviteCodeRequestByIdAsync(associatedId);
+            if (requestResult.IsFailure) return requestResult.CastFailure<List<Notification>>();
+
+            var requesterResult = await userService.GetUserByIdAsync(requestResult.Value.RequesterId);
+            if (requesterResult.IsFailure) return requesterResult.CastFailure<List<Notification>>();
+
+            var moderatorUserIdsResult = await userService.GetModeratorIdsAsync();
+            if (moderatorUserIdsResult.IsFailure) return moderatorUserIdsResult.CastFailure<List<Notification>>();
+
+            core.Recipients = moderatorUserIdsResult.Value;
+            core.PushNotificationRecipients = core.Recipients;
+
+            core.UserId = requestResult.Value.RequesterId;
+
+            core.Title = $"{requesterResult.Value.Nickname}님이 초대 코드 {requestResult.Value.RequestedCount}개를 요청했습니다.";
+            core.Body = string.IsNullOrEmpty(requestResult.Value.Reason) ? "사유가 작성되지 않았습니다." : requestResult.Value.Reason;
+            core.ImageUrl = requesterResult.Value.ProfileThumbnailMediaId != null ? Utils.GenerateMediaUri(requesterResult.Value.ProfileThumbnailMediaId) : null;
+
+            core.Data.Add("UserId", requesterResult.Value.Id);
+            core.Data.Add("RequestId", requestResult.Value.Id);
+        }
+        else if (type == NotificationType.InviteCodeRequestResult)
+        {
+            var userService = serviceProvider.GetRequiredService<IUserService>();
+            var inviteCodeService = serviceProvider.GetRequiredService<IInviteCodeService>();
+
+            var requestResult = await inviteCodeService.GetInviteCodeRequestByIdAsync(associatedId);
+            if (requestResult.IsFailure) return requestResult.CastFailure<List<Notification>>();
+
+            if (string.IsNullOrEmpty(requestResult.Value.ModeratorId))
+                return (ErrorType.BadRequest, "초대 코드 요청이 아직 처리되지 않았습니다.");
+
+            var moderatorResult = await userService.GetUserByIdAsync(requestResult.Value.ModeratorId);
+            if (moderatorResult.IsFailure) return moderatorResult.CastFailure<List<Notification>>();
+
+            core.Recipients = [requestResult.Value.RequesterId];
+            core.PushNotificationRecipients = core.Recipients;
+
+            core.UserId = requestResult.Value.ModeratorId;
+
+            if (requestResult.Value.Status == Commons.Enums.InviteCodeRequestStatus.Accepted)
+            {
+                core.Title = $"초대 코드 요청이 수락되었습니다. ({requestResult.Value.GrantedCount}개 발급)";
+                core.Body = string.IsNullOrEmpty(requestResult.Value.ModeratorMessage) ? "관리자가 요청을 수락했습니다." : requestResult.Value.ModeratorMessage;
+            }
+            else
+            {
+                core.Title = "초대 코드 요청이 거부되었습니다.";
+                core.Body = string.IsNullOrEmpty(requestResult.Value.ModeratorMessage) ? "관리자가 요청을 거부했습니다." : requestResult.Value.ModeratorMessage;
+            }
+
+            core.ImageUrl = moderatorResult.Value.ProfileThumbnailMediaId != null ? Utils.GenerateMediaUri(moderatorResult.Value.ProfileThumbnailMediaId) : null;
+
+            core.Data.Add("RequestId", requestResult.Value.Id);
+            core.Data.Add("Status", requestResult.Value.Status.ToString());
+        }
         else return (ErrorType.BadRequest, "지원되지 않는 알림 유형입니다.");
 
 		foreach (var notification in notifications)

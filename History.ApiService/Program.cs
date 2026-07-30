@@ -40,6 +40,7 @@ BsonSerializer.RegisterSerializer(new EnumSerializer<SocialService>(BsonType.Str
 BsonSerializer.RegisterSerializer(new EnumSerializer<RestrictionType>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<ReportType>(BsonType.String));
 BsonSerializer.RegisterSerializer(new EnumSerializer<ReportTarget>(BsonType.String));
+BsonSerializer.RegisterSerializer(new EnumSerializer<InviteCodeRequestStatus>(BsonType.String));
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,6 +72,7 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IModerationService, ModerationService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IStickerService, StickerService>();
+builder.Services.AddScoped<IInviteCodeService, InviteCodeService>();
 builder.Services.AddScoped<IFortuneService, FortuneService>();
 builder.Services.AddHostedService<DatabaseInitService>();
 builder.Services.AddHostedService<MigrationService>();

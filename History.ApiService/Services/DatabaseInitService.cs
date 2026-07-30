@@ -1,4 +1,5 @@
 ﻿using History.Commons.DataTypes;
+using History.Commons.Enums;
 using MongoDB.Driver;
 
 namespace History.ApiService.Services;
@@ -29,6 +30,10 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
 
         // Bookmarks
         var bookmarkedPostCollection = database.GetCollection<BookmarkedPost>("BookmarkedPosts");
+
+        // Invite Codes
+        var inviteCodeCollection = database.GetCollection<InviteCode>("InviteCodes");
+        var inviteCodeRequestCollection = database.GetCollection<InviteCodeRequest>("InviteCodeRequests");
 
         // Create indexes
         logger.LogInformation("Creating indexes...");
@@ -199,6 +204,26 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
                     Builders<DailyFortuneRecord>.IndexKeys.Ascending(x => x.UserId),
                     Builders<DailyFortuneRecord>.IndexKeys.Ascending(x => x.Date)),
                 new CreateIndexOptions { Unique = true }),
+            cancellationToken: cancellationToken);
+
+        logger.LogInformation("Creating indexes for InviteCode collection...");
+        await inviteCodeCollection.Indexes.CreateOneAsync(
+            new CreateIndexModel<InviteCode>(Builders<InviteCode>.IndexKeys.Ascending(x => x.Code), new CreateIndexOptions { Unique = true }),
+            cancellationToken: cancellationToken);
+        await inviteCodeCollection.Indexes.CreateOneAsync(new CreateIndexModel<InviteCode>(Builders<InviteCode>.IndexKeys.Ascending(x => x.OwnerId)), cancellationToken: cancellationToken);
+        await inviteCodeCollection.Indexes.CreateOneAsync(new CreateIndexModel<InviteCode>(Builders<InviteCode>.IndexKeys.Ascending(x => x.IsActive)), cancellationToken: cancellationToken);
+        await inviteCodeCollection.Indexes.CreateOneAsync(new CreateIndexModel<InviteCode>(Builders<InviteCode>.IndexKeys.Ascending(x => x.UsedByUserId)), cancellationToken: cancellationToken);
+        await inviteCodeCollection.Indexes.CreateOneAsync(new CreateIndexModel<InviteCode>(Builders<InviteCode>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
+
+        logger.LogInformation("Creating indexes for InviteCodeRequest collection...");
+        await inviteCodeRequestCollection.Indexes.CreateOneAsync(new CreateIndexModel<InviteCodeRequest>(Builders<InviteCodeRequest>.IndexKeys.Ascending(x => x.RequesterId)), cancellationToken: cancellationToken);
+        await inviteCodeRequestCollection.Indexes.CreateOneAsync(new CreateIndexModel<InviteCodeRequest>(Builders<InviteCodeRequest>.IndexKeys.Ascending(x => x.Status)), cancellationToken: cancellationToken);
+        await inviteCodeRequestCollection.Indexes.CreateOneAsync(new CreateIndexModel<InviteCodeRequest>(Builders<InviteCodeRequest>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
+        // Partial unique index: a user may have at most one Pending request at a time
+        var rawInviteCodeRequestCollection = database.GetCollection<MongoDB.Bson.BsonDocument>("InviteCodeRequests");
+        await rawInviteCodeRequestCollection.Indexes.CreateOneAsync(
+            new CreateIndexModel<MongoDB.Bson.BsonDocument>(
+                MongoDB.Bson.BsonDocument.Parse("{ 'key': { 'RequesterId': 1 }, 'unique': true, 'partialFilterExpression': { 'Status': 'Pending' } }")),
             cancellationToken: cancellationToken);
 
         logger.LogInformation("Indexes created successfully.");

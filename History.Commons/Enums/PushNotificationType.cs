@@ -12,7 +12,9 @@ public enum PushNotificationType
     PostReaction,
     PostMention,
     FavoriteFriendNewPost,
-    Message
+    Message,
+    InviteCodeRequest,
+    InviteCodeRequestResult
 }
 
 public static class PushNotificationTypeExtensions
@@ -29,6 +31,8 @@ public static class PushNotificationTypeExtensions
             PushNotificationType.PostMention => "게시물 언급",
             PushNotificationType.FavoriteFriendNewPost => "관심 친구의 새 게시글",
             PushNotificationType.Message => "쪽지",
+            PushNotificationType.InviteCodeRequest => "초대 코드 요청",
+            PushNotificationType.InviteCodeRequestResult => "초대 코드 요청 결과",
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }

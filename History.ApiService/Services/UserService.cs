@@ -30,6 +30,17 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     }
 
     /// <inheritdoc />
+    public async Task<Result> DeleteUserAsync(string userId)
+    {
+        var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
+        var result = await _userCollection.DeleteOneAsync(filter);
+        return result.DeletedCount > 0 ? Result.Success() : (ErrorType.NotFound, "사용자를 찾을 수 없습니다.");
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> IsUserCollectionEmptyAsync() => await _userCollection.CountDocumentsAsync(FilterDefinition<User>.Empty) == 0;
+
+    /// <inheritdoc />
     public async Task<Result<User>> GetUserByIdAsync(string id)
     {
         var user = await _userCollection.Find(u => u.Id == id).FirstOrDefaultAsync();
@@ -77,7 +88,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
     public async Task<Result> ApproveUnauthorizedUserAsync(string userId)
     {
         var filter = Builders<User>.Filter.Eq(u => u.Id, userId) & Builders<User>.Filter.Eq(u => u.Rank, Rank.Unauthorized);
-        var update = Builders<User>.Update.Set(u => u.Rank, Rank.Unauthorized);
+        var update = Builders<User>.Update.Set(u => u.Rank, Rank.User);
 
         return (await _userCollection.UpdateOneAsync(filter, update)).MatchedCount > 0 ? Result.Success() : (ErrorType.NotFound, "승인할 사용자를 찾을 수 없습니다.");
     }
@@ -449,6 +460,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         var notificationService = serviceProvider.GetRequiredService<INotificationService>();
         var mediaService = serviceProvider.GetRequiredService<IMediaService>();
         var messageService = serviceProvider.GetRequiredService<IMessageService>();
+        var inviteCodeService = serviceProvider.GetRequiredService<IInviteCodeService>();
 
         await postService.HandleWithdrawAsync(userId);
         await commentService.HandleWithdrawAsync(userId);
@@ -456,6 +468,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         await refreshTokenService.HandleWithdrawAsync(userId);
         await notificationService.HandleWithdrawAsync(userId);
         await messageService.HandleWithdrawAsync(userId);
+        await inviteCodeService.HandleWithdrawAsync(userId);
         await mediaService.DeleteMediasByUserIdAsync(userId);
 
         var filter = Builders<User>.Filter.Eq(u => u.Id, userId);

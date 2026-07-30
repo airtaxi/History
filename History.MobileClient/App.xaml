@@ -32,6 +32,7 @@
             <!--  Converters  -->
             <converters:BoolToPrimaryColorConverter x:Key="BoolToPrimaryColorConverter" />
             <converters:BoolToUnreadBackgroundConverter x:Key="UnreadBackgroundConverter" />
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
