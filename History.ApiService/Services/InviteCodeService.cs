@@ -34,7 +34,8 @@ public class InviteCodeService(IMongoDatabase database, IServiceProvider service
         }
 
         return await _inviteCodeCollection.Find(filter)
-            .SortByDescending(x => x.CreatedAt)
+            .SortByDescending(x => x.IsActive)
+            .ThenByDescending(x => x.CreatedAt)
             .Limit(limit)
             .ToListAsync();
     }
@@ -53,7 +54,8 @@ public class InviteCodeService(IMongoDatabase database, IServiceProvider service
         }
 
         return await _inviteCodeCollection.Find(filter)
-            .SortByDescending(x => x.CreatedAt)
+            .SortByDescending(x => x.IsActive)
+            .ThenByDescending(x => x.CreatedAt)
             .Limit(limit)
             .ToListAsync();
     }
