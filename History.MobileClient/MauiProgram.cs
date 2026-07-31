@@ -95,6 +95,9 @@ public static class MauiProgram
 #if ANDROID
         CrossFirebaseCloudMessaging.Current.NotificationTapped += OnNotificationTapped;
         CrossFirebaseCloudMessaging.Current.NotificationReceived += OnNotificationReceived;
+
+        // CoreCLR GC: prefer background GC to minimize UI thread pauses during scroll.
+        System.Runtime.GCSettings.LatencyMode = System.Runtime.GCLatencyMode.SustainedLowLatency;
 #endif
 
         return builder.Build();
