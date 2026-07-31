@@ -358,6 +358,10 @@ public partial class UserPage : ContentPage
 
         try { MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false); }
         catch (Exception) { }
+
+        // Hide immediately so the border does not linger until the next 1-second polling tick.
+        ScrollToTopBorder.IsVisible = false;
+        _lastScrollToTopBorderVisible = false;
     }
 
     protected override bool OnBackButtonPressed()
