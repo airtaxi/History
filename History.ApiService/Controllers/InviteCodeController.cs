@@ -69,12 +69,15 @@ public class InviteCodeController(IInviteCodeService inviteCodeService, IUserSer
 
     /// <summary>
     /// Request invite codes (only when user has zero active codes).
+    /// Moderators and above bypass the request queue and receive generated codes immediately.
     /// </summary>
     [HttpPost("request")]
     [Authorize]
+    [ProducesResponseType<List<History.Commons.DataTypes.ResponseDtos.InviteCodeResponseDto>>(200)]
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
     [ProducesResponseType<string>(409)]
     [ProducesResponseType<string>(429)]
     [ProducesResponseType<string>(500)]
@@ -82,6 +85,24 @@ public class InviteCodeController(IInviteCodeService inviteCodeService, IUserSer
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        // Moderators and above generate invite codes immediately instead of creating a request
+        var requester = await userService.GetUserByIdAsync(userId);
+        if (requester?.Value.Rank >= Rank.Moderator)
+        {
+            var createResult = await inviteCodeService.CreateInviteCodesAsync(userId, request.Count, userId);
+            if (createResult.IsFailure)
+            {
+                if (createResult.Error == ErrorType.NotFound) return NotFound(createResult.ErrorMessage);
+                else if (createResult.Error == ErrorType.BadRequest) return BadRequest(createResult.ErrorMessage);
+                else return StatusCode(500, createResult.FullErrorMessage);
+            }
+
+            var dtosResult = await inviteCodeService.GenerateInviteCodeResponseDtosAsync(createResult.Value);
+            if (dtosResult.IsFailure) return StatusCode(500, dtosResult.FullErrorMessage);
+
+            return Ok(dtosResult.Value);
+        }
 
         var result = await inviteCodeService.CreateInviteCodeRequestAsync(userId, request.Reason, request.Count);
         if (result.IsSuccess) return Ok();
