@@ -1,21 +1,24 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
+using Microsoft.UI.Xaml.Controls;
 using Uno.Resizetizer;
 
 namespace History.Uno;
 
 public partial class App : Application
 {
-    /// <summary>
-    /// Initializes the singleton application object. This is the first line of authored code
-    /// executed, and as such is the logical equivalent of main() or WinMain().
-    /// </summary>
+    private static readonly SemaphoreSlim ApiRequestSemaphore = new(1, 1);
+    private static readonly SemaphoreSlim NavigationSemaphore = new(1, 1);
+
+    public static Window MainWindow { get; private set; }
+    public static Frame RootFrame { get; private set; }
+
     public App()
     {
         this.InitializeComponent();
     }
 
-    protected Window? MainWindow { get; private set; }
-    protected IHost? Host { get; private set; }
+    protected IHost Host { get; private set; }
 
     [SuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Uno.Extensions APIs are used in a way that is safe for trimming in this template context.")]
     protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -27,38 +30,16 @@ public partial class App : Application
 #endif
             .Configure(host => host
 #if DEBUG
-                // Switch to Development environment when running in DEBUG
                 .UseEnvironment(Environments.Development)
 #endif
                 .UseLogging(configure: (context, logBuilder) =>
                 {
-                    // Configure log levels for different categories of logging
                     logBuilder
                         .SetMinimumLevel(
                             context.HostingEnvironment.IsDevelopment() ?
                                 LogLevel.Information :
                                 LogLevel.Warning)
-
-                        // Default filters for core Uno Platform namespaces
                         .CoreLogLevel(LogLevel.Warning);
-
-                    // Uno Platform namespace filter groups
-                    // Uncomment individual methods to see more detailed logging
-                    //// Generic Xaml events
-                    //logBuilder.XamlLogLevel(LogLevel.Debug);
-                    //// Layout specific messages
-                    //logBuilder.XamlLayoutLogLevel(LogLevel.Debug);
-                    //// Storage messages
-                    //logBuilder.StorageLogLevel(LogLevel.Debug);
-                    //// Binding related messages
-                    //logBuilder.XamlBindingLogLevel(LogLevel.Debug);
-                    //// Binder memory references tracking
-                    //logBuilder.BinderMemoryReferenceLogLevel(LogLevel.Debug);
-                    //// DevServer and HotReload related
-                    //logBuilder.HotReloadCoreLogLevel(LogLevel.Information);
-                    //// Debug JS interop
-                    //logBuilder.WebAssemblyLogLevel(LogLevel.Debug);
-
                 }, enableUnoLogging: true)
                 .UseConfiguration(configure: configBuilder =>
                     configBuilder
@@ -67,38 +48,166 @@ public partial class App : Application
                 )
                 .ConfigureServices((context, services) =>
                 {
-                    // TODO: Register your services
-                    //services.AddSingleton<IMyService, MyService>();
                 })
             );
+
         MainWindow = builder.Window;
 
-        #if DEBUG
+#if DEBUG
         MainWindow.UseStudio();
 #endif
-                MainWindow.SetWindowIcon();
+        MainWindow.SetWindowIcon();
 
         Host = builder.Build();
 
-        // Do not repeat app initialization when the Window already has content,
-        // just ensure that the window is active
+        // Set up ApiHandler metadata
+#if ANDROID
+        ApiHandler.Platform = "Android";
+#elif IOS
+        ApiHandler.Platform = "iOS";
+#endif
+        ApiHandler.ApplicationVersion = "1.0.0";
+
+        // Load tokens from Configuration and initialize ApiHandler
+        var accessToken = Configuration.GetValue<string>("AccessToken");
+        var refreshToken = Configuration.GetValue<string>("RefreshToken");
+        if (accessToken != null && refreshToken != null) Shared.ApiHandler = new ApiHandler(accessToken, refreshToken);
+
+        // Set up root frame
         if (MainWindow.Content is not Frame rootFrame)
         {
-            // Create a Frame to act as the navigation context and navigate to the first page
             rootFrame = new Frame();
-
-            // Place the frame in the current Window
             MainWindow.Content = rootFrame;
         }
 
-        if (rootFrame.Content == null)
-        {
-            // When the navigation stack isn't restored navigate to the first page,
-            // configuring the new page by passing required information as a navigation
-            // parameter
-            rootFrame.Navigate(typeof(MainPage), args.Arguments);
-        }
-        // Ensure the current window is active
+        RootFrame = rootFrame;
+
+        if (rootFrame.Content == null) rootFrame.Navigate(typeof(MainPage), args.Arguments);
+
         MainWindow.Activate();
+    }
+
+    // --- Navigation ---
+
+    public static Page Page => RootFrame?.Content as Page;
+    public static Page TopPage => Page;
+
+    public static async Task PushAsync(Type pageType, object parameter = null)
+    {
+        if (NavigationSemaphore.CurrentCount == 0) return;
+
+        await NavigationSemaphore.WaitAsync();
+        try { RootFrame?.Navigate(pageType, parameter); }
+        finally { if (NavigationSemaphore.CurrentCount == 0) NavigationSemaphore.Release(); }
+    }
+
+    public static async Task PopAsync()
+    {
+        if (NavigationSemaphore.CurrentCount == 0) return;
+
+        await NavigationSemaphore.WaitAsync();
+        try { if (RootFrame?.CanGoBack == true) RootFrame.GoBack(); }
+        finally { if (NavigationSemaphore.CurrentCount == 0) NavigationSemaphore.Release(); }
+    }
+
+    public static async Task PushModalAsync(Type pageType, object parameter = null) => await PushAsync(pageType, parameter);
+
+    public static async Task PopModalAsync() => await PopAsync();
+
+    // --- API Request Execution ---
+
+    public static async Task<Result> ExecuteRequestAsync(IBaseRequest request, params ErrorType[] hiddenErrorTypes)
+    {
+        hiddenErrorTypes ??= [];
+
+        try
+        {
+            await ApiRequestSemaphore.WaitAsync();
+            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
+
+            await Shared.ApiHandler.ExecuteRequestAsync(request);
+            return Result.Success();
+        }
+        catch (HttpRequestException exception)
+        {
+            var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
+
+            if (!hiddenErrorTypes.Contains(errorType)) await DisplayAlertAsync("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
+            return (errorType, exception.Message);
+        }
+        finally
+        {
+            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(false));
+            ApiRequestSemaphore.Release();
+        }
+    }
+
+    public static async Task<Result<T>> ExecuteRequestAsync<T>(IBaseRequest<T> request, params ErrorType[] hiddenErrorTypes)
+    {
+        hiddenErrorTypes ??= [];
+
+        try
+        {
+            await ApiRequestSemaphore.WaitAsync();
+            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
+
+            return await Shared.ApiHandler.ExecuteRequestAsync(request);
+        }
+        catch (HttpRequestException exception)
+        {
+            var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
+
+            if (!hiddenErrorTypes.Contains(errorType)) await DisplayAlertAsync("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
+            return (errorType, exception.Message);
+        }
+        finally
+        {
+            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(false));
+            ApiRequestSemaphore.Release();
+        }
+    }
+
+    private static ErrorType StatusCodeToErrorType(HttpStatusCode statusCode) => statusCode switch
+    {
+        HttpStatusCode.NotFound => ErrorType.NotFound,
+        HttpStatusCode.Forbidden => ErrorType.Forbidden,
+        HttpStatusCode.Conflict => ErrorType.Conflict,
+        HttpStatusCode.BadRequest => ErrorType.BadRequest,
+        HttpStatusCode.Unauthorized => ErrorType.Unauthorized,
+        _ => ErrorType.ProgramError,
+    };
+
+    // --- Alert Helpers (ContentDialog-based) ---
+
+    public static async Task DisplayAlertAsync(string title, string message, string ok = "확인")
+    {
+        var page = TopPage;
+        if (page == null) return;
+
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = message,
+            CloseButtonText = ok,
+            XamlRoot = page.XamlRoot
+        };
+        await dialog.ShowAsync();
+    }
+
+    public static async Task<bool> DisplayAlertAsync(string title, string message, string accept, string cancel)
+    {
+        var page = TopPage;
+        if (page == null) return false;
+
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = message,
+            PrimaryButtonText = accept,
+            SecondaryButtonText = cancel,
+            XamlRoot = page.XamlRoot
+        };
+        var result = await dialog.ShowAsync();
+        return result == ContentDialogResult.Primary;
     }
 }

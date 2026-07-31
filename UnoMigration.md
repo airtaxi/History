@@ -10,7 +10,7 @@
 - **대상 플랫폼**: iOS, Android만 타겟. `net10.0-android;net10.0-ios` (Skia 렌더링). Windows/Desktop은 별도 네이티브 클라이언트로 분리 (아래 참조).
 - **Windows 네이티브 클라이언트 분리**: Windows는 Uno 프로젝트에 포함시키지 않고, MAUI Embedding이 불필요해진 시점에 별도 WinUI 3 / WinAppSDK 네이티브 프로젝트로 제작. History.Commons를 공유하여 API/DTO/비즈니스 로직은 재사용하되 UI는 WinUI 컨트롤로 처음부터 작성. 사유: (1) Uno.Templates 6.6.33 + .NET 10 조합에서 WinAppSDK 타겟 빌드 에러(`CS0619: TemplatedView.Children obsolete`) 발생, (2) Windows는 Uno Skia 렌더링보다 WinUI 네이티브가 성능/통합 면에서 유리, (3) 모바일과 데스크톱은 UI 패턴 자체가 다름.
 - **네비게이션**: 초기엔 WinUI Frame 네비게이션(`-nav blank`)으로 시작, 이후 Uno Extensions Region Navigation로 업그레이드 가능.
-- **테마**: Uno Fluent(`-theme fluent`) - Material 대비 빌트인 컨트롤 커버리지가 넓고 WinUI 네이티브와 일치. MAUI의 UraniumUI.Material과 시각적 차이는 있지만 컨트롤 안정성 우선.
+- **테마**: Uno Material(`-theme material` / `MaterialToolkitTheme`)- Material 대비 빌트인 컨트롤 커버리지가 넓고 WinUI 네이티브와 일치. MAUI `UraniumUI.Material`과 시각적으로 가장 가깝고, Uno Toolkit `TabBar` 사전 스타일(`BottomTabBarStyle`/`TopTabBarStyle`/`VerticalTabBarStyle`)이 Material/Cupertino 패키지에만 존재하므로 NavigationShell 패턴(하단 탭 셸)을 그대로 적용 가능.
 
 ## 현재 MAUI 프로젝트 구성 (이전 대상 인벤토리)
 
@@ -58,14 +58,14 @@ PanPinchContainer, StaggeredLayout
 | CommunityToolkit.Maui | 14.1.0 | MAUI Embedding 영역만 유지, Uno 본체는 CommunityToolkit.Mvvm |
 | CommunityToolkit.Maui.MediaElement | 9.0.0 | Uno `MediaPlayerElement` (`UnoFeature: MediaPlayerElement`) |
 | CommunityToolkit.Mvvm | 8.4.2 | 그대로 사용 (GlobalUsings에 이미 포함) |
-| AnimatedWebP.FFImageLoading.Maui | 1.4.1 | Uno `Image` + Skia / WebP 지원 검토 |
+| AnimatedWebP.FFImageLoading.Maui | 1.4.1 | Uno 기본 `Image` (Skia)로 대체. 애니메이션 WebP는 별도 처리 검토 |
 | Microsoft.Maui.Controls | 10.0.41 | MAUI Embedding용으로만 유지 |
 | Plugin.Firebase.CloudMessaging | 4.0.1 | 플랫폼별 FCM 직접 연동 또는 Uno 플러그인 검토 |
 | Syncfusion.Maui.ImageEditor | 34.1.32 | **MAUI Embedding 유지** |
 | Syncfusion.Maui.Toolkit | 1.0.10 | **MAUI Embedding 유지** |
 | UraniumUI.Icons.FontAwesome | 3.0.0 | Uno `FontIcon` + Fluent Icons로 대체 |
 | UraniumUI.Icons.MaterialSymbols | 3.0.0 | Uno `FontIcon` + Material Symbols 폰트 |
-| UraniumUI.Material | 2.15.0 | Uno Material 테마로 대체 |
+| UraniumUI.Material | 2.15.0 | Uno Material 테마(`MaterialToolkitTheme`)로 자연스럽게 대체 — 동일 Material 디자인 언어 |
 | Xamarin.Build.Download | 0.11.4 | MAUI Embedding 영역만 |
 | Xamarin.MediaGallery | 3.0.0 | WinUI `FileOpenPicker` / 플랫폼별 Media Picker |
 | SuggestingBox.Maui | (외부) | **MAUI Embedding 유지** |
@@ -79,21 +79,21 @@ PanPinchContainer, StaggeredLayout
 
 Uno 프로젝트에 MAUI 앱의 공통 인프라를 올린다. 이 단계가 끝나면 API 호출, 공유 상태, 설정, 네비게이션 뼈대가 동작한다.
 
-- [ ] `History.Commons` 프로젝트 참조 추가
-- [ ] `Constants.cs` 이전 (플랫폼 독립 상수)
-- [ ] `Shared.cs` 이전 (`ApiHandler`, `UserId`, `MyRank`, `Friends`, `LastUsedPostDiscoveryOption`)
-- [ ] `Configuration` 래퍼 이전 (MAUI `Configuration.GetValue<string>` → Uno `IOptions<AppConfig>` / `UseConfiguration`)
-- [ ] `App.ExecuteRequestAsync` / `ExecuteRequestAsync<T>` 재구현 (Uno `Dispatcher` / `CoreDispatcher` 사용)
-- [ ] `LoadingStateChangedMessage` 메시징 채널 설정 (CommunityToolkit.Mvvm `WeakReferenceMessenger` 그대로 사용 가능)
-- [ ] `ErrorType` → HTTP 상태 매핑(`StatusCodeToErrorType`) 이전
-- [ ] `Utils.cs` 중 플랫폼 독립 부분 이전 (`GenerateMediaUri`, `GenerateFriendlyTimestamp`, `GenerateTextPreviewFromContents`, `GenerateThumbnailUrlFromContents`, `SanitizeContents`, `GenerateSpanFromTextTypeContents`는 Uno `RichTextBlock`/`TextBlock` Inlines로 재작성 필요)
-- [ ] 네비게이션 인프라: `App.PushAsync` / `PopAsync` / `PushModalAsync` / `PopModalAsync`를 WinUI `Frame.Navigate` + 세마포어 기반으로 재구현
-- [ ] `App.Page` / `App.TopPage` / `App.Navigation` 정적 접근자 재구현 (Uno `Window.Current.Content` 기반)
-- [ ] `MainPage`를 로그인 게이트로 교체 (`CreateWindow` → `Frame.Navigate(typeof(LoginPage))`)
-- [ ] `appsettings.json`에 `ApiEndpoint`, `AccessToken`, `RefreshToken`, `Theme` 키 마이그레이션
-- [ ] `DataTypes/` 메시지 클래스 23개 이전 (대부분 `ValueChangedMessage<T>` 상속, 플랫폼 독립)
-- [ ] `Enums/` 2개 이전 (`InteractionType`, `PostType`)
-- [ ] 빌드 통과 (Windows 타겟)
+- [x] `History.Commons` 프로젝트 참조 추가
+- [x] `Constants.cs` 이전 (플랫폼 독립 상수)
+- [x] `Shared.cs` 이전 (`ApiHandler`, `UserId`, `MyRank`, `Friends`, `LastUsedPostDiscoveryOption`)
+- [x] `Configuration` 래퍼 이전 (`History.Commons.Configuration` 그대로 재사용, `App.xaml.cs`에서 토큰 로드)
+- [x] `App.ExecuteRequestAsync` / `ExecuteRequestAsync<T>` 재구현 (WinUI `Frame` + `SemaphoreSlim`, `ContentDialog` 기반 알럿)
+- [x] `LoadingStateChangedMessage` 메시징 채널 설정 (CommunityToolkit.Mvvm `WeakReferenceMessenger` 그대로 사용)
+- [x] `ErrorType` → HTTP 상태 매핑(`StatusCodeToErrorType`) 이전
+- [x] `Utils.cs` 중 플랫폼 독립 부분 이전 (`GenerateMediaUri`, `GenerateFriendlyTimestamp`, `GenerateTextPreviewFromContents`, `GenerateThumbnailUrlFromContents`, `SanitizeContents` — `GenerateSpanFromTextTypeContents`/`GenerateContentViewModels`는 2단계 ViewModel 이전 후, `RefreshFirebaseToken`/`GetGlobalAppTheme`/`CheckForUpdateAsync`는 4단계 플랫폼별 이전 후)
+- [x] 네비게이션 인프라: `App.PushAsync` / `PopAsync` / `PushModalAsync` / `PopModalAsync`를 WinUI `Frame.Navigate` + 세마포어 기반으로 재구현
+- [x] `App.Page` / `App.TopPage` 정적 접근자 재구현 (Uno `Window.Current.Content` 기반 `RootFrame`)
+- [ ] `MainPage`를 로그인 게이트로 교체 (`CreateWindow` → `Frame.Navigate(typeof(LoginPage))`) — 2단계에서 `LoginPage` 이전 시
+- [x] `appsettings.json`에 `ApiEndpoint` 키 마이그레이션 (`AccessToken`, `RefreshToken`, `Theme`은 런타임 `Configuration.cs`에서 관리)
+- [x] `DataTypes/` 메시지 클래스 이전 (21/25 — `SelectUserSelectionMessage`, `ResizeMediaCarouselViewMessage`, `ResizeCarouselViewMessage`, `ApplePostViewModelTapMessage`는 2단계 ViewModel 이전 후)
+- [x] `Enums/` 2개 이전 (`InteractionType`, `PostType`)
+- [x] 빌드 통과 (Android 타겟, 0 에러)
 
 ### 2단계: 핵심 페이지 마이그레이션
 
@@ -101,7 +101,7 @@ Uno 프로젝트에 MAUI 앱의 공통 인프라를 올린다. 이 단계가 끝
 
 - [ ] `LoginPage.xaml/.cs` → Uno `Page` + WinUI 컨트롤로 재작성
 - [ ] `RegisterPage.xaml/.cs` 이전
-- [ ] `AppShell` 탭 네비게이션 → Uno `NavigationView` 또는 `TabBar` (Uno Toolkit)로 재구현 (5개 탭: 타임라인, 알림/쪽지, 친구, 더보기, 프로필)
+- [ ] `AppShell` 탭 네비게이션 → Uno Toolkit `TabBar`(`BottomTabBarStyle`, Material 테마) NavigationShell 패턴으로 재구현 (5개 탭: 타임라인, 알림/쪽지, 친구, 더보기, 프로필). 상세는 `UnoInterfaceMigration.md` "AppShell · TabbedPage 마이그레이션 상세" 참조.
 - [ ] `TimelinePage.xaml/.cs` 이전 (당김새로고침, 페이지네이션, 포스트 아이템 템플릿)
 - [ ] `PostViewModel` 이전 (가장 복잡한 ViewModel, `IContentViewModel` 체계 포함)
 - [ ] `IContentViewModel` 인터페이스 + 구현체들 (`TextTypeContentsViewModel`, `MediaContentViewModel`, `StickerContentViewModel`, `ExternalUriContentViewModel`, `PollContentViewModel`, `WrappedMediaContentsViewModel`)
@@ -109,7 +109,7 @@ Uno 프로젝트에 MAUI 앱의 공통 인프라를 올린다. 이 단계가 끝
 - [ ] `UserPage.xaml/.cs` 이전 (프로필, 미디어, 포스트 목록)
 - [ ] `ProfileViewModel` 이전
 - [ ] 스타일: `Colors.xaml`, `Styles.xaml`, `Post.xaml`, `Profile.xaml`, `Content.xaml` → Uno `ResourceDictionary`로 변환
-- [ ] 이미지 로딩: FFImageLoading → Uno `Image` (Skia) 마이그레이션 패턴 확립
+- [ ] 이미지 로딩: FFImageLoading → Uno 기본 `Image` (Skia) 마이그레이션 패턴 확립
 - [ ] 빌드 + Windows에서 핵심 루프 동작 확인
 
 ### 3단계: 나머지 페이지 마이그레이션
@@ -172,8 +172,8 @@ MAUI Embedding 잔재 정리, 서드파티 정리, 품질 점검.
 
 - **Uno 템플릿 버전**: 6.6.33 설치됨. WinAppSDK(`net10.0-windows10.0.26100`) 타겟에서 MAUI Embedding + .NET 10 조합 빌드 에러(`CS0619: TemplatedView.Children obsolete`) 발생하여 Windows 타겟 제외. 모바일(iOS/Android)만 타겟.
 - **`FormattedString`/`Span`**: MAUI의 `Span` + `GestureRecognizers` 패턴은 Uno `RichTextBlock` + `Hyperlink`/`Inline`로 재작성 필요 (`Utils.GenerateSpanFromTextTypeContents`).
-- **`Shell` → `NavigationView`**: MAUI Shell의 `TabBar`/`Tab`/`ShellContent` 계층은 Uno `NavigationView` (`PaneDisplayMode="Bottom"`) + `Frame` 네비게이션으로 매핑.
-- **Fluent 테마**: `MaterialToolkitTheme` 대신 `XamlControlsResources` + `ToolkitResources`만 로드. 추가 컬러 오버라이드는 `Styles/` 폴더에서 관리.
+- **`Shell` → `TabBar` NavigationShell**: MAUI Shell의 `TabBar`/`Tab`/`ShellContent` 계층은 Uno Toolkit `TabBar`(`BottomTabBarStyle`, Material 테마 전제) + `Region.Attached` + `Region.Navigator="Visibility"` + `Frame` 네비게이션으로 매핑. 상세는 `UnoInterfaceMigration.md` "AppShell · TabbedPage 마이그레이션 상세" 섹션 참조.
+- **Material 테마**: `MaterialToolkitTheme` 로드(`App.xaml` `Application.Resources`). 추가 컬러 오버라이드는 `Styles/` 폴더에서 관리.
 - **`Preferences`**: MAUI `Preferences.Set/Get` → Uno `ApplicationData.Current.LocalSettings` 또는 `IConfiguration` + 파일 저장.
 - **`MainThread.BeginInvokeOnMainThread`**: Uno `Dispatcher.RunAsync` / `CoreDispatcher.RunAsync`.
 - **`CommunityToolkit.Maui.Alerts` (Toast)**: Uno `InfoBar` 또는 플랫폼별 Toast.
