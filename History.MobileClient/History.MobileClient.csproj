@@ -22,6 +22,10 @@
 		<Nullable>disable</Nullable>
 		<LangVersion>preview</LangVersion>
 
+		<!--  Android GC: minimize UI thread pauses  -->
+		<ServerGarbageCollection>true</ServerGarbageCollection>
+		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+
 		<!-- Display name -->
 		<ApplicationTitle>히스토리</ApplicationTitle>
 		<!-- App Identifier -->
