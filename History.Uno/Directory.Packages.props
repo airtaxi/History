@@ -8,5 +8,6 @@
   <ItemGroup>
     <PackageVersion Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageVersion Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
+    <PackageVersion Include="Plugin.Firebase.CloudMessaging" Version="4.0.1" />
   </ItemGroup>
 </Project>

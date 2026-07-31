@@ -10,6 +10,13 @@ using Android.Views;
 using Android.Widget;
 using Microsoft.UI.Xaml.Media;
 
+// Permissions for JobScheduler (background token refresh)
+[assembly: UsesPermission(Android.Manifest.Permission.WakeLock)]
+[assembly: UsesPermission(Android.Manifest.Permission.ReceiveBootCompleted)]
+
+// Permission for haptic feedback (vibration in notifications)
+[assembly: UsesPermission(Android.Manifest.Permission.Vibrate)]
+
 namespace History.Uno.Droid;
 
 [global::Android.App.ApplicationAttribute(

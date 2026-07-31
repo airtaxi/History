@@ -134,21 +134,40 @@ Uno 프로젝트에 MAUI 앱의 공통 인프라를 올린다. 이 단계가 끝
 
 iOS/Android 네이티브 기능을 Uno 플랫폼 폴더로 옮긴다.
 
-- [ ] **Firebase Cloud Messaging**: Android `BootCompletedReceiver`, `TokenRefreshService`, `MainActivity` FCM 초기화 → Uno `Platforms/Android` MainActivity 재구현; iOS `AppDelegate` FCM 초기화 → Uno `Platforms/iOS` AppDelegate 재구현
+- [x] **Firebase Cloud Messaging**: Android `BootCompletedReceiver`, `TokenRefreshService`, `MainActivity` FCM 초기화 → Uno `Platforms/Android` MainActivity 재구현; iOS `AppDelegate` FCM 초기화 → Uno `App.xaml.cs` `WillFinishLaunching` 재구현
 - [ ] **Google OAuth**: `Auth/GoogleAuthService` Android/iOS 분할 구현을 Uno 플랫폼별로 이전 (`Platforms/Android`, `Platforms/iOS`)
 - [ ] **Apple OAuth**: `AppleLoginPage` + `Platforms/iOS` Apple Sign-In
 - [ ] **카카오스토리**: `KakaoStory/` 3파일, `KakaoStoryLoginPage`, `KakaoStoryRewritePage` 이전
 - [ ] **미디어 피커**: `AndroidMediaPickerHelper` → Uno 플랫폼별 Media Picker; `Xamarin.MediaGallery` 대체
 - [ ] **키보드 감지**: `KeyboardSizeMessage` (Android `WindowInsetsListener`, iOS `UIKeyboard` 알림) → Uno 플랫폼별 재구현
 - [ ] **공유 인텐트 (Android)**: `MainActivity.HandleIntent` (ActionSend/ActionSendMultiple) → Uno `Platforms/Android` MainActivity
-- [ ] **iOS 커스텀 렌더러**: `CustomShellRenderer`, `CustomTabBarAppearanceTracker`, `StaggeredItemsViewLayout` → Uno 네이티브 컨트롤 또는 플랫폼별 구현
+- [ ] **iOS 커스텀 렌더러**: `CustomShellRenderer`, `CustomTabBarAppearanceTracker`, `StaggeredItemsViewLayout` → **불필요** (Uno Toolkit `TabBar` + `ItemsRepeater` 사용). 마이그레이션 계획에서 제외
 - [ ] **백 버튼 처리**: `AppShell.OnBackButtonPressed` (Android 더블탭 종료) → Uno `Platforms/Android` BackButton 처리
 - [ ] **앱 아이콘/스플래시**: `Resources/AppIcon`, `Resources/Splash` → Uno `Assets`, `app.manifest`, `Package.appxmanifest`
 - [ ] **폰트**: `Resources/Fonts` (OpenSans, MaterialSymbols, FontAwesome) → Uno `Assets/Fonts`
-- [ ] **AndroidManifest.xml**, **Info.plist**, **Entitlements.plist** 마이그레이션
-- [ ] **Firebase 설정**: `google-services.json` (Android), `GoogleService-Info.plist` (iOS) 연동
+- [x] **AndroidManifest.xml**, **Info.plist** 마이그레이션 (FCM 관련 부분)
+- [x] **Firebase 설정**: `google-services.json` (Android), `GoogleService-Info.plist` (iOS) 연동
+- [x] `Entitlements.plist` `aps-environment` 추가
 - [ ] **서명**: Android `signing.keystore`, iOS 인증서/프로비저닝 설정
 - [ ] 빌드 + iOS/Android 디바이스 동작 확인
+
+### 4단계 잔여 (2~3단계 페이지 이전과 연계하여 진행)
+
+인프라 이식(FCM, JWT 리프레시, 매니페스트)은 완료. 다음 항목들은 해당 페이지/기능이 Uno로 이전된 후 구현한다.
+
+- [ ] **Google OAuth**: `Auth/GoogleAuthService` Android/iOS 분할 구현을 Uno 플랫폼별로 이전 (`Platforms/Android`, `Platforms/iOS`). 2단계 `LoginPage` 이전 시 활성화.
+- [ ] **Apple OAuth**: `AppleLoginPage` + `Platforms/iOS` Apple Sign-In. 2단계 `LoginPage`/`AppleLoginPage` 이전 시 활성화.
+- [ ] **카카오스토리**: `KakaoStory/` 3파일(`KakaoStoryApiHandler.cs`, `KakaoStoryUtils.cs`, `DataTypes.cs`), `KakaoStoryLoginPage`, `KakaoStoryRewritePage` 이전. 플랫폼 독립 HTTP 코드라 직접 복사 가능. RestSharp, Newtonsoft.Json 의존성 추가 필요. 3단계 페이지 이전 시.
+- [ ] **미디어 피커**: `AndroidMediaPickerHelper` → Uno 플랫폼별 Media Picker; `Xamarin.MediaGallery` 대체. iOS는 `PHPickerViewController` 네이티브 구현 필요. 3단계 `EditPostPage`/`EditCommentPage` 이전 시.
+- [ ] **키보드 감지**: `KeyboardSizeMessage` (Android `WindowInsetsListener`, iOS `UIKeyboard` 알림) → Uno 플랫폼별 재구현. `KeyboardSizeMessage`는 이미 `History.Uno/DataTypes/`에 이식됨. 3단계 `EditPostPage`/`PostPage` 이전 시.
+- [ ] **공유 인텐트 (Android)**: `MainActivity.HandleIntent` (ActionSend/ActionSendMultiple) → Uno `Platforms/Android` MainActivity. 3단계 `EditPostPage` 이전 후.
+- [ ] **iOS 커스텀 렌더러**: `CustomShellRenderer`, `CustomTabBarAppearanceTracker`, `StaggeredItemsViewLayout` → **불필요** (Uno Toolkit `TabBar` + `ItemsRepeater` 사용). 마이그레이션 계획에서 제외.
+- [ ] **백 버튼 처리**: `AppShell.OnBackButtonPressed` (Android 더블탭 종료) → Uno `Platforms/Android` BackButton 처리. 2단계 `AppShell` → `TabBar` 이전 시.
+- [ ] **앱 아이콘/스플래시**: `Resources/AppIcon`, `Resources/Splash` → Uno `Assets`, `app.manifest`, `Package.appxmanifest`. 별도 작업.
+- [ ] **폰트**: `Resources/Fonts` (OpenSans, MaterialSymbols, FontAwesome) → Uno `Assets/Fonts`. 별도 작업.
+- [ ] **서명**: Android `signing.keystore`, iOS 인증서/프로비저닝 설정. 배포 단계.
+- [ ] **`Utils.GetGlobalAppTheme`**: MAUI `Application.Current.UserAppTheme` → Uno `ThemeService` (`UnoFeature: ThemeService` 이미 활성화). 2단계 이후.
+- [ ] **`Utils.CheckForUpdateAsync`**: `AppInfo.Current.VersionString` → Uno 플랫폼별 버전 API. 2단계 이후.
 
 ### 5단계: 최종화
 

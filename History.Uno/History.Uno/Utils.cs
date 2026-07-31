@@ -1,5 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
+using History.Commons.Api.PushNotification;
+using Plugin.Firebase.CloudMessaging;
 
 namespace History.Uno;
 
@@ -127,4 +129,23 @@ public static partial class Utils
 
     [GeneratedRegex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled)]
     public static partial Regex UrlRegex();
+
+    public static async Task RefreshFirebaseToken()
+    {
+        await CrossFirebaseCloudMessaging.Current.CheckIfValidAsync();
+        var firebaseToken = await CrossFirebaseCloudMessaging.Current.GetTokenAsync();
+        Console.WriteLine($"FCM token: {firebaseToken}");
+
+        if (Shared.ApiHandler == null)
+        {
+            var accessToken = Configuration.GetValue<string>("AccessToken");
+            var refreshToken = Configuration.GetValue<string>("RefreshToken");
+
+            if (accessToken != null && refreshToken != null) Shared.ApiHandler = new(accessToken, refreshToken);
+            else return;
+        }
+
+        try { await Shared.ApiHandler.ExecuteRequestAsync(new RegisterFirebaseToken(firebaseToken)); }
+        catch { }
+    }
 }
