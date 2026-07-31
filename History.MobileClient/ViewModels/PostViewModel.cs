@@ -261,10 +261,8 @@ public partial class PostViewModel : ObservableObject
 
     private void OnCommentChangedMessageReceived(object recipient, ValueChangedMessage<CommentResponseDto> message)
     {
-        var viewModel = Comments.FirstOrDefault(c => c.Comment.Id == message.Value.Id);
-        if (viewModel == null) return;
-
-        viewModel.Comment = message.Value;
+        // CommentViewModel already subscribes to ValueChangedMessage<CommentResponseDto> and
+        // calls UpdateComment internally. No action needed here.
     }
 
     public async Task DisplayActionSheetAsync(bool popModal)
