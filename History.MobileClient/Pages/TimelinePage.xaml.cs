@@ -10,7 +10,6 @@ using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;
 using Microsoft.Maui.Platform;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using Application = Microsoft.Maui.Controls.Application;
 
 namespace History.MobileClient.Pages;
@@ -74,7 +73,7 @@ public partial class TimelinePage : ContentPage
                 if (firstViewModel == null) return;
 
                 try { MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false); }
-                catch (Exception exception) { Debug.WriteLine($"[TL] ScrollTo failed: {exception.Message}"); }
+                catch (Exception) { }
 
                 await Task.Delay(100);
             }
@@ -191,7 +190,6 @@ public partial class TimelinePage : ContentPage
     {
         base.OnNavigatedTo(args);
 
-        Debug.WriteLine($"[TL] Scroll Recovery: {_lastScrollOffsetY}");
         MainCollectionView.SetScrollOffsetY(_lastScrollOffsetY, false);
     }
 
@@ -200,7 +198,6 @@ public partial class TimelinePage : ContentPage
         base.OnNavigatingFrom(args);
 
         _lastScrollOffsetY = MainCollectionView.GetScrollOffsetY();
-        Debug.WriteLine($"[TL] _lastScrollOffsetY: {_lastScrollOffsetY}");
     }
 
 #endif
@@ -252,8 +249,6 @@ public partial class TimelinePage : ContentPage
         var viewModel = view.BindingContext as PostViewModel;
         if (viewModel == null) return;
 
-        Debug.WriteLine($"[TL] Child Added {viewModel.Post.Id == _lastViewModel?.Post.Id}");
-
         if (viewModel.Post.Id == _lastViewModel?.Post.Id)
         {
             _lastViewModel = null;
@@ -292,7 +287,7 @@ public partial class TimelinePage : ContentPage
         if (firstViewModel == null) return;
 
         try { MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false); }
-        catch (Exception exception) { Debug.WriteLine($"[TL] ScrollTo failed: {exception.Message}"); }
+        catch (Exception) { }
     }
 
     private async void OnSearchPostImageTapped(object sender, TappedEventArgs e)
