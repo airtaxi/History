@@ -32,7 +32,7 @@ public partial class BookmarkedPostsPage : ContentPage
 
     private void OnPostUnbookmarkedMessageMessageReceived(object recipient, PostUnbookmarkedMessage message)
     {
-        var viewModel = _viewModels.Where(x => x.Post.Id == message.Value).FirstOrDefault();
+        var viewModel = _viewModels.FirstOrDefault(x => x.Post.Id == message.Value);
         if (viewModel == null) return;
 
         _viewModels.Remove(viewModel);
