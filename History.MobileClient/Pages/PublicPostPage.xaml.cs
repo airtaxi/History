@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
@@ -30,6 +31,7 @@ public partial class PublicPostPage : ContentPage
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<TimelineVirtualizationChangedMessage>(this, OnTimelineVirtualizationChangedMessageReceived);
     }
 
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
@@ -117,6 +119,8 @@ public partial class PublicPostPage : ContentPage
             Dispatcher.Dispatch(async () => await RefreshAsync());
         }
 
+        Dispatcher.Dispatch(ApplyVirtualizationSetting);
+
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
         if (safeAreaTopHeight != 0)
         {
@@ -129,6 +133,17 @@ public partial class PublicPostPage : ContentPage
     {
         base.OnDisappearing();
         _isInForeground = false;
+    }
+
+    private void OnTimelineVirtualizationChangedMessageReceived(object recipient, TimelineVirtualizationChangedMessage message) => ApplyVirtualizationSetting();
+
+    private void ApplyVirtualizationSetting()
+    {
+#if ANDROID
+        var isEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
+        if (MainCollectionView.Handler?.PlatformView is AndroidX.RecyclerView.Widget.RecyclerView recyclerView)
+            recyclerView.SetItemViewCacheSize(isEnabled ? 2 : 100);
+#endif
     }
 
 #if IOS
