@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -22,54 +22,24 @@ namespace History.MobileClient.ViewModels;
 public partial class PostViewModel : ObservableObject
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Nickname))]
-    [NotifyPropertyChangedFor(nameof(IsModerator))]
-    [NotifyPropertyChangedFor(nameof(IsAdmin))]
-    [NotifyPropertyChangedFor(nameof(DiscoveryOptionGlyph))]
-    [NotifyPropertyChangedFor(nameof(ProfileMedia))]
-    [NotifyPropertyChangedFor(nameof(IsRepost))]
-    [NotifyPropertyChangedFor(nameof(ParentPost))]
-    [NotifyPropertyChangedFor(nameof(IsShare))]
-    [NotifyPropertyChangedFor(nameof(HasRepostedUsers))]
-    [NotifyPropertyChangedFor(nameof(RepostedUsersCount))]
-    [NotifyPropertyChangedFor(nameof(HasSharedUsers))]
-    [NotifyPropertyChangedFor(nameof(SharedUsersCount))]
-    [NotifyPropertyChangedFor(nameof(HasNoComments))]
-    [NotifyPropertyChangedFor(nameof(HasComments))]
-    [NotifyPropertyChangedFor(nameof(CommentsCount))]
-    [NotifyPropertyChangedFor(nameof(LatestComment))]
-    [NotifyPropertyChangedFor(nameof(HasInteractions))]
-    [NotifyPropertyChangedFor(nameof(HasReactions))]
-    [NotifyPropertyChangedFor(nameof(HasSharedUsers))]
-    [NotifyPropertyChangedFor(nameof(ReactionsCount))]
-    [NotifyPropertyChangedFor(nameof(Interactions))]
-    [NotifyPropertyChangedFor(nameof(Reaction))]
-    [NotifyPropertyChangedFor(nameof(ReactionGlyph))]
-    [NotifyPropertyChangedFor(nameof(ReactionFontFamily))]
-    [NotifyPropertyChangedFor(nameof(ReactionColor))]
-    [NotifyPropertyChangedFor(nameof(CreatedAt))]
-    [NotifyPropertyChangedFor(nameof(ModifiedAt))]
-    [NotifyPropertyChangedFor(nameof(TimestampText))]
-    [NotifyPropertyChangedFor(nameof(PreviewText))]
-    [NotifyPropertyChangedFor(nameof(PreviewThumbnail))]
-    [NotifyPropertyChangedFor(nameof(PreviewThumbnailVisible))]
-    [NotifyPropertyChangedFor(nameof(PreviewTimestamp))]
-    [NotifyPropertyChangedFor(nameof(HasUnreadNotification))]
     public partial PostResponseDto Post { get; private set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Nickname))]
-    [NotifyPropertyChangedFor(nameof(ProfileMedia))]
     public partial UserResponseDto User { get; private set; }
 
-    public string Nickname => User.Nickname;
-    public bool IsModerator => User.Rank == Rank.Moderator;
-    public bool IsAdmin => User.Rank == Rank.Admin;
-    public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia
-        ? new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
-        : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+    // User-dependent properties — set in UpdatePost alongside User assignment.
+    [ObservableProperty]
+    public partial string Nickname { get; private set; }
+    [ObservableProperty]
+    public partial bool IsModerator { get; private set; }
+    [ObservableProperty]
+    public partial bool IsAdmin { get; private set; }
+    [ObservableProperty]
+    public partial IMediaViewModel ProfileMedia { get; private set; }
 
-    public string DiscoveryOptionGlyph => Utils.GetDiscoveryOptionGlyph(Post.DiscoveryOption);
+    // Post-dependent simple properties — all set in UpdatePost.
+    [ObservableProperty]
+    public partial string DiscoveryOptionGlyph { get; private set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotWideMode))]
@@ -79,79 +49,78 @@ public partial class PostViewModel : ObservableObject
     [ObservableProperty]
     public partial List<IContentViewModel> Contents { get; private set; }
 
-    public bool HasInteractions => Post.PostReactions.Count > 0 || Post.SharedAndRepostedUsers.Count > 0;
-
-    public PostViewModel ParentPost { get; private  set; }
-    public bool IsRepost => Post.IsRepost;
-    public bool IsShare => Post.ParentPost != null && !IsRepost;
-
-    public bool HasRepostedUsers => Post.SharedAndRepostedUsers.Any(x => x.IsRepost);
-    public int RepostedUsersCount => Post.SharedAndRepostedUsers.Count(x => x.IsRepost);
-
-    public bool HasSharedUsers => Post.SharedAndRepostedUsers.Any(x => !x.IsRepost);
-    public int SharedUsersCount => Post.SharedAndRepostedUsers.Count(x => !x.IsRepost);
-
-    public bool HasReactions => Post.PostReactions.Count > 0;
-    public int ReactionsCount => Post.PostReactions.Count;
-    public List<InteractionViewModel> Interactions
-    {
-        get
-        {
-            var reactions = Post.PostReactions.Select(x => new InteractionViewModel(x));
-            var shared = Post.SharedAndRepostedUsers.Where(x => !x.IsRepost).Select(x => new InteractionViewModel(x, true));
-            var reposted = Post.SharedAndRepostedUsers.Where(x => x.IsRepost).Select(x => new InteractionViewModel(x, false));
-
-            var result = reactions.Concat(shared).Concat(reposted).OrderByDescending(x => x.CreatedAt).ToList();
-            return result;
-        }
-    }
-    public PostType PostType { get; }
-    public bool IsParentPost { get; }
-
-    public InteractionViewModel Reaction => Interactions.FirstOrDefault(r => r.User.UserId == Shared.UserId && r.ReactionType != null);
-    public string ReactionGlyph => Reaction?.Glyph ?? Solid.Heart;
-    public string ReactionFontFamily => Reaction != null ? "FASolid" : "FARegular";
-    public Color ReactionColor => Reaction?.Color ?? (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Colors.White : Colors.Black);
+    [ObservableProperty]
+    public partial bool HasInteractions { get; private set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(LatestComment))]
-    [NotifyPropertyChangedFor(nameof(HasComments))]
-    [NotifyPropertyChangedFor(nameof(HasNoComments))]
-    [NotifyPropertyChangedFor(nameof(CommentsCount))]
-    public partial ObservableCollection<CommentViewModel> Comments { get; private set; }
+    public partial PostViewModel ParentPost { get; private set; }
+    [ObservableProperty]
+    public partial bool IsRepost { get; private set; }
+    [ObservableProperty]
+    public partial bool IsShare { get; private set; }
 
-    public CommentViewModel LatestComment => Comments.LastOrDefault();
-    public bool HasComments => Post.CommentsCount > 0;
-    public bool HasNoComments => Post.CommentsCount == 0;
-    public int CommentsCount => Post.CommentsCount;
+    [ObservableProperty]
+    public partial bool HasRepostedUsers { get; private set; }
+    [ObservableProperty]
+    public partial int RepostedUsersCount { get; private set; }
+
+    [ObservableProperty]
+    public partial bool HasSharedUsers { get; private set; }
+    [ObservableProperty]
+    public partial int SharedUsersCount { get; private set; }
+
+    [ObservableProperty]
+    public partial bool HasReactions { get; private set; }
+    [ObservableProperty]
+    public partial int ReactionsCount { get; private set; }
+    [ObservableProperty]
+    public partial List<InteractionViewModel> Interactions { get; private set; }
+
+    [ObservableProperty]
+    public partial InteractionViewModel Reaction { get; private set; }
+    [ObservableProperty]
+    public partial string ReactionGlyph { get; private set; }
+    [ObservableProperty]
+    public partial string ReactionFontFamily { get; private set; }
+    [ObservableProperty]
+    public partial Color ReactionColor { get; private set; }
+
+    [ObservableProperty]
+    public partial ObservableCollection<CommentViewModel> Comments { get; private set; }
+    [ObservableProperty]
+    public partial CommentViewModel LatestComment { get; private set; }
+    [ObservableProperty]
+    public partial bool HasComments { get; private set; }
+    [ObservableProperty]
+    public partial bool HasNoComments { get; private set; }
+    [ObservableProperty]
+    public partial int CommentsCount { get; private set; }
 
     [ObservableProperty]
     public partial bool HasMoreComments { get; private set; }
 
-    public DateTime CreatedAt => Post.CreatedAt;
-    public DateTime? ModifiedAt => Post.ModifiedAt;
+    [ObservableProperty]
+    public partial DateTime CreatedAt { get; private set; }
+    [ObservableProperty]
+    public partial DateTime? ModifiedAt { get; private set; }
 
-    public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
+    [ObservableProperty]
+    public partial string TimestampText { get; private set; }
 
-    public string PreviewText => Utils.GenerateTextPreviewFromPost(Post);
-    public string PreviewTimestamp => Post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd");
-    public bool PreviewThumbnailVisible => PreviewThumbnail != null;
-    public bool HasUnreadNotification => Post.HasUnreadNotification;
-    public ImageViewModel PreviewThumbnail
-    {
-        get
-        {
-            var url = Utils.GenerateThumbnailUrlFromPost(Post);
-            if (url == null) return null;
+    [ObservableProperty]
+    public partial string PreviewText { get; private set; }
+    [ObservableProperty]
+    public partial string PreviewTimestamp { get; private set; }
 
-            return new ImageViewModel(url)
-            {
-                Aspect = Aspect.AspectFill,
-                HorizontalContentOptions = LayoutOptions.Fill,
-                VerticalContentOptions = LayoutOptions.Fill
-            };
-        }
-    }
+    // Avoid allocating an ImageViewModel just to null-check. Checks the URL directly.
+    public bool PreviewThumbnailVisible => Utils.GenerateThumbnailUrlFromPost(Post) != null;
+    [ObservableProperty]
+    public partial bool HasUnreadNotification { get; private set; }
+    [ObservableProperty]
+    public partial ImageViewModel PreviewThumbnail { get; private set; }
+
+    public PostType PostType { get; }
+    public bool IsParentPost { get; }
 
     public PostViewModel(PostResponseDto post, PostType postType, bool isParentPost = false)
     {
@@ -175,20 +144,72 @@ public partial class PostViewModel : ObservableObject
         if (Post.Id != message.Value) return;
 
         Post.HasUnreadNotification = false;
-        OnPropertyChanged(nameof(HasUnreadNotification));
+        HasUnreadNotification = false;
     }
 
     private void UpdatePost(PostResponseDto post)
     {
         try
         {
-            Post = post;
-            Contents = Utils.GenerateContentViewModels(Post.Contents, PostType, IsParentPost, Post.Id);
-            ParentPost = Post.ParentPost != null ? new(Post.ParentPost, PostType, true) : null;
-            User = post?.User;
+            // Compute all derived properties from the new post/user before assigning Post/User.
+            // This avoids per-binding-read allocations (LINQ, new ImageViewModel, etc.) during scroll.
+            var newUser = post?.User;
 
-            Comments = [.. Post.Comments.Select(c => new CommentViewModel(c, Post.User.UserId == Shared.UserId, PostType, this)).OrderBy(x => x.CreatedAt)];
-            HasMoreComments = Post.CommentsCount > Comments.Count; // If comments count is greater than loaded comments, there are more comments to load
+            // User-dependent
+            UpdateUserDependentProperties(newUser);
+
+            // Post-dependent simple
+            DiscoveryOptionGlyph = Utils.GetDiscoveryOptionGlyph(post.DiscoveryOption);
+            Contents = Utils.GenerateContentViewModels(post.Contents, PostType, IsParentPost, post.Id);
+            ParentPost = post.ParentPost != null ? new(post.ParentPost, PostType, true) : null;
+            var isRepost = post.IsRepost;
+            IsRepost = isRepost;
+            IsShare = post.ParentPost != null && !isRepost;
+
+            HasRepostedUsers = post.SharedAndRepostedUsers.Any(x => x.IsRepost);
+            RepostedUsersCount = post.SharedAndRepostedUsers.Count(x => x.IsRepost);
+            HasSharedUsers = post.SharedAndRepostedUsers.Any(x => !x.IsRepost);
+            SharedUsersCount = post.SharedAndRepostedUsers.Count(x => !x.IsRepost);
+
+            HasReactions = post.PostReactions.Count > 0;
+            ReactionsCount = post.PostReactions.Count;
+            HasInteractions = post.PostReactions.Count > 0 || post.SharedAndRepostedUsers.Count > 0;
+            Interactions = [.. post.PostReactions.Select(x => new InteractionViewModel(x))
+                .Concat(post.SharedAndRepostedUsers.Where(x => !x.IsRepost).Select(x => new InteractionViewModel(x, true)))
+                .Concat(post.SharedAndRepostedUsers.Where(x => x.IsRepost).Select(x => new InteractionViewModel(x, false)))
+                .OrderByDescending(x => x.CreatedAt)];
+
+            Reaction = Interactions.FirstOrDefault(r => r.User.UserId == Shared.UserId && r.ReactionType != null);
+            ReactionGlyph = Reaction?.Glyph ?? Solid.Heart;
+            ReactionFontFamily = Reaction != null ? "FASolid" : "FARegular";
+            ReactionColor = Reaction?.Color ?? (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Colors.White : Colors.Black);
+
+            Comments = [.. post.Comments.Select(c => new CommentViewModel(c, post.User.UserId == Shared.UserId, PostType, this)).OrderBy(x => x.CreatedAt)];
+            LatestComment = Comments.LastOrDefault();
+            CommentsCount = post.CommentsCount;
+            HasComments = CommentsCount > 0;
+            HasNoComments = CommentsCount == 0;
+            HasMoreComments = CommentsCount > Comments.Count;
+
+            CreatedAt = post.CreatedAt;
+            ModifiedAt = post.ModifiedAt;
+            TimestampText = Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
+
+            PreviewText = Utils.GenerateTextPreviewFromPost(post);
+            PreviewTimestamp = post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd");
+            HasUnreadNotification = post.HasUnreadNotification;
+
+            var thumbnailUrl = Utils.GenerateThumbnailUrlFromPost(post);
+            PreviewThumbnail = thumbnailUrl != null ? new ImageViewModel(thumbnailUrl)
+            {
+                Aspect = Aspect.AspectFill,
+                HorizontalContentOptions = LayoutOptions.Fill,
+                VerticalContentOptions = LayoutOptions.Fill
+            } : null;
+
+            // Assign Post and User last so all derived properties are already up-to-date.
+            Post = post;
+            User = newUser;
         }
         catch (ObjectDisposedException) { } // The view is disposed. this view model also will be removed on next GC
         catch (Exception) { } // Ignore any exceptions during update, as the view might be in the foreground.
@@ -201,10 +222,26 @@ public partial class PostViewModel : ObservableObject
         UpdatePost(message.Value);
     }
 
+    // Shared between UpdatePost and OnUserChangedMessageReceived to keep User-dependent properties in sync.
+    private void UpdateUserDependentProperties(UserResponseDto user)
+    {
+        Nickname = user?.Nickname;
+        IsModerator = user?.Rank == Rank.Moderator;
+        IsAdmin = user?.Rank == Rank.Admin;
+        ProfileMedia = user != null
+            ? (user.UsesAnimatedProfileMedia
+                ? new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
+                : new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName))
+            : null;
+    }
+
     private void OnUserChangedMessageReceived(object recipient, ValueChangedMessage<UserResponseDto> message)
     {
         if (message.Value.UserId != User.UserId) return;
-        User = message.Value;
+
+        var newUser = message.Value;
+        UpdateUserDependentProperties(newUser);
+        User = newUser;
     }
 
     private void OnCommentDeletedMessageReceived(object recipient, ValueDeletedMessage<CommentResponseDto> message)
@@ -216,10 +253,10 @@ public partial class PostViewModel : ObservableObject
         Post.CommentsCount -= removedCount;
 
         Comments.Remove(viewModel);
-        OnPropertyChanged(nameof(LatestComment));
-        OnPropertyChanged(nameof(HasComments));
-        OnPropertyChanged(nameof(HasNoComments));
-        OnPropertyChanged(nameof(CommentsCount));
+        LatestComment = Comments.LastOrDefault();
+        CommentsCount = Post.CommentsCount;
+        HasComments = CommentsCount > 0;
+        HasNoComments = CommentsCount == 0;
     }
 
     private void OnCommentChangedMessageReceived(object recipient, ValueChangedMessage<CommentResponseDto> message)
