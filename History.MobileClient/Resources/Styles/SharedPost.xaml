@@ -23,8 +23,8 @@
                 HorizontalOptions="Fill"
                 VerticalOptions="Start" />
             <VerticalStackLayout Margin="0,10,0,0" Spacing="8">
-                <Grid>
-                    <HorizontalStackLayout Spacing="6">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <HorizontalStackLayout Grid.Column="0" Spacing="6">
                         <views:DataTemplatePresenter
                             HeightRequest="28"
                             Template="{StaticResource MediaTemplateSelector}"
@@ -49,43 +49,28 @@
                             <Image
                                 HeightRequest="14"
                                 IsVisible="{x:Binding IsAdmin}"
-                                WidthRequest="14">
-                                <Image.Source>
-                                    <FontImageSource
-                                        FontFamily="FASolid"
-                                        Glyph="{x:Static fa:Solid.Crown}"
-                                        Color="#f78501" />
-                                </Image.Source>
-                            </Image>
+                                Source="{StaticResource CrownIcon}"
+                                WidthRequest="14" />
                             <Image
                                 HeightRequest="14"
                                 IsVisible="{x:Binding IsModerator}"
+                                Source="{StaticResource GavelIcon}"
                                 VerticalOptions="Center"
-                                WidthRequest="14">
-                                <Image.Source>
-                                    <FontImageSource
-                                        FontFamily="FASolid"
-                                        Glyph="{x:Static fa:Solid.Gavel}"
-                                        Color="#1a5bf3" />
-                                </Image.Source>
-                            </Image>
+                                WidthRequest="14" />
                         </HorizontalStackLayout>
                     </HorizontalStackLayout>
                     <HorizontalStackLayout
+                        Grid.Column="2"
                         HorizontalOptions="End"
                         Spacing="4"
                         VerticalOptions="Center">
-                        <Image HeightRequest="14" WidthRequest="14">
+                        <Image
+                            HeightRequest="14"
+                            Source="{StaticResource ShareIcon}"
+                            WidthRequest="14">
                             <Image.GestureRecognizers>
                                 <TapGestureRecognizer Command="{x:Binding HandleMoreTapCommand}" />
                             </Image.GestureRecognizers>
-                            <Image.Source>
-                                <FontImageSource
-                                    FontFamily="MaterialSharp"
-                                    Glyph="{x:Static m:MaterialSharp.Share}"
-                                    Color="{AppThemeBinding Dark=White,
-                                                            Light=Black}" />
-                            </Image.Source>
                         </Image>
                         <Label
                             FontAttributes="Bold"

@@ -57,6 +57,10 @@ public partial class SettingsPage : ContentPage
         var isKakaoStoryProfanityCheckEnabled = Configuration.GetValue<bool?>("KakaoStoryProfanityCheckEnabled") ?? true;
         KakaoStoryProfanityCheckLabel.Text = isKakaoStoryProfanityCheckEnabled ? PushNotificationOn : PushNotificationOff;
 
+        // Virtualization toggle (default: off for smoother scroll with less View recreation)
+        var isTimelineVirtualizationEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
+        TimelineVirtualizationLabel.Text = isTimelineVirtualizationEnabled ? PushNotificationOn : PushNotificationOff;
+
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
 
@@ -357,5 +361,17 @@ public partial class SettingsPage : ContentPage
         Configuration.SetValue("Theme", themeValue);
         Application.Current.UserAppTheme = appTheme;
         ThemeLabel.Text = action;
+    }
+
+    private async void OnTimelineVirtualizationGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("타임라인 스크롤 가상화", Constants.PromptCancel, null, PushNotificationOn, PushNotificationOff);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == PushNotificationOn;
+        Configuration.SetValue("TimelineVirtualizationEnabled", isEnabled);
+        TimelineVirtualizationLabel.Text = isEnabled ? PushNotificationOn : PushNotificationOff;
+
+        WeakReferenceMessenger.Default.Send(new TimelineVirtualizationChangedMessage(isEnabled));
     }
 }

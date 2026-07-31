@@ -52,8 +52,9 @@
             BackgroundColor="{AppThemeBinding Dark=Black,
                                               Light=White}"
             Spacing="8">
-            <HorizontalStackLayout HeightRequest="48" Spacing="6">
+            <Grid HeightRequest="48" ColumnDefinitions="48,*">
                 <views:DataTemplatePresenter
+                    Grid.Column="0"
                     HeightRequest="48"
                     Template="{StaticResource MediaTemplateSelector}"
                     ViewModel="{x:Binding ProfileMedia}"
@@ -68,7 +69,7 @@
                             RadiusY="24" />
                     </views:DataTemplatePresenter.Clip>
                 </views:DataTemplatePresenter>
-                <VerticalStackLayout VerticalOptions="Center">
+                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
                     <HorizontalStackLayout Spacing="4">
                         <Label
                             FontAttributes="Bold"
@@ -78,25 +79,13 @@
                         <Image
                             HeightRequest="16"
                             IsVisible="{x:Binding IsAdmin}"
-                            WidthRequest="16">
-                            <Image.Source>
-                                <FontImageSource
-                                    FontFamily="FASolid"
-                                    Glyph="{x:Static fa:Solid.Crown}"
-                                    Color="#f78501" />
-                            </Image.Source>
-                        </Image>
+                            Source="{StaticResource CrownIcon}"
+                            WidthRequest="16" />
                         <Image
                             HeightRequest="16"
                             IsVisible="{x:Binding IsModerator}"
-                            WidthRequest="16">
-                            <Image.Source>
-                                <FontImageSource
-                                    FontFamily="FASolid"
-                                    Glyph="{x:Static fa:Solid.Gavel}"
-                                    Color="#1a5bf3" />
-                            </Image.Source>
-                        </Image>
+                            Source="{StaticResource GavelIcon}"
+                            WidthRequest="16" />
                     </HorizontalStackLayout>
                     <HorizontalStackLayout>
                         <Label FontSize="14" TextColor="#808080">
@@ -117,7 +106,7 @@
                         </Image>
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
-            </HorizontalStackLayout>
+            </Grid>
             <VerticalStackLayout
                 BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
                 BindableLayout.ItemsSource="{x:Binding Contents}"
@@ -198,8 +187,8 @@
                     <RoundRectangle CornerRadius="16" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="8">
-                    <Grid Grid.Row="0" HeightRequest="48">
-                        <HorizontalStackLayout Spacing="6">
+                    <Grid HeightRequest="48" ColumnDefinitions="Auto,*,Auto">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="6">
                             <views:DataTemplatePresenter
                                 HeightRequest="36"
                                 Template="{StaticResource MediaTemplateSelector}"
@@ -226,25 +215,13 @@
                                     <Image
                                         HeightRequest="14"
                                         IsVisible="{x:Binding IsAdmin}"
-                                        WidthRequest="14">
-                                        <Image.Source>
-                                            <FontImageSource
-                                                FontFamily="FASolid"
-                                                Glyph="{x:Static fa:Solid.Crown}"
-                                                Color="#f78501" />
-                                        </Image.Source>
-                                    </Image>
+                                        Source="{StaticResource CrownIcon}"
+                                        WidthRequest="14" />
                                     <Image
                                         HeightRequest="14"
                                         IsVisible="{x:Binding IsModerator}"
-                                        WidthRequest="14">
-                                        <Image.Source>
-                                            <FontImageSource
-                                                FontFamily="FASolid"
-                                                Glyph="{x:Static fa:Solid.Gavel}"
-                                                Color="#1a5bf3" />
-                                        </Image.Source>
-                                    </Image>
+                                        Source="{StaticResource GavelIcon}"
+                                        WidthRequest="14" />
                                 </HorizontalStackLayout>
                                 <HorizontalStackLayout>
                                     <Label FontSize="12" TextColor="#808080">
@@ -267,8 +244,8 @@
                             </VerticalStackLayout>
                         </HorizontalStackLayout>
                         <Image
+                            Grid.Column="2"
                             HeightRequest="28"
-                            HorizontalOptions="End"
                             VerticalOptions="Center"
                             WidthRequest="28">
                             <Image.GestureRecognizers>
@@ -314,15 +291,10 @@
                                 VerticalOptions="Center" />
                         </HorizontalStackLayout>
                         <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                            <Image HeightRequest="24" WidthRequest="24">
-                                <Image.Source>
-                                    <FontImageSource
-                                        FontFamily="FARegular"
-                                        Glyph="{x:Static fa:Regular.Comments}"
-                                        Color="{AppThemeBinding Dark=#FFFFFF,
-                                                                Light=#000000}" />
-                                </Image.Source>
-                            </Image>
+                            <Image
+                                HeightRequest="24"
+                                Source="{StaticResource CommentsIcon}"
+                                WidthRequest="24" />
                             <Label
                                 FontAttributes="Bold"
                                 FontSize="16"
@@ -333,15 +305,10 @@
                             IsVisible="{x:Binding HasSharedUsers}"
                             Spacing="4"
                             VerticalOptions="Center">
-                            <Image HeightRequest="24" WidthRequest="24">
-                                <Image.Source>
-                                    <FontImageSource
-                                        FontFamily="MaterialSharp"
-                                        Glyph="{x:Static m:MaterialSharp.Share}"
-                                        Color="{AppThemeBinding Dark=White,
-                                                                Light=Black}" />
-                                </Image.Source>
-                            </Image>
+                            <Image
+                                HeightRequest="24"
+                                Source="{StaticResource ShareIcon}"
+                                WidthRequest="24" />
                             <Label
                                 FontAttributes="Bold"
                                 FontSize="16"
@@ -349,15 +316,10 @@
                                 VerticalOptions="Center" />
                         </HorizontalStackLayout>
                         <HorizontalStackLayout IsVisible="{x:Binding HasRepostedUsers}" Spacing="4">
-                            <Image HeightRequest="24" WidthRequest="24">
-                                <Image.Source>
-                                    <FontImageSource
-                                        FontFamily="MaterialSharp"
-                                        Glyph="{x:Static m:MaterialSharp.Shift_lock}"
-                                        Color="{AppThemeBinding Dark=White,
-                                                                Light=Black}" />
-                                </Image.Source>
-                            </Image>
+                            <Image
+                                HeightRequest="24"
+                                Source="{StaticResource ShiftLockIcon}"
+                                WidthRequest="24" />
                             <Label
                                 FontAttributes="Bold"
                                 FontSize="16"

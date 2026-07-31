@@ -23,8 +23,8 @@
                     <RoundRectangle CornerRadius="16" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="8">
-                    <Grid Grid.Row="0" HeightRequest="36">
-                        <HorizontalStackLayout Spacing="6">
+                    <Grid HeightRequest="36" ColumnDefinitions="Auto,*">
+                        <HorizontalStackLayout Grid.Column="0" Spacing="6">
                             <views:DataTemplatePresenter
                                 HeightRequest="36"
                                 Template="{StaticResource MediaTemplateSelector}"
@@ -51,25 +51,13 @@
                                     <Image
                                         HeightRequest="14"
                                         IsVisible="{x:Binding IsAdmin}"
-                                        WidthRequest="14">
-                                        <Image.Source>
-                                            <FontImageSource
-                                                FontFamily="FASolid"
-                                                Glyph="{x:Static fa:Solid.Crown}"
-                                                Color="#f78501" />
-                                        </Image.Source>
-                                    </Image>
+                                        Source="{StaticResource CrownIcon}"
+                                        WidthRequest="14" />
                                     <Image
                                         HeightRequest="14"
                                         IsVisible="{x:Binding IsModerator}"
-                                        WidthRequest="14">
-                                        <Image.Source>
-                                            <FontImageSource
-                                                FontFamily="FASolid"
-                                                Glyph="{x:Static fa:Solid.Gavel}"
-                                                Color="#1a5bf3" />
-                                        </Image.Source>
-                                    </Image>
+                                        Source="{StaticResource GavelIcon}"
+                                        WidthRequest="14" />
                                 </HorizontalStackLayout>
                                 <HorizontalStackLayout>
                                     <Label FontSize="12" TextColor="#808080">
@@ -105,12 +93,10 @@
                         <Grid
                             Margin="0,12,0,0"
                             Padding="6,0,0,6"
+                            ColumnDefinitions="36,*"
                             ColumnSpacing="6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="36" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
                             <Border
+                                Grid.Column="0"
                                 Background="{AppThemeBinding Dark=#AAAAAA,
                                                              Light=#555555}"
                                 HeightRequest="36"
@@ -118,15 +104,10 @@
                                 <Border.StrokeShape>
                                     <RoundRectangle CornerRadius="18" />
                                 </Border.StrokeShape>
-                                <Image HeightRequest="28" WidthRequest="28">
-                                    <Image.Source>
-                                        <FontImageSource
-                                            FontFamily="MaterialSharp"
-                                            Glyph="{x:Static m:MaterialSharp.Shift_lock}"
-                                            Color="{AppThemeBinding Dark=#000000,
-                                                                    Light=#FFFFFF}" />
-                                    </Image.Source>
-                                </Image>
+                                <Image
+                                    HeightRequest="28"
+                                    Source="{StaticResource ShiftLockRepostIcon}"
+                                    WidthRequest="28" />
                             </Border>
                             <Label Grid.Column="1" VerticalOptions="Center">
                                 <Label.FormattedText>

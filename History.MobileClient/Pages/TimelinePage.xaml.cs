@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
@@ -38,6 +39,7 @@ public partial class TimelinePage : ContentPage
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<TimelineVirtualizationChangedMessage>(this, OnTimelineVirtualizationChangedMessageReceived);
 #if IOS
         WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
 
@@ -132,6 +134,9 @@ public partial class TimelinePage : ContentPage
         _scrollPositionTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
         _ = PollScrollPositionAsync(_scrollPositionTimer);
 
+        // Apply virtualization setting once the handler is ready.
+        Dispatcher.Dispatch(ApplyVirtualizationSetting);
+
         if (_isFirstLoad || ShouldRefresh)
         {
             _isFirstLoad = false;
@@ -199,12 +204,27 @@ public partial class TimelinePage : ContentPage
     {
         var isLoading = message.Value;
         if (!_isInForeground && isLoading) return;
-         
+          
         Application.Current.Dispatcher.Dispatch(() =>
         {
             MainActivityIndicator.IsRunning = isLoading;
             IsEnabled = !isLoading;
         });
+    }
+
+    private void OnTimelineVirtualizationChangedMessageReceived(object recipient, TimelineVirtualizationChangedMessage message) => ApplyVirtualizationSetting();
+
+    private void ApplyVirtualizationSetting()
+    {
+#if ANDROID
+        var isEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
+        if (MainCollectionView.Handler?.PlatformView is AndroidX.RecyclerView.Widget.RecyclerView recyclerView)
+        {
+            // When virtualization is disabled, set a very large item view cache size so
+            // off-screen Views are retained instead of being recycled.
+            recyclerView.SetItemViewCacheSize(isEnabled ? 2 : 100);
+        }
+#endif
     }
 
     private void OnSizeChanged(object sender, EventArgs e)

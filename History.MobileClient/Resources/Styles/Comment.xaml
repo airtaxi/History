@@ -8,23 +8,16 @@
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
     <DataTemplate x:Key="CommentTemplate" x:DataType="vm:CommentViewModel">
-        <Grid Padding="6,0,0,6" ColumnSpacing="8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
+        <Grid Padding="6,0,0,6" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
             </Grid.GestureRecognizers>
 
-            <Grid>
+            <Grid Grid.Column="0">
                 <Grid.GestureRecognizers>
                     <TapGestureRecognizer Command="{x:Binding HandleProfileTapCommand}" />
                 </Grid.GestureRecognizers>
                 <views:DataTemplatePresenter
-                    Grid.Column="0"
                     HeightRequest="32"
                     Template="{StaticResource MediaTemplateSelector}"
                     VerticalOptions="Start"
@@ -48,25 +41,13 @@
                     <Image
                         HeightRequest="14"
                         IsVisible="{x:Binding IsAdmin}"
-                        WidthRequest="14">
-                        <Image.Source>
-                            <FontImageSource
-                                FontFamily="FASolid"
-                                Glyph="{x:Static fa:Solid.Crown}"
-                                Color="#f78501" />
-                        </Image.Source>
-                    </Image>
+                        Source="{StaticResource CrownIcon}"
+                        WidthRequest="14" />
                     <Image
                         HeightRequest="14"
                         IsVisible="{x:Binding IsModerator}"
-                        WidthRequest="14">
-                        <Image.Source>
-                            <FontImageSource
-                                FontFamily="FASolid"
-                                Glyph="{x:Static fa:Solid.Gavel}"
-                                Color="#1a5bf3" />
-                        </Image.Source>
-                    </Image>
+                        Source="{StaticResource GavelIcon}"
+                        WidthRequest="14" />
                 </HorizontalStackLayout>
                 <VerticalStackLayout
                     BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
@@ -98,18 +79,12 @@
             <Image
                 Grid.Column="2"
                 HeightRequest="24"
+                Source="{StaticResource MoreHorizIcon}"
                 VerticalOptions="Start"
                 WidthRequest="24">
                 <Image.GestureRecognizers>
                     <TapGestureRecognizer Command="{x:Binding HandleMoreCommand}" />
                 </Image.GestureRecognizers>
-                <Image.Source>
-                    <FontImageSource
-                        FontFamily="MaterialSharp"
-                        Glyph="{x:Static m:MaterialSharp.More_horiz}"
-                        Color="{AppThemeBinding Dark=White,
-                                                Light=Black}" />
-                </Image.Source>
             </Image>
         </Grid>
     </DataTemplate>

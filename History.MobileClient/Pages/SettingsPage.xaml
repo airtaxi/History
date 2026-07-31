@@ -427,6 +427,32 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnTimelineVirtualizationGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="타임라인 스크롤 가상화"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="TimelineVirtualizationLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
                 <Grid
                     Padding="14,0,14,0"
                     Background="{AppThemeBinding Dark={StaticResource CategoryDarkBackground},
