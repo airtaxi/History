@@ -319,10 +319,12 @@ public partial class UserPage : ContentPage
         }
     }
 
-    private async void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e)
-    {
-        await LoadMoreAsync();
-    }
+#if IOS
+    private async void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e) => await LoadMoreAsync();
+#else
+    // Not used on Android, but required for compatibility
+    private void OnMainCollectionViewRemainingItemsThresholdReached(object sender, EventArgs e) { }
+#endif
 
     private async void OnTitleLabelTapped(object sender, TappedEventArgs e) => await RefreshAsync();
 
