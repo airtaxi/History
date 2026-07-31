@@ -1,4 +1,4 @@
-using History.Commons.Enums;
+﻿using History.Commons.Enums;
 using History.Commons.Api.Post;
 using History.MobileClient.Helpers;
 
@@ -40,7 +40,7 @@ public partial class MorePage : ContentPage
 
     private async void OnPublicPostGridTapped(object sender, TappedEventArgs e)
     {
-        var page = new PublicPostPage();
+        var page = new PublicPostsPage();
         await App.PushAsync(page);
     }
 
@@ -188,6 +188,6 @@ public partial class MorePage : ContentPage
     {
         TimelinePage.ShouldRefresh = true;
         UserPage.ShouldRefresh = true;
-        PublicPostPage.ShouldRefresh = true;
+        PublicPostsPage.ShouldRefresh = true;
     }
 }

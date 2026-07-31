@@ -353,7 +353,7 @@ public partial class PostViewModel : ObservableObject
             var success = await App.ExecuteRequestAsync(new WritePublicPost(Post.Id));
             if (success.IsSuccess)
             {
-                PublicPostPage.ShouldRefresh = true;
+                PublicPostsPage.ShouldRefresh = true;
                 await App.Page.DisplayAlertAsync("안내", "게시글 홍보가 성공적으로 전송되었습니다. 발견탭에서 확인할 수 있습니다.", Constants.PromptOk);
             }
         }
