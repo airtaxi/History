@@ -39,7 +39,9 @@ public partial class TimelinePage : ContentPage
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+#if ANDROID
         WeakReferenceMessenger.Default.Register<TimelineVirtualizationChangedMessage>(this, OnTimelineVirtualizationChangedMessageReceived);
+#endif
 #if IOS
         WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
 
@@ -134,8 +136,10 @@ public partial class TimelinePage : ContentPage
         _scrollPositionTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
         _ = PollScrollPositionAsync(_scrollPositionTimer);
 
+#if ANDROID
         // Apply virtualization setting once the handler is ready.
         Dispatcher.Dispatch(ApplyVirtualizationSetting);
+#endif
 
         if (_isFirstLoad || ShouldRefresh)
         {
@@ -212,11 +216,11 @@ public partial class TimelinePage : ContentPage
         });
     }
 
+#if ANDROID
     private void OnTimelineVirtualizationChangedMessageReceived(object recipient, TimelineVirtualizationChangedMessage message) => ApplyVirtualizationSetting();
 
     private void ApplyVirtualizationSetting()
     {
-#if ANDROID
         var isEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
         if (MainCollectionView.Handler?.PlatformView is AndroidX.RecyclerView.Widget.RecyclerView recyclerView)
         {
@@ -224,8 +228,8 @@ public partial class TimelinePage : ContentPage
             // off-screen Views are retained instead of being recycled.
             recyclerView.SetItemViewCacheSize(isEnabled ? 2 : 100);
         }
-#endif
     }
+#endif
 
     private void OnSizeChanged(object sender, EventArgs e)
     {
