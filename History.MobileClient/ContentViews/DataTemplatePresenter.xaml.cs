@@ -1,4 +1,4 @@
-namespace History.MobileClient.ContentViews;
+﻿namespace History.MobileClient.ContentViews;
 
 public partial class DataTemplatePresenter : ContentView
 {
@@ -33,6 +33,10 @@ public partial class DataTemplatePresenter : ContentView
         InitializeComponent();
     }
 
+    private View _currentView;
+    private DataTemplate _currentTemplate;
+    private object _currentViewModel;
+
     private static void OnTemplateChanged(BindableObject bindable, object oldValue, object newValue)
     {
         if (bindable is DataTemplatePresenter presenter)
@@ -52,24 +56,33 @@ public partial class DataTemplatePresenter : ContentView
     private void ApplyTemplate()
     {
         if (Template == null || ViewModel == null)
+        {
+            Content = null;
+            _currentView = null;
+            _currentTemplate = null;
+            _currentViewModel = null;
             return;
-
-        if(Template is DataTemplateSelector selector)
-        {
-            var template = selector.SelectTemplate(ViewModel, this);
-            if (template?.CreateContent() is View view)
-            {
-                view.BindingContext = ViewModel;
-                Content = view;
-            }
         }
-        else
+
+        // Resolve the effective template (selector or direct).
+        var effectiveTemplate = Template is DataTemplateSelector selector ? selector.SelectTemplate(ViewModel, this) : Template;
+
+        // If only the ViewModel changed and the template is the same, reuse the existing view.
+        if (_currentView != null && effectiveTemplate == _currentTemplate && ViewModel.GetType() == _currentViewModel?.GetType())
         {
-            if (Template.CreateContent() is View view)
-            {
-                view.BindingContext = ViewModel;
-                Content = view;
-            }
+            _currentView.BindingContext = ViewModel;
+            _currentViewModel = ViewModel;
+            return;
+        }
+
+        // Template or ViewModel type changed — create a new view.
+        if (effectiveTemplate?.CreateContent() is View view)
+        {
+            view.BindingContext = ViewModel;
+            Content = view;
+            _currentView = view;
+            _currentTemplate = effectiveTemplate;
+            _currentViewModel = ViewModel;
         }
     }
 }
