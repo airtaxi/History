@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Microsoft.UI.Xaml.Controls;
 using Uno.Resizetizer;
+using History.Uno.Services;
 
 namespace History.Uno;
 

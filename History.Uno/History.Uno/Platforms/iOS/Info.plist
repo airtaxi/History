@@ -31,13 +31,18 @@
 		<false/>
 		<key>XSAppIconAssets</key>
 		<string>Assets.xcassets/icon.appiconset</string>
-		<key>UIApplicationSupportsIndirectInputEvents</key>
-		<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 
-		<!--
-		Adjust this to your application's encryption usage.
-		<key>ITSAppUsesNonExemptEncryption</key>
-		<false/>
-		-->
-	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+
+	<!--
+	Adjust this to your application's encryption usage.
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	-->
+</dict>
 </plist>
