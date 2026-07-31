@@ -37,7 +37,9 @@ public partial class SearchPostsPage : ContentPage
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+#if ANDROID
         WeakReferenceMessenger.Default.Register<TimelineVirtualizationChangedMessage>(this, OnTimelineVirtualizationChangedMessageReceived);
+#endif
 #if IOS
 
         RootGrid.SafeAreaEdges = new(SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.SoftInput);
@@ -127,7 +129,9 @@ public partial class SearchPostsPage : ContentPage
             Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
         }
 
+#if ANDROID
         Dispatcher.Dispatch(ApplyVirtualizationSetting);
+#endif
     }
 
     protected override void OnDisappearing()
@@ -136,16 +140,16 @@ public partial class SearchPostsPage : ContentPage
         _isInForeground = false;
     }
 
+#if ANDROID
     private void OnTimelineVirtualizationChangedMessageReceived(object recipient, TimelineVirtualizationChangedMessage message) => ApplyVirtualizationSetting();
 
     private void ApplyVirtualizationSetting()
     {
-#if ANDROID
         var isEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
         if (MainCollectionView.Handler?.PlatformView is AndroidX.RecyclerView.Widget.RecyclerView recyclerView)
             recyclerView.SetItemViewCacheSize(isEnabled ? 2 : 100);
-#endif
     }
+#endif
 
 #if IOS
     protected override void OnNavigatedTo(NavigatedToEventArgs args)
