@@ -68,6 +68,9 @@ public partial class UserPage : ContentPage
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+#if ANDROID
+        WeakReferenceMessenger.Default.Register<TimelineVirtualizationChangedMessage>(this, OnTimelineVirtualizationChangedMessageReceived);
+#endif
 #if IOS
         WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
 
@@ -191,6 +194,11 @@ public partial class UserPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
+#if ANDROID
+        // Apply virtualization setting once the handler is ready.
+        Dispatcher.Dispatch(ApplyVirtualizationSetting);
+#endif
+
         if (UserId != Shared.UserId) _ = MarkFriendNotificationsAsReadAsync();
 
         if (_isFirstLoad || (ShouldRefresh && UserId == Shared.UserId))
@@ -274,6 +282,19 @@ public partial class UserPage : ContentPage
             IsEnabled = !isLoading;
         });
     }
+
+#if ANDROID
+    private void OnTimelineVirtualizationChangedMessageReceived(object recipient, TimelineVirtualizationChangedMessage message) => ApplyVirtualizationSetting();
+
+    private void ApplyVirtualizationSetting()
+    {
+        // Grid mode uses small thumbnails where virtualization is always desired.
+        // Non-grid (timeline) mode honors the user's virtualization preference.
+        var isEnabled = _useGridLayout || (Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false);
+        if (MainCollectionView.Handler?.PlatformView is AndroidX.RecyclerView.Widget.RecyclerView recyclerView)
+            recyclerView.SetItemViewCacheSize(isEnabled ? 2 : 100);
+    }
+#endif
 
     private async void OnRefreshing(object sender, EventArgs e)
     {
@@ -366,6 +387,11 @@ public partial class UserPage : ContentPage
             var span = ((int)Width / 700) + 1;
             if (span == 1) MainCollectionView.ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical);
             else MainCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = span };
+
+#if ANDROID
+            // Re-apply the virtualization preference after switching to the non-grid layout.
+            Dispatcher.Dispatch(ApplyVirtualizationSetting);
+#endif
         }
         else
         {
@@ -378,6 +404,11 @@ public partial class UserPage : ContentPage
                 HorizontalItemSpacing = 1,
                 VerticalItemSpacing = 1
             };
+
+#if ANDROID
+            // Restore default virtualization for the grid layout.
+            Dispatcher.Dispatch(ApplyVirtualizationSetting);
+#endif
         }
     }
 
