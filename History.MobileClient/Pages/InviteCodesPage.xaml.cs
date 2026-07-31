@@ -91,12 +91,16 @@ public partial class InviteCodesPage : ContentPage
 
     private async void OnRequestInviteCodesTapped(object sender, TappedEventArgs e)
     {
-        // Check active code count first; only allow requesting when zero active codes remain
-        var countResult = await App.ExecuteRequestAsync(new GetActiveInviteCodeCount());
-        if (countResult.IsSuccess && countResult.Value > 0)
+        // Moderators and above can generate codes regardless of active code count
+        if (Shared.MyRank < Rank.Moderator)
         {
-            await App.Page.DisplayAlertAsync("안내", $"유효한 초대 코드가 {countResult.Value}개 남아있습니다. 모두 사용한 후에 요청할 수 있습니다.", Constants.PromptOk);
-            return;
+            // Check active code count first; only allow requesting when zero active codes remain
+            var countResult = await App.ExecuteRequestAsync(new GetActiveInviteCodeCount());
+            if (countResult.IsSuccess && countResult.Value > 0)
+            {
+                await App.Page.DisplayAlertAsync("안내", $"유효한 초대 코드가 {countResult.Value}개 남아있습니다. 모두 사용한 후에 요청할 수 있습니다.", Constants.PromptOk);
+                return;
+            }
         }
 
         await ShowRequestDialogAsync();
@@ -115,6 +119,19 @@ public partial class InviteCodesPage : ContentPage
         if (!int.TryParse(countStr, out var count) || count < 1 || count > 50)
         {
             await App.Page.DisplayAlertAsync("오류", "1~50 사이의 숫자를 입력해주세요.", Constants.PromptOk);
+            return;
+        }
+
+        // Moderators and above generate invite codes immediately instead of submitting a request
+        if (Shared.MyRank >= Rank.Moderator)
+        {
+            var createResult = await App.ExecuteRequestAsync(new CreateInviteCodeByAdmin(Shared.UserId, count), [ErrorType.BadRequest, ErrorType.NotFound]);
+            if (createResult.IsSuccess)
+            {
+                await App.Page.DisplayAlertAsync("안내", "초대 코드가 생성되었습니다.", Constants.PromptOk);
+                await RefreshAsync();
+            }
+            else await App.Page.DisplayAlertAsync("오류", createResult.ErrorMessage, Constants.PromptOk);
             return;
         }
 
