@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
@@ -11,7 +11,7 @@ using System.Diagnostics;
 
 namespace History.MobileClient.Pages;
 
-public partial class PublicPostPage : ContentPage
+public partial class PublicPostsPage : ContentPage
 {
     public static bool ShouldRefresh { get; set; }
 
@@ -24,7 +24,7 @@ public partial class PublicPostPage : ContentPage
     private readonly ObservableCollection<PostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
-    public PublicPostPage()
+    public PublicPostsPage()
 	{
         InitializeComponent();
         MainCollectionView.ItemsSource = _viewModels;
