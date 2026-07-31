@@ -155,7 +155,6 @@
                     ItemTemplate="{StaticResource PostPreviewTemplate}"
                     RemainingItemsThreshold="0"
                     RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
-                    Scrolled="OnMainCollectionViewScrolled"
                     SelectionMode="None">
                     <CollectionView.Header>
                         <views:DataTemplatePresenter x:Name="ProfileDataTemplatePresenter" Template="{StaticResource ProfileTemplate}" />
