@@ -20,6 +20,8 @@ public partial class TimelinePage : ContentPage
 
     private bool _isInForeground;
     private bool _areThereNoMorePostsToLoad;
+    private PeriodicTimer _scrollPositionTimer;
+    private bool _lastScrollToTopBorderVisible;
 #if IOS
     private double _lastScrollOffsetY;
     private Thickness _scrollToTopBorderBaseMargin;
@@ -126,6 +128,10 @@ public partial class TimelinePage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
+        _scrollPositionTimer?.Dispose();
+        _scrollPositionTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        _ = PollScrollPositionAsync(_scrollPositionTimer);
+
         if (_isFirstLoad || ShouldRefresh)
         {
             _isFirstLoad = false;
@@ -157,6 +163,8 @@ public partial class TimelinePage : ContentPage
     {
         base.OnDisappearing();
         _isInForeground = false;
+        _scrollPositionTimer?.Dispose();
+        _scrollPositionTimer = null;
     }
 
 #if IOS
@@ -240,12 +248,18 @@ public partial class TimelinePage : ContentPage
 
     private async void OnWritePostBorderTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
 
-    private void OnMainCollectionViewScrolled(object sender, ItemsViewScrolledEventArgs e)
+    private async Task PollScrollPositionAsync(PeriodicTimer timer)
     {
-        var collectionView = sender as CollectionView;
-        var scrollOffsetY = collectionView.GetScrollOffsetY();
-        if (scrollOffsetY > 0) ScrollToTopBorder.IsVisible = true;
-        else ScrollToTopBorder.IsVisible = false;
+        while (await timer.WaitForNextTickAsync())
+        {
+            var scrollOffsetY = MainCollectionView.GetScrollOffsetY();
+            var shouldShow = scrollOffsetY > 0;
+            if (shouldShow != _lastScrollToTopBorderVisible)
+            {
+                ScrollToTopBorder.IsVisible = shouldShow;
+                _lastScrollToTopBorderVisible = shouldShow;
+            }
+        }
     }
 
     private void OnScrollToTopBorderTapped(object sender, TappedEventArgs e)

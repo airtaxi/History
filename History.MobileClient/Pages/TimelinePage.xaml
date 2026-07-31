@@ -62,7 +62,6 @@
                     ItemsUpdatingScrollMode="KeepItemsInView"
                     RemainingItemsThreshold="0"
                     RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
-                    Scrolled="OnMainCollectionViewScrolled"
                     SelectionMode="None">
                     <CollectionView.ItemsLayout>
                         <staggered:StaggeredItemsLayout Span="10000" />
