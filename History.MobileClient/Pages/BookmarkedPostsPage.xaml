@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="History.MobileClient.Pages.BookmarkedPostsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -42,8 +42,8 @@
             </HorizontalStackLayout>
         </Grid>
 
-        <Grid Grid.Row="1">
-            <RefreshView Refreshing="OnRefreshing">
+        <Grid Grid.Row="1" SafeAreaEdges="None">
+            <RefreshView Refreshing="OnRefreshing" SafeAreaEdges="None">
                 <CollectionView
                     x:Name="MainCollectionView"
                     ItemTemplate="{StaticResource TimelineTemplateSelector}"
