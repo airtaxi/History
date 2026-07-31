@@ -26,6 +26,7 @@
       Svg;
       Hosting;
       Toolkit;
+      Material;
       Logging;
       MauiEmbedding;
       Mvvm;
@@ -36,6 +37,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\History.Commons\History.Commons.csproj" />
     <ProjectReference Include="..\History.Uno.MauiControls\History.Uno.MauiControls.csproj" />
   </ItemGroup>
 
