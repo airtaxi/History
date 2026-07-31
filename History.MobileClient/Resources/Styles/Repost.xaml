@@ -92,10 +92,9 @@
                             </VerticalStackLayout>
                         </HorizontalStackLayout>
                     </Grid>
-                    <VerticalStackLayout
-                        BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
-                        BindableLayout.ItemsSource="{x:Binding Contents}"
-                        Spacing="8" />
+                    <views:DataTemplatePresenter
+                        Template="{StaticResource TimelineContentsTemplate}"
+                        ViewModel="{x:Binding TimelineContents}" />
                     <Grid Margin="0,4,0,0">
                         <Rectangle
                             Fill="#808080"

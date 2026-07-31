@@ -49,6 +49,10 @@ public partial class PostViewModel : ObservableObject
     [ObservableProperty]
     public partial List<IContentViewModel> Contents { get; private set; }
 
+    // Pre-slotted view model for timeline preview — avoids BindableLayout overhead.
+    [ObservableProperty]
+    public partial TimelineContentsViewModel TimelineContents { get; private set; }
+
     [ObservableProperty]
     public partial bool HasInteractions { get; private set; }
 
@@ -161,6 +165,7 @@ public partial class PostViewModel : ObservableObject
             // Post-dependent simple
             DiscoveryOptionGlyph = Utils.GetDiscoveryOptionGlyph(post.DiscoveryOption);
             Contents = Utils.GenerateContentViewModels(post.Contents, PostType, IsParentPost, post.Id);
+            TimelineContents = new TimelineContentsViewModel(Contents);
             ParentPost = post.ParentPost != null ? new(post.ParentPost, PostType, true) : null;
             var isRepost = post.IsRepost;
             IsRepost = isRepost;

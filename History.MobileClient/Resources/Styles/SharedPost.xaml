@@ -93,10 +93,9 @@
                             Text="{x:Binding SharedUsersCount}" />
                     </HorizontalStackLayout>
                 </Grid>
-                <VerticalStackLayout
-                    BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
-                    BindableLayout.ItemsSource="{x:Binding Contents}"
-                    Spacing="8" />
+                <views:DataTemplatePresenter
+                    Template="{StaticResource TimelineContentsTemplate}"
+                    ViewModel="{x:Binding TimelineContents}" />
             </VerticalStackLayout>
         </Grid>
     </DataTemplate>
