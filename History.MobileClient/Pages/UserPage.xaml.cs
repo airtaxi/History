@@ -24,6 +24,8 @@ public partial class UserPage : ContentPage
     private bool _isInForeground;
     private bool _areThereNoMorePostsToLoad;
     private bool _useGridLayout = true;
+    private PeriodicTimer _scrollPositionTimer;
+    private bool _lastScrollToTopBorderVisible;
 #if IOS
     private double _lastScrollOffsetY;
     private Thickness _scrollToTopBorderBaseMargin;
@@ -190,6 +192,10 @@ public partial class UserPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
+        _scrollPositionTimer?.Dispose();
+        _scrollPositionTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        _ = PollScrollPositionAsync(_scrollPositionTimer);
+
 #if ANDROID
         // Apply virtualization setting once the handler is ready.
         Dispatcher.Dispatch(ApplyVirtualizationSetting);
@@ -237,6 +243,8 @@ public partial class UserPage : ContentPage
     {
         base.OnDisappearing();
         _isInForeground = false;
+        _scrollPositionTimer?.Dispose();
+        _scrollPositionTimer = null;
     }
 
 #if IOS
@@ -327,11 +335,18 @@ public partial class UserPage : ContentPage
     private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new SettingsPage(_viewModel.User));
     private async void OnWritePostBorderTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
 
-    private void OnMainCollectionViewScrolled(object sender, ItemsViewScrolledEventArgs e)
+    private async Task PollScrollPositionAsync(PeriodicTimer timer)
     {
-        var collectionView = sender as CollectionView;
-        if (collectionView.GetScrollOffsetY() > 0) ScrollToTopBorder.IsVisible = true;
-        else ScrollToTopBorder.IsVisible = false;
+        while (await timer.WaitForNextTickAsync())
+        {
+            var scrollOffsetY = MainCollectionView.GetScrollOffsetY();
+            var shouldShow = scrollOffsetY > 0;
+            if (shouldShow != _lastScrollToTopBorderVisible)
+            {
+                ScrollToTopBorder.IsVisible = shouldShow;
+                _lastScrollToTopBorderVisible = shouldShow;
+            }
+        }
     }
 
     private void OnScrollToTopBorderTapped(object sender, TappedEventArgs e)
