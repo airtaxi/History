@@ -17,45 +17,39 @@ namespace History.MobileClient.ViewModels;
 public partial class CommentViewModel : ObservableObject
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Nickname))]
-    [NotifyPropertyChangedFor(nameof(IsModerator))]
-    [NotifyPropertyChangedFor(nameof(IsAdmin))]
-    [NotifyPropertyChangedFor(nameof(ProfileMedia))]
-    [NotifyPropertyChangedFor(nameof(IsMyComment))]
-    [NotifyPropertyChangedFor(nameof(HasLikes))]
-    [NotifyPropertyChangedFor(nameof(LikesCount))]
-    [NotifyPropertyChangedFor(nameof(LikedUsers))]
-    [NotifyPropertyChangedFor(nameof(Liked))]
-    [NotifyPropertyChangedFor(nameof(CommentLikeFontFamily))]
-    [NotifyPropertyChangedFor(nameof(CommentLikeColor))]
-    [NotifyPropertyChangedFor(nameof(CreatedAt))]
-    [NotifyPropertyChangedFor(nameof(ModifiedAt))]
-    [NotifyPropertyChangedFor(nameof(TimestampText))]
-    public partial CommentResponseDto Comment { get; set; }
+    public partial CommentResponseDto Comment { get; private set; }
 
-    public string Nickname => Comment.User.Nickname;
-    public bool IsModerator => Comment.User.Rank == Rank.Moderator;
-    public bool IsAdmin => Comment.User.Rank == Rank.Admin;
-    public IMediaViewModel ProfileMedia => Comment.User.UsesAnimatedProfileMedia
-        ? new ImageViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
-        : new ImageViewModel(Utils.GenerateMediaUri(Comment.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+    // User-dependent properties — set in UpdateComment alongside Comment assignment.
+    [ObservableProperty]
+    public partial string Nickname { get; private set; }
+    [ObservableProperty]
+    public partial bool IsModerator { get; private set; }
+    [ObservableProperty]
+    public partial bool IsAdmin { get; private set; }
+    [ObservableProperty]
+    public partial IMediaViewModel ProfileMedia { get; private set; }
+
+    // Comment-dependent properties — set in UpdateComment.
+    [ObservableProperty]
+    public partial bool IsMyComment { get; private set; }
+    [ObservableProperty]
+    public partial bool HasLikes { get; private set; }
+    [ObservableProperty]
+    public partial int LikesCount { get; private set; }
+    [ObservableProperty]
+    public partial bool Liked { get; private set; }
 
     [ObservableProperty]
     public partial List<IContentViewModel> Contents { get; private set; }
 
-    /// <summary>
-    /// See OnTextTypeContentsLabelTouchGestureCompleted of Content.xaml.cs and HandleTapAsync method for why this needed
-    /// </summary>
+    [ObservableProperty]
+    public partial DateTime CreatedAt { get; private set; }
+    [ObservableProperty]
+    public partial DateTime? ModifiedAt { get; private set; }
+    [ObservableProperty]
+    public partial string TimestampText { get; private set; }
+
     public bool IsLongPressed { get; set; }
-
-    public bool IsMyComment => Comment.User.UserId == Shared.UserId;
-
-    public bool HasLikes => Comment.LikedUsers.Count > 0;
-    public int LikesCount => Comment.LikedUsers.Count;
-    public List<ProfileViewModel> LikedUsers => Comment.LikedUsers.Select(u => new ProfileViewModel(u)).ToList();
-
-    public bool Liked => Comment.LikedUsers.Any(x => x.UserId == Shared.UserId);
-    public string CommentLikeFontFamily => Liked ? "FASolid" : "FARegular";
 
     private readonly bool _isMyPost;
     private readonly PostType _postType;
@@ -80,28 +74,38 @@ public partial class CommentViewModel : ObservableObject
     {
         try
         {
-            Comment = comment;
+            // Compute all derived properties from the new comment before assigning Comment.
+            var user = comment.User;
 
-            var contents = Utils.GenerateContentViewModels(Comment.Contents, _postType);
+            Nickname = user.Nickname;
+            IsModerator = user.Rank == Rank.Moderator;
+            IsAdmin = user.Rank == Rank.Admin;
+            ProfileMedia = user.UsesAnimatedProfileMedia
+                ? new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
+                : new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+
+            IsMyComment = user.UserId == Shared.UserId;
+            HasLikes = comment.LikedUsers.Count > 0;
+            LikesCount = comment.LikedUsers.Count;
+            Liked = comment.LikedUsers.Any(x => x.UserId == Shared.UserId);
+
+            var contents = Utils.GenerateContentViewModels(comment.Contents, _postType);
             var imageViewModels = (contents.FirstOrDefault(x => x is WrappedMediaContentsViewModel) as WrappedMediaContentsViewModel)?.Medias.Select(x => x.ImageMedia);
             imageViewModels ??= contents.OfType<MediaContentViewModel>().Select(x => x.ImageMedia);
-            foreach (ImageViewModel imageViewModel in imageViewModels)
-            {
-                imageViewModel.MaxWidth = 200;
-            }
+            foreach (ImageViewModel imageViewModel in imageViewModels) imageViewModel.MaxWidth = 200;
 
             Contents = contents;
+
+            CreatedAt = comment.CreatedAt;
+            ModifiedAt = comment.ModifiedAt;
+            TimestampText = Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
+
+            // Assign Comment last so all derived properties are already up-to-date.
+            Comment = comment;
         }
         catch (ObjectDisposedException) { } // The view is disposed. this view model also will be removed on next GC
         catch (Exception) { } // Ignore any exceptions during update, as the view might be in the foreground.
     }
-
-    public Color CommentLikeColor => Liked ? Color.FromRgb(0xeb, 0x55, 0x27) : Color.FromRgb(0x80, 0x80, 0x80);
-
-    public DateTime CreatedAt => Comment.CreatedAt;
-    public DateTime? ModifiedAt => Comment.ModifiedAt;
-
-    public string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, ModifiedAt);
 
     [RelayCommand]
     public async Task HandleMore()
@@ -177,7 +181,7 @@ public partial class CommentViewModel : ObservableObject
             var deleteResult = await App.ExecuteRequestAsync(new ModerationDeleteComment(Comment.Id, reason, reportType));
             if (deleteResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<CommentResponseDto>(Comment));
         }
-        else if(_isMyPost || Comment.User.UserId == Shared.UserId)
+        else if (_isMyPost || Comment.User.UserId == Shared.UserId)
         {
             var result = await App.Page.DisplayAlertAsync("댓글 삭제", "정말로 댓글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
             if (!result) return;
@@ -188,7 +192,6 @@ public partial class CommentViewModel : ObservableObject
         else
         {
             await App.Page.DisplayAlertAsync("권한 부족", "댓글을 삭제할 권한이 없습니다.", Constants.PromptOk);
-            return;
         }
     }
 
