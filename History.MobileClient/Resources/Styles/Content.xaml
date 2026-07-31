@@ -399,6 +399,49 @@
         </Grid>
     </DataTemplate>
 
+    <DataTemplate x:Key="TimelineContentsTemplate" x:DataType="vm:TimelineContentsViewModel">
+        <VerticalStackLayout Spacing="8">
+            <!--  Best-effort text/sticker interleaving (up to 3 pairs)  -->
+            <views:DataTemplatePresenter
+                IsVisible="{x:Binding HasText1}"
+                Template="{StaticResource TextTypeContentsTemplate}"
+                ViewModel="{x:Binding Text1}" />
+            <views:DataTemplatePresenter
+                IsVisible="{x:Binding HasSticker1}"
+                Template="{StaticResource StickerContentTemplate}"
+                ViewModel="{x:Binding Sticker1}" />
+            <views:DataTemplatePresenter
+                IsVisible="{x:Binding HasText2}"
+                Template="{StaticResource TextTypeContentsTemplate}"
+                ViewModel="{x:Binding Text2}" />
+            <views:DataTemplatePresenter
+                IsVisible="{x:Binding HasSticker2}"
+                Template="{StaticResource StickerContentTemplate}"
+                ViewModel="{x:Binding Sticker2}" />
+            <views:DataTemplatePresenter
+                IsVisible="{x:Binding HasText3}"
+                Template="{StaticResource TextTypeContentsTemplate}"
+                ViewModel="{x:Binding Text3}" />
+            <views:DataTemplatePresenter
+                IsVisible="{x:Binding HasSticker3}"
+                Template="{StaticResource StickerContentTemplate}"
+                ViewModel="{x:Binding Sticker3}" />
+            <!--  Single-instance slots  -->
+            <views:DataTemplatePresenter
+                IsVisible="{x:Binding HasMediaContent}"
+                Template="{StaticResource AndroidWrappedMediaContentsTemplate}"
+                ViewModel="{x:Binding MediaContent}" />
+            <views:DataTemplatePresenter
+                IsVisible="{x:Binding HasPollContent}"
+                Template="{StaticResource PollContentTemplate}"
+                ViewModel="{x:Binding PollContent}" />
+            <views:DataTemplatePresenter
+                IsVisible="{x:Binding HasExternalUrlContent}"
+                Template="{StaticResource ExternalUrlContentTemplate}"
+                ViewModel="{x:Binding ExternalUrlContent}" />
+        </VerticalStackLayout>
+    </DataTemplate>
+
     <vm:ContentTemplateSelector
         x:Key="ContentTemplateSelector"
         AndroidWrappedMediaContentsTemplate="{StaticResource AndroidWrappedMediaContentsTemplate}"

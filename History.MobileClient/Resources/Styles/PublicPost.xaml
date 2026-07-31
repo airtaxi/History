@@ -91,10 +91,9 @@
                             </Image.Source>
                         </Image>
                     </Grid>
-                    <VerticalStackLayout
-                        BindableLayout.ItemTemplateSelector="{StaticResource ContentTemplateSelector}"
-                        BindableLayout.ItemsSource="{x:Binding Contents}"
-                        Spacing="8" />
+                    <views:DataTemplatePresenter
+                        Template="{StaticResource TimelineContentsTemplate}"
+                        ViewModel="{x:Binding TimelineContents}" />
                     <views:DataTemplatePresenter
                         IsVisible="{x:Binding IsShare}"
                         Template="{StaticResource SharedPostTemplate}"

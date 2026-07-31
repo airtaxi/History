@@ -21,8 +21,15 @@ public partial class Content : ResourceDictionary
     {
         var label = sender as Label;
 
-        // See OnTextTypeContentsLabelTouchGestureCompleted method for why this needed
-        if (label.Parent?.BindingContext is CommentViewModel commentViewModel) commentViewModel.IsLongPressed = true;
+        // Walk up the visual tree to find the hosting ViewModel (CommentViewModel sets IsLongPressed)
+        var bindingContext = label?.Parent?.BindingContext;
+        var parent = label?.Parent;
+        while (parent != null && bindingContext is null or TextTypeContentsViewModel or TimelineContentsViewModel)
+        {
+            parent = parent.Parent;
+            bindingContext = parent?.BindingContext;
+        }
+        if (bindingContext is CommentViewModel commentViewModel) commentViewModel.IsLongPressed = true;
 
         var viewModel = label.BindingContext as TextTypeContentsViewModel;
         var contents = viewModel.TextTypeContents;
@@ -46,15 +53,25 @@ public partial class Content : ResourceDictionary
     private async void OnTextTypeContentsLabelTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e)
     {
         var label = sender as Label;
-        var parent = label.Parent;
-        if (parent?.BindingContext is null) return;
+
+        // Walk up the visual tree to find the hosting ViewModel (PostViewModel, CommentViewModel, etc.)
+        // With TimelineContentsTemplate, the parent chain is: Label -> DataTemplatePresenter (TextTypeContentsViewModel)
+        // -> VerticalStackLayout (TimelineContentsViewModel) -> DataTemplatePresenter -> PostTemplate (PostViewModel)
+        var bindingContext = label?.Parent?.BindingContext;
+        var parent = label?.Parent;
+        while (parent != null && bindingContext is null or TextTypeContentsViewModel or TimelineContentsViewModel)
+        {
+            parent = parent.Parent;
+            bindingContext = parent?.BindingContext;
+        }
+        if (bindingContext is null) return;
 
 #if ANDROID
         // For Android, CommentViewModel's HandleTapCommand doesn't fire automatically. still needs manaual event fire
-        if (parent.BindingContext is CommentViewModel commentModel) await commentModel.HandleTapAsync();
+        if (bindingContext is CommentViewModel commentModel) await commentModel.HandleTapAsync();
 #endif
-        if (parent.BindingContext is PublicPostViewModel publicPostViewModel) await publicPostViewModel.HandleProfileTapAsync();
-        else if (parent.BindingContext is PostViewModel postViewModel && (postViewModel.PostType != Enums.PostType.Unwrapped || postViewModel.IsParentPost)) await postViewModel.HandleTapAsync();
+        if (bindingContext is PublicPostViewModel publicPostViewModel) await publicPostViewModel.HandleProfileTapAsync();
+        else if (bindingContext is PostViewModel postViewModel && (postViewModel.PostType != Enums.PostType.Unwrapped || postViewModel.IsParentPost)) await postViewModel.HandleTapAsync();
     }
 
     private void OnTextTypeContentsLabelSizeChanged(object sender, EventArgs e)
