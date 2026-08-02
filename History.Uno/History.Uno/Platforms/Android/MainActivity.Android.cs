@@ -23,11 +23,19 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
 {
     private const string TAG = "History";
 
+    // Event raised when Google Sign-In completes (from OnActivityResult)
+    public static event EventHandler<string> LoginCompleted;
+
+    // Static reference to the current activity instance (Uno single-activity architecture)
+    public static MainActivity CurrentActivity { get; private set; }
+
     protected override void OnCreate(Bundle savedInstanceState)
     {
         global::AndroidX.Core.SplashScreen.SplashScreen.InstallSplashScreen(this);
 
         base.OnCreate(savedInstanceState);
+
+        CurrentActivity = this;
 
         // Firebase Cloud Messaging initialization
         CrossFirebase.Initialize(this, () => this);
@@ -57,6 +65,18 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
     {
         base.OnNewIntent(intent);
         FirebaseCloudMessagingImplementation.OnNewIntent(intent);
+    }
+
+    protected override void OnActivityResult(int requestCode, Android.App.Result resultCode, Intent data)
+    {
+        base.OnActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == Constants.GoogleAuthRequestCode)
+        {
+            var result = Android.Gms.Auth.Api.Auth.GoogleSignInApi.GetSignInResultFromIntent(data);
+            if (result.IsSuccess) LoginCompleted?.Invoke(this, result.SignInAccount?.IdToken);
+            else LoginCompleted?.Invoke(this, null);
+        }
     }
 
     private void CheckNotificationPermission()

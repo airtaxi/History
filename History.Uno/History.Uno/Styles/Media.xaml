@@ -1,0 +1,36 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:helpers="using:History.Uno.Behaviors"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:vm="using:History.Uno.ViewModels">
+
+    <DataTemplate x:Key="ImageTemplate" x:DataType="vm:ImageViewModel">
+        <Image
+            MaxWidth="{Binding MaxWidth, Mode=OneWay}"
+            HorizontalAlignment="{Binding HorizontalContentAlignment, Mode=OneWay}"
+            VerticalAlignment="{Binding VerticalContentAlignment, Mode=OneWay}"
+            Source="{Binding Uri, Mode=OneWay}"
+            Stretch="{Binding Stretch, Mode=OneWay}">
+            <interactivity:Interaction.Behaviors>
+                <helpers:FlipViewImageSizingBehavior />
+            </interactivity:Interaction.Behaviors>
+        </Image>
+    </DataTemplate>
+
+    <DataTemplate x:Key="VideoTemplate" x:DataType="vm:VideoViewModel">
+        <MediaPlayerElement
+            HorizontalAlignment="{Binding HorizontalContentAlignment, Mode=OneWay}"
+            VerticalAlignment="{Binding VerticalContentAlignment, Mode=OneWay}"
+            AreTransportControlsEnabled="{Binding ShouldShowPlaybackControls, Mode=OneWay}"
+            AutoPlay="{Binding ShouldAutoPlay, Mode=OneWay}"
+            IsLoopingEnabled="{Binding ShouldLoopPlayback, Mode=OneWay}"
+            Source="{Binding Source, Mode=OneTime}"
+            Stretch="{Binding Stretch, Mode=OneWay}" />
+    </DataTemplate>
+
+    <vm:MediaTemplateSelector
+        x:Key="MediaTemplateSelector"
+        ImageTemplate="{StaticResource ImageTemplate}"
+        VideoTemplate="{StaticResource VideoTemplate}" />
+</ResourceDictionary>

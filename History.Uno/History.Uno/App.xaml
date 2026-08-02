@@ -1,18 +1,31 @@
-<Application x:Class="History.Uno.App"
-       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-       xmlns:utu="using:Uno.Toolkit.UI.Material">
+﻿<Application
+    x:Class="History.Uno.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:utu="using:Uno.Toolkit.UI.Material">
 
-  <Application.Resources>
-    <ResourceDictionary>
-      <ResourceDictionary.MergedDictionaries>
-        <!-- Load Uno Material Toolkit (handles WinUI + Toolkit + Material resources) -->
-        <utu:MaterialToolkitTheme />
-      </ResourceDictionary.MergedDictionaries>
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <utu:MaterialToolkitTheme ColorOverrideSource="ms-appx:///Styles/Application/MaterialColorsOverride.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/Colors.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/Icons.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/Media.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/Content.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/Comment.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/SharedPost.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/Repost.xaml" />
+                <ResourceDictionary Source="ms-appx:///Styles/Post.xaml" />
+            </ResourceDictionary.MergedDictionaries>
 
-      <!-- Add resources here -->
+            <!--  Compact bottom tab bar (Material v2): shrink the 80px default height by trimming the empty vertical space.  -->
+            <!--  Icon (18px) and selection pill (32x64) keep their default sizes; only the bar height and item padding change.  -->
+            <ResourceDictionary.ThemeDictionaries>
+                <x:Double x:Key="NavigationTabBarWidthOrHeight">60</x:Double>
+                <Thickness x:Key="NavigationTabBarItemPadding">0,4,0,8</Thickness>
+            </ResourceDictionary.ThemeDictionaries>
 
-    </ResourceDictionary>
-  </Application.Resources>
+        </ResourceDictionary>
+    </Application.Resources>
 
 </Application>

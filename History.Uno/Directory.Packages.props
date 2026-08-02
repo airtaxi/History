@@ -9,5 +9,10 @@
     <PackageVersion Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageVersion Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
     <PackageVersion Include="Plugin.Firebase.CloudMessaging" Version="4.0.1" />
+    <PackageVersion Include="Xamarin.GooglePlayServices.Auth" Version="121.6.0.1" />
+    <PackageVersion Include="AdamE.Google.iOS.SignIn" Version="9.0.0" />
+    <PackageVersion Include="CommunityToolkit.WinUI.Controls.Primitives" Version="8.2.251219" />
+    <PackageVersion Include="Uno.Microsoft.Xaml.Behaviors.Interactivity.WinUI" Version="3.0.3" />
+    <PackageVersion Include="Uno.Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.4.2" />
   </ItemGroup>
 </Project>

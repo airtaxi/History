@@ -1,58 +1,96 @@
 <Project Sdk="Uno.Sdk">
-  <PropertyGroup>
-    <TargetFrameworks>net10.0-android;net10.0-ios</TargetFrameworks>
+    <PropertyGroup>
+        <TargetFrameworks>net10.0-android;net10.0-ios</TargetFrameworks>
 
-    <OutputType>Exe</OutputType>
-    <UnoSingleProject>true</UnoSingleProject>
+        <OutputType>Exe</OutputType>
+        <UnoSingleProject>true</UnoSingleProject>
 
-    <!-- Display name -->
-    <ApplicationTitle>History.Uno</ApplicationTitle>
-    <!-- App Identifier -->
-    <ApplicationId>com.airtaxi.history</ApplicationId>
-    <!-- Versions -->
-    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <ApplicationVersion>1</ApplicationVersion>
-    <!-- Package Publisher -->
-    <ApplicationPublisher>History.Uno</ApplicationPublisher>
-    <!-- Package Description -->
-    <Description>History.Uno powered by Uno Platform.</Description>
+        <!-- Display name -->
+        <ApplicationTitle>히스토리</ApplicationTitle>
+        <!-- App Identifier -->
+        <ApplicationId>com.airtaxi.history</ApplicationId>
+        <!-- Versions -->
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <ApplicationVersion>1</ApplicationVersion>
+        <!-- Package Publisher -->
+        <ApplicationPublisher>히스토리</ApplicationPublisher>
+        <!-- Package Description -->
+        <Description>히스토리 powered by Uno Platform.</Description>
 
-    <!--
-      UnoFeatures are used to quickly add and manage features enabled for your app.
-      https://aka.platform.uno/singleproject-features
-    -->
-    <UnoFeatures>
-      Lottie;
-      Svg;
-      Hosting;
-      Toolkit;
-      Material;
-      Logging;
-      MauiEmbedding;
-      Mvvm;
-      Configuration;
-      ThemeService;
-      SkiaRenderer;
-    </UnoFeatures>
-  </PropertyGroup>
+        <!-- App icon (icon.svg = background, icon_foreground.svg = foreground, same as MAUI: yellow bg + black H logo) -->
+        <UnoIconBackgroundColor>#fff112</UnoIconBackgroundColor>
+        <UnoIconForegroundScale>1</UnoIconForegroundScale>
+        <UnoIconForegroundScale Condition="'$(IsAndroid)' == 'true'">0.7</UnoIconForegroundScale>
 
-  <ItemGroup>
-    <PackageReference Include="Plugin.Firebase.CloudMessaging" />
-  </ItemGroup>
+        <!-- Splash screen (yellow background + brown #594431 H logo, same as MAUI MauiSplashScreen) -->
+        <UnoSplashScreenColor>#fff112</UnoSplashScreenColor>
+        <UnoSplashScreenBaseSize>256,256</UnoSplashScreenBaseSize>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\History.Commons\History.Commons.csproj" />
-    <ProjectReference Include="..\History.Uno.MauiControls\History.Uno.MauiControls.csproj" />
-  </ItemGroup>
+        <!-- Suppress NuGet package downgrade errors from GooglePlayServices.Auth AndroidX version conflicts -->
+        <NoWarn>NU1605</NoWarn>
 
-  <!-- Firebase Android configuration -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
-    <GoogleServicesJson Include="google-services.json" />
-  </ItemGroup>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
 
-  <!-- Firebase iOS configuration -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
-    <BundleResource Include="GoogleService-Info.plist" />
-  </ItemGroup>
+        <!--
+          UnoFeatures are used to quickly add and manage features enabled for your app.
+          https://aka.platform.uno/singleproject-features
+        -->
+        <UnoFeatures>
+            Lottie;
+            Svg;
+            Hosting;
+            Toolkit;
+            Material;
+            Logging;
+            MauiEmbedding;
+            Mvvm;
+            Configuration;
+            ThemeService;
+            SkiaRenderer;
+            WebView;
+            MediaPlayerElement;
+        </UnoFeatures>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Plugin.Firebase.CloudMessaging" />
+        <PackageReference Include="CommunityToolkit.WinUI.Controls.Primitives" />
+        <PackageReference Include="Uno.Microsoft.Xaml.Behaviors.Interactivity.WinUI" />
+        <PackageReference Include="Uno.Microsoft.Xaml.Behaviors.WinUI.Managed" />
+    </ItemGroup>
+
+    <!-- Google Sign-In — Android only -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
+        <PackageReference Include="Xamarin.GooglePlayServices.Auth" />
+    </ItemGroup>
+
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
+        <AndroidKeyStore>true</AndroidKeyStore>
+        <AndroidSigningKeyStore>signing.keystore</AndroidSigningKeyStore>
+        <AndroidSigningStorePass>kck4156</AndroidSigningStorePass>
+        <AndroidSigningKeyAlias>hoyo_ftp</AndroidSigningKeyAlias>
+        <AndroidSigningKeyPass>kck4156</AndroidSigningKeyPass>
+    </PropertyGroup>
+
+    <!-- Google Sign-In — iOS only -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
+        <PackageReference Include="AdamE.Google.iOS.SignIn" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\History.Commons\History.Commons.csproj" />
+        <ProjectReference Include="..\History.Uno.MauiControls\History.Uno.MauiControls.csproj" />
+    </ItemGroup>
+
+    <!-- Firebase Android configuration -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
+        <GoogleServicesJson Include="google-services.json" />
+    </ItemGroup>
+
+    <!-- Firebase iOS configuration -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
+        <BundleResource Include="GoogleService-Info.plist" />
+    </ItemGroup>
 
 </Project>

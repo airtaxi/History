@@ -1,0 +1,6 @@
+﻿<UserControl
+    x:Class="History.Uno.Controls.TextTypeContentsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <TextBlock x:Name="MainTextBlock" TextWrapping="Wrap" />
+</UserControl>

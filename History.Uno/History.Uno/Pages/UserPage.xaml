@@ -1,0 +1,16 @@
+﻿<Page
+    x:Class="History.Uno.Pages.UserPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:utu="using:Uno.Toolkit.UI"
+    utu:StatusBar.Background="{StaticResource PrimaryColor}"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid utu:SafeArea.Insets="VisibleBounds">
+        <TextBlock
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            FontSize="16"
+            FontWeight="SemiBold"
+            Text="프로필 (마이그레이션 예정)" />
+    </Grid>
+</Page>

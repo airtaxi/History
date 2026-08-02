@@ -1,0 +1,22 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--  Badge glyphs (admin / moderator)  -->
+    <x:String x:Key="CrownGlyph">&#xEC1B;</x:String>
+    <x:String x:Key="GavelGlyph">&#xEA18;</x:String>
+
+    <!--  Action glyphs  -->
+    <x:String x:Key="MoreHorizGlyph">&#xE712;</x:String>
+    <x:String x:Key="CommentsGlyph">&#xE90A;</x:String>
+    <x:String x:Key="ShareGlyph">&#xE72D;</x:String>
+    <x:String x:Key="ReshareGlyph">&#xE8EB;</x:String>
+
+    <!--  Content glyphs  -->
+    <x:String x:Key="PlayGlyph">&#xE768;</x:String>
+    <x:String x:Key="VisibilityOffGlyph">&#xE890;</x:String>
+    <x:String x:Key="CheckGlyph">&#xE73E;</x:String>
+
+    <!--  Page glyphs  -->
+    <x:String x:Key="SearchGlyph">&#xE721;</x:String>
+    <x:String x:Key="EditGlyph">&#xE70F;</x:String>
+    <x:String x:Key="ChevronUpGlyph">&#xE70E;</x:String>
+</ResourceDictionary>
