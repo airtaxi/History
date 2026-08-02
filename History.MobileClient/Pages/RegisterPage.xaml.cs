@@ -78,7 +78,10 @@ namespace History.MobileClient.Pages
         private void OnInviteCodeTextChanged(object sender, TextChangedEventArgs e)
         {
             if (sender is Entry entry && !string.IsNullOrEmpty(e.NewTextValue) && e.NewTextValue != e.NewTextValue.ToUpper())
+            {
                 entry.Text = e.NewTextValue.ToUpper();
+                entry.CursorPosition = entry.Text.Length;
+            }
         }
 
         protected override void OnAppearing()
