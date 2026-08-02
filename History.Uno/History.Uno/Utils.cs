@@ -1,17 +1,97 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using History.Commons.Api.PushNotification;
+using History.Uno.Enums;
+using History.Uno.ViewModels;
+using Microsoft.UI.Xaml;
 using Plugin.Firebase.CloudMessaging;
 
 namespace History.Uno;
 
 public static partial class Utils
 {
+    private const int TimelineMaxTextLengthWithoutMedias = 400;
+    private const int TimelineMaxTextLengthWithMedias = 80;
+    private const int TimelineMaxTextLinesWithoutMedias = 12;
+    private const int TimelineMaxTextLinesWithMedias = 8;
+    private const int DiscoveryMaxTextLength = 1600;
+    private const int DiscoveryMaxTextLines = 27;
+
     public static string GenerateMediaUri(string mediaId)
     {
         if (mediaId == null) return null;
 
         return $"https://api.history.cenox.io/api/media/{mediaId}";
+    }
+
+    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, PostType postType, bool isParentPost = false, string postId = null)
+    {
+        var contentViewModels = new List<IContentViewModel>();
+
+        var mediaContents = new List<MediaContent>();
+        var allMediaContents = contents.OfType<MediaContent>();
+        void FlushMediaContents()
+        {
+            if (mediaContents.Count > 0)
+            {
+                contentViewModels.Add(new WrappedMediaContentsViewModel(mediaContents, allMediaContents, postType, isParentPost));
+                mediaContents = [];
+            }
+        }
+
+        var textTypeContents = new List<BaseContent>();
+        void FlushTextTypeContents()
+        {
+            if (textTypeContents.Count > 0)
+            {
+                contentViewModels.Add(new TextTypeContentsViewModel(textTypeContents, postType, contents.OfType<MediaContent>().Any() || contents.OfType<ExternalUrlContent>().Any()));
+                textTypeContents = [];
+            }
+        }
+
+        // Fill contentViewModels with contents
+        foreach (var content in contents)
+        {
+            if (content is TextContent or ProfileContent or HashtagContent)
+            {
+                FlushMediaContents();
+                textTypeContents.Add(content);
+            }
+            else if (content is StickerContent stickerContent)
+            {
+                // Prevent multiple stickers in a single post for non-unwrapped posts
+                // To prevent abusing stickers in timeline or discovery
+                if (postType != PostType.Unwrapped && contentViewModels.Any(x => x is StickerContentViewModel)) continue;
+
+                FlushMediaContents();
+                FlushTextTypeContents();
+                contentViewModels.Add(new StickerContentViewModel(stickerContent));
+            }
+            else if (content is ExternalUrlContent externalUrlContent)
+            {
+                FlushMediaContents();
+                FlushTextTypeContents();
+                contentViewModels.Add(new ExternalUrlContentViewModel(externalUrlContent));
+            }
+            else if (content is PollContent pollContent)
+            {
+                FlushMediaContents();
+                FlushTextTypeContents();
+                contentViewModels.Add(new PollContentViewModel(pollContent, postId));
+            }
+            else if (content is MediaContent mediaContent)
+            {
+                FlushTextTypeContents();
+                if (postType != PostType.Unwrapped) mediaContents.Add(mediaContent);
+                else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents, postType, isParentPost));
+            }
+        }
+
+        // Flush remaining contents
+        FlushTextTypeContents();
+        FlushMediaContents();
+
+        return contentViewModels;
     }
 
     public static void SanitizeContents(List<BaseContent> contents)
@@ -129,6 +209,116 @@ public static partial class Utils
 
     [GeneratedRegex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled)]
     public static partial Regex UrlRegex();
+
+    /// <summary>
+    /// Converts text/profile/hashtag contents into a list of runs with timeline truncation
+    /// applied ("... 더보기" marker), ready to be rendered in a TextBlock.
+    /// </summary>
+    public static List<TextContentRun> GenerateTextContentRuns(List<BaseContent> contents, PostType postType, bool hasMedias)
+    {
+        var runs = new List<TextContentRun>();
+        var maxLength = postType == PostType.Timeline ? (hasMedias ? TimelineMaxTextLengthWithMedias : TimelineMaxTextLengthWithoutMedias) : DiscoveryMaxTextLength;
+        var maxLines = postType == PostType.Timeline ? (hasMedias ? TimelineMaxTextLinesWithMedias : TimelineMaxTextLinesWithoutMedias) : DiscoveryMaxTextLines;
+        var currentLength = 0;
+        var currentLines = 0;
+
+        void AddMoreRun(TextContentRun run)
+        {
+            runs.Add(run);
+            runs.Add(new TextContentRun(" ... 더보기", true, TextContentRunKind.Plain, colorHex: "#999999"));
+        }
+
+        void TrimRun(TextContentRun run)
+        {
+            if (currentLines > maxLines)
+            {
+                var lines = run.Text.Split(["\r\n", "\n"], StringSplitOptions.None);
+                var allowedLines = maxLines - (currentLines - lines.Length);
+
+                if (allowedLines <= 0) run.Text = string.Empty;
+                else run.Text = string.Join(Environment.NewLine, lines.Take(allowedLines));
+            }
+            else if (currentLength > maxLength)
+            {
+                var allowedLength = maxLength - (currentLength - run.Text.Length);
+                if (allowedLength >= 0) run.Text = run.Text[..allowedLength];
+            }
+        }
+
+        void AddRun(TextContentRun run, ref bool breaked)
+        {
+            currentLength += run.Text.Length;
+            currentLines += run.Text.Count(x => x == '\n');
+            if (postType != PostType.Unwrapped && (currentLength > maxLength || currentLines > maxLines))
+            {
+                TrimRun(run);
+                AddMoreRun(run);
+                breaked = true;
+            }
+            else runs.Add(run);
+        }
+
+        foreach (var content in contents)
+        {
+            if (content is TextContent textContent)
+            {
+                var matches = UrlRegex().Matches(textContent.Text);
+                var lastIndex = 0;
+                var breaked = false;
+                foreach (Match match in matches)
+                {
+                    if (match.Index > lastIndex)
+                    {
+                        AddRun(new TextContentRun(textContent.Text[lastIndex..match.Index], false, TextContentRunKind.Plain), ref breaked);
+                        if (breaked) break;
+                    }
+
+                    if (breaked) break;
+
+                    AddRun(new TextContentRun(match.Value, false, TextContentRunKind.Link, match.Value, "#ED664D"), ref breaked);
+                    lastIndex = match.Index + match.Length;
+                    if (breaked) break;
+                }
+                if (breaked) break;
+
+                if (lastIndex < textContent.Text.Length)
+                {
+                    AddRun(new TextContentRun(textContent.Text[lastIndex..], false, TextContentRunKind.Plain), ref breaked);
+                    if (breaked) break;
+                }
+            }
+            else if (content is ProfileContent profileContent)
+            {
+                var breaked = false;
+                AddRun(new TextContentRun(profileContent.Nickname, true, TextContentRunKind.Profile, profileContent.UserId, "#ED664D"), ref breaked);
+                if (breaked) break;
+            }
+            else if (content is HashtagContent hashtagContent)
+            {
+                var breaked = false;
+                AddRun(new TextContentRun($"#{hashtagContent.Tag}", true, TextContentRunKind.Hashtag, hashtagContent.Tag, "#ED664D"), ref breaked);
+                if (breaked) break;
+            }
+        }
+
+        return runs;
+    }
+
+    public static ApplicationTheme GetGlobalAppTheme() => Application.Current.RequestedTheme;
+
+    public static string GetDiscoveryOptionGlyph(DiscoveryOption option)
+    {
+        return option switch
+        {
+            DiscoveryOption.OnlyMe => "\uE72E",           // Lock
+            DiscoveryOption.SelectedUsers => "\uE8FA",    // AddFriend
+            DiscoveryOption.UnselectedUsers => "\uE8F8",  // BlockContact
+            DiscoveryOption.Friends => "\uE716",          // People
+            DiscoveryOption.FriendsOfFriends => "\uEBDA", // Family
+            DiscoveryOption.Everyone => "\uE774",         // Globe
+            _ => "\uF142",                                // StatusCircleQuestionMark
+        };
+    }
 
     public static async Task RefreshFirebaseToken()
     {

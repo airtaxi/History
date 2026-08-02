@@ -40,7 +40,7 @@ E:\Repos\History\
 ### 0.2 현재 상태
 
 - **1단계 완료**: `History.Commons` 참조, `Constants`, `Shared.cs`, `Configuration`, `App.xaml.cs`(API 호출, 네비게이션, 알럿), `Utils.cs`(플랫폼 독립 부분), `DataTypes/` 메시지 클래스, `Enums/` — 빌드 통과
-- **2단계 미착수**: 핵심 페이지(`LoginPage`, `AppShell`, `TimelinePage`, `UserPage` 등)가 아직 Uno에 없음
+- **2단계 미착수**: 핵심 페이지(`LoginPage`, `AppShell`(Uno `MainPage`), `TimelinePage`, `UserPage` 등)가 아직 Uno에 없음
 - **4단계 본 작업**: 페이지 없이도 구축 가능한 인프라(FCM, JWT 리프레시, 매니페스트)를 먼저 이식
 
 ### 0.3 핵심 참조 레포지토리
@@ -764,7 +764,7 @@ public static class NotificationHandler
         var pushData = JsonSerializer.Serialize(data);
 
         // Check if the app is loaded by verifying the root frame has content.
-        // Unlike MAUI's AppShell.IsLoaded, Uno uses the root frame's current page.
+        // Unlike MAUI's AppShell.IsLoaded (now Uno's MainPage), Uno uses the root frame's current page.
         if (App.RootFrame?.Content == null)
         {
             // App not loaded yet — store push data for later processing after login
@@ -1523,7 +1523,7 @@ dotnet build "E:/Repos/History/History.Uno/History.Uno/History.Uno.csproj" -f ne
 - [ ] **키보드 감지**: `KeyboardSizeMessage` (Android `WindowInsetsListener`, iOS `UIKeyboard` 알림) → Uno 플랫폼별 재구현. `KeyboardSizeMessage`는 이미 `History.Uno/DataTypes/`에 이식됨. 3단계 `EditPostPage`/`PostPage` 이전 시.
 - [ ] **공유 인텐트 (Android)**: `MainActivity.HandleIntent` (ActionSend/ActionSendMultiple) → Uno `Platforms/Android` MainActivity. 3단계 `EditPostPage` 이전 후.
 - [ ] **iOS 커스텀 렌더러**: `CustomShellRenderer`, `CustomTabBarAppearanceTracker`, `StaggeredItemsViewLayout` → **불필요** (Uno Toolkit `TabBar` + `ItemsRepeater` 사용). 마이그레이션 계획에서 제외.
-- [ ] **백 버튼 처리**: `AppShell.OnBackButtonPressed` (Android 더블탭 종료) → Uno `Platforms/Android` BackButton 처리. 2단계 `AppShell` → `TabBar` 이전 시.
+- [ ] **백 버튼 처리**: `AppShell.OnBackButtonPressed` (Android 더블탭 종료) → Uno `MainPage`(셸)의 `Platforms/Android` BackButton 처리. 2단계 `MainPage` → `TabBar` 이전 시.
 - [ ] **앱 아이콘/스플래시**: `Resources/AppIcon`, `Resources/Splash` → Uno `Assets`, `app.manifest`, `Package.appxmanifest`. 별도 작업.
 - [ ] **폰트**: `Resources/Fonts` (OpenSans, MaterialSymbols, FontAwesome) → Uno `Assets/Fonts`. 별도 작업.
 - [ ] **서명**: Android `signing.keystore`, iOS 인증서/프로비저닝 설정. 배포 단계.

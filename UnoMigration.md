@@ -2,6 +2,13 @@
 
 단계적 마이그레이션 전략. `History.Uno` 프로젝트는 MAUI Embedding(`UnoFeatures: MauiEmbedding`)을 활성화한 상태로 시작하며, 플랫폼별 기본 서비스부터 페이지 하나씩 점진적으로 Uno 네이티브로 옮긴다.
 
+## 관련 문서 (본 문서를 읽은 경우 반드시 함께 읽기)
+
+본 문서는 마이그레이션의 전체 계획(상위 문서)이다. 아래 문서들은 본 문서의 상세 구현 지침이므로, **본 문서를 읽었으면 다음 문서들도 반드시 읽은 뒤 작업을 진행**하라.
+
+- **`UnoInfrastructureMigration.md`** — 4단계 인프라 이식(FCM 푸시 알림, 백그라운드 JWT 리프레시, AndroidManifest/Info.plist/권한/설정 파일)의 완전한 구현 지침. 이 문서 하나로 이전 대화 맥락 없이 새 에이전트가 처음부터 구현할 수 있다. 4단계 작업 전 필독.
+- **`UnoInterfaceMigration.md`** — MAUI XAML 컨트롤 → Uno/WinUI 컨트롤 매핑 기준. UI 컨트롤 단위 1:1/대응/부분/대응 없음 분류와 `StaggeredLayout`·`AppShell`→`MainPage`(Uno 셸)/`TabbedPage`(NavigationShell) 마이그레이션 상세 포함. XAML/UI 마이그레이션 작업 전 필독.
+
 ## 전략 원칙
 
 - **MAUI Embedding 유지 항목**: `SuggestingBox.MAUI`, `Syncfusion.Maui.ImageEditor`는 Uno 대체품이 없으므로 `History.Uno.MauiControls` 프로젝트에 MAUI ContentView로 남기고 `MauiHost`로 호스팅한다.
@@ -15,7 +22,7 @@
 ## 현재 MAUI 프로젝트 구성 (이전 대상 인벤토리)
 
 ### 페이지 (38)
-AddFriendsPage, AppleLoginPage, AppShell, BlockedFriendsPage, BookmarkedPostsPage, CreateStickerPage, DiscoveryOptionSelectUsersPage, EditCommentPage, EditPostPage, FriendListPage, FullScreenMediaViewerPage, IgnoredFriendsPage, ImageEditorPage, InAppBrowserPage, InteractionsPage, KakaoStoryLoginPage, KakaoStoryRewritePage, LoginPage, MainPage, MessagePage, MessagesPage, ModerationRecordsPage, MorePage, NotificationsPage, PendingFriendRequestsPage, PollResultsPage, PollVotersPage, PostPage, PublicPostPage, RegisterPage, SearchPostsPage, SettingsPage, StickerDetailPage, StickersPage, TimelinePage, UserPage, WaitingFriendRequestsPage, WriteMessagePage
+AddFriendsPage, AppleLoginPage, AppShell(→ Uno `MainPage`), BlockedFriendsPage, BookmarkedPostsPage, CreateStickerPage, DiscoveryOptionSelectUsersPage, EditCommentPage, EditPostPage, FriendListPage, FullScreenMediaViewerPage, IgnoredFriendsPage, ImageEditorPage, InAppBrowserPage, InteractionsPage, KakaoStoryLoginPage, KakaoStoryRewritePage, LoginPage, MainPage(→ Uno에서 제거), MessagePage, MessagesPage, ModerationRecordsPage, MorePage, NotificationsPage, PendingFriendRequestsPage, PollResultsPage, PollVotersPage, PostPage, PublicPostPage, RegisterPage, SearchPostsPage, SettingsPage, StickerDetailPage, StickersPage, TimelinePage, UserPage, WaitingFriendRequestsPage, WriteMessagePage
 
 ### ViewModels (35)
 CommentViewModel, ContentTemplateSelector, ExternalUriContentViewModel, FriendshipViewModel, FullScreenMediaContentViewModel, FullScreenMediaContentViewModelSelector, IContentViewModel, ImageViewModel, IMediaViewModel, InteractionViewModel, MediaAttachmentViewModel, MediaContentViewModel, MediaTemplateSelector, MentionStickerViewModel, MentionsViewModel, MentionUserViewModel, MessageViewModel, ModerationRecordViewModel, NotificationViewModel, PollContentViewModel, PollOptionViewModel, PollResultOptionViewModel, PollVoterViewModel, PostViewModel, ProfileViewModel, PublicPostViewModel, RepostViewModel, SelectUserViewModel, StickerAssetViewModel, StickerContentViewModel, StickerViewModel, TextTypeContentsViewModel, TimelineTemplateSelector, VideoViewModel, WrappedMediaContentsViewModel
@@ -58,13 +65,13 @@ PanPinchContainer, StaggeredLayout
 | CommunityToolkit.Maui | 14.1.0 | MAUI Embedding 영역만 유지, Uno 본체는 CommunityToolkit.Mvvm |
 | CommunityToolkit.Maui.MediaElement | 9.0.0 | Uno `MediaPlayerElement` (`UnoFeature: MediaPlayerElement`) |
 | CommunityToolkit.Mvvm | 8.4.2 | 그대로 사용 (GlobalUsings에 이미 포함) |
-| AnimatedWebP.FFImageLoading.Maui | 1.4.1 | Uno 기본 `Image` (Skia)로 대체. 애니메이션 WebP는 별도 처리 검토 |
+| AnimatedWebP.FFImageLoading.Maui | 1.4.1 | Uno 기본 `Image`로 대체. 애니메이션 WebP는 Uno가 네이티브로 지원하므로 별도 처리 불필요 |
 | Microsoft.Maui.Controls | 10.0.41 | MAUI Embedding용으로만 유지 |
 | Plugin.Firebase.CloudMessaging | 4.0.1 | 플랫폼별 FCM 직접 연동 또는 Uno 플러그인 검토 |
 | Syncfusion.Maui.ImageEditor | 34.1.32 | **MAUI Embedding 유지** |
 | Syncfusion.Maui.Toolkit | 1.0.10 | **MAUI Embedding 유지** |
 | UraniumUI.Icons.FontAwesome | 3.0.0 | Uno `FontIcon` + Fluent Icons로 대체 |
-| UraniumUI.Icons.MaterialSymbols | 3.0.0 | Uno `FontIcon` + Material Symbols 폰트 |
+| UraniumUI.Icons.MaterialSymbols | 3.0.0 | Uno `FontIcon` + Fluent Icons로 대체. Uno Material은 Material 아이콘 폰트를 제공하지 않으므로 별도 폰트 추가 없이 Fluent 아이콘 사용 (`fluent-icons` MCP로 검색) |
 | UraniumUI.Material | 2.15.0 | Uno Material 테마(`MaterialToolkitTheme`)로 자연스럽게 대체 — 동일 Material 디자인 언어 |
 | Xamarin.Build.Download | 0.11.4 | MAUI Embedding 영역만 |
 | Xamarin.MediaGallery | 3.0.0 | WinUI `FileOpenPicker` / 플랫폼별 Media Picker |
@@ -89,7 +96,7 @@ Uno 프로젝트에 MAUI 앱의 공통 인프라를 올린다. 이 단계가 끝
 - [x] `Utils.cs` 중 플랫폼 독립 부분 이전 (`GenerateMediaUri`, `GenerateFriendlyTimestamp`, `GenerateTextPreviewFromContents`, `GenerateThumbnailUrlFromContents`, `SanitizeContents` — `GenerateSpanFromTextTypeContents`/`GenerateContentViewModels`는 2단계 ViewModel 이전 후, `RefreshFirebaseToken`/`GetGlobalAppTheme`/`CheckForUpdateAsync`는 4단계 플랫폼별 이전 후)
 - [x] 네비게이션 인프라: `App.PushAsync` / `PopAsync` / `PushModalAsync` / `PopModalAsync`를 WinUI `Frame.Navigate` + 세마포어 기반으로 재구현
 - [x] `App.Page` / `App.TopPage` 정적 접근자 재구현 (Uno `Window.Current.Content` 기반 `RootFrame`)
-- [ ] `MainPage`를 로그인 게이트로 교체 (`CreateWindow` → `Frame.Navigate(typeof(LoginPage))`) — 2단계에서 `LoginPage` 이전 시
+- [ ] 루트를 로그인 게이트로 교체 (`CreateWindow` → `Frame.Navigate(typeof(LoginPage))`, 로그인 성공 시 셸 `MainPage`(AppShell 대응)로 이동) — 2단계에서 `LoginPage` 이전 시
 - [x] `appsettings.json`에 `ApiEndpoint` 키 마이그레이션 (`AccessToken`, `RefreshToken`, `Theme`은 런타임 `Configuration.cs`에서 관리)
 - [x] `DataTypes/` 메시지 클래스 이전 (21/25 — `SelectUserSelectionMessage`, `ResizeMediaCarouselViewMessage`, `ResizeCarouselViewMessage`, `ApplePostViewModelTapMessage`는 2단계 ViewModel 이전 후)
 - [x] `Enums/` 2개 이전 (`InteractionType`, `PostType`)
@@ -101,7 +108,7 @@ Uno 프로젝트에 MAUI 앱의 공통 인프라를 올린다. 이 단계가 끝
 
 - [ ] `LoginPage.xaml/.cs` → Uno `Page` + WinUI 컨트롤로 재작성
 - [ ] `RegisterPage.xaml/.cs` 이전
-- [ ] `AppShell` 탭 네비게이션 → Uno Toolkit `TabBar`(`BottomTabBarStyle`, Material 테마) NavigationShell 패턴으로 재구현 (5개 탭: 타임라인, 알림/쪽지, 친구, 더보기, 프로필). 상세는 `UnoInterfaceMigration.md` "AppShell · TabbedPage 마이그레이션 상세" 참조.
+- [ ] `AppShell` 탭 네비게이션 → Uno `MainPage`(셸 페이지, `AppShell` 대응)로 이전 후 Uno Toolkit `TabBar`(`BottomTabBarStyle`, Material 테마) NavigationShell 패턴으로 재구현 (5개 탭: 타임라인, 알림/쪽지, 친구, 더보기, 프로필). 상세는 `UnoInterfaceMigration.md` "AppShell · TabbedPage 마이그레이션 상세" 참조.
 - [ ] `TimelinePage.xaml/.cs` 이전 (당김새로고침, 페이지네이션, 포스트 아이템 템플릿)
 - [ ] `PostViewModel` 이전 (가장 복잡한 ViewModel, `IContentViewModel` 체계 포함)
 - [ ] `IContentViewModel` 인터페이스 + 구현체들 (`TextTypeContentsViewModel`, `MediaContentViewModel`, `StickerContentViewModel`, `ExternalUriContentViewModel`, `PollContentViewModel`, `WrappedMediaContentsViewModel`)
@@ -142,8 +149,8 @@ iOS/Android 네이티브 기능을 Uno 플랫폼 폴더로 옮긴다.
 - [ ] **키보드 감지**: `KeyboardSizeMessage` (Android `WindowInsetsListener`, iOS `UIKeyboard` 알림) → Uno 플랫폼별 재구현
 - [ ] **공유 인텐트 (Android)**: `MainActivity.HandleIntent` (ActionSend/ActionSendMultiple) → Uno `Platforms/Android` MainActivity
 - [ ] **iOS 커스텀 렌더러**: `CustomShellRenderer`, `CustomTabBarAppearanceTracker`, `StaggeredItemsViewLayout` → **불필요** (Uno Toolkit `TabBar` + `ItemsRepeater` 사용). 마이그레이션 계획에서 제외
-- [ ] **백 버튼 처리**: `AppShell.OnBackButtonPressed` (Android 더블탭 종료) → Uno `Platforms/Android` BackButton 처리
-- [ ] **앱 아이콘/스플래시**: `Resources/AppIcon`, `Resources/Splash` → Uno `Assets`, `app.manifest`, `Package.appxmanifest`
+- [ ] **백 버튼 처리**: `AppShell.OnBackButtonPressed` (Android 더블탭 종료) → Uno `MainPage`(셸)의 `Platforms/Android` BackButton 처리
+- [x] **앱 아이콘**: `Resources/AppIcon/appicon.svg` → Uno `Assets/Icons` (`icon.svg`/`icon_foreground.svg`) 교체, `UnoIconBackgroundColor`/`UnoIconForegroundScale` 설정. 스플래시는 잔여 항목 참조
 - [ ] **폰트**: `Resources/Fonts` (OpenSans, MaterialSymbols, FontAwesome) → Uno `Assets/Fonts`
 - [x] **AndroidManifest.xml**, **Info.plist** 마이그레이션 (FCM 관련 부분)
 - [x] **Firebase 설정**: `google-services.json` (Android), `GoogleService-Info.plist` (iOS) 연동
@@ -162,8 +169,9 @@ iOS/Android 네이티브 기능을 Uno 플랫폼 폴더로 옮긴다.
 - [ ] **키보드 감지**: `KeyboardSizeMessage` (Android `WindowInsetsListener`, iOS `UIKeyboard` 알림) → Uno 플랫폼별 재구현. `KeyboardSizeMessage`는 이미 `History.Uno/DataTypes/`에 이식됨. 3단계 `EditPostPage`/`PostPage` 이전 시.
 - [ ] **공유 인텐트 (Android)**: `MainActivity.HandleIntent` (ActionSend/ActionSendMultiple) → Uno `Platforms/Android` MainActivity. 3단계 `EditPostPage` 이전 후.
 - [ ] **iOS 커스텀 렌더러**: `CustomShellRenderer`, `CustomTabBarAppearanceTracker`, `StaggeredItemsViewLayout` → **불필요** (Uno Toolkit `TabBar` + `ItemsRepeater` 사용). 마이그레이션 계획에서 제외.
-- [ ] **백 버튼 처리**: `AppShell.OnBackButtonPressed` (Android 더블탭 종료) → Uno `Platforms/Android` BackButton 처리. 2단계 `AppShell` → `TabBar` 이전 시.
-- [ ] **앱 아이콘/스플래시**: `Resources/AppIcon`, `Resources/Splash` → Uno `Assets`, `app.manifest`, `Package.appxmanifest`. 별도 작업.
+- [ ] **백 버튼 처리**: `AppShell.OnBackButtonPressed` (Android 더블탭 종료) → Uno `MainPage`(셸)의 `Platforms/Android` BackButton 처리. 2단계 `MainPage` → `TabBar` 이전 시.
+- [x] **앱 아이콘**: `Resources/AppIcon/appicon.svg` → `Assets/Icons/icon.svg`(노란 배경 `#fff112`) / `icon_foreground.svg`(검정 H 로고) 교체. `UnoIconBackgroundColor=#fff112`, `UnoIconForegroundScale` 1(iOS)/0.7(Android) 설정
+- [x] **스플래시**: `Resources/Splash/foreground.svg` → `Assets/Splash/splash_screen.svg` 교체 (`UnoSplashScreenColor=#fff112`, `UnoSplashScreenBaseSize=256,256`, 틴트 `#594431`은 SVG에 직접 적용)
 - [ ] **폰트**: `Resources/Fonts` (OpenSans, MaterialSymbols, FontAwesome) → Uno `Assets/Fonts`. 별도 작업.
 - [ ] **서명**: Android `signing.keystore`, iOS 인증서/프로비저닝 설정. 배포 단계.
 - [ ] **`Utils.GetGlobalAppTheme`**: MAUI `Application.Current.UserAppTheme` → Uno `ThemeService` (`UnoFeature: ThemeService` 이미 활성화). 2단계 이후.
@@ -191,7 +199,7 @@ MAUI Embedding 잔재 정리, 서드파티 정리, 품질 점검.
 
 - **Uno 템플릿 버전**: 6.6.33 설치됨. WinAppSDK(`net10.0-windows10.0.26100`) 타겟에서 MAUI Embedding + .NET 10 조합 빌드 에러(`CS0619: TemplatedView.Children obsolete`) 발생하여 Windows 타겟 제외. 모바일(iOS/Android)만 타겟.
 - **`FormattedString`/`Span`**: MAUI의 `Span` + `GestureRecognizers` 패턴은 Uno `RichTextBlock` + `Hyperlink`/`Inline`로 재작성 필요 (`Utils.GenerateSpanFromTextTypeContents`).
-- **`Shell` → `TabBar` NavigationShell**: MAUI Shell의 `TabBar`/`Tab`/`ShellContent` 계층은 Uno Toolkit `TabBar`(`BottomTabBarStyle`, Material 테마 전제) + `Region.Attached` + `Region.Navigator="Visibility"` + `Frame` 네비게이션으로 매핑. 상세는 `UnoInterfaceMigration.md` "AppShell · TabbedPage 마이그레이션 상세" 섹션 참조.
+- **`Shell` → `TabBar` NavigationShell**: MAUI Shell의 `TabBar`/`Tab`/`ShellContent` 계층은 Uno Toolkit `TabBar`(`BottomTabBarStyle`, Material 테마 전제) + `Region.Attached` + `Region.Navigator="Visibility"` + `Frame` 네비게이션으로 매핑. 셸 페이지는 Uno에서 `AppShell`이 아닌 **`MainPage`** 라는 이름으로 이전한다 (MAUI `MainPage` TabbedPage는 제거). 상세는 `UnoInterfaceMigration.md` "AppShell · TabbedPage 마이그레이션 상세" 섹션 참조.
 - **Material 테마**: `MaterialToolkitTheme` 로드(`App.xaml` `Application.Resources`). 추가 컬러 오버라이드는 `Styles/` 폴더에서 관리.
 - **`Preferences`**: MAUI `Preferences.Set/Get` → Uno `ApplicationData.Current.LocalSettings` 또는 `IConfiguration` + 파일 저장.
 - **`MainThread.BeginInvokeOnMainThread`**: Uno `Dispatcher.RunAsync` / `CoreDispatcher.RunAsync`.

@@ -12,4 +12,8 @@ public static class Constants
     public const string PromptNo = "아니요";
 
     public const string DiscordInviteUrl = "https://discord.com/invite/g9jk3GR3vD";
+
+    public const int GoogleAuthRequestCode = 9001;
+    public const string GoogleAuthWebClientId = "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com";
+    public const string GoogleAuthAppleClientId = "401981104412-6tbj8kobldvl3if26qv069h4crcc2cp0.apps.googleusercontent.com";
 }

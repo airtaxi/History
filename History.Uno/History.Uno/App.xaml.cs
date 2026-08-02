@@ -83,7 +83,7 @@ public partial class App : Application
 
         RootFrame = rootFrame;
 
-        if (rootFrame.Content == null) rootFrame.Navigate(typeof(MainPage), args.Arguments);
+        if (rootFrame.Content == null) rootFrame.Navigate(typeof(Pages.LoginPage), args.Arguments);
 
         MainWindow.Activate();
     }
@@ -180,35 +180,98 @@ public partial class App : Application
 
     // --- Alert Helpers (ContentDialog-based) ---
 
-    public static async Task DisplayAlertAsync(string title, string message, string ok = "확인")
+    public static async Task<ContentDialogResult> DisplayAlertAsync(string title, string message, string primaryButtonText = "확인", string secondaryButtonText = null, string closeButtonText = null, ContentDialogButton? defaultButton = null)
     {
         var page = TopPage;
-        if (page == null) return;
+        if (page == null) return ContentDialogResult.None;
 
         var dialog = new ContentDialog
         {
             Title = title,
             Content = message,
-            CloseButtonText = ok,
+            PrimaryButtonText = primaryButtonText,
+            SecondaryButtonText = secondaryButtonText,
+            CloseButtonText = closeButtonText,
+            XamlRoot = page.XamlRoot
+        };
+        if (defaultButton != null) dialog.DefaultButton = defaultButton.Value;
+
+        return await dialog.ShowAsync();
+    }
+
+    // --- Action Sheet / Prompt Helpers (ContentDialog-based) ---
+
+    /// <summary>
+    /// Shows a vertical list of option buttons in a ContentDialog (MAUI DisplayActionSheetAsync equivalent).
+    /// Returns the selected option text, or null when cancelled.
+    /// </summary>
+    public static async Task<string> DisplayActionSheetAsync(string title, string cancel, string destruction, params string[] buttons)
+    {
+        var page = TopPage;
+        if (page == null) return null;
+
+        var selected = cancel;
+        var stackPanel = new StackPanel { Spacing = 8 };
+        ContentDialog dialog = null;
+        foreach (var button in buttons ?? [])
+        {
+            var capturedButton = button;
+            var itemButton = new Button
+            {
+                Content = button,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Center
+            };
+            itemButton.Click += (_, _) =>
+            {
+                selected = capturedButton;
+                dialog.Hide();
+            };
+            stackPanel.Children.Add(itemButton);
+        }
+
+        dialog = new ContentDialog
+        {
+            Title = title,
+            Content = stackPanel,
+            CloseButtonText = cancel,
             XamlRoot = page.XamlRoot
         };
         await dialog.ShowAsync();
+
+        return selected == cancel ? null : selected;
     }
 
-    public static async Task<bool> DisplayAlertAsync(string title, string message, string accept, string cancel)
+    /// <summary>
+    /// Shows a text input dialog (MAUI DisplayPromptAsync equivalent). Returns the entered text, or null when cancelled.
+    /// </summary>
+    public static async Task<string> DisplayPromptAsync(string title, string message, string accept, string cancel, string placeholder = null, int maxLength = -1, string initialValue = null)
     {
         var page = TopPage;
-        if (page == null) return false;
+        if (page == null) return null;
+
+        var textBox = new TextBox { PlaceholderText = placeholder, Text = initialValue ?? string.Empty };
+        if (maxLength > 0) textBox.MaxLength = maxLength;
 
         var dialog = new ContentDialog
         {
             Title = title,
-            Content = message,
+            Content = new StackPanel
+            {
+                Spacing = 8,
+                Children =
+                {
+                    new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap },
+                    textBox
+                }
+            },
             PrimaryButtonText = accept,
-            SecondaryButtonText = cancel,
+            CloseButtonText = cancel ?? Constants.PromptCancel,
+            DefaultButton = ContentDialogButton.Primary,
             XamlRoot = page.XamlRoot
         };
         var result = await dialog.ShowAsync();
-        return result == ContentDialogResult.Primary;
+
+        return result == ContentDialogResult.Primary ? textBox.Text : null;
     }
 }

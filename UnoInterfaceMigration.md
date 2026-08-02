@@ -11,6 +11,7 @@
 - 본 문서는 **UI 컨트롤 단위의 1:1 대응 가능 여부**를 분류하는 것이 목적이다. 비즈니스 로직, ViewModel, 메시징, DI, 인증 흐름 등은 `UnoMigration.md`에서 다룬다.
 - Uno 프로젝트는 `UnoFeatures: MauiEmbedding`을 켠 상태로 시작하며, **테마는 Uno Material(`MaterialToolkitTheme`)을 사용**(`TabBar` 사전 스타일이 Material/Cupertino 패키지에만 존재하므로 NavigationShell 패턴 적용을 위함). MAUI Embedding 영역에 남기는 컨트롤(`SuggestingBox`, `SfImageEditor`, `SfDateTimePicker`)은 "MAUI Embedding 유지"로 표기한다.
 - 대상 플랫폼은 iOS/Android(`net10.0-android;net10.0-ios`, Skia 렌더링)이며, Windows는 별도 WinUI 3 네이티브 클라이언트로 분리한다(`UnoMigration.md` 11항 참조).
+- **필수 사전 작업**: Uno/WinUI XAML·C# 작업은 WinUI와 동일한 API/패턴을 쓰므로, 마이그레이션 작업 전에 반드시 `/csharp-winui-projects` 스킬을 사전에 로드해야 한다(`$csharp-code-style` 스킬도 함께). XAML 작성 후 XAML 포맷터 실행, Fluent 아이콘은 `fluent-icons` MCP로 검색, `x:Uid`/`.resw` 지역화 규칙 등이 모두 이 스킬에 포함되어 있다.
 
 ## 분류 기호
 
@@ -93,8 +94,8 @@
 | MAUI (사용처) | Uno / WinUI | 분류 | 비고 |
 |---|---|---|---|
 | `Image` (45파일 151회) | `Image` | **1:1** | `Source`→`Source`(`BitmapImage`/`Uri`/`ms-appx`). `Aspect`→`Stretch`(`Fill`/`AspectFill`→`UniformToFill`, `AspectFit`→`Uniform`). |
-| `FontImageSource` (42파일 140회, 아이콘 글리프) | `FontIcon` (`Glyph`/`FontFamily`) 또는 `ImageIcon` | **대응** | MAUI `FontImageSource`는 `FontFamily`+`Glyph`(+ `x:Static`로 `m:MaterialSharp.*`/`fa:Solid.*` 참조). Uno `FontIcon`에 `Glyph`/`FontFamily`로 매핑. 폰트 파일(`MaterialSymbolsOutlined.ttf`/`fa-solid-900.ttf`)은 `Assets/Fonts`로 이동. `fluent-icons` MCP로 Fluent Icons 검색 가능(대체 아이콘 필요 시). |
-| `ffimageloading:CachedImage` (9파일 12회: `StickerDetailPage` 3, `Media.xaml` 2, `EditPostPage` 1, `PostPage` 1, `EditCommentPage` 1, `CreateStickerPage` 1, `PollVotersPage` 1, `Content.xaml` 1, `StickersPage` 1) | `Image` | **부분** | FFImageLoading의 캐싱·플레이스홀더·에러 폴백·다운샘플링은 `Image`에 내장 없음. 별도 캐싱 서비스·`ImageBrush` 폴백 구현 필요. 애니메이션 WebP(`AnimatedWebP.FFImageLoading.Maui`)은 Uno `Image` Skia에서 별도 처리 검토(`UnoMigration.md` 의존성 표). |
+| `FontImageSource` (42파일 140회, 아이콘 글리프) | `FontIcon` (`Glyph`/`FontFamily`) 또는 `ImageIcon` | **대응** | MAUI `FontImageSource`는 `FontFamily`+`Glyph`(+ `x:Static`로 `m:MaterialSharp.*`/`fa:Solid.*` 참조). Uno `FontIcon`에 `Glyph`/`FontFamily`로 매핑. **Uno Material은 Material 아이콘 폰트를 별도 제공하지 않으므로**(Roboto 폰트만 번들), MAUI의 `MaterialSharp.*`/`FontAwesome` 글리프는 동일한 플랫 디자인의 Fluent 아이콘으로 대체한다. `fluent-icons` MCP(`fluent-icons_search_fluent_icons`)로 적절한 아이콘을 검색해 `FontIcon.Glyph`에 사용하고, 폰트는 내장 Fluent 심볼 폰트(`{ThemeResource SymbolThemeFontFamily}`)를 그대로 쓴다. 커스텀 폰트 파일(`MaterialSymbolsOutlined.ttf`/`fa-solid-900.ttf`)을 꼭 유지해야 하면 `Assets/Fonts`로 이동. |
+| `ffimageloading:CachedImage` (9파일 12회: `StickerDetailPage` 3, `Media.xaml` 2, `EditPostPage` 1, `PostPage` 1, `EditCommentPage` 1, `CreateStickerPage` 1, `PollVotersPage` 1, `Content.xaml` 1, `StickersPage` 1) | `Image` | **대응** | Uno `Image`는 이미지 로딩 성능·캐싱이 우수하고 애니메이션 WebP(`AnimatedWebP.FFImageLoading.Maui` 대체)도 이미 지원하므로 별도 캐싱 서비스·보조 구현 없이 `CachedImage`를 `Image`로 그냥 교체하면 된다. FFImageLoading의 플레이스홀더·에러 폴백·다운샘플링은 별도로 신경쓰지 않는다. |
 | `WebView` (3파일 3회: `AppleLoginPage`, `InAppBrowserPage`, `KakaoStoryLoginPage`) | `WebView2` (`UnoFeature: WebView`) | **대응** | 신규는 `WebView2` 권장, 모든 Uno 타겟 지원. 쿠키 접근·JS 인터롭은 `WebView2` API로 재작성. `WebViewCookieHelper`/`InAppBrowserPage`가 영향권. |
 | `Rectangle` (Shape, 14파일 48회: `SettingsPage` 25, `MorePage` 6, `EditPostPage` 3 등) | `Rectangle` (WinUI Shapes) | **1:1** | `Fill`→`Fill`, `Stroke`→`Stroke`, `StrokeThickness`/`RadiusX`/`RadiusY` 매핑. |
 | `Ellipse` (Shape, 2파일 2회: `Content.xaml` 1, `PollVotersPage` 1) | `Ellipse` (WinUI Shapes) | **1:1** | 동일. |
@@ -109,7 +110,7 @@
 | `views:DataTemplatePresenter` (18파일 47회) | `ContentControl` + `ContentTemplateSelector` 또는 커스텀 `UserControl` | **대응** | 프로젝트 자체 컨트롤(`ContentView` 상속). `ContentControl`의 `ContentTemplateSelector`로 흉내, 또는 Uno 네이티브 `UserControl`로 재작성. 타임라인 콘텐츠 슬롯(`TimelineContentsTemplate`)이 영향권. |
 | `views:SquareView` (`Post.xaml` 1회) | `UserControl` 또는 `Border` + 바인딩 | **1:1** | 커스텀 정사각형 `ContentView`. 로직만 `UserControl`로 옮기면 됨. |
 
-> **권장 기준**: 이미지·웹뷰는 Uno 내장 컨트롤로 옮기되, FFImageLoading 캐싱 기능은 별도 서비스로 보충. `ZoomContentControl`로 `PanPinchContainer` 대체(1:1 대응 후보). `SfImageEditor`·`SuggestingBox`·`SfDateTimePicker`는 MAUI Embedding 영역에 남겨 재작성 비용을 피한다.
+> **권장 기준**: 이미지·웹뷰는 Uno 내장 컨트롤로 그대로 옮긴다. **FFImageLoading 캐싱은 신경쓰지 않는다** — Uno `Image`는 이미지 로딩 성능이 뛰어나고 캐싱·애니메이션 WebP를 이미 지원하므로 `CachedImage`를 `Image`로 그냥 교체하면 된다. `ZoomContentControl`로 `PanPinchContainer` 대체(1:1 대응 후보). `SfImageEditor`·`SuggestingBox`·`SfDateTimePicker`는 MAUI Embedding 영역에 남겨 재작성 비용을 피한다. **아이콘 정책**: Uno Material은 Material 아이콘 폰트를 별도 제공하지 않으므로(공식 `material-getting-started.md` — Roboto 폰트만 번들) 별도 폰트 추가 없이 동일한 플랫 디자인의 Fluent 아이콘을 사용한다. 아이콘 선택 시 `fluent-icons` MCP로 이름·태그·코드(`E7xx`)를 검색해 가장 적절한 아이콘을 찾고, `FontIcon`에 `FontFamily="{ThemeResource SymbolThemeFontFamily}"` + `Glyph="&#xE7xx;"` 형태로 적용한다.
 
 ---
 
@@ -118,12 +119,12 @@
 | MAUI (사용처) | Uno / WinUI | 분류 | 비고 |
 |---|---|---|---|
 | `ContentPage` (38파일, 거의 모든 페이지) | `Page` | **1:1** | WinUI `Page`가 MAUI `ContentPage`에 대응. `Content` 단일 자식. |
-| `Shell` + `TabBar` + `Tab` + `ShellContent` (`AppShell.xaml` 1회, `Tab` 5/`ShellContent` 11) | **Uno Toolkit NavigationShell 패턴**: `TabBar`(`BottomTabBarStyle`) + `Region.Attached` + `Region.Navigator="Visibility"` + 중첩 `Grid` | **대응** | 공식 `NavigationShell.md`가 제시하는 Uno Toolkit의 Shell 대응 패턴. **Material 테마 전제**(`BottomTabBarStyle`은 `Uno.Toolkit.UI.Material` 패키지에만 존재). `MainPage`를 `Grid`(메인 콘텐츠 영역 + 하단 `TabBar`)로 구성하고 `uen:Region.Attached="True"`로 네비게이션 활성화, 각 `TabBarItem`에 `uen:Region.Name` 부여. 단순 Frame 네비게이션보다 Shell에 가까운 구조 재현. **초기 단계**(`UnoMigration.md` 전략)는 WinUI `Frame` 네비게이션(`-nav blank`)으로 시작, **이후** `Uno.Extensions.Navigation` Region Navigation로 업그레이드하여 NavigationShell 패턴 적용. |
-| `TabbedPage` (`MainPage.xaml` 1회 — 루트, 자식 `local:TimelinePage`/`NotificationsPage`/`UserPage`) | `NavigationView` (`PaneDisplayMode="Bottom"`) 또는 `TabBar` | **대응** | MAUI `TabbedPage`는 3개 자식 페이지를 탭으로 전환. **`AppShell`과 역할 중복**(이 프로젝트는 `AppShell` Shell + `MainPage` TabbedPage 혼용). 마이그레이션 시 하나로 통일 — `AppShell`의 5탭 체계를 `TabBar`로 옮기고 `MainPage` TabbedPage는 제거 후 `AppShell`의 타임라인/알림/프로필 탭이 `MainPage` 자식을 직접 호스팅하도록 재설계. |
+| `Shell` + `TabBar` + `Tab` + `ShellContent` (`AppShell.xaml` 1회, `Tab` 5/`ShellContent` 11) | **Uno Toolkit NavigationShell 패턴**: `TabBar`(`BottomTabBarStyle`) + `Region.Attached` + `Region.Navigator="Visibility"` + 중첩 `Grid` | **대응** | 공식 `NavigationShell.md`가 제시하는 Uno Toolkit의 Shell 대응 패턴. **Material 테마 전제**(`BottomTabBarStyle`은 `Uno.Toolkit.UI.Material` 패키지에만 존재). **Uno 셸 페이지명은 `MainPage`**(`AppShell` 이름으로 이전하지 않음) — `MainPage`를 `Grid`(메인 콘텐츠 영역 + 하단 `TabBar`)로 구성하고 `uen:Region.Attached="True"`로 네비게이션 활성화, 각 `TabBarItem`에 `uen:Region.Name` 부여. 단순 Frame 네비게이션보다 Shell에 가까운 구조 재현. **초기 단계**(`UnoMigration.md` 전략)는 WinUI `Frame` 네비게이션(`-nav blank`)으로 시작, **이후** `Uno.Extensions.Navigation` Region Navigation로 업그레이드하여 NavigationShell 패턴 적용. |
+| `TabbedPage` (`MainPage.xaml` 1회 — 루트, 자식 `local:TimelinePage`/`NotificationsPage`/`UserPage`) | `NavigationView` (`PaneDisplayMode="Bottom"`) 또는 `TabBar` | **대응** | MAUI `TabbedPage`는 3개 자식 페이지를 탭으로 전환. **`AppShell`과 역할 중복**(이 프로젝트는 `AppShell` Shell + `MainPage` TabbedPage 혼용). 마이그레이션 시 하나로 통일 — `AppShell`(Uno에서는 `MainPage` 이름으로 이전)의 5탭 체계를 `TabBar`로 옮기고 MAUI `MainPage` TabbedPage는 제거 후, Uno `MainPage`(셸)의 타임라인/알림/프로필 탭이 각 페이지를 직접 호스팅하도록 재설계. |
 | `NavigationPage` (요소로는 미사용, 단 `NavigationPage.HasNavigationBar="False"` 부착 프로퍼티가 `FullScreenMediaViewerPage` 1회 사용) | `Frame` 네비게이션 + `AppBar`/`CommandBar` 표시 제어 | **대응** | `HasNavigationBar="False"`는 페이지 헤더를 숨기는 용도. Uno에서는 `Page`에 `AppBar`/`CommandBar`를 아예 두지 않거나 `Visibility="Collapsed"`로. `NavigationPage` 요소 자체는 미사용이므로 네비게이션 컨테이너 매핑은 불필요. |
 | 모달 (`PushModalAsync`) | `ContentDialog` (모달) 또는 `Flyout` | **대응** | 전체화면 모달은 `ContentDialog`, 경량 팝업은 `Flyout`. `Uno.Extensions.Navigation`의 `Qualifiers.Dialog`로 Flyout/Modal 자동 분류(공식 `HowTo-ShowDialog.md`). MAUI `DisplayAlertAsync`→`ContentDialog`(`UnoMigration.md` 메모). |
 
-> **권장 기준**: 셸은 3단계로 간다. (1) **1단계** — WinUI `Frame` 네비게이션(`-nav blank`)으로 `App.PushAsync`/`PopAsync` 재구현, `MainPage` TabbedPage 제거하고 `AppShell` 5탭을 `Frame`+수동 탭 전환으로 임시 구성. (2) **3~4단계** — `Uno.Extensions.Navigation` Region Navigation 활성화(`uen:Region.Attached="True"`)하고 Uno Toolkit `TabBar` NavigationShell 패턴 적용(아래 상세 섹션 참조). `AppShell`의 다중 `ShellContent` 하위 섹션 구조는 `TabBarItem`당 1 `Region.Name` + 상위 탭에서 `NavigationView`/`Pivot`로 하위 전환하는 2단계 매핑. (3) 모달은 `ContentDialog`·`Flyout`로 통일. Shell의 URI 라우팅은 1:1 대응이 아니므로 Frame 기반으로 먼저 안정화한 뒤 Region Navigation로 자연스럽게 전환.
+> **권장 기준**: 셸은 3단계로 간다. (1) **1단계** — WinUI `Frame` 네비게이션(`-nav blank`)으로 `App.PushAsync`/`PopAsync` 재구현, MAUI `MainPage` TabbedPage 제거하고 `AppShell`(Uno `MainPage`) 5탭을 `Frame`+수동 탭 전환으로 임시 구성. (2) **3~4단계** — `Uno.Extensions.Navigation` Region Navigation 활성화(`uen:Region.Attached="True"`)하고 Uno Toolkit `TabBar` NavigationShell 패턴 적용(아래 상세 섹션 참조). `AppShell`의 다중 `ShellContent` 하위 섹션 구조는 `TabBarItem`당 1 `Region.Name` + 상위 탭에서 `NavigationView`/`Pivot`로 하위 전환하는 2단계 매핑. (3) 모달은 `ContentDialog`·`Flyout`로 통일. Shell의 URI 라우팅은 1:1 대응이 아니므로 Frame 기반으로 먼저 안정화한 뒤 Region Navigation로 자연스럽게 전환.
 
 ---
 
@@ -143,6 +144,22 @@ MAUI의 `GestureRecognizer` 체계는 Uno/WinUI에 직접 대응이 없다. 이�
 
 > **권장 기준**: 제스처는 (1) 탭(160회)은 `Tapped` 이벤트로 직매핑, (2) 드래그/드롭(각 1회)은 WinUI `CanDrag`/`AllowDrop` API로 옮긴다. `Pan`/`Pinch`/`Swipe` GestureRecognizer는 미사용이므로 매핑 불필요(핀치/팬은 `ZoomContentControl`이 흡수). `StatusBarBehavior`(66회, 거의 모든 페이지)는 플랫폼별 코드로 이전해야 하므로 4단계에서 일괄 처리. `SwipeToCloseBehavior` 자체 Behavior는 `Microsoft.Xaml.Behaviors` 또는 컨트롤 기반으로 재작성.
 
+> **이벤트 핸들러 명명 규칙 (필수)**: MAUI에서 그대로 복사해 온 이벤트 핸들러 이름은 `/csharp-winui-projects` 스킬의 `On{ControlName}{EventName}` 규칙에 맞게 반드시 재명명한다. 특히 MAUI 컨트롤 타입명(`Label`, `Entry`)이 이름에 남은 경우 Uno/WinUI 컨트롤 타입명(`TextBlock`, `TextBox`)으로 교체한다. XAML 이벤트 바인딩과 코드비하인드 양쪽을 함께 수정해야 한다. `Click` 이벤트는 `Clicked` 접미사를 사용한다.
+>
+> - `OnViewTermsLabelTapped` → `OnViewTermsTextBlockTapped` (Label → TextBlock)
+> - `OnTermsLabelTapped` → `OnTermsTextBlockTapped` (Label → TextBlock)
+> - `OnInviteCodeTextChanged` → `OnInviteCodeTextBoxTextChanged` (Entry → TextBox)
+> - `OnCheckBoxChecked` / `OnRegisterButtonClicked` 처럼 컨트롤 타입명이 이미 맞는 이름은 유지
+>
+> **컨트롤 이름(x:Name) 명명 규칙 (필수)**: `x:Name`은 `{의미 있는 이름}{WinUI 컨트롤 타입}` 형식(PascalCase)으로 작성한다. MAUI에서 그대로 가져온 x:Name 중 MAUI 컨트롤 타입명(`Entry`, `Label`, `Editor`, `Picker`, `Switch`, `ImageButton`, `ActivityIndicator`, `CollectionView`, `RefreshView` 등)이 포함된 것은 WinUI 컨트롤 타입명으로 교체한다. 이벤트 핸들러 명명 규칙(`On{ControlName}{EventName}`)의 ControlName이 곧 이 x:Name이므로, 컨트롤명을 바꾸면 핸들러명도 함께 맞춘다.
+>
+> - `InviteCodeEntry` → `InviteCodeTextBox` (Entry → TextBox)
+> - `LoginVerticalStackLayout` → `LoginStackPanel` (VerticalStackLayout → StackPanel)
+> - `MainActivityIndicator` → `MainProgressRing` (ActivityIndicator → ProgressRing)
+> - `TermsCheckBox` / `RegisterButton` / `MainWebView` 처럼 이미 WinUI 타입명인 경우 유지
+>
+> 이미 수정 완료된 사례: `RegisterPage.xaml` — `InviteCodeEntry` → `InviteCodeTextBox`, `LoginPage.xaml` — `LoginPanel` → `LoginStackPanel`.
+
 ---
 
 ## 8. 마이그레이션 우선순위 · 위험도 요약
@@ -161,7 +178,7 @@ MAUI의 `GestureRecognizer` 체계는 Uno/WinUI에 직접 대응이 없다. 이�
 
 ### 부분(높은 위험, 보조 구현 필요)
 
-`CollectionView`(`EmptyView`/`RemainingItemsThreshold` 부재) · `FlipView`+`PipsPager`(↔`CarouselView`, `CurrentItem`/`Position` API 상이) · `RichTextBlock`(↔`Span`+`GestureRecognizers`, 제스처 없음, `Repost.xaml` 1곳) · `Image`(↔`CachedImage` 캐싱 없음) · `Shell` URI 라우팅(초기 — NavigationShell 패턴으로 해소) · `SwipeToCloseBehavior` 재작성 · `StatusBarBehavior` 플랫폼별 이전
+`CollectionView`(`EmptyView`/`RemainingItemsThreshold` 부재) · `FlipView`+`PipsPager`(↔`CarouselView`, `CurrentItem`/`Position` API 상이) · `RichTextBlock`(↔`Span`+`GestureRecognizers`, 제스처 없음, `Repost.xaml` 1곳) · `Shell` URI 라우팅(초기 — NavigationShell 패턴으로 해소) · `SwipeToCloseBehavior` 재작성 · `StatusBarBehavior` 플랫폼별 이전
 
 ### 대응 없음(재설계 또는 MAUI Embedding)
 
@@ -175,13 +192,14 @@ MAUI의 `GestureRecognizer` 체계는 Uno/WinUI에 직접 대응이 없다. 이�
 
 각 페이지/컨트롤을 옮길 때 아래 순서로 적용한다.
 
+0. **스킬 사전 로드**: 작업 시작 전 `/csharp-winui-projects`(+ `$csharp-code-style`) 스킬을 반드시 로드한다. WinUI와 동일한 API·코딩 규칙(이벤트 핸들러 `On{Control}{Event}` 명명, XAML 포맷터, Fluent 아이콘 `fluent-icons` MCP 검색, `.resw` 지역화 등)이 스킬에 정의되어 있다.
 1. **네임스페이스 교체**: `xmlns`을 WinUI 스키마(`http://schemas.microsoft.com/winfx/2006/xaml/presentation`)로, `x:`은 `http://schemas.microsoft.com/winfx/2006/xaml`로. `xmlns:toolkit`은 `using:Uno.Toolkit.UI`/`using:Uno.UI.Controls`로. `xmlns:utu`(`Uno.Toolkit.UI`) 권장.
 2. **컨트롤명·프로퍼티명 매핑**: 위 표 기준. `x:DataType`은 그대로 유지(CommunityToolkit.Mvvm 호환).
 3. **리소스 키 재매핑**: MAUI `Styles/*.xaml`을 Uno `ResourceDictionary`로 옮길 때 `StaticResource` 키는 유지하되, WinUI 컨트롤 템플릿 바인딩(`TemplateBinding`) 문법으로 조정.
 4. **`{Binding StringFormat=...}` 금지**: 이 프로젝트 AGENTS.md 규칙. 다중 `Run`으로 문자열 조합.
 5. **바인딩 모드 명시**: `TwoWay`/`OneWay`/`OneTime` 명시(이 프로젝트 AGENTS.md).
-6. **`Shell`/`TabbedPage` 의존 제거**: `App.PushAsync`/`PopAsync` 재구현 후, 코드비하인드의 `Navigation.PushAsync`/`PopAsync`를 `App.PushAsync`/`App.PopAsync` 정적 호출로 교체. `AppShell` Shell + `MainPage` TabbedPage 이중 구조를 `TabBar` NavigationShell 단일 구조로 통합(아래 "AppShell · TabbedPage 마이그레이션 상세" 섹션 참조).
-7. **제스처/Behavior 재작성**: `TapGestureRecognizer`→`Tapped`, `Drag`/`Drop`→`CanDrag`/`AllowDrop`, `Span.GestureRecognizers`(`Repost.xaml` 1곳)→`Hyperlink.Click`, `Behavior<T>`→`Microsoft.Xaml.Behaviors` 또는 Uno.Toolkit attached property. `StatusBarBehavior`→플랫폼별 코드.
+6. **`Shell`/`TabbedPage` 의존 제거**: `App.PushAsync`/`PopAsync` 재구현 후, 코드비하인드의 `Navigation.PushAsync`/`PopAsync`를 `App.PushAsync`/`App.PopAsync` 정적 호출로 교체. `AppShell`(Uno `MainPage`) Shell + MAUI `MainPage` TabbedPage 이중 구조를 `TabBar` NavigationShell 단일 구조로 통합(아래 "AppShell · TabbedPage 마이그레이션 상세" 섹션 참조).
+7. **제스처/Behavior 재작성**: `TapGestureRecognizer`→`Tapped`, `Drag`/`Drop`→`CanDrag`/`AllowDrop`, `Span.GestureRecognizers`(`Repost.xaml` 1곳)→`Hyperlink.Click`, `Behavior<T>`→`Microsoft.Xaml.Behaviors` 또는 Uno.Toolkit attached property. `StatusBarBehavior`→플랫폼별 코드. **MAUI에서 복사한 이벤트 핸들러 이름은 `/csharp-winui-projects` 규칙(`On{ControlName}{EventName}`)에 맞게 재명명** — `Label`/`Entry` 등 MAUI 컨트롤 타입명이 남은 핸들러(`OnTermsLabelTapped`, `OnInviteCodeTextChanged`)는 Uno 컨트롤 타입명(`TextBlock`/`TextBox`)으로 교체하고 XAML·코드비하인드 양쪽을 함께 수정한다 (7장 "이벤트 핸들러 명명 규칙" 참조). **x:Name 컨트롤명도 동일 규칙 적용** — MAUI 컨트롤 타입명이 남은 컨트롤명(`InviteCodeEntry`)은 WinUI 타입명(`InviteCodeTextBox`)으로 교체한다 (7장 "컨트롤 이름(x:Name) 명명 규칙" 참조).
 8. **MAUI Embedding 경계**: `SuggestingBox`/`SfImageEditor`/`SfDateTimePicker`가 포함된 페이지는 `MauiHost`로 호스팅되는 `History.Uno.MauiControls` `UserControl`로 분리.
 9. **`StaggeredItemsLayout` → 공식 NuGet 패키지 적용**: `CommunityToolkit.WinUI.Controls.Primitives`(8.2.251219 이상, MIT)를 `History.Uno` csproj에 추가하고 `<UnoFeatures>`에 `Toolkit` 포함. `CollectionView`+`staggered:StaggeredItemsLayout`을 `ItemsRepeater`+`controls:StaggeredLayout`으로 교체. Android에서 `DesiredColumnWidth` 측정값 차이 보정 필요(아래 상세 섹션 참조).
 10. **플랫폼별 코드**: `OnPlatform`/`DeviceInfo.Platform` 분기를 `Platforms/Android`/`Platforms/iOS` 폴더의 부분 클래스로 이전. `CustomShellRenderer`/`CustomTabBarAppearanceTracker`/`StaggeredItemsViewLayout` iOS 커스텀 렌더러는 Uno 네이티브 컨트롤 또는 플랫폼별 구현로 재작계.
@@ -265,7 +283,7 @@ MAUI `StaggeredItemsLayout`이 고정 열 개수(예: 2열)를 썼다면, `Desir
 
 ## AppShell · TabbedPage 마이그레이션 상세
 
-MAUI `AppShell.xaml`은 Shell에 5개 `Tab` + 다중 `ShellContent` 하위 섹션 구조, `MainPage.xaml`은 별도 `TabbedPage`(3탭)로 이중 셸이다. Uno Toolkit의 `NavigationShell` 패턴(공식 `external/uno.chefs/doc/toolkit/NavigationShell.md`)으로 단일 구조로 통합한다.
+MAUI `AppShell.xaml`은 Shell에 5개 `Tab` + 다중 `ShellContent` 하위 섹션 구조, `MainPage.xaml`은 별도 `TabbedPage`(3탭)로 이중 셸이다. Uno Toolkit의 `NavigationShell` 패턴(공식 `external/uno.chefs/doc/toolkit/NavigationShell.md`)으로 단일 구조로 통합한다. **셸 페이지는 Uno에서 `MainPage`라는 이름으로 이전한다** — `AppShell` 이름은 MAUI 소스에서만 존재하고, MAUI `MainPage`(TabbedPage)는 제거되어 Uno `MainPage`(셸)가 `AppShell`을 대체한다.
 
 ### MAUI 현재 구조 분석
 
@@ -345,7 +363,7 @@ MAUI `AppShell.xaml`은 Shell에 5개 `Tab` + 다중 `ShellContent` 하위 섹�
 - **패턴 A — 각 `ShellContent`를 별도 `Region.Name`으로**: 탭 내에서 하위 페이지를 각각 독립 Region으로 등록. `친구` 탭 클릭 시 기본 `FriendListPage` 표시, 하위 메뉴(`AddFriendsPage` 등)는 `Frame` 푸시 또는 상단 `Pivot`/`NavigationView`로 전환.
 - **패턴 B — 상위 탭은 `TabBar`, 하위 섹션은 `Pivot` 또는 `NavigationView` (`PaneDisplayMode="Top"`)**: `알림/쪽지` 탭은 상단 `Pivot`(알림 | 쪽지) + 콘텐츠, `친구` 탭은 상단 `NavigationView` 또는 리스트 메뉴로 6개 하위 전환. MAUI Shell의 `Tab`+다중 `ShellContent` UI(상단 서브탭)와 가장 유사.
 
-`AppShell.xaml` 5탭 매핑 예시(패턴 B 기준):
+MAUI `AppShell.xaml` 5탭 → Uno `MainPage.xaml`(셸) 매핑 예시(패턴 B 기준):
 ```
 TabBar(하단)
   ├─ 타임라인  → Region.Name="Timeline"        (ShellContent 1개)
@@ -355,9 +373,9 @@ TabBar(하단)
   └─ 프로필    → Region.Name="Profile"          (ShellContent 1개)
 ```
 
-### `MainPage` TabbedPage 제거
+### `MainPage` TabbedPage 제거 (Uno `MainPage`는 셸 페이지)
 
-`MainPage.xaml`의 3탭(`TimelinePage`/`NotificationsPage`/`UserPage`)은 `AppShell` 5탭에 완전 포함되므로 제거. `AppShell`의 타임라인/알림/프로필 탭이 직접 해당 페이지 호스팅.
+MAUI `MainPage.xaml`의 3탭(`TimelinePage`/`NotificationsPage`/`UserPage`)은 `AppShell` 5탭에 완전 포함되므로 제거. **Uno의 `MainPage`라는 이름은 `AppShell`(셸 페이지)이 차지**하며, 셸의 타임라인/알림/프로필 탭이 직접 해당 페이지 호스팅.
 
 ### 반응형 Shell (선택)
 
