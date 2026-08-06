@@ -383,8 +383,7 @@ public static partial class Utils
 
         foreach (var data in quoteDatas)
         {
-            // Image decorators only carry the media payload; their "(Image) " text must not be rendered.
-            if (data.type == "image") continue;
+            if (data.type == "image" || data.type == "emoticon") continue;
 
             void AddMoreSpan(Span span)
             {
