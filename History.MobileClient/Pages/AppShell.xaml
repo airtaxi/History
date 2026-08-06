@@ -11,7 +11,8 @@
             <Tab.Icon>
                 <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.View_timeline}" />
             </Tab.Icon>
-            <ShellContent ContentTemplate="{DataTemplate pages:TimelinePage}" />
+            <ShellContent Title="히스토리" ContentTemplate="{DataTemplate pages:TimelinePage}" />
+            <ShellContent Title="카카오스토리" ContentTemplate="{DataTemplate pages:KakaoStoryTimelinePage}" />
         </Tab>
         <Tab Title="알림/쪽지">
             <Tab.Icon>
