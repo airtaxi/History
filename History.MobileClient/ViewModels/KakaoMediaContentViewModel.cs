@@ -25,8 +25,7 @@ public partial class KakaoMediaContentViewModel : BaseMediaContentViewModel
     private static IMediaViewModel CreateMedia(Medium medium, bool isFullScreen, bool moreThanOneMedias, PostType postType)
     {
         var isVideo = medium.content_type?.StartsWith("video", StringComparison.OrdinalIgnoreCase) == true;
-        // Timeline displays url2 (high-res display version); full screen uses origin_url (full original).
-        var uri = isVideo ? (medium.url_hq ?? medium.url) : (isFullScreen ? (medium.origin_url ?? medium.url) : (medium.url2 ?? medium.thumbnail_url ?? medium.url));
+        var uri = isVideo ? (medium.url_hq ?? medium.url) : (isFullScreen ? (medium.origin_url ?? medium.url) : (medium.url ?? medium.url2 ?? medium.thumbnail_url));
 
         if (isVideo)
         {
