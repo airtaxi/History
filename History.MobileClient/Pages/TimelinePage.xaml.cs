@@ -5,11 +5,13 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;
 using Microsoft.Maui.Platform;
 using System.Collections.ObjectModel;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 using Application = Microsoft.Maui.Controls.Application;
 
 namespace History.MobileClient.Pages;
@@ -17,8 +19,10 @@ namespace History.MobileClient.Pages;
 public partial class TimelinePage : ContentPage
 {
     public static bool ShouldRefresh { get; set; }
+    public static bool ShouldRefreshKakaoStory { get; set; }
 
     private bool _isInForeground;
+    private bool _isKakaoStoryMode;
     private bool _areThereNoMorePostsToLoad;
     private PeriodicTimer _scrollPositionTimer;
     private bool _lastScrollToTopBorderVisible;
@@ -27,16 +31,18 @@ public partial class TimelinePage : ContentPage
     private Thickness _scrollToTopBorderBaseMargin;
     private Thickness _writePostBorderBaseMargin;
 #endif
-    private PostViewModel _lastViewModel;
-    private readonly ObservableCollection<PostViewModel> _viewModels = [];
+    private string _nextSince;
+    private BasePostViewModel _lastViewModel;
+    private readonly ObservableCollection<BasePostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public TimelinePage()
-	{
+    {
         InitializeComponent();
         MainCollectionView.ItemsSource = _viewModels;
 
-        WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
+        WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnHistoryPostDeletedMessageReceived);
+        WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostData>>(this, OnKakaoPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
 #if ANDROID
         WeakReferenceMessenger.Default.Register<TimelineVirtualizationChangedMessage>(this, OnTimelineVirtualizationChangedMessageReceived);
@@ -50,13 +56,63 @@ public partial class TimelinePage : ContentPage
         _scrollToTopBorderBaseMargin = ScrollToTopBorder.Margin;
         _writePostBorderBaseMargin = WritePostBorder.Margin;
 #endif
+
+        UpdatePillVisuals();
     }
 
-    private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
+    private void OnHistoryPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {
-        var viewModels = _viewModels.Where(x => x.Post.Id == message.Value.Id).ToList(); // ToList is needed (Collection will be modified)
+        var viewModels = _viewModels.OfType<HistoryPostViewModel>().Where(x => x.Post.Id == message.Value.Id).ToList(); // ToList is needed (Collection will be modified)
         foreach (var viewModel in viewModels) _viewModels.Remove(viewModel);
         _lastViewModel = _viewModels.LastOrDefault();
+    }
+
+    private void OnKakaoPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostData> message)
+    {
+        var viewModels = _viewModels.OfType<KakaoPostViewModel>().Where(x => x.PostData.id == message.Value.id).ToList(); // ToList is needed (Collection will be modified)
+        foreach (var viewModel in viewModels) _viewModels.Remove(viewModel);
+        _lastViewModel = _viewModels.LastOrDefault();
+    }
+
+    private static string GetPostId(BasePostViewModel viewModel)
+    {
+        return viewModel switch
+        {
+            HistoryRepostViewModel repostViewModel => repostViewModel.RepostId,
+            HistoryPostViewModel historyViewModel => historyViewModel.Post.Id,
+            KakaoPostViewModel kakaoViewModel => kakaoViewModel.PostData.id,
+            _ => null
+        };
+    }
+
+    private async Task LoadFirstPageAsync()
+    {
+        if (_isKakaoStoryMode)
+        {
+            if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+
+            var timeline = await KakaoStoryApiHandler.GetFeed(null);
+            if (timeline?.feeds == null)
+            {
+                await DisplayAlertAsync("오류", "카카오스토리 피드가 비어있습니다.", Constants.PromptOk);
+                return;
+            }
+
+            var viewModels = timeline.feeds.Select(x => (BasePostViewModel)new KakaoPostViewModel(x)).ToList();
+            _lastViewModel = viewModels.LastOrDefault();
+            foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
+        }
+        else
+        {
+            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(null, 30));
+            if (postsResult.IsSuccess)
+            {
+                var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
+                var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User) : new HistoryPostViewModel(x, PostType.Timeline)));
+                _lastViewModel = viewModels.LastOrDefault();
+                foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
+            }
+        }
     }
 
     public async Task RefreshAsync()
@@ -79,15 +135,16 @@ public partial class TimelinePage : ContentPage
             }
 
             _viewModels.Clear();
+            _areThereNoMorePostsToLoad = false;
+            _nextSince = null;
 
-            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(null, 30));
-            if (postsResult.IsSuccess)
-            {
-                var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
-                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, PostType.Timeline));
-                _lastViewModel = viewModels.LastOrDefault();
-                foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
-            }
+            await LoadFirstPageAsync();
+        }
+        catch (Exception exception)
+        {
+            // History errors are surfaced by the shared request pipeline; only Kakao Story shows its own alert.
+            if (_isKakaoStoryMode) await DisplayAlertAsync("오류", $"카카오스토리 피드를 불러오지 못했습니다.\n{exception.Message}", Constants.PromptOk);
+            else throw;
         }
         finally { _fetchSemaphore.Release(); }
     }
@@ -99,21 +156,38 @@ public partial class TimelinePage : ContentPage
 
         try
         {
-
             await _fetchSemaphore.WaitAsync();
 
-            var lastViewModel = _viewModels.OfType<PostViewModel>().LastOrDefault();
-            if (lastViewModel == null) return;
-
-            var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
-            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts (lastPostId, 30));
-            if (postsResult.IsSuccess)
+            if (_isKakaoStoryMode)
             {
-                var posts = postsResult.Value;
-                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, PostType.Timeline));
+                var timeline = await KakaoStoryApiHandler.GetFeed(_nextSince);
+                if (timeline?.feeds == null)
+                {
+                    _areThereNoMorePostsToLoad = true;
+                    return;
+                }
+
+                var viewModels = timeline.feeds.Select(x => (BasePostViewModel)new KakaoPostViewModel(x)).ToList();
+                _nextSince = timeline.next_since;
                 _lastViewModel = viewModels.LastOrDefault();
-                _areThereNoMorePostsToLoad = !viewModels.Any();
+                _areThereNoMorePostsToLoad = string.IsNullOrEmpty(_nextSince) || !viewModels.Any();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
+            }
+            else
+            {
+                var lastViewModel = _viewModels.OfType<HistoryPostViewModel>().LastOrDefault();
+                if (lastViewModel == null) return;
+
+                var lastPostId = lastViewModel is HistoryRepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
+                var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(lastPostId, 30));
+                if (postsResult.IsSuccess)
+                {
+                    var posts = postsResult.Value;
+                    var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User) : new HistoryPostViewModel(x, PostType.Timeline)));
+                    _lastViewModel = viewModels.LastOrDefault();
+                    _areThereNoMorePostsToLoad = !viewModels.Any();
+                    foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
+                }
             }
         }
         finally { _fetchSemaphore.Release(); }
@@ -140,10 +214,11 @@ public partial class TimelinePage : ContentPage
         Dispatcher.Dispatch(ApplyVirtualizationSetting);
 #endif
 
-        if (_isFirstLoad || ShouldRefresh)
+        if (_isFirstLoad || (ShouldRefresh && !_isKakaoStoryMode) || (ShouldRefreshKakaoStory && _isKakaoStoryMode))
         {
             _isFirstLoad = false;
             ShouldRefresh = false;
+            ShouldRefreshKakaoStory = false;
             Dispatcher.Dispatch(async () => await RefreshAsync());
         }
 
@@ -205,7 +280,7 @@ public partial class TimelinePage : ContentPage
     {
         var isLoading = message.Value;
         if (!_isInForeground && isLoading) return;
-          
+
         Application.Current.Dispatcher.Dispatch(() =>
         {
             MainActivityIndicator.IsRunning = isLoading;
@@ -246,10 +321,10 @@ public partial class TimelinePage : ContentPage
     private async void OnChildAdded(object sender, ElementEventArgs e)
     {
         var view = e.Element as View;
-        var viewModel = view.BindingContext as PostViewModel;
+        var viewModel = view.BindingContext as BasePostViewModel;
         if (viewModel == null) return;
 
-        if (viewModel.Post.Id == _lastViewModel?.Post.Id)
+        if (_lastViewModel != null && GetPostId(viewModel) == GetPostId(_lastViewModel))
         {
             _lastViewModel = null;
             await LoadMoreAsync();
@@ -266,6 +341,34 @@ public partial class TimelinePage : ContentPage
     private async void OnTitleGridTapped(object sender, TappedEventArgs e) => await RefreshAsync();
 
     private async void OnWritePostBorderTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
+
+    private async void OnHistoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(false);
+
+    private async void OnKakaoStoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(true);
+
+    private async Task SwitchModeAsync(bool isKakaoStoryMode)
+    {
+        if (_isKakaoStoryMode == isKakaoStoryMode) return;
+        _isKakaoStoryMode = isKakaoStoryMode;
+        UpdatePillVisuals();
+        SearchImage.IsVisible = !isKakaoStoryMode;
+        ShouldRefresh = false;
+        ShouldRefreshKakaoStory = false;
+        await RefreshAsync();
+    }
+
+    private void UpdatePillVisuals()
+    {
+        var primaryColor = Application.Current.Resources["Primary"] as Color ?? Colors.Orange;
+        var isDarkTheme = Utils.GetGlobalAppTheme() == AppTheme.Dark;
+        var inactiveBackgroundColor = isDarkTheme ? Color.FromRgb(0x33, 0x33, 0x33) : Color.FromRgb(0xEA, 0xEA, 0xEA);
+        var inactiveTextColor = isDarkTheme ? Color.FromRgb(0xAA, 0xAA, 0xAA) : Color.FromRgb(0x66, 0x66, 0x66);
+
+        HistoryPillBorder.BackgroundColor = _isKakaoStoryMode ? inactiveBackgroundColor : primaryColor;
+        HistoryPillLabel.TextColor = _isKakaoStoryMode ? inactiveTextColor : Colors.White;
+        KakaoStoryPillBorder.BackgroundColor = _isKakaoStoryMode ? primaryColor : inactiveBackgroundColor;
+        KakaoStoryPillLabel.TextColor = _isKakaoStoryMode ? Colors.White : inactiveTextColor;
+    }
 
     private async Task PollScrollPositionAsync(PeriodicTimer timer)
     {

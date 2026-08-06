@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.Moderation;
@@ -11,7 +11,7 @@ using History.MobileClient.Enums;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class PublicPostViewModel(PostResponseDto post) : PostViewModel(post, PostType.Discovery)
+public partial class HistoryPublicPostViewModel(PostResponseDto post) : HistoryPostViewModel(post, PostType.Discovery)
 {
     [RelayCommand]
     public async Task HandlePublicPostMoreTapAsync()

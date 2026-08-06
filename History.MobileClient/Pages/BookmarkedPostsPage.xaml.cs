@@ -14,7 +14,7 @@ public partial class BookmarkedPostsPage : ContentPage
 {
     private bool _isInForeground;
     private bool _areThereNoMorePostsToLoad;
-    private readonly ObservableCollection<PostViewModel> _viewModels = [];
+    private readonly ObservableCollection<HistoryPostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public BookmarkedPostsPage()
@@ -58,8 +58,8 @@ public partial class BookmarkedPostsPage : ContentPage
             {
                 foreach (var post in result.Value)
                 {
-                    if (post.IsRepost && post.ParentPost != null) _viewModels.Add(new RepostViewModel(post.Id, post.ParentPost, post.User));
-                    else _viewModels.Add(new PostViewModel(post, PostType.Bookmarked));
+                    if (post.IsRepost && post.ParentPost != null) _viewModels.Add(new HistoryRepostViewModel(post.Id, post.ParentPost, post.User));
+                    else _viewModels.Add(new HistoryPostViewModel(post, PostType.Bookmarked));
                 }
 
                 _areThereNoMorePostsToLoad = result.Value.Count < 20;
@@ -82,14 +82,14 @@ public partial class BookmarkedPostsPage : ContentPage
             var lastViewModel = _viewModels.LastOrDefault();
             if (lastViewModel == null) return;
 
-            var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
+            var lastPostId = lastViewModel is HistoryRepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
             var result = await App.ExecuteRequestAsync(new GetBookmarkedPosts(lastPostId, 20));
             if (result.IsSuccess)
             {
                 foreach (var post in result.Value)
                 {
-                    if (post.IsRepost && post.ParentPost != null) _viewModels.Add(new RepostViewModel(post.Id, post.ParentPost, post.User));
-                    else _viewModels.Add(new PostViewModel(post, PostType.Bookmarked));
+                    if (post.IsRepost && post.ParentPost != null) _viewModels.Add(new HistoryRepostViewModel(post.Id, post.ParentPost, post.User));
+                    else _viewModels.Add(new HistoryPostViewModel(post, PostType.Bookmarked));
                 }
 
                 _areThereNoMorePostsToLoad = result.Value.Count < 20;

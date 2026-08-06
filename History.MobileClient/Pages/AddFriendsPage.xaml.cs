@@ -47,7 +47,7 @@ public partial class AddFriendsPage : ContentPage
         // Delete duplicated records
         results = [.. results.DistinctBy(x => x.UserId)];
 
-        var viewModels = results.Select(x => new FriendshipViewModel(x));
+        var viewModels = results.Select(x => new HistoryFriendshipViewModel(x));
 
         MainCollectionView.ItemsSource = viewModels;
         EmptyLabel.IsVisible = !viewModels.Any();
@@ -60,7 +60,7 @@ public partial class AddFriendsPage : ContentPage
         var collectionView = sender as CollectionView;
         collectionView.SelectedItem = null;
 
-        var viewModel = e.CurrentSelection as FriendshipViewModel;
+        var viewModel = e.CurrentSelection as HistoryFriendshipViewModel;
         await App.PushAsync(new UserPage(viewModel.User.UserId));
     }
 

@@ -7,7 +7,7 @@
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
-    <DataTemplate x:Key="CommentTemplate" x:DataType="vm:CommentViewModel">
+    <DataTemplate x:Key="CommentTemplate" x:DataType="vm:BaseCommentViewModel">
         <Grid Padding="6,0,0,6" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />

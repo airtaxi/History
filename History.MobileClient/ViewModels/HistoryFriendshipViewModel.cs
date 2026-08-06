@@ -12,24 +12,30 @@ using UraniumUI.Icons.FontAwesome;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class FriendshipViewModel(UserResponseDto user, InteractionViewModel interactionViewModel = null) : ObservableObject
+public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Nickname))]
-    [NotifyPropertyChangedFor(nameof(IsModerator))]
-    [NotifyPropertyChangedFor(nameof(IsAdmin))]
     [NotifyPropertyChangedFor(nameof(CreatedAt))]
-    [NotifyPropertyChangedFor(nameof(ProfileMedia))]
     [NotifyPropertyChangedFor(nameof(FriendshipGlyph))]
     [NotifyPropertyChangedFor(nameof(IsFriendshipImageVisible))]
-    [NotifyPropertyChangedFor(nameof(IsInteractionAvailable))]
-    public partial UserResponseDto User { get; set; } = user;
+    public partial UserResponseDto User { get; set; }
 
-    public string Nickname => User.Nickname;
-    public bool IsModerator => User.Rank == Rank.Moderator;
-    public bool IsAdmin => User.Rank == Rank.Admin;
+    public HistoryFriendshipViewModel(UserResponseDto user, HistoryInteractionViewModel interactionViewModel = null)
+    {
+        User = user;
+        InteractionViewModel = interactionViewModel;
+        UpdateUserDependentProperties(user);
+    }
+
     public DateTime CreatedAt => User.Friendship?.CreatedAt ?? DateTime.MinValue;
-    public IMediaViewModel ProfileMedia => new ImageViewModel(Utils.GenerateMediaUri(User.ProfileThumbnailMediaId) ?? Constants.DefaultProfileImageFileName);
+
+    private void UpdateUserDependentProperties(UserResponseDto user)
+    {
+        Nickname = user.Nickname;
+        IsModerator = user.Rank == Rank.Moderator;
+        IsAdmin = user.Rank == Rank.Admin;
+        ProfileMedia = new ImageViewModel(Utils.GenerateMediaUri(user.ProfileThumbnailMediaId) ?? Constants.DefaultProfileImageFileName);
+    }
 
     public Color FriendshipColor
     {
@@ -56,17 +62,13 @@ public partial class FriendshipViewModel(UserResponseDto user, InteractionViewMo
 
     public bool IsFriendshipImageVisible => User.UserId != Shared.UserId;
 
-    public bool IsInteractionAvailable => InteractionViewModel != null;
-    public InteractionViewModel InteractionViewModel { get; } = interactionViewModel;
-
     private async Task RefreshAsync()
     {
         var result = await App.ExecuteRequestAsync(new GetUser(User.UserId));
         if (result.IsSuccess) User = result.Value;
     }
 
-    [RelayCommand]
-    private async Task HandleTapAsync()
+    public override async Task HandleTapAsync()
     {
         if (User == null) return;
 
@@ -75,7 +77,7 @@ public partial class FriendshipViewModel(UserResponseDto user, InteractionViewMo
             var postResult = await App.ExecuteRequestAsync(new GetPost(InteractionViewModel.TargetPostId), ErrorType.Forbidden);
             if (postResult.IsSuccess)
             {
-                var postViewModel = new PostViewModel(postResult.Value, PostType.Unwrapped);
+                var postViewModel = new HistoryPostViewModel(postResult.Value, PostType.Unwrapped);
                 var postPage = new PostPage(postViewModel);
                 await App.PushAsync(postPage);
             }

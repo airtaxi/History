@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -14,53 +14,20 @@ using Syncfusion.Maui.Toolkit.Picker;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class CommentViewModel : ObservableObject
+public partial class HistoryCommentViewModel : BaseCommentViewModel
 {
     [ObservableProperty]
     public partial CommentResponseDto Comment { get; private set; }
-
-    // User-dependent properties — set in UpdateComment alongside Comment assignment.
-    [ObservableProperty]
-    public partial string Nickname { get; private set; }
-    [ObservableProperty]
-    public partial bool IsModerator { get; private set; }
-    [ObservableProperty]
-    public partial bool IsAdmin { get; private set; }
-    [ObservableProperty]
-    public partial IMediaViewModel ProfileMedia { get; private set; }
 
     // Comment-dependent properties — set in UpdateComment.
     [ObservableProperty]
     public partial bool IsMyComment { get; private set; }
     [ObservableProperty]
-    public partial bool HasLikes { get; private set; }
-    [ObservableProperty]
-    public partial int LikesCount { get; private set; }
-    [ObservableProperty]
     public partial bool Liked { get; private set; }
 
-    [ObservableProperty]
-    public partial List<IContentViewModel> Contents { get; private set; }
-
-    [ObservableProperty]
-    public partial DateTime CreatedAt { get; private set; }
-    [ObservableProperty]
-    public partial DateTime? ModifiedAt { get; private set; }
-    [ObservableProperty]
-    public partial string TimestampText { get; private set; }
-
-    public bool IsLongPressed { get; set; }
-
-    private readonly bool _isMyPost;
-    private readonly PostType _postType;
-    private readonly PostViewModel _parentViewModel;
-
-    public CommentViewModel(CommentResponseDto comment, bool isMyPost, PostType postType, PostViewModel parentViewModel)
+    public HistoryCommentViewModel(CommentResponseDto comment, bool isMyPost, PostType postType, BasePostViewModel parentViewModel)
+        : base(isMyPost, postType, parentViewModel)
     {
-        _isMyPost = isMyPost;
-        _postType = postType;
-        _parentViewModel = parentViewModel;
-
         UpdateComment(comment);
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, (r, m) =>
         {
@@ -89,9 +56,9 @@ public partial class CommentViewModel : ObservableObject
             LikesCount = comment.LikedUsers.Count;
             Liked = comment.LikedUsers.Any(x => x.UserId == Shared.UserId);
 
-            var contents = Utils.GenerateContentViewModels(comment.Contents, _postType);
-            var imageViewModels = (contents.FirstOrDefault(x => x is WrappedMediaContentsViewModel) as WrappedMediaContentsViewModel)?.Medias.Select(x => x.ImageMedia);
-            imageViewModels ??= contents.OfType<MediaContentViewModel>().Select(x => x.ImageMedia);
+            var contents = Utils.GenerateContentViewModels(comment.Contents, PostType);
+            var imageViewModels = (contents.FirstOrDefault(x => x is BaseWrappedMediaContentsViewModel) as BaseWrappedMediaContentsViewModel)?.Medias.Select(x => x.ImageMedia);
+            imageViewModels ??= contents.OfType<BaseMediaContentViewModel>().Select(x => x.ImageMedia);
             foreach (ImageViewModel imageViewModel in imageViewModels) imageViewModel.MaxWidth = 200;
 
             Contents = contents;
@@ -107,14 +74,13 @@ public partial class CommentViewModel : ObservableObject
         catch (Exception) { } // Ignore any exceptions during update, as the view might be in the foreground.
     }
 
-    [RelayCommand]
-    public async Task HandleMore()
+    public override async Task HandleMore()
     {
         var actions = new List<string>
         {
             Liked ? "좋아요 취소" : "좋아요",
             IsMyComment ? "댓글 수정" : null,
-            IsMyComment || _isMyPost || Shared.MyRank >= Rank.Moderator ? "댓글 삭제" : null,
+            IsMyComment || IsMyPost || Shared.MyRank >= Rank.Moderator ? "댓글 삭제" : null,
             IsMyComment || Shared.MyRank >= Rank.Moderator ? null : "댓글 신고",
         };
         actions.RemoveAll(x => x == null);
@@ -145,8 +111,7 @@ public partial class CommentViewModel : ObservableObject
         else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
 
-    [RelayCommand]
-    public async Task HandleCommentLikeTapAsync()
+    public override async Task HandleCommentLikeTapAsync()
     {
         var users = Comment.LikedUsers;
         if (users.Count == 0)
@@ -155,18 +120,18 @@ public partial class CommentViewModel : ObservableObject
             return;
         }
 
-        var viewModels = users.Select(x => new FriendshipViewModel(x, new(x)));
+        var viewModels = users.Select(x => new HistoryFriendshipViewModel(x, new HistoryInteractionViewModel(x)));
         var page = new InteractionsPage(viewModels, InteractionType.CommentLike);
         await App.PushAsync(page);
     }
 
-    public async Task HandleLikeAsync()
+    public override async Task HandleLikeAsync()
     {
         var commentResult = await App.ExecuteRequestAsync(new HandleCommentLike(Comment.Id));
         if (commentResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<CommentResponseDto>(commentResult.Value));
     }
 
-    public async Task DeleteAsync()
+    public override async Task DeleteAsync()
     {
         if (Comment.User.UserId != Shared.UserId && Shared.MyRank >= Rank.Moderator)
         {
@@ -181,7 +146,7 @@ public partial class CommentViewModel : ObservableObject
             var deleteResult = await App.ExecuteRequestAsync(new ModerationDeleteComment(Comment.Id, reason, reportType));
             if (deleteResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<CommentResponseDto>(Comment));
         }
-        else if (_isMyPost || Comment.User.UserId == Shared.UserId)
+        else if (IsMyPost || Comment.User.UserId == Shared.UserId)
         {
             var result = await App.Page.DisplayAlertAsync("댓글 삭제", "정말로 댓글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
             if (!result) return;
@@ -195,20 +160,18 @@ public partial class CommentViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    public async Task HandleTapAsync()
+    public override async Task HandleTapAsync()
     {
-        if (_postType == PostType.Unwrapped)
+        if (PostType == PostType.Unwrapped)
         {
             // As TouchGestureCompleted is set to Label, LongPress will also raise Tap event which we doesn't count as Tap event.
             if (!IsLongPressed) WeakReferenceMessenger.Default.Send<CommentTappedMessage>(new(Comment.User));
             else IsLongPressed = false; // Reset the flag and never raise the event
         }
-        else await _parentViewModel.HandleTapAsync();
+        else await ParentViewModel.HandleTapAsync();
     }
 
-    [RelayCommand]
-    public async Task HandleProfileTap()
+    public override async Task HandleProfileTap()
     {
         var userPage = new UserPage(Comment.User.UserId);
         await App.PushAsync(userPage);

@@ -16,7 +16,7 @@ public partial class FriendListPage : ContentPage
     private bool _isInForeground;
     private bool _isFirstLoad;
     private bool _sortByTime;
-    private IEnumerable<FriendshipViewModel> _viewModels;
+    private IEnumerable<HistoryFriendshipViewModel> _viewModels;
 
     private readonly string _userId;
 
@@ -53,7 +53,7 @@ public partial class FriendListPage : ContentPage
         {
             Shared.Friends = friendsResult.Value;
 
-            _viewModels = friendsResult.Value.Select(x => new FriendshipViewModel(x));
+            _viewModels = friendsResult.Value.Select(x => new HistoryFriendshipViewModel(x));
             MainSearchBar.Text = string.Empty;
             EmptyLabel.IsVisible = !_viewModels.Any();
             TitleLabel.Text = $"{Shared.Friends.Count}명의 친구";

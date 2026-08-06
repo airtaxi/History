@@ -8,8 +8,9 @@ internal class TimelineTemplateSelector : DataTemplateSelector
 
     protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
     {
-        if (item is RepostViewModel) return RepostTemplate;
-        else if (item is PostViewModel) return PostTemplate;
+        if (item is HistoryRepostViewModel) return RepostTemplate;
+        else if (item is HistoryPostViewModel) return PostTemplate;
+        else if (item is KakaoPostViewModel) return PostTemplate;
         else if (item is ProfileViewModel) return ProfileTemplate;
         else throw new ArgumentException("Unknown item type", nameof(item));
     }

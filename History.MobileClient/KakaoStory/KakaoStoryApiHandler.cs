@@ -19,7 +19,9 @@ public partial class KakaoStoryApiHandler
     private static DateTime s_emoticonCredentialUpdatedTime = DateTime.MinValue;
     private static AuthController s_emoticonCredential;
 
-    public delegate bool ReloginRequired();
+    public delegate Task<bool> ReloginRequired();
+
+    public static ReloginRequired OnReloginRequired { get; set; }
 
     public static int MaxRetryCount { get; set; } = 15;
 
@@ -154,11 +156,7 @@ public partial class KakaoStoryApiHandler
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "PUT");
         string postData = $"permission={permission}&enable_share={GetBoolString(enable_share)}&comment_all_writable={GetBoolString(comment_all_writable)}&is_must_read={GetBoolString(is_must_read)}";
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<bool> MutePost(string id, bool mute)
     {
@@ -167,12 +165,7 @@ public partial class KakaoStoryApiHandler
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, mute ? "POST" : "DELETE");
         string postData = $"push_mute={mute}";
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<List<ShareData.Share>> GetShares(PostData data, bool isUP, string from = null)
     {
@@ -252,11 +245,7 @@ public partial class KakaoStoryApiHandler
 
         string postData = $"{key}={id}&has_profile=true";
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<bool> AcceptFriendRequest(string id, bool isDelete)
     {
@@ -270,11 +259,7 @@ public partial class KakaoStoryApiHandler
 
         string postData = $"inviter_id={id}&has_profile=true";
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<bool> RequestFavorite(string id, bool isUnpin)
     {
@@ -317,12 +302,7 @@ public partial class KakaoStoryApiHandler
             postData += "&allowed_profile_ids=" + Uri.EscapeDataString(JsonConvert.SerializeObject(trust_ids));
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<bool> UpPost(string postId, bool isDelete)
     {
@@ -354,12 +334,7 @@ public partial class KakaoStoryApiHandler
             postData = "emotion=" + emotion;
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<PostData> GetPost(string activityID)
     {
@@ -386,14 +361,8 @@ public partial class KakaoStoryApiHandler
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "DELETE");
 
         string postData = $"id={id}";
-
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<bool> DeleteBirthday()
     {
@@ -408,11 +377,7 @@ public partial class KakaoStoryApiHandler
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "POST");
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<bool> SetBirthday(DateTime date, bool isLeapType)
     {
@@ -421,11 +386,7 @@ public partial class KakaoStoryApiHandler
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "PUT");
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<bool> SetGender(string gender, string permission)
     {
@@ -434,11 +395,7 @@ public partial class KakaoStoryApiHandler
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "PUT");
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<bool> DeleteGender()
     {
@@ -447,11 +404,7 @@ public partial class KakaoStoryApiHandler
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "PUT");
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<bool> SetStatusMessage(string message)
     {
@@ -482,11 +435,7 @@ public partial class KakaoStoryApiHandler
         webRequest.Referer = "https://story.kakao.com/";
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<List<MailData.Mail>> GetMails(string since = null)
     {
@@ -555,15 +504,8 @@ public partial class KakaoStoryApiHandler
         postData = postData.Replace("%20", "+");
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-
-
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "POST");
-
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        return await GetResponseFromRequest(webRequest) != null;
+        return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
     public static async Task<bool> DeleteComment(string commentID, string postId)
     {
@@ -595,14 +537,8 @@ public partial class KakaoStoryApiHandler
         postData = postData.Replace("%20", "+");
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "PUT");
-
-        Stream writeStream = await webRequest.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-        writeStream.Close();
-
-        var response = await GetResponseFromRequest(webRequest);
+        var response = await GetResponseFromRequest(webRequest, byteArray);
         return JsonConvert.DeserializeObject<Comment>(response);
     }
     public static async Task<List<ShareData.Share>> GetShares(bool isUP, PostData data, string from)
@@ -628,16 +564,64 @@ public partial class KakaoStoryApiHandler
         string response = await GetResponseFromRequest(webRequest);
         return JsonConvert.DeserializeObject<List<ShareData.Share>>(response);
     }
-    private static async Task<string> GetResponseFromRequest(HttpWebRequest webRequest)
+    /// <summary>
+    /// Sends the request (optionally writing <paramref name="body"/> once), returning the
+    /// response body. On 401 the request is held until OnReloginRequired completes, then
+    /// retried with the same body. Other failures retry up to MaxRetryCount times.
+    /// <paramref name="configure"/> re-applies request-specific headers on every retry.
+    /// </summary>
+    private static async Task<string> GetResponseFromRequest(HttpWebRequest webRequest, byte[] body = null, int count = 0, Action<HttpWebRequest> configure = null)
     {
-		var readStream = await webRequest?.GetResponseAsync();
-        var respReader = (readStream?.GetResponseStream()) ?? throw new Exception("Network Error!");
-		using var reader = new StreamReader(respReader);
-        string respResult = await reader.ReadToEndAsync();
+        try
+        {
+            if (body != null)
+            {
+                Stream writeStream = await webRequest.GetRequestStreamAsync();
+                writeStream.Write(body, 0, body.Length);
+                writeStream.Close();
+            }
 
-        respReader.Close();
-        readStream.Close();
-        return respResult;
+            var readStream = await webRequest.GetResponseAsync();
+            var respReader = (readStream?.GetResponseStream()) ?? throw new Exception("Network Error!");
+            using var reader = new StreamReader(respReader);
+            string respResult = await reader.ReadToEndAsync();
+
+            respReader.Close();
+            readStream.Close();
+            return respResult;
+        }
+        catch (WebException exception)
+        {
+            int statusCode = -1;
+            var statusCodeObject = exception.Response as HttpWebResponse;
+            if (statusCodeObject?.StatusCode != null) statusCode = (int)statusCodeObject.StatusCode;
+
+            if (statusCode == 401)
+            {
+                var success = await OnReloginRequired?.Invoke();
+                if (!success) return null;
+                var newRequest = GenerateDefaultProfile(webRequest.RequestUri.ToString(), webRequest.Method);
+                configure?.Invoke(newRequest);
+                return await GetResponseFromRequest(newRequest, body, ++count, configure);
+            }
+            else if (statusCode == 403 || statusCode == 404) return null;
+            else if (count < MaxRetryCount)
+            {
+                var newRequest = GenerateDefaultProfile(webRequest.RequestUri.ToString(), webRequest.Method);
+                configure?.Invoke(newRequest);
+                return await GetResponseFromRequest(newRequest, body, ++count, configure);
+            }
+        }
+        catch (Exception)
+        {
+            if (count < MaxRetryCount)
+            {
+                var newRequest = GenerateDefaultProfile(webRequest.RequestUri.ToString(), webRequest.Method);
+                configure?.Invoke(newRequest);
+                return await GetResponseFromRequest(newRequest, body, ++count, configure);
+            }
+        }
+        return null;
     }
 
     /// <summary>
@@ -747,40 +731,17 @@ public partial class KakaoStoryApiHandler
         if (isEdit)
             requestURI = "https://story.kakao.com/a/activities/" + editPostId + "/content";
 
-        HttpWebRequest request = WebRequest.CreateHttp(requestURI);
-        request.Method = "POST";
-        if (isEdit)
-            request.Method = "PUT";
-        request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
+        // WritePost uses custom headers (fixed X-Kakao-VC, authority) that must survive retries.
+        void Configure(HttpWebRequest request)
+        {
+            request.Headers["X-Kakao-VC"] = "185412afe1da9580e67f";
+            request.Headers["authority"] = "story.kakao.com";
+            request.Referer = "https://story.kakao.com";
+        }
 
-        request.CookieContainer = s_cookieContainer;
-        request.Headers["X-Kakao-DeviceInfo"] = "web:d;-;-";
-        request.Headers["X-Kakao-ApiLevel"] = "49";
-        request.Headers["X-Requested-With"] = "XMLHttpRequest";
-        request.Headers["X-Kakao-VC"] = "185412afe1da9580e67f";
-        request.Headers["Cache-Control"] = "max-age=0";
-
-        request.Headers["Accept-Encoding"] = "gzip, deflate, br";
-        request.Headers["Accept-Language"] = "ko";
-
-        request.Headers["DNT"] = "1";
-
-        request.Headers["authority"] = "story.kakao.com";
-        request.Referer = "https://story.kakao.com";
-        request.KeepAlive = true;
-        request.UseDefaultCredentials = true;
-        request.Host = "story.kakao.com";
-        request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36";
-        request.Accept = "application/json";
-
-        Stream writeStream = await request.GetRequestStreamAsync();
-        writeStream.Write(byteArray, 0, byteArray.Length);
-
-        var readStream = await request.GetResponseAsync();
-        var respReader = readStream.GetResponseStream();
-        using var reader = new StreamReader(respReader, Encoding.UTF8);
-        var response = await reader.ReadToEndAsync();
-        respReader.Close();;
+        var request = GenerateDefaultProfile(requestURI, isEdit ? "PUT" : "POST");
+        Configure(request);
+        await GetResponseFromRequest(request, byteArray, configure: Configure);
     }
 
     private static async Task<string> GetUploadUrl(bool isImage)

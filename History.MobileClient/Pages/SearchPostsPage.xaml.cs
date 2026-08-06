@@ -24,8 +24,8 @@ public partial class SearchPostsPage : ContentPage
 #if IOS
     private double _lastScrollOffsetY;
 #endif
-    private PostViewModel _lastViewModel;
-    private readonly ObservableCollection<PostViewModel> _viewModels = [];
+    private HistoryPostViewModel _lastViewModel;
+    private readonly ObservableCollection<HistoryPostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     private string _query;
@@ -80,7 +80,7 @@ public partial class SearchPostsPage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
-                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, PostType.Timeline));
+                var viewModels = posts.Select(x => x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User) : new HistoryPostViewModel(x, PostType.Timeline));
                 _lastViewModel = viewModels.LastOrDefault();
 
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
@@ -100,15 +100,15 @@ public partial class SearchPostsPage : ContentPage
         {
             await _fetchSemaphore.WaitAsync();
 
-            var lastViewModel = _viewModels.OfType<PostViewModel>().LastOrDefault();
+            var lastViewModel = _viewModels.OfType<HistoryPostViewModel>().LastOrDefault();
             if (lastViewModel == null) return;
 
-            var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
+            var lastPostId = lastViewModel is HistoryRepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
             var postsResult = await App.ExecuteRequestAsync(new SearchPosts(_query, lastPostId));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var viewModels = posts.Select(x => x.IsRepost ? new RepostViewModel(x.Id, x.ParentPost, x.User) : new PostViewModel(x, PostType.Timeline));
+                var viewModels = posts.Select(x => x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User) : new HistoryPostViewModel(x, PostType.Timeline));
                 _lastViewModel = viewModels.LastOrDefault();
                 _areThereNoMorePostsToLoad = !viewModels.Any();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
@@ -199,7 +199,7 @@ public partial class SearchPostsPage : ContentPage
     private async void OnChildAdded(object sender, ElementEventArgs e)
     {
         var view = e.Element as View;
-        var viewModel = view.BindingContext as PostViewModel;
+        var viewModel = view.BindingContext as HistoryPostViewModel;
         Debug.WriteLine($"[SP] Child Added {viewModel.Post.Id == _lastViewModel?.Post.Id}");
 
         if (viewModel.Post.Id == _lastViewModel?.Post.Id)

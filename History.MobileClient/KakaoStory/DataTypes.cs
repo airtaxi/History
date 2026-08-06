@@ -881,12 +881,6 @@ public partial class KakaoStoryApiHandler
                 public bool blocked { get; set; }
             }
 
-            public class Decorator2
-            {
-                public string text { get; set; }
-                public string type { get; set; }
-            }
-
             public class Relation3
             {
                 public bool feed_blocked { get; set; }
@@ -900,52 +894,6 @@ public partial class KakaoStoryApiHandler
             {
                 public string object_type { get; set; }
                 public string message { get; set; }
-            }
-
-            public class Writer2
-            {
-                public string birthday { get; set; }
-                public string bg_image_url2 { get; set; }
-                public bool is_favorite { get; set; }
-                public int birthday_left { get; set; }
-                public string gender { get; set; }
-                public bool birth_leap_type { get; set; }
-                public string birth_type { get; set; }
-                public string profile_image_url2 { get; set; }
-                public string type { get; set; }
-                public int follower_count { get; set; }
-                public Relation3 relation { get; set; }
-                public bool is_celebratable { get; set; }
-                public int default_bg_id { get; set; }
-                public int activity_count { get; set; }
-                public bool is_valid_user { get; set; }
-                public string id { get; set; }
-                public string relationship { get; set; }
-                public bool vip { get; set; }
-                public int friend_count { get; set; }
-                public bool is_birthday { get; set; }
-                public string bg_image_url { get; set; }
-                public bool allow_following { get; set; }
-                public string profile_thumbnail_url { get; set; }
-                public List<StatusObject2> status_objects { get; set; }
-                public string profile_image_url { get; set; }
-                public string display_name { get; set; }
-                public string permalink { get; set; }
-                public bool is_default_profile_image { get; set; }
-                public bool is_feed_blocked { get; set; }
-            }
-
-            public class LatestComment
-            {
-                public int like_count { get; set; }
-                public List<Decorator2> decorators { get; set; }
-                public string activity_id { get; set; }
-                public string index { get; set; }
-                public DateTime created_at { get; set; }
-                public string id { get; set; }
-                public string text { get; set; }
-                public Writer2 writer { get; set; }
-                public bool liked { get; set; }
             }
 
 
@@ -1103,7 +1051,7 @@ public partial class KakaoStoryApiHandler
                 public bool push_mute { get; set; }
                 public bool with_me { get; set; }
                 public int sympathy_count { get; set; }
-                public List<LatestComment> latest_comments { get; set; }
+                public List<Comment> latest_comments { get; set; }
                 public string permalink { get; set; }
                 public int view_count { get; set; }
                 public CommentData.PostData @object { get; set; }
@@ -1591,7 +1539,7 @@ public partial class KakaoStoryApiHandler
                 public bool push_mute { get; set; }
                 public bool with_me { get; set; }
                 public int sympathy_count { get; set; }
-                public List<CommentData.LatestComment> latest_comments { get; set; }
+                public List<CommentData.Comment> latest_comments { get; set; }
                 public string permalink { get; set; }
                 public int view_count { get; set; }
                 public Object @object { get; set; }

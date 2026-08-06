@@ -83,7 +83,7 @@
                 <editPost:TextContentView x:Name="MainTextContent" Loaded="OnMainTextContentLoaded" />
                 <views:DataTemplatePresenter
                     x:Name="ShareTargetPostDataTemplatePresenter"
-                    x:DataType="vm:PostViewModel"
+                    x:DataType="vm:BasePostViewModel"
                     InputTransparent="True"
                     IsVisible="False"
                     Template="{StaticResource SharedPostTemplate}" />
@@ -404,6 +404,7 @@
                 VerticalOptions="Center">
                 <HorizontalStackLayout Spacing="12">
                     <Image
+                        x:Name="InsertImageButton"
                         HeightRequest="40"
                         VerticalOptions="Center"
                         WidthRequest="40">
@@ -419,6 +420,7 @@
                         </Image.Source>
                     </Image>
                     <Image
+                        x:Name="InsertVideoButton"
                         HeightRequest="40"
                         VerticalOptions="Center"
                         WidthRequest="40">
@@ -434,6 +436,7 @@
                         </Image.Source>
                     </Image>
                     <Image
+                        x:Name="InsertExternalUrlButton"
                         HeightRequest="40"
                         VerticalOptions="Center"
                         WidthRequest="40">
@@ -452,6 +455,7 @@
 
                     <!--  Poll button  -->
                     <Image
+                        x:Name="InsertPollButton"
                         HeightRequest="40"
                         VerticalOptions="Center"
                         WidthRequest="40">
@@ -468,6 +472,7 @@
                     </Image>
 
                     <Image
+                        x:Name="InsertStickerButton"
                         HeightRequest="40"
                         VerticalOptions="Center"
                         WidthRequest="40">
@@ -511,6 +516,7 @@
                     </Image>
                 </Grid>
                 <Image
+                    x:Name="ExpandCollapseSettingsImage"
                     HeightRequest="40"
                     HorizontalOptions="End"
                     VerticalOptions="Center"

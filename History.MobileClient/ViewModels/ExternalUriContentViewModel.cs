@@ -2,23 +2,36 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.Contents;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.TimeLineData;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class ExternalUrlContentViewModel(ExternalUrlContent externalUrlContent) : ObservableObject, IContentViewModel
+public partial class ExternalUrlContentViewModel : ObservableObject, IContentViewModel
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Title))]
     [NotifyPropertyChangedFor(nameof(Description))]
     [NotifyPropertyChangedFor(nameof(Domain))]
     [NotifyPropertyChangedFor(nameof(ThumbnailImage))]
-    public partial ExternalUrlContent ExternalUrlContent { get; set; } = externalUrlContent;
+    public partial ExternalUrlContent ExternalUrlContent { get; set; }
+
+    // History overload.
+    public ExternalUrlContentViewModel(ExternalUrlContent externalUrlContent)
+    {
+        ExternalUrlContent = externalUrlContent;
+    }
+
+    // Kakao Story scrap overload — maps the scrap card onto the same surface.
+    public ExternalUrlContentViewModel(Scrap scrap)
+    {
+        ExternalUrlContent = new ExternalUrlContent
+        {
+            Title = scrap.title,
+            Description = scrap.description,
+            SourceUrl = scrap.dest_url ?? scrap.url,
+            ThumbnailImageUrl = scrap.image?.FirstOrDefault()
+        };
+    }
 
     public string Title => ExternalUrlContent.Title;
     public string Description => ExternalUrlContent.Description;

@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.Contents;
 using UraniumUI.Icons.MaterialSymbols;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient.ViewModels;
 
@@ -9,9 +10,10 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
 {
     public byte[] Data { get; private set; }
     public MediaContent ServerContent { get; }
+    public string KakaoServerPath { get; }
 
     public bool IsVideo { get; }
-    public bool IsUpload => ServerContent == null;
+    public bool IsUpload => ServerContent == null && KakaoServerPath == null;
     public bool IsEditImageVisible => !IsVideo && IsUpload;
     public string FileName { get; }
 
@@ -42,6 +44,15 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
 
         // Set ImageSource
         ImageSource = ImageSource.FromUri(new(Utils.GenerateMediaUri(serverContent.ThumbnailMediaId)));
+    }
+
+    public MediaAttachmentViewModel(Medium media)
+    {
+        KakaoServerPath = media.media_path;
+        IsVideo = media.content_type?.StartsWith("video", StringComparison.OrdinalIgnoreCase) == true;
+
+        // Set ImageSource
+        ImageSource = ImageSource.FromUri(new(media.thumbnail_url ?? media.origin_url ?? media.url));
     }
 
     public MediaAttachmentViewModel(string fileName, byte[] imageBytes, bool isVideo = false)

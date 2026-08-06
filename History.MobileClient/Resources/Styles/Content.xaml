@@ -9,7 +9,7 @@
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
 
-    <DataTemplate x:Key="MediaContentTemplate" x:DataType="vm:MediaContentViewModel">
+    <DataTemplate x:Key="MediaContentTemplate" x:DataType="vm:BaseMediaContentViewModel">
         <Grid>
             <!--  View  -->
             <Grid.GestureRecognizers>
@@ -110,7 +110,7 @@
         </Grid>
     </DataTemplate>
 
-    <DataTemplate x:Key="AndroidWrappedMediaContentsTemplate" x:DataType="vm:WrappedMediaContentsViewModel">
+    <DataTemplate x:Key="AndroidWrappedMediaContentsTemplate" x:DataType="vm:BaseWrappedMediaContentsViewModel">
         <Grid>
             <CarouselView
                 BackgroundColor="#808080"
@@ -152,7 +152,7 @@
         </Grid>
     </DataTemplate>
 
-    <DataTemplate x:Key="AppleWrappedMediaContentsTemplate" x:DataType="vm:WrappedMediaContentsViewModel">
+    <DataTemplate x:Key="AppleWrappedMediaContentsTemplate" x:DataType="vm:BaseWrappedMediaContentsViewModel">
         <Grid>
             <CarouselView
                 HeightRequest="{x:Binding CarouselViewHeight,

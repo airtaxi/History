@@ -120,6 +120,21 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 - `PostViewModel`에서 `ContentTemplateSelector`가 처리하는 새 콘텐츠 타입(`IContentViewModel` 구현)이 추가되면, **반드시** `TimelineContentsViewModel`(`ViewModels/TimelineContentsViewModel.cs`)에 해당 타입 슬롯과 `IsVisible` 플래그를 추가하고, `TimelineContentsTemplate` XAML에 `DataTemplatePresenter` 슬롯을 추가해야 합니다.
 - `PostContentTemplate`(PostPage 상세)과 `CommentTemplate`은 전체 콘텐츠를 순서대로 표시해야 하므로 `BindableLayout` + `ContentTemplateSelector`를 유지합니다.
 
+### 플랫폼 포스트/댓글 ViewModel 분리 규칙
+
+- `BasePostViewModel`/`BaseCommentViewModel`(`History.MobileClient/ViewModels/`)은 **DTO·업데이트 로직·메신저 없이** 공통 UI 표면(`[ObservableProperty] protected set`)과 `[RelayCommand]` virtual 명령 계약만 보유합니다.
+- `HistoryPostViewModel`/`HistoryCommentViewModel`이 이들을 상속하며 DTO 보유, `UpdatePost`/`UpdateComment`로 베이스 표면 채우기, 메신저 등록, API/네비게이션 로직을 담당합니다.
+- 명령(`[RelayCommand]`)은 **베이스에만** 선언하고 파생은 순수 `override`합니다(파생에 재선언 시 MVVMTK0023 중복 명령 오류).
+- 신규 플랫폼(예: 카카오스토리)은 별도 DtoMapper 없이 `Base*` 상속 + 자기 데이터로 표면 채우기로 바로 통합합니다.
+
+### 카카오스토리 프로필 미디어 규칙
+
+- 카카오 API의 `profile_video_url*` 필드(움직이는 프로필 영상)는 절대 사용하지 마세요. MAUI에서 타임라인 등 리스트에 사용하면 이미지 디코더가 버티지 못하는 이슈가 있습니다.
+- 카카오 프로필 이미지 매핑 규칙 (히스토리 미디어 ID 대응):
+  - `ThumbnailMediaId`(목록/썸네일 표시) → `profile_image_url`
+  - `MediaId`(프로필 상세/풀스크린 표시) → `profile_image_url2`
+- TODO: `profile_image_url2` 사용처를 모두 구현하고 나면 이 매핑 규칙 안내는 삭제하세요.
+
 ### 보안
 
 - 미들웨어에서 JWT 검증

@@ -28,6 +28,7 @@ using Syncfusion.Maui.Toolkit.Picker;
 using MongoDB.Bson.Serialization.Serializers;
 using Svg;
 using System.Threading.Tasks;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 
 namespace History.MobileClient.Pages;
@@ -37,14 +38,18 @@ public partial class EditPostPage : ContentPage
     private bool _isInForeground;
     private bool _preventDispose;
 
-    private readonly bool _isShare;
+    private readonly bool _isHistoryShare;
+    private readonly bool _isKakaoShare;
+    private readonly bool _isKakaoEdit;
     private readonly PostResponseDto _post;
+    private readonly PostData _kakaoPost;
     private readonly TextContent _sharedTextContent;
 
     private DateTime? _reservationTime;
     private AccessPermission? _commentPermission;
     private MediaAttachmentViewModel _attachmentViewModelBeingDragged;
     private ExternalUrlContentViewModel _externalUrlContentViewModel;
+    private int _lastValidDiscoveryOptionIndex;
 
     private readonly ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
     private readonly SemaphoreSlim _uploadSemaphore = new(1, 1);
@@ -76,8 +81,20 @@ public partial class EditPostPage : ContentPage
 
     public EditPostPage(PostResponseDto post, bool isShare) : this()
     {
-        _isShare = isShare;
+        _isHistoryShare = isShare;
         _post = post;
+    }
+
+    public EditPostPage(PostData post) : this()
+    {
+        _isKakaoShare = true;
+        _kakaoPost = post;
+    }
+
+    public EditPostPage(PostData post, bool isEdit) : this()
+    {
+        _isKakaoEdit = isEdit;
+        _kakaoPost = post;
     }
 
     public EditPostPage(List<MediaFile> mediaFiles) : this()
@@ -138,7 +155,39 @@ public partial class EditPostPage : ContentPage
 
     private async Task LoadPostAsync()
     {
-        if (!_isShare)
+        if (_isKakaoEdit)
+        {
+            ButtonUpload.Text = "수정";
+            if (_kakaoPost.content_decorators is { Count: > 0 })
+                await MainTextContent.SetContentsAsync(TextTypeContentsViewModel.ConvertToBaseContents(_kakaoPost.content_decorators));
+            foreach (var medium in _kakaoPost.media ?? []) _attachmentViewModels.Add(new MediaAttachmentViewModel(medium));
+            if (_kakaoPost.scrap != null)
+            {
+                _externalUrlContentViewModel = new ExternalUrlContentViewModel(_kakaoPost.scrap);
+                ExternalUrlContentDataTemplatePresenter.ViewModel = _externalUrlContentViewModel;
+                ExternalUrlContentBorder.IsVisible = true;
+                ExternalUrlFontImageSource.Glyph = MaterialSharp.Link_off;
+            }
+            DiscoveryOptionPicker.SelectedIndex = _kakaoPost.permission switch
+            {
+                "A" => (int)DiscoveryOption.Everyone,
+                "F" => (int)DiscoveryOption.Friends,
+                "M" => (int)DiscoveryOption.OnlyMe,
+                _ => (int)DiscoveryOption.Friends
+            };
+            CommentPermissionSwitch.IsToggled = _kakaoPost.comment_all_writable;
+            return;
+        }
+
+        if (_isKakaoShare)
+        {
+            ButtonUpload.Text = "공유";
+            ShareTargetPostDataTemplatePresenter.ViewModel = new KakaoPostViewModel(_kakaoPost);
+            ShareTargetPostDataTemplatePresenter.IsVisible = true;
+            return;
+        }
+
+        if (!_isHistoryShare)
         {
             ButtonUpload.Text = "수정";
             await MainTextContent.SetContentsAsync(_post.Contents);
@@ -160,14 +209,14 @@ public partial class EditPostPage : ContentPage
             }
             if (_post.ParentPost != null)
             {
-                ShareTargetPostDataTemplatePresenter.ViewModel = new PostViewModel(_post.ParentPost, PostType.Timeline);
+                ShareTargetPostDataTemplatePresenter.ViewModel = new HistoryPostViewModel(_post.ParentPost, PostType.Timeline);
                 ShareTargetPostDataTemplatePresenter.IsVisible = true;
             }
         }
         else
         {
             ButtonUpload.Text = "공유";
-            ShareTargetPostDataTemplatePresenter.ViewModel = new PostViewModel(_post, PostType.Timeline);
+            ShareTargetPostDataTemplatePresenter.ViewModel = new HistoryPostViewModel(_post, PostType.Timeline);
             ShareTargetPostDataTemplatePresenter.IsVisible = true;
         }
 
@@ -447,25 +496,28 @@ public partial class EditPostPage : ContentPage
 
             var files = new Dictionary<string, byte[]>();
             var mediaAndUploadContents = new List<BaseContent>();
-            foreach(var viewModel in _attachmentViewModels)
+            if (!_isKakaoEdit && !_isKakaoShare)
             {
-                if (viewModel.IsUpload)
+                foreach(var viewModel in _attachmentViewModels)
                 {
-                    var uploadContent = new UploadContent
+                    if (viewModel.IsUpload)
                     {
-                        Description = string.IsNullOrEmpty(viewModel.Description) ? null : viewModel.Description,
-                        FileName = viewModel.FileName,
-                        IsSpoiler = viewModel.IsSpoiler
-                    };
-                    mediaAndUploadContents.Add(uploadContent);
-                    files.Add(viewModel.FileName, viewModel.Data);
-                }
-                else
-                {
-                    var mediaContent = viewModel.ServerContent;
-                    mediaContent.Description = viewModel.Description;
-                    mediaContent.IsSpoiler = viewModel.IsSpoiler;
-                    mediaAndUploadContents.Add(mediaContent);
+                        var uploadContent = new UploadContent
+                        {
+                            Description = string.IsNullOrEmpty(viewModel.Description) ? null : viewModel.Description,
+                            FileName = viewModel.FileName,
+                            IsSpoiler = viewModel.IsSpoiler
+                        };
+                        mediaAndUploadContents.Add(uploadContent);
+                        files.Add(viewModel.FileName, viewModel.Data);
+                    }
+                    else
+                    {
+                        var mediaContent = viewModel.ServerContent;
+                        mediaContent.Description = viewModel.Description;
+                        mediaContent.IsSpoiler = viewModel.IsSpoiler;
+                        mediaAndUploadContents.Add(mediaContent);
+                    }
                 }
             }
 
@@ -474,14 +526,14 @@ public partial class EditPostPage : ContentPage
             if (_externalUrlContentViewModel != null) contents.Add(_externalUrlContentViewModel.ExternalUrlContent);
             if (_pollContentViewModel != null) contents.Add(_pollContentViewModel.PollContent);
 
-            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && _pollContentViewModel == null && !_isShare && !editorContents.OfType<HashtagContent>().Any())
+            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && _pollContentViewModel == null && !_isHistoryShare && !_isKakaoShare && !editorContents.OfType<HashtagContent>().Any())
             {
                 await DisplayAlertAsync("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
                 return;
             }
 
             // Save draft before upload to prevent data loss on crash or error
-            if (_post == null && HasDraftableContent()) SaveDraft();
+            if (_post == null && !_isKakaoShare && !_isKakaoEdit && HasDraftableContent()) SaveDraft();
 
             MainActivityIndicator.IsRunning = true;
 
@@ -503,7 +555,71 @@ public partial class EditPostPage : ContentPage
                 await Task.Delay(1000);
             }
 
-            if (_post != null && !_isShare)
+            if (_isKakaoEdit)
+            {
+                var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
+                if (text.Length > 4000)
+                {
+                    await DisplayAlertAsync("오류", $"카카오스토리의 글자 수 제한은 4,000자입니다. 현재 작성하신 글은 {text.Length}자로 제한을 초과합니다. 글 내용을 수정하신 후 다시 시도해 주세요.", Constants.PromptOk);
+                    return;
+                }
+
+                var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
+                var permission = MapDiscoveryOptionToKakaoPermission((DiscoveryOption)DiscoveryOptionPicker.SelectedIndex);
+                var commentable = _kakaoPost.comment_all_writable;
+                var sharpen = _kakaoPost.sharable;
+
+                try
+                {
+                    var mediaData = await BuildKakaoMediaDataAsync();
+                    var editOldMediaPaths = (_kakaoPost.media ?? []).Select(m => m.media_path).Where(p => p != null).ToList();
+                    await KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, commentable, sharpen, null, null, null, true, editOldMediaPaths, _kakaoPost.id);
+                    TimelinePage.ShouldRefreshKakaoStory = true;
+                    await App.PopAsync();
+                }
+                catch (WebException exception)
+                {
+                    var response = exception.Response as HttpWebResponse;
+                    using var respReader = response.GetResponseStream();
+                    using var reader = new StreamReader(respReader, Encoding.UTF8);
+                    var message = await reader.ReadToEndAsync();
+                    await DisplayAlertAsync("오류", $"카카오스토리 API 오류가 발생하였습니다: [{response.StatusCode}] {message}", Constants.PromptOk);
+                }
+                return;
+            }
+
+            if (_isKakaoShare)
+            {
+                var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
+                if (text.Length > 4000)
+                {
+                    await DisplayAlertAsync("오류", $"카카오스토리의 글자 수 제한은 4,000자입니다. 현재 작성하신 글은 {text.Length}자로 제한을 초과합니다. 글 내용을 수정하신 후 다시 시도해 주세요.", Constants.PromptOk);
+                    return;
+                }
+
+                var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
+                var permission = MapDiscoveryOptionToKakaoPermission((DiscoveryOption)DiscoveryOptionPicker.SelectedIndex);
+                var commentable = CommentPermissionSwitch.IsToggled;
+                if (!ExpandCollapseSettingsImage.IsVisible) commentable = true; // Kakao share keeps comments writable when the settings row is hidden
+
+                try
+                {
+                    await KakaoStoryApiHandler.SharePost(_kakaoPost.id, quoteDatas, permission, commentable, null, null);
+                    TimelinePage.ShouldRefreshKakaoStory = true;
+                    await App.PopAsync();
+                }
+                catch (WebException exception)
+                {
+                    var response = exception.Response as HttpWebResponse;
+                    using var respReader = response.GetResponseStream();
+                    using var reader = new StreamReader(respReader, Encoding.UTF8);
+                    var message = await reader.ReadToEndAsync();
+                    await DisplayAlertAsync("오류", $"카카오스토리 API 오류가 발생하였습니다: [{response.StatusCode}] {message}", Constants.PromptOk);
+                }
+                return;
+            }
+
+            if (_post != null && !_isHistoryShare)
             {
                 var result = await App.ExecuteRequestAsync(new ModifyPost(_post.Id, contents, discoveryOption, _commentPermission, disallowShare, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest);
                 if (result.Error == ErrorType.BadRequest) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
@@ -542,11 +658,11 @@ public partial class EditPostPage : ContentPage
                     }
                 }
 
-                var result = await App.ExecuteRequestAsync<PostResponseDto>(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null), ErrorType.BadRequest);
+                var result = await App.ExecuteRequestAsync<PostResponseDto>(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isHistoryShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null), ErrorType.BadRequest);
                 if (!result.IsSuccess) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                 else
                 {
-                    if (!_isShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
+                    if (!_isHistoryShare && !_isKakaoShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
                     if (_reservationTime == null)
                     {
                         TimelinePage.ShouldRefresh = RefreshSwitch.IsToggled;
@@ -694,7 +810,7 @@ public partial class EditPostPage : ContentPage
     private async Task<bool> TryNavigateBackAsync()
     {
         // Only prompt for new posts (not editing or sharing existing posts)
-        if (_post != null) return true;
+        if (_isKakaoShare || _isKakaoEdit || _post != null) return true;
 
         if (!HasDraftableContent()) return true;
 
@@ -726,7 +842,7 @@ public partial class EditPostPage : ContentPage
     {
         MainTextContent.ImageInputRequested += OnImageInputRequested;
 
-        if (_post != null && !_loaded)
+        if ((_post != null || _isKakaoEdit || _isKakaoShare) && !_loaded)
         {
             _loaded = true;
             await LoadPostAsync();
@@ -758,7 +874,7 @@ public partial class EditPostPage : ContentPage
             return;
         }
 
-        if (!_isShare)
+        if (!_isHistoryShare || _isKakaoShare || _isKakaoEdit)
         {
             DiscoveryOptionFontImageSource.Glyph = Utils.GetDiscoveryOptionGlyph(discoveryOption);
             return;
@@ -799,7 +915,7 @@ public partial class EditPostPage : ContentPage
     private void OnRefreshSwitchToggled(object sender, ToggledEventArgs e)
     {
         var @switch = sender as Switch;
-        Configuration.SetValue($"ShouldRefreshOnNewPost[{_isShare}]", @switch.IsToggled);
+        Configuration.SetValue($"ShouldRefreshOnNewPost[{_isHistoryShare}]", @switch.IsToggled);
     }
 
     private void OnWritePostToKakaoStorySwitchToggled(object sender, ToggledEventArgs e)
@@ -854,15 +970,29 @@ public partial class EditPostPage : ContentPage
         base.OnAppearing();
         _isInForeground = true;
 
+        if (_isKakaoShare)
+        {
+            // Kakao Story share only supports text: hide media/url/poll/sticker/reservation/settings.
+            MediaCollectionView.IsVisible = false;
+            InsertImageButton.IsVisible = false;
+            InsertVideoButton.IsVisible = false;
+            InsertExternalUrlButton.IsVisible = false;
+            InsertPollButton.IsVisible = false;
+            InsertStickerButton.IsVisible = false;
+            ReservationImage.IsVisible = false;
+            ExpandCollapseSettingsImage.IsVisible = false;
+            WritePostToKakaoStoryGrid.IsVisible = false;
+        }
+
         var disallowShare = Configuration.GetValue<bool?>("DisallowShare") ?? false;
         DisallowShareSwitch.IsToggled = disallowShare;
 
-        var shouldRefreshOnNewPost = Configuration.GetValue<bool?>($"ShouldRefreshOnNewPost[{_isShare}]") ?? !_isShare;
+        var shouldRefreshOnNewPost = Configuration.GetValue<bool?>($"ShouldRefreshOnNewPost[{_isHistoryShare}]") ?? !_isHistoryShare;
         RefreshSwitch.IsToggled = shouldRefreshOnNewPost;
 
         var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory");
         if (shouldWritePostToKakaoStory.HasValue) WritePostToKakaoStorySwitch.IsToggled = shouldWritePostToKakaoStory.Value;
-        WritePostToKakaoStoryGrid.IsVisible = !_isShare && _post == null;
+        WritePostToKakaoStoryGrid.IsVisible = !_isHistoryShare && !_isKakaoShare && !_isKakaoEdit && _post == null;
 
         Dispatcher.Dispatch(async () => await LoginPage.RefreshFriendsAsync());
 
@@ -901,7 +1031,7 @@ public partial class EditPostPage : ContentPage
         MainTextContent.FocusEditor();
 
         // Prompt to restore draft only for new posts (not editing/sharing)
-        if (_post == null && _sharedTextContent == null && _attachmentViewModels.Count == 0 && PostDraft.Exists())
+        if (_post == null && !_isKakaoShare && !_isKakaoEdit && _sharedTextContent == null && _attachmentViewModels.Count == 0 && PostDraft.Exists())
         {
             var draft = PostDraft.Load();
             if (draft != null)
@@ -1127,6 +1257,17 @@ public partial class EditPostPage : ContentPage
     }
 
     /// <summary>
+    /// Maps a History discovery option to the Kakao Story permission value.
+    /// Only Everyone/Friends/OnlyMe have Kakao Story equivalents.
+    /// </summary>
+    private static string MapDiscoveryOptionToKakaoPermission(DiscoveryOption discoveryOption)
+    {
+        if (discoveryOption == DiscoveryOption.Everyone) return "A";
+        else if (discoveryOption == DiscoveryOption.OnlyMe) return "M";
+        else return "F";
+    }
+
+    /// <summary>
     /// Detects whether the contents represent a "fortune-only" post, i.e. a single
     /// #오늘의운세 hashtag optionally accompanied by blank text. Mirrors the server-side
     /// interception logic in PostService.WritePostAsync.
@@ -1224,46 +1365,14 @@ public partial class EditPostPage : ContentPage
 
             if (loginNeeded)
             {
-                var savedEmail = Configuration.GetValue<string>("KakaoStoryEmail");
-                var savedEncryptedPassword = Configuration.GetValue<string>("KakaoStoryPassword");
-                if (savedEmail == null || savedEncryptedPassword == null)
-                {
-                    var useAutoFill = await DisplayAlertAsync("자동 입력", "쿠키 만료로 인해 로그인이 필요합니다. 카카오스토리 로그인 정보를 저장하여 자동 입력하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
-                    if (useAutoFill)
-                    {
-                        var email = await DisplayPromptAsync("이메일 입력", "카카오 계정 이메일을 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "이메일", -1, Keyboard.Email);
-                        if (!string.IsNullOrWhiteSpace(email))
-                        {
-                            var password = await DisplayPromptAsync("비밀번호 입력", "카카오 계정 비밀번호를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "비밀번호", -1, Keyboard.Password);
-                            if (!string.IsNullOrWhiteSpace(password))
-                            {
-                                var encryptedPassword = AesCryptoHelper.Encrypt(password, Constants.KakaoStoryCredentialEncryptionKey);
-                                Configuration.SetValue("KakaoStoryEmail", email);
-                                Configuration.SetValue("KakaoStoryPassword", encryptedPassword);
-                            }
-                        }
-                    }
-                }
-
-                var kakaoStoryLoginPage = new KakaoStoryLoginPage();
-                await App.PushModalAsync(kakaoStoryLoginPage);
-
-                cookies = await kakaoStoryLoginPage.GetResultAsync();
-
-                IsEnabled = false;
-                MainActivityIndicator.IsRunning = true;
-
-                if (cookies == null)
+                if (!await KakaoStoryUtils.EnsureLoggedInAsync(this))
                 {
                     await DisplayAlertAsync("오류", "카카오스토리 로그인에 실패하였습니다.", Constants.PromptOk);
                     return false;
                 }
 
-                var cookieContainer = new CookieContainer();
-                foreach (var cookie in cookies) cookieContainer.Add(cookie);
-
-                KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
-                Configuration.SetValue("KakaoStoryCookies", cookies);
+                IsEnabled = false;
+                MainActivityIndicator.IsRunning = true;
             }
 
             try
@@ -1352,9 +1461,7 @@ public partial class EditPostPage : ContentPage
                 }
                 else mediaData = null;
 
-                string permission = "F";
-                if (discoveryOption == DiscoveryOption.Everyone) permission = "A";
-                else if (discoveryOption == DiscoveryOption.OnlyMe) permission = "M";
+                string permission = MapDiscoveryOptionToKakaoPermission(discoveryOption);
 
                 string scrap = null;
                 var scrapTryCount = 0;
@@ -1374,6 +1481,8 @@ public partial class EditPostPage : ContentPage
                 }
 
                 await KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, true, true, null, null, scrap, false, null, null);
+                // Mirror upload succeeded: refresh the KakaoStory timeline on return.
+                TimelinePage.ShouldRefreshKakaoStory = true;
                 if (conversionFailedCount > 0) await DisplayAlertAsync("오류", $"카키오스토리 업로드 도중 일부 webp 이미지를 png로 변환하는 데 실패하여 {conversionFailedCount}개의 이미지가 제외되었습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
             }
             catch (WebException exception)
@@ -1392,5 +1501,83 @@ public partial class EditPostPage : ContentPage
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Builds the KakaoStory media payload for an edited post. New attachments are
+    /// uploaded and return fresh keys; existing server media (KakaoServerPath) are kept
+    /// as-is so they are not re-uploaded.
+    /// </summary>
+    private async Task<KakaoStoryApiHandler.DataType.MediaData> BuildKakaoMediaDataAsync()
+    {
+        if (_attachmentViewModels.Count == 0) return null;
+
+        var mediaData = new KakaoStoryApiHandler.DataType.MediaData();
+        var medias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
+        foreach (var attachment in _attachmentViewModels)
+        {
+            var media = new KakaoStoryApiHandler.DataType.MediaData.MediaObject();
+            if (!attachment.IsUpload)
+            {
+                // Existing server media: keep the server path without re-uploading.
+                media.media_path = attachment.KakaoServerPath;
+                media.media_type = attachment.IsVideo ? "video" : "image";
+                medias.Add(media);
+                continue;
+            }
+
+            if (!attachment.IsVideo)
+            {
+                string filePath = attachment.FilePath;
+                var isWebp = attachment.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase);
+                if (isWebp)
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(filePath) + ".png";
+                    filePath = Path.GetTempPath() + "c_" + fileName;
+                    using var stream = File.OpenRead(attachment.FilePath);
+                    using var image = PlatformImage.FromStream(stream);
+                    var saveStream = File.Create(filePath);
+                    if (image != null)
+                    {
+                        await image.SaveAsync(saveStream, ImageFormat.Png);
+                        saveStream.Dispose();
+                    }
+                }
+
+                try
+                {
+                    var key = await KakaoStoryApiHandler.UploadImage(filePath);
+                    media.media_path = key;
+                    media.media_type = "image";
+                }
+                finally
+                {
+                    if (filePath != attachment.FilePath)
+                    {
+                        try { File.Delete(filePath); } catch { }
+                    }
+                }
+            }
+            else
+            {
+                File.WriteAllBytes(attachment.FilePath, attachment.Data);
+                var key = await KakaoStoryApiHandler.UploadVideo(attachment.FilePath);
+                media.media_path = key;
+                await KakaoStoryApiHandler.WaitForVideoUploadFinish(key);
+                media.media_type = "video";
+            }
+            medias.Add(media);
+        }
+        mediaData.media = medias;
+
+        string mediaType = null;
+        var imageExists = _attachmentViewModels.Any(x => !x.IsVideo);
+        var videoExists = _attachmentViewModels.Any(x => x.IsVideo);
+        if (imageExists && videoExists) mediaType = "mixed";
+        else if (imageExists) mediaType = "image";
+        else if (videoExists) mediaType = "video";
+        mediaData.media_type = mediaType;
+
+        return mediaData;
     }
 }

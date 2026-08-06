@@ -16,13 +16,13 @@ internal class ContentTemplateSelector : DataTemplateSelector
     {
         if (item is TextTypeContentsViewModel) return TextTypeContentsTemplate;
         else if (item is StickerContentViewModel) return StickerContentTemplate;
-        else if (item is MediaContentViewModel) return MediaContentTemplate;
+        else if (item is BaseMediaContentViewModel) return MediaContentTemplate;
         else if (item is ExternalUrlContentViewModel) return ExternalUrlContentTemplate;
         else if (item is PollContentViewModel) return PollContentTemplate;
 #if IOS
-        else if (item is WrappedMediaContentsViewModel) return AppleWrappedMediaContentsTemplate;
+        else if (item is BaseWrappedMediaContentsViewModel) return AppleWrappedMediaContentsTemplate;
 #else
-        else if (item is WrappedMediaContentsViewModel) return AndroidWrappedMediaContentsTemplate;
+        else if (item is BaseWrappedMediaContentsViewModel) return AndroidWrappedMediaContentsTemplate;
 #endif
         else throw new ArgumentException("Unknown item type", nameof(item));
     }
