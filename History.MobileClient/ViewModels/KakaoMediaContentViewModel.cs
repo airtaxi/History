@@ -1,4 +1,4 @@
-using History.MobileClient.Enums;
+﻿using History.MobileClient.Enums;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient.ViewModels;

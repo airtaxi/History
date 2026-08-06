@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -133,8 +133,8 @@ public partial class HistoryPostViewModel : BasePostViewModel
         Nickname = user?.Nickname;
         IsModerator = user?.Rank == Rank.Moderator;
         IsAdmin = user?.Rank == Rank.Admin;
-        ProfileMedia = user != null
-            ? (user.UsesAnimatedProfileMedia
+        ProfileMedia = user != null 
+            ? (user.UsesAnimatedProfileMedia 
                 ? new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
                 : new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName))
             : null;

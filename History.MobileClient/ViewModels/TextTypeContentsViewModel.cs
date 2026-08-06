@@ -30,6 +30,11 @@ public class TextTypeContentsViewModel(List<BaseContent> textTypeContents, PostT
                 case "profile":
                     contents.Add(new ProfileContent { UserId = data.id, Nickname = data.text });
                     break;
+                case "emoticon":
+                    // Preserve the emoticon as a placeholder token so editing a Kakao
+                    // Story post keeps it instead of dropping it entirely.
+                    contents.Add(new TextContent { Text = "(이모티콘)" });
+                    break;
             }
         }
         return contents;
