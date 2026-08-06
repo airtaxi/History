@@ -21,12 +21,12 @@ public partial class KakaoMediaContentViewModel : BaseMediaContentViewModel
 
     protected override List<IMediaViewModel> CreateFullScreenMedias(bool moreThanOneMedias)
     {
-        return [.. _allMedias.Select(medium => CreateMedia(medium, true, moreThanOneMedias))];
+        return [.. _allMedias.Select(medium => CreateMedia(medium, true, moreThanOneMedias, PostType))];
     }
 
-    protected override IMediaViewModel CreateInlineMedia() => CreateMedia(_medium, false, false);
+    protected override IMediaViewModel CreateInlineMedia() => CreateMedia(_medium, false, false, PostType);
 
-    private static IMediaViewModel CreateMedia(Medium medium, bool isFullScreen, bool moreThanOneMedias)
+    private static IMediaViewModel CreateMedia(Medium medium, bool isFullScreen, bool moreThanOneMedias, PostType postType)
     {
         var isVideo = medium.content_type?.StartsWith("video", StringComparison.OrdinalIgnoreCase) == true;
         // Timeline displays url2 (high-res display version); full screen uses origin_url (full original).
@@ -38,7 +38,7 @@ public partial class KakaoMediaContentViewModel : BaseMediaContentViewModel
         {
             return new VideoViewModel(uri)
             {
-                Aspect = Aspect.AspectFill,
+                Aspect = isFullScreen ? Aspect.AspectFit : Aspect.AspectFill,
                 ShouldAutoPlay = true,
                 ShouldLoopPlayback = true,
                 ShouldMute = false,
@@ -48,9 +48,10 @@ public partial class KakaoMediaContentViewModel : BaseMediaContentViewModel
             };
         }
 
-        return new ImageViewModel(uri, isFullScreen ? PostType.Unwrapped : PostType.Timeline)
+        return new ImageViewModel(uri, isFullScreen ? PostType.Unwrapped : postType)
         {
-            Aspect = Aspect.AspectFill,
+            // Match History media: full screen and detail (Unwrapped) fit the whole image, timeline crops it.
+            Aspect = isFullScreen || postType == PostType.Unwrapped ? Aspect.AspectFit : Aspect.AspectFill,
             FullScreenSwipeable = moreThanOneMedias,
             IsFullScreen = isFullScreen
         };
