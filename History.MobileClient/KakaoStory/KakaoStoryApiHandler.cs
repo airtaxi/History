@@ -46,14 +46,44 @@ public partial class KakaoStoryApiHandler
     private const string EmoticonUrl = "https://mk.kakaocdn.net/dna/emoticons/resources";
     private const string EmoticonAuthUrl = "https://api-item.kakao.com/api/sdk/config";
 
-    public static async Task<string> GetEmoticonUrl(string id, string resourceId)
+    private static readonly SemaphoreSlim s_emoticonCredentialSemaphore = new(1, 1);
+
+    /// <summary>
+    /// Refreshes the emoticon credential when it is older than one hour.
+    /// The double-checked semaphore prevents concurrent refreshes when multiple
+    /// posts load emoticons at once. Failures are swallowed so fire-and-forget
+    /// callers never observe unhandled exceptions; GetEmoticonUrlSync then
+    /// returns null and the "(이모티콘)" text placeholder is kept.
+    /// </summary>
+    public static async Task EnsureEmoticonCredentialAsync()
     {
         var hoursAfterLastEmoticonCredential = (DateTime.UtcNow - s_emoticonCredentialUpdatedTime).TotalHours;
-        if (hoursAfterLastEmoticonCredential > 1)
+        if (hoursAfterLastEmoticonCredential <= 1) return;
+
+        try
         {
+            await s_emoticonCredentialSemaphore.WaitAsync();
+
+            hoursAfterLastEmoticonCredential = (DateTime.UtcNow - s_emoticonCredentialUpdatedTime).TotalHours;
+            if (hoursAfterLastEmoticonCredential <= 1) return; // Refreshed by another caller while we waited.
+
             s_emoticonCredential = await GetEmoticonCredential();
             s_emoticonCredentialUpdatedTime = DateTime.UtcNow;
         }
+        catch { }
+        finally { s_emoticonCredentialSemaphore.Release(); }
+    }
+
+    /// <summary>
+    /// Builds an emoticon image URL synchronously from the cached credential.
+    /// Returns null when the credential is not available yet (call
+    /// EnsureEmoticonCredentialAsync first); the caller then keeps the
+    /// "(이모티콘)" text placeholder.
+    /// </summary>
+    public static string GetEmoticonUrlSync(string id, string resourceId)
+    {
+        if (s_emoticonCredential?.Auth == null) return null;
+
         var url = EmoticonUrl;
         url += $"/{id}/thum_{resourceId.PadLeft(3, '0')}.png";
         url += $"?credential={s_emoticonCredential.Auth.Credential}";

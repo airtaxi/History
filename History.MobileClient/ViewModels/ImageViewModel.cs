@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using FFImageLoading;
+using FFImageLoading.Config;
 using FFImageLoading.Maui;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Enums;
@@ -9,6 +11,10 @@ namespace History.MobileClient.ViewModels;
 public partial class ImageViewModel(string uri, PostType postType = PostType.Unwrapped) : ObservableObject, IMediaViewModel
 {
     public PostType PostType { get; } = postType;
+
+    // Per-image configuration override (e.g. custom download headers).
+    // Defaults to the global configuration; CachedImage picks it up via binding.
+    public IConfiguration Configuration { get; set; } = ImageService.Instance.Configuration;
 
     [ObservableProperty]
     public partial string Uri { get; set; } = uri;

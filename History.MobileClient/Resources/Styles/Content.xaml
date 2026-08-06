@@ -196,6 +196,7 @@
     <DataTemplate x:Key="StickerContentTemplate" x:DataType="vm:StickerContentViewModel">
         <ffimageloading:CachedImage
             Aspect="AspectFit"
+            Configuration="{x:Binding Media.Configuration}"
             DownsampleToViewSize="True"
             HeightRequest="120"
             HorizontalOptions="Start"

@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
@@ -30,11 +30,11 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
     private string _commentUserId;
     private string _commentNickname;
     private List<QuoteData> _decorators;
+    private int _updateVersion;
 
     private string PostId => Comment?.activity_id ?? _parentPostViewModel.PostData.id;
 
-    public KakaoCommentViewModel(Comment comment, PostType postType, KakaoPostViewModel parentViewModel)
-        : base(parentViewModel.PostData.actor?.id == Shared.KakaoUserId, postType, parentViewModel)
+    public KakaoCommentViewModel(Comment comment, PostType postType, KakaoPostViewModel parentViewModel) : base(parentViewModel.PostData.actor?.id == Shared.KakaoUserId, postType, parentViewModel)
     {
         _parentPostViewModel = parentViewModel;
         UpdateComment(comment);
@@ -48,6 +48,7 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
 
     private void UpdateComment(Comment comment)
     {
+        var version = ++_updateVersion;
         try
         {
             var writer = comment.writer;
@@ -99,6 +100,48 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
         }
         catch (ObjectDisposedException) { }
         catch (Exception) { }
+
+        // Fire-and-forget: render emoticons (Referer-signed) once the credential
+        // is available; until then the "(이모티콘)" text placeholder is shown.
+        _ = AttachEmoticonsAsync(version);
+    }
+
+    private async Task AttachEmoticonsAsync(int version)
+    {
+        try
+        {
+            var emoticonContents = await KakaoStoryUtils.BuildEmoticonContentsAsync(_decorators, PostType);
+            if (emoticonContents == null) return;
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (version != _updateVersion) return; // Stale update.
+                var contents = emoticonContents.ToList();
+
+                // Append the comment image (embedded as a media decorator) after
+                // the text/emoticon fragments, mirroring UpdateComment's layout.
+                var commentMedia = _decorators?.FirstOrDefault(x => x.media?.thumbnail_url != null)?.media;
+                if (commentMedia != null)
+                {
+                    var medium = new Medium
+                    {
+                        media_path = commentMedia.media_path,
+                        thumbnail_url = commentMedia.thumbnail_url,
+                        url = commentMedia.url,
+                        origin_url = commentMedia.origin_url,
+                        content_type = "image",
+                        width = commentMedia.width,
+                        height = commentMedia.height
+                    };
+                    var mediaViewModel = new KakaoMediaContentViewModel(medium, [medium], PostType);
+                    if (mediaViewModel.ImageMedia is ImageViewModel commentImage) commentImage.MaxWidth = 200;
+                    contents.Add(mediaViewModel);
+                }
+
+                Contents = contents;
+            });
+        }
+        catch { } // Credential/URL failures keep the text placeholder.
     }
 
     public override async Task HandleLikeAsync()

@@ -14,6 +14,7 @@ namespace History.MobileClient.ViewModels;
 public partial class KakaoPostViewModel : BasePostViewModel
 {
     private PostData _postData;
+    private int _updateVersion;
 
     public PostData PostData => _postData;
     public bool IsMyPost => _postData.actor.id == Shared.KakaoUserId;
@@ -36,6 +37,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
     private void UpdatePost(PostData postData)
     {
         _postData = postData;
+        var version = ++_updateVersion;
         try
         {
             var actor = postData.actor;
@@ -99,6 +101,28 @@ public partial class KakaoPostViewModel : BasePostViewModel
         }
         catch (ObjectDisposedException) { }
         catch (Exception) { }
+
+        // Fire-and-forget: render emoticons (Referer-signed) once the credential
+        // is available; until then the "(이모티콘)" text placeholder is shown.
+        _ = AttachEmoticonsAsync(version);
+    }
+
+    private async Task AttachEmoticonsAsync(int version)
+    {
+        try
+        {
+            var quoteDatas = _postData.content_decorators;
+            var emoticonContents = await KakaoStoryUtils.BuildEmoticonContentsAsync(quoteDatas, PostType);
+            if (emoticonContents == null) return;
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (version != _updateVersion) return; // Stale update.
+                Contents = emoticonContents;
+                TimelineContents = new TimelineContentsViewModel(Contents);
+            });
+        }
+        catch { } // Credential/URL failures keep the text placeholder.
     }
 
     private static List<IContentViewModel> GenerateContentViewModels(PostData postData, PostType postType)

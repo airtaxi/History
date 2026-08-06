@@ -1,6 +1,8 @@
 ﻿using History.Commons;
+using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.Pages;
+using History.MobileClient.ViewModels;
 using Newtonsoft.Json;
 using System.Net;
 using System.Text;
@@ -70,6 +72,7 @@ public static class KakaoStoryUtils
             {
                 await KakaoStoryApiHandler.GetFriends();
                 await SaveCurrentUserAsync();
+                _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
                 return true;
             }
             catch { }
@@ -108,7 +111,44 @@ public static class KakaoStoryUtils
         KakaoStoryApiHandler.Init(container, cookies, null);
         Configuration.SetValue("KakaoStoryCookies", cookies);
         await SaveCurrentUserAsync();
+        _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
         return true;
+    }
+
+    /// <summary>
+    /// Builds contents with Kakao Story emoticons rendered as sticker view models
+    /// (Referer-signed images). Text decorators are batched into
+    /// TextTypeContentsViewModel; emoticons whose signed URL cannot be resolved
+    /// keep the "(이모티콘)" text placeholder. Returns null when the input has no
+    /// emoticon decorators — the caller then keeps its existing contents.
+    /// </summary>
+    public static async Task<List<IContentViewModel>> BuildEmoticonContentsAsync(List<QuoteData> quoteDatas, PostType postType)
+    {
+        if (quoteDatas == null || !quoteDatas.Any(x => x.type == "emoticon")) return null;
+
+        await KakaoStoryApiHandler.EnsureEmoticonCredentialAsync();
+
+        var contents = new List<IContentViewModel>();
+        var textBatch = new List<QuoteData>();
+        foreach (var data in quoteDatas)
+        {
+            if (data.type == "emoticon")
+            {
+                if (textBatch.Count > 0)
+                {
+                    contents.Add(new TextTypeContentsViewModel(textBatch, postType));
+                    textBatch = [];
+                }
+
+                var emoticonUrl = KakaoStoryApiHandler.GetEmoticonUrlSync(data.item_id, data.resource_id.ToString());
+                if (emoticonUrl == null) contents.Add(new TextTypeContentsViewModel([new QuoteData { type = "text", text = "(이모티콘) " }], postType));
+                else contents.Add(new StickerContentViewModel(emoticonUrl, postType));
+            }
+            else textBatch.Add(data);
+        }
+        if (textBatch.Count > 0) contents.Add(new TextTypeContentsViewModel(textBatch, postType));
+
+        return contents;
     }
 
     /// <summary>

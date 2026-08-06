@@ -14,6 +14,7 @@
         <ffimageloading:CachedImage
             Aspect="{x:Binding Aspect}"
             BitmapOptimizations="True"
+            Configuration="{x:Binding Configuration}"
             DownsampleToViewSize="True"
             Finish="OnImageFinished"
             HorizontalOptions="{x:Binding HorizontalContentOptions}"
@@ -43,6 +44,7 @@
             </ppc:PanPinchContainer.Behaviors>
             <ffimageloading:CachedImage
                 Aspect="{x:Binding Aspect}"
+                Configuration="{x:Binding Configuration}"
                 HorizontalOptions="{x:Binding HorizontalContentOptions}"
                 Source="{x:Binding Uri,
                                    Mode=OneTime}"
