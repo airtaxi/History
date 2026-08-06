@@ -19,12 +19,12 @@ public static class KakaoStoryUtils
     {
         return emotion switch
         {
-            "like" => (Solid.Heart, Color.FromRgb(0xE2, 0x54, 0x34)),
-            "good" => (Solid.Star, Color.FromRgb(0xBC, 0xCB, 0x3C)),
-            "pleasure" => (Solid.FaceSmile, Color.FromRgb(0xEF, 0xBD, 0x30)),
-            "sad" => (Solid.Droplet, Color.FromRgb(0x35, 0x9F, 0xB0)),
-            "cheerup" => (Solid.Bolt, Color.FromRgb(0x9C, 0x62, 0xAE)),
-            _ => (Solid.Heart, Color.FromRgb(0xE2, 0x54, 0x34))
+            "like" => (Solid.Heart, Color.FromRgb(0xEB, 0x55, 0x27)),
+            "good" => (Solid.Star, Color.FromRgb(0xBB, 0xCC, 0x29)),
+            "pleasure" => (Solid.FaceSmile, Color.FromRgb(0xFF, 0xC1, 0x00)),
+            "sad" => (Solid.Droplet, Color.FromRgb(0x00, 0x9F, 0xB2)),
+            "cheerup" => (Solid.Bolt, Color.FromRgb(0xA0, 0x61, 0xB1)),
+            _ => (Solid.Heart, Color.FromRgb(0xEB, 0x55, 0x27))
         };
     }
 
