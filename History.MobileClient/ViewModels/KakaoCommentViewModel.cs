@@ -86,14 +86,11 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
                     width = commentMedia.width,
                     height = commentMedia.height
                 };
-                var mediaViewModel = new KakaoMediaContentViewModel(medium, [medium], PostType);
-                if (mediaViewModel.ImageMedia is ImageViewModel commentImage)
-                {
-                    commentImage.MaxWidth = 200;
-                    commentImage.HorizontalContentOptions = LayoutOptions.Start;
-                    commentImage.VerticalContentOptions = LayoutOptions.Start;
-                    commentImage.Aspect = Aspect.AspectFit;
-                }
+                // Wrap in the carousel like the History comment flow: the shared CachedImage
+                // template can't size itself, so a fixed-width carousel caps the thumbnail at 200px.
+                var mediaViewModel = new KakaoWrappedMediaContentsViewModel([medium], PostType);
+                var commentImage = mediaViewModel.Medias[0].ImageMedia as ImageViewModel;
+                if (commentImage != null) commentImage.MaxWidth = 200;
                 contents.Add(mediaViewModel);
             }
             Contents = contents;
@@ -139,14 +136,11 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
                         width = commentMedia.width,
                         height = commentMedia.height
                     };
-                    var mediaViewModel = new KakaoMediaContentViewModel(medium, [medium], PostType);
-                    if (mediaViewModel.ImageMedia is ImageViewModel commentImage)
-                    {
-                        commentImage.MaxWidth = 200;
-                        commentImage.HorizontalContentOptions = LayoutOptions.Start;
-                        commentImage.VerticalContentOptions = LayoutOptions.Start;
-                        commentImage.Aspect = Aspect.AspectFit;
-                    }
+                    // Wrap in the carousel like the History comment flow: the shared CachedImage
+                    // template can't size itself, so a fixed-width carousel caps the thumbnail at 200px.
+                    var mediaViewModel = new KakaoWrappedMediaContentsViewModel([medium], PostType);
+                    var commentImage = mediaViewModel.Medias[0].ImageMedia as ImageViewModel;
+                    if (commentImage != null) commentImage.MaxWidth = 200;
                     contents.Add(mediaViewModel);
                 }
 
