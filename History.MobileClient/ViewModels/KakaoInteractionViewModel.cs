@@ -7,11 +7,15 @@ namespace History.MobileClient.ViewModels;
 
 public partial class KakaoInteractionViewModel : BaseInteractionViewModel
 {
+    public ShareData.Share Share { get; }
+
     public KakaoInteractionViewModel(ShareData.Share share, InteractionType type = InteractionType.Reaction)
     {
+        Share = share;
         Type = type;
         CreatedAt = share.created_at;
-        TargetPostId = null;
+        // Mirror HistoryInteractionViewModel: only shares carry the shared post id for navigation.
+        TargetPostId = type == InteractionType.Share ? share.activity_id : null;
         ReactionType = null;
 
         ProfileMedia = share.actor?.profile_image_url != null ? new ImageViewModel(share.actor.profile_image_url) : null;

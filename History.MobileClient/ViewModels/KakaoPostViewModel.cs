@@ -378,51 +378,31 @@ public partial class KakaoPostViewModel : BasePostViewModel
 
     // Reaction (느낌) — see HandleReactionAsync above.
     // Share count displays share_count - sympathy_count (Kakao includes UP actions in share_count).
-    public override async Task HandleReactionTapAsync() => await ShowReactionUsersAsync();
-
-    public override async Task HandleSharedTapAsync() => await ShowShareUsersAsync();
-
-    public override async Task HandleRepostTapAsync() => await ShowSympathyUsersAsync();
-
-    private async Task ShowReactionUsersAsync()
+    // Mirror HistoryPostViewModel.HandleReactionTapAsync/HandleSharedTapAsync/HandleRepostTapAsync:
+    // use the already-merged Interactions list instead of fetching share/UP lists again.
+    public override async Task HandleReactionTapAsync()
     {
-        if (_postData.like_count == 0)
-        {
-            await App.Page.DisplayAlertAsync("안내", "아직 좋아요를 누른 사용자가 없습니다.", Constants.PromptOk);
-            return;
-        }
-
-        var likes = await KakaoStoryApiHandler.GetLikes(_postData, null);
-        var viewModels = likes.Select(x => new KakaoFriendshipViewModel(x));
+        var viewModels = Interactions
+            .Where(x => x is KakaoInteractionViewModel interaction && interaction.Type == InteractionType.Reaction)
+            .Select(x => new KakaoFriendshipViewModel(((KakaoInteractionViewModel)x).Share));
         var page = new InteractionsPage(viewModels, InteractionType.Reaction);
         await App.PushAsync(page);
     }
 
-    private async Task ShowShareUsersAsync()
+    public override async Task HandleSharedTapAsync()
     {
-        var shareCount = _postData.share_count - _postData.sympathy_count;
-        if (shareCount <= 0)
-        {
-            await App.Page.DisplayAlertAsync("안내", "아직 공유한 사용자가 없습니다.", Constants.PromptOk);
-            return;
-        }
-
-        var shares = await KakaoStoryApiHandler.GetShares(_postData, false, null);
-        var viewModels = shares.Select(x => new KakaoFriendshipViewModel(x));
+        var viewModels = Interactions
+            .Where(x => x is KakaoInteractionViewModel interaction && interaction.Type == InteractionType.Share)
+            .Select(x => new KakaoFriendshipViewModel(((KakaoInteractionViewModel)x).Share, (KakaoInteractionViewModel)x));
         var page = new InteractionsPage(viewModels, InteractionType.Share);
         await App.PushAsync(page);
     }
 
-    private async Task ShowSympathyUsersAsync()
+    public override async Task HandleRepostTapAsync()
     {
-        if (_postData.sympathy_count == 0)
-        {
-            await App.Page.DisplayAlertAsync("안내", "아직 UP한 사용자가 없습니다.", Constants.PromptOk);
-            return;
-        }
-
-        var sympathies = await KakaoStoryApiHandler.GetShares(_postData, true, null);
-        var viewModels = sympathies.Select(x => new KakaoFriendshipViewModel(x));
+        var viewModels = Interactions
+            .Where(x => x is KakaoInteractionViewModel interaction && interaction.Type == InteractionType.Repost)
+            .Select(x => new KakaoFriendshipViewModel(((KakaoInteractionViewModel)x).Share));
         var page = new InteractionsPage(viewModels, InteractionType.Repost, "UP 사용자 목록");
         await App.PushAsync(page);
     }
