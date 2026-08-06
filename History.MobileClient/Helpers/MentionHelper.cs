@@ -147,7 +147,7 @@ public static class MentionHelper
     public static SuggestingBoxTokenInfo CreateStickerFallbackToken(int startIndex, StickerContent stickerContent) =>
         new(startIndex, " * ", "스티커 * ", s_stickerFallbackFormat, stickerContent);
 
-    private static async Task<byte[]> GetStickerImageDataAsync(string stickerMediaId)
+    public static async Task<byte[]> GetStickerImageDataAsync(string stickerMediaId)
     {
         if (string.IsNullOrEmpty(stickerMediaId)) return [];
 

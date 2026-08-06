@@ -9,17 +9,24 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls.Platform.Compatibility;
-using NativeMedia;
 using System.Diagnostics;
+using System.Net;
+using System.Text;
 using UraniumUI.Icons.MaterialSymbols;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+#if IOS
+using NativeMedia;
+#endif
 
 namespace History.MobileClient.Pages;
 
 public partial class PostPage : ContentPage
 {
-    public HistoryPostViewModel ViewModel { get; set; }
+    public BasePostViewModel ViewModel { get; set; }
 
     private bool _isInForeground;
     private MediaAttachmentViewModel _commentMediaAttachmentViewModel;
@@ -34,13 +41,20 @@ public partial class PostPage : ContentPage
 
     private bool IsCommentAvailable => _commentMediaAttachmentViewModel != null || !IsCommentEmpty;
 
-    public PostPage(HistoryPostViewModel viewModel)
+    private KakaoPostViewModel KakaoViewModel => ViewModel as KakaoPostViewModel;
+
+    private bool IsKakaoStory => KakaoViewModel != null;
+
+    public string PostId => IsKakaoStory ? KakaoViewModel.PostData.id : ((HistoryPostViewModel)ViewModel).Post.Id;
+
+    public PostPage(BasePostViewModel viewModel)
     {
         Debug.WriteLine("POST PAGE LOADED");
 
         ViewModel = viewModel;
         InitializeComponent();
-        UpdateRepostStatus(viewModel.Post);
+        if (IsKakaoStory) UpdateRepostStatus(KakaoViewModel.PostData);
+        else UpdateRepostStatus(((HistoryPostViewModel)ViewModel).Post);
 
         CommentStickerCollectionView.SetTextContentView(CommentTextContentView);
 
@@ -51,8 +65,12 @@ public partial class PostPage : ContentPage
     private void UpdateRepostStatus(PostResponseDto post)
     {
         var isReposted = post.SharedAndRepostedUsers.Any(x => x.User.UserId == Shared.UserId && x.IsRepost);
-        if (isReposted) RepostFontImageSource.Glyph = MaterialSharp.Shift_lock_off;
-        else RepostFontImageSource.Glyph = MaterialSharp.Shift_lock;
+        RepostFontImageSource.Glyph = isReposted ? MaterialSharp.Shift_lock_off : MaterialSharp.Shift_lock;
+    }
+
+    private void UpdateRepostStatus(PostData post)
+    {
+        RepostFontImageSource.Glyph = post.sympathized ? MaterialSharp.Shift_lock_off : MaterialSharp.Shift_lock;
     }
 
     private static async Task CommentsScrollToEnd(ScrollView scrollView)
@@ -100,6 +118,12 @@ public partial class PostPage : ContentPage
     {
         if (_commentMediaAttachmentViewModel == null)
         {
+            if (IsKakaoStory)
+            {
+                await SendKakaoStoryCommentImageAsync();
+                return;
+            }
+
 #if IOS
             CommentTextContentView.UnfocusEditor();
             var request = new MediaPickRequest(1, MediaFileType.Image) { Title = "이미지 추가" };
@@ -152,6 +176,12 @@ public partial class PostPage : ContentPage
             return;
         }
 
+        if (IsKakaoStory)
+        {
+            await SendKakaoStoryCommentAsync();
+            return;
+        }
+
         var contents = CommentTextContentView.GetContents();
         Utils.SanitizeContents(contents);
 
@@ -163,7 +193,7 @@ public partial class PostPage : ContentPage
             files.Add(_commentMediaAttachmentViewModel.FileName, _commentMediaAttachmentViewModel.Data);
         }
 
-        var result = await App.ExecuteRequestAsync(new CreateComment(ViewModel.Post.Id, contents, files), ErrorType.BadRequest, ErrorType.Forbidden);
+        var result = await App.ExecuteRequestAsync(new CreateComment(((HistoryPostViewModel)ViewModel).Post.Id, contents, files), ErrorType.BadRequest, ErrorType.Forbidden);
         if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Forbidden) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
         else if (result.IsSuccess)
         {
@@ -186,6 +216,176 @@ public partial class PostPage : ContentPage
         }
     }
 
+    /// <summary>
+    /// Sends a comment to Kakao Story: text (+ optional image, uploaded first).
+    /// Stickers are uploaded as images when possible; otherwise they degrade to "(스티커)".
+    /// </summary>
+    private async Task SendKakaoStoryCommentAsync()
+    {
+        if (KakaoViewModel.PostData.comment_all_writable == false)
+        {
+            await DisplayAlertAsync("안내", "댓글을 작성할 수 없는 게시글입니다.", Constants.PromptOk);
+            return;
+        }
+
+        MainActivityIndicator.IsRunning = true;
+        IsEnabled = false;
+        try
+        {
+            var stickerContents = CommentTextContentView.GetContents().OfType<StickerContent>().ToList();
+
+            // Replace image tokens with "(스티커)" first so the text layer always has a placeholder.
+            var replacedText = CommentTextContentView.GetTextWithImageTokenReplacement("(스티커)");
+            var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(replacedText);
+
+            // Stickers resolve to an uploaded image when possible; otherwise "(스티커)" stays as text.
+            var imageQuoteDatas = new List<QuoteData>();
+            var uploadedStickerCount = 0;
+            foreach (var stickerContent in stickerContents)
+            {
+                if (stickerContent.StickerMediaId == null) continue;
+
+                var imageData = await MentionHelper.GetStickerImageDataAsync(stickerContent.StickerMediaId);
+                if (imageData.Length == 0) continue;
+
+                var tempFilePath = Path.Combine(FileSystem.CacheDirectory, $"comment_sticker_{Guid.NewGuid():N}.png");
+                File.WriteAllBytes(tempFilePath, imageData);
+                try
+                {
+                    var uploadedImage = await KakaoStoryApiHandler.UploadImageProp(tempFilePath);
+                    imageQuoteDatas.Add(new QuoteData
+                    {
+                        type = "image",
+                        text = "(Image) ",
+                        media_path = BuildKakaoMediaPath(uploadedImage)
+                    });
+                    uploadedStickerCount++;
+                }
+                finally { try { File.Delete(tempFilePath); } catch { } }
+            }
+
+            // Drop the "(스티커)" placeholders that were replaced by uploaded images.
+            if (uploadedStickerCount > 0)
+            {
+                var remaining = new List<QuoteData>();
+                var toRemove = uploadedStickerCount;
+                foreach (var quoteData in quoteDatas)
+                {
+                    if (quoteData.type == "text")
+                    {
+                        var fragment = quoteData.text;
+                        while (toRemove > 0 && fragment != null && fragment.Contains("(스티커)", StringComparison.Ordinal))
+                        {
+                            var index = fragment.IndexOf("(스티커)", StringComparison.Ordinal);
+                            fragment = fragment.Remove(index, "(스티커)".Length);
+                            toRemove--;
+                        }
+                        quoteData.text = fragment;
+                        if (!string.IsNullOrEmpty(fragment)) remaining.Add(quoteData);
+                    }
+                    else remaining.Add(quoteData);
+                }
+                quoteDatas = remaining;
+            }
+
+            // The picker image goes first; the API renders the first decorator as the comment image.
+            if (_commentMediaAttachmentViewModel != null && _commentMediaAttachmentViewModel.FilePath != null)
+            {
+                var uploadedImage = await KakaoStoryApiHandler.UploadImageProp(_commentMediaAttachmentViewModel.FilePath);
+                imageQuoteDatas.Insert(0, new QuoteData
+                {
+                    type = "image",
+                    text = "(Image) ",
+                    media_path = BuildKakaoMediaPath(uploadedImage)
+                });
+            }
+
+            var decorators = imageQuoteDatas.Concat(quoteDatas).ToList();
+            // The API expects the plain text to mirror the decorators (KSMP pattern: space-joined decorator texts).
+            var text = string.Join(' ', decorators.Select(x => x.text));
+
+            var postId = KakaoViewModel.PostData.id;
+            await KakaoStoryApiHandler.ReplyToPost(postId, text, decorators);
+
+            _commentMediaAttachmentViewModel?.Dispose();
+            _commentMediaAttachmentViewModel = null;
+            CommentMediaFontImageSource.Glyph = MaterialSharp.Image;
+            AttachmentImage.BindingContext = null;
+            AttachmentGrid.IsVisible = false;
+
+            CommentTextContentView.Text = string.Empty;
+            CommentTextContentView.UnfocusEditor();
+
+            await ViewModel.RefreshAsync();
+            Dispatcher.Dispatch(async () =>
+            {
+                await Task.Delay(100);
+                if (ViewModel.IsWideMode) await CommentsScrollToEnd(TabletCommentScrollView);
+                else await CommentsScrollToEnd(PhoneScrollView);
+            });
+        }
+        catch (WebException exception)
+        {
+            var message = exception.Message;
+            try
+            {
+                var response = exception.Response as HttpWebResponse;
+                using var respReader = response.GetResponseStream();
+                using var reader = new StreamReader(respReader, Encoding.UTF8);
+                message = await reader.ReadToEndAsync();
+            }
+            catch { }
+            await DisplayAlertAsync("오류", $"카카오스토리 API 오류가 발생하였습니다: [{exception.Status}] {message}", Constants.PromptOk);
+        }
+        finally
+        {
+            MainActivityIndicator.IsRunning = false;
+            IsEnabled = true;
+        }
+    }
+
+    private async Task SendKakaoStoryCommentImageAsync()
+    {
+        if (KakaoViewModel.PostData.comment_all_writable == false)
+        {
+            await DisplayAlertAsync("안내", "댓글을 작성할 수 없는 게시글입니다.", Constants.PromptOk);
+            return;
+        }
+
+#if IOS
+        CommentTextContentView.UnfocusEditor();
+        var request = new MediaPickRequest(1, MediaFileType.Image) { Title = "이미지 추가" };
+
+        var results = await MediaGallery.PickAsync(request);
+        var files = results?.Files?.ToArray();
+        if (files == null || files.Length == 0) return;
+
+        using var file = files.FirstOrDefault();
+        using var stream = await file.OpenReadAsync();
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+        memoryStream.Seek(0, SeekOrigin.Begin);
+
+        var fileName = file.GenerateFileName();
+        var bytes = memoryStream.ToArray();
+
+        _commentMediaAttachmentViewModel?.Dispose();
+        _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(fileName, bytes);
+#elif ANDROID
+        var image = await AndroidMediaPickerHelper.PickMediaAsync(true, false);
+        if (image == null) return;
+
+        _commentMediaAttachmentViewModel?.Dispose();
+        _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(image.FileName, image.Bytes);
+#endif
+        CommentMediaFontImageSource.Glyph = MaterialSharp.Hide_image;
+        AttachmentImage.BindingContext = _commentMediaAttachmentViewModel;
+        AttachmentGrid.IsVisible = true;
+    }
+
+    private static string BuildKakaoMediaPath(KakaoStoryApiHandler.DataType.UploadedImageProp uploadedImage) =>
+        $"{uploadedImage.access_key}/{uploadedImage.info.original.filename}?width={uploadedImage.info.original.width}&height={uploadedImage.info.original.height}&avg={uploadedImage.info.original.avg}";
+
     private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await ViewModel.DisplayActionSheetAsync(true);
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
@@ -196,7 +396,8 @@ public partial class PostPage : ContentPage
     {
         await ViewModel.HandleRepostAsync();
 
-        UpdateRepostStatus(ViewModel.Post);
+        if (IsKakaoStory) UpdateRepostStatus(KakaoViewModel.PostData);
+        else UpdateRepostStatus(((HistoryPostViewModel)ViewModel).Post);
     }
 
     private async void OnRefreshing(object sender, EventArgs e)
@@ -281,7 +482,10 @@ public partial class PostPage : ContentPage
 
     private async Task MarkPostNotificationsAsReadAsync()
     {
-        var postId = ViewModel.Post.Id;
+        // Kakao Story marks posts as read automatically when fetched — no read API exists.
+        if (IsKakaoStory) return;
+
+        var postId = ((HistoryPostViewModel)ViewModel).Post.Id;
         var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByPostId(postId));
         if (success) WeakReferenceMessenger.Default.Send(new NotificationPostReadMessage(postId));
     }

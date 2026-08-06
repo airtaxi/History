@@ -18,7 +18,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
     public PostData PostData => _postData;
     public bool IsMyPost => _postData.actor.id == Shared.KakaoUserId;
 
-    public KakaoPostViewModel(PostData postData) : base(PostType.Timeline)
+    public KakaoPostViewModel(PostData postData, PostType postType = PostType.Timeline) : base(postType)
     {
         _postData = postData;
         UpdatePost(postData);
@@ -47,18 +47,19 @@ public partial class KakaoPostViewModel : BasePostViewModel
                 ? new ImageViewModel(actor.profile_image_url) { IsAnimated = false }
                 : null;
 
-            Contents = GenerateContentViewModels(postData);
+            Contents = GenerateContentViewModels(postData, PostType);
             TimelineContents = new TimelineContentsViewModel(Contents);
             ParentPost = null;
             IsRepost = false;
             IsShare = false;
 
-            Comments = [.. (postData.latest_comments ?? []).Select(c => new KakaoCommentViewModel(c, PostType, this))];
+            var sourceComments = postData.comments ?? postData.latest_comments ?? [];
+            Comments = [.. sourceComments.Select(c => new KakaoCommentViewModel(c, PostType, this)).OrderBy(x => x.CreatedAt)];
             LatestComment = Comments.LastOrDefault();
             CommentsCount = postData.comment_count;
             HasComments = CommentsCount > 0;
             HasNoComments = CommentsCount == 0;
-            HasMoreComments = false;
+            HasMoreComments = CommentsCount > Comments.Count;
 
             CreatedAt = postData.created_at;
             ModifiedAt = null;
@@ -79,7 +80,6 @@ public partial class KakaoPostViewModel : BasePostViewModel
 
             // Unused History surfaces.
             DiscoveryOptionGlyph = null;
-            HasInteractions = false;
             var shareCount = Math.Max(0, postData.share_count - postData.sympathy_count); // Kakao's share_count includes sympathy (UP) actions.
             HasSharedUsers = shareCount > 0;
             SharedUsersCount = shareCount;
@@ -95,22 +95,23 @@ public partial class KakaoPostViewModel : BasePostViewModel
             RepostedUsersCount = postData.sympathy_count;
             Interactions = postData.likes?.Select(x => (BaseInteractionViewModel)new KakaoInteractionViewModel(x)).ToList() ?? [];
             Reaction = null;
+            HasInteractions = HasReactions || HasSharedUsers || HasRepostedUsers;
         }
         catch (ObjectDisposedException) { }
         catch (Exception) { }
     }
 
-    private static List<IContentViewModel> GenerateContentViewModels(PostData postData)
+    private static List<IContentViewModel> GenerateContentViewModels(PostData postData, PostType postType)
     {
         var contents = new List<IContentViewModel>();
 
         if (postData.content_decorators is { Count: > 0 })
         {
-            contents.Add(new TextTypeContentsViewModel(postData.content_decorators, PostType.Timeline));
+            contents.Add(new TextTypeContentsViewModel(postData.content_decorators, postType));
         }
         else if (!string.IsNullOrWhiteSpace(postData.content))
         {
-            contents.Add(new TextTypeContentsViewModel(KakaoStoryUtils.GetQuoteDataFromString(postData.content), PostType.Timeline));
+            contents.Add(new TextTypeContentsViewModel(KakaoStoryUtils.GetQuoteDataFromString(postData.content), postType));
         }
 
         if (postData.scrap != null)
@@ -120,7 +121,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
 
         if (postData.media is { Count: > 0 })
         {
-            contents.Add(new KakaoWrappedMediaContentsViewModel(postData.media, PostType.Timeline));
+            contents.Add(new KakaoWrappedMediaContentsViewModel(postData.media, postType));
         }
 
         return contents;
@@ -294,7 +295,12 @@ public partial class KakaoPostViewModel : BasePostViewModel
 
     public override async Task HandleTapAsync()
     {
-        await App.Page.DisplayAlertAsync("안내", "카카오스토리 게시글 상세 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
+        var result = await RefreshAsync();
+        if (result.IsFailure) return;
+
+        var newViewModel = new KakaoPostViewModel(_postData, PostType.Unwrapped);
+        var postPage = new PostPage(newViewModel);
+        await App.PushAsync(postPage);
     }
 
     public override async Task HandleProfileTapAsync()
@@ -390,5 +396,19 @@ public partial class KakaoPostViewModel : BasePostViewModel
         await App.PushAsync(page);
     }
 
-    public override async Task HandleLoadMoreComments() { }
+    public override async Task HandleLoadMoreComments()
+    {
+        var oldestViewModel = Comments.OfType<KakaoCommentViewModel>().FirstOrDefault();
+        if (oldestViewModel == null) return;
+
+        var comments = await KakaoStoryApiHandler.GetComments(_postData.id, oldestViewModel.Comment.id);
+        if (comments == null) return;
+
+        // The API returns newest-first; reverse to oldest-first so prepending keeps chronological order.
+        comments.Reverse();
+        var existingIds = Comments.OfType<KakaoCommentViewModel>().Select(x => x.Comment.id).ToHashSet();
+        var commentViewModels = comments.Where(x => !existingIds.Contains(x.id)).Select(x => new KakaoCommentViewModel(x, PostType, this));
+        foreach (var commentViewModel in commentViewModels) Comments.Insert(0, commentViewModel);
+        HasMoreComments = CommentsCount > Comments.Count;
+    }
 }
