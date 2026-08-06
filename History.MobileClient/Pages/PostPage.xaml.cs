@@ -293,8 +293,14 @@ public partial class PostPage : ContentPage
                         var fragment = quoteData.text;
                         while (toRemove > 0 && fragment != null && fragment.Contains("(스티커)", StringComparison.Ordinal))
                         {
-                            var index = fragment.IndexOf("(스티커)", StringComparison.Ordinal);
-                            fragment = fragment.Remove(index, "(스티커)".Length);
+                            // Prefer removing "(스티커)\n" (sticker on its own line) so no blank line remains.
+                            var index = fragment.IndexOf("(스티커)\n", StringComparison.Ordinal);
+                            if (index >= 0) fragment = fragment.Remove(index, "(스티커)\n".Length);
+                            else
+                            {
+                                index = fragment.IndexOf("(스티커)", StringComparison.Ordinal);
+                                fragment = fragment.Remove(index, "(스티커)".Length);
+                            }
                             toRemove--;
                         }
                         quoteData.text = fragment;
