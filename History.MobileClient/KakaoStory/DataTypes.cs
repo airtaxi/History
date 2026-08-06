@@ -737,6 +737,7 @@ public partial class KakaoStoryApiHandler
                 public string media_path { get; set; }
                 public bool searchable { get; set; }
                 public string iid { get; set; }
+                public string preview_url { get; set; }
                 public string preview_url_hq { get; set; }
                 public string url_hq { get; set; }
             }

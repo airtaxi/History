@@ -1,4 +1,5 @@
 ﻿using History.MobileClient.Enums;
+using History.MobileClient.Pages;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient.ViewModels;
@@ -20,7 +21,21 @@ public partial class KakaoMediaContentViewModel : BaseMediaContentViewModel
 
     protected override List<IMediaViewModel> CreateFullScreenMedias(bool moreThanOneMedias) => [.. _allMedias.Select(medium => CreateMedia(medium, true, moreThanOneMedias, PostType))];
 
-    protected override IMediaViewModel CreateInlineMedia() => CreateMedia(_medium, false, false, PostType);
+    // Inline media: videos show the thumbnail (preview_url) with a play overlay,
+    // matching History's behavior. The actual video (url_hq) loads on overlay tap.
+    protected override IMediaViewModel CreateInlineMedia()
+    {
+        if (IsVideo)
+        {
+            var thumbnailUri = _medium.preview_url ?? _medium.preview_url_hq ?? _medium.thumbnail_url ?? _medium.url;
+            return new ImageViewModel(thumbnailUri, PostType)
+            {
+                Aspect = PostType != PostType.Unwrapped ? Aspect.AspectFill : Aspect.AspectFit
+            };
+        }
+
+        return CreateMedia(_medium, false, false, PostType);
+    }
 
     private static IMediaViewModel CreateMedia(Medium medium, bool isFullScreen, bool moreThanOneMedias, PostType postType)
     {
@@ -49,4 +64,27 @@ public partial class KakaoMediaContentViewModel : BaseMediaContentViewModel
             IsFullScreen = isFullScreen
         };
     }
+
+    // Overlay tap (play button): inline-play the video (url_hq) like History on Android.
+    // The play overlay disappears and the video starts playing in-place.
+    // Tapping the playing video then opens the full-screen viewer via HandleTapAsync.
+    public override async Task HandleOverlayTap()
+    {
+        if (!IsVideo) throw new InvalidOperationException("MediaContent is not a video.");
+
+#if ANDROID
+        IsOverlayVisible = false;
+        Media = new VideoViewModel(_medium.url_hq ?? _medium.url)
+        {
+            Aspect = Aspect.AspectFill,
+            HorizontalContentOptions = LayoutOptions.Fill,
+            VerticalContentOptions = LayoutOptions.Fill
+        };
+#elif IOS
+        // iOS does not support inline video playback in the carousel — go straight to full screen.
+        var viewerPage = new FullScreenMediaViewerPage(new FullScreenMediaContentViewModel(FullScreenMedias, CurrentMedia));
+        await App.PushAsync(viewerPage);
+#endif
+    }
+
 }
