@@ -87,7 +87,13 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
                     height = commentMedia.height
                 };
                 var mediaViewModel = new KakaoMediaContentViewModel(medium, [medium], PostType);
-                if (mediaViewModel.ImageMedia is ImageViewModel commentImage) commentImage.MaxWidth = 200;
+                if (mediaViewModel.ImageMedia is ImageViewModel commentImage)
+                {
+                    commentImage.MaxWidth = 200;
+                    commentImage.HorizontalContentOptions = LayoutOptions.Start;
+                    commentImage.VerticalContentOptions = LayoutOptions.Start;
+                    commentImage.Aspect = Aspect.AspectFit;
+                }
                 contents.Add(mediaViewModel);
             }
             Contents = contents;
@@ -134,7 +140,13 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
                         height = commentMedia.height
                     };
                     var mediaViewModel = new KakaoMediaContentViewModel(medium, [medium], PostType);
-                    if (mediaViewModel.ImageMedia is ImageViewModel commentImage) commentImage.MaxWidth = 200;
+                    if (mediaViewModel.ImageMedia is ImageViewModel commentImage)
+                    {
+                        commentImage.MaxWidth = 200;
+                        commentImage.HorizontalContentOptions = LayoutOptions.Start;
+                        commentImage.VerticalContentOptions = LayoutOptions.Start;
+                        commentImage.Aspect = Aspect.AspectFit;
+                    }
                     contents.Add(mediaViewModel);
                 }
 
