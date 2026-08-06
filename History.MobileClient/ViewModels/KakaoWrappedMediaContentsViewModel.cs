@@ -3,4 +3,5 @@ using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.Comme
 
 namespace History.MobileClient.ViewModels;
 
-public partial class KakaoWrappedMediaContentsViewModel(IEnumerable<Medium> medias, PostType postType) : BaseWrappedMediaContentsViewModel(medias.Select(medium => new KakaoMediaContentViewModel(medium, medias, postType)), postType);
+public partial class KakaoWrappedMediaContentsViewModel(IEnumerable<Medium> medias, PostType postType)
+    : BaseWrappedMediaContentsViewModel(medias.Select(medium => new KakaoMediaContentViewModel(medium, medias, postType)), postType);

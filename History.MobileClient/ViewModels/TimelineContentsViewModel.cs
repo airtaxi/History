@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.Enums;
 
@@ -7,30 +7,48 @@ namespace History.MobileClient.ViewModels;
 public partial class TimelineContentsViewModel : ObservableObject
 {
     // Best-effort text slots (up to 3)
-    [ObservableProperty] public partial TextTypeContentsViewModel Text1 { get; private set; }
-    [ObservableProperty] public partial TextTypeContentsViewModel Text2 { get; private set; }
-    [ObservableProperty] public partial TextTypeContentsViewModel Text3 { get; private set; }
+    [ObservableProperty]
+    public partial TextTypeContentsViewModel Text1 { get; private set; }
+    [ObservableProperty]
+    public partial TextTypeContentsViewModel Text2 { get; private set; }
+    [ObservableProperty]
+    public partial TextTypeContentsViewModel Text3 { get; private set; }
 
     // Best-effort sticker slots (up to 3)
-    [ObservableProperty] public partial StickerContentViewModel Sticker1 { get; private set; }
-    [ObservableProperty] public partial StickerContentViewModel Sticker2 { get; private set; }
-    [ObservableProperty] public partial StickerContentViewModel Sticker3 { get; private set; }
+    [ObservableProperty]
+    public partial StickerContentViewModel Sticker1 { get; private set; }
+    [ObservableProperty]
+    public partial StickerContentViewModel Sticker2 { get; private set; }
+    [ObservableProperty]
+    public partial StickerContentViewModel Sticker3 { get; private set; }
 
     // Single-instance slots
-    [ObservableProperty] public partial BaseWrappedMediaContentsViewModel MediaContent { get; private set; }
-    [ObservableProperty] public partial PollContentViewModel PollContent { get; private set; }
-    [ObservableProperty] public partial ExternalUrlContentViewModel ExternalUrlContent { get; private set; }
+    [ObservableProperty]
+    public partial BaseWrappedMediaContentsViewModel MediaContent { get; private set; }
+    [ObservableProperty]
+    public partial PollContentViewModel PollContent { get; private set; }
+    [ObservableProperty]
+    public partial ExternalUrlContentViewModel ExternalUrlContent { get; private set; }
 
     // Visibility flags
-    [ObservableProperty] public partial bool HasText1 { get; private set; }
-    [ObservableProperty] public partial bool HasText2 { get; private set; }
-    [ObservableProperty] public partial bool HasText3 { get; private set; }
-    [ObservableProperty] public partial bool HasSticker1 { get; private set; }
-    [ObservableProperty] public partial bool HasSticker2 { get; private set; }
-    [ObservableProperty] public partial bool HasSticker3 { get; private set; }
-    [ObservableProperty] public partial bool HasMediaContent { get; private set; }
-    [ObservableProperty] public partial bool HasPollContent { get; private set; }
-    [ObservableProperty] public partial bool HasExternalUrlContent { get; private set; }
+    [ObservableProperty]
+    public partial bool HasText1 { get; private set; }
+    [ObservableProperty]
+    public partial bool HasText2 { get; private set; }
+    [ObservableProperty]
+    public partial bool HasText3 { get; private set; }
+    [ObservableProperty]
+    public partial bool HasSticker1 { get; private set; }
+    [ObservableProperty]
+    public partial bool HasSticker2 { get; private set; }
+    [ObservableProperty]
+    public partial bool HasSticker3 { get; private set; }
+    [ObservableProperty]
+    public partial bool HasMediaContent { get; private set; }
+    [ObservableProperty]
+    public partial bool HasPollContent { get; private set; }
+    [ObservableProperty]
+    public partial bool HasExternalUrlContent { get; private set; }
 
     public TimelineContentsViewModel(List<IContentViewModel> contents) => Update(contents);
 

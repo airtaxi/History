@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -25,8 +25,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel
     [ObservableProperty]
     public partial bool Liked { get; private set; }
 
-    public HistoryCommentViewModel(CommentResponseDto comment, bool isMyPost, PostType postType, BasePostViewModel parentViewModel)
-        : base(isMyPost, postType, parentViewModel)
+    public HistoryCommentViewModel(CommentResponseDto comment, bool isMyPost, PostType postType, BasePostViewModel parentViewModel) : base(isMyPost, postType, parentViewModel)
     {
         UpdateComment(comment);
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, (r, m) =>
@@ -59,7 +58,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel
             var contents = Utils.GenerateContentViewModels(comment.Contents, PostType);
             var imageViewModels = (contents.FirstOrDefault(x => x is BaseWrappedMediaContentsViewModel) as BaseWrappedMediaContentsViewModel)?.Medias.Select(x => x.ImageMedia);
             imageViewModels ??= contents.OfType<BaseMediaContentViewModel>().Select(x => x.ImageMedia);
-            foreach (ImageViewModel imageViewModel in imageViewModels) imageViewModel.MaxWidth = 200;
+            foreach (var imageViewModel in imageViewModels.Cast<ImageViewModel>()) imageViewModel.MaxWidth = 200;
 
             Contents = contents;
 
@@ -154,10 +153,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel
             var deleteResult = await App.ExecuteRequestAsync(new DeleteComment(Comment.Id));
             if (deleteResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<CommentResponseDto>(Comment));
         }
-        else
-        {
-            await App.Page.DisplayAlertAsync("권한 부족", "댓글을 삭제할 권한이 없습니다.", Constants.PromptOk);
-        }
+        else await App.Page.DisplayAlertAsync("권한 부족", "댓글을 삭제할 권한이 없습니다.", Constants.PromptOk);
     }
 
     public override async Task HandleTapAsync()

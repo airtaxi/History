@@ -197,10 +197,7 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
             await KakaoStoryApiHandler.DeleteComment(_commentId, PostId);
             await _parentPostViewModel.RefreshAsync();
         }
-        catch (Exception exception)
-        {
-            await App.Page.DisplayAlertAsync("오류", $"댓글 삭제에 실패하였습니다.\n{exception.Message}", Constants.PromptOk);
-        }
+        catch (Exception exception) { await App.Page.DisplayAlertAsync("오류", $"댓글 삭제에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }
     }
 
     public override async Task HandleTapAsync()
@@ -214,15 +211,9 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
         else await ParentViewModel.HandleTapAsync();
     }
 
-    public override async Task HandleProfileTap()
-    {
-        // TODO: Kakao Story profile page — pending page migration.
-        await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
-    }
+    // TODO: Kakao Story profile page — pending page migration.
+    public override async Task HandleProfileTap() => await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
 
-    private async Task HandleEditCommentAsync()
-    {
-        // TODO: Comment editing requires the Kakao Story comment editor page — pending page migration.
-        await App.Page.DisplayAlertAsync("안내", "카카오스토리 댓글 수정은 아직 지원되지 않습니다.", Constants.PromptOk);
-    }
+    // TODO: Comment editing requires the Kakao Story comment editor page — pending page migration.
+    private async Task HandleEditCommentAsync() => await App.Page.DisplayAlertAsync("안내", "카카오스토리 댓글 수정은 아직 지원되지 않습니다.", Constants.PromptOk);
 }

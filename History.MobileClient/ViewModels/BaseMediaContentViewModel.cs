@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.MobileClient.DataTypes;
@@ -79,10 +79,7 @@ public partial class BaseMediaContentViewModel : ObservableObject, IContentViewM
     }
 
     [RelayCommand]
-    public void HandleSpoilerOverlayTap()
-    {
-        IsSpoilerOverlayVisible = false;
-    }
+    public void HandleSpoilerOverlayTap() => IsSpoilerOverlayVisible = false;
 
     // Shared behavior: opening the full-screen viewer. Derived types may override to
     // inline-play videos (e.g. History on Android).
