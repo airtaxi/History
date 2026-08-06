@@ -7,6 +7,7 @@ using History.MobileClient.Enums;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
 using UraniumUI.Icons.FontAwesome;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient.ViewModels;
@@ -99,6 +100,10 @@ public partial class KakaoPostViewModel : BasePostViewModel
         // Fire-and-forget: render emoticons (Referer-signed) once the credential
         // is available; until then the "(이모티콘)" text placeholder is shown.
         _ = AttachEmoticonsAsync(version);
+
+        // Fire-and-forget: fetch share/UP user profile photos for the detail page interaction list.
+        // The timeline template only shows counts, so we avoid extra API calls on the feed.
+        if (PostType == PostType.Unwrapped) _ = AttachInteractionsAsync(version);
     }
 
     private async Task AttachEmoticonsAsync(int version)
@@ -117,6 +122,32 @@ public partial class KakaoPostViewModel : BasePostViewModel
             });
         }
         catch { } // Credential/URL failures keep the text placeholder.
+    }
+
+    private async Task AttachInteractionsAsync(int version)
+    {
+        try
+        {
+            // Fetch both share and UP (sympathy) user lists in parallel when available.
+            Task<List<ShareData.Share>> sharesTask = HasSharedUsers ? KakaoStoryApiHandler.GetShares(_postData, false, null) : Task.FromResult<List<ShareData.Share>>([]);
+            Task<List<ShareData.Share>> sympathiesTask = HasRepostedUsers ? KakaoStoryApiHandler.GetShares(_postData, true, null) : Task.FromResult<List<ShareData.Share>>([]);
+            await Task.WhenAll(sharesTask, sympathiesTask);
+
+            var shares = sharesTask.Result ?? [];
+            var sympathies = sympathiesTask.Result ?? [];
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (version != _updateVersion) return; // Stale update.
+
+                // Mirror HistoryPostViewModel: reactions.Concat(shares).Concat(reposts).OrderByDescending(CreatedAt).
+                Interactions = [.. (Interactions ?? [])
+                    .Concat(shares.Select(x => new KakaoInteractionViewModel(x, InteractionType.Share)))
+                    .Concat(sympathies.Select(x => new KakaoInteractionViewModel(x, InteractionType.Repost)))
+                    .OrderByDescending(x => x.CreatedAt)];
+            });
+        }
+        catch { } // Credential/URL failures keep the existing reaction-only list.
     }
 
     private static List<IContentViewModel> GenerateContentViewModels(PostData postData, PostType postType)
