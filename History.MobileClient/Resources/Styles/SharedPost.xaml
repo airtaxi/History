@@ -78,9 +78,7 @@
                             Text="{x:Binding SharedUsersCount}" />
                     </HorizontalStackLayout>
                 </Grid>
-                <views:DataTemplatePresenter
-                    Template="{StaticResource TimelineContentsTemplate}"
-                    ViewModel="{x:Binding TimelineContents}" />
+                <views:DataTemplatePresenter Template="{StaticResource TimelineContentsTemplate}" ViewModel="{x:Binding TimelineContents}" />
             </VerticalStackLayout>
         </Grid>
     </DataTemplate>
