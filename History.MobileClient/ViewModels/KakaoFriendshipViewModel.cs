@@ -1,4 +1,6 @@
 ﻿using History.Commons;
+using History.MobileClient.Enums;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
@@ -9,7 +11,7 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
     public string UserId { get; }
     public string Permalink { get; }
 
-    public KakaoFriendshipViewModel(ShareData.Share share)
+    public KakaoFriendshipViewModel(ShareData.Share share, KakaoInteractionViewModel interactionViewModel = null)
     {
         UserId = share.actor?.id;
         Permalink = share.actor?.permalink;
@@ -17,6 +19,7 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
         IsModerator = false;
         IsAdmin = false;
         ProfileMedia = share.actor?.profile_image_url != null ? new ImageViewModel(share.actor.profile_image_url) : null;
+        InteractionViewModel = interactionViewModel;
     }
 
     public KakaoFriendshipViewModel(CommentLikes commentLike)
@@ -29,6 +32,21 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
         ProfileMedia = commentLike.actor?.profile_image_url != null ? new ImageViewModel(commentLike.actor.profile_image_url) : null;
     }
 
-    // Kakao Story profile pages are not implemented yet.
-    public override async Task HandleTapAsync() => await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
+    // Mirror HistoryFriendshipViewModel: navigate to the shared post when TargetPostId is set,
+    // otherwise show the profile-not-supported notice.
+    public override async Task HandleTapAsync()
+    {
+        if (InteractionViewModel?.TargetPostId != null)
+        {
+            var post = await KakaoStoryApiHandler.GetPost(InteractionViewModel.TargetPostId);
+            if (post != null)
+            {
+                var postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);
+                var postPage = new PostPage(postViewModel);
+                await App.PushAsync(postPage);
+            }
+            else await App.Page.DisplayAlertAsync("안내", "해당 게시글을 불러올 수 없습니다.", Constants.PromptOk);
+        }
+        else await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
+    }
 }
