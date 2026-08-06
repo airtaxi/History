@@ -52,7 +52,10 @@
             BackgroundColor="{AppThemeBinding Dark=Black,
                                               Light=White}"
             Spacing="8">
-            <Grid HeightRequest="48" ColumnDefinitions="48,*">
+            <Grid
+                ColumnDefinitions="48,*"
+                ColumnSpacing="8"
+                HeightRequest="48">
                 <views:DataTemplatePresenter
                     Grid.Column="0"
                     HeightRequest="48"
@@ -187,7 +190,7 @@
                     <RoundRectangle CornerRadius="16" />
                 </Border.StrokeShape>
                 <VerticalStackLayout Spacing="8">
-                    <Grid HeightRequest="48" ColumnDefinitions="Auto,*,Auto">
+                    <Grid ColumnDefinitions="Auto,*,Auto" HeightRequest="48">
                         <HorizontalStackLayout Grid.Column="0" Spacing="6">
                             <views:DataTemplatePresenter
                                 HeightRequest="36"
@@ -254,9 +257,7 @@
                             </Image.GestureRecognizers>
                         </Image>
                     </Grid>
-                    <views:DataTemplatePresenter
-                        Template="{StaticResource TimelineContentsTemplate}"
-                        ViewModel="{x:Binding TimelineContents}" />
+                    <views:DataTemplatePresenter Template="{StaticResource TimelineContentsTemplate}" ViewModel="{x:Binding TimelineContents}" />
                     <views:DataTemplatePresenter
                         IsVisible="{x:Binding IsShare}"
                         Template="{StaticResource SharedPostTemplate}"
