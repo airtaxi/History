@@ -66,7 +66,30 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
             LikesCount = comment.like_count;
             Liked = comment.liked;
 
-            Contents = [new TextTypeContentsViewModel(comment.decorators is { Count: > 0 } ? comment.decorators : KakaoStoryUtils.GetQuoteDataFromString(comment.text ?? string.Empty), PostType)];
+            var contents = new List<IContentViewModel>
+            {
+                new TextTypeContentsViewModel(comment.decorators is { Count: > 0 } ? comment.decorators : KakaoStoryUtils.GetQuoteDataFromString(comment.text ?? string.Empty), PostType)
+            };
+
+            // Render the comment image (embedded as a media decorator) with the shared media surface.
+            var commentMedia = comment.decorators?.FirstOrDefault(x => x.media?.thumbnail_url != null)?.media;
+            if (commentMedia != null)
+            {
+                var medium = new Medium
+                {
+                    media_path = commentMedia.media_path,
+                    thumbnail_url = commentMedia.thumbnail_url,
+                    url = commentMedia.url,
+                    origin_url = commentMedia.origin_url,
+                    content_type = "image",
+                    width = commentMedia.width,
+                    height = commentMedia.height
+                };
+                var mediaViewModel = new KakaoMediaContentViewModel(medium, [medium], PostType);
+                if (mediaViewModel.ImageMedia is ImageViewModel commentImage) commentImage.MaxWidth = 200;
+                contents.Add(mediaViewModel);
+            }
+            Contents = contents;
 
             CreatedAt = comment.created_at;
             ModifiedAt = comment.updated_at.Year > 1 ? comment.updated_at : null;

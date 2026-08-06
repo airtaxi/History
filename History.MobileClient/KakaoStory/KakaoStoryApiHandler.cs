@@ -820,6 +820,12 @@ public partial class KakaoStoryApiHandler
 
     public static async Task<string> UploadImage(string filepath)
     {
+        var result = await UploadImageProp(filepath);
+        return result.access_key + "/" + result.info.original.filename + "?width=" + result.info.original.width + "&height=" + result.info.original.height + "&avg=" + result.info.original.avg;
+    }
+
+    public static async Task<UploadedImageProp> UploadImageProp(string filepath)
+    {
         string filename = Path.GetFileName(filepath);
         StreamReader fileStream = new StreamReader(filepath);
 
@@ -861,8 +867,9 @@ public partial class KakaoStoryApiHandler
         respReader.Close();
 
         UploadedImageProp result = JsonConvert.DeserializeObject<UploadedImageProp>(respResult);
-        return result.access_key + "/" + result.info.original.filename + "?width=" + result.info.original.width + "&height=" + result.info.original.height + "&avg=" + result.info.original.avg;
+        return result;
     }
+
     public static async Task<string> UploadVideo(string filePath)
     {
         StreamReader fileStream = new StreamReader(filePath);

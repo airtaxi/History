@@ -100,7 +100,7 @@ public partial class App : Application
 #else
             var navigationStack = Navigation.NavigationStack;
 #endif
-            duplicatePage = navigationStack.FirstOrDefault(p => p is PostPage existingPostPage && existingPostPage.ViewModel.Post.Id == postPage.ViewModel.Post.Id);
+            duplicatePage = navigationStack.FirstOrDefault(p => p is PostPage existingPostPage && existingPostPage.PostId == postPage.PostId);
         }
         else if (page is UserPage userPage)
         {
