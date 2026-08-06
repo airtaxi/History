@@ -1,0 +1,394 @@
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
+using History.Commons;
+using History.MobileClient.DataTypes;
+using History.MobileClient.Enums;
+using History.MobileClient.KakaoStory;
+using History.MobileClient.Pages;
+using UraniumUI.Icons.FontAwesome;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+
+namespace History.MobileClient.ViewModels;
+
+public partial class KakaoPostViewModel : BasePostViewModel
+{
+    private PostData _postData;
+
+    public PostData PostData => _postData;
+    public bool IsMyPost => _postData.actor.id == Shared.KakaoUserId;
+
+    public KakaoPostViewModel(PostData postData) : base(PostType.Timeline)
+    {
+        _postData = postData;
+        UpdatePost(postData);
+
+        WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostData>>(this, OnPostChangedMessageReceived);
+    }
+
+    private void OnPostChangedMessageReceived(object recipient, ValueChangedMessage<PostData> message)
+    {
+        if (message.Value.id != _postData.id) return;
+
+        UpdatePost(message.Value);
+    }
+
+    private void UpdatePost(PostData postData)
+    {
+        _postData = postData;
+        try
+        {
+            var actor = postData.actor;
+
+            Nickname = actor?.display_name;
+            IsModerator = false;
+            IsAdmin = false;
+            ProfileMedia = actor != null && actor.profile_image_url != null
+                ? new ImageViewModel(actor.profile_image_url) { IsAnimated = false }
+                : null;
+
+            Contents = GenerateContentViewModels(postData);
+            TimelineContents = new TimelineContentsViewModel(Contents);
+            ParentPost = null;
+            IsRepost = false;
+            IsShare = false;
+
+            Comments = [.. (postData.latest_comments ?? []).Select(c => new KakaoCommentViewModel(c, PostType, this))];
+            LatestComment = Comments.LastOrDefault();
+            CommentsCount = postData.comment_count;
+            HasComments = CommentsCount > 0;
+            HasNoComments = CommentsCount == 0;
+            HasMoreComments = false;
+
+            CreatedAt = postData.created_at;
+            ModifiedAt = null;
+            TimestampText = KakaoStoryUtils.GetTimeString(postData.created_at);
+
+            PreviewText = postData.summary ?? postData.content ?? string.Empty;
+            PreviewTimestamp = postData.created_at.ToLocalTime().ToString("yyyy-MM-dd");
+            PreviewThumbnailVisible = postData.media?.FirstOrDefault()?.thumbnail_url != null;
+            HasUnreadNotification = postData.has_unread_reaction;
+            PreviewThumbnail = PreviewThumbnailVisible
+                ? new ImageViewModel(postData.media[0].thumbnail_url)
+                {
+                    Aspect = Aspect.AspectFill,
+                    HorizontalContentOptions = LayoutOptions.Fill,
+                    VerticalContentOptions = LayoutOptions.Fill
+                }
+                : null;
+
+            // Unused History surfaces.
+            DiscoveryOptionGlyph = null;
+            HasInteractions = false;
+            var shareCount = Math.Max(0, postData.share_count - postData.sympathy_count); // Kakao's share_count includes sympathy (UP) actions.
+            HasSharedUsers = shareCount > 0;
+            SharedUsersCount = shareCount;
+            HasReactions = postData.like_count > 0;
+            ReactionsCount = postData.like_count;
+            var reactionVisual = KakaoStoryUtils.GetEmotionVisual(_postData.liked_emotion);
+            ReactionGlyph = reactionVisual.Glyph;
+            ReactionFontFamily = postData.liked ? "FASolid" : "FARegular";
+            ReactionColor = postData.liked
+                ? reactionVisual.Color
+                : (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Color.FromRgb(0x77, 0x72, 0x6B) : Color.FromRgb(0x88, 0x8D, 0x94));
+            HasRepostedUsers = postData.sympathy_count > 0;
+            RepostedUsersCount = postData.sympathy_count;
+            Interactions = postData.likes?.Select(x => (BaseInteractionViewModel)new KakaoInteractionViewModel(x)).ToList() ?? [];
+            Reaction = null;
+        }
+        catch (ObjectDisposedException) { }
+        catch (Exception) { }
+    }
+
+    private static List<IContentViewModel> GenerateContentViewModels(PostData postData)
+    {
+        var contents = new List<IContentViewModel>();
+
+        if (postData.content_decorators is { Count: > 0 })
+        {
+            contents.Add(new TextTypeContentsViewModel(postData.content_decorators, PostType.Timeline));
+        }
+        else if (!string.IsNullOrWhiteSpace(postData.content))
+        {
+            contents.Add(new TextTypeContentsViewModel(KakaoStoryUtils.GetQuoteDataFromString(postData.content), PostType.Timeline));
+        }
+
+        if (postData.scrap != null)
+        {
+            contents.Add(new ExternalUrlContentViewModel(postData.scrap));
+        }
+
+        if (postData.media is { Count: > 0 })
+        {
+            contents.Add(new KakaoWrappedMediaContentsViewModel(postData.media, PostType.Timeline));
+        }
+
+        return contents;
+    }
+
+    public override async Task HandleReactionAsync()
+    {
+        HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
+
+        // Delete reaction
+        if (_postData.liked)
+        {
+            await KakaoStoryApiHandler.LikePost(_postData.id, null);
+            await RefreshAsync();
+            return;
+        }
+
+        // Add reaction
+        var rawReaction = await App.Page.DisplayActionSheetAsync("느낌 달기", Constants.PromptCancel, null, "좋아요", "멋져요", "기뻐요", "슬퍼요", "힘내요");
+        if (rawReaction == null || rawReaction == Constants.PromptCancel) return;
+
+        var emotion = rawReaction switch
+        {
+            "좋아요" => "like",
+            "멋져요" => "good",
+            "기뻐요" => "pleasure",
+            "슬퍼요" => "sad",
+            "힘내요" => "cheerup",
+            _ => null
+        };
+        if (emotion == null) return;
+
+        await KakaoStoryApiHandler.LikePost(_postData.id, emotion);
+        await RefreshAsync();
+    }
+
+    public override async Task<Result> RefreshAsync()
+    {
+        var post = await KakaoStoryApiHandler.GetPost(_postData.id);
+        if (post == null) return Result.Failure(ErrorType.NotFound, "카카오스토리 게시글을 불러오지 못했습니다.");
+
+        WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostData>(post));
+        return Result.Success();
+    }
+
+    public override async Task DeleteAsync(bool popModal)
+    {
+        if (!IsMyPost)
+        {
+            await App.Page.DisplayAlertAsync("권한 부족", "삭제할 수 없는 게시글입니다.", Constants.PromptOk);
+            return;
+        }
+
+        var confirm = await App.Page.DisplayAlertAsync("게시글 삭제", "정말로 게시글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+        if (!confirm) return;
+
+        try
+        {
+            await KakaoStoryApiHandler.DeletePost(_postData.id);
+            WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostData>(_postData));
+            if (popModal) await App.PopAsync();
+        }
+        catch (Exception exception)
+        {
+            await App.Page.DisplayAlertAsync("오류", $"게시글 삭제에 실패하였습니다.\n{exception.Message}", Constants.PromptOk);
+        }
+    }
+
+    public override async Task DisplayActionSheetAsync(bool popModal)
+    {
+        var options = new List<string>
+        {
+            _postData.sympathized ? "UP 해제" : "UP",
+            _postData.bookmarked ? "관심글 삭제" : "관심글로 저장"
+        };
+        if (_postData.sharable) options.Add("게시글 공유");
+        if (IsMyPost)
+        {
+            if(_postData.modifiable) options.Add("게시글 수정");
+
+            options.Add("공개범위 설정");
+            options.Add("게시글 삭제");
+        }
+        else options.Add("이 글 숨기기");
+
+        var action = await App.Page.DisplayActionSheetAsync("카카오스토리 게시물 옵션", Constants.PromptCancel, null, [.. options]);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        if (action is "UP" or "UP 해제") await HandleRepostAsync();
+        else if (action == "게시글 공유") await HandleShareAsync();
+        else if (action is "관심글로 저장" or "관심글 삭제") await HandleBookmarkAsync();
+        else if (action == "공개범위 설정") await HandleChangePermissionAsync();
+        else if (action == "게시글 수정") await HandleEditAsync();
+        else if (action == "이 글 숨기기") await HandleHidePostAsync(popModal);
+        else if (action == "게시글 삭제") await DeleteAsync(popModal);
+    }
+
+    private async Task HandleChangePermissionAsync()
+    {
+        // Kakao Story supports only A(All)/F(Friends)/M(OnlyMe) — a separate action sheet.
+        var options = new List<string>
+        {
+            $"전체 공개{( _postData.permission == "A" ? " (현재)" : string.Empty)}",
+            $"친구 공개{( _postData.permission == "F" ? " (현재)" : string.Empty)}",
+            $"나만 보기{( _postData.permission == "M" ? " (현재)" : string.Empty)}"
+        };
+
+        var action = await App.Page.DisplayActionSheetAsync("공개범위 설정", Constants.PromptCancel, null, [.. options]);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var permission = action switch
+        {
+            string option when option.StartsWith("전체 공개") => "A",
+            string option when option.StartsWith("친구 공개") => "F",
+            string option when option.StartsWith("나만 보기") => "M",
+            _ => null
+        };
+        if (permission == null || permission == _postData.permission) return;
+
+        try
+        {
+            // preserve sharable/comment writable state; only the permission changes
+            await KakaoStoryApiHandler.SetActivityProfile(_postData.id, permission, _postData.sharable, _postData.comment_all_writable, false);
+            await RefreshAsync();
+        }
+        catch (Exception exception)
+        {
+            await App.Page.DisplayAlertAsync("오류", $"공개범위 변경에 실패하였습니다.\n{exception.Message}", Constants.PromptOk);
+        }
+    }
+
+    private async Task HandleHidePostAsync(bool popModal)
+    {
+        var confirm = await App.Page.DisplayAlertAsync("이 글 숨기기", "이 글을 숨기면 타임라인에서 더 이상 보이지 않습니다. 계속하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+        if (!confirm) return;
+
+        try
+        {
+            await KakaoStoryApiHandler.HidePost(_postData.id);
+            WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostData>(_postData));
+            if (popModal) await App.PopAsync();
+        }
+        catch (Exception exception)
+        {
+            await App.Page.DisplayAlertAsync("오류", $"게시글 숨기기에 실패하였습니다.\n{exception.Message}", Constants.PromptOk);
+        }
+    }
+
+    private async Task HandleBookmarkAsync()
+    {
+        HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
+
+        // PinPost toggles: currently bookmarked -> DELETE, otherwise -> POST.
+        var isUnpin = _postData.bookmarked;
+        try
+        {
+            await KakaoStoryApiHandler.PinPost(_postData.id, isUnpin);
+            await RefreshAsync();
+        }
+        catch (Exception exception)
+        {
+            await App.Page.DisplayAlertAsync("오류", $"관심글 처리에 실패하였습니다.\n{exception.Message}", Constants.PromptOk);
+        }
+    }
+
+    private async Task HandleEditAsync()
+    {
+        var page = new EditPostPage(_postData, true);
+        await App.PushAsync(page);
+    }
+
+    public override async Task HandleTapAsync()
+    {
+        await App.Page.DisplayAlertAsync("안내", "카카오스토리 게시글 상세 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
+    }
+
+    public override async Task HandleProfileTapAsync()
+    {
+        // Kakao Story profile pages are not implemented yet.
+        await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
+    }
+
+    public override async Task HandleShareAsync()
+    {
+        if (!_postData.sharable)
+        {
+            await App.Page.DisplayAlertAsync("안내", "이 게시글은 공유할 수 없는 게시글입니다.", Constants.PromptOk);
+            return;
+        }
+
+        if (_postData.@object != null)
+        {
+            await App.Page.DisplayAlertAsync("안내", "공유된 게시글은 공유할 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        var page = new EditPostPage(_postData);
+        await App.PushAsync(page);
+    }
+
+    public override async Task HandleRepostAsync()
+    {
+        HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
+
+        var isUp = _postData.sympathized;
+        try
+        {
+            await KakaoStoryApiHandler.UpPost(_postData.id, isUp);
+            await RefreshAsync();
+        }
+        catch (Exception exception)
+        {
+            await App.Page.DisplayAlertAsync("오류", $"UP 처리에 실패하였습니다.\n{exception.Message}", Constants.PromptOk);
+        }
+    }
+
+    public override async Task HandleMoreTapAsync() => await DisplayActionSheetAsync(false);
+
+    // Reaction (느낌) — see HandleReactionAsync above.
+    // Share count displays share_count - sympathy_count (Kakao includes UP actions in share_count).
+    public override async Task HandleReactionTapAsync() => await ShowReactionUsersAsync();
+
+    public override async Task HandleSharedTapAsync() => await ShowShareUsersAsync();
+
+    public override async Task HandleRepostTapAsync() => await ShowSympathyUsersAsync();
+
+    private async Task ShowReactionUsersAsync()
+    {
+        if (_postData.like_count == 0)
+        {
+            await App.Page.DisplayAlertAsync("안내", "아직 좋아요를 누른 사용자가 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        var likes = await KakaoStoryApiHandler.GetLikes(_postData, null);
+        var viewModels = likes.Select(x => new KakaoFriendshipViewModel(x));
+        var page = new InteractionsPage(viewModels, InteractionType.Reaction);
+        await App.PushAsync(page);
+    }
+
+    private async Task ShowShareUsersAsync()
+    {
+        var shareCount = _postData.share_count - _postData.sympathy_count;
+        if (shareCount <= 0)
+        {
+            await App.Page.DisplayAlertAsync("안내", "아직 공유한 사용자가 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        var shares = await KakaoStoryApiHandler.GetShares(_postData, false, null);
+        var viewModels = shares.Select(x => new KakaoFriendshipViewModel(x));
+        var page = new InteractionsPage(viewModels, InteractionType.Share);
+        await App.PushAsync(page);
+    }
+
+    private async Task ShowSympathyUsersAsync()
+    {
+        if (_postData.sympathy_count == 0)
+        {
+            await App.Page.DisplayAlertAsync("안내", "아직 UP한 사용자가 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        var sympathies = await KakaoStoryApiHandler.GetShares(_postData, true, null);
+        var viewModels = sympathies.Select(x => new KakaoFriendshipViewModel(x));
+        var page = new InteractionsPage(viewModels, InteractionType.Repost, "UP 사용자 목록");
+        await App.PushAsync(page);
+    }
+
+    public override async Task HandleLoadMoreComments() { }
+}

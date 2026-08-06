@@ -1,13 +1,15 @@
 ﻿using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
-using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Enums;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class WrappedMediaContentsViewModel : ObservableObject, IContentViewModel
+// Base wrapped media (carousel) view model shared by History and (future) Kakao Story.
+// Holds the carousel geometry/state logic and messenger wiring; derived types build the
+// media list from their own data models.
+public partial class BaseWrappedMediaContentsViewModel : ObservableObject, IContentViewModel
 {
     private double _lastCarouselViewHeight = 0;
 
@@ -19,10 +21,7 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
 
     public int CarouselPosition
     {
-        get
-        {
-            return field;
-        }
+        get;
         set
         {
             field = value;
@@ -93,18 +92,18 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
     // Single media content won't be scrolled
     public bool CarouselSwipeEnabled { get; }
 
-    public List<MediaContentViewModel> Medias { get; }
-    public MediaContentViewModel FirstMedia { get; }
+    public List<BaseMediaContentViewModel> Medias { get; }
+    public BaseMediaContentViewModel FirstMedia { get; }
 
     private ImageViewModel CurrentPositionMediaImageViewModel => Medias[CarouselPosition].ImageMedia as ImageViewModel;
 
     private readonly int _mediaContentsCount;
     private readonly PostType _postType;
 
-    public WrappedMediaContentsViewModel(IEnumerable<MediaContent> mediaContents, IEnumerable<MediaContent> allMediaContents, PostType postType, bool isParentPost = false)
+    public BaseWrappedMediaContentsViewModel(IEnumerable<BaseMediaContentViewModel> medias, PostType postType)
     {
         _postType = postType;
-        _mediaContentsCount = mediaContents.Count();
+        _mediaContentsCount = medias.Count();
         CarouselSwipeEnabled = _mediaContentsCount > 1;
 
         if (_postType == PostType.Unwrapped)
@@ -118,10 +117,10 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
             MaxCarouselViewHeight = 400;
         }
 
-        var medias = mediaContents.Select(m => new MediaContentViewModel(m, allMediaContents, postType, isParentPost)).ToList();
-        FirstMedia = medias.FirstOrDefault() ?? throw new InvalidOperationException("No media contents available.");
+        var mediaList = medias.ToList();
+        FirstMedia = mediaList.FirstOrDefault() ?? throw new InvalidOperationException("No media contents available.");
         Debug.WriteLine($"FIRST MEDIA: {FirstMedia.Media.Uri}");
-        Medias = medias;
+        Medias = mediaList;
 
         WeakReferenceMessenger.Default.Register<ResizeCarouselViewMessage>(this, OnCarouselViewHeightChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<SpanChangedMessage>(this, OnSpanChangedMessageReceived);
@@ -137,7 +136,7 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
         }
     }
 
-    private void OnSpanChangedMessageReceived(object recipient, SpanChangedMessage message)
+    private void OnSpanChangedMessageReceived(object _, SpanChangedMessage __)
     {
         _lastCarouselViewHeight = 0;
         CarouselViewWidth = -1;
@@ -174,7 +173,7 @@ public partial class WrappedMediaContentsViewModel : ObservableObject, IContentV
         return newHeight;
     }
 
-    private void OnCarouselViewHeightChangedMessageReceived(object recipient, ResizeCarouselViewMessage message)
+    private void OnCarouselViewHeightChangedMessageReceived(object _, ResizeCarouselViewMessage message)
     {
         if (CurrentPositionMediaImageViewModel == message.Value)
         {

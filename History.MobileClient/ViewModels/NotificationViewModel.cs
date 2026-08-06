@@ -145,7 +145,7 @@ public partial class NotificationViewModel : ObservableObject
             if (!postResult.IsSuccess) return;
 
             var post = postResult.Value;
-            var viewModel = new PostViewModel(post, PostType.Unwrapped);
+            var viewModel = new HistoryPostViewModel(post, PostType.Unwrapped);
             var page = new PostPage(viewModel);
             await App.PushAsync(page);
         }

@@ -8,7 +8,7 @@
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
 
-    <DataTemplate x:Key="PostCommentTemplate" x:DataType="vm:PostViewModel">
+    <DataTemplate x:Key="PostCommentTemplate" x:DataType="vm:BasePostViewModel">
         <Grid BackgroundColor="{AppThemeBinding Dark=Black, Light=White}">
             <VerticalStackLayout
                 Padding="16"
@@ -46,7 +46,7 @@
                 VerticalOptions="Center" />
         </Grid>
     </DataTemplate>
-    <DataTemplate x:Key="PostContentTemplate" x:DataType="vm:PostViewModel">
+    <DataTemplate x:Key="PostContentTemplate" x:DataType="vm:BasePostViewModel">
         <VerticalStackLayout
             Padding="16"
             BackgroundColor="{AppThemeBinding Dark=Black,
@@ -173,7 +173,7 @@
         </VerticalStackLayout>
     </DataTemplate>
 
-    <DataTemplate x:Key="PostTemplate" x:DataType="vm:PostViewModel">
+    <DataTemplate x:Key="PostTemplate" x:DataType="vm:BasePostViewModel">
         <Grid Padding="6">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
@@ -339,7 +339,7 @@
         </Grid>
     </DataTemplate>
 
-    <DataTemplate x:Key="PostPreviewTemplate" x:DataType="vm:PostViewModel">
+    <DataTemplate x:Key="PostPreviewTemplate" x:DataType="vm:BasePostViewModel">
         <views:SquareView BackgroundColor="{AppThemeBinding Dark=#000000, Light=#FFFFFF}">
             <views:SquareView.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />

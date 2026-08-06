@@ -21,7 +21,7 @@ public partial class Content : ResourceDictionary
     {
         var label = sender as Label;
 
-        // Walk up the visual tree to find the hosting ViewModel (CommentViewModel sets IsLongPressed)
+        // Walk up the visual tree to find the hosting ViewModel (BaseCommentViewModel sets IsLongPressed)
         var bindingContext = label?.Parent?.BindingContext;
         var parent = label?.Parent;
         while (parent != null && bindingContext is null or TextTypeContentsViewModel or TimelineContentsViewModel)
@@ -29,7 +29,7 @@ public partial class Content : ResourceDictionary
             parent = parent.Parent;
             bindingContext = parent?.BindingContext;
         }
-        if (bindingContext is CommentViewModel commentViewModel) commentViewModel.IsLongPressed = true;
+        if (bindingContext is BaseCommentViewModel commentViewModel) commentViewModel.IsLongPressed = true;
 
         var viewModel = label.BindingContext as TextTypeContentsViewModel;
         var contents = viewModel.TextTypeContents;
@@ -49,14 +49,14 @@ public partial class Content : ResourceDictionary
     }
 
     // Must set TouchGesture to invoke TapGestureCommand for Comment.xaml
-    // For iOS, No need to call HandleTapAsync here. CommentViewModel's HandleTapCommand will do their job.
+    // For iOS, No need to call HandleTapAsync here. HistoryCommentViewModel's HandleTapCommand will do their job.
     private async void OnTextTypeContentsLabelTouchGestureCompleted(object sender, TouchGestureCompletedEventArgs e)
     {
         var label = sender as Label;
 
-        // Walk up the visual tree to find the hosting ViewModel (PostViewModel, CommentViewModel, etc.)
+        // Walk up the visual tree to find the hosting ViewModel (BasePostViewModel, BaseCommentViewModel, etc.)
         // With TimelineContentsTemplate, the parent chain is: Label -> DataTemplatePresenter (TextTypeContentsViewModel)
-        // -> VerticalStackLayout (TimelineContentsViewModel) -> DataTemplatePresenter -> PostTemplate (PostViewModel)
+        // -> VerticalStackLayout (TimelineContentsViewModel) -> DataTemplatePresenter -> PostTemplate (HistoryPostViewModel)
         var bindingContext = label?.Parent?.BindingContext;
         var parent = label?.Parent;
         while (parent != null && bindingContext is null or TextTypeContentsViewModel or TimelineContentsViewModel)
@@ -67,11 +67,11 @@ public partial class Content : ResourceDictionary
         if (bindingContext is null) return;
 
 #if ANDROID
-        // For Android, CommentViewModel's HandleTapCommand doesn't fire automatically. still needs manaual event fire
-        if (bindingContext is CommentViewModel commentModel) await commentModel.HandleTapAsync();
+        // For Android, BaseCommentViewModel's HandleTapCommand doesn't fire automatically. still needs manaual event fire
+        if (bindingContext is BaseCommentViewModel commentModel) await commentModel.HandleTapAsync();
 #endif
-        if (bindingContext is PublicPostViewModel publicPostViewModel) await publicPostViewModel.HandleProfileTapAsync();
-        else if (bindingContext is PostViewModel postViewModel && (postViewModel.PostType != Enums.PostType.Unwrapped || postViewModel.IsParentPost)) await postViewModel.HandleTapAsync();
+        if (bindingContext is HistoryPublicPostViewModel publicPostViewModel) await publicPostViewModel.HandleProfileTapAsync();
+        else if (bindingContext is BasePostViewModel postViewModel && (postViewModel.PostType != Enums.PostType.Unwrapped || postViewModel.IsParentPost)) await postViewModel.HandleTapAsync();
     }
 
     private void OnTextTypeContentsLabelSizeChanged(object sender, EventArgs e)
@@ -96,7 +96,7 @@ public partial class Content : ResourceDictionary
 
         clip.Rect = new Rect(0, 0, carouselView.Width, carouselView.Height);
 
-        if (carouselView.BindingContext is WrappedMediaContentsViewModel viewModel)
+        if (carouselView.BindingContext is BaseWrappedMediaContentsViewModel viewModel)
         {
             viewModel.CarouselViewWidth = -1;
             viewModel.UpdateCarouselViewSize();

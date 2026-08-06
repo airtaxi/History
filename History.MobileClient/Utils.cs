@@ -7,7 +7,9 @@ using History.Commons.Api.PushNotification;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using History.MobileClient.Enums;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
 using UraniumUI.Icons.FontAwesome;
@@ -42,7 +44,7 @@ public static partial class Utils
         {
             if (mediaContents.Count > 0)
             {
-                contentViewModels.Add(new WrappedMediaContentsViewModel(mediaContents, allMediaContents, postType, isParentPost));
+                contentViewModels.Add(new HistoryWrappedMediaContentsViewModel(mediaContents, allMediaContents, postType, isParentPost));
                 mediaContents = [];
             }
         }
@@ -94,7 +96,7 @@ public static partial class Utils
                 mediaContents.Add(mediaContent);
 #else
                 if (postType != PostType.Unwrapped) mediaContents.Add(mediaContent);
-                else contentViewModels.Add(new MediaContentViewModel(mediaContent, allMediaContents, postType, isParentPost));
+                else contentViewModels.Add(new HistoryMediaContentViewModel(mediaContent, allMediaContents, postType, isParentPost));
 #endif
             }
         }
@@ -219,7 +221,7 @@ public static partial class Utils
         return preview;
     }
 
-    public static FormattedString GenerateSpanFromTextTypeContents(List<BaseContent> contents, PostType postType, bool hasMedias)
+    public static FormattedString GenerateFormattedStringFromTextTypeContents(List<BaseContent> contents, PostType postType, bool hasMedias)
     {
         var formattedString = new FormattedString();
         var maxLength = postType == PostType.Timeline ? (hasMedias ? TimelineMaxTextLengthWithMedias : TimelineMaxTextLengthWithoutMedias) : DiscoveryMaxTextLength;
@@ -365,6 +367,66 @@ public static partial class Utils
                 }
                 else formattedString.Spans.Add(span);
             }
+        }
+
+        return formattedString;
+    }
+
+    // Kakao Story variant: renders QuoteData (text/hashtag/profile/emoticon) into a FormattedString.
+    public static FormattedString GenerateFormattedStringFromQuoteData(List<QuoteData> quoteDatas, PostType postType)
+    {
+        var formattedString = new FormattedString();
+        var maxLength = postType == PostType.Timeline ? 400 : 1600;
+        var maxLines = postType == PostType.Timeline ? 12 : 27;
+        var currentLength = 0;
+        var currentLines = 0;
+
+        foreach (var data in quoteDatas)
+        {
+            void AddMoreSpan(Span span)
+            {
+                formattedString.Spans.Add(span);
+                formattedString.Spans.Add(new Span
+                {
+                    Text = " ... 더보기",
+                    FontAttributes = FontAttributes.Bold,
+                    TextColor = Color.FromRgb(0x99, 0x99, 0x99)
+                });
+            }
+
+            void TrimSpan(Span span)
+            {
+                if (currentLines > maxLines)
+                {
+                    var lines = span.Text.Split(["\r\n", "\n"], StringSplitOptions.None);
+                    var allowedLines = maxLines - (currentLines - lines.Length);
+                    if (allowedLines <= 0) span.Text = string.Empty;
+                    else span.Text = string.Join(Environment.NewLine, lines.Take(allowedLines));
+                }
+                else if (currentLength > maxLength)
+                {
+                    var allowedLength = maxLength - (currentLength - span.Text.Length);
+                    if (allowedLength >= 0) span.Text = span.Text[..allowedLength];
+                }
+            }
+
+            var isEmoticon = data.type == "emoticon";
+            var span = new Span
+            {
+                Text = isEmoticon ? "(이모티콘) " : data.text,
+                TextColor = data.type is "hashtag" or "profile" ? Application.Current.Resources["Primary"] as Color : null,
+                FontAttributes = data.type is "hashtag" or "profile" ? FontAttributes.Bold : FontAttributes.None
+            };
+
+            currentLength += span.Text.Length;
+            currentLines += span.Text.Count(x => x == '\n');
+            if (postType != PostType.Unwrapped && (currentLength > maxLength || currentLines > maxLines))
+            {
+                TrimSpan(span);
+                AddMoreSpan(span);
+                break;
+            }
+            else formattedString.Spans.Add(span);
         }
 
         return formattedString;

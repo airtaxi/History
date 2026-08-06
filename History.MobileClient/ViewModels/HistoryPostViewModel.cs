@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -19,7 +19,7 @@ using UraniumUI.Icons.FontAwesome;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class PostViewModel : ObservableObject
+public partial class HistoryPostViewModel : BasePostViewModel
 {
     [ObservableProperty]
     public partial PostResponseDto Post { get; private set; }
@@ -27,112 +27,11 @@ public partial class PostViewModel : ObservableObject
     [ObservableProperty]
     public partial UserResponseDto User { get; private set; }
 
-    // User-dependent properties — set in UpdatePost alongside User assignment.
-    [ObservableProperty]
-    public partial string Nickname { get; private set; }
-    [ObservableProperty]
-    public partial bool IsModerator { get; private set; }
-    [ObservableProperty]
-    public partial bool IsAdmin { get; private set; }
-    [ObservableProperty]
-    public partial IMediaViewModel ProfileMedia { get; private set; }
-
-    // Post-dependent simple properties — all set in UpdatePost.
-    [ObservableProperty]
-    public partial string DiscoveryOptionGlyph { get; private set; }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsNotWideMode))]
-    public partial bool IsWideMode { get; set; }
-    public bool IsNotWideMode => !IsWideMode;
-
-    [ObservableProperty]
-    public partial List<IContentViewModel> Contents { get; private set; }
-
-    // Pre-slotted view model for timeline preview — avoids BindableLayout overhead.
-    [ObservableProperty]
-    public partial TimelineContentsViewModel TimelineContents { get; private set; }
-
-    [ObservableProperty]
-    public partial bool HasInteractions { get; private set; }
-
-    [ObservableProperty]
-    public partial PostViewModel ParentPost { get; private set; }
-    [ObservableProperty]
-    public partial bool IsRepost { get; private set; }
-    [ObservableProperty]
-    public partial bool IsShare { get; private set; }
-
-    [ObservableProperty]
-    public partial bool HasRepostedUsers { get; private set; }
-    [ObservableProperty]
-    public partial int RepostedUsersCount { get; private set; }
-
-    [ObservableProperty]
-    public partial bool HasSharedUsers { get; private set; }
-    [ObservableProperty]
-    public partial int SharedUsersCount { get; private set; }
-
-    [ObservableProperty]
-    public partial bool HasReactions { get; private set; }
-    [ObservableProperty]
-    public partial int ReactionsCount { get; private set; }
-    [ObservableProperty]
-    public partial List<InteractionViewModel> Interactions { get; private set; }
-
-    [ObservableProperty]
-    public partial InteractionViewModel Reaction { get; private set; }
-    [ObservableProperty]
-    public partial string ReactionGlyph { get; private set; }
-    [ObservableProperty]
-    public partial string ReactionFontFamily { get; private set; }
-    [ObservableProperty]
-    public partial Color ReactionColor { get; private set; }
-
-    [ObservableProperty]
-    public partial ObservableCollection<CommentViewModel> Comments { get; private set; }
-    [ObservableProperty]
-    public partial CommentViewModel LatestComment { get; private set; }
-    [ObservableProperty]
-    public partial bool HasComments { get; private set; }
-    [ObservableProperty]
-    public partial bool HasNoComments { get; private set; }
-    [ObservableProperty]
-    public partial int CommentsCount { get; private set; }
-
-    [ObservableProperty]
-    public partial bool HasMoreComments { get; private set; }
-
-    [ObservableProperty]
-    public partial DateTime CreatedAt { get; private set; }
-    [ObservableProperty]
-    public partial DateTime? ModifiedAt { get; private set; }
-
-    [ObservableProperty]
-    public partial string TimestampText { get; private set; }
-
-    [ObservableProperty]
-    public partial string PreviewText { get; private set; }
-    [ObservableProperty]
-    public partial string PreviewTimestamp { get; private set; }
-
-    // Avoid allocating an ImageViewModel just to null-check. Checks the URL directly.
-    public bool PreviewThumbnailVisible => Utils.GenerateThumbnailUrlFromPost(Post) != null;
-    [ObservableProperty]
-    public partial bool HasUnreadNotification { get; private set; }
-    [ObservableProperty]
-    public partial ImageViewModel PreviewThumbnail { get; private set; }
-
-    public PostType PostType { get; }
-    public bool IsParentPost { get; }
-
-    public PostViewModel(PostResponseDto post, PostType postType, bool isParentPost = false)
+    public HistoryPostViewModel(PostResponseDto post, PostType postType, bool isParentPost = false) : base(postType, isParentPost)
     {
         try
         {
-            PostType = postType;
-            IsParentPost = isParentPost;
-            UpdatePost(post ?? throw new Exception("[PostViewModel] POST IS NULL"));
+            UpdatePost(post ?? throw new Exception("[HistoryPostViewModel] POST IS NULL"));
 
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, OnUserChangedMessageReceived);
@@ -166,7 +65,7 @@ public partial class PostViewModel : ObservableObject
             DiscoveryOptionGlyph = Utils.GetDiscoveryOptionGlyph(post.DiscoveryOption);
             Contents = Utils.GenerateContentViewModels(post.Contents, PostType, IsParentPost, post.Id);
             TimelineContents = new TimelineContentsViewModel(Contents);
-            ParentPost = post.ParentPost != null ? new(post.ParentPost, PostType, true) : null;
+            ParentPost = post.ParentPost != null ? new HistoryPostViewModel(post.ParentPost, PostType, true) : null;
             var isRepost = post.IsRepost;
             IsRepost = isRepost;
             IsShare = post.ParentPost != null && !isRepost;
@@ -179,17 +78,17 @@ public partial class PostViewModel : ObservableObject
             HasReactions = post.PostReactions.Count > 0;
             ReactionsCount = post.PostReactions.Count;
             HasInteractions = post.PostReactions.Count > 0 || post.SharedAndRepostedUsers.Count > 0;
-            Interactions = [.. post.PostReactions.Select(x => new InteractionViewModel(x))
-                .Concat(post.SharedAndRepostedUsers.Where(x => !x.IsRepost).Select(x => new InteractionViewModel(x, true)))
-                .Concat(post.SharedAndRepostedUsers.Where(x => x.IsRepost).Select(x => new InteractionViewModel(x, false)))
+            Interactions = [.. post.PostReactions.Select(x => new HistoryInteractionViewModel(x))
+                .Concat(post.SharedAndRepostedUsers.Where(x => !x.IsRepost).Select(x => new HistoryInteractionViewModel(x, true)))
+                .Concat(post.SharedAndRepostedUsers.Where(x => x.IsRepost).Select(x => new HistoryInteractionViewModel(x, false)))
                 .OrderByDescending(x => x.CreatedAt)];
 
-            Reaction = Interactions.FirstOrDefault(r => r.User.UserId == Shared.UserId && r.ReactionType != null);
+            Reaction = Interactions.FirstOrDefault(r => r is HistoryInteractionViewModel historyInteraction && historyInteraction.User.UserId == Shared.UserId && r.ReactionType != null);
             ReactionGlyph = Reaction?.Glyph ?? Solid.Heart;
             ReactionFontFamily = Reaction != null ? "FASolid" : "FARegular";
             ReactionColor = Reaction?.Color ?? (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Colors.White : Colors.Black);
 
-            Comments = [.. post.Comments.Select(c => new CommentViewModel(c, post.User.UserId == Shared.UserId, PostType, this)).OrderBy(x => x.CreatedAt)];
+            Comments = [.. post.Comments.Select(c => new HistoryCommentViewModel(c, post.User.UserId == Shared.UserId, PostType, this)).OrderBy(x => x.CreatedAt)];
             LatestComment = Comments.LastOrDefault();
             CommentsCount = post.CommentsCount;
             HasComments = CommentsCount > 0;
@@ -211,6 +110,7 @@ public partial class PostViewModel : ObservableObject
                 HorizontalContentOptions = LayoutOptions.Fill,
                 VerticalContentOptions = LayoutOptions.Fill
             } : null;
+            PreviewThumbnailVisible = thumbnailUrl != null;
 
             // Assign Post and User last so all derived properties are already up-to-date.
             Post = post;
@@ -251,7 +151,7 @@ public partial class PostViewModel : ObservableObject
 
     private void OnCommentDeletedMessageReceived(object recipient, ValueDeletedMessage<CommentResponseDto> message)
     {
-        var viewModel = Comments.FirstOrDefault(c => c.Comment.Id == message.Value.Id);
+        var viewModel = Comments.OfType<HistoryCommentViewModel>().FirstOrDefault(c => c.Comment.Id == message.Value.Id);
         if (viewModel == null) return;
 
         var removedCount = Post.Comments.RemoveAll(x => x.Id == viewModel.Comment.Id);
@@ -266,12 +166,11 @@ public partial class PostViewModel : ObservableObject
 
     private void OnCommentChangedMessageReceived(object recipient, ValueChangedMessage<CommentResponseDto> message)
     {
-        // CommentViewModel already subscribes to ValueChangedMessage<CommentResponseDto> and
+        // HistoryCommentViewModel already subscribes to ValueChangedMessage<CommentResponseDto> and
         // calls UpdateComment internally. No action needed here.
     }
 
-    public async Task DisplayActionSheetAsync(bool popModal)
-    {
+    public override async Task DisplayActionSheetAsync(bool popModal)    {
         var options = new List<string>();
 
         if (PostType != PostType.Unwrapped)
@@ -393,14 +292,14 @@ public partial class PostViewModel : ObservableObject
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostResponseDto>(Post));
     }
 
-    public async Task<Result> RefreshAsync()
+    public override async Task<Result> RefreshAsync()
     {
         var result = await App.ExecuteRequestAsync(new GetPost(Post.Id));
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
         return result;
     }
 
-    public async Task DeleteAsync(bool popModal)
+    public override async Task DeleteAsync(bool popModal)
     {
         if (User.UserId != Shared.UserId)
         {
@@ -440,37 +339,28 @@ public partial class PostViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    public async Task HandleTapAsync()
+    public override async Task HandleTapAsync()
     {
         var result = await RefreshAsync();
         if (result.IsFailure) return;
 
-        var newViewModel = new PostViewModel(Post, PostType.Unwrapped);
-
-#if IOS
-        WeakReferenceMessenger.Default.Send(new ApplePostViewModelTapMessage(this));
-
-#endif
+        var newViewModel = new HistoryPostViewModel(Post, PostType.Unwrapped);
         var postPage = new PostPage(newViewModel);
         await App.PushAsync(postPage);
     }
 
-    [RelayCommand]
-    public async Task HandleProfileTapAsync()
+    public override async Task HandleProfileTapAsync()
     {
         var profilePage = new UserPage(Post.User.UserId);
         await App.PushAsync(profilePage);
     }
 
-    [RelayCommand]
-    public async Task HandleMoreTapAsync()
+    public override async Task HandleMoreTapAsync()
     {
         await DisplayActionSheetAsync(false);
     }
 
-    [RelayCommand]
-    public async Task HandleReactionAsync()
+    public override async Task HandleReactionAsync()
     {
         HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
 
@@ -492,8 +382,7 @@ public partial class PostViewModel : ObservableObject
         await RefreshAsync();
     }
 
-    [RelayCommand]
-    public async Task HandleShareAsync()
+    public override async Task HandleShareAsync()
     {
         if (Post.DiscoveryOption == DiscoveryOption.SelectedUsers || Post.DiscoveryOption == DiscoveryOption.UnselectedUsers)
         {
@@ -510,8 +399,7 @@ public partial class PostViewModel : ObservableObject
         await App.PushAsync(page);
     }
 
-    [RelayCommand]
-    public async Task HandleRepostAsync()
+    public override async Task HandleRepostAsync()
     {
         if (Post.DiscoveryOption == DiscoveryOption.SelectedUsers || Post.DiscoveryOption == DiscoveryOption.UnselectedUsers)
         {
@@ -526,10 +414,9 @@ public partial class PostViewModel : ObservableObject
         WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post));
     }
 
-    [RelayCommand]
-    public async Task HandleReactionTapAsync()
+    public override async Task HandleReactionTapAsync()
     {
-        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Reaction).Select(x => new FriendshipViewModel(x.User, x)), Enums.InteractionType.Reaction);
+        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Reaction).Select(x => new HistoryFriendshipViewModel(((HistoryInteractionViewModel)x).User, (HistoryInteractionViewModel)x)), Enums.InteractionType.Reaction);
 #if IOS
         await App.PushAsync(page);
 #else
@@ -537,10 +424,9 @@ public partial class PostViewModel : ObservableObject
 #endif
     }
 
-    [RelayCommand]
-    public async Task HandleSharedTapAsync()
+    public override async Task HandleSharedTapAsync()
     {
-        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Share).Select(x => new FriendshipViewModel(x.User, x)), Enums.InteractionType.Share);
+        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Share).Select(x => new HistoryFriendshipViewModel(((HistoryInteractionViewModel)x).User, (HistoryInteractionViewModel)x)), Enums.InteractionType.Share);
 #if IOS
         await App.PushAsync(page);
 #else
@@ -548,10 +434,9 @@ public partial class PostViewModel : ObservableObject
 #endif
     }
 
-    [RelayCommand]
-    public async Task HandleRepostTapAsync()
+    public override async Task HandleRepostTapAsync()
     {
-        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Repost).Select(x => new FriendshipViewModel(x.User, x)), Enums.InteractionType.Repost);
+        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Repost).Select(x => new HistoryFriendshipViewModel(((HistoryInteractionViewModel)x).User, (HistoryInteractionViewModel)x)), Enums.InteractionType.Repost);
 #if IOS
         await App.PushAsync(page);
 #else
@@ -559,17 +444,16 @@ public partial class PostViewModel : ObservableObject
 #endif
     }
 
-    [RelayCommand]
-    private async Task HandleLoadMoreComments()
+    public override async Task HandleLoadMoreComments()
     {
-        var oldestViewModel = Comments.FirstOrDefault();
+        var oldestViewModel = Comments.OfType<HistoryCommentViewModel>().FirstOrDefault();
         if (oldestViewModel == null) return;
 
         var commentsResult = await App.ExecuteRequestAsync(new GetCommentsByPostId(Post.Id, oldestViewModel.Comment.Id, 20));
         if (commentsResult.IsSuccess)
         {
             var comments = commentsResult.Value;
-            var commentViewModels = comments.Select(x => new CommentViewModel(x, Post.User.UserId == Shared.UserId, PostType, this));
+            var commentViewModels = comments.Select(x => new HistoryCommentViewModel(x, Post.User.UserId == Shared.UserId, PostType, this));
             foreach (var commentViewModel in commentViewModels) Comments.Insert(0, commentViewModel);
             HasMoreComments = Post.CommentsCount > Comments.Count;
         }

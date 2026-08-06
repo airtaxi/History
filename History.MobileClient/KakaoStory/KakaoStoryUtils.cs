@@ -1,11 +1,129 @@
-﻿using Newtonsoft.Json;
+﻿using History.Commons;
+using History.MobileClient.Helpers;
+using History.MobileClient.Pages;
+using Newtonsoft.Json;
+using System.Net;
 using System.Text;
+using UraniumUI.Icons.FontAwesome;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
 namespace History.MobileClient.KakaoStory;
 
 public static class KakaoStoryUtils
 {
+    // Kakao Story emotions map to the History reaction visuals (glyph + color).
+    // Emotion strings: like(좋아요), good(멋져요), pleasure(기뻐요), sad(슬퍼요), cheerup(힘내요).
+    public static (string Glyph, Color Color) GetEmotionVisual(string emotion)
+    {
+        return emotion switch
+        {
+            "like" => (Solid.Heart, Color.FromRgb(0xE2, 0x54, 0x34)),
+            "good" => (Solid.Star, Color.FromRgb(0xBC, 0xCB, 0x3C)),
+            "pleasure" => (Solid.FaceSmile, Color.FromRgb(0xEF, 0xBD, 0x30)),
+            "sad" => (Solid.Droplet, Color.FromRgb(0x35, 0x9F, 0xB0)),
+            "cheerup" => (Solid.Bolt, Color.FromRgb(0x9C, 0x62, 0xAE)),
+            _ => (Solid.Heart, Color.FromRgb(0xE2, 0x54, 0x34))
+        };
+    }
+
+    private static bool s_isRelogging;
+
+    /// <summary>
+    /// Relogin entry point used by KakaoStoryApiHandler when a request returns 401.
+    /// Presents the login modal (or auto-fill) and updates the stored cookies.
+    /// Returns true when a valid session is available afterwards.
+    /// Re-entrancy guard: the cookie validation inside EnsureLoggedInAsync also performs
+    /// API requests, which 401 again and would otherwise recurse into this method forever.
+    /// Nested invocations return false and let the outer relogin flow show the login page.
+    /// </summary>
+    public static async Task<bool> ReLoginAsync()
+    {
+        if (s_isRelogging) return false;
+        s_isRelogging = true;
+        try
+        {
+            var success = await EnsureLoggedInAsync(App.TopPage);
+            if (success)
+            {
+                // Refresh the cached user id after relogin so post action sheets stay accurate.
+                await SaveCurrentUserAsync();
+            }
+            return success;
+        }
+        finally { s_isRelogging = false; }
+    }
+
+    /// <summary>
+    /// Validates the saved cookies and, when they are missing/expired, presents the
+    /// KakaoStoryLoginPage modal. Returns true when a valid session is available.
+    /// </summary>
+    public static async Task<bool> EnsureLoggedInAsync(Page hostPage)
+    {
+        var cookies = Configuration.GetValue<List<Cookie>>("KakaoStoryCookies");
+        if (cookies != null)
+        {
+            var cookieContainer = new CookieContainer();
+            foreach (var cookie in cookies) cookieContainer.Add(cookie);
+
+            KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
+            try
+            {
+                await KakaoStoryApiHandler.GetFriends();
+                await SaveCurrentUserAsync();
+                return true;
+            }
+            catch { }
+        }
+
+        var savedEmail = Configuration.GetValue<string>("KakaoStoryEmail");
+        var savedEncryptedPassword = Configuration.GetValue<string>("KakaoStoryPassword");
+        if (savedEmail == null || savedEncryptedPassword == null)
+        {
+            var useAutoFill = await hostPage.DisplayAlertAsync("자동 입력", "쿠키 만료로 인해 로그인이 필요합니다. 카카오스토리 로그인 정보를 저장하여 자동 입력하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+            if (useAutoFill)
+            {
+                var email = await hostPage.DisplayPromptAsync("이메일 입력", "카카오 계정 이메일을 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "이메일", -1, Keyboard.Email);
+                if (!string.IsNullOrWhiteSpace(email))
+                {
+                    var password = await hostPage.DisplayPromptAsync("비밀번호 입력", "카카오 계정 비밀번호를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "비밀번호", -1, Keyboard.Password);
+                    if (!string.IsNullOrWhiteSpace(password))
+                    {
+                        var encryptedPassword = AesCryptoHelper.Encrypt(password, Constants.KakaoStoryCredentialEncryptionKey);
+                        Configuration.SetValue("KakaoStoryEmail", email);
+                        Configuration.SetValue("KakaoStoryPassword", encryptedPassword);
+                    }
+                }
+            }
+        }
+
+        var kakaoStoryLoginPage = new KakaoStoryLoginPage();
+        await App.PushModalAsync(kakaoStoryLoginPage);
+
+        cookies = await kakaoStoryLoginPage.GetResultAsync();
+        if (cookies == null) return false;
+
+        var container = new CookieContainer();
+        foreach (var cookie in cookies) container.Add(cookie);
+
+        KakaoStoryApiHandler.Init(container, cookies, null);
+        Configuration.SetValue("KakaoStoryCookies", cookies);
+        await SaveCurrentUserAsync();
+        return true;
+    }
+
+    /// <summary>
+    /// Loads the logged-in Kakao Story user's id into Shared.KakaoUserId so post
+    /// action sheets can distinguish own posts (e.g. hide vs. delete).
+    /// </summary>
+    private static async Task SaveCurrentUserAsync()
+    {
+        try
+        {
+            var profile = await KakaoStoryApiHandler.GetProfileData();
+            Shared.KakaoUserId = profile?.id;
+        }
+        catch { Shared.KakaoUserId = null; }
+    }
 
     private static readonly DateTime epoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     public static long ToUnixTime(DateTime date)

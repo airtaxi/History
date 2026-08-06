@@ -19,7 +19,7 @@ namespace History.MobileClient.Pages;
 
 public partial class PostPage : ContentPage
 {
-    public PostViewModel ViewModel { get; set; }
+    public HistoryPostViewModel ViewModel { get; set; }
 
     private bool _isInForeground;
     private MediaAttachmentViewModel _commentMediaAttachmentViewModel;
@@ -34,7 +34,7 @@ public partial class PostPage : ContentPage
 
     private bool IsCommentAvailable => _commentMediaAttachmentViewModel != null || !IsCommentEmpty;
 
-    public PostPage(PostViewModel viewModel)
+    public PostPage(HistoryPostViewModel viewModel)
     {
         Debug.WriteLine("POST PAGE LOADED");
 

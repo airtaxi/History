@@ -14,6 +14,7 @@ using History.Commons.Enums;
 using History.Commons.Interfaces;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Enums;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
@@ -67,6 +68,8 @@ public partial class App : Application
         if (theme == "Light") UserAppTheme = AppTheme.Light;
         else if (theme == "Dark") UserAppTheme = AppTheme.Dark;
         else UserAppTheme = AppTheme.Unspecified;
+
+        KakaoStoryApiHandler.OnReloginRequired = KakaoStoryUtils.ReLoginAsync;
     }
 
     public static Page Page
@@ -322,7 +325,7 @@ public partial class App : Application
             var postResult = await ExecuteRequestAsync(new GetPost(postId));
             if (postResult.IsFailure) return;
 
-            var postViewModel = new PostViewModel(postResult.Value, PostType.Unwrapped);
+            var postViewModel = new HistoryPostViewModel(postResult.Value, PostType.Unwrapped);
             var page = new PostPage(postViewModel);
             await PushAsync(page);
         }

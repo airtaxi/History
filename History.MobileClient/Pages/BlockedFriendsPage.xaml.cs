@@ -28,7 +28,7 @@ public partial class BlockedFriendsPage : ContentPage
         var pendingUsersResult = await App.ExecuteRequestAsync(new GetBlockedUsers());
         if (pendingUsersResult.IsSuccess)
         {
-            var viewModels = pendingUsersResult.Value.Select(x => new FriendshipViewModel(x));
+            var viewModels = pendingUsersResult.Value.Select(x => new HistoryFriendshipViewModel(x));
             MainCollectionView.ItemsSource = viewModels;
             EmptyLabel.IsVisible = pendingUsersResult.Value.Count == 0;
         }

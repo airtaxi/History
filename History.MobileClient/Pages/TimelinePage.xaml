@@ -34,6 +34,7 @@
 
             <HorizontalStackLayout HorizontalOptions="End">
                 <Image
+                    x:Name="SearchImage"
                     HeightRequest="32"
                     VerticalOptions="Center"
                     WidthRequest="32">
@@ -63,6 +64,54 @@
                     RemainingItemsThreshold="0"
                     RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
                     SelectionMode="None">
+                    <CollectionView.Header>
+                        <Grid Padding="12,10" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border
+                                x:Name="HistoryPillBorder"
+                                Grid.Column="0"
+                                HeightRequest="34"
+                                StrokeThickness="0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnHistoryPillTapped" />
+                                </Border.GestureRecognizers>
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="17" />
+                                </Border.StrokeShape>
+                                <Label
+                                    x:Name="HistoryPillLabel"
+                                    Padding="16,0"
+                                    FontAttributes="Bold"
+                                    FontSize="13"
+                                    HorizontalOptions="Center"
+                                    Text="히스토리"
+                                    VerticalOptions="Center" />
+                            </Border>
+                            <Border
+                                x:Name="KakaoStoryPillBorder"
+                                Grid.Column="1"
+                                HeightRequest="34"
+                                StrokeThickness="0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnKakaoStoryPillTapped" />
+                                </Border.GestureRecognizers>
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="17" />
+                                </Border.StrokeShape>
+                                <Label
+                                    x:Name="KakaoStoryPillLabel"
+                                    Padding="16,0"
+                                    FontAttributes="Bold"
+                                    FontSize="13"
+                                    HorizontalOptions="Center"
+                                    Text="카카오스토리"
+                                    VerticalOptions="Center" />
+                            </Border>
+                        </Grid>
+                    </CollectionView.Header>
                     <CollectionView.ItemsLayout>
                         <staggered:StaggeredItemsLayout Span="10000" />
                     </CollectionView.ItemsLayout>

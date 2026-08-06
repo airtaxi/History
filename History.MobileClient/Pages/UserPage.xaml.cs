@@ -34,7 +34,7 @@ public partial class UserPage : ContentPage
     private object _lastViewModel;
     private ProfileViewModel _viewModel;
     private readonly bool _isMyProfile;
-    private readonly ObservableCollection<PostViewModel> _viewModels = [];
+    private readonly ObservableCollection<HistoryPostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public UserPage() : this(Shared.UserId)
@@ -82,7 +82,7 @@ public partial class UserPage : ContentPage
 
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {
-        var viewModels = _viewModels.OfType<PostViewModel>().Where(x => x.Post.Id == message.Value.Id).ToList(); // ToList is needed (Collection will be modified)
+        var viewModels = _viewModels.OfType<HistoryPostViewModel>().Where(x => x.Post.Id == message.Value.Id).ToList(); // ToList is needed (Collection will be modified)
         foreach (var viewModel in viewModels) _viewModels.Remove(viewModel);
         _lastViewModel = _viewModels.LastOrDefault();
     }
@@ -127,7 +127,7 @@ public partial class UserPage : ContentPage
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var viewModels = posts.Select(x => new PostViewModel(x, PostType.Timeline));
+                var viewModels = posts.Select(x => new HistoryPostViewModel(x, PostType.Timeline));
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
@@ -144,15 +144,15 @@ public partial class UserPage : ContentPage
         {
             await _fetchSemaphore.WaitAsync();
 
-            var lastViewModel = _viewModels.OfType<PostViewModel>().LastOrDefault();
+            var lastViewModel = _viewModels.OfType<HistoryPostViewModel>().LastOrDefault();
             if (lastViewModel == null) return;
 
-            var lastPostId = lastViewModel is RepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
+            var lastPostId = lastViewModel is HistoryRepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
             var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, lastPostId, _useGridLayout ? 50 : 30));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value;
-                var viewModels = posts.Select(x => new PostViewModel(x, PostType.Timeline));
+                var viewModels = posts.Select(x => new HistoryPostViewModel(x, PostType.Timeline));
                 _lastViewModel = viewModels.LastOrDefault();
                 _areThereNoMorePostsToLoad = !viewModels.Any();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
@@ -309,10 +309,10 @@ public partial class UserPage : ContentPage
     private async void OnMainCollectionViewChildAdded(object sender, ElementEventArgs e)
     {
         var view = e.Element as View;
-        var viewModel = view.BindingContext as PostViewModel;
+        var viewModel = view.BindingContext as HistoryPostViewModel;
         if (viewModel == null) return;
 
-        if (viewModel.Post.Id == (_lastViewModel as PostViewModel)?.Post.Id)
+        if (viewModel.Post.Id == (_lastViewModel as HistoryPostViewModel)?.Post.Id)
         {
             _lastViewModel = null;
             await LoadMoreAsync();

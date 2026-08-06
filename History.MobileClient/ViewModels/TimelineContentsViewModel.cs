@@ -17,7 +17,7 @@ public partial class TimelineContentsViewModel : ObservableObject
     [ObservableProperty] public partial StickerContentViewModel Sticker3 { get; private set; }
 
     // Single-instance slots
-    [ObservableProperty] public partial WrappedMediaContentsViewModel MediaContent { get; private set; }
+    [ObservableProperty] public partial BaseWrappedMediaContentsViewModel MediaContent { get; private set; }
     [ObservableProperty] public partial PollContentViewModel PollContent { get; private set; }
     [ObservableProperty] public partial ExternalUrlContentViewModel ExternalUrlContent { get; private set; }
 
@@ -72,7 +72,7 @@ public partial class TimelineContentsViewModel : ObservableObject
                     }
                     stickerIndex++;
                     break;
-                case WrappedMediaContentsViewModel media:
+                case BaseWrappedMediaContentsViewModel media:
                     MediaContent = media; HasMediaContent = true;
                     break;
                 case PollContentViewModel poll:

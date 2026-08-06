@@ -28,7 +28,7 @@ public partial class WaitingFriendRequestsPage : ContentPage
         var waitingUsersResult = await App.ExecuteRequestAsync(new GetWaitingRequests());
         if (waitingUsersResult.IsSuccess)
         {
-            var viewModels = waitingUsersResult.Value.Select(x => new FriendshipViewModel(x));
+            var viewModels = waitingUsersResult.Value.Select(x => new HistoryFriendshipViewModel(x));
             MainCollectionView.ItemsSource = viewModels;
             EmptyLabel.IsVisible = waitingUsersResult.Value.Count == 0;
         }
