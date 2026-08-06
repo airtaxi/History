@@ -12,6 +12,7 @@ using History.MobileClient.Helpers;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls.Platform.Compatibility;
+using Microsoft.Maui.Graphics.Platform;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
@@ -248,8 +249,24 @@ public partial class PostPage : ContentPage
                 var imageData = await MentionHelper.GetStickerImageDataAsync(stickerContent.StickerMediaId);
                 if (imageData.Length == 0) continue;
 
+                // All History stickers are webp, which KakaoStory does not accept.
+                // Convert to PNG before uploading, same as the EditPostPage media upload flow.
                 var tempFilePath = Path.Combine(FileSystem.CacheDirectory, $"comment_sticker_{Guid.NewGuid():N}.png");
-                File.WriteAllBytes(tempFilePath, imageData);
+                try
+                {
+                    using var stream = new MemoryStream(imageData);
+                    using var image = PlatformImage.FromStream(stream);
+                    if (image == null) continue;
+
+                    using var saveStream = File.Create(tempFilePath);
+                    await image.SaveAsync(saveStream, ImageFormat.Png);
+                }
+                catch
+                {
+                    try { File.Delete(tempFilePath); } catch { }
+                    continue;
+                }
+
                 try
                 {
                     var uploadedImage = await KakaoStoryApiHandler.UploadImageProp(tempFilePath);
