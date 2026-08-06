@@ -87,7 +87,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
             var reactionVisual = KakaoStoryUtils.GetEmotionVisual(_postData.liked_emotion);
             ReactionGlyph = reactionVisual.Glyph;
             ReactionFontFamily = postData.liked ? "FASolid" : "FARegular";
-            ReactionColor = postData.liked ? reactionVisual.Color : (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Color.FromRgb(0x77, 0x72, 0x6B) : Color.FromRgb(0x88, 0x8D, 0x94));
+            ReactionColor = postData.liked ? reactionVisual.Color : (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Colors.White : Colors.Black);
             HasRepostedUsers = postData.sympathy_count > 0;
             RepostedUsersCount = postData.sympathy_count;
             Interactions = postData.likes?.Select(x => (BaseInteractionViewModel)new KakaoInteractionViewModel(x)).ToList() ?? [];
