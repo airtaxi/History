@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
@@ -13,8 +13,7 @@ public partial class HistoryMediaContentViewModel : BaseMediaContentViewModel
 
     private readonly List<MediaContent> _allMediaContents;
 
-    public HistoryMediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, PostType postType, bool isParentPost)
-        : base(mediaContent.IsVideo, mediaContent.IsSpoiler, mediaContent.Description, postType, isParentPost)
+    public HistoryMediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, PostType postType, bool isParentPost) : base(mediaContent.IsVideo, mediaContent.IsSpoiler, mediaContent.Description, postType, isParentPost)
     {
         MediaContent = mediaContent;
         _allMediaContents = allMediaContents.ToList();
@@ -29,18 +28,12 @@ public partial class HistoryMediaContentViewModel : BaseMediaContentViewModel
         SetMediaAndOverlay();
     }
 
-    protected override List<IMediaViewModel> CreateFullScreenMedias(bool moreThanOneMedias)
-    {
-        return [.. _allMediaContents.Select(mediaContent => GenerateFullScreenMedia(mediaContent, moreThanOneMedias))];
-    }
+    protected override List<IMediaViewModel> CreateFullScreenMedias(bool moreThanOneMedias) => [.. _allMediaContents.Select(mediaContent => GenerateFullScreenMedia(mediaContent, moreThanOneMedias))];
 
-    protected override IMediaViewModel CreateInlineMedia()
+    protected override IMediaViewModel CreateInlineMedia() => new ImageViewModel(Utils.GenerateMediaUri((PostType != PostType.Unwrapped || IsVideo) ? MediaContent.ThumbnailMediaId : MediaContent.MediaId), PostType)
     {
-        return new ImageViewModel(Utils.GenerateMediaUri((PostType != PostType.Unwrapped || IsVideo) ? MediaContent.ThumbnailMediaId : MediaContent.MediaId), PostType)
-        {
-            Aspect = PostType != PostType.Unwrapped ? Aspect.AspectFill : Aspect.AspectFit
-        };
-    }
+        Aspect = PostType != PostType.Unwrapped ? Aspect.AspectFill : Aspect.AspectFit
+    };
 
     public override async Task HandleOverlayTap()
     {

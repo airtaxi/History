@@ -1,4 +1,4 @@
-using History.Commons;
+﻿using History.Commons;
 using History.MobileClient.Pages;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
@@ -16,9 +16,7 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
         Nickname = share.actor?.display_name ?? "알 수 없는 사용자";
         IsModerator = false;
         IsAdmin = false;
-        ProfileMedia = share.actor?.profile_image_url != null
-            ? new ImageViewModel(share.actor.profile_image_url)
-            : null;
+        ProfileMedia = share.actor?.profile_image_url != null ? new ImageViewModel(share.actor.profile_image_url) : null;
     }
 
     public KakaoFriendshipViewModel(CommentLikes commentLike)
@@ -28,14 +26,9 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
         Nickname = commentLike.actor?.display_name ?? "알 수 없는 사용자";
         IsModerator = false;
         IsAdmin = false;
-        ProfileMedia = commentLike.actor?.profile_image_url != null
-            ? new ImageViewModel(commentLike.actor.profile_image_url)
-            : null;
+        ProfileMedia = commentLike.actor?.profile_image_url != null ? new ImageViewModel(commentLike.actor.profile_image_url) : null;
     }
 
-    public override async Task HandleTapAsync()
-    {
-        // Kakao Story profile pages are not implemented yet.
-        await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
-    }
+    // Kakao Story profile pages are not implemented yet.
+    public override async Task HandleTapAsync() => await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
 }

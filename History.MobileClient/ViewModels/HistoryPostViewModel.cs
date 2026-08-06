@@ -35,14 +35,13 @@ public partial class HistoryPostViewModel : BasePostViewModel
 
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostResponseDto>>(this, OnPostChangedMessageReceived);
             WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, OnUserChangedMessageReceived);
-            WeakReferenceMessenger.Default.Register<ValueChangedMessage<CommentResponseDto>>(this, OnCommentChangedMessageReceived);
             WeakReferenceMessenger.Default.Register<ValueDeletedMessage<CommentResponseDto>>(this, OnCommentDeletedMessageReceived);
             WeakReferenceMessenger.Default.Register<NotificationPostReadMessage>(this, OnNotificationPostReadMessage);
         }
         catch (Exception exception) { App.Page.DisplayAlertAsync("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk); }
     }
 
-    private void OnNotificationPostReadMessage(object recipient, NotificationPostReadMessage message)
+    private void OnNotificationPostReadMessage(object _, NotificationPostReadMessage message)
     {
         if (Post.Id != message.Value) return;
 
@@ -120,7 +119,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
         catch (Exception) { } // Ignore any exceptions during update, as the view might be in the foreground.
     }
 
-    private void OnPostChangedMessageReceived(object sender, ValueChangedMessage<PostResponseDto> message)
+    private void OnPostChangedMessageReceived(object _, ValueChangedMessage<PostResponseDto> message)
     {
         if (message.Value.Id != Post.Id) return;
 
@@ -134,13 +133,11 @@ public partial class HistoryPostViewModel : BasePostViewModel
         IsModerator = user?.Rank == Rank.Moderator;
         IsAdmin = user?.Rank == Rank.Admin;
         ProfileMedia = user != null 
-            ? (user.UsesAnimatedProfileMedia 
-                ? new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
-                : new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName))
+            ? (user.UsesAnimatedProfileMedia ? new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true } : new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName))
             : null;
     }
 
-    private void OnUserChangedMessageReceived(object recipient, ValueChangedMessage<UserResponseDto> message)
+    private void OnUserChangedMessageReceived(object _, ValueChangedMessage<UserResponseDto> message)
     {
         if (message.Value.UserId != User.UserId) return;
 
@@ -164,13 +161,8 @@ public partial class HistoryPostViewModel : BasePostViewModel
         HasNoComments = CommentsCount == 0;
     }
 
-    private void OnCommentChangedMessageReceived(object recipient, ValueChangedMessage<CommentResponseDto> message)
+    public override async Task DisplayActionSheetAsync(bool popModal)
     {
-        // HistoryCommentViewModel already subscribes to ValueChangedMessage<CommentResponseDto> and
-        // calls UpdateComment internally. No action needed here.
-    }
-
-    public override async Task DisplayActionSheetAsync(bool popModal)    {
         var options = new List<string>();
 
         if (PostType != PostType.Unwrapped)
@@ -355,10 +347,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
         await App.PushAsync(profilePage);
     }
 
-    public override async Task HandleMoreTapAsync()
-    {
-        await DisplayActionSheetAsync(false);
-    }
+    public override async Task HandleMoreTapAsync() => await DisplayActionSheetAsync(false);
 
     public override async Task HandleReactionAsync()
     {

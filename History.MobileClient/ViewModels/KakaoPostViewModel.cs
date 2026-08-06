@@ -27,7 +27,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostData>>(this, OnPostChangedMessageReceived);
     }
 
-    private void OnPostChangedMessageReceived(object recipient, ValueChangedMessage<PostData> message)
+    private void OnPostChangedMessageReceived(object _, ValueChangedMessage<PostData> message)
     {
         if (message.Value.id != _postData.id) return;
 
@@ -45,9 +45,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
             Nickname = actor?.display_name;
             IsModerator = false;
             IsAdmin = false;
-            ProfileMedia = actor != null && actor.profile_image_url != null
-                ? new ImageViewModel(actor.profile_image_url) { IsAnimated = false }
-                : null;
+            ProfileMedia = (actor != null && actor.profile_image_url != null) ? new ImageViewModel(actor.profile_image_url) { IsAnimated = false } : null;
 
             Contents = GenerateContentViewModels(postData, PostType);
             TimelineContents = new TimelineContentsViewModel(Contents);
@@ -71,14 +69,12 @@ public partial class KakaoPostViewModel : BasePostViewModel
             PreviewTimestamp = postData.created_at.ToLocalTime().ToString("yyyy-MM-dd");
             PreviewThumbnailVisible = postData.media?.FirstOrDefault()?.thumbnail_url != null;
             HasUnreadNotification = postData.has_unread_reaction;
-            PreviewThumbnail = PreviewThumbnailVisible
-                ? new ImageViewModel(postData.media[0].thumbnail_url)
-                {
-                    Aspect = Aspect.AspectFill,
-                    HorizontalContentOptions = LayoutOptions.Fill,
-                    VerticalContentOptions = LayoutOptions.Fill
-                }
-                : null;
+            PreviewThumbnail = PreviewThumbnailVisible ? new ImageViewModel(postData.media[0].thumbnail_url)
+            {
+                Aspect = Aspect.AspectFill,
+                HorizontalContentOptions = LayoutOptions.Fill,
+                VerticalContentOptions = LayoutOptions.Fill
+            } : null;
 
             // Unused History surfaces.
             DiscoveryOptionGlyph = null;
@@ -90,9 +86,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
             var reactionVisual = KakaoStoryUtils.GetEmotionVisual(_postData.liked_emotion);
             ReactionGlyph = reactionVisual.Glyph;
             ReactionFontFamily = postData.liked ? "FASolid" : "FARegular";
-            ReactionColor = postData.liked
-                ? reactionVisual.Color
-                : (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Color.FromRgb(0x77, 0x72, 0x6B) : Color.FromRgb(0x88, 0x8D, 0x94));
+            ReactionColor = postData.liked ? reactionVisual.Color : (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Color.FromRgb(0x77, 0x72, 0x6B) : Color.FromRgb(0x88, 0x8D, 0x94));
             HasRepostedUsers = postData.sympathy_count > 0;
             RepostedUsersCount = postData.sympathy_count;
             Interactions = postData.likes?.Select(x => (BaseInteractionViewModel)new KakaoInteractionViewModel(x)).ToList() ?? [];
@@ -129,24 +123,12 @@ public partial class KakaoPostViewModel : BasePostViewModel
     {
         var contents = new List<IContentViewModel>();
 
-        if (postData.content_decorators is { Count: > 0 })
-        {
-            contents.Add(new TextTypeContentsViewModel(postData.content_decorators, postType));
-        }
-        else if (!string.IsNullOrWhiteSpace(postData.content))
-        {
-            contents.Add(new TextTypeContentsViewModel(KakaoStoryUtils.GetQuoteDataFromString(postData.content), postType));
-        }
+        if (postData.content_decorators is { Count: > 0 }) contents.Add(new TextTypeContentsViewModel(postData.content_decorators, postType));
+        else if (!string.IsNullOrWhiteSpace(postData.content)) contents.Add(new TextTypeContentsViewModel(KakaoStoryUtils.GetQuoteDataFromString(postData.content), postType));
 
-        if (postData.scrap != null)
-        {
-            contents.Add(new ExternalUrlContentViewModel(postData.scrap));
-        }
+        if (postData.scrap != null) contents.Add(new ExternalUrlContentViewModel(postData.scrap));
 
-        if (postData.media is { Count: > 0 })
-        {
-            contents.Add(new KakaoWrappedMediaContentsViewModel(postData.media, postType));
-        }
+        if (postData.media is { Count: > 0 }) contents.Add(new KakaoWrappedMediaContentsViewModel(postData.media, postType));
 
         return contents;
     }
@@ -305,10 +287,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
             await KakaoStoryApiHandler.PinPost(_postData.id, isUnpin);
             await RefreshAsync();
         }
-        catch (Exception exception)
-        {
-            await App.Page.DisplayAlertAsync("오류", $"관심글 처리에 실패하였습니다.\n{exception.Message}", Constants.PromptOk);
-        }
+        catch (Exception exception) { await App.Page.DisplayAlertAsync("오류", $"관심글 처리에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }
     }
 
     private async Task HandleEditAsync()
@@ -327,11 +306,8 @@ public partial class KakaoPostViewModel : BasePostViewModel
         await App.PushAsync(postPage);
     }
 
-    public override async Task HandleProfileTapAsync()
-    {
-        // Kakao Story profile pages are not implemented yet.
-        await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
-    }
+    // Kakao Story profile pages are not implemented yet.
+    public override async Task HandleProfileTapAsync() => await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
 
     public override async Task HandleShareAsync()
     {
