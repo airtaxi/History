@@ -46,8 +46,8 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
         Nickname = Profile?.display_name;
         Description = Profile?.status_objects?.FirstOrDefault()?.message ?? "설정된 한줄 소개가 없습니다";
         FriendshipDescription = IsMe ? "내 프로필입니다." : (MutualFriend?.message ?? "친구가 아니에요.");
-        BackgroundMedia = HasBackgroundImage ? new ImageViewModel(Profile.bg_image_url) : null;
-        ProfileMedia = HasProfileImage ? new ImageViewModel(Profile.profile_image_url) : null;
+        BackgroundMedia = Profile?.bg_image_url != null ? new ImageViewModel(Profile.bg_image_url) : null;
+        ProfileMedia = Profile?.profile_image_url != null ? new ImageViewModel(Profile.profile_image_url) : null;
         IsBlocked = Profile?.blocked ?? false;
         BlockedUserIdText = $"사용자 ID: {Profile?.id}";
         IsFeedBlockAvailable = !IsMe && !IsBlocked;
