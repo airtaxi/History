@@ -8,7 +8,7 @@
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
 
-    <DataTemplate x:Key="RepostTemplate" x:DataType="vm:HistoryRepostViewModel">
+    <DataTemplate x:Key="RepostTemplate" x:DataType="vm:BasePostViewModel">
         <Grid Padding="6">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />

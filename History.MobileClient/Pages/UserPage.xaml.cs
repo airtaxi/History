@@ -147,7 +147,7 @@ public partial class UserPage : ContentPage
             var lastViewModel = _viewModels.OfType<HistoryPostViewModel>().LastOrDefault();
             if (lastViewModel == null) return;
 
-            var lastPostId = lastViewModel is HistoryRepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
+            var lastPostId = lastViewModel.RepostId ?? lastViewModel.Post.Id;
             var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, lastPostId, _useGridLayout ? 50 : 30));
             if (postsResult.IsSuccess)
             {

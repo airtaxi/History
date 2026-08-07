@@ -82,7 +82,7 @@ public partial class BookmarkedPostsPage : ContentPage
             var lastViewModel = _viewModels.LastOrDefault();
             if (lastViewModel == null) return;
 
-            var lastPostId = lastViewModel is HistoryRepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
+            var lastPostId = lastViewModel.RepostId ?? lastViewModel.Post.Id;
             var result = await App.ExecuteRequestAsync(new GetBookmarkedPosts(lastPostId, 20));
             if (result.IsSuccess)
             {
