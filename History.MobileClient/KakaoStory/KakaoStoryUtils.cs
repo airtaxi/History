@@ -8,6 +8,7 @@ using System.Net;
 using System.Text;
 using UraniumUI.Icons.FontAwesome;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient.KakaoStory;
 
@@ -149,6 +150,32 @@ public static class KakaoStoryUtils
         if (textBatch.Count > 0) contents.Add(new TextTypeContentsViewModel(textBatch, postType));
 
         return contents;
+    }
+
+    /// <summary>
+    /// Creates the post view model for a Kakao Story feed item, unwrapping bundled feeds
+    /// (share/UP activities) into the shared post/repost surfaces (WPF pattern):
+    /// - bundled_feed.type == "up"    -> render the original activity as a repost card.
+    /// - bundled_feed.type == "share" -> inject the original activity into activities[0].@object
+    ///                                    so the shared card renders the original post.
+    /// </summary>
+    public static BasePostViewModel CreatePostViewModel(PostData postData)
+    {
+        var bundledFeed = postData.bundled_feed;
+        if (postData.verb == "bundled_feed" && bundledFeed != null)
+        {
+            if (bundledFeed.type == "up" && bundledFeed.original_activity != null)
+                return new KakaoRepostViewModel(postData);
+
+            if (bundledFeed.type == "share" && bundledFeed.activities is { Count: > 0 })
+            {
+                var activity = bundledFeed.activities[0];
+                activity.@object = bundledFeed.original_activity;
+                return new KakaoPostViewModel(activity);
+            }
+        }
+
+        return new KakaoPostViewModel(postData);
     }
 
     /// <summary>

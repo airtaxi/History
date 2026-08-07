@@ -30,5 +30,16 @@ public partial class KakaoRepostViewModel : KakaoPostViewModel
         IsShare = false;
     }
 
-    public override async Task HandleRepostedUserTap() => await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
+    public override async Task HandleRepostedUserTap()
+    {
+        var actorId = CurrentPostData.bundled_feed?.original_activity?.actor?.id;
+        if (actorId == null)
+        {
+            await App.Page.DisplayAlertAsync("안내", "프로필을 불러올 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        var profilePage = new UserPage(actorId, true);
+        await App.PushAsync(profilePage);
+    }
 }

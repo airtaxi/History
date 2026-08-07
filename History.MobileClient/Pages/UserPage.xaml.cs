@@ -6,6 +6,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Platform;
 using System.Collections.ObjectModel;
@@ -13,15 +14,19 @@ using History.Commons;
 using UraniumUI.Icons.MaterialSymbols;
 using History.Commons.Api.Message;
 using History.MobileClient.ThirdParty.StaggeredLayout;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient.Pages;
 
 public partial class UserPage : ContentPage
 {
     public static bool ShouldRefresh { get; set; }
+    public static bool ShouldRefreshKakaoStory { get; set; }
     public string UserId { get; }
+    public string KakaoUserId { get; }
 
     private bool _isInForeground;
+    private bool _isKakaoStoryMode;
     private bool _areThereNoMorePostsToLoad;
     private bool _useGridLayout = true;
     private PeriodicTimer _scrollPositionTimer;
@@ -32,10 +37,11 @@ public partial class UserPage : ContentPage
     private Thickness _writePostBorderBaseMargin;
 #endif
     private object _lastViewModel;
-    private ProfileViewModel _viewModel;
+    private BaseProfileViewModel _viewModel;
     private readonly bool _isMyProfile;
-    private readonly ObservableCollection<HistoryPostViewModel> _viewModels = [];
+    private readonly ObservableCollection<BasePostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
+    private string _nextSince;
 
     public UserPage() : this(Shared.UserId)
     {
@@ -50,21 +56,45 @@ public partial class UserPage : ContentPage
         WeakReferenceMessenger.Default.Register<PostPinnedMessage>(this, OnPostPinnedMessageReceived);
     }
 
-    public UserPage(string userId)
-	{
-		UserId = userId;
+    public UserPage(string userId) : this(userId, false)
+    {
+    }
+
+    public UserPage(string userId, bool isKakaoStoryMode)
+    {
+        if (isKakaoStoryMode) KakaoUserId = userId;
+        else UserId = userId;
+
+        _isKakaoStoryMode = isKakaoStoryMode;
         InitializeComponent();
 
-        if (UserId == Shared.UserId)
+        if (!_isKakaoStoryMode)
         {
-            BanImage.IsVisible = false;
-            MemoImage.IsVisible = false;
+            if (UserId == Shared.UserId)
+            {
+                BanImage.IsVisible = false;
+                MemoImage.IsVisible = false;
+            }
+            else MessageImage.IsVisible = true;
         }
-        else MessageImage.IsVisible = true;
+        else
+        {
+            // Kakao Story profile: only back/layout remain; History-only header actions are hidden.
+            MessageImage.IsVisible = false;
+            MemoImage.IsVisible = false;
+            FriendsImage.IsVisible = false;
+            BanImage.IsVisible = false;
+            SettingsImage.IsVisible = false;
+            TitleLabel.Text = "프로필";
+        }
+
+        PillGrid.IsVisible = IsMyProfilePage;
+        UpdatePillVisuals();
 
         MainCollectionView.ItemsSource = _viewModels;
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
+        WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostData>>(this, OnKakaoPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
 #if ANDROID
         WeakReferenceMessenger.Default.Register<TimelineVirtualizationChangedMessage>(this, OnTimelineVirtualizationChangedMessageReceived);
@@ -80,11 +110,30 @@ public partial class UserPage : ContentPage
 #endif
     }
 
+    private bool IsMyProfilePage => _isKakaoStoryMode ? KakaoUserId == Shared.KakaoUserId : UserId == Shared.UserId;
+
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {
         var viewModels = _viewModels.OfType<HistoryPostViewModel>().Where(x => x.Post.Id == message.Value.Id).ToList(); // ToList is needed (Collection will be modified)
         foreach (var viewModel in viewModels) _viewModels.Remove(viewModel);
         _lastViewModel = _viewModels.LastOrDefault();
+    }
+
+    private void OnKakaoPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostData> message)
+    {
+        var viewModels = _viewModels.OfType<KakaoPostViewModel>().Where(x => x.PostData.id == message.Value.id).ToList(); // ToList is needed (Collection will be modified)
+        foreach (var viewModel in viewModels) _viewModels.Remove(viewModel);
+        _lastViewModel = _viewModels.LastOrDefault();
+    }
+
+    private static string GetPostId(BasePostViewModel viewModel)
+    {
+        return viewModel.RepostId ?? viewModel switch
+        {
+            HistoryPostViewModel historyViewModel => historyViewModel.Post.Id,
+            KakaoPostViewModel kakaoViewModel => kakaoViewModel.PostData.id,
+            _ => null
+        };
     }
 
     public async Task RefreshAsync()
@@ -107,30 +156,59 @@ public partial class UserPage : ContentPage
             }
 
             _viewModels.Clear();
+            _areThereNoMorePostsToLoad = false;
+            _nextSince = null;
 
-            var friends = await Shared.ApiHandler.ExecuteRequestAsync(new GetFriends(Shared.UserId));
-            Shared.Friends = friends;
-
-            var user = await App.ExecuteRequestAsync(new GetUser(UserId));
-            if (user.IsSuccess)
+            if (_isKakaoStoryMode)
             {
-                _viewModel = new ProfileViewModel(user.Value);
+                if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+
+                var profileObject = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetProfileFeed(KakaoUserId, null));
+                if (profileObject?.profile == null)
+                {
+                    await DisplayAlertAsync("오류", "카카오스토리 프로필을 불러오지 못했습니다.", Constants.PromptOk);
+                    return;
+                }
+
+                _viewModel = new KakaoProfileViewModel(profileObject.profile, profileObject.mutual_friend);
                 ProfileDataTemplatePresenter.ViewModel = _viewModel;
-            }
-            else
-            {
-                await App.PopAsync();
-                return;
-            }
 
-            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, null, _useGridLayout ? 50 : 30));
-            if (postsResult.IsSuccess)
-            {
-                var posts = postsResult.Value;
-                var viewModels = posts.Select(x => new HistoryPostViewModel(x, PostType.Timeline));
+                var viewModels = (profileObject.activities ?? []).Select(KakaoStoryUtils.CreatePostViewModel).ToList();
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
+            else
+            {
+                var friends = await Shared.ApiHandler.ExecuteRequestAsync(new GetFriends(Shared.UserId));
+                Shared.Friends = friends;
+
+                var user = await App.ExecuteRequestAsync(new GetUser(UserId));
+                if (user.IsSuccess)
+                {
+                    _viewModel = new HistoryProfileViewModel(user.Value);
+                    ProfileDataTemplatePresenter.ViewModel = _viewModel;
+                }
+                else
+                {
+                    await App.PopAsync();
+                    return;
+                }
+
+                var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, null, _useGridLayout ? 50 : 30));
+                if (postsResult.IsSuccess)
+                {
+                    var posts = postsResult.Value;
+                    var viewModels = posts.Select(x => (BasePostViewModel)new HistoryPostViewModel(x, PostType.Timeline));
+                    _lastViewModel = viewModels.LastOrDefault();
+                    foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
+                }
+            }
+        }
+        catch (Exception exception)
+        {
+            // History errors are surfaced by the shared request pipeline; only Kakao Story shows its own alert.
+            if (_isKakaoStoryMode) await DisplayAlertAsync("오류", $"카카오스토리 프로필을 불러오지 못했습니다.\n{exception.Message}", Constants.PromptOk);
+            else throw;
         }
         finally { _fetchSemaphore.Release(); }
     }
@@ -144,18 +222,39 @@ public partial class UserPage : ContentPage
         {
             await _fetchSemaphore.WaitAsync();
 
-            var lastViewModel = _viewModels.OfType<HistoryPostViewModel>().LastOrDefault();
-            if (lastViewModel == null) return;
-
-            var lastPostId = lastViewModel.RepostId ?? lastViewModel.Post.Id;
-            var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, lastPostId, _useGridLayout ? 50 : 30));
-            if (postsResult.IsSuccess)
+            if (_isKakaoStoryMode)
             {
-                var posts = postsResult.Value;
-                var viewModels = posts.Select(x => new HistoryPostViewModel(x, PostType.Timeline));
+                var profileObject = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetProfileFeed(KakaoUserId, _nextSince));
+                if (profileObject?.activities == null)
+                {
+                    _areThereNoMorePostsToLoad = true;
+                    return;
+                }
+
+                var activities = profileObject.activities;
+                var viewModels = activities.Select(KakaoStoryUtils.CreatePostViewModel).ToList();
+                // The profile feed has no next_since; the cursor is the last activity id,
+                // advanced only while more than 15 items are returned (Kakao Story Manager Plus pattern).
+                _nextSince = activities.Count > 15 ? activities.LastOrDefault()?.id : null;
                 _lastViewModel = viewModels.LastOrDefault();
-                _areThereNoMorePostsToLoad = !viewModels.Any();
+                _areThereNoMorePostsToLoad = string.IsNullOrEmpty(_nextSince) || !viewModels.Any();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
+            }
+            else
+            {
+                var lastViewModel = _viewModels.OfType<HistoryPostViewModel>().LastOrDefault();
+                if (lastViewModel == null) return;
+
+                var lastPostId = lastViewModel.RepostId ?? lastViewModel.Post.Id;
+                var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(UserId, lastPostId, _useGridLayout ? 50 : 30));
+                if (postsResult.IsSuccess)
+                {
+                    var posts = postsResult.Value;
+                    var viewModels = posts.Select(x => (BasePostViewModel)new HistoryPostViewModel(x, PostType.Timeline));
+                    _lastViewModel = viewModels.LastOrDefault();
+                    _areThereNoMorePostsToLoad = !viewModels.Any();
+                    foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
+                }
             }
         }
         finally { _fetchSemaphore.Release(); }
@@ -201,11 +300,12 @@ public partial class UserPage : ContentPage
         Dispatcher.Dispatch(ApplyVirtualizationSetting);
 #endif
 
-        if (UserId != Shared.UserId) _ = MarkFriendNotificationsAsReadAsync();
+        if (!_isKakaoStoryMode && UserId != Shared.UserId) _ = MarkFriendNotificationsAsReadAsync();
 
-        if (_isFirstLoad || (ShouldRefresh && UserId == Shared.UserId))
+        if (_isFirstLoad || (ShouldRefresh && !_isKakaoStoryMode && UserId == Shared.UserId) || (ShouldRefreshKakaoStory && _isKakaoStoryMode && KakaoUserId == Shared.KakaoUserId))
         {
             ShouldRefresh = false;
+            ShouldRefreshKakaoStory = false;
             _isFirstLoad = false;
             Dispatcher.Dispatch(async () => await RefreshAsync());
         }
@@ -309,10 +409,10 @@ public partial class UserPage : ContentPage
     private async void OnMainCollectionViewChildAdded(object sender, ElementEventArgs e)
     {
         var view = e.Element as View;
-        var viewModel = view.BindingContext as HistoryPostViewModel;
+        var viewModel = view.BindingContext as BasePostViewModel;
         if (viewModel == null) return;
 
-        if (viewModel.Post.Id == (_lastViewModel as HistoryPostViewModel)?.Post.Id)
+        if (GetPostId(viewModel) == GetPostId(_lastViewModel as BasePostViewModel))
         {
             _lastViewModel = null;
             await LoadMoreAsync();
@@ -334,8 +434,35 @@ public partial class UserPage : ContentPage
         else ShouldRefresh = true;
     }
 
-    private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new SettingsPage(_viewModel.User));
+    private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new SettingsPage((_viewModel as HistoryProfileViewModel)?.User));
     private async void OnWritePostBorderTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
+
+    private async void OnHistoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(false);
+
+    private async void OnKakaoStoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(true);
+
+    private async Task SwitchModeAsync(bool isKakaoStoryMode)
+    {
+        if (_isKakaoStoryMode == isKakaoStoryMode) return;
+        _isKakaoStoryMode = isKakaoStoryMode;
+        UpdatePillVisuals();
+        ShouldRefresh = false;
+        ShouldRefreshKakaoStory = false;
+        await RefreshAsync();
+    }
+
+    private void UpdatePillVisuals()
+    {
+        var primaryColor = Application.Current.Resources["Primary"] as Color ?? Colors.Orange;
+        var isDarkTheme = Utils.GetGlobalAppTheme() == AppTheme.Dark;
+        var inactiveBackgroundColor = isDarkTheme ? Color.FromRgb(0x33, 0x33, 0x33) : Color.FromRgb(0xEA, 0xEA, 0xEA);
+        var inactiveTextColor = isDarkTheme ? Color.FromRgb(0xAA, 0xAA, 0xAA) : Color.FromRgb(0x66, 0x66, 0x66);
+
+        HistoryPillBorder.BackgroundColor = _isKakaoStoryMode ? inactiveBackgroundColor : primaryColor;
+        HistoryPillLabel.TextColor = _isKakaoStoryMode ? inactiveTextColor : Colors.White;
+        KakaoStoryPillBorder.BackgroundColor = _isKakaoStoryMode ? primaryColor : inactiveBackgroundColor;
+        KakaoStoryPillLabel.TextColor = _isKakaoStoryMode ? Colors.White : inactiveTextColor;
+    }
 
     private async Task PollScrollPositionAsync(PeriodicTimer timer)
     {
@@ -432,6 +559,6 @@ public partial class UserPage : ContentPage
     private async void OnMessageImageTapped(object sender, TappedEventArgs e)
     {
         var canSendMessage = await App.ExecuteRequestAsync(new CheckMessagePermission(UserId));
-        if (canSendMessage.IsSuccess) await App.PushModalAsync(new WriteMessagePage(UserId, _viewModel.User.Nickname));
+        if (canSendMessage.IsSuccess) await App.PushModalAsync(new WriteMessagePage(UserId, (_viewModel as HistoryProfileViewModel)?.User.Nickname));
     }
 }

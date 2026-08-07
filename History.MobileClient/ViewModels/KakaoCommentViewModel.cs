@@ -217,8 +217,17 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
         else await ParentViewModel.HandleTapAsync();
     }
 
-    // TODO: Kakao Story profile page — pending page migration.
-    public override async Task HandleProfileTap() => await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
+    public override async Task HandleProfileTap()
+    {
+        if (_commentUserId == null)
+        {
+            await App.Page.DisplayAlertAsync("안내", "프로필을 불러올 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        var userPage = new UserPage(_commentUserId, true);
+        await App.PushAsync(userPage);
+    }
 
     // TODO: Comment editing requires the Kakao Story comment editor page — pending page migration.
     private async Task HandleEditCommentAsync() => await App.Page.DisplayAlertAsync("안내", "카카오스토리 댓글 수정은 아직 지원되지 않습니다.", Constants.PromptOk);

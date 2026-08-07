@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using FFImageLoading.Maui;
@@ -16,96 +15,81 @@ using NativeMedia;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class ProfileViewModel : ObservableObject
+public partial class HistoryProfileViewModel : BaseProfileViewModel
 {
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsMe))]
-    [NotifyPropertyChangedFor(nameof(IsNotMe))]
-    [NotifyPropertyChangedFor(nameof(IsFriend))]
-    [NotifyPropertyChangedFor(nameof(IsFavorite))]
-    [NotifyPropertyChangedFor(nameof(FavoriteColor))]
-    [NotifyPropertyChangedFor(nameof(FriendButtonText))]
-    [NotifyPropertyChangedFor(nameof(Nickname))]
-    [NotifyPropertyChangedFor(nameof(Description))]
-    [NotifyPropertyChangedFor(nameof(FriendshipDescription))]
-    [NotifyPropertyChangedFor(nameof(BackgroundMedia))]
-    [NotifyPropertyChangedFor(nameof(ProfileMedia))]
     public partial UserResponseDto User { get; private set; }
 
-    public bool IsMe => User.UserId == Shared.UserId;
-    public bool IsNotMe => !IsMe;
-    public bool IsFriend => User.Friendship?.Status == FriendshipStatus.Accepted;
-
-    public bool IsModerator => User.Rank == Rank.Moderator;
-    public bool IsAdmin => User.Rank == Rank.Admin;
-
-    public bool IsFavorite => User.IsFavorite;
-    public Color FavoriteColor => IsFavorite ? Application.Current.Resources["Primary"] as Color : Color.FromRgb(0x30, 0x30, 0x30);
-
-    public string FriendButtonText
-    {
-        get
-        {
-            if (IsMe) return "ERROR";
-            else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Accepted) return "친구 삭제";
-            else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Waiting) return "친구 수락";
-            else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Requested) return "친구 요청 취소";
-            else return "친구 신청";
-        }
-    }
-
-    public string Nickname => User.Nickname;
-    public string Description => string.IsNullOrEmpty(User.Description) ? "설정된 한줄 소개가 없습니다" : User.Description;
-    public string FriendshipDescription
-    {
-        get
-        {
-            if (IsMe) return "내 프로필입니다.";
-            else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Accepted)
-            {
-                var friendDays = (DateTime.UtcNow - User.Friendship.CreatedAt).TotalDays;
-                if (friendDays < 1)
-                    return "친구가 된지 하루도 안됐어요!";
-                else if (friendDays < 30)
-                    return $"{friendDays:N0}일째 친구에요!";
-                else if (friendDays < 365)
-                    return $"{friendDays / 30:N0}개월째 친구에요!";
-                else
-                    return $"{friendDays / 365:N0}년째 친구에요!";
-            }
-            else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Requested)
-            {
-                return "친구 요청을 보냈어요!";
-            }
-            else return "친구가 아니에요.";
-        }
-    }
-
-    public IMediaViewModel BackgroundMedia => new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundThumbnailMediaId) ?? Constants.DefaultBackgroundImageFileName);
-
-    public IMediaViewModel ProfileMedia => User.UsesAnimatedProfileMedia
-        ? new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
-        : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
-
-    public ProfileViewModel(UserResponseDto user)
+    public HistoryProfileViewModel(UserResponseDto user)
     {
         User = user;
+        UpdateSurface();
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<UserResponseDto>>(this, (r, m) =>
         {
             if (m.Value.UserId != User.UserId) return;
 
             User = m.Value;
+            UpdateSurface();
         });
     }
 
-    public async Task RefreshAsync()
+    private void UpdateSurface()
+    {
+        IsMe = User.UserId == Shared.UserId;
+        IsNotMe = !IsMe;
+        IsFriend = User.Friendship?.Status == FriendshipStatus.Accepted;
+        IsModerator = User.Rank == Rank.Moderator;
+        IsAdmin = User.Rank == Rank.Admin;
+        IsFavorite = User.IsFavorite;
+        FavoriteColor = IsFavorite ? Application.Current.Resources["Primary"] as Color : Color.FromRgb(0x30, 0x30, 0x30);
+        FriendButtonText = GetFriendButtonText();
+        Nickname = User.Nickname;
+        Description = string.IsNullOrEmpty(User.Description) ? "설정된 한줄 소개가 없습니다" : User.Description;
+        FriendshipDescription = GetFriendshipDescription();
+        BackgroundMedia = new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundThumbnailMediaId) ?? Constants.DefaultBackgroundImageFileName);
+        ProfileMedia = User.UsesAnimatedProfileMedia
+            ? new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
+            : new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
+    }
+
+    private string GetFriendButtonText()
+    {
+        if (IsMe) return "ERROR";
+        else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Accepted) return "친구 삭제";
+        else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Waiting) return "친구 수락";
+        else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Requested) return "친구 요청 취소";
+        else return "친구 신청";
+    }
+
+    private string GetFriendshipDescription()
+    {
+        if (IsMe) return "내 프로필입니다.";
+        else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Accepted)
+        {
+            var friendDays = (DateTime.UtcNow - User.Friendship.CreatedAt).TotalDays;
+            if (friendDays < 1)
+                return "친구가 된지 하루도 안됐어요!";
+            else if (friendDays < 30)
+                return $"{friendDays:N0}일째 친구에요!";
+            else if (friendDays < 365)
+                return $"{friendDays / 30:N0}개월째 친구에요!";
+            else
+                return $"{friendDays / 365:N0}년째 친구에요!";
+        }
+        else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Requested)
+        {
+            return "친구 요청을 보냈어요!";
+        }
+        else return "친구가 아니에요.";
+    }
+
+    public override async Task RefreshAsync()
     {
         var result = await App.ExecuteRequestAsync(new GetUser(User.UserId));
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<UserResponseDto>(result.Value));
     }
 
-    [RelayCommand]
-    private async Task HandleProfileLongPressAsync()
+    public override async Task HandleProfileLongPressAsync()
     {
         HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
 
@@ -120,8 +104,7 @@ public partial class ProfileViewModel : ObservableObject
         catch { await Toast.Make("핸들 복사에 실패했습니다.").Show(); }
     }
 
-    [RelayCommand]
-    private async Task HandleProfileTapAsync()
+    public override async Task HandleProfileTapAsync()
     {
         IMediaViewModel media = User.UsesAnimatedProfileMedia ?
         new ImageViewModel(Utils.GenerateMediaUri(User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName)
@@ -149,8 +132,7 @@ public partial class ProfileViewModel : ObservableObject
         await App.PushAsync(viewerPage);
     }
 
-    [RelayCommand]
-    private async Task HandleBackgroundTapAsync()
+    public override async Task HandleBackgroundTapAsync()
     {
         IMediaViewModel media = User.UsesAnimatedBackgroundMedia ?
         new ImageViewModel(Utils.GenerateMediaUri(User.BackgroundMediaId) ?? Constants.DefaultBackgroundImageFileName)
@@ -198,7 +180,6 @@ public partial class ProfileViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
     private async Task HandleChangeDescriptionAsync()
     {
         var prompt = await App.Page.DisplayPromptAsync("한줄 소개 변경", "새로운 한줄 소개를 입력해주세요 (공백 시 설정 해제)", "변경", Constants.PromptCancel, "새로운 한줄 소개 (공백 시 설정 해제)", 40, Keyboard.Plain, User.Description);
@@ -217,7 +198,6 @@ public partial class ProfileViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
     private async Task HandleChangeProfileMediaAsync()
     {
         var shouldUpload = true;
@@ -271,7 +251,6 @@ public partial class ProfileViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
     private async Task HandleChangeBackgroundMediaAsync()
     {
         var shouldUpload = true;
@@ -342,7 +321,6 @@ public partial class ProfileViewModel : ObservableObject
         return true;
     }
 
-    [RelayCommand]
     private async Task HandleChangeHandleAsync()
     {
         var handle = await App.Page.DisplayPromptAsync("핸들 변경", "새로운 핸들을 입력해주세요 (최대 20자, 특수문자 사용 불가)", "변경", Constants.PromptCancel, "새로운 핸들", CommonsConstants.MaxHandleLength, null, User.Handle);
@@ -359,7 +337,6 @@ public partial class ProfileViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
     private async Task HandleChangeProfileVisibilityAsync()
     {
         var action = await App.Page.DisplayActionSheetAsync("프로필 공개 설정", Constants.PromptCancel, null, "공개", "비공개");
@@ -376,8 +353,7 @@ public partial class ProfileViewModel : ObservableObject
         else await App.Page.DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
     }
 
-    [RelayCommand]
-    public async Task HandleBanAsync()
+    public override async Task HandleBanAsync()
     {
         var action = await App.Page.DisplayActionSheetAsync("사용자 차단 / 무시", Constants.PromptCancel, null, "차단", "무시");
         if (action == null || action == Constants.PromptCancel) return;
@@ -414,8 +390,7 @@ public partial class ProfileViewModel : ObservableObject
         else if (action == "무시") await Ignore();
     }
 
-    [RelayCommand]
-    private async Task HandleFriendshipActionAsync()
+    public override async Task HandleFriendshipActionAsync()
     {
         Result result = null;
 
@@ -456,15 +431,13 @@ public partial class ProfileViewModel : ObservableObject
         if (result != null && result.IsSuccess) await RefreshAsync();
     }
 
-    [RelayCommand]
-    private async Task HandleFavoriteAsync()
+    public override async Task HandleFavoriteAsync()
     {
         var result = await App.ExecuteRequestAsync(new ToggleFavorite(User.UserId));
         if (result.IsSuccess) await RefreshAsync();
     }
 
-    [RelayCommand]
-    private async Task HandleProfileSettingsAsync()
+    public override async Task HandleProfileSettingsAsync()
     {
         var action = await App.Page.DisplayActionSheetAsync("프로필 설정", Constants.PromptCancel, null, "닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정", "핸들 변경", "프로필 공개 설정");
 

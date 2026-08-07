@@ -371,8 +371,17 @@ public partial class KakaoPostViewModel : BasePostViewModel
         await App.PushAsync(postPage);
     }
 
-    // Kakao Story profile pages are not implemented yet.
-    public override async Task HandleProfileTapAsync() => await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필 페이지는 아직 지원되지 않습니다.", Constants.PromptOk);
+    public override async Task HandleProfileTapAsync()
+    {
+        if (_postData.actor?.id == null)
+        {
+            await App.Page.DisplayAlertAsync("안내", "프로필을 불러올 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        var profilePage = new UserPage(_postData.actor.id, true);
+        await App.PushAsync(profilePage);
+    }
 
     public override async Task HandleShareAsync()
     {
