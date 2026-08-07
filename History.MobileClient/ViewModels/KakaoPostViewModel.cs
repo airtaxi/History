@@ -77,7 +77,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
             ModifiedAt = postData.content_updated_at.Year > 1 ? postData.content_updated_at : null;
             TimestampText = KakaoStoryUtils.GetTimeString(postData.created_at, ModifiedAt);
 
-            PreviewText = postData.summary ?? postData.content ?? string.Empty;
+            PreviewText = GetPreviewText(postData);
             PreviewTimestamp = postData.created_at.ToLocalTime().ToString("yyyy-MM-dd");
             PreviewThumbnailVisible = postData.media?.FirstOrDefault()?.thumbnail_url != null;
             HasUnreadNotification = postData.has_unread_reaction;
@@ -166,6 +166,19 @@ public partial class KakaoPostViewModel : BasePostViewModel
             });
         }
         catch { } // Credential/URL failures keep the existing reaction-only list.
+    }
+
+    private static string GetPreviewText(PostData postData)
+    {
+        if (postData.content_decorators is { Count: > 0 })
+        {
+            var text = KakaoStoryUtils.GetStringFromQuoteData(postData.content_decorators, false);
+            if (!string.IsNullOrWhiteSpace(text)) return text;
+        }
+
+        if (!string.IsNullOrWhiteSpace(postData.content)) return postData.content;
+
+        return postData.@object != null ? GetPreviewText(postData.@object) : string.Empty;
     }
 
     private static List<IContentViewModel> GenerateContentViewModels(PostData postData, PostType postType)
