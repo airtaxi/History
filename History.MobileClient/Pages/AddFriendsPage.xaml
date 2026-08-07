@@ -9,41 +9,104 @@
         <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
         <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" />
     </ContentPage.Behaviors>
-    <Grid x:Name="RootGrid" RowSpacing="8">
+    <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <SearchBar
-            x:Name="MainSearchBar"
+        <RefreshView
             Grid.Row="0"
-            Placeholder="친구의 닉네임 또는 핸들 검색"
-            SearchButtonPressed="OnSearchButtonPressed" />
+            Refreshing="OnRefreshing"
+            SafeAreaEdges="None">
+            <Grid RowSpacing="8" SafeAreaEdges="None">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-        <Label
-            Grid.Row="1"
-            Margin="6,0,0,0"
-            Text="검색 결과" />
+                <Grid
+                    x:Name="PillGrid"
+                    Grid.Row="0"
+                    Padding="12,10"
+                    ColumnSpacing="8"
+                    IsVisible="False">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        x:Name="HistoryPillBorder"
+                        Grid.Column="0"
+                        HeightRequest="34"
+                        StrokeThickness="0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHistoryPillTapped" />
+                        </Border.GestureRecognizers>
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="17" />
+                        </Border.StrokeShape>
+                        <Label
+                            x:Name="HistoryPillLabel"
+                            Padding="16,0"
+                            FontAttributes="Bold"
+                            FontSize="13"
+                            HorizontalOptions="Center"
+                            Text="히스토리"
+                            VerticalOptions="Center" />
+                    </Border>
+                    <Border
+                        x:Name="KakaoStoryPillBorder"
+                        Grid.Column="1"
+                        HeightRequest="34"
+                        StrokeThickness="0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnKakaoStoryPillTapped" />
+                        </Border.GestureRecognizers>
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="17" />
+                        </Border.StrokeShape>
+                        <Label
+                            x:Name="KakaoStoryPillLabel"
+                            Padding="16,0"
+                            FontAttributes="Bold"
+                            FontSize="13"
+                            HorizontalOptions="Center"
+                            Text="카카오스토리"
+                            VerticalOptions="Center" />
+                    </Border>
+                </Grid>
 
-        <CollectionView
-            x:Name="MainCollectionView"
-            Grid.Row="2"
-            ItemTemplate="{StaticResource FriendshipTemplate}" />
+                <SearchBar
+                    x:Name="MainSearchBar"
+                    Grid.Row="1"
+                    Placeholder="친구의 닉네임 또는 핸들 검색"
+                    SearchButtonPressed="OnSearchButtonPressed" />
 
-        <Label
-            x:Name="EmptyLabel"
-            Grid.Row="2"
-            FontAttributes="Bold"
-            FontSize="16"
-            HorizontalOptions="Center"
-            Text="검색 결과가 없습니다"
-            VerticalOptions="Center" />
+                <Label
+                    Grid.Row="2"
+                    Margin="6,0,0,0"
+                    Text="검색 결과" />
+
+                <CollectionView
+                    x:Name="MainCollectionView"
+                    Grid.Row="3"
+                    ItemTemplate="{StaticResource FriendshipTemplate}" />
+
+                <Label
+                    x:Name="EmptyLabel"
+                    Grid.Row="3"
+                    FontAttributes="Bold"
+                    FontSize="16"
+                    HorizontalOptions="Center"
+                    Text="검색 결과가 없습니다"
+                    VerticalOptions="Center" />
+            </Grid>
+        </RefreshView>
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"
-            Grid.RowSpan="3"
             HeightRequest="100"
             HorizontalOptions="Center"
             IsRunning="False"
