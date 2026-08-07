@@ -102,7 +102,7 @@ public partial class TimelinePage : ContentPage
                 return;
             }
 
-            var viewModels = timeline.feeds.Select(CreateKakaoPostViewModel).ToList();
+            var viewModels = timeline.feeds.Select(CreateKakaoPostViewModel).Where(x => x != null).ToList();
             _lastViewModel = viewModels.LastOrDefault();
             foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
         }
@@ -171,7 +171,7 @@ public partial class TimelinePage : ContentPage
                     return;
                 }
 
-                var viewModels = timeline.feeds.Select(CreateKakaoPostViewModel).ToList();
+                var viewModels = timeline.feeds.Select(CreateKakaoPostViewModel).Where(x => x != null).ToList();
                 _nextSince = timeline.next_since;
                 _lastViewModel = viewModels.LastOrDefault();
                 _areThereNoMorePostsToLoad = string.IsNullOrEmpty(_nextSince) || !viewModels.Any();
