@@ -10,6 +10,7 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.Helpers;
+using History.MobileClient.Messages;
 using History.MobileClient.Pages;
 using NativeMedia;
 
@@ -366,6 +367,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
                 var result = await App.ExecuteRequestAsync(new BlockUser(User.UserId));
                 if (result.IsFailure) return;
 
+                WeakReferenceMessenger.Default.Send(new FriendshipChangedMessage(User.UserId, FriendshipStatus.Blocked, User));
                 await LoginPage.RefreshFriendsAsync();
                 await App.PopAsync();
             }
@@ -380,6 +382,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
                 var result = await App.ExecuteRequestAsync(new IgnoreUser(User.UserId));
                 if (result.IsFailure) return;
 
+                WeakReferenceMessenger.Default.Send(new FriendshipChangedMessage(User.UserId, FriendshipStatus.Ignored, User));
                 await LoginPage.RefreshFriendsAsync();
                 await App.PopAsync();
             }
@@ -393,11 +396,16 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
     public override async Task HandleFriendshipActionAsync()
     {
         Result result = null;
+        FriendshipStatus? newStatus = null;
 
         if (User.Friendship == null)
         {
             var send = await App.Page.DisplayAlertAsync("안내", $"{Nickname}님에게 친구 신청을 보내시겠습니까?", Constants.PromptYes, Constants.PromptNo);
-            if (send) result = await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
+            if (send)
+            {
+                result = await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
+                newStatus = FriendshipStatus.Requested;
+            }
         }
         else if (User.Friendship.Status == FriendshipStatus.Accepted)
         {
@@ -405,13 +413,18 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
             if (delete)
             {
                 result = await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
+                newStatus = null;
                 if (result.IsSuccess) await LoginPage.RefreshFriendsAsync();
             }
         }
         else if (User.Friendship.Status == FriendshipStatus.Requested)
         {
             var cancel = await App.Page.DisplayAlertAsync("안내", $"{Nickname}님에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", Constants.PromptYes, Constants.PromptNo);
-            if (cancel) result = await App.ExecuteRequestAsync(new CancelFriendRequest(User.UserId));
+            if (cancel)
+            {
+                result = await App.ExecuteRequestAsync(new CancelFriendRequest(User.UserId));
+                newStatus = null;
+            }
         }
         else if (User.Friendship.Status == FriendshipStatus.Waiting)
         {
@@ -419,16 +432,16 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
             if (accept)
             {
                 result = await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
-                if (result.IsSuccess)
-                {
-                    var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
-                    if (result.IsSuccess) await LoginPage.RefreshFriendsAsync();
-                    result = friendsResult;
-                }
+                newStatus = FriendshipStatus.Accepted;
+                if (result.IsSuccess) await LoginPage.RefreshFriendsAsync();
             }
         }
 
-        if (result != null && result.IsSuccess) await RefreshAsync();
+        if (result != null && result.IsSuccess)
+        {
+            await RefreshAsync();
+            WeakReferenceMessenger.Default.Send(new FriendshipChangedMessage(User.UserId, newStatus, User));
+        }
     }
 
     public override async Task HandleFavoriteAsync()

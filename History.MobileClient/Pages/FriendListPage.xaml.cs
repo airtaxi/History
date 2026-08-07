@@ -3,6 +3,7 @@ using CommunityToolkit.Maui.Core.Platform;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
+using History.Commons.Enums;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
@@ -17,7 +18,7 @@ public partial class FriendListPage : ContentPage
     private bool _isInForeground;
     private bool _isFirstLoad;
     private bool _sortByTime;
-    private IEnumerable<HistoryFriendshipViewModel> _viewModels;
+    private List<HistoryFriendshipViewModel> _viewModels;
 
     private readonly string _userId;
 
@@ -30,6 +31,7 @@ public partial class FriendListPage : ContentPage
         InitializeComponent();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<FriendshipChangedMessage>(this, OnFriendshipChangedMessageReceived);
 #if IOS
         WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
 
@@ -52,13 +54,14 @@ public partial class FriendListPage : ContentPage
         var friendsResult = await App.ExecuteRequestAsync(new GetFriends(_userId));
         if (friendsResult.IsSuccess)
         {
-            Shared.Friends = friendsResult.Value;
+            if (_userId == Shared.UserId) Shared.Friends = friendsResult.Value;
 
-            _viewModels = friendsResult.Value.Select(x => new HistoryFriendshipViewModel(x));
+            _viewModels = [.. friendsResult.Value.Select(x => new HistoryFriendshipViewModel(x))];
             MainSearchBar.Text = string.Empty;
             EmptyLabel.IsVisible = !_viewModels.Any();
-            TitleLabel.Text = $"{Shared.Friends.Count}명의 친구";
-            FriendListLabel.Text = $"친구 목록 (총 {Shared.Friends.Count}명)";
+            var friendCount = Shared.Friends?.Count ?? 0;
+            TitleLabel.Text = $"{friendCount}명의 친구";
+            FriendListLabel.Text = $"친구 목록 (총 {friendCount}명)";
             ApplySort();
         }
         else if (_userId != Shared.UserId) await App.PopAsync();
@@ -70,37 +73,62 @@ public partial class FriendListPage : ContentPage
         {
             SortFontImageSource.Glyph = Solid.Timeline;
             SortLabel.Text = "최신순";
-            MainCollectionView.ItemsSource = _viewModels.OrderByDescending(x => x.CreatedAt);
         }
         else
         {
             SortFontImageSource.Glyph = Solid.ArrowUpAZ;
             SortLabel.Text = "이름순";
-            MainCollectionView.ItemsSource = _viewModels.OrderBy(x => x.Nickname);
         }
         Configuration.SetValue("FriendsListSortByTime", _sortByTime);
+        ApplyFilterAndSort();
     }
 
-    private void OnMainSearchBarTextChanged(object sender, TextChangedEventArgs e)
+    private void OnFriendshipChangedMessageReceived(object recipient, FriendshipChangedMessage message)
+    {
+        if (_userId != Shared.UserId) return; // Only the user's own friend list reacts to relationship changes.
+
+        var data = message.Value;
+        var isFriend = data.NewStatus == FriendshipStatus.Accepted;
+        var existingViewModel = _viewModels?.FirstOrDefault(x => x.User.UserId == data.UserId);
+
+        // Keep Shared.Friends in sync regardless of the target list, since it is used across the app.
+        if (isFriend)
+        {
+            if (Shared.Friends != null && !Shared.Friends.Any(x => x.UserId == data.UserId)) Shared.Friends.Add(data.User);
+        }
+        else if (Shared.Friends != null) Shared.Friends.RemoveAll(x => x.UserId == data.UserId);
+
+        if (_viewModels == null) return; // First load has not happened yet; it will fetch the latest data.
+
+        if (isFriend && existingViewModel == null) _viewModels.Add(new HistoryFriendshipViewModel(data.User));
+        else if (!isFriend && existingViewModel != null) _viewModels.RemoveAll(x => x.User.UserId == data.UserId);
+
+        var friendCount = Shared.Friends?.Count ?? 0;
+        TitleLabel.Text = $"{friendCount}명의 친구";
+        FriendListLabel.Text = $"친구 목록 (총 {friendCount}명)";
+        ApplyFilterAndSort();
+    }
+
+    private void ApplyFilterAndSort()
     {
         if (_viewModels == null) return;
 
-        var searchBar = sender as SearchBar;
-        var query = searchBar.Text?.ToLowerInvariant() ?? string.Empty;
-        query = query.Trim();
+        var query = MainSearchBar.Text?.ToLowerInvariant()?.Trim() ?? string.Empty;
+        IEnumerable<HistoryFriendshipViewModel> viewModels = _viewModels;
 
-        if (string.IsNullOrEmpty(query))
+        if (!string.IsNullOrEmpty(query))
         {
-            MainCollectionView.ItemsSource = _viewModels;
-            EmptyLabel.IsVisible = !_viewModels.Any();
+            viewModels = viewModels.Where(x => x.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(x.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase) || x.User.Handle.Equals(query, StringComparison.OrdinalIgnoreCase));
         }
-        else
-        {
-            var viewModels = _viewModels.Where(x => x.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(x.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase) || x.User.Handle.Equals(query, StringComparison.OrdinalIgnoreCase));
-            MainCollectionView.ItemsSource = viewModels;
-            EmptyLabel.IsVisible = !viewModels.Any();
-        }
+
+        if (_sortByTime) viewModels = viewModels.OrderByDescending(x => x.CreatedAt);
+        else viewModels = viewModels.OrderBy(x => x.Nickname);
+
+        MainCollectionView.ItemsSource = viewModels;
+        EmptyLabel.IsVisible = !viewModels.Any();
     }
+
+    private void OnMainSearchBarTextChanged(object sender, TextChangedEventArgs e) => ApplyFilterAndSort();
 
     private async void OnRefreshing(object sender, EventArgs e)
     {

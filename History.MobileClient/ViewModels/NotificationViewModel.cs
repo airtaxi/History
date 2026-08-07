@@ -169,6 +169,8 @@ public partial class NotificationViewModel : ObservableObject
         if (result.IsSuccess)
         {
             IsAccepted = true;
+            await LoginPage.RefreshFriendsAsync();
+            WeakReferenceMessenger.Default.Send(new FriendshipChangedMessage(userId, FriendshipStatus.Accepted, Notification.User));
             await Toast.Make("친구 요청을 수락했습니다.").Show();
         }
     }
