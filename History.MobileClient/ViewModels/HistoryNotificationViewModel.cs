@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -15,9 +15,9 @@ using History.MobileClient.Pages;
 
 namespace History.MobileClient.ViewModels;
 
-public partial class NotificationViewModel : ObservableObject
+public partial class HistoryNotificationViewModel : BaseNotificationViewModel
 {
-    public NotificationViewModel(NotificationResponseDto notification)
+    public HistoryNotificationViewModel(NotificationResponseDto notification)
     {
         Notification = notification;
         WeakReferenceMessenger.Default.Register<NotificationsReadAllMessage>(this, OnNotificationsReadAllMessage);
@@ -80,29 +80,23 @@ public partial class NotificationViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsUnread))]
     public partial NotificationResponseDto Notification { get; private set; }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsAcceptButtonVisible))]
-    public partial bool IsAccepted { get; private set; }
+    public override bool IsUnread => Notification.IsUnread;
+    public override string Title => Notification.Title;
+    public override string Body => Notification.Body;
+    public override bool IsBodyVisible => !string.IsNullOrEmpty(Notification.Body);
+    public override string TimestampText => Utils.GenerateFriendlyTimestamp(Notification.CreatedAt, null);
+    public override ImageViewModel ImageMedia => !string.IsNullOrEmpty(Notification.ImageUrl) ? new(Notification.ImageUrl) { Aspect = Aspect.AspectFill } : null;
+    public override bool IsImageVisible => !string.IsNullOrEmpty(Notification.ImageUrl) && Notification.Type != NotificationType.FriendRequest && !IsAcceptButtonVisible;
+    public override bool IsFriendRequest => Notification.Type == NotificationType.FriendRequest;
+    public override bool IsAcceptButtonVisible => IsFriendRequest && !IsAccepted;
 
-    public bool IsUnread => Notification.IsUnread;
-
-    public string Title => Notification.Title;
-    public string Body => Notification.Body;
-    public bool IsBodyVisible => !string.IsNullOrEmpty(Notification.Body);
-    public string TimestampText => Utils.GenerateFriendlyTimestamp(Notification.CreatedAt, null);
-    public ImageViewModel ImageMedia => !string.IsNullOrEmpty(Notification.ImageUrl) ? new(Notification.ImageUrl) { Aspect = Aspect.AspectFill } : null;
-    public bool IsImageVisible => !string.IsNullOrEmpty(Notification.ImageUrl) && Notification.Type != NotificationType.FriendRequest && !IsAcceptButtonVisible;
-    public bool IsFriendRequest => Notification.Type == NotificationType.FriendRequest;
-    public bool IsAcceptButtonVisible => IsFriendRequest && !IsAccepted;
-
-    public IMediaViewModel ProfileMedia => Notification.User.UsesAnimatedProfileMedia
+    public override IMediaViewModel ProfileMedia => Notification.User.UsesAnimatedProfileMedia
         ? new ImageViewModel(Utils.GenerateMediaUri(Notification.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
         : new ImageViewModel(Utils.GenerateMediaUri(Notification.User.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
-    [RelayCommand]
-    public async Task HandleTapAsync()
+    public override async Task HandleTapAsync()
     {
-        if(Notification.Data == null) return;
+        if (Notification.Data == null) return;
         var type = Notification.Type;
 
         if (type == NotificationType.Restriction)
@@ -152,15 +146,13 @@ public partial class NotificationViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    public async Task HandleProfileTapAsync()
+    public override async Task HandleProfileTapAsync()
     {
         var profilePage = new UserPage(Notification.User.UserId);
         await App.PushAsync(profilePage);
     }
 
-    [RelayCommand]
-    public async Task AcceptFriendRequestAsync()
+    public override async Task AcceptFriendRequestAsync()
     {
         if (Notification.Type != NotificationType.FriendRequest) return;
         if (!Notification.Data.TryGetValue("UserId", out var userId)) return;
@@ -175,7 +167,7 @@ public partial class NotificationViewModel : ObservableObject
         }
     }
 
-    public async Task MarkAsReadAsync()
+    public override async Task MarkAsReadAsync()
     {
         if (!IsUnread) return;
 
