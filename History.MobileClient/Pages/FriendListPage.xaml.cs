@@ -86,7 +86,11 @@ public partial class FriendListPage : ContentPage
 
                 if (friends == null)
                 {
-                    if (!_isMyProfile) await DisplayAlertAsync("안내", "친구 목록을 공개하지 않은 사용자입니다.", Constants.PromptOk);
+                    if (!_isMyProfile)
+                    {
+                        await DisplayAlertAsync("안내", "친구 목록을 공개하지 않은 사용자입니다.", Constants.PromptOk);
+                        await App.PopAsync();
+                    }
                     return;
                 }
 
