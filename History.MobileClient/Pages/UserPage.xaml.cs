@@ -412,7 +412,7 @@ public partial class UserPage : ContentPage
         var viewModel = view.BindingContext as BasePostViewModel;
         if (viewModel == null) return;
 
-        if (GetPostId(viewModel) == GetPostId(_lastViewModel as BasePostViewModel))
+        if (_lastViewModel != null && GetPostId(viewModel) == GetPostId(_lastViewModel as BasePostViewModel))
         {
             _lastViewModel = null;
             await LoadMoreAsync();
