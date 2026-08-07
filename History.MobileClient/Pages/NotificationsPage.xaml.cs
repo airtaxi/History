@@ -166,12 +166,6 @@ public partial class NotificationsPage : ContentPage
 
     private async void OnReadAllImageTapped(object sender, TappedEventArgs e)
     {
-        if (_isKakaoStoryMode)
-        {
-            foreach (var viewModel in _viewModels.OfType<KakaoNotificationViewModel>()) await viewModel.MarkAsReadAsync();
-            return;
-        }
-
         var hasUnread = _viewModels.Any(x => x.IsUnread);
         if (!hasUnread) return;
 
@@ -191,6 +185,7 @@ public partial class NotificationsPage : ContentPage
 
         _isKakaoStoryMode = isKakaoStoryMode;
         UpdatePillVisuals();
+        ReadAllImage.IsVisible = !isKakaoStoryMode;
         await RefreshAsync();
     }
 

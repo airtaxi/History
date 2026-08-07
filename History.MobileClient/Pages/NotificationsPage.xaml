@@ -30,6 +30,7 @@
                 Text="알림"
                 VerticalOptions="Center" />
             <Image
+                x:Name="ReadAllImage"
                 HeightRequest="28"
                 HorizontalOptions="End"
                 VerticalOptions="Center"
