@@ -24,11 +24,13 @@ public partial class FriendListPage : ContentPage
     private List<BaseFriendshipViewModel> _viewModels;
 
     private readonly string _userId;
+    private readonly bool _isMyProfile;
 
 
 	public FriendListPage()
 	{
         _userId = Shared.UserId;
+        _isMyProfile = true;
         _sortByTime = Configuration.GetValue<bool>("FriendsListSortByTime");
 
         InitializeComponent();
@@ -48,6 +50,7 @@ public partial class FriendListPage : ContentPage
     public FriendListPage(string userId) : this()
     {
         _userId = userId;
+        _isMyProfile = false;
 
         _sortByTime = false;
         SortHorizontalStackLayout.IsVisible = false;
@@ -60,6 +63,7 @@ public partial class FriendListPage : ContentPage
     {
         _userId = userId;
         _isKakaoStoryMode = isKakaoStoryMode;
+        _isMyProfile = false;
 
         _sortByTime = false;
         SortHorizontalStackLayout.IsVisible = false;
@@ -77,12 +81,12 @@ public partial class FriendListPage : ContentPage
             try
             {
                 FriendData.Friends friends;
-                if (_userId == Shared.KakaoUserId) friends = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetFriends());
+                if (_isMyProfile) friends = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetFriends());
                 else friends = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetProfileFriends(_userId));
 
                 if (friends == null)
                 {
-                    if (_userId != Shared.KakaoUserId) await DisplayAlertAsync("안내", "친구 목록을 공개하지 않은 사용자입니다.", Constants.PromptOk);
+                    if (!_isMyProfile) await DisplayAlertAsync("안내", "친구 목록을 공개하지 않은 사용자입니다.", Constants.PromptOk);
                     return;
                 }
 
