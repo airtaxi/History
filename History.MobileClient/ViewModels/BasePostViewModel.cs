@@ -106,6 +106,12 @@ public partial class BasePostViewModel : ObservableObject
     [ObservableProperty]
     public partial ImageViewModel PreviewThumbnail { get; protected set; }
 
+    // Repost attribution surface shared by History and Kakao Story repost view models.
+    [ObservableProperty]
+    public partial string RepostId { get; protected set; }
+    [ObservableProperty]
+    public partial string RepostedUserNickname { get; protected set; }
+
     public PostType PostType { get; }
     public bool IsParentPost { get; }
 
@@ -144,6 +150,9 @@ public partial class BasePostViewModel : ObservableObject
 
     [RelayCommand]
     public virtual async Task HandleLoadMoreComments() => throw new NotSupportedException("[BasePostViewModel] HandleLoadMoreComments must be overridden");
+
+    [RelayCommand]
+    public virtual async Task HandleRepostedUserTap() => throw new NotSupportedException("[BasePostViewModel] HandleRepostedUserTap must be overridden");
 
     public virtual async Task<Result> RefreshAsync() => throw new NotSupportedException("[BasePostViewModel] RefreshAsync must be overridden");
 

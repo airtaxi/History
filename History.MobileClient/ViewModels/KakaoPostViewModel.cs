@@ -18,9 +18,15 @@ public partial class KakaoPostViewModel : BasePostViewModel
     private int _updateVersion;
 
     public PostData PostData => _postData;
-    public bool IsMyPost => _postData.actor.id == Shared.KakaoUserId;
+    public bool IsMyPost => _postData.actor?.id == Shared.KakaoUserId;
 
-    public KakaoPostViewModel(PostData postData, PostType postType = PostType.Timeline) : base(postType)
+    protected PostData CurrentPostData
+    {
+        get => _postData;
+        set => _postData = value;
+    }
+
+    public KakaoPostViewModel(PostData postData, PostType postType = PostType.Timeline, bool isParentPost = false) : base(postType, isParentPost)
     {
         _postData = postData;
         UpdatePost(postData);
@@ -35,7 +41,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         UpdatePost(message.Value);
     }
 
-    private void UpdatePost(PostData postData)
+    protected virtual void UpdatePost(PostData postData)
     {
         _postData = postData;
         var version = ++_updateVersion;
@@ -50,9 +56,11 @@ public partial class KakaoPostViewModel : BasePostViewModel
 
             Contents = GenerateContentViewModels(postData, PostType);
             TimelineContents = new TimelineContentsViewModel(Contents);
-            ParentPost = null;
+            // Kakao Story embeds the original post in @object for share/UP activities (KSMP pattern).
+            // The embedded post renders as a nested card via SharedPostTemplate; tapping it opens the original post.
+            ParentPost = postData.@object != null ? new KakaoPostViewModel(postData.@object, PostType, true) : null;
             IsRepost = false;
-            IsShare = false;
+            IsShare = postData.@object != null;
 
             var sourceComments = postData.comments ?? postData.latest_comments ?? [];
             Comments = [.. sourceComments.Select(c => new KakaoCommentViewModel(c, PostType, this)).OrderBy(x => x.CreatedAt)];
@@ -103,7 +111,8 @@ public partial class KakaoPostViewModel : BasePostViewModel
 
         // Fire-and-forget: fetch share/UP user profile photos for the detail page interaction list.
         // The timeline template only shows counts, so we avoid extra API calls on the feed.
-        if (PostType == PostType.Unwrapped) _ = AttachInteractionsAsync(version);
+        // The embedded original post (ParentPost) never shows its own interaction list.
+        if (PostType == PostType.Unwrapped && !IsParentPost) _ = AttachInteractionsAsync(version);
     }
 
     private async Task AttachEmoticonsAsync(int version)
@@ -329,6 +338,22 @@ public partial class KakaoPostViewModel : BasePostViewModel
 
     public override async Task HandleTapAsync()
     {
+        // Tapping the embedded original post card opens the original post (KSMP pattern).
+        if (IsParentPost)
+        {
+            var originalPost = await KakaoStoryApiHandler.GetPost(_postData.id);
+            if (originalPost == null)
+            {
+                await App.Page.DisplayAlertAsync("안내", "원본 게시글을 불러올 수 없습니다.", Constants.PromptOk);
+                return;
+            }
+
+            var originalViewModel = new KakaoPostViewModel(originalPost, PostType.Unwrapped);
+            var originalPostPage = new PostPage(originalViewModel);
+            await App.PushAsync(originalPostPage);
+            return;
+        }
+
         var result = await RefreshAsync();
         if (result.IsFailure) return;
 

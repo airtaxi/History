@@ -76,13 +76,35 @@ public partial class TimelinePage : ContentPage
 
     private static string GetPostId(BasePostViewModel viewModel)
     {
-        return viewModel switch
+        return viewModel.RepostId ?? viewModel switch
         {
-            HistoryRepostViewModel repostViewModel => repostViewModel.RepostId,
             HistoryPostViewModel historyViewModel => historyViewModel.Post.Id,
             KakaoPostViewModel kakaoViewModel => kakaoViewModel.PostData.id,
             _ => null
         };
+    }
+
+    // Kakao Story bundles multiple share/UP activities into a single feed (WPF pattern):
+    // - bundled_feed.type == "up"    -> render the original activity as a repost card.
+    // - bundled_feed.type == "share" -> inject the original activity into activities[0].@object
+    //                                    so the shared card renders the original post.
+    private static BasePostViewModel CreateKakaoPostViewModel(PostData postData)
+    {
+        var bundledFeed = postData.bundled_feed;
+        if (postData.verb == "bundled_feed" && bundledFeed != null)
+        {
+            if (bundledFeed.type == "up" && bundledFeed.original_activity != null)
+                return new KakaoRepostViewModel(postData);
+
+            if (bundledFeed.type == "share" && bundledFeed.activities is { Count: > 0 })
+            {
+                var activity = bundledFeed.activities[0];
+                activity.@object = bundledFeed.original_activity;
+                return new KakaoPostViewModel(activity);
+            }
+        }
+
+        return new KakaoPostViewModel(postData);
     }
 
     private async Task LoadFirstPageAsync()
@@ -98,7 +120,7 @@ public partial class TimelinePage : ContentPage
                 return;
             }
 
-            var viewModels = timeline.feeds.Select(x => (BasePostViewModel)new KakaoPostViewModel(x)).ToList();
+            var viewModels = timeline.feeds.Select(CreateKakaoPostViewModel).ToList();
             _lastViewModel = viewModels.LastOrDefault();
             foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
         }
@@ -167,7 +189,7 @@ public partial class TimelinePage : ContentPage
                     return;
                 }
 
-                var viewModels = timeline.feeds.Select(x => (BasePostViewModel)new KakaoPostViewModel(x)).ToList();
+                var viewModels = timeline.feeds.Select(CreateKakaoPostViewModel).ToList();
                 _nextSince = timeline.next_since;
                 _lastViewModel = viewModels.LastOrDefault();
                 _areThereNoMorePostsToLoad = string.IsNullOrEmpty(_nextSince) || !viewModels.Any();
@@ -178,7 +200,7 @@ public partial class TimelinePage : ContentPage
                 var lastViewModel = _viewModels.OfType<HistoryPostViewModel>().LastOrDefault();
                 if (lastViewModel == null) return;
 
-                var lastPostId = lastViewModel is HistoryRepostViewModel repostViewModel ? repostViewModel.RepostId : lastViewModel.Post.Id;
+                var lastPostId = lastViewModel.RepostId ?? lastViewModel.Post.Id;
                 var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(lastPostId, 30));
                 if (postsResult.IsSuccess)
                 {
