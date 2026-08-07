@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="History.MobileClient.Pages.WaitingFriendRequestsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -12,15 +12,74 @@
     </ContentPage.Behaviors>
     <Grid x:Name="RootGrid">
         <RefreshView Refreshing="OnRefreshing">
-            <Grid>
-                <CollectionView x:Name="MainCollectionView" ItemTemplate="{StaticResource FriendshipTemplate}" />
-                <Label
-                    x:Name="EmptyLabel"
-                    FontAttributes="Bold"
-                    FontSize="16"
-                    HorizontalOptions="Center"
-                    Text="보낸 친구 신청이 없습니다"
-                    VerticalOptions="Center" />
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid
+                    x:Name="PillGrid"
+                    Grid.Row="0"
+                    Padding="12,10"
+                    ColumnSpacing="8"
+                    IsVisible="False">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        x:Name="HistoryPillBorder"
+                        Grid.Column="0"
+                        HeightRequest="34"
+                        StrokeThickness="0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHistoryPillTapped" />
+                        </Border.GestureRecognizers>
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="17" />
+                        </Border.StrokeShape>
+                        <Label
+                            x:Name="HistoryPillLabel"
+                            Padding="16,0"
+                            FontAttributes="Bold"
+                            FontSize="13"
+                            HorizontalOptions="Center"
+                            Text="히스토리"
+                            VerticalOptions="Center" />
+                    </Border>
+                    <Border
+                        x:Name="KakaoStoryPillBorder"
+                        Grid.Column="1"
+                        HeightRequest="34"
+                        StrokeThickness="0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnKakaoStoryPillTapped" />
+                        </Border.GestureRecognizers>
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="17" />
+                        </Border.StrokeShape>
+                        <Label
+                            x:Name="KakaoStoryPillLabel"
+                            Padding="16,0"
+                            FontAttributes="Bold"
+                            FontSize="13"
+                            HorizontalOptions="Center"
+                            Text="카카오스토리"
+                            VerticalOptions="Center" />
+                    </Border>
+                </Grid>
+
+                <Grid Grid.Row="1">
+                    <CollectionView x:Name="MainCollectionView" ItemTemplate="{StaticResource FriendshipTemplate}" />
+                    <Label
+                        x:Name="EmptyLabel"
+                        FontAttributes="Bold"
+                        FontSize="16"
+                        HorizontalOptions="Center"
+                        Text="보낸 친구 신청이 없습니다"
+                        VerticalOptions="Center" />
+                </Grid>
             </Grid>
         </RefreshView>
 
