@@ -38,6 +38,16 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
         ProfileMedia = commentLike.actor?.profile_image_url != null ? new ImageViewModel(commentLike.actor.profile_image_url) : null;
     }
 
+    public KakaoFriendshipViewModel(FriendData.Profile profile)
+    {
+        UserId = profile.id;
+        _relationship = profile.relationship;
+        Nickname = profile.display_name ?? "알 수 없는 사용자";
+        IsModerator = false;
+        IsAdmin = false;
+        ProfileMedia = profile.profile_thumbnail_url != null ? new ImageViewModel(profile.profile_thumbnail_url) : null;
+    }
+
     public override bool IsFriendshipImageVisible => UserId != null && UserId != Shared.KakaoUserId;
 
     public override string FriendshipGlyph => _relationship switch

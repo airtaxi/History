@@ -31,6 +31,9 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
     // A user banned by me (차단) — distinct from Profile.blocked (Kakao-suspended user).
     public bool IsBanned => Profile?.relation?.ban == "A";
 
+    // The friends button is shown when the profile exposes a friend list (friend_count > 0).
+    public bool IsFriendsVisible => !IsMe && (Profile?.friend_count ?? 0) > 0;
+
     public KakaoProfileViewModel(ProfileData.Profile profile, ProfileData.MutualFriend mutualFriend)
     {
         Profile = profile;

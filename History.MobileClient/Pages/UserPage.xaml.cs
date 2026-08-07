@@ -80,10 +80,9 @@ public partial class UserPage : ContentPage
         }
         else
         {
-            // Kakao Story profile: only back/layout/ban remain; History-only header actions are hidden.
+            // Kakao Story profile: only back/layout/ban/friends remain; History-only header actions are hidden.
             MessageImage.IsVisible = false;
             MemoImage.IsVisible = false;
-            FriendsImage.IsVisible = false;
             SettingsImage.IsVisible = false;
             TitleLabel.Text = "프로필";
         }
@@ -172,6 +171,7 @@ public partial class UserPage : ContentPage
 
                 _viewModel = new KakaoProfileViewModel(profileObject.profile, profileObject.mutual_friend);
                 ProfileDataTemplatePresenter.ViewModel = _viewModel;
+                FriendsImage.IsVisible = (_viewModel as KakaoProfileViewModel)?.IsFriendsVisible ?? false;
 
                 var viewModels = (profileObject.activities ?? []).Select(KakaoStoryUtils.CreatePostViewModel).ToList();
                 _lastViewModel = viewModels.LastOrDefault();
@@ -262,8 +262,16 @@ public partial class UserPage : ContentPage
 
     private async void OnFriendsImageTapped(object sender, TappedEventArgs e)
     {
-        var page = new FriendListPage(UserId);
-        await App.PushAsync(page);
+        if (_isKakaoStoryMode)
+        {
+            var page = new FriendListPage(KakaoUserId, true);
+            await App.PushAsync(page);
+        }
+        else
+        {
+            var page = new FriendListPage(UserId);
+            await App.PushAsync(page);
+        }
     }
 
     private async void OnBanUserImageTapped(object sender, TappedEventArgs e) => await _viewModel.HandleBanAsync();
