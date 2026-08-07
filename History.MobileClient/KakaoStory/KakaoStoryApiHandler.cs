@@ -449,6 +449,44 @@ public partial class KakaoStoryApiHandler
 
         return await GetResponseFromRequest(webRequest) != null;
     }
+    public static async Task<UserProfile.ProfileData> SetBackgroundImage(string imagePath)
+    {
+        string requestURI = "https://story.kakao.com/a/settings/profile/image/background";
+        string postData = $"image_path={Uri.EscapeDataString(imagePath)}";
+        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "PUT");
+
+        byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+        string response = await GetResponseFromRequest(webRequest, byteArray);
+        return JsonConvert.DeserializeObject<UserProfile.ProfileData>(response);
+    }
+    public static async Task<UserProfile.ProfileData> SetProfileImage(string imagePath)
+    {
+        string requestURI = "https://story.kakao.com/a/settings/profile/image/profile";
+        string postData = $"image_path={Uri.EscapeDataString(imagePath)}";
+        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "PUT");
+
+        byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+        string response = await GetResponseFromRequest(webRequest, byteArray);
+        return JsonConvert.DeserializeObject<UserProfile.ProfileData>(response);
+    }
+    public static async Task<UserProfile.ProfileData> DeleteProfileImage()
+    {
+        string requestURI = "https://story.kakao.com/a/settings/profile/image/profile";
+        string postData = "default_image_id=-1";
+        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "DELETE");
+
+        byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+        string response = await GetResponseFromRequest(webRequest, byteArray);
+        return JsonConvert.DeserializeObject<UserProfile.ProfileData>(response);
+    }
+    public static async Task<UserProfile.ProfileData> DeleteBackgroundImage()
+    {
+        string requestURI = "https://story.kakao.com/a/settings/profile/image/background";
+        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "DELETE");
+
+        string response = await GetResponseFromRequest(webRequest);
+        return JsonConvert.DeserializeObject<UserProfile.ProfileData>(response);
+    }
     public static async Task<bool> SendMail(string content, string id, bool bomb, string imgURI = null)
     {
         string requestURI = "https://story.kakao.com/a/messages?_=" + ((long)DateTime.Now.Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds - 32400).ToString() + "11149";
