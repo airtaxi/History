@@ -1,13 +1,7 @@
-namespace History.MobileClient.DataTypes;
+﻿namespace History.MobileClient.DataTypes;
 
-public class CommentTarget
+public class CommentTarget(string userId, string nickname)
 {
-    public string UserId { get; }
-    public string Nickname { get; }
-
-    public CommentTarget(string userId, string nickname)
-    {
-        UserId = userId;
-        Nickname = nickname;
-    }
+    public string UserId { get; } = userId;
+    public string Nickname { get; } = nickname;
 }
