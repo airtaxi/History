@@ -7,15 +7,16 @@ using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.Comme
 namespace History.MobileClient.ViewModels;
 
 // Kakao Story UP (sympathy) bundled-feed view model: fills the shared repost surface
-// (RepostId, RepostedUserNickname) from the bundled feed, mirroring HistoryRepostViewModel.
+// (RepostId, RepostedUserNickname, RepostPostfix) from the bundled feed, mirroring HistoryRepostViewModel.
 // The bundled feed wraps the original activity; this VM renders the original post's
-// content with the shared RepostTemplate attribution bar ("OO님이 리포스트 했어요").
+// content with the shared RepostTemplate attribution bar ("OO님이 UP 했어요").
 public partial class KakaoRepostViewModel : KakaoPostViewModel
 {
     public KakaoRepostViewModel(PostData postData, PostType postType = PostType.Timeline) : base(postData, postType)
     {
         RepostId = postData.id;
         RepostedUserNickname = postData.bundled_feed?.title_decorators?.FirstOrDefault()?.text;
+        RepostPostfix = "님이 UP 했어요";
     }
 
     protected override void UpdatePost(PostData postData)

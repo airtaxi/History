@@ -29,6 +29,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
 
     public HistoryPostViewModel(PostResponseDto post, PostType postType, bool isParentPost = false) : base(postType, isParentPost)
     {
+        RepostCountPrefix = "리포스트 ";
         try
         {
             UpdatePost(post ?? throw new Exception("[HistoryPostViewModel] POST IS NULL"));

@@ -156,7 +156,7 @@
                         </Label.GestureRecognizers>
                         <Label.FormattedText>
                             <FormattedString>
-                                <Span Text="리포스트 " TextColor="#808080" />
+                                <Span Text="{x:Binding RepostCountPrefix}" TextColor="#808080" />
                                 <Span
                                     FontAttributes="Bold"
                                     Text="{x:Binding RepostedUsersCount}"

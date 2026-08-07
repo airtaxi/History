@@ -13,6 +13,7 @@ public partial class HistoryRepostViewModel : HistoryPostViewModel
         _repostedUser = repostedUser;
         RepostId = postId;
         RepostedUserNickname = _repostedUser?.Nickname;
+        RepostPostfix = "님이 리포스트 했어요";
     }
 
     public override async Task HandleRepostedUserTap()
