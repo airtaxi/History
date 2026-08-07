@@ -85,8 +85,14 @@ public partial class KakaoPostViewModel : BasePostViewModel
                 VerticalContentOptions = LayoutOptions.Fill
             } : null;
 
-            // Unused History surfaces.
-            DiscoveryOptionGlyph = null;
+            // Kakao Story permission mapping: M = Only me, F = Friends, A = Everyone.
+            DiscoveryOptionGlyph = postData.permission switch
+            {
+                "M" => Solid.Lock,
+                "F" => Solid.Users,
+                "A" => Solid.Globe,
+                _ => Solid.Question
+            };
             var shareCount = Math.Max(0, postData.share_count - postData.sympathy_count); // Kakao's share_count includes sympathy (UP) actions.
             HasSharedUsers = shareCount > 0;
             SharedUsersCount = shareCount;
