@@ -1,5 +1,7 @@
-﻿using History.MobileClient.Enums;
+﻿using History.Commons;
+using History.MobileClient.Enums;
 using History.MobileClient.KakaoStory;
+using History.MobileClient.Pages;
 using UraniumUI.Icons.MaterialSymbols;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
@@ -41,5 +43,15 @@ public partial class KakaoInteractionViewModel : BaseInteractionViewModel
         }
     }
 
-    public override async Task HandleTapAsync() { }
+    public override async Task HandleTapAsync()
+    {
+        if (Share.actor?.id == null)
+        {
+            await App.Page.DisplayAlertAsync("안내", "프로필을 불러올 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        var profilePage = new UserPage(Share.actor.id, true);
+        await App.PushAsync(profilePage);
+    }
 }

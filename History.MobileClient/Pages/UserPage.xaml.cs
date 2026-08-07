@@ -23,7 +23,7 @@ public partial class UserPage : ContentPage
     public static bool ShouldRefresh { get; set; }
     public static bool ShouldRefreshKakaoStory { get; set; }
     public string UserId { get; }
-    public string KakaoUserId { get; }
+    public string KakaoUserId { get; private set; }
 
     private bool _isInForeground;
     private bool _isKakaoStoryMode;
@@ -207,7 +207,7 @@ public partial class UserPage : ContentPage
         catch (Exception exception)
         {
             // History errors are surfaced by the shared request pipeline; only Kakao Story shows its own alert.
-            if (_isKakaoStoryMode) await DisplayAlertAsync("오류", $"카카오스토리 프로필을 불러오지 못했습니다.\n{exception.Message}", Constants.PromptOk);
+            if (_isKakaoStoryMode) await DisplayAlertAsync("오류", $"카카오스토리 프로필을 불러오지 못했습니다.\n{exception.Message}\n{exception.StackTrace}", Constants.PromptOk);
             else throw;
         }
         finally { _fetchSemaphore.Release(); }
@@ -444,6 +444,20 @@ public partial class UserPage : ContentPage
     private async Task SwitchModeAsync(bool isKakaoStoryMode)
     {
         if (_isKakaoStoryMode == isKakaoStoryMode) return;
+
+        if (isKakaoStoryMode && KakaoUserId == null)
+        {
+            // The pill is only visible on my profile; the Kakao Story user id is
+            // resolved from the saved session so the profile feed can be fetched.
+            if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+            KakaoUserId = Shared.KakaoUserId;
+            if (KakaoUserId == null)
+            {
+                await DisplayAlertAsync("오류", "카카오스토리 사용자 정보를 불러오지 못했습니다.", Constants.PromptOk);
+                return;
+            }
+        }
+
         _isKakaoStoryMode = isKakaoStoryMode;
         UpdatePillVisuals();
         ShouldRefresh = false;
