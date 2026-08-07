@@ -304,6 +304,62 @@ public partial class KakaoStoryApiHandler
             }
         }
 
+        public class SearchData
+        {
+            public class Relation
+            {
+                public bool feed_blocked { get; set; }
+                public string friend { get; set; }
+                public bool self { get; set; }
+                public string follow { get; set; }
+                public bool favorite { get; set; }
+                public string ban { get; set; }
+                public bool foaf { get; set; }
+            }
+
+            public class SearchResult
+            {
+                public bool allow_following { get; set; }
+                public bool is_oversea { get; set; }
+                public string name { get; set; }
+                public string friend_accept_level { get; set; }
+                public string object_image_url { get; set; }
+                public string type { get; set; }
+                public bool vip { get; set; }
+                public string object_id { get; set; }
+                public Relation relation { get; set; }
+            }
+
+            public class SearchResults
+            {
+                public bool searchable_id { get; set; }
+                public string impression_id { get; set; }
+                public List<SearchResult> search_results { get; set; }
+            }
+        }
+
+        public class InvitationData
+        {
+            public class StatusObject
+            {
+                public string object_type { get; set; }
+                public string message { get; set; }
+            }
+
+            public class Invitation
+            {
+                public string profile_thumbnail_url { get; set; }
+                public List<StatusObject> status_objects { get; set; }
+                public string user_id { get; set; }
+                public string profile_image_url { get; set; }
+                public string id { get; set; }
+                public string type { get; set; }
+                public bool has_profile { get; set; }
+                public string display_name { get; set; }
+                public bool vip { get; set; }
+            }
+        }
+
         public class UserProfile
         {
             public class AbTest

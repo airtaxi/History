@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Friendship;
 using History.MobileClient.DataTypes;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
@@ -11,11 +12,15 @@ namespace History.MobileClient.Pages;
 public partial class PendingFriendRequestsPage : ContentPage
 {
     private bool _isInForeground;
-    private List<HistoryFriendshipViewModel> _viewModels;
+    private bool _isKakaoStoryMode;
+    private List<BaseFriendshipViewModel> _viewModels;
 
     public PendingFriendRequestsPage()
 	{
 		InitializeComponent();
+
+        PillGrid.IsVisible = true;
+        UpdatePillVisuals();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<FriendshipChangedMessage>(this, OnFriendshipChangedMessageReceived);
@@ -28,11 +33,26 @@ public partial class PendingFriendRequestsPage : ContentPage
 
     private async Task RefreshAsync()
     {
-        var pendingUsersResult = await App.ExecuteRequestAsync(new GetPendingRequests());
-        if (pendingUsersResult.IsSuccess)
+        if (_isKakaoStoryMode)
         {
-            _viewModels = [.. pendingUsersResult.Value.Select(x => new HistoryFriendshipViewModel(x))];
-            UpdateList();
+            if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+
+            try
+            {
+                var invitations = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetInvitations());
+                _viewModels = [.. invitations.Where(x => x.type == "received").Select(x => (BaseFriendshipViewModel)new KakaoFriendshipViewModel(x))];
+                UpdateList();
+            }
+            catch (Exception exception) { await DisplayAlertAsync("오류", $"카카오스토리 받은 신청 목록을 불러오지 못했습니다.\n{exception.Message}", Constants.PromptOk); }
+        }
+        else
+        {
+            var pendingUsersResult = await App.ExecuteRequestAsync(new GetPendingRequests());
+            if (pendingUsersResult.IsSuccess)
+            {
+                _viewModels = [.. pendingUsersResult.Value.Select(x => (BaseFriendshipViewModel)new HistoryFriendshipViewModel(x))];
+                UpdateList();
+            }
         }
     }
 
@@ -44,10 +64,12 @@ public partial class PendingFriendRequestsPage : ContentPage
 
     private void OnFriendshipChangedMessageReceived(object recipient, FriendshipChangedMessage message)
     {
+        if (_isKakaoStoryMode) return; // Kakao Story friends are not tracked by the History friendship message.
+
         var data = message.Value;
         if (_viewModels == null) return; // First load has not happened yet; it will fetch the latest data.
 
-        _viewModels.RemoveAll(x => x.User.UserId == data.UserId);
+        _viewModels.RemoveAll(x => (x as HistoryFriendshipViewModel)?.User.UserId == data.UserId);
 
         UpdateList();
     }
@@ -103,5 +125,33 @@ public partial class PendingFriendRequestsPage : ContentPage
             MainActivityIndicator.IsRunning = isLoading;
             IsEnabled = !isLoading;
         });
+    }
+
+    private async void OnHistoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(false);
+
+    private async void OnKakaoStoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(true);
+
+    private async Task SwitchModeAsync(bool isKakaoStoryMode)
+    {
+        if (_isKakaoStoryMode == isKakaoStoryMode) return;
+
+        if (isKakaoStoryMode && !await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+
+        _isKakaoStoryMode = isKakaoStoryMode;
+        UpdatePillVisuals();
+        await RefreshAsync();
+    }
+
+    private void UpdatePillVisuals()
+    {
+        var primaryColor = Application.Current.Resources["Primary"] as Color ?? Colors.Orange;
+        var isDarkTheme = Utils.GetGlobalAppTheme() == AppTheme.Dark;
+        var inactiveBackgroundColor = isDarkTheme ? Color.FromRgb(0x33, 0x33, 0x33) : Color.FromRgb(0xEA, 0xEA, 0xEA);
+        var inactiveTextColor = isDarkTheme ? Color.FromRgb(0xAA, 0xAA, 0xAA) : Color.FromRgb(0x66, 0x66, 0x66);
+
+        HistoryPillBorder.BackgroundColor = _isKakaoStoryMode ? inactiveBackgroundColor : primaryColor;
+        HistoryPillLabel.TextColor = _isKakaoStoryMode ? inactiveTextColor : Colors.White;
+        KakaoStoryPillBorder.BackgroundColor = _isKakaoStoryMode ? primaryColor : inactiveBackgroundColor;
+        KakaoStoryPillLabel.TextColor = _isKakaoStoryMode ? Colors.White : inactiveTextColor;
     }
 }

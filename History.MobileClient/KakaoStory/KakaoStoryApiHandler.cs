@@ -199,6 +199,27 @@ public partial class KakaoStoryApiHandler
 
         return JsonConvert.DeserializeObject<FriendData.Friends>(response);
     }
+    public static async Task<SearchData.SearchResults> SearchUsers(string query)
+    {
+        string requestURI = "https://story.kakao.com/a/search/united?q=" + Uri.EscapeDataString(query) + "&profile_uri=true";
+        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
+        string response = await GetResponseFromRequest(webRequest);
+        return JsonConvert.DeserializeObject<SearchData.SearchResults>(response);
+    }
+    public static async Task<List<InvitationData.Invitation>> GetInvitations()
+    {
+        string requestURI = "https://story.kakao.com/a/invitations";
+        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
+        string response = await GetResponseFromRequest(webRequest);
+        return JsonConvert.DeserializeObject<List<InvitationData.Invitation>>(response);
+    }
+    public static async Task<List<ProfileData.Profile>> GetBannedUsers()
+    {
+        string requestURI = "https://story.kakao.com/a/bans";
+        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
+        string response = await GetResponseFromRequest(webRequest);
+        return JsonConvert.DeserializeObject<List<ProfileData.Profile>>(response);
+    }
     public static async Task<BookmarkData.Bookmarks> GetBookmarks(string id, string from)
     {
         string requestURI = "https://story.kakao.com/a/profiles/" + id + "/sections/bookmark";

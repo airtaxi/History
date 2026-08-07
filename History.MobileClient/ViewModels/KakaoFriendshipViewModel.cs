@@ -58,6 +58,26 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
         ProfileMedia = searchResult.object_image_url != null ? new ImageViewModel(searchResult.object_image_url) : null;
     }
 
+    public KakaoFriendshipViewModel(InvitationData.Invitation invitation)
+    {
+        UserId = invitation.user_id;
+        _relationship = invitation.type == "received" ? "C" : "R";
+        Nickname = invitation.display_name ?? "알 수 없는 사용자";
+        IsModerator = false;
+        IsAdmin = false;
+        ProfileMedia = invitation.profile_image_url != null ? new ImageViewModel(invitation.profile_image_url) : null;
+    }
+
+    public KakaoFriendshipViewModel(ProfileData.Profile profile)
+    {
+        UserId = profile.id;
+        _relationship = "B";
+        Nickname = profile.display_name ?? "알 수 없는 사용자";
+        IsModerator = false;
+        IsAdmin = false;
+        ProfileMedia = profile.profile_image_url != null ? new ImageViewModel(profile.profile_image_url) : null;
+    }
+
     public override bool IsFriendshipImageVisible => UserId != null && UserId != Shared.KakaoUserId;
 
     public override string FriendshipGlyph => _relationship switch
@@ -65,6 +85,7 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
         "F" => Solid.UserMinus,
         "R" => Solid.UserClock,
         "C" => Solid.UserCheck,
+        "B" => Solid.UserLock,
         _ => Solid.UserPlus
     };
 
@@ -72,6 +93,7 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
     {
         "F" => Color.FromRgb(0xbd, 0x00, 0x00),
         "R" or "C" => Colors.ForestGreen,
+        "B" => Color.FromRgb(0x80, 0x80, 0x80),
         _ => Colors.RoyalBlue
     };
 
@@ -116,6 +138,20 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
                 OnPropertyChanged(nameof(FriendshipColor));
             }
             catch (Exception exception) { await App.Page.DisplayAlertAsync("오류", $"친구 삭제에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }
+        }
+        else if (_relationship == "B")
+        {
+            var unban = await App.Page.DisplayAlertAsync("안내", $"정말로 {Nickname}님의 차단을 해제하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
+            if (!unban) return;
+
+            try
+            {
+                await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UnbanProfile(UserId));
+                _relationship = "N";
+                OnPropertyChanged(nameof(FriendshipGlyph));
+                OnPropertyChanged(nameof(FriendshipColor));
+            }
+            catch (Exception exception) { await App.Page.DisplayAlertAsync("오류", $"차단 해제에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }
         }
         else if (_relationship == "R")
         {
