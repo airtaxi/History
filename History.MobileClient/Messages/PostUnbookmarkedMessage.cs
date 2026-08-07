@@ -6,6 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace History.MobileClient.DataTypes;
+namespace History.MobileClient.Messages;
 
 public class PostUnbookmarkedMessage(string postId) : ValueChangedMessage<string>(postId);

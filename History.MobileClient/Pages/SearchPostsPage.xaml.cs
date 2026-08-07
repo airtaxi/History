@@ -6,6 +6,7 @@ using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.ThirdParty.StaggeredLayout;

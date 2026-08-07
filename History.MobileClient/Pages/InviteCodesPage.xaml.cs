@@ -5,6 +5,7 @@ using History.Commons.Api.InviteCode;
 using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 

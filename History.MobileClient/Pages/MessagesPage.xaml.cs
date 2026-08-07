@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Message;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Platform;

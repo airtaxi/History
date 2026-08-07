@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using History.MobileClient.Enums;
 
 namespace History.MobileClient.ViewModels;

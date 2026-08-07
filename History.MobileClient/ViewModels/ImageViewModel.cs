@@ -4,6 +4,7 @@ using FFImageLoading;
 using FFImageLoading.Config;
 using FFImageLoading.Maui;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using History.MobileClient.Enums;
 
 namespace History.MobileClient.ViewModels;

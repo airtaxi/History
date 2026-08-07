@@ -7,6 +7,7 @@ using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.MobileClient.Auth;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using Result = History.Commons.Result;
 
 namespace History.MobileClient.Pages;

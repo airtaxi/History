@@ -13,6 +13,7 @@ using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.Commons.Interfaces;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using History.MobileClient.Enums;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;

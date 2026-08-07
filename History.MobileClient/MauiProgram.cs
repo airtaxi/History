@@ -15,6 +15,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Api.User;
 using History.Commons.Api.Friendship;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Platform;
 using History.Commons;

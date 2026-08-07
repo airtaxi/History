@@ -1,7 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.DataTypes.ResponseDtos;
+using History.MobileClient.DataTypes;
 
-namespace History.MobileClient.DataTypes;
+namespace History.MobileClient.Messages;
 
 public class CommentTappedMessage : ValueChangedMessage<CommentTarget>
 {

@@ -5,6 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace History.MobileClient.DataTypes;
+namespace History.MobileClient.Messages;
 
-public class KeyboardSizeMessage(double keyboardHeight) : ValueChangedMessage<double>(keyboardHeight);
+public class FullScreenMediaTappedMessage() : ValueChangedMessage<object>(null);

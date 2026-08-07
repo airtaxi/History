@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
