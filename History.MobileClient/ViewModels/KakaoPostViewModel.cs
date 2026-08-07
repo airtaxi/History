@@ -28,6 +28,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
 
     public KakaoPostViewModel(PostData postData, PostType postType = PostType.Timeline, bool isParentPost = false) : base(postType, isParentPost)
     {
+        RepostCountPrefix = "UP ";
         _postData = postData;
         UpdatePost(postData);
 
@@ -436,7 +437,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         var viewModels = Interactions
             .Where(x => x is KakaoInteractionViewModel interaction && interaction.Type == InteractionType.Repost)
             .Select(x => new KakaoFriendshipViewModel(((KakaoInteractionViewModel)x).Share));
-        var page = new InteractionsPage(viewModels, InteractionType.Repost, "UP 사용자 목록");
+        var page = new InteractionsPage(viewModels, InteractionType.Repost);
         await App.PushAsync(page);
     }
 

@@ -111,6 +111,10 @@ public partial class BasePostViewModel : ObservableObject
     public partial string RepostId { get; protected set; }
     [ObservableProperty]
     public partial string RepostedUserNickname { get; protected set; }
+    [ObservableProperty]
+    public partial string RepostPostfix { get; protected set; }
+    [ObservableProperty]
+    public partial string RepostCountPrefix { get; protected set; }
 
     public PostType PostType { get; }
     public bool IsParentPost { get; }

@@ -23,6 +23,7 @@ public partial class InteractionsPage : ContentPage, INotifyPropertyChanged
 
         ViewModels = viewModels;
         HasNoUsers = !viewModels.Any();
+        var isKakao = viewModels.FirstOrDefault() is KakaoFriendshipViewModel;
         if (HasNoUsers)
         {
             if (customTitle != null) NoUsersText = "아직 해당 목록이 없습니다";
@@ -38,7 +39,7 @@ public partial class InteractionsPage : ContentPage, INotifyPropertyChanged
         if (customTitle != null) TitleLabel.Text = customTitle;
         else if (type == InteractionType.Reaction) TitleLabel.Text = "느낌 사용자 목록";
         else if (type == InteractionType.Share) TitleLabel.Text = "공유 사용자 목록";
-        else if (type == InteractionType.Repost) TitleLabel.Text = "리포스트 사용자 목록";
+        else if (type == InteractionType.Repost) TitleLabel.Text = isKakao ? "UP 사용자 목록" : "리포스트 사용자 목록";
         else if (type == InteractionType.CommentLike) TitleLabel.Text = "댓글 좋아요 사용자 목록";
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);

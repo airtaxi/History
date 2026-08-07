@@ -117,7 +117,7 @@
                                                 <TapGestureRecognizer Command="{x:Binding HandleRepostedUserTapCommand}" />
                                             </Span.GestureRecognizers>
                                         </Span>
-                                        <Span>님이 리포스트 했어요</Span>
+                                        <Span Text="{x:Binding RepostPostfix}" />
                                     </FormattedString>
                                 </Label.FormattedText>
                             </Label>
