@@ -420,6 +420,9 @@ public static partial class Utils
                 FontAttributes = data.type is "hashtag" or "profile" ? FontAttributes.Bold : FontAttributes.None
             };
 
+            // Kakao Story @-mention: open the mentioned user's Kakao Story profile on tap.
+            if (data.type == "profile" && data.id != null) AddTapGestureRecognizerToKakaoProfileSpan(span, data.id);
+
             currentLength += span.Text.Length;
             currentLines += span.Text.Count(x => x == '\n');
             if (postType != PostType.Unwrapped && (currentLength > maxLength || currentLines > maxLines))
@@ -455,6 +458,13 @@ public static partial class Utils
     {
         var tapGestureRecognizer = new TapGestureRecognizer();
         tapGestureRecognizer.Tapped += async (s, e) => await App.PushAsync(new UserPage(userId));
+        span.GestureRecognizers.Add(tapGestureRecognizer);
+    }
+
+    private static void AddTapGestureRecognizerToKakaoProfileSpan(Span span, string kakaoUserId)
+    {
+        var tapGestureRecognizer = new TapGestureRecognizer();
+        tapGestureRecognizer.Tapped += async (s, e) => await App.PushAsync(new UserPage(kakaoUserId, true));
         span.GestureRecognizers.Add(tapGestureRecognizer);
     }
 
