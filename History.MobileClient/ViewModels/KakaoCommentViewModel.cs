@@ -230,6 +230,9 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
         await App.PushAsync(userPage);
     }
 
-    // TODO: Comment editing requires the Kakao Story comment editor page — pending page migration.
-    private async Task HandleEditCommentAsync() => await App.Page.DisplayAlertAsync("안내", "카카오스토리 댓글 수정은 아직 지원되지 않습니다.", Constants.PromptOk);
+    private async Task HandleEditCommentAsync()
+    {
+        var page = new EditCommentPage(Comment, PostId);
+        await App.PushAsync(page);
+    }
 }

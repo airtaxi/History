@@ -637,22 +637,25 @@ public partial class KakaoStoryApiHandler
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "DELETE");
         return await GetResponseFromRequest(webRequest) != null;
     }
-    public static async Task<Comment> EditComment(Comment comment, string postId, List<QuoteData> quoteDatas, string text)
+    public static async Task<Comment> EditComment(Comment comment, string postId, List<QuoteData> quoteDatas, string text, bool preserveOldImage = true)
     {
         string requestURI = "https://story.kakao.com/a/activities/" + postId + "/comments/" + comment.id + "/content";
 
         string textContent = Uri.EscapeDataString(JsonConvert.SerializeObject(quoteDatas).Replace("\"id\":null,", ""));
         string imageData2 = "";
-        foreach (QuoteData qdata in comment.decorators)
+        if (preserveOldImage)
         {
-            if (qdata.media_path != null)
+            foreach (QuoteData qdata in comment.decorators)
             {
-                imageData2 = "(Image) ";
-                string imageData = JsonConvert.SerializeObject(qdata, Formatting.None, new JsonSerializerSettings()
+                if (qdata.media_path != null)
                 {
-                    NullValueHandling = NullValueHandling.Ignore
-                });
-                textContent = textContent.Insert(3, Uri.EscapeDataString(imageData));
+                    imageData2 = "(Image) ";
+                    string imageData = JsonConvert.SerializeObject(qdata, Formatting.None, new JsonSerializerSettings()
+                    {
+                        NullValueHandling = NullValueHandling.Ignore
+                    });
+                    textContent = textContent.Insert(3, Uri.EscapeDataString(imageData));
+                }
             }
         }
         string postData = "text=" + Uri.EscapeDataString(imageData2 + text);

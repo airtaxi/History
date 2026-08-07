@@ -6,25 +6,47 @@ using History.Commons.Api.Comment;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
-using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
+using History.MobileClient.KakaoStory;
+using History.MobileClient.Messages;
 using History.MobileClient.ViewModels;
-using NativeMedia;
+using System.Net;
+using System.Text;
 using UraniumUI.Icons.MaterialSymbols;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+#if IOS
+using NativeMedia;
+#endif
 
 namespace History.MobileClient.Pages;
 
 public partial class EditCommentPage : ContentPage
 {
     private bool _isInForeground;
+    private readonly bool _isKakaoEdit;
     private CommentResponseDto _comment;
+    private Comment _kakaoComment;
+    private string _kakaoPostId;
     private MediaAttachmentViewModel _attachmentViewModel;
 
     public EditCommentPage(CommentResponseDto comment)
     {
         _comment = comment;
         InitializeComponent();
+        Initialize();
+    }
 
+    public EditCommentPage(Comment comment, string postId)
+    {
+        _isKakaoEdit = true;
+        _kakaoComment = comment;
+        _kakaoPostId = postId;
+        InitializeComponent();
+        Initialize();
+    }
+
+    private void Initialize()
+    {
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         StickerCollectionView.SetTextContentView(MainTextContent);
     }
@@ -45,10 +67,43 @@ public partial class EditCommentPage : ContentPage
         CommentMediaFontImageSource.Glyph = hasMediaContent ? MaterialSharp.Hide_image : MaterialSharp.Image;
     }
 
+    private async Task LoadKakaoCommentAsync(Comment comment)
+    {
+        // Emoticons are preserved as "(이모티콘)" text placeholders; the comment image
+        // is loaded into the attachment grid so it can be kept, replaced, or removed.
+        await MainTextContent.SetContentsAsync(TextTypeContentsViewModel.ConvertToBaseContents(comment.decorators ?? []));
+
+        var commentMedia = comment.decorators?.FirstOrDefault(x => x.media?.thumbnail_url != null)?.media;
+        if (commentMedia != null)
+        {
+            var medium = new Medium
+            {
+                media_path = commentMedia.media_path,
+                thumbnail_url = commentMedia.thumbnail_url,
+                url = commentMedia.url,
+                origin_url = commentMedia.origin_url,
+                content_type = "image",
+                width = commentMedia.width,
+                height = commentMedia.height
+            };
+            _attachmentViewModel = new MediaAttachmentViewModel(medium);
+            AttachmentImage.BindingContext = _attachmentViewModel;
+            AttachmentGrid.IsVisible = true;
+        }
+
+        CommentMediaFontImageSource.Glyph = _attachmentViewModel != null ? MaterialSharp.Hide_image : MaterialSharp.Image;
+    }
+
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
 
     private async void OnEditButtonClicked(object sender, EventArgs e)
     {
+        if (_isKakaoEdit)
+        {
+            await EditKakaoCommentAsync();
+            return;
+        }
+
         var contents = MainTextContent.GetContents();
         Utils.SanitizeContents(contents);
 
@@ -77,6 +132,46 @@ public partial class EditCommentPage : ContentPage
         {
             WeakReferenceMessenger.Default.Send<ValueChangedMessage<CommentResponseDto>>(new(result.Value));
             await App.PopAsync();
+        }
+    }
+
+    private async Task EditKakaoCommentAsync()
+    {
+        var stickerContents = MainTextContent.GetContents().OfType<StickerContent>().ToList();
+
+        // Replace image tokens with "(스티커)" first so the text layer always has a placeholder.
+        var replacedText = MainTextContent.GetTextWithImageTokenReplacement("(스티커)");
+
+        if (string.IsNullOrWhiteSpace(replacedText) && _attachmentViewModel == null)
+        {
+            await DisplayAlertAsync("오류", "빈 내용의 댓글은 작성할 수 없습니다", Constants.PromptOk);
+            return;
+        }
+
+        try
+        {
+            var (decorators, text) = await KakaoStoryCommentHelper.BuildCommentPayloadAsync(replacedText, stickerContents, _attachmentViewModel);
+
+            // The old image is preserved only when the user kept it (server medium, not re-uploaded).
+            var hadOriginalImage = _kakaoComment.decorators?.Any(x => x.media_path != null) == true;
+            var preserveOldImage = hadOriginalImage && _attachmentViewModel != null && !_attachmentViewModel.IsUpload;
+            var comment = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.EditComment(_kakaoComment, _kakaoPostId, decorators, text, preserveOldImage));
+
+            WeakReferenceMessenger.Default.Send(new ValueChangedMessage<Comment>(comment));
+            await App.PopAsync();
+        }
+        catch (WebException exception)
+        {
+            var message = exception.Message;
+            try
+            {
+                var response = exception.Response as HttpWebResponse;
+                using var respReader = response.GetResponseStream();
+                using var reader = new StreamReader(respReader, Encoding.UTF8);
+                message = await reader.ReadToEndAsync();
+            }
+            catch { }
+            await DisplayAlertAsync("오류", $"카카오스토리 API 오류가 발생하였습니다: [{exception.Status}] {message}", Constants.PromptOk);
         }
     }
 
@@ -128,7 +223,11 @@ public partial class EditCommentPage : ContentPage
         }
     }
 
-    private async void OnMainTextContentLoaded(object sender, EventArgs e) => await LoadCommentAsync(_comment);
+    private async void OnMainTextContentLoaded(object sender, EventArgs e)
+    {
+        if (_isKakaoEdit) await LoadKakaoCommentAsync(_kakaoComment);
+        else await LoadCommentAsync(_comment);
+    }
 
     protected override void OnAppearing()
     {
