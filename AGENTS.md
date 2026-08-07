@@ -117,7 +117,7 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 ### 타임라인 콘텐츠 템플릿 동기화 규칙
 
 - 타임라인/발견/리포스트/공유 포스트는 `BindableLayout` 대신 고정 슬롯 기반의 `TimelineContentsTemplate`(`Resources/Styles/Content.xaml`)을 사용합니다.
-- `PostViewModel`에서 `ContentTemplateSelector`가 처리하는 새 콘텐츠 타입(`IContentViewModel` 구현)이 추가되면, **반드시** `TimelineContentsViewModel`(`ViewModels/TimelineContentsViewModel.cs`)에 해당 타입 슬롯과 `IsVisible` 플래그를 추가하고, `TimelineContentsTemplate` XAML에 `DataTemplatePresenter` 슬롯을 추가해야 합니다.
+- `BasePostViewModel`에서 파생된 플랫폼별 포스트 뷰모델(`HistoryPostViewModel`, `KakaoPostViewModel`)에서 `ContentTemplateSelector`가 처리하는 새 콘텐츠 타입(`IContentViewModel` 구현)이 추가되면, **반드시** `TimelineContentsViewModel`(`ViewModels/TimelineContentsViewModel.cs`)에 해당 타입 슬롯과 `IsVisible` 플래그를 추가하고, `TimelineContentsTemplate` XAML에 `DataTemplatePresenter` 슬롯을 추가해야 합니다.
 - `PostContentTemplate`(PostPage 상세)과 `CommentTemplate`은 전체 콘텐츠를 순서대로 표시해야 하므로 `BindableLayout` + `ContentTemplateSelector`를 유지합니다.
 
 ### 플랫폼 포스트/댓글 ViewModel 분리 규칙
@@ -126,6 +126,13 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 - `HistoryPostViewModel`/`HistoryCommentViewModel`이 이들을 상속하며 DTO 보유, `UpdatePost`/`UpdateComment`로 베이스 표면 채우기, 메신저 등록, API/네비게이션 로직을 담당합니다.
 - 명령(`[RelayCommand]`)은 **베이스에만** 선언하고 파생은 순수 `override`합니다(파생에 재선언 시 MVVMTK0023 중복 명령 오류).
 - 신규 플랫폼(예: 카카오스토리)은 별도 DtoMapper 없이 `Base*` 상속 + 자기 데이터로 표면 채우기로 바로 통합합니다.
+
+### 카카오스토리 구현 대칭 원칙
+
+- 카카오스토리 기능을 구현할 때는 히스토리의 기존 기능 구현을 **최대한 대칭적으로** 따릅니다. 코드 스타일, 개행, 메소드 위치/순서, 네이밍, 구조까지 히스토리 구현과 일치시키는 것을 지향합니다. 예: `KakaoPostViewModel`은 `HistoryPostViewModel`과 메소드 순서·구조가 대칭이 되도록 작성합니다.
+- 가능하면 템플릿은 그대로 유지합니다. 템플릿(`Post.xaml` 등) 수정이 필요하면 최소화하고, 기존 템플릿의 구조를 유지하는 방향으로 구현합니다.
+- 베이스 뷰모델과 플랫폼별 뷰모델을 분리합니다: `BasePostViewModel`(공통 UI 표면/명령 계약) → `HistoryPostViewModel`/`KakaoPostViewModel`(플랫폼별 구현).
+- `Post.xaml`의 `PostTemplate`/`PostContentTemplate`/`PostPreviewTemplate` 등이 `x:DataType="vm:BasePostViewModel"`로 베이스 뷰모델을 공유하는 사례와 같이, 템플릿은 베이스 뷰모델 타입에 바인딩하고 플랫폼별 뷰모델이 이를 상속·구현하는 방식을 지향합니다. 신규 플랫폼 뷰모델 추가 시 템플릿의 바인딩 대상 타입은 바꾸지 않고 베이스 뷰모델의 표면만 확장합니다.
 
 ### 카카오스토리 프로필 미디어 규칙
 
@@ -302,7 +309,7 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 ## 코딩 표준 (MAUI)
 
 - **XAML**: 명명된 스타일 사용, 바인딩 모드 명시적 지정, FontImageSource로 아이콘, DataTemplate로 재사용 가능한 UI, x:DataType로 타입화된 바인딩
-- **ViewModels**: ObservableProperty, RelayCommand 사용, API 호출을 위한 async 메서드 (반드시 PostViewModel.cs 참고)
+- **ViewModels**: ObservableProperty, RelayCommand 사용, API 호출을 위한 async 메서드 (반드시 HistoryPostViewModel.cs 참고)
 - **네비게이션**: App.PushAsync/PopAsync 정적 메서드 사용
 - **API 호출**: App.ExecuteRequestAsync 사용, 로딩 상태 관리
 - **메시징**: WeakReferenceMessenger.Default.Send/Receive
