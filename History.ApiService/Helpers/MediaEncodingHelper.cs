@@ -270,7 +270,7 @@ public static class MediaEncodingHelper
             StartInfo = new ProcessStartInfo
             {
                 FileName = "ffprobe",
-                Arguments = $"-v error -select_streams v:0 -show_entries frame=duration -of csv=p=0 \"{path}\"",
+                Arguments = $"-v error -select_streams v:0 -show_entries frame=duration_time -of csv=p=0 \"{path}\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -282,7 +282,7 @@ public static class MediaEncodingHelper
         var durationsText = probeProcess.StandardOutput.ReadToEnd().Trim();
         probeProcess.WaitForExit();
 
-        double totalDelay = 0;
+        double totalDuration = 0;
         int frameCount = 0;
 
         foreach (var durationText in durationsText.Split('\n'))
@@ -291,18 +291,17 @@ public static class MediaEncodingHelper
 
             // Usually, a delay of 0 is invalid or too fast to render correctly.
             // Assign a minimum fallback delay if needed.
-            if (duration == 0) duration = 10; // Fallback to minimum 0.1s (10/100s)
+            if (duration == 0) duration = 0.1; // Fallback to minimum 0.1s
 
-            totalDelay += duration;
+            totalDuration += duration;
             frameCount++;
         }
 
         if (frameCount == 0) return 0;
 
         // Calculate average delay and convert it to FPS.
-        // Delay is in 1/100ths of a second, so multiply by 100 to get FPS.
-        double averageDelay = totalDelay / frameCount;
-        double fps = 100.0 / averageDelay;
+        double averageDuration = totalDuration / frameCount;
+        double fps = 1.0 / averageDuration;
 
         return fps;
     }
