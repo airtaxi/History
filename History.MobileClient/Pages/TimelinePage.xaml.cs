@@ -113,7 +113,7 @@ public partial class TimelinePage : ContentPage
         {
             if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
 
-            var timeline = await KakaoStoryApiHandler.GetFeed(null);
+            var timeline = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetFeed(null));
             if (timeline?.feeds == null)
             {
                 await DisplayAlertAsync("오류", "카카오스토리 피드가 비어있습니다.", Constants.PromptOk);
@@ -182,7 +182,7 @@ public partial class TimelinePage : ContentPage
 
             if (_isKakaoStoryMode)
             {
-                var timeline = await KakaoStoryApiHandler.GetFeed(_nextSince);
+                var timeline = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetFeed(_nextSince));
                 if (timeline?.feeds == null)
                 {
                     _areThereNoMorePostsToLoad = true;

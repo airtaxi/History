@@ -152,7 +152,7 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
 
     public override async Task HandleLikeAsync()
     {
-        var commentResult = await KakaoStoryApiHandler.LikeComment(PostId, _commentId, Liked);
+        var commentResult = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.LikeComment(PostId, _commentId, Liked));
         if (commentResult == null) return;
 
         // Like responses may omit decorators — preserve the current ones (KSMP pattern).
@@ -163,7 +163,7 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
 
     public override async Task HandleCommentLikeTapAsync()
     {
-        var likes = await KakaoStoryApiHandler.GetCommentLikes(PostId, _commentId);
+        var likes = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetCommentLikes(PostId, _commentId));
         if (likes == null || likes.Count == 0)
         {
             await App.Page.DisplayAlertAsync("안내", "이 댓글에 좋아요를 누른 사용자가 없습니다.", Constants.PromptOk);
@@ -200,7 +200,7 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
 
         try
         {
-            await KakaoStoryApiHandler.DeleteComment(_commentId, PostId);
+            await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.DeleteComment(_commentId, PostId));
             await _parentPostViewModel.RefreshAsync();
         }
         catch (Exception exception) { await App.Page.DisplayAlertAsync("오류", $"댓글 삭제에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }

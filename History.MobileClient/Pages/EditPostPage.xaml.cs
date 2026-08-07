@@ -574,7 +574,7 @@ public partial class EditPostPage : ContentPage
                 {
                     var mediaData = await BuildKakaoMediaDataAsync();
                     var editOldMediaPaths = (_kakaoPost.media ?? []).Select(m => m.media_path).Where(p => p != null).ToList();
-                    await KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, commentable, sharpen, null, null, null, true, editOldMediaPaths, _kakaoPost.id);
+                    await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, commentable, sharpen, null, null, null, true, editOldMediaPaths, _kakaoPost.id));
                     TimelinePage.ShouldRefreshKakaoStory = true;
                     await App.PopAsync();
                 }
@@ -605,7 +605,7 @@ public partial class EditPostPage : ContentPage
 
                 try
                 {
-                    await KakaoStoryApiHandler.SharePost(_kakaoPost.id, quoteDatas, permission, commentable, null, null);
+                    await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.SharePost(_kakaoPost.id, quoteDatas, permission, commentable, null, null));
                     TimelinePage.ShouldRefreshKakaoStory = true;
                     await App.PopAsync();
                 }
@@ -1440,7 +1440,7 @@ public partial class EditPostPage : ContentPage
 
                             try
                             {
-                                var key = await KakaoStoryApiHandler.UploadImage(filePath);
+                                var key = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImage(filePath));
                                 media.media_path = key;
                                 media.media_type = "image";
                             }
@@ -1455,9 +1455,9 @@ public partial class EditPostPage : ContentPage
                         else
                         {
                             File.WriteAllBytes(attachment.FilePath, attachment.Data);
-                            var key = await KakaoStoryApiHandler.UploadVideo(attachment.FilePath);
+                            var key = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadVideo(attachment.FilePath));
                             media.media_path = key;
-                            await KakaoStoryApiHandler.WaitForVideoUploadFinish(key);
+                            await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.WaitForVideoUploadFinish(key));
                             media.media_type = "video";
                         }
                         medias.Add(media);
@@ -1487,7 +1487,7 @@ public partial class EditPostPage : ContentPage
                 {
                     async Task DoScrap()
                     {
-                        try { scrap = await KakaoStoryApiHandler.GetScrapData(externalUrlContentViewModel.ExternalUrlContent.SourceUrl); }
+                        try { scrap = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetScrapData(externalUrlContentViewModel.ExternalUrlContent.SourceUrl)); }
                         catch (WebException)
                         {
                             scrapTryCount++;
@@ -1498,7 +1498,7 @@ public partial class EditPostPage : ContentPage
                     await DoScrap();
                 }
 
-                await KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, true, true, null, null, scrap, false, null, null);
+                await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, true, true, null, null, scrap, false, null, null));
                 // Mirror upload succeeded: refresh the KakaoStory timeline on return.
                 TimelinePage.ShouldRefreshKakaoStory = true;
                 if (conversionFailedCount > 0) await DisplayAlertAsync("오류", $"카키오스토리 업로드 도중 일부 webp 이미지를 png로 변환하는 데 실패하여 {conversionFailedCount}개의 이미지가 제외되었습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
@@ -1554,7 +1554,7 @@ public partial class EditPostPage : ContentPage
 
             try
             {
-                var key = await KakaoStoryApiHandler.UploadImage(tempFilePath);
+                var key = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImage(tempFilePath));
                 stickerMedias.Add(new KakaoStoryApiHandler.DataType.MediaData.MediaObject { media_path = key, media_type = "image" });
             }
             finally { try { File.Delete(tempFilePath); } catch { } }
@@ -1605,7 +1605,7 @@ public partial class EditPostPage : ContentPage
 
                 try
                 {
-                    var key = await KakaoStoryApiHandler.UploadImage(filePath);
+                    var key = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImage(filePath));
                     media.media_path = key;
                     media.media_type = "image";
                 }
@@ -1620,9 +1620,9 @@ public partial class EditPostPage : ContentPage
             else
             {
                 File.WriteAllBytes(attachment.FilePath, attachment.Data);
-                var key = await KakaoStoryApiHandler.UploadVideo(attachment.FilePath);
+                var key = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadVideo(attachment.FilePath));
                 media.media_path = key;
-                await KakaoStoryApiHandler.WaitForVideoUploadFinish(key);
+                await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.WaitForVideoUploadFinish(key));
                 media.media_type = "video";
             }
             medias.Add(media);
