@@ -1,6 +1,7 @@
 ﻿#pragma warning disable SYSLIB0014 // Type or member is obsolete
 using System.Net;
 using System.Text;
+using System.Text.Json.Nodes;
 using History.Commons;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -184,6 +185,19 @@ public partial class KakaoStoryApiHandler
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         var content = await GetResponseFromRequest(webRequest);
 		return JsonConvert.DeserializeObject<FriendData.Friends>(content);
+    }
+    public static async Task<FriendData.Friends> GetProfileFriends(string id)
+    {
+        string requestURI = "https://story.kakao.com/a/profiles/" + id + "/friend?option=all";
+        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
+        string response = await GetResponseFromRequest(webRequest);
+        if (response == null) return null;
+
+        // The friend list is private when the response carries a message instead of profiles.
+        var jsonNode = JsonNode.Parse(response);
+        if (jsonNode?["message"]?.GetValue<string>() == "friendlist_blocked_by_permission_meonly") return null;
+
+        return JsonConvert.DeserializeObject<FriendData.Friends>(response);
     }
     public static async Task<BookmarkData.Bookmarks> GetBookmarks(string id, string from)
     {

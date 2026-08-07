@@ -52,18 +52,71 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
+                <Grid
+                    x:Name="PillGrid"
+                    Grid.Row="0"
+                    Padding="12,10"
+                    ColumnSpacing="8"
+                    IsVisible="False">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        x:Name="HistoryPillBorder"
+                        Grid.Column="0"
+                        HeightRequest="34"
+                        StrokeThickness="0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHistoryPillTapped" />
+                        </Border.GestureRecognizers>
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="17" />
+                        </Border.StrokeShape>
+                        <Label
+                            x:Name="HistoryPillLabel"
+                            Padding="16,0"
+                            FontAttributes="Bold"
+                            FontSize="13"
+                            HorizontalOptions="Center"
+                            Text="히스토리"
+                            VerticalOptions="Center" />
+                    </Border>
+                    <Border
+                        x:Name="KakaoStoryPillBorder"
+                        Grid.Column="1"
+                        HeightRequest="34"
+                        StrokeThickness="0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnKakaoStoryPillTapped" />
+                        </Border.GestureRecognizers>
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="17" />
+                        </Border.StrokeShape>
+                        <Label
+                            x:Name="KakaoStoryPillLabel"
+                            Padding="16,0"
+                            FontAttributes="Bold"
+                            FontSize="13"
+                            HorizontalOptions="Center"
+                            Text="카카오스토리"
+                            VerticalOptions="Center" />
+                    </Border>
+                </Grid>
+
                 <SearchBar
                     x:Name="MainSearchBar"
-                    Grid.Row="0"
+                    Grid.Row="1"
                     Placeholder="친구의 닉네임 또는 핸들 검색"
                     TextChanged="OnMainSearchBarTextChanged" />
 
                 <Label
                     x:Name="FriendListLabel"
-                    Grid.Row="1"
+                    Grid.Row="2"
                     Margin="12,0,0,0"
                     FontAttributes="Bold"
                     HorizontalOptions="Start"
@@ -71,7 +124,7 @@
                     VerticalOptions="Center" />
                 <HorizontalStackLayout
                     x:Name="SortHorizontalStackLayout"
-                    Grid.Row="1"
+                    Grid.Row="2"
                     Margin="0,0,12,0"
                     HorizontalOptions="End"
                     Spacing="4"
@@ -99,12 +152,12 @@
 
                 <CollectionView
                     x:Name="MainCollectionView"
-                    Grid.Row="2"
+                    Grid.Row="3"
                     ItemTemplate="{StaticResource FriendshipTemplate}" />
 
                 <Label
                     x:Name="EmptyLabel"
-                    Grid.Row="2"
+                    Grid.Row="3"
                     FontAttributes="Bold"
                     FontSize="16"
                     HorizontalOptions="Center"

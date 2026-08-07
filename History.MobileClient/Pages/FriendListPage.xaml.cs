@@ -5,11 +5,13 @@ using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Platform;
 using UraniumUI.Icons.FontAwesome;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
 namespace History.MobileClient.Pages;
 
@@ -18,7 +20,8 @@ public partial class FriendListPage : ContentPage
     private bool _isInForeground;
     private bool _isFirstLoad;
     private bool _sortByTime;
-    private List<HistoryFriendshipViewModel> _viewModels;
+    private bool _isKakaoStoryMode;
+    private List<BaseFriendshipViewModel> _viewModels;
 
     private readonly string _userId;
 
@@ -29,6 +32,9 @@ public partial class FriendListPage : ContentPage
         _sortByTime = Configuration.GetValue<bool>("FriendsListSortByTime");
 
         InitializeComponent();
+
+        PillGrid.IsVisible = true;
+        UpdatePillVisuals();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<FriendshipChangedMessage>(this, OnFriendshipChangedMessageReceived);
@@ -45,26 +51,67 @@ public partial class FriendListPage : ContentPage
 
         _sortByTime = false;
         SortHorizontalStackLayout.IsVisible = false;
+        PillGrid.IsVisible = false;
         
+        TitleGrid.IsVisible = true;
+    }
+
+    public FriendListPage(string userId, bool isKakaoStoryMode) : this()
+    {
+        _userId = userId;
+        _isKakaoStoryMode = isKakaoStoryMode;
+
+        _sortByTime = false;
+        SortHorizontalStackLayout.IsVisible = false;
+        PillGrid.IsVisible = false;
+
         TitleGrid.IsVisible = true;
     }
 
     private async Task RefreshAsync()
     {
-        var friendsResult = await App.ExecuteRequestAsync(new GetFriends(_userId));
-        if (friendsResult.IsSuccess)
+        if (_isKakaoStoryMode)
         {
-            if (_userId == Shared.UserId) Shared.Friends = friendsResult.Value;
+            if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
 
-            _viewModels = [.. friendsResult.Value.Select(x => new HistoryFriendshipViewModel(x))];
-            MainSearchBar.Text = string.Empty;
-            EmptyLabel.IsVisible = !_viewModels.Any();
-            var friendCount = Shared.Friends?.Count ?? 0;
-            TitleLabel.Text = $"{friendCount}명의 친구";
-            FriendListLabel.Text = $"친구 목록 (총 {friendCount}명)";
-            ApplySort();
+            try
+            {
+                FriendData.Friends friends;
+                if (_userId == Shared.KakaoUserId) friends = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetFriends());
+                else friends = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetProfileFriends(_userId));
+
+                if (friends == null)
+                {
+                    if (_userId != Shared.KakaoUserId) await DisplayAlertAsync("안내", "친구 목록을 공개하지 않은 사용자입니다.", Constants.PromptOk);
+                    return;
+                }
+
+                _viewModels = [.. friends.profiles.Select(x => (BaseFriendshipViewModel)new KakaoFriendshipViewModel(x))];
+                MainSearchBar.Text = string.Empty;
+                EmptyLabel.IsVisible = !_viewModels.Any();
+                TitleLabel.Text = $"{_viewModels.Count}명의 친구";
+                FriendListLabel.Text = $"친구 목록 (총 {_viewModels.Count}명)";
+                ApplyFilterAndSort();
+            }
+            catch (Exception exception) { await DisplayAlertAsync("오류", $"카카오스토리 친구 목록을 불러오지 못했습니다.\n{exception.Message}", Constants.PromptOk); }
         }
-        else if (_userId != Shared.UserId) await App.PopAsync();
+        else
+        {
+            var friendsResult = await App.ExecuteRequestAsync(new GetFriends(_userId));
+            if (friendsResult.IsSuccess)
+            {
+                if (_userId == Shared.UserId) Shared.Friends = friendsResult.Value;
+
+                _viewModels = [.. friendsResult.Value.Select(x => (BaseFriendshipViewModel)new HistoryFriendshipViewModel(x))];
+                MainSearchBar.Text = string.Empty;
+                EmptyLabel.IsVisible = !_viewModels.Any();
+                var friendCount = Shared.Friends?.Count ?? 0;
+                TitleLabel.Text = $"{friendCount}명의 친구";
+                FriendListLabel.Text = $"친구 목록 (총 {friendCount}명)";
+                ApplySort();
+            }
+            else if (_userId != Shared.UserId) await App.PopAsync();
+        }
     }
 
     private void ApplySort()
@@ -86,10 +133,11 @@ public partial class FriendListPage : ContentPage
     private void OnFriendshipChangedMessageReceived(object recipient, FriendshipChangedMessage message)
     {
         if (_userId != Shared.UserId) return; // Only the user's own friend list reacts to relationship changes.
+        if (_isKakaoStoryMode) return; // Kakao Story friends are not tracked by the History friendship message.
 
         var data = message.Value;
         var isFriend = data.NewStatus == FriendshipStatus.Accepted;
-        var existingViewModel = _viewModels?.FirstOrDefault(x => x.User.UserId == data.UserId);
+        var existingViewModel = _viewModels?.OfType<HistoryFriendshipViewModel>().FirstOrDefault(x => x.User.UserId == data.UserId);
 
         // Keep Shared.Friends in sync regardless of the target list, since it is used across the app.
         if (isFriend)
@@ -101,7 +149,7 @@ public partial class FriendListPage : ContentPage
         if (_viewModels == null) return; // First load has not happened yet; it will fetch the latest data.
 
         if (isFriend && existingViewModel == null) _viewModels.Add(new HistoryFriendshipViewModel(data.User));
-        else if (!isFriend && existingViewModel != null) _viewModels.RemoveAll(x => x.User.UserId == data.UserId);
+        else if (!isFriend && existingViewModel != null) _viewModels.RemoveAll(x => (x as HistoryFriendshipViewModel)?.User.UserId == data.UserId);
 
         var friendCount = Shared.Friends?.Count ?? 0;
         TitleLabel.Text = $"{friendCount}명의 친구";
@@ -114,14 +162,14 @@ public partial class FriendListPage : ContentPage
         if (_viewModels == null) return;
 
         var query = MainSearchBar.Text?.ToLowerInvariant()?.Trim() ?? string.Empty;
-        IEnumerable<HistoryFriendshipViewModel> viewModels = _viewModels;
+        IEnumerable<BaseFriendshipViewModel> viewModels = _viewModels;
 
         if (!string.IsNullOrEmpty(query))
         {
-            viewModels = viewModels.Where(x => x.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(x.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase) || x.User.Handle.Equals(query, StringComparison.OrdinalIgnoreCase));
+            viewModels = viewModels.Where(x => x.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(x.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase));
         }
 
-        if (_sortByTime) viewModels = viewModels.OrderByDescending(x => x.CreatedAt);
+        if (_sortByTime && !_isKakaoStoryMode) viewModels = viewModels.OrderByDescending(x => (x as HistoryFriendshipViewModel)?.CreatedAt ?? DateTime.MinValue);
         else viewModels = viewModels.OrderBy(x => x.Nickname);
 
         MainCollectionView.ItemsSource = viewModels;
@@ -201,6 +249,34 @@ public partial class FriendListPage : ContentPage
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopAsync();
+
+    private async void OnHistoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(false);
+
+    private async void OnKakaoStoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(true);
+
+    private async Task SwitchModeAsync(bool isKakaoStoryMode)
+    {
+        if (_isKakaoStoryMode == isKakaoStoryMode) return;
+
+        if (isKakaoStoryMode && !await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+
+        _isKakaoStoryMode = isKakaoStoryMode;
+        UpdatePillVisuals();
+        await RefreshAsync();
+    }
+
+    private void UpdatePillVisuals()
+    {
+        var primaryColor = Application.Current.Resources["Primary"] as Color ?? Colors.Orange;
+        var isDarkTheme = Utils.GetGlobalAppTheme() == AppTheme.Dark;
+        var inactiveBackgroundColor = isDarkTheme ? Color.FromRgb(0x33, 0x33, 0x33) : Color.FromRgb(0xEA, 0xEA, 0xEA);
+        var inactiveTextColor = isDarkTheme ? Color.FromRgb(0xAA, 0xAA, 0xAA) : Color.FromRgb(0x66, 0x66, 0x66);
+
+        HistoryPillBorder.BackgroundColor = _isKakaoStoryMode ? inactiveBackgroundColor : primaryColor;
+        HistoryPillLabel.TextColor = _isKakaoStoryMode ? inactiveTextColor : Colors.White;
+        KakaoStoryPillBorder.BackgroundColor = _isKakaoStoryMode ? primaryColor : inactiveBackgroundColor;
+        KakaoStoryPillLabel.TextColor = _isKakaoStoryMode ? Colors.White : inactiveTextColor;
+    }
 
     private void OnLoaded(object sender, EventArgs e)
     {

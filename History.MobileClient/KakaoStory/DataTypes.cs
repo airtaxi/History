@@ -260,6 +260,13 @@ public partial class KakaoStoryApiHandler
                 public bool self { get; set; }
                 public string follow { get; set; }
                 public bool favorite { get; set; }
+                public string ban { get; set; }
+            }
+
+            public class StatusObject
+            {
+                public string object_type { get; set; }
+                public string message { get; set; }
             }
 
             public class Profile
@@ -287,6 +294,7 @@ public partial class KakaoStoryApiHandler
                 public bool? message_received_bomb { get; set; }
                 public long? message_receiver_priority { get; set; }
                 public bool? blocked { get; set; }
+                public List<StatusObject> status_objects { get; set; }
             }
 
             public class Friends
