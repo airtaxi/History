@@ -13,7 +13,6 @@ using History.MobileClient.Helpers;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls.Platform.Compatibility;
-using Microsoft.Maui.Graphics.Platform;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
@@ -236,95 +235,8 @@ public partial class PostPage : ContentPage
 
             // Replace image tokens with "(스티커)" first so the text layer always has a placeholder.
             var replacedText = CommentTextContentView.GetTextWithImageTokenReplacement("(스티커)");
-            var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(replacedText);
 
-            // Stickers resolve to an uploaded image when possible; otherwise "(스티커)" stays as text.
-            var imageQuoteDatas = new List<QuoteData>();
-            var uploadedStickerCount = 0;
-            foreach (var stickerContent in stickerContents)
-            {
-                if (stickerContent.StickerMediaId == null) continue;
-
-                var imageData = await MentionHelper.GetStickerImageDataAsync(stickerContent.StickerMediaId);
-                if (imageData.Length == 0) continue;
-
-                // All History stickers are webp, which KakaoStory does not accept.
-                // Convert to PNG before uploading, same as the EditPostPage media upload flow.
-                var tempFilePath = Path.Combine(FileSystem.CacheDirectory, $"comment_sticker_{Guid.NewGuid():N}.png");
-                try
-                {
-                    using var stream = new MemoryStream(imageData);
-                    using var image = PlatformImage.FromStream(stream);
-                    if (image == null) continue;
-
-                    using var saveStream = File.Create(tempFilePath);
-                    await image.SaveAsync(saveStream, ImageFormat.Png);
-                }
-                catch
-                {
-                    try { File.Delete(tempFilePath); } catch { }
-                    continue;
-                }
-
-                try
-                {
-                    var uploadedImage = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImageProp(tempFilePath));
-                    imageQuoteDatas.Add(new QuoteData
-                    {
-                        type = "image",
-                        text = "(Image) ",
-                        media_path = BuildKakaoMediaPath(uploadedImage)
-                    });
-                    uploadedStickerCount++;
-                }
-                finally { try { File.Delete(tempFilePath); } catch { } }
-            }
-
-            // Drop the "(스티커)" placeholders that were replaced by uploaded images.
-            if (uploadedStickerCount > 0)
-            {
-                var remaining = new List<QuoteData>();
-                var toRemove = uploadedStickerCount;
-                foreach (var quoteData in quoteDatas)
-                {
-                    if (quoteData.type == "text")
-                    {
-                        var fragment = quoteData.text;
-                        while (toRemove > 0 && fragment != null && fragment.Contains("(스티커)", StringComparison.Ordinal))
-                        {
-                            // Prefer removing "(스티커)\n" (sticker on its own line) so no blank line remains.
-                            var index = fragment.IndexOf("(스티커)\n", StringComparison.Ordinal);
-                            if (index >= 0) fragment = fragment.Remove(index, "(스티커)\n".Length);
-                            else
-                            {
-                                index = fragment.IndexOf("(스티커)", StringComparison.Ordinal);
-                                fragment = fragment.Remove(index, "(스티커)".Length);
-                            }
-                            toRemove--;
-                        }
-                        quoteData.text = fragment;
-                        if (!string.IsNullOrEmpty(fragment)) remaining.Add(quoteData);
-                    }
-                    else remaining.Add(quoteData);
-                }
-                quoteDatas = remaining;
-            }
-
-            // The picker image goes first; the API renders the first decorator as the comment image.
-            if (_commentMediaAttachmentViewModel != null && _commentMediaAttachmentViewModel.FilePath != null)
-            {
-                var uploadedImage = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImageProp(_commentMediaAttachmentViewModel.FilePath));
-                imageQuoteDatas.Insert(0, new QuoteData
-                {
-                    type = "image",
-                    text = "(Image) ",
-                    media_path = BuildKakaoMediaPath(uploadedImage)
-                });
-            }
-
-            var decorators = imageQuoteDatas.Concat(quoteDatas).ToList();
-            // The API expects the plain text to mirror the decorators (KSMP pattern: space-joined decorator texts).
-            var text = string.Join(' ', decorators.Select(x => x.text));
+            var (decorators, text) = await KakaoStoryCommentHelper.BuildCommentPayloadAsync(replacedText, stickerContents, _commentMediaAttachmentViewModel);
 
             var postId = KakaoViewModel.PostData.id;
             await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.ReplyToPost(postId, text, decorators));
@@ -399,9 +311,6 @@ public partial class PostPage : ContentPage
         AttachmentImage.BindingContext = _commentMediaAttachmentViewModel;
         AttachmentGrid.IsVisible = true;
     }
-
-    private static string BuildKakaoMediaPath(KakaoStoryApiHandler.DataType.UploadedImageProp uploadedImage) =>
-        $"{uploadedImage.access_key}/{uploadedImage.info.original.filename}?width={uploadedImage.info.original.width}&height={uploadedImage.info.original.height}&avg={uploadedImage.info.original.avg}";
 
     private async void OnMoreImageTapped(object sender, TappedEventArgs e) => await ViewModel.DisplayActionSheetAsync(true);
 
