@@ -37,7 +37,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel
         ProfileMedia = new ImageViewModel(Utils.GenerateMediaUri(user.ProfileThumbnailMediaId) ?? Constants.DefaultProfileImageFileName);
     }
 
-    public Color FriendshipColor
+    public override Color FriendshipColor
     {
         get
         {
@@ -48,7 +48,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel
             else return Color.FromRgb(0x80, 0x80, 0x80);
         }
     }
-    public string FriendshipGlyph
+    public override string FriendshipGlyph
     {
         get
         {
@@ -60,7 +60,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel
         }
     }
 
-    public bool IsFriendshipImageVisible => User.UserId != Shared.UserId;
+    public override bool IsFriendshipImageVisible => User.UserId != Shared.UserId;
 
     private async Task RefreshAsync()
     {
@@ -86,8 +86,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel
         else await App.PushAsync(new UserPage(User.UserId));
     }
 
-    [RelayCommand]
-    private async Task HandleFriendshipActionAsync()
+    public override async Task HandleFriendshipActionAsync()
     {
         if (User.Friendship == null)
         {
