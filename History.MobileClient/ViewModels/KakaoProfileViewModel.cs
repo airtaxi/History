@@ -28,6 +28,9 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
     // A background image is considered missing when the default wallpaper is in use.
     public bool HasBackgroundImage => Profile?.bg_image_url != null && !Profile.bg_image_url.StartsWith(DefaultBackgroundImageUrlPrefix, StringComparison.Ordinal);
 
+    // A user banned by me (차단) — distinct from Profile.blocked (Kakao-suspended user).
+    public bool IsBanned => Profile?.relation?.ban == "A";
+
     public KakaoProfileViewModel(ProfileData.Profile profile, ProfileData.MutualFriend mutualFriend)
     {
         Profile = profile;
@@ -408,7 +411,33 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
         }
     }
 
-    public override async Task HandleBanAsync() { }
+    public override async Task HandleBanAsync()
+    {
+        if (IsBanned)
+        {
+            var unban = await App.Page.DisplayAlertAsync("안내", $"정말로 {Nickname}님의 차단을 해제하시겠습니까? 차단을 해제하면 상대방의 프로필과 글을 다시 볼 수 있습니다.", Constants.PromptYes, Constants.PromptNo);
+            if (!unban) return;
+
+            try
+            {
+                await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UnbanProfile(KakaoUserId));
+                await RefreshAsync();
+            }
+            catch (Exception exception) { await App.Page.DisplayAlertAsync("오류", $"차단 해제에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }
+        }
+        else
+        {
+            var ban = await App.Page.DisplayAlertAsync("안내", $"정말로 {Nickname}님을 차단하시겠습니까? 차단하는 경우, 해제할 때 까지 카카오스토리에서 나와 상대방 모두 서로를 볼 수 없게 됩니다. 또한, 친구 관계인 경우 친구 삭제가 먼저 선행됩니다.", Constants.PromptYes, Constants.PromptNo);
+            if (!ban) return;
+
+            try
+            {
+                await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.BanProfile(KakaoUserId));
+                await RefreshAsync();
+            }
+            catch (Exception exception) { await App.Page.DisplayAlertAsync("오류", $"차단에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }
+        }
+    }
 
     public override async Task HandleFeedBlockAsync()
     {
