@@ -493,6 +493,7 @@ public partial class EditPostPage : ContentPage
             }
             var disallowShare = DisallowShareSwitch.IsToggled;
             var editorContents = MainTextContent.GetContents();
+            var stickerContents = editorContents.OfType<StickerContent>().ToList();
 
             var files = new Dictionary<string, byte[]>();
             var mediaAndUploadContents = new List<BaseContent>();
@@ -654,7 +655,7 @@ public partial class EditPostPage : ContentPage
                         // Samsung pass will overwrite the text content, fetch the text content before logging in to KakaoStory
                         var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
 
-                        if (!await TryWritePostToKakaoStoryAsync(text, [.. _attachmentViewModels], _externalUrlContentViewModel, discoveryOption)) return;
+                        if (!await TryWritePostToKakaoStoryAsync(text, [.. _attachmentViewModels], _externalUrlContentViewModel, discoveryOption, stickerContents)) return;
                     }
                 }
 
@@ -674,7 +675,7 @@ public partial class EditPostPage : ContentPage
                     {
                         // After-the-fact KakaoStory mirroring using the server-generated fortune contents
                         var fortuneText = BuildTextFromPostContents(result.Value?.Contents);
-                        if (!string.IsNullOrWhiteSpace(fortuneText)) await TryWritePostToKakaoStoryAsync(fortuneText, [.. _attachmentViewModels], _externalUrlContentViewModel, discoveryOption);
+                        if (!string.IsNullOrWhiteSpace(fortuneText)) await TryWritePostToKakaoStoryAsync(fortuneText, [.. _attachmentViewModels], _externalUrlContentViewModel, discoveryOption, stickerContents);
                     }
 
                     await App.PopAsync();
@@ -1304,13 +1305,24 @@ public partial class EditPostPage : ContentPage
         string text,
         List<MediaAttachmentViewModel> attachmentViewModels,
         ExternalUrlContentViewModel externalUrlContentViewModel,
-        DiscoveryOption discoveryOption)
+        DiscoveryOption discoveryOption,
+        List<StickerContent> stickerContents)
     {
         MainActivityIndicator.IsRunning = true;
         IsEnabled = false;
 
         try
         {
+            // KakaoStory allows at most 20 images per post. Stickers are uploaded as images,
+            // so ask the user to drop them when the combined count would exceed the limit.
+            var photoCount = attachmentViewModels.Count(x => !x.IsVideo);
+            if (stickerContents.Count > 0 && photoCount + stickerContents.Count > 20)
+            {
+                var proceed = await DisplayAlertAsync("경고", $"카카오스토리의 이미지 갯수 제한은 20개입니다. 스티커까지 첨부하면 총 {photoCount + stickerContents.Count}장이 되어 글을 올릴 수 없습니다. 스티커를 업로드하지 않고 사진만 올리시겠습니까?", "사진만 올리기", Constants.PromptCancel);
+                if (!proceed) return false;
+                stickerContents = [];
+            }
+
             // Check for profanity before uploading to KakaoStory
             var isKakaoStoryProfanityCheckEnabled = Configuration.GetValue<bool?>("KakaoStoryProfanityCheckEnabled") ?? true;
             if (isKakaoStoryProfanityCheckEnabled)
@@ -1390,9 +1402,13 @@ public partial class EditPostPage : ContentPage
                 }
                 var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
 
+                // Sticker images are uploaded and inserted at the front of the photo queue.
+                var stickerMedias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
+                if (stickerContents.Count > 0) stickerMedias = await UploadStickerMediaAsync(stickerContents);
+
                 var conversionFailedCount = 0;
                 KakaoStoryApiHandler.DataType.MediaData mediaData;
-                if (attachmentViewModels.Count > 0)
+                if (attachmentViewModels.Count > 0 || stickerMedias.Count > 0)
                 {
                     mediaData = new();
                     var medias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
@@ -1446,10 +1462,12 @@ public partial class EditPostPage : ContentPage
                         }
                         medias.Add(media);
                     }
+                    // Sticker images go first in the photo queue.
+                    medias.InsertRange(0, stickerMedias);
                     mediaData.media = medias;
 
                     string mediaType = null;
-                    var imageExists = attachmentViewModels.Any(x => !x.IsVideo);
+                    var imageExists = attachmentViewModels.Any(x => !x.IsVideo) || stickerMedias.Count > 0;
                     var videoExists = attachmentViewModels.Any(x => x.IsVideo);
                     if (imageExists && videoExists)
                         mediaType = "mixed";
@@ -1501,6 +1519,47 @@ public partial class EditPostPage : ContentPage
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Uploads sticker images to KakaoStory. All History stickers are webp, which
+    /// KakaoStory does not accept, so they are converted to PNG before uploading.
+    /// Stickers that fail to upload are skipped and remain as "(스티커)" text.
+    /// </summary>
+    private static async Task<List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>> UploadStickerMediaAsync(List<StickerContent> stickerContents)
+    {
+        var stickerMedias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
+        foreach (var stickerContent in stickerContents)
+        {
+            if (stickerContent.StickerMediaId == null) continue;
+
+            var imageData = await MentionHelper.GetStickerImageDataAsync(stickerContent.StickerMediaId);
+            if (imageData.Length == 0) continue;
+
+            var tempFilePath = Path.Combine(FileSystem.CacheDirectory, $"post_sticker_{Guid.NewGuid():N}.png");
+            try
+            {
+                using var stream = new MemoryStream(imageData);
+                using var image = PlatformImage.FromStream(stream);
+                if (image == null) continue;
+
+                using var saveStream = File.Create(tempFilePath);
+                await image.SaveAsync(saveStream, ImageFormat.Png);
+            }
+            catch
+            {
+                try { File.Delete(tempFilePath); } catch { }
+                continue;
+            }
+
+            try
+            {
+                var key = await KakaoStoryApiHandler.UploadImage(tempFilePath);
+                stickerMedias.Add(new KakaoStoryApiHandler.DataType.MediaData.MediaObject { media_path = key, media_type = "image" });
+            }
+            finally { try { File.Delete(tempFilePath); } catch { } }
+        }
+        return stickerMedias;
     }
 
     /// <summary>
