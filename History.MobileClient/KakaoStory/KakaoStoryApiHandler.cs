@@ -41,6 +41,13 @@ public partial class KakaoStoryApiHandler
         ProfileData.ProfileObject obj = JsonConvert.DeserializeObject<ProfileData.ProfileObject>(response);
         return obj;
     }
+    public static async Task<ProfileData.Profile> GetBiography(string id)
+    {
+        string requestURI = "https://story.kakao.com/a/profiles/" + id + "/biography";
+        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
+        string response = await GetResponseFromRequest(webRequest);
+        return JsonConvert.DeserializeObject<ProfileData.Profile>(response);
+    }
 
     private const string EmoticonListUrl = "https://api-item.kakao.com/api/sdk/items";
     private const string EmoticonUrl = "https://mk.kakaocdn.net/dna/emoticons/resources";
