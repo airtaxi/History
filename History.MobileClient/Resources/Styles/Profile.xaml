@@ -8,7 +8,7 @@
     xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels">
-    <DataTemplate x:Key="ProfileTemplate" x:DataType="vm:ProfileViewModel">
+    <DataTemplate x:Key="ProfileTemplate" x:DataType="vm:BaseProfileViewModel">
         <Border
             Margin="8"
             HeightRequest="300"
@@ -155,24 +155,51 @@
                         </Label>
                     </VerticalStackLayout>
                 </Grid>
-                <HorizontalStackLayout
+                <VerticalStackLayout
                     Margin="20"
                     HorizontalOptions="End"
                     Spacing="4"
                     VerticalOptions="End">
-                    <Button
-                        Background="{StaticResource Primary}"
-                        Command="{x:Binding HandleProfileSettingsCommand}"
-                        IsVisible="{x:Binding IsMe}"
-                        Text="프로필 설정"
-                        TextColor="White" />
-                    <Button
-                        Background="{StaticResource Primary}"
-                        Command="{x:Binding HandleFriendshipActionCommand}"
-                        IsVisible="{x:Binding IsNotMe}"
-                        Text="{x:Binding FriendButtonText}"
-                        TextColor="White" />
-                </HorizontalStackLayout>
+                    <HorizontalStackLayout
+                        HorizontalOptions="End"
+                        IsVisible="{x:Binding IsNotBlocked}"
+                        Spacing="4">
+                        <Button
+                            Background="{StaticResource Primary}"
+                            Command="{x:Binding HandleProfileSettingsCommand}"
+                            IsVisible="{x:Binding IsMe}"
+                            Text="프로필 설정"
+                            TextColor="White" />
+                        <Button
+                            Background="{StaticResource Primary}"
+                            Command="{x:Binding HandleFriendshipActionCommand}"
+                            IsVisible="{x:Binding IsNotMe}"
+                            Text="{x:Binding FriendButtonText}"
+                            TextColor="White" />
+                        <Button
+                            Background="#808080"
+                            Command="{x:Binding HandleFeedBlockCommand}"
+                            IsVisible="{x:Binding IsFeedBlockAvailable}"
+                            Text="{x:Binding FeedBlockButtonText}"
+                            TextColor="White" />
+                    </HorizontalStackLayout>
+                    <VerticalStackLayout
+                        HorizontalOptions="Center"
+                        IsVisible="{x:Binding IsBlocked}"
+                        Spacing="4">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            HorizontalTextAlignment="Center"
+                            Text="제한된 사용자"
+                            TextColor="White" />
+                        <Label
+                            FontSize="12"
+                            HorizontalTextAlignment="Center"
+                            Text="{x:Binding BlockedUserIdText}"
+                            TextColor="#CCCCCC" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
             </Grid>
         </Border>
     </DataTemplate>

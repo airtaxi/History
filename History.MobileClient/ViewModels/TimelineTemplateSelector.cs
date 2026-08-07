@@ -12,7 +12,7 @@ internal class TimelineTemplateSelector : DataTemplateSelector
         else if (item is KakaoRepostViewModel) return RepostTemplate;
         else if (item is HistoryPostViewModel) return PostTemplate;
         else if (item is KakaoPostViewModel) return PostTemplate;
-        else if (item is ProfileViewModel) return ProfileTemplate;
+        else if (item is HistoryProfileViewModel) return ProfileTemplate;
         else throw new ArgumentException("Unknown item type", nameof(item));
     }
 }

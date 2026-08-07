@@ -84,28 +84,9 @@ public partial class TimelinePage : ContentPage
         };
     }
 
-    // Kakao Story bundles multiple share/UP activities into a single feed (WPF pattern):
-    // - bundled_feed.type == "up"    -> render the original activity as a repost card.
-    // - bundled_feed.type == "share" -> inject the original activity into activities[0].@object
-    //                                    so the shared card renders the original post.
-    private static BasePostViewModel CreateKakaoPostViewModel(PostData postData)
-    {
-        var bundledFeed = postData.bundled_feed;
-        if (postData.verb == "bundled_feed" && bundledFeed != null)
-        {
-            if (bundledFeed.type == "up" && bundledFeed.original_activity != null)
-                return new KakaoRepostViewModel(postData);
-
-            if (bundledFeed.type == "share" && bundledFeed.activities is { Count: > 0 })
-            {
-                var activity = bundledFeed.activities[0];
-                activity.@object = bundledFeed.original_activity;
-                return new KakaoPostViewModel(activity);
-            }
-        }
-
-        return new KakaoPostViewModel(postData);
-    }
+    // Kakao Story bundles multiple share/UP activities into a single feed (WPF pattern);
+    // the unwrapping lives in KakaoStoryUtils.CreatePostViewModel.
+    private static BasePostViewModel CreateKakaoPostViewModel(PostData postData) => KakaoStoryUtils.CreatePostViewModel(postData);
 
     private async Task LoadFirstPageAsync()
     {

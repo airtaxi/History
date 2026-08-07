@@ -576,6 +576,7 @@ public partial class EditPostPage : ContentPage
                     var editOldMediaPaths = (_kakaoPost.media ?? []).Select(m => m.media_path).Where(p => p != null).ToList();
                     await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, commentable, sharpen, null, null, null, true, editOldMediaPaths, _kakaoPost.id));
                     TimelinePage.ShouldRefreshKakaoStory = true;
+                    UserPage.ShouldRefreshKakaoStory = true;
                     await App.PopAsync();
                 }
                 catch (WebException exception)
@@ -607,6 +608,7 @@ public partial class EditPostPage : ContentPage
                 {
                     await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.SharePost(_kakaoPost.id, quoteDatas, permission, commentable, null, null));
                     TimelinePage.ShouldRefreshKakaoStory = true;
+                    UserPage.ShouldRefreshKakaoStory = true;
                     await App.PopAsync();
                 }
                 catch (WebException exception)
@@ -1501,6 +1503,7 @@ public partial class EditPostPage : ContentPage
                 await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, permission, true, true, null, null, scrap, false, null, null));
                 // Mirror upload succeeded: refresh the KakaoStory timeline on return.
                 TimelinePage.ShouldRefreshKakaoStory = true;
+                UserPage.ShouldRefreshKakaoStory = true;
                 if (conversionFailedCount > 0) await DisplayAlertAsync("오류", $"카키오스토리 업로드 도중 일부 webp 이미지를 png로 변환하는 데 실패하여 {conversionFailedCount}개의 이미지가 제외되었습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
             }
             catch (WebException exception)
