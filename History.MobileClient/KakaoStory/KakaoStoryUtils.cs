@@ -310,7 +310,7 @@ public static class KakaoStoryUtils
         return returnData;
     }
 
-    public static string GetTimeString(DateTime created_at)
+    public static string GetTimeString(DateTime created_at, DateTime? modified_at = null)
     {
         int offset = DateTimeOffset.Now.Offset.Hours;
         string dateText = created_at.AddHours(offset).ToString();
@@ -327,6 +327,8 @@ public static class KakaoStoryUtils
         {
             dateText = ((int)diffTime.TotalHours).ToString() + "시간 전";
         }
+
+        if (modified_at != null) dateText += " (수정됨)";
         return dateText;
     }
 }

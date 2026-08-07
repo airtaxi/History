@@ -71,8 +71,10 @@ public partial class KakaoPostViewModel : BasePostViewModel
             HasMoreComments = CommentsCount > Comments.Count;
 
             CreatedAt = postData.created_at;
-            ModifiedAt = null;
-            TimestampText = KakaoStoryUtils.GetTimeString(postData.created_at);
+            // content_updated_at exists only when the content was actually edited
+            // (updated_at also changes on comments/likes, so it is not reliable).
+            ModifiedAt = postData.content_updated_at.Year > 1 ? postData.content_updated_at : null;
+            TimestampText = KakaoStoryUtils.GetTimeString(postData.created_at, ModifiedAt);
 
             PreviewText = postData.summary ?? postData.content ?? string.Empty;
             PreviewTimestamp = postData.created_at.ToLocalTime().ToString("yyyy-MM-dd");

@@ -97,7 +97,7 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
 
             CreatedAt = comment.created_at;
             ModifiedAt = comment.updated_at.Year > 1 ? comment.updated_at : null;
-            TimestampText = KakaoStoryUtils.GetTimeString(CreatedAt);
+            TimestampText = KakaoStoryUtils.GetTimeString(CreatedAt, ModifiedAt);
 
             Comment = comment;
         }
