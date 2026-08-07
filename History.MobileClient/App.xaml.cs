@@ -26,7 +26,7 @@ namespace History.MobileClient;
 
 public partial class App : Application
 {
-    private static readonly SemaphoreSlim ApiRequestSemaphore = new(1, 1);
+    private static readonly SemaphoreSlim ActionRequestSemaphore = new(1, 1);
     private static readonly SemaphoreSlim NavigationSemaphore = new(1, 1);
 
     public static Window MainWindow { get; private set; }
@@ -190,10 +190,7 @@ public partial class App : Application
 
         try
         {
-            await ApiRequestSemaphore.WaitAsync();
-            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
-
-            await Shared.ApiHandler.ExecuteRequestAsync(request);
+            await ExecuteWithLoadingAsync(() => Shared.ApiHandler.ExecuteRequestAsync(request));
             return Result.Success();
         }
         catch (HttpRequestException exception)
@@ -203,11 +200,6 @@ public partial class App : Application
             if (!hiddenErrorTypes.Contains(errorType)) await TopPage.DisplayAlertAsync("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
-        finally
-        {
-            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(false));
-            ApiRequestSemaphore.Release();
-        }
     }
 
     public static async Task<Result<T>> ExecuteRequestAsync<T>(IBaseRequest<T> request, params ErrorType[] hiddenErrorTypes)
@@ -216,10 +208,7 @@ public partial class App : Application
 
         try
         {
-            await ApiRequestSemaphore.WaitAsync();
-            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
-
-            return await Shared.ApiHandler.ExecuteRequestAsync(request);
+            return await ExecuteWithLoadingAsync(() => Shared.ApiHandler.ExecuteRequestAsync(request));
         }
         catch (HttpRequestException exception)
         {
@@ -228,10 +217,37 @@ public partial class App : Application
             if (!hiddenErrorTypes.Contains(errorType)) await TopPage.DisplayAlertAsync("오류", $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}", Constants.PromptOk);
             return (errorType, exception.Message);
         }
+    }
+
+    public static async Task ExecuteWithLoadingAsync(Func<Task> action)
+    {
+        try
+        {
+            await ActionRequestSemaphore.WaitAsync();
+            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
+
+            await action();
+        }
         finally
         {
             WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(false));
-            ApiRequestSemaphore.Release();
+            ActionRequestSemaphore.Release();
+        }
+    }
+
+    public static async Task<T> ExecuteWithLoadingAsync<T>(Func<Task<T>> action)
+    {
+        try
+        {
+            await ActionRequestSemaphore.WaitAsync();
+            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
+
+            return await action();
+        }
+        finally
+        {
+            WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(false));
+            ActionRequestSemaphore.Release();
         }
     }
 

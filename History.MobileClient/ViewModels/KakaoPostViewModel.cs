@@ -146,8 +146,8 @@ public partial class KakaoPostViewModel : BasePostViewModel
         try
         {
             // Fetch both share and UP (sympathy) user lists in parallel when available.
-            Task<List<ShareData.Share>> sharesTask = HasSharedUsers ? KakaoStoryApiHandler.GetShares(_postData, false, null) : Task.FromResult<List<ShareData.Share>>([]);
-            Task<List<ShareData.Share>> sympathiesTask = HasRepostedUsers ? KakaoStoryApiHandler.GetShares(_postData, true, null) : Task.FromResult<List<ShareData.Share>>([]);
+            Task<List<ShareData.Share>> sharesTask = HasSharedUsers ? App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetShares(_postData, false, null)) : Task.FromResult<List<ShareData.Share>>([]);
+            Task<List<ShareData.Share>> sympathiesTask = HasRepostedUsers ? App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetShares(_postData, true, null)) : Task.FromResult<List<ShareData.Share>>([]);
             await Task.WhenAll(sharesTask, sympathiesTask);
 
             var shares = sharesTask.Result ?? [];
@@ -188,7 +188,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         // Delete reaction
         if (_postData.liked)
         {
-            await KakaoStoryApiHandler.LikePost(_postData.id, null);
+            await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.LikePost(_postData.id, null));
             await RefreshAsync();
             return;
         }
@@ -208,13 +208,13 @@ public partial class KakaoPostViewModel : BasePostViewModel
         };
         if (emotion == null) return;
 
-        await KakaoStoryApiHandler.LikePost(_postData.id, emotion);
+        await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.LikePost(_postData.id, emotion));
         await RefreshAsync();
     }
 
     public override async Task<Result> RefreshAsync()
     {
-        var post = await KakaoStoryApiHandler.GetPost(_postData.id);
+        var post = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetPost(_postData.id));
         if (post == null) return Result.Failure(ErrorType.NotFound, "카카오스토리 게시글을 불러오지 못했습니다.");
 
         WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostData>(post));
@@ -234,7 +234,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
 
         try
         {
-            await KakaoStoryApiHandler.DeletePost(_postData.id);
+            await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.DeletePost(_postData.id));
             WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostData>(_postData));
             if (popModal) await App.PopAsync();
         }
@@ -298,7 +298,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         try
         {
             // preserve sharable/comment writable state; only the permission changes
-            await KakaoStoryApiHandler.SetActivityProfile(_postData.id, permission, _postData.sharable, _postData.comment_all_writable, false);
+            await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.SetActivityProfile(_postData.id, permission, _postData.sharable, _postData.comment_all_writable, false));
             await RefreshAsync();
         }
         catch (Exception exception)
@@ -314,7 +314,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
 
         try
         {
-            await KakaoStoryApiHandler.HidePost(_postData.id);
+            await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.HidePost(_postData.id));
             WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostData>(_postData));
             if (popModal) await App.PopAsync();
         }
@@ -332,7 +332,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         var isUnpin = _postData.bookmarked;
         try
         {
-            await KakaoStoryApiHandler.PinPost(_postData.id, isUnpin);
+            await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.PinPost(_postData.id, isUnpin));
             await RefreshAsync();
         }
         catch (Exception exception) { await App.Page.DisplayAlertAsync("오류", $"관심글 처리에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }
@@ -349,7 +349,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         // Tapping the embedded original post card opens the original post (KSMP pattern).
         if (IsParentPost)
         {
-            var originalPost = await KakaoStoryApiHandler.GetPost(_postData.id);
+            var originalPost = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetPost(_postData.id));
             if (originalPost == null)
             {
                 await App.Page.DisplayAlertAsync("안내", "원본 게시글을 불러올 수 없습니다.", Constants.PromptOk);
@@ -398,7 +398,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         var isUp = _postData.sympathized;
         try
         {
-            await KakaoStoryApiHandler.UpPost(_postData.id, isUp);
+            await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UpPost(_postData.id, isUp));
             await RefreshAsync();
         }
         catch (Exception exception)
@@ -445,7 +445,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         var oldestViewModel = Comments.OfType<KakaoCommentViewModel>().FirstOrDefault();
         if (oldestViewModel == null) return;
 
-        var comments = await KakaoStoryApiHandler.GetComments(_postData.id, oldestViewModel.Comment.id);
+        var comments = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetComments(_postData.id, oldestViewModel.Comment.id));
         if (comments == null) return;
 
         // The API returns newest-first; reverse to oldest-first so prepending keeps chronological order.

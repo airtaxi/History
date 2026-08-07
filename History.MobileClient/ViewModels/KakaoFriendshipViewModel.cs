@@ -38,7 +38,7 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
     {
         if (InteractionViewModel?.TargetPostId != null)
         {
-            var post = await KakaoStoryApiHandler.GetPost(InteractionViewModel.TargetPostId);
+            var post = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetPost(InteractionViewModel.TargetPostId));
             if (post != null)
             {
                 var postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);

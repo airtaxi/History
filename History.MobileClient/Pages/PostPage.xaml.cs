@@ -229,8 +229,6 @@ public partial class PostPage : ContentPage
             return;
         }
 
-        MainActivityIndicator.IsRunning = true;
-        IsEnabled = false;
         try
         {
             var stickerContents = CommentTextContentView.GetContents().OfType<StickerContent>().ToList();
@@ -269,7 +267,7 @@ public partial class PostPage : ContentPage
 
                 try
                 {
-                    var uploadedImage = await KakaoStoryApiHandler.UploadImageProp(tempFilePath);
+                    var uploadedImage = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImageProp(tempFilePath));
                     imageQuoteDatas.Add(new QuoteData
                     {
                         type = "image",
@@ -314,7 +312,7 @@ public partial class PostPage : ContentPage
             // The picker image goes first; the API renders the first decorator as the comment image.
             if (_commentMediaAttachmentViewModel != null && _commentMediaAttachmentViewModel.FilePath != null)
             {
-                var uploadedImage = await KakaoStoryApiHandler.UploadImageProp(_commentMediaAttachmentViewModel.FilePath);
+                var uploadedImage = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImageProp(_commentMediaAttachmentViewModel.FilePath));
                 imageQuoteDatas.Insert(0, new QuoteData
                 {
                     type = "image",
@@ -328,7 +326,7 @@ public partial class PostPage : ContentPage
             var text = string.Join(' ', decorators.Select(x => x.text));
 
             var postId = KakaoViewModel.PostData.id;
-            await KakaoStoryApiHandler.ReplyToPost(postId, text, decorators);
+            await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.ReplyToPost(postId, text, decorators));
 
             _commentMediaAttachmentViewModel?.Dispose();
             _commentMediaAttachmentViewModel = null;
@@ -359,11 +357,6 @@ public partial class PostPage : ContentPage
             }
             catch { }
             await DisplayAlertAsync("오류", $"카카오스토리 API 오류가 발생하였습니다: [{exception.Status}] {message}", Constants.PromptOk);
-        }
-        finally
-        {
-            MainActivityIndicator.IsRunning = false;
-            IsEnabled = true;
         }
     }
 
