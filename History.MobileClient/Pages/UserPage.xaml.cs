@@ -80,11 +80,10 @@ public partial class UserPage : ContentPage
         }
         else
         {
-            // Kakao Story profile: only back/layout remain; History-only header actions are hidden.
+            // Kakao Story profile: only back/layout/ban remain; History-only header actions are hidden.
             MessageImage.IsVisible = false;
             MemoImage.IsVisible = false;
             FriendsImage.IsVisible = false;
-            BanImage.IsVisible = false;
             SettingsImage.IsVisible = false;
             TitleLabel.Text = "프로필";
         }
