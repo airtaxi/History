@@ -2,6 +2,7 @@
 using History.Commons;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Enums;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
@@ -19,6 +20,7 @@ public partial class AddFriendsPage : ContentPage
 		InitializeComponent();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<FriendshipChangedMessage>(this, OnFriendshipChangedMessageReceived);
 #if IOS
         WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
 
@@ -26,16 +28,21 @@ public partial class AddFriendsPage : ContentPage
 #endif
     }
 
+    private long _searchSequence;
+
     private async void OnSearchButtonPressed(object sender, EventArgs e)
     {
         await MainSearchBar.HideSoftInputAsync(CancellationToken.None);
+        await SearchAsync(MainSearchBar.Text);
+    }
 
-        var searchBar = sender as SearchBar;
-        var query = searchBar.Text;
+    private async Task SearchAsync(string query)
+    {
+        var sequence = ++_searchSequence;
         var results = new List<UserResponseDto>();
 
         // Add handle results
-        var handleResult = await App.ExecuteRequestAsync(new GetUserByHandle(query), [ErrorType.NotFound]);
+        var handleResult = await App.ExecuteRequestAsync(new GetUserByHandle(query), [ErrorType.NotFound, ErrorType.Forbidden]);
         if (handleResult.IsSuccess) results.Add(handleResult);
 
         // Add nickname results
@@ -48,10 +55,20 @@ public partial class AddFriendsPage : ContentPage
         // Delete duplicated records
         results = [.. results.DistinctBy(x => x.UserId)];
 
+        if (sequence != _searchSequence) return; // A newer search was issued; discard stale results.
+
         var viewModels = results.Select(x => new HistoryFriendshipViewModel(x));
 
         MainCollectionView.ItemsSource = viewModels;
         EmptyLabel.IsVisible = !viewModels.Any();
+    }
+
+    private async void OnFriendshipChangedMessageReceived(object recipient, FriendshipChangedMessage message)
+    {
+        var query = MainSearchBar.Text;
+        if (string.IsNullOrWhiteSpace(query)) return; // No search results are shown yet.
+
+        await SearchAsync(query);
     }
 
     private async void OnFriendCollectionViewSelectionChanged(object sender, SelectionChangedEventArgs e)

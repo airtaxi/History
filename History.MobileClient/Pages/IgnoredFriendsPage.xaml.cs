@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Friendship;
+using History.Commons.Enums;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
@@ -11,12 +12,14 @@ namespace History.MobileClient.Pages;
 public partial class IgnoredFriendsPage : ContentPage
 {
     private bool _isInForeground;
+    private List<HistoryFriendshipViewModel> _viewModels;
 
     public IgnoredFriendsPage()
 	{
 		InitializeComponent();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<FriendshipChangedMessage>(this, OnFriendshipChangedMessageReceived);
 #if IOS
         WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
 
@@ -29,10 +32,30 @@ public partial class IgnoredFriendsPage : ContentPage
         var pendingUsersResult = await App.ExecuteRequestAsync(new GetIgnoredUsers());
         if (pendingUsersResult.IsSuccess)
         {
-            var viewModels = pendingUsersResult.Value.Select(x => new HistoryFriendshipViewModel(x));
-            MainCollectionView.ItemsSource = viewModels;
-            EmptyLabel.IsVisible = pendingUsersResult.Value.Count == 0;
+            _viewModels = [.. pendingUsersResult.Value.Select(x => new HistoryFriendshipViewModel(x))];
+            UpdateList();
         }
+    }
+
+    private void UpdateList()
+    {
+        MainCollectionView.ItemsSource = _viewModels.ToList();
+        EmptyLabel.IsVisible = _viewModels.Count == 0;
+    }
+
+    private void OnFriendshipChangedMessageReceived(object recipient, FriendshipChangedMessage message)
+    {
+        var data = message.Value;
+        if (_viewModels == null) return; // First load has not happened yet; it will fetch the latest data.
+
+        if (data.NewStatus == FriendshipStatus.Ignored)
+        {
+            if (_viewModels.Any(x => x.User.UserId == data.UserId)) return;
+            _viewModels.Add(new HistoryFriendshipViewModel(data.User));
+        }
+        else _viewModels.RemoveAll(x => x.User.UserId == data.UserId);
+
+        UpdateList();
     }
 
     private async void OnRefreshing(object sender, EventArgs e)
