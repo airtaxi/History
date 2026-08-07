@@ -156,6 +156,20 @@ public partial class KakaoStoryApiHandler
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, isUnblock ? "DELETE" : "POST");
         await GetResponseFromRequest(webRequest);
     }
+    public static async Task<ProfileData.Profile> BanProfile(string id)
+    {
+        string requestURI = "https://story.kakao.com/a/profiles/" + id + "/ban";
+        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "POST");
+        string response = await GetResponseFromRequest(webRequest);
+        return JsonConvert.DeserializeObject<ProfileData.Profile>(response);
+    }
+    public static async Task<ProfileData.Profile> UnbanProfile(string id)
+    {
+        string requestURI = "https://story.kakao.com/a/profiles/" + id + "/ban";
+        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "DELETE");
+        string response = await GetResponseFromRequest(webRequest);
+        return JsonConvert.DeserializeObject<ProfileData.Profile>(response);
+    }
     public static async Task<FriendData.Friends> GetFriends()
     {
         string requestURI = "https://story.kakao.com/a/friends/";
