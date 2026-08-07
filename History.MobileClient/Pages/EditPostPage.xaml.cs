@@ -49,7 +49,6 @@ public partial class EditPostPage : ContentPage
     private AccessPermission? _commentPermission;
     private MediaAttachmentViewModel _attachmentViewModelBeingDragged;
     private ExternalUrlContentViewModel _externalUrlContentViewModel;
-    private int _lastValidDiscoveryOptionIndex;
 
     private readonly ObservableCollection<MediaAttachmentViewModel> _attachmentViewModels = [];
     private readonly SemaphoreSlim _uploadSemaphore = new(1, 1);
