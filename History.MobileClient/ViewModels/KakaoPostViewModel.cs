@@ -60,12 +60,13 @@ public partial class KakaoPostViewModel : BasePostViewModel
             TimelineContents = new TimelineContentsViewModel(Contents);
             // Kakao Story embeds the original post in @object for share/UP activities (KSMP pattern).
             // The embedded post renders as a nested card via SharedPostTemplate; tapping it opens the original post.
-            ParentPost = postData.@object != null ? new KakaoPostViewModel(postData.@object, PostType, true) : null;
+            // Skip the embedded card when the original author is banned (relation.ban == "A") so only the share text shows.
+            ParentPost = postData.@object?.actor?.relation?.ban != "A" && postData.@object != null ? new KakaoPostViewModel(postData.@object, PostType, true) : null;
             IsRepost = false;
             IsShare = postData.@object != null;
 
             var sourceComments = postData.comments ?? postData.latest_comments ?? [];
-            Comments = [.. sourceComments.Select(c => new KakaoCommentViewModel(c, PostType, this)).OrderBy(x => x.CreatedAt)];
+            Comments = [.. sourceComments.Where(c => c.writer?.relation?.ban != "A").Select(c => new KakaoCommentViewModel(c, PostType, this)).OrderBy(x => x.CreatedAt)];
             LatestComment = Comments.LastOrDefault();
             CommentsCount = postData.comment_count;
             HasComments = CommentsCount > 0;
@@ -475,7 +476,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         // The API returns newest-first; reverse to oldest-first so prepending keeps chronological order.
         comments.Reverse();
         var existingIds = Comments.OfType<KakaoCommentViewModel>().Select(x => x.Comment.id).ToHashSet();
-        var commentViewModels = comments.Where(x => !existingIds.Contains(x.id)).Select(x => new KakaoCommentViewModel(x, PostType, this));
+        var commentViewModels = comments.Where(x => !existingIds.Contains(x.id) && x.writer?.relation?.ban != "A").Select(x => new KakaoCommentViewModel(x, PostType, this));
         foreach (var commentViewModel in commentViewModels) Comments.Insert(0, commentViewModel);
         HasMoreComments = CommentsCount > Comments.Count;
     }

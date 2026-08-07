@@ -158,14 +158,22 @@ public static class KakaoStoryUtils
     /// - bundled_feed.type == "up"    -> render the original activity as a repost card.
     /// - bundled_feed.type == "share" -> inject the original activity into activities[0].@object
     ///                                    so the shared card renders the original post.
+    /// Returns null when the post author is banned (relation.ban == "A") so callers skip it.
     /// </summary>
     public static BasePostViewModel CreatePostViewModel(PostData postData)
     {
+        if (postData.actor?.relation?.ban == "A") return null;
+
         var bundledFeed = postData.bundled_feed;
         if (postData.verb == "bundled_feed" && bundledFeed != null)
         {
+            // The repost card renders the original activity's content, so the original
+            // author is also checked for a ban (relation.ban == "A").
             if (bundledFeed.type == "up" && bundledFeed.original_activity != null)
+            {
+                if (bundledFeed.original_activity.actor?.relation?.ban == "A") return null;
                 return new KakaoRepostViewModel(postData);
+            }
 
             if (bundledFeed.type == "share" && bundledFeed.activities is { Count: > 0 })
             {

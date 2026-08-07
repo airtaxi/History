@@ -173,7 +173,7 @@ public partial class UserPage : ContentPage
                 ProfileDataTemplatePresenter.ViewModel = _viewModel;
                 FriendsImage.IsVisible = (_viewModel as KakaoProfileViewModel)?.IsFriendsVisible ?? false;
 
-                var viewModels = (profileObject.activities ?? []).Select(KakaoStoryUtils.CreatePostViewModel).ToList();
+                var viewModels = (profileObject.activities ?? []).Select(KakaoStoryUtils.CreatePostViewModel).Where(x => x != null).ToList();
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
@@ -232,7 +232,7 @@ public partial class UserPage : ContentPage
                 }
 
                 var activities = profileObject.activities;
-                var viewModels = activities.Select(KakaoStoryUtils.CreatePostViewModel).ToList();
+                var viewModels = activities.Select(KakaoStoryUtils.CreatePostViewModel).Where(x => x != null).ToList();
                 // The profile feed has no next_since; the cursor is the last activity id,
                 // advanced only while more than 15 items are returned (Kakao Story Manager Plus pattern).
                 _nextSince = activities.Count > 15 ? activities.LastOrDefault()?.id : null;
