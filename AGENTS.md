@@ -243,7 +243,7 @@ public async Task<IActionResult> MethodName(params)
 - 사용자 대면 응답에 한국어 오류 메시지
 - 남용 방지를 위한 속도 제한 적용
 - 특정 출처에 CORS 구성
-- 새로운 컨트롤러 또는 서비스를 추가할 때는 이 지침 파일(.github/copilot-instructions.md)을 업데이트하여 새로운 구성 요소를 문서화하십시오.
+- 새로운 컨트롤러 또는 서비스를 추가할 때는 이 지침 파일(AGENTS.md)을 업데이트하여 새로운 구성 요소를 문서화하십시오.
 
 ## MAUI (모바일 클라이언트)
 
