@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 
 namespace History.MobileClient.Pages;

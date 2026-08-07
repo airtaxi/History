@@ -6,6 +6,7 @@ using History.Commons.Api.Friendship;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;

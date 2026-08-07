@@ -3,6 +3,7 @@ using History.Commons;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Platform;

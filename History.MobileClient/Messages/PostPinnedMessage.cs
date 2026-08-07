@@ -5,6 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace History.MobileClient.DataTypes;
+namespace History.MobileClient.Messages;
 
-public class AppleVideoUnloadedMessage() : ValueChangedMessage<object>(null);
+public class PostPinnedMessage() : ValueChangedMessage<object>(null);

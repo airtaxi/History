@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using History.MobileClient.ViewModels;
 
 namespace History.MobileClient.ThirdParty.PanPinchContainer;

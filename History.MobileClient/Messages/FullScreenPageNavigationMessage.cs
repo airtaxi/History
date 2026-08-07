@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace History.MobileClient.DataTypes;
+namespace History.MobileClient.Messages;
 
 public class FullScreenPageNavigationMessage(Page page, bool disappear) : ValueChangedMessage<Page>(page)
 {

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using FFImageLoading.Maui;
 using History.Commons.Api.Sticker;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 using Microsoft.Maui.Controls.Shapes;
 using UraniumUI.Icons.MaterialSymbols;

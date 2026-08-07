@@ -3,6 +3,7 @@ using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using SuggestingBox.Maui;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using CommunityToolkit.Mvvm.Messaging;
 
 namespace History.MobileClient.ContentViews.EditPost;

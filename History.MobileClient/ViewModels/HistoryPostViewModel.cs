@@ -12,6 +12,7 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Messages;
 using History.MobileClient.Enums;
 using History.MobileClient.Pages;
 using System.Collections.ObjectModel;
