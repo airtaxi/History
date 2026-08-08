@@ -268,6 +268,8 @@ public partial class App : Application
 #if ANDROID
         MainWindow.Resumed += OnWindowResumed;
         MainWindow.Stopped += OnWindowStopped;
+
+        if (Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") == true) KakaoStoryNotificationPoller.StartForegroundPolling();
 #endif
         return MainWindow;
     }
