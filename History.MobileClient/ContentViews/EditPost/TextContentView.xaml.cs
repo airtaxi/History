@@ -76,9 +76,10 @@ public partial class TextContentView : ContentView
 
     private static List<MentionUserViewModel> BuildKakaoMentionViewModels(string query)
     {
-        if (string.IsNullOrEmpty(query)) return [.. Shared.KakaoFriends.Select(profile => new MentionUserViewModel(profile))];
+        var friends = Shared.KakaoFriends ?? [];
+        if (string.IsNullOrEmpty(query)) return [.. friends.Select(profile => new MentionUserViewModel(profile))];
 
-        return [.. Shared.KakaoFriends
+        return [.. friends
             .Where(profile => profile.display_name != null && (profile.display_name.Contains(query, StringComparison.OrdinalIgnoreCase)
                 || KoreanHelper.SplitToChosung(profile.display_name).Contains(query, StringComparison.OrdinalIgnoreCase)))
             .Select(profile => new MentionUserViewModel(profile))];
