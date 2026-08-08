@@ -443,7 +443,16 @@ public partial class UserPage : ContentPage
     }
 
     private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new SettingsPage((_viewModel as HistoryProfileViewModel)?.User));
-    private async void OnWritePostBorderTapped(object sender, TappedEventArgs e) => await App.PushAsync(new EditPostPage());
+    private async void OnWritePostBorderTapped(object sender, TappedEventArgs e)
+    {
+        if (_isKakaoStoryMode)
+        {
+            var proceed = await DisplayAlertAsync("안내", KakaoStoryUtils.KakaoOnlyWriteGuideMessage, "작성", Constants.PromptCancel);
+            if (!proceed) return;
+            await App.PushAsync(new EditPostPage(isKakaoOnlyWrite: true));
+        }
+        else await App.PushAsync(new EditPostPage());
+    }
 
     private async void OnHistoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(false);
 

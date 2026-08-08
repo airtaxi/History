@@ -14,6 +14,12 @@ namespace History.MobileClient.KakaoStory;
 
 public static class KakaoStoryUtils
 {
+    // Guide shown when entering the Kakao Story-only write mode and when blocking a
+    // post without any user mention. Kakao Story-only writing exists solely to mention
+    // Kakao Story users that History posts cannot reference.
+    public const string KakaoOnlyWriteGuideMessage = 
+        "카카오스토리에만 게시글을 작성하는 기능은 히스토리 게시글 작성으로는 불가능한 카카오스토리 사용자를 언급하기 위한 기능으로, 게시글에 사용자 언급이 존재하지 않으면 게시글 작성이 차단됩니다. 히스토리 활성화를 위한 조치로써 해당 용도가 아닌 게시글 작성은 히스토리탭에서 게시글을 작성하신 뒤 \"카카오스토리에도 게시글 작성\" 옵션을 글 작성 메뉴 우측 하단의 펼침 메뉴에서 활성화하고 작성해주세요";
+
     // Kakao Story emotions map to the History reaction visuals (glyph + color).
     // Emotion strings: like(좋아요), good(멋져요), pleasure(기뻐요), sad(슬퍼요), cheerup(힘내요).
     public static (string Glyph, Color Color) GetEmotionVisual(string emotion)

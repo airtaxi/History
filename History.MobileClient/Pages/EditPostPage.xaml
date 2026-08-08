@@ -299,7 +299,7 @@
             IsVisible="False"
             VerticalOptions="End">
             <VerticalStackLayout Spacing="8">
-                <Grid>
+                <Grid x:Name="DisallowShareGrid">
                     <Label
                         FontAttributes="Bold"
                         HorizontalOptions="Start"
@@ -312,7 +312,10 @@
                         Toggled="OnDisallowShareSwitchSwitchToggled"
                         VerticalOptions="Center" />
                 </Grid>
-                <VerticalStackLayout HorizontalOptions="Fill" Spacing="0">
+                <VerticalStackLayout
+                    x:Name="CommentPermissionGrid"
+                    HorizontalOptions="Fill"
+                    Spacing="0">
                     <Grid>
                         <Label
                             FontAttributes="Bold"
