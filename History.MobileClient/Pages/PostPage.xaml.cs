@@ -231,12 +231,10 @@ public partial class PostPage : ContentPage
 
         try
         {
-            var stickerContents = CommentTextContentView.GetContents().OfType<StickerContent>().ToList();
+            var contents = CommentTextContentView.GetContents();
+            var stickerContents = contents.OfType<StickerContent>().ToList();
 
-            // Replace image tokens with "(스티커)" first so the text layer always has a placeholder.
-            var replacedText = CommentTextContentView.GetTextWithImageTokenReplacement("(스티커)");
-
-            var (decorators, text) = await KakaoStoryCommentHelper.BuildCommentPayloadAsync(replacedText, stickerContents, _commentMediaAttachmentViewModel);
+            var (decorators, text) = await KakaoStoryCommentHelper.BuildCommentPayloadAsync(contents, stickerContents, _commentMediaAttachmentViewModel);
 
             var postId = KakaoViewModel.PostData.id;
             await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.ReplyToPost(postId, text, decorators));

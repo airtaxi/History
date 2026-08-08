@@ -137,12 +137,10 @@ public partial class EditCommentPage : ContentPage
 
     private async Task EditKakaoCommentAsync()
     {
-        var stickerContents = MainTextContent.GetContents().OfType<StickerContent>().ToList();
+        var contents = MainTextContent.GetContents();
+        var stickerContents = contents.OfType<StickerContent>().ToList();
 
-        // Replace image tokens with "(스티커)" first so the text layer always has a placeholder.
-        var replacedText = MainTextContent.GetTextWithImageTokenReplacement("(스티커)");
-
-        if (string.IsNullOrWhiteSpace(replacedText) && _attachmentViewModel == null)
+        if (string.IsNullOrWhiteSpace(MainTextContent.Text) && _attachmentViewModel == null)
         {
             await DisplayAlertAsync("오류", "빈 내용의 댓글은 작성할 수 없습니다", Constants.PromptOk);
             return;
@@ -150,7 +148,7 @@ public partial class EditCommentPage : ContentPage
 
         try
         {
-            var (decorators, text) = await KakaoStoryCommentHelper.BuildCommentPayloadAsync(replacedText, stickerContents, _attachmentViewModel);
+            var (decorators, text) = await KakaoStoryCommentHelper.BuildCommentPayloadAsync(contents, stickerContents, _attachmentViewModel);
 
             // The old image is preserved only when the user kept it (server medium, not re-uploaded).
             var hadOriginalImage = _kakaoComment.decorators?.Any(x => x.media_path != null) == true;

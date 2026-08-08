@@ -2,8 +2,10 @@
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using SuggestingBox.Maui;
+using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using CommunityToolkit.Mvvm.Messaging;
+using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient.ContentViews.EditPost;
 
@@ -76,10 +78,9 @@ public partial class TextContentView : ContentView
 
     private static List<MentionUserViewModel> BuildKakaoMentionViewModels(string query)
     {
-        var friends = Shared.KakaoFriends ?? [];
-        if (string.IsNullOrEmpty(query)) return [.. friends.Select(profile => new MentionUserViewModel(profile))];
+        if (string.IsNullOrEmpty(query)) return [.. Shared.KakaoFriends.Select(profile => new MentionUserViewModel(profile))];
 
-        return [.. friends
+        return [.. Shared.KakaoFriends
             .Where(profile => profile.display_name != null && (profile.display_name.Contains(query, StringComparison.OrdinalIgnoreCase)
                 || KoreanHelper.SplitToChosung(profile.display_name).Contains(query, StringComparison.OrdinalIgnoreCase)))
             .Select(profile => new MentionUserViewModel(profile))];

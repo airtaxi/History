@@ -11,7 +11,7 @@ public partial class KakaoStoryRewritePage : ContentPage
 {
     private bool _isInForeground;
     private readonly string _originalText;
-    private readonly TaskCompletionSource<string> _taskCompletionSource = new();
+    private readonly TaskCompletionSource<List<BaseContent>> _taskCompletionSource = new();
 
     public KakaoStoryRewritePage(string originalText)
     {
@@ -23,9 +23,9 @@ public partial class KakaoStoryRewritePage : ContentPage
     }
 
     /// <summary>
-    /// Returns the rewritten text, or null if the user cancelled.
+    /// Returns the rewritten contents, or null if the user cancelled.
     /// </summary>
-    public Task<string> GetResultAsync() => _taskCompletionSource.Task;
+    public Task<List<BaseContent>> GetResultAsync() => _taskCompletionSource.Task;
 
     private async Task LoadOriginalTextAsync()
     {
@@ -69,7 +69,7 @@ public partial class KakaoStoryRewritePage : ContentPage
             if (!proceed) return;
         }
 
-        _taskCompletionSource.TrySetResult(text);
+        _taskCompletionSource.TrySetResult(MainTextContent.GetContents());
         await App.PopAsync();
     }
 
