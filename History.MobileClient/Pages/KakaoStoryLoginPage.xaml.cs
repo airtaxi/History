@@ -152,7 +152,7 @@ public partial class KakaoStoryLoginPage : ContentPage
 
             KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
 
-            await KakaoStoryApiHandler.GetFriends();
+            Shared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
 
             _gotCookies = true;
             Configuration.SetValue("KakaoStoryCookies", cookies);

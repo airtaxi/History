@@ -398,6 +398,9 @@ public partial class PostPage : ContentPage
 
         BindingContext = ViewModel;
 
+        // Kakao Story comment editor mentions Kakao Story friends; History comments keep History friends.
+        CommentTextContentView.IsKakaoMentionMode = IsKakaoStory;
+
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
         if (safeAreaTopHeight != 0)
         {

@@ -71,7 +71,7 @@ public static class KakaoStoryUtils
             KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
             try
             {
-                await KakaoStoryApiHandler.GetFriends();
+                Shared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
                 await SaveCurrentUserAsync();
                 _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
                 return true;
