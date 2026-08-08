@@ -5,26 +5,25 @@ using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 namespace History.MobileClient.KakaoStory;
 
 /// <summary>
-/// Polls the Kakao Story notification counter and raises local notifications for
-/// new notifications. Shared by the foreground 1-second poller (started while the
-/// window is resumed) and the Android background JobService (15-minute cadence).
+/// Polls the Kakao Story notification list and raises local notifications for
+/// new notifications. The newest notification id is persisted as a baseline; any
+/// item newer than that baseline (the API list is newest-first and capped at 30)
+/// is posted. Shared by the foreground 1-second poller (started while the window
+/// is resumed) and the Android background JobService (15-minute cadence).
 /// 401 responses never open the login modal from here; the poll cycle just ends
 /// silently and the saved cookies are revalidated on the next cycle.
 /// </summary>
 public static class KakaoStoryNotificationPoller
 {
-    private const string LastNotificationCountKey = "KakaoStoryLastNotificationCount";
-    private const string KnownNotificationIdsKey = "KakaoStoryKnownNotificationIds";
+    private const string LatestNotificationIdKey = "KakaoStoryLatestNotificationId";
     private const string IsEnabledKey = "KakaoStoryNotificationEnabled";
     private const string SessionExpiredNotificationEnabledKey = "KakaoStorySessionExpiredNotificationEnabled";
     private const string SessionExpiredNotifiedKey = "KakaoStorySessionExpiredNotified";
-    private const int MaxKnownNotificationIds = 200;
 
     private static readonly SemaphoreSlim s_pollSemaphore = new(1, 1);
     private static readonly PeriodicTimer s_timer = new(TimeSpan.FromSeconds(1));
     private static CancellationTokenSource s_foregroundPollingCts;
     private static Task s_foregroundPollingTask;
-    private static int s_lastNotificationCount = -1;
 
     static KakaoStoryNotificationPoller() => KakaoStoryApiHandler.OnBackgroundReloginRequired += HandleSessionExpired;
 
@@ -95,34 +94,41 @@ public static class KakaoStoryNotificationPoller
             foreach (var cookie in cookies) cookieContainer.Add(cookie);
             KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
 
-            var status = await KakaoStoryApiHandler.GetNotificationStatus();
-            if (status == null) return;
+            var notifications = await KakaoStoryApiHandler.GetNotifications();
+            if (notifications == null || notifications.Count == 0) return;
 
-            if (s_lastNotificationCount < 0) s_lastNotificationCount = Preferences.Get(LastNotificationCountKey, -1);
-            if (status.NotificationCount > s_lastNotificationCount)
-                await FetchAndPostNotificationsAsync();
+            var latestId = notifications[0].id;
+            if (string.IsNullOrEmpty(latestId)) return;
 
-            if (status.NotificationCount != s_lastNotificationCount)
+            var storedLatestId = Preferences.Get(LatestNotificationIdKey, string.Empty);
+            if (string.IsNullOrEmpty(storedLatestId))
             {
-                s_lastNotificationCount = status.NotificationCount;
-                Preferences.Set(LastNotificationCountKey, s_lastNotificationCount);
+                // First poll ever (no baseline recorded yet): the whole history
+                // would be treated as new. Only record the baseline so fresh
+                // installs do not blast every past notification at once.
+                Preferences.Set(LatestNotificationIdKey, latestId);
+                return;
             }
+
+            if (storedLatestId == latestId) return; // Nothing new.
+
+            // The list is newest-first (capped at 30): everything newer than the
+            // stored baseline is new. When the baseline fell out of the window
+            // (more than 30 new notifications), every fetched item is posted.
+            // Notifications already read in the app (is_new == false) are skipped,
+            // while the baseline still advances past them.
+            var newNotifications = new List<Notification>();
+            foreach (var notification in notifications)
+            {
+                if (notification.id == storedLatestId) break;
+                if (notification.is_new) newNotifications.Add(notification);
+            }
+
+            foreach (var notification in newNotifications) PostNotification(notification);
+
+            Preferences.Set(LatestNotificationIdKey, latestId);
         }
         finally { KakaoStoryApiHandler.IsBackgroundMode = previousBackgroundMode; }
-    }
-
-    private static async Task FetchAndPostNotificationsAsync()
-    {
-        var notifications = await KakaoStoryApiHandler.GetNotifications();
-        if (notifications == null || notifications.Count == 0) return;
-
-        var knownIds = new HashSet<string>(GetKnownNotificationIds());
-        var newNotifications = notifications.Where(notification => notification.id != null && knownIds.Add(notification.id)).ToList();
-        if (newNotifications.Count == 0) return;
-
-        foreach (var notification in newNotifications) PostNotification(notification);
-
-        SaveKnownNotificationIds([.. knownIds]);
     }
 
     private static void PostNotification(Notification notification)
@@ -156,17 +162,5 @@ public static class KakaoStoryNotificationPoller
 #if ANDROID
         KakaoStoryNotificationPoster.PostSessionExpired();
 #endif
-    }
-
-    private static List<string> GetKnownNotificationIds()
-    {
-        var raw = Preferences.Get(KnownNotificationIdsKey, string.Empty);
-        return string.IsNullOrEmpty(raw) ? [] : [.. raw.Split(',', StringSplitOptions.RemoveEmptyEntries)];
-    }
-
-    private static void SaveKnownNotificationIds(List<string> ids)
-    {
-        if (ids.Count > MaxKnownNotificationIds) ids = ids[..MaxKnownNotificationIds];
-        Preferences.Set(KnownNotificationIdsKey, string.Join(',', ids));
     }
 }
