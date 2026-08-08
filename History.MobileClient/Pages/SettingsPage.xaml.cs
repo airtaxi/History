@@ -17,8 +17,8 @@ public partial class SettingsPage : ContentPage
 
     private UserResponseDto _user;
 
-    private const string PushNotificationOn = "켜짐";
-    private const string PushNotificationOff = "꺼짐";
+    private const string OnText = "켜짐";
+    private const string OffText = "꺼짐";
 
     public SettingsPage(UserResponseDto user)
 	{
@@ -39,14 +39,14 @@ public partial class SettingsPage : ContentPage
         FriendListDiscovryOptionLabel.Text = user.FriendListDiscoveryOption.ToDisplayString();
 
         // push notification permission
-        CommentPushNotificationPermissionLabel.Text = user.CommentPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
-        CommentMentionPushNotificationPermissionLabel.Text = user.CommentMentionPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
-        CommentLikePushNotificationPermissionLabel.Text = user.CommentLikePushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
-        SharedPostCommentPushNotificationPermissionLabel.Text = user.SharedPostCommentPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
-        SharedPostCommentPushNotificationPermissionLabel.Text = user.SharedPostCommentPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
-        PostReactionPushNotificationPermissionLabel.Text = user.PostReactionPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
-        PostMentionPushNotificationPermissionLabel.Text = user.PostMentionPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
-        IsFavoriteFriendNewPostPushNotificationEnabledLabel.Text = user.IsFavoriteFriendNewPostPushNotificationEnabled ? PushNotificationOn : PushNotificationOff;
+        CommentPushNotificationPermissionLabel.Text = user.CommentPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
+        CommentMentionPushNotificationPermissionLabel.Text = user.CommentMentionPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
+        CommentLikePushNotificationPermissionLabel.Text = user.CommentLikePushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
+        SharedPostCommentPushNotificationPermissionLabel.Text = user.SharedPostCommentPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
+        SharedPostCommentPushNotificationPermissionLabel.Text = user.SharedPostCommentPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
+        PostReactionPushNotificationPermissionLabel.Text = user.PostReactionPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
+        PostMentionPushNotificationPermissionLabel.Text = user.PostMentionPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
+        IsFavoriteFriendNewPostPushNotificationEnabledLabel.Text = user.IsFavoriteFriendNewPostPushNotificationEnabled ? OnText : OffText;
 
         var theme = Configuration.GetValue<string>("Theme");
         ThemeLabel.Text = theme switch
@@ -57,18 +57,18 @@ public partial class SettingsPage : ContentPage
         };
 
         var isKakaoStoryProfanityCheckEnabled = Configuration.GetValue<bool?>("KakaoStoryProfanityCheckEnabled") ?? true;
-        KakaoStoryProfanityCheckLabel.Text = isKakaoStoryProfanityCheckEnabled ? PushNotificationOn : PushNotificationOff;
+        KakaoStoryProfanityCheckLabel.Text = isKakaoStoryProfanityCheckEnabled ? OnText : OffText;
 
         var isKakaoStoryNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true;
-        KakaoStoryNotificationLabel.Text = isKakaoStoryNotificationEnabled ? PushNotificationOn : PushNotificationOff;
+        KakaoStoryNotificationLabel.Text = isKakaoStoryNotificationEnabled ? OnText : OffText;
 
         var isKakaoStorySessionExpiredNotificationEnabled = Configuration.GetValue<bool?>("KakaoStorySessionExpiredNotificationEnabled") ?? true;
-        KakaoStorySessionExpiredNotificationLabel.Text = isKakaoStorySessionExpiredNotificationEnabled ? PushNotificationOn : PushNotificationOff;
+        KakaoStorySessionExpiredNotificationLabel.Text = isKakaoStorySessionExpiredNotificationEnabled ? OnText : OffText;
 
 #if ANDROID
         // Virtualization toggle (default: off for smoother scroll with less View recreation)
         var isTimelineVirtualizationEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
-        TimelineVirtualizationLabel.Text = isTimelineVirtualizationEnabled ? PushNotificationOn : PushNotificationOff;
+        TimelineVirtualizationLabel.Text = isTimelineVirtualizationEnabled ? OnText : OffText;
 #endif
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
@@ -91,7 +91,7 @@ public partial class SettingsPage : ContentPage
     {
         var accessPermissions = Enum.GetValues<AccessPermission>().Select(x => x.ToDisplayString()).ToList();
         var offIndex = accessPermissions.FindIndex(x => x == AccessPermission.OnlyMe.ToDisplayString());
-        accessPermissions[offIndex] = PushNotificationOff;
+        accessPermissions[offIndex] = OffText;
 
         var action = await DisplayActionSheetAsync(type.ToDisplayString() + " 푸시 알림", Constants.PromptCancel, null, [.. accessPermissions]);
         if (action == null || action == Constants.PromptCancel) return;
@@ -111,27 +111,27 @@ public partial class SettingsPage : ContentPage
             switch (type)
             {
                 case PushNotificationType.Comment:
-                    CommentPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+                    CommentPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
                     _user.CommentPushNotificationPermission = permission;
                     break;
                 case PushNotificationType.CommentMention:
-                    CommentMentionPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+                    CommentMentionPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
                     _user.CommentMentionPushNotificationPermission = permission;
                     break;
                 case PushNotificationType.CommentLike:
-                    CommentLikePushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+                    CommentLikePushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
                     _user.CommentLikePushNotificationPermission = permission;
                     break;
                 case PushNotificationType.SharedPostComment:
-                    SharedPostCommentPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+                    SharedPostCommentPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
                     _user.SharedPostCommentPushNotificationPermission = permission;
                     break;
                 case PushNotificationType.PostReaction:
-                    PostReactionPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+                    PostReactionPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
                     _user.PostReactionPushNotificationPermission = permission;
                     break;
                 case PushNotificationType.PostMention:
-                    PostMentionPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), PushNotificationOff);
+                    PostMentionPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
                     _user.PostMentionPushNotificationPermission = permission;
                     break;
             }
@@ -319,22 +319,22 @@ public partial class SettingsPage : ContentPage
 
     private async void OnKakaoStoryProfanityCheckGridTapped(object sender, TappedEventArgs e)
     {
-        var action = await DisplayActionSheetAsync("카카오스토리 업로드 시 욕설 체크", Constants.PromptCancel, null, PushNotificationOn, PushNotificationOff);
+        var action = await DisplayActionSheetAsync("카카오스토리 업로드 시 욕설 체크", Constants.PromptCancel, null, OnText, OffText);
         if (action == null || action == Constants.PromptCancel) return;
 
-        var isEnabled = action == PushNotificationOn;
+        var isEnabled = action == OnText;
         Configuration.SetValue("KakaoStoryProfanityCheckEnabled", isEnabled);
-        KakaoStoryProfanityCheckLabel.Text = isEnabled ? PushNotificationOn : PushNotificationOff;
+        KakaoStoryProfanityCheckLabel.Text = isEnabled ? OnText : OffText;
     }
 
     private async void OnKakaoStoryNotificationGridTapped(object sender, TappedEventArgs e)
     {
-        var action = await DisplayActionSheetAsync("카카오스토리 알림", Constants.PromptCancel, null, PushNotificationOn, PushNotificationOff);
+        var action = await DisplayActionSheetAsync("카카오스토리 알림", Constants.PromptCancel, null, OnText, OffText);
         if (action == null || action == Constants.PromptCancel) return;
 
-        var isEnabled = action == PushNotificationOn;
+        var isEnabled = action == OnText;
         Configuration.SetValue("KakaoStoryNotificationEnabled", isEnabled);
-        KakaoStoryNotificationLabel.Text = isEnabled ? PushNotificationOn : PushNotificationOff;
+        KakaoStoryNotificationLabel.Text = isEnabled ? OnText : OffText;
 
         // Start/stop the foreground polling loop so a disabled setting costs no battery.
         if (isEnabled) KakaoStoryNotificationPoller.StartForegroundPolling();
@@ -343,12 +343,12 @@ public partial class SettingsPage : ContentPage
 
     private async void OnKakaoStorySessionExpiredNotificationGridTapped(object sender, TappedEventArgs e)
     {
-        var action = await DisplayActionSheetAsync("카카오스토리 로그인 만료 알림", Constants.PromptCancel, null, PushNotificationOn, PushNotificationOff);
+        var action = await DisplayActionSheetAsync("카카오스토리 로그인 만료 알림", Constants.PromptCancel, null, OnText, OffText);
         if (action == null || action == Constants.PromptCancel) return;
 
-        var isEnabled = action == PushNotificationOn;
+        var isEnabled = action == OnText;
         Configuration.SetValue("KakaoStorySessionExpiredNotificationEnabled", isEnabled);
-        KakaoStorySessionExpiredNotificationLabel.Text = isEnabled ? PushNotificationOn : PushNotificationOff;
+        KakaoStorySessionExpiredNotificationLabel.Text = isEnabled ? OnText : OffText;
     }
 
     private async void OnCheckForUpdateGridTapped(object sender, TappedEventArgs e) => await Utils.CheckForUpdateAsync();
@@ -361,14 +361,14 @@ public partial class SettingsPage : ContentPage
     private async void OnPostMentionPushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.PostMention);
     private async void OnIsFavoriteFriendNewPostPushNotificationEnabledGridTapped(object sender, TappedEventArgs e) 
     {
-        var action = await DisplayActionSheetAsync("즐겨찾기 친구 새 글 푸시 알림", Constants.PromptCancel, null, PushNotificationOn, PushNotificationOff);
+        var action = await DisplayActionSheetAsync("즐겨찾기 친구 새 글 푸시 알림", Constants.PromptCancel, null, OnText, OffText);
         if (action == null || action == Constants.PromptCancel) return;
 
-        var isEnabled = action == PushNotificationOn;
+        var isEnabled = action == OnText;
         var result = await App.ExecuteRequestAsync(new UpdatePushNotificationPermission(PushNotificationType.FavoriteFriendNewPost, IsEnabled ? AccessPermission.Everyone : AccessPermission.OnlyMe));
         if (result.IsSuccess)
         {
-            IsFavoriteFriendNewPostPushNotificationEnabledLabel.Text = isEnabled ? PushNotificationOn : PushNotificationOff;
+            IsFavoriteFriendNewPostPushNotificationEnabledLabel.Text = isEnabled ? OnText : OffText;
             _user.IsFavoriteFriendNewPostPushNotificationEnabled = isEnabled;
             await DisplayAlertAsync("안내", $"즐겨찾기 친구 새 글 푸시 알림이 {action}으로 설정되었습니다.", Constants.PromptOk);
         }
@@ -401,12 +401,12 @@ public partial class SettingsPage : ContentPage
 #if ANDROID
     private async void OnTimelineVirtualizationGridTapped(object sender, TappedEventArgs e)
     {
-        var action = await DisplayActionSheetAsync("타임라인 스크롤 가상화", Constants.PromptCancel, null, PushNotificationOn, PushNotificationOff);
+        var action = await DisplayActionSheetAsync("타임라인 스크롤 가상화", Constants.PromptCancel, null, OnText, OffText);
         if (action == null || action == Constants.PromptCancel) return;
 
-        var isEnabled = action == PushNotificationOn;
+        var isEnabled = action == OnText;
         Configuration.SetValue("TimelineVirtualizationEnabled", isEnabled);
-        TimelineVirtualizationLabel.Text = isEnabled ? PushNotificationOn : PushNotificationOff;
+        TimelineVirtualizationLabel.Text = isEnabled ? OnText : OffText;
 
         WeakReferenceMessenger.Default.Send(new TimelineVirtualizationChangedMessage(isEnabled));
     }
