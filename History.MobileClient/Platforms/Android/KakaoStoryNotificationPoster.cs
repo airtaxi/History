@@ -20,6 +20,7 @@ namespace History.MobileClient;
 public static class KakaoStoryNotificationPoster
 {
     private const int NotificationIdBase = 9002;
+    private const int SessionExpiredNotificationId = 9001;
     public const string SchemeExtraKey = "KakaoStoryNotificationScheme";
 
     public static void Post(KakaoNotification notification)
@@ -50,6 +51,31 @@ public static class KakaoStoryNotificationPoster
             .SetContentIntent(pendingIntent);
 
         NotificationManagerCompat.From(context).Notify(notificationId, builder.Build());
+    }
+
+    /// <summary>
+    /// Posts the "Kakao Story login expired" notification. Tapping it only opens
+    /// the app (no scheme extra), where the user can re-login.
+    /// </summary>
+    public static void PostSessionExpired()
+    {
+        var context = Platform.AppContext;
+        if (OperatingSystem.IsAndroidVersionAtLeast(33) && ContextCompat.CheckSelfPermission(context, Manifest.Permission.PostNotifications) != Permission.Granted) return;
+
+        var intent = new Intent(context, typeof(MainActivity));
+        intent.SetFlags(ActivityFlags.SingleTop | ActivityFlags.ClearTop);
+
+        var pendingIntent = PendingIntent.GetActivity(context, SessionExpiredNotificationId, intent, PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent);
+
+        var builder = new NotificationCompat.Builder(context, $"{context.PackageName}.push")
+            .SetSmallIcon(Resource.Mipmap.appicon)
+            .SetContentTitle("카카오스토리 로그인 만료")
+            .SetContentText("카카오스토리 로그인이 만료되었습니다. 앱을 열어 다시 로그인해주세요.")
+            .SetPriority(NotificationCompat.PriorityDefault)
+            .SetAutoCancel(true)
+            .SetContentIntent(pendingIntent);
+
+        NotificationManagerCompat.From(context).Notify(SessionExpiredNotificationId, builder.Build());
     }
 
     /// <summary>
