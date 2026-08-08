@@ -7,6 +7,7 @@ using History.Commons.Enums;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
+using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient.Pages;
 
@@ -57,6 +58,9 @@ public partial class SettingsPage : ContentPage
 
         var isKakaoStoryProfanityCheckEnabled = Configuration.GetValue<bool?>("KakaoStoryProfanityCheckEnabled") ?? true;
         KakaoStoryProfanityCheckLabel.Text = isKakaoStoryProfanityCheckEnabled ? PushNotificationOn : PushNotificationOff;
+
+        var isKakaoStoryNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true;
+        KakaoStoryNotificationLabel.Text = isKakaoStoryNotificationEnabled ? PushNotificationOn : PushNotificationOff;
 
 #if ANDROID
         // Virtualization toggle (default: off for smoother scroll with less View recreation)
@@ -182,8 +186,8 @@ public partial class SettingsPage : ContentPage
         if (result.IsSuccess) FriendListDiscovryOptionLabel.Text = rawDiscoveryOption;
     }
 
-    private static readonly int[] s_months = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-    private static readonly int[] s_monthDays = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    private static readonly int[] s_months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    private static readonly int[] s_monthDays = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
     private async void OnBirthdayGridTapped(object sender, TappedEventArgs e)
     {
@@ -318,6 +322,20 @@ public partial class SettingsPage : ContentPage
         var isEnabled = action == PushNotificationOn;
         Configuration.SetValue("KakaoStoryProfanityCheckEnabled", isEnabled);
         KakaoStoryProfanityCheckLabel.Text = isEnabled ? PushNotificationOn : PushNotificationOff;
+    }
+
+    private async void OnKakaoStoryNotificationGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("카카오스토리 알림", Constants.PromptCancel, null, PushNotificationOn, PushNotificationOff);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == PushNotificationOn;
+        Configuration.SetValue("KakaoStoryNotificationEnabled", isEnabled);
+        KakaoStoryNotificationLabel.Text = isEnabled ? PushNotificationOn : PushNotificationOff;
+
+        // Start/stop the foreground polling loop so a disabled setting costs no battery.
+        if (isEnabled) KakaoStoryNotificationPoller.StartForegroundPolling();
+        else KakaoStoryNotificationPoller.StopForegroundPolling();
     }
 
     private async void OnCheckForUpdateGridTapped(object sender, TappedEventArgs e) => await Utils.CheckForUpdateAsync();

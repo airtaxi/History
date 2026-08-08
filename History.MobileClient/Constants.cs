@@ -3,6 +3,8 @@
 public static class Constants
 {
     public const int TokenRefreshIntervalMilliseconds = 24 * 60 * 60 * 1000; // 1 Day
+    public const int KakaoStoryNotificationPollIntervalMilliseconds = 15 * 60 * 1000; // 15 Minutes (JobScheduler minimum)
+    public const int KakaoStoryNotificationJobId = 2;
 
     public const int GoogleAuthRequestCode = 9001;
     public const string GoogleAuthWebClientId = "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com";

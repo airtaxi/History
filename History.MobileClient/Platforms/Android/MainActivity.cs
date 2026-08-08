@@ -21,9 +21,12 @@ using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
-using History.MobileClient.Messages;
+using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
+using History.MobileClient.KakaoStory;
+using History.MobileClient.Messages;
 using History.MobileClient.Pages;
+using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
 
 namespace History.MobileClient;
@@ -49,6 +52,7 @@ public class MainActivity : MauiAppCompatActivity
         base.OnCreate(savedInstanceState);
 
         ScheduleJob();
+        ScheduleKakaoStoryNotificationJob();
         CheckNotificationPermission();
         CreateNotificationChannelIfNeeded();
         HandleIntent(Intent);
@@ -281,11 +285,86 @@ public class MainActivity : MauiAppCompatActivity
     [SupportedOSPlatform("android33.0")]
     private static bool CheckNotificationPermissionGranted() => ContextCompat.CheckSelfPermission(Platform.AppContext, Manifest.Permission.PostNotifications) == Permission.Granted;
 
+    /// <summary>
+    /// Opens the target of a tapped Kakao Story notification (post or profile)
+    /// based on the scheme stored when the local notification was posted.
+    /// </summary>
+    private static void HandleKakaoStoryNotificationScheme(string scheme)
+    {
+        if (string.IsNullOrEmpty(scheme)) return;
+
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            try
+            {
+                // Post notification: the scheme contains the activity id after "activities/".
+                if (scheme.Contains("?profile_id=") && scheme.Contains("activities/"))
+                {
+                    var postId = scheme.Split(new[] { "activities/" }, StringSplitOptions.None)[1];
+                    var post = await KakaoStoryApiHandler.GetPost(postId);
+                    if (post == null) return;
+
+                    var postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);
+                    await App.PushAsync(new PostPage(postViewModel));
+                }
+                // Profile notification: the scheme is a kakaostory:// deep link to the profile.
+                else if (scheme.Contains("kakaostory://profiles/"))
+                {
+                    var profileId = scheme.Replace("kakaostory://profiles/", "");
+                    if (string.IsNullOrEmpty(profileId)) return;
+
+                    await App.PushAsync(new UserPage(profileId, true));
+                }
+            }
+            catch (Exception exception) { Log.Error(TAG, $"Kakao Story notification navigation failed: {exception.Message}"); }
+        });
+    }
+
+    private void ScheduleKakaoStoryNotificationJob()
+    {
+        try
+        {
+            var jobScheduler = (JobScheduler)GetSystemService(JobSchedulerService);
+            var componentName = new ComponentName(this, Java.Lang.Class.FromType(typeof(KakaoStoryNotificationRefreshService)));
+
+            // Check if the job is already scheduled
+            var allPendingJobs = jobScheduler.AllPendingJobs;
+            foreach (var job in allPendingJobs)
+            {
+                if (job.Id == Constants.KakaoStoryNotificationJobId)
+                {
+                    Log.Debug(TAG, "Kakao Story notification job is already scheduled.");
+                    return; // Job is already scheduled. return
+                }
+            }
+
+            var jobInfo = new JobInfo.Builder(Constants.KakaoStoryNotificationJobId, componentName)
+                .SetPeriodic(Constants.KakaoStoryNotificationPollIntervalMilliseconds)
+                .SetPersisted(true) // Persist across device reboots
+                .Build();
+
+            var result = jobScheduler.Schedule(jobInfo);
+            if (result == JobScheduler.ResultSuccess) Log.Debug(TAG, "Kakao Story notification job scheduled successfully.");
+            else Log.Debug(TAG, "Kakao Story notification job scheduling failed.");
+        }
+        catch (Exception exception)
+        {
+            Log.Error(TAG, $"Kakao Story notification job scheduling failed: {exception.Message}\n{exception.StackTrace}");
+        }
+    }
+
 
 #pragma warning disable CA1422, CA1416
     private void HandleIntent(Intent intent)
     {
         FirebaseCloudMessagingImplementation.OnNewIntent(intent);
+
+        var scheme = intent.GetStringExtra(KakaoStoryNotificationPoster.SchemeExtraKey);
+        if (!string.IsNullOrEmpty(scheme))
+        {
+            HandleKakaoStoryNotificationScheme(scheme);
+            return;
+        }
 
         var action = intent.Action;
         var type = intent.Type;
