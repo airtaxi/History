@@ -77,6 +77,7 @@ public partial class SettingsPage : ContentPage
         Shared.MyRank = default;
         Shared.LastUsedPostDiscoveryOption = default;
         Shared.Friends = default;
+        Shared.KakaoFriends = default;
     }
 
     private async Task SetupPushNotificationPermission(PushNotificationType type)

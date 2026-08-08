@@ -1,8 +1,7 @@
-using History.Commons.DataTypes.Contents;
+﻿using History.Commons.DataTypes.Contents;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using SuggestingBox.Maui;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using CommunityToolkit.Mvvm.Messaging;
 
@@ -12,6 +11,10 @@ public partial class TextContentView : ContentView
 {
     public MentionsViewModel MentionsViewModel => ViewModel;
     public SuggestingBox.Maui.SuggestingBox SuggestingBoxControl => MainSuggestingBox;
+
+    // When true, @-mention suggestions use the logged-in Kakao Story friends (Shared.KakaoFriends)
+    // instead of the History friends (Shared.Friends).
+    public bool IsKakaoMentionMode { get; set; }
 
     public string Text
     {
@@ -45,13 +48,7 @@ public partial class TextContentView : ContentView
         if (args.Prefix == "@")
         {
             var query = args.QueryText.Trim();
-            List<MentionUserViewModel> viewModels;
-            if (string.IsNullOrEmpty(query)) viewModels = [.. Shared.Friends.Select(friendUser => new MentionUserViewModel(friendUser))];
-            else viewModels = [.. Shared.Friends
-                    .Where(friendUser => friendUser.Handle.Contains(query, StringComparison.InvariantCultureIgnoreCase)
-                        || friendUser.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase)
-                        || KoreanHelper.SplitToChosung(friendUser.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase))
-                    .Select(friendUser => new MentionUserViewModel(friendUser))];
+            var viewModels = IsKakaoMentionMode ? BuildKakaoMentionViewModels(query) : BuildHistoryMentionViewModels(query);
             ViewModel.UserViewModels = viewModels;
 
             sender.ItemTemplate = (DataTemplate)Resources["UserMentionTemplate"];
@@ -64,6 +61,27 @@ public partial class TextContentView : ContentView
             if (!string.IsNullOrEmpty(query)) sender.ItemsSource = new List<string> { query };
             else sender.ItemsSource = null;
         }
+    }
+
+    private static List<MentionUserViewModel> BuildHistoryMentionViewModels(string query)
+    {
+        if (string.IsNullOrEmpty(query)) return [.. Shared.Friends.Select(friendUser => new MentionUserViewModel(friendUser))];
+
+        return [.. Shared.Friends
+            .Where(friendUser => friendUser.Handle.Contains(query, StringComparison.InvariantCultureIgnoreCase)
+                || friendUser.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || KoreanHelper.SplitToChosung(friendUser.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase))
+            .Select(friendUser => new MentionUserViewModel(friendUser))];
+    }
+
+    private static List<MentionUserViewModel> BuildKakaoMentionViewModels(string query)
+    {
+        if (string.IsNullOrEmpty(query)) return [.. Shared.KakaoFriends.Select(profile => new MentionUserViewModel(profile))];
+
+        return [.. Shared.KakaoFriends
+            .Where(profile => profile.display_name != null && (profile.display_name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || KoreanHelper.SplitToChosung(profile.display_name).Contains(query, StringComparison.OrdinalIgnoreCase)))
+            .Select(profile => new MentionUserViewModel(profile))];
     }
 
     private void OnSuggestionChosen(SuggestingBox.Maui.SuggestingBox sender, SuggestionChosenEventArgs args)

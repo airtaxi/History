@@ -1371,7 +1371,7 @@ public partial class EditPostPage : ContentPage
                 KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
                 try
                 {
-                    await KakaoStoryApiHandler.GetFriends();
+                    Shared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
                     loginNeeded = false;
                 }
                 catch { }
