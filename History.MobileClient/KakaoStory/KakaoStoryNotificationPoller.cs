@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using History.Commons;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
@@ -16,6 +16,8 @@ public static class KakaoStoryNotificationPoller
     private const string LastNotificationCountKey = "KakaoStoryLastNotificationCount";
     private const string KnownNotificationIdsKey = "KakaoStoryKnownNotificationIds";
     private const string IsEnabledKey = "KakaoStoryNotificationEnabled";
+    private const string SessionExpiredNotificationEnabledKey = "KakaoStorySessionExpiredNotificationEnabled";
+    private const string SessionExpiredNotifiedKey = "KakaoStorySessionExpiredNotified";
     private const int MaxKnownNotificationIds = 200;
 
     private static readonly SemaphoreSlim s_pollSemaphore = new(1, 1);
@@ -23,6 +25,8 @@ public static class KakaoStoryNotificationPoller
     private static CancellationTokenSource s_foregroundPollingCts;
     private static Task s_foregroundPollingTask;
     private static int s_lastNotificationCount = -1;
+
+    static KakaoStoryNotificationPoller() => KakaoStoryApiHandler.OnBackgroundReloginRequired += HandleSessionExpired;
 
     /// <summary>
     /// Starts the foreground polling loop (1 request/second against the cheap
@@ -125,6 +129,32 @@ public static class KakaoStoryNotificationPoller
     {
 #if ANDROID
         KakaoStoryNotificationPoster.Post(notification);
+#endif
+    }
+
+    /// <summary>
+    /// Posts the "Kakao Story login expired" notification at most once per expired
+    /// session. The flag is cleared again once a login succeeds (see
+    /// ResetSessionExpiredNotification). The user can disable it from the settings page.
+    /// </summary>
+    private static void HandleSessionExpired()
+    {
+        if (Configuration.GetValue<bool?>(SessionExpiredNotificationEnabledKey) == false) return;
+        if (Preferences.Get(SessionExpiredNotifiedKey, false)) return; // Already notified for this expired session.
+
+        Preferences.Set(SessionExpiredNotifiedKey, true);
+        PostSessionExpiredNotification();
+    }
+
+    /// <summary>
+    /// Called after a successful Kakao Story login so a future 401 notifies again.
+    /// </summary>
+    public static void ResetSessionExpiredNotification() => Preferences.Set(SessionExpiredNotifiedKey, false);
+
+    private static void PostSessionExpiredNotification()
+    {
+#if ANDROID
+        KakaoStoryNotificationPoster.PostSessionExpired();
 #endif
     }
 

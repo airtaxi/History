@@ -62,6 +62,9 @@ public partial class SettingsPage : ContentPage
         var isKakaoStoryNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true;
         KakaoStoryNotificationLabel.Text = isKakaoStoryNotificationEnabled ? PushNotificationOn : PushNotificationOff;
 
+        var isKakaoStorySessionExpiredNotificationEnabled = Configuration.GetValue<bool?>("KakaoStorySessionExpiredNotificationEnabled") ?? true;
+        KakaoStorySessionExpiredNotificationLabel.Text = isKakaoStorySessionExpiredNotificationEnabled ? PushNotificationOn : PushNotificationOff;
+
 #if ANDROID
         // Virtualization toggle (default: off for smoother scroll with less View recreation)
         var isTimelineVirtualizationEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
@@ -336,6 +339,16 @@ public partial class SettingsPage : ContentPage
         // Start/stop the foreground polling loop so a disabled setting costs no battery.
         if (isEnabled) KakaoStoryNotificationPoller.StartForegroundPolling();
         else KakaoStoryNotificationPoller.StopForegroundPolling();
+    }
+
+    private async void OnKakaoStorySessionExpiredNotificationGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("카카오스토리 로그인 만료 알림", Constants.PromptCancel, null, PushNotificationOn, PushNotificationOff);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == PushNotificationOn;
+        Configuration.SetValue("KakaoStorySessionExpiredNotificationEnabled", isEnabled);
+        KakaoStorySessionExpiredNotificationLabel.Text = isEnabled ? PushNotificationOn : PushNotificationOff;
     }
 
     private async void OnCheckForUpdateGridTapped(object sender, TappedEventArgs e) => await Utils.CheckForUpdateAsync();

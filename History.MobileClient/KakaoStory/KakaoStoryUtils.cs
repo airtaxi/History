@@ -56,6 +56,8 @@ public static class KakaoStoryUtils
             {
                 // Refresh the cached user id after relogin so post action sheets stay accurate.
                 await SaveCurrentUserAsync();
+                // Allow the background 401 flow to notify about the next expired session.
+                KakaoStoryNotificationPoller.ResetSessionExpiredNotification();
             }
             return success;
         }
@@ -119,6 +121,7 @@ public static class KakaoStoryUtils
         Configuration.SetValue("KakaoStoryCookies", cookies);
         await SaveCurrentUserAsync();
         _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
+        KakaoStoryNotificationPoller.ResetSessionExpiredNotification();
         return true;
     }
 
