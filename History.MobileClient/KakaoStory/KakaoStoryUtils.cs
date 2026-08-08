@@ -1,4 +1,5 @@
 ﻿using History.Commons;
+using History.Commons.DataTypes.Contents;
 using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.Pages;
@@ -352,6 +353,54 @@ public static class KakaoStoryUtils
             }
         }
         return returnData;
+    }
+
+    /// <summary>
+    /// Converts the editor contents (text/hashtag/profile/sticker) into Kakao Story
+    /// QuoteData decorators. Profile mentions keep the bare display name (no "@")
+    /// and the friend's id, matching the Kakao Story API format. Sticker contents
+    /// are skipped here; they are uploaded as images separately.
+    /// </summary>
+    public static List<QuoteData> GetQuoteDataFromContents(List<BaseContent> contents)
+    {
+        if (contents == null) return [];
+
+        var quoteDatas = new List<QuoteData>();
+        foreach (var content in contents)
+        {
+            if (content is TextContent textContent)
+            {
+                if (!string.IsNullOrEmpty(textContent.Text)) quoteDatas.Add(new QuoteData { type = "text", text = textContent.Text });
+            }
+            else if (content is HashtagContent hashtagContent)
+            {
+                quoteDatas.Add(new QuoteData
+                {
+                    type = "hashtag",
+                    hashtag_type = "",
+                    hashtag_type_id = "",
+                    text = "#" + hashtagContent.Tag
+                });
+            }
+            else if (content is ProfileContent profileContent)
+            {
+                var friend = Shared.KakaoFriends?.FirstOrDefault(profile => profile.display_name == profileContent.Nickname);
+                if (friend != null)
+                {
+                    quoteDatas.Add(new QuoteData
+                    {
+                        type = "profile",
+                        id = friend.id,
+                        text = profileContent.Nickname
+                    });
+                }
+                else
+                {
+                    quoteDatas.Add(new QuoteData { type = "text", text = "@" + profileContent.Nickname });
+                }
+            }
+        }
+        return quoteDatas;
     }
 
     public static string GetTimeString(DateTime created_at, DateTime? modified_at = null)

@@ -30,6 +30,7 @@ using MongoDB.Bson.Serialization.Serializers;
 using Svg;
 using System.Threading.Tasks;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
 
 namespace History.MobileClient.Pages;
@@ -542,7 +543,7 @@ public partial class EditPostPage : ContentPage
 
                 var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
                 var kakaoOnlyDiscoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
-                if (!await TryWritePostToKakaoStoryAsync(text, [.. _attachmentViewModels], _externalUrlContentViewModel, kakaoOnlyDiscoveryOption, stickerContents, isSoleDestination: true)) return;
+                if (!await TryWritePostToKakaoStoryAsync(editorContents, [.. _attachmentViewModels], _externalUrlContentViewModel, kakaoOnlyDiscoveryOption, stickerContents, isSoleDestination: true)) return;
 
                 if (RefreshSwitch.IsToggled)
                 {
@@ -591,7 +592,7 @@ public partial class EditPostPage : ContentPage
                     return;
                 }
 
-                var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
+                var quoteDatas = KakaoStoryUtils.GetQuoteDataFromContents(editorContents);
                 var permission = MapDiscoveryOptionToKakaoPermission((DiscoveryOption)DiscoveryOptionPicker.SelectedIndex);
                 var commentable = _kakaoPost.comment_all_writable;
                 var sharpen = _kakaoPost.sharable;
@@ -628,7 +629,7 @@ public partial class EditPostPage : ContentPage
                     return;
                 }
 
-                var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
+                var quoteDatas = KakaoStoryUtils.GetQuoteDataFromContents(editorContents);
                 var permission = MapDiscoveryOptionToKakaoPermission((DiscoveryOption)DiscoveryOptionPicker.SelectedIndex);
                 var commentable = CommentPermissionSwitch.IsToggled;
                 if (!ExpandCollapseSettingsImage.IsVisible) commentable = true; // Kakao share keeps comments writable when the settings row is hidden
@@ -689,7 +690,7 @@ public partial class EditPostPage : ContentPage
                         // Samsung pass will overwrite the text content, fetch the text content before logging in to KakaoStory
                         var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
 
-                        if (!await TryWritePostToKakaoStoryAsync(text, [.. _attachmentViewModels], _externalUrlContentViewModel, discoveryOption, stickerContents)) return;
+                        if (!await TryWritePostToKakaoStoryAsync(editorContents, [.. _attachmentViewModels], _externalUrlContentViewModel, discoveryOption, stickerContents)) return;
                     }
                 }
 
@@ -712,7 +713,7 @@ public partial class EditPostPage : ContentPage
                     {
                         // After-the-fact KakaoStory mirroring using the server-generated fortune contents
                         var fortuneText = BuildTextFromPostContents(result.Value?.Contents);
-                        if (!string.IsNullOrWhiteSpace(fortuneText)) await TryWritePostToKakaoStoryAsync(fortuneText, [.. _attachmentViewModels], _externalUrlContentViewModel, discoveryOption, stickerContents);
+                        if (!string.IsNullOrWhiteSpace(fortuneText)) await TryWritePostToKakaoStoryAsync([new TextContent { Text = fortuneText }], [.. _attachmentViewModels], _externalUrlContentViewModel, discoveryOption, stickerContents);
                     }
 
                     await App.PopAsync();
@@ -1032,6 +1033,8 @@ public partial class EditPostPage : ContentPage
         if (shouldWritePostToKakaoStory.HasValue) WritePostToKakaoStorySwitch.IsToggled = shouldWritePostToKakaoStory.Value;
         WritePostToKakaoStoryGrid.IsVisible = !_isHistoryShare && !_isKakaoShare && !_isKakaoEdit && !_isKakaoOnlyWrite && _post == null;
 
+        if (_isKakaoOnlyWrite || _isKakaoEdit || _isKakaoShare) MainTextContent.IsKakaoMentionMode = true;
+
         if (_isKakaoOnlyWrite)
         {
             // Kakao Story-only write: mention suggestions come from Kakao Story friends,
@@ -1346,12 +1349,28 @@ public partial class EditPostPage : ContentPage
     }
 
     /// <summary>
+    /// Builds a plain-text representation from the editor contents, used for the
+    /// KakaoStory profanity check and the 4,000-character limit (roughly accurate).
+    /// </summary>
+    private static string GetTextFromContents(List<BaseContent> contents)
+    {
+        var sb = new StringBuilder();
+        foreach (var content in contents)
+        {
+            if (content is TextContent text) sb.Append(text.Text);
+            else if (content is HashtagContent hashtag) sb.Append('#').Append(hashtag.Tag).Append(' ');
+            else if (content is ProfileContent profile) sb.Append('@').Append(profile.Nickname).Append(' ');
+        }
+        return sb.ToString().Trim();
+    }
+
+    /// <summary>
     /// Handles the full KakaoStory upload flow: cookie restoration/relogin, profanity
     /// filter, media upload, scrap, and WritePost. Returns true when the upload completed
     /// (or no longer needed), false when the caller should abort the surrounding flow.
     /// </summary>
     private async Task<bool> TryWritePostToKakaoStoryAsync(
-        string text,
+        List<BaseContent> contents,
         List<MediaAttachmentViewModel> attachmentViewModels,
         ExternalUrlContentViewModel externalUrlContentViewModel,
         DiscoveryOption discoveryOption,
@@ -1378,7 +1397,7 @@ public partial class EditPostPage : ContentPage
             if (isKakaoStoryProfanityCheckEnabled)
             {
                 await ProfanityFilterHelper.LoadAsync();
-                var profanityWords = ProfanityFilterHelper.FindProfanity(text);
+                var profanityWords = ProfanityFilterHelper.FindProfanity(GetTextFromContents(contents));
                 if (profanityWords.Count > 0)
                 {
                     var wordList = string.Join(", ", profanityWords.Take(20));
@@ -1395,16 +1414,16 @@ public partial class EditPostPage : ContentPage
                         IsEnabled = true;
                         MainActivityIndicator.IsRunning = false;
 
-                        var rewritePage = new KakaoStoryRewritePage(text);
+                        var rewritePage = new KakaoStoryRewritePage(GetTextFromContents(contents));
                         await App.PushAsync(rewritePage);
 
-                        var rewrittenText = await rewritePage.GetResultAsync();
+                        var rewrittenContents = await rewritePage.GetResultAsync();
 
                         IsEnabled = false;
                         MainActivityIndicator.IsRunning = true;
 
-                        if (rewrittenText == null) return false;
-                        text = rewrittenText;
+                        if (rewrittenContents == null) return false;
+                        contents = rewrittenContents;
                     }
                 }
             }
@@ -1439,9 +1458,9 @@ public partial class EditPostPage : ContentPage
 
             try
             {
-                if (text.Length > 4000)
+                if (GetTextFromContents(contents).Length > 4000)
                 {
-                    await DisplayAlertAsync("오류", $"카카오스토리에도 업로드 기능이 활성화되어 있으나, 카카오스토리의 글자 수 제한은 4,000자입니다. 현재 작성하신 게시글은 {text.Length}자로 제한을 초과하여 업로드하실 수 없습니다. 게시글 내용을 수정하신 후 다시 시도해 주세요.", Constants.PromptOk);
+                    await DisplayAlertAsync("오류", $"카카오스토리에도 업로드 기능이 활성화되어 있으나, 카카오스토리의 글자 수 제한은 4,000자입니다. 현재 작성하신 게시글은 {GetTextFromContents(contents).Length}자로 제한을 초과하여 업로드하실 수 없습니다. 게시글 내용을 수정하신 후 다시 시도해 주세요.", Constants.PromptOk);
                     return false;
                 }
 
@@ -1450,7 +1469,7 @@ public partial class EditPostPage : ContentPage
                     var proceed = await DisplayAlertAsync("경고", "카카오스토리 업로드 시, 외부 URL이 포함된 사진 및 동영상은 히스토리에서는 지원되지만, 카카오스토리에서는 지원되지 않습니다. 따라서 외부 URL은 카카오스토리에 게시되지 않습니다. 계속 진행하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
                     if (!proceed) return false;
                 }
-                var quoteDatas = KakaoStoryUtils.GetQuoteDataFromString(text);
+                var quoteDatas = KakaoStoryUtils.GetQuoteDataFromContents(contents);
 
                 // Sticker images are uploaded and inserted at the front of the photo queue.
                 var stickerMedias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
@@ -1579,7 +1598,7 @@ public partial class EditPostPage : ContentPage
     /// <summary>
     /// Uploads sticker images to KakaoStory. All History stickers are webp, which
     /// KakaoStory does not accept, so they are converted to PNG before uploading.
-    /// Stickers that fail to upload are skipped and remain as "(스티커)" text.
+    /// Stickers that fail to upload are skipped.
     /// </summary>
     private static async Task<List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>> UploadStickerMediaAsync(List<StickerContent> stickerContents)
     {
