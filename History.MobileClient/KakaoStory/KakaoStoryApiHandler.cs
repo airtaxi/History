@@ -26,6 +26,13 @@ public partial class KakaoStoryApiHandler
 
     public static int MaxRetryCount { get; set; } = 15;
 
+    /// <summary>
+    /// When true, 401 responses abort the request instead of invoking OnReloginRequired,
+    /// so background pollers never pop up the login modal. The saved cookies are simply
+    /// revalidated on the next poll cycle.
+    /// </summary>
+    public static bool IsBackgroundMode { get; set; }
+
     public static void Init(CookieContainer cookieContainer, List<Cookie> cookies, string appKey)
     {
         s_cookieContainer = cookieContainer;
@@ -725,6 +732,7 @@ public partial class KakaoStoryApiHandler
 
             if (statusCode == 401)
             {
+                if (IsBackgroundMode) return null;
                 var success = await OnReloginRequired?.Invoke();
                 if (!success) return null;
                 var newRequest = GenerateDefaultProfile(webRequest.RequestUri.ToString(), webRequest.Method);

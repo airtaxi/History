@@ -265,8 +265,29 @@ public partial class App : Application
     protected override Window CreateWindow(IActivationState activationState)
     {
         MainWindow ??= new Window(new LoginPage());
+#if ANDROID
+        MainWindow.Resumed += OnWindowResumed;
+        MainWindow.Stopped += OnWindowStopped;
+#endif
         return MainWindow;
     }
+
+#if ANDROID
+    private void OnWindowResumed(object sender, EventArgs e)
+    {
+        // Foreground polling: 1 request/second against the cheap Kakao Story
+        // notification counter while the app is visible. The user can disable it
+        // from the settings page; the background job respects the same setting.
+        if (Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") == false) return;
+        KakaoStoryNotificationPoller.StartForegroundPolling();
+    }
+
+    private void OnWindowStopped(object sender, EventArgs e)
+    {
+        // The 15-minute JobService takes over while the app is in the background.
+        KakaoStoryNotificationPoller.StopForegroundPolling();
+    }
+#endif
 
     private static void UpdateSyncFusionTheme()
     {

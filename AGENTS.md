@@ -273,6 +273,9 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 - **Helpers**: 플랫폼별 유틸리티 (미디어 피커, 웹뷰 쿠키)
 - **DataTypes**: 메시징 및 데이터 전송용 클래스
 - **Enums**: 상호작용 타입, 포스트 타입 등
+- **KakaoStoryNotificationPoller**: 카카오스토리 알림 폴링 공용 로직 (포그라운드 1초 / Android 백그라운드 15분 JobScheduler 공유). `new_count` 엔드포인트만 주기 폴링하고 카운트 증가 시에만 전체 목록을 fetch, 새 알림만 로컬 알림으로 표시. 401 시 로그인 UI를 절대 띄우지 않음.
+- **KakaoStoryNotificationPoster** (Android): 카카오스토리 알림을 기존 push 채널(`{PackageName}.push`) 로컬 알림으로 표시. 탭하면 scheme 기반으로 게시글/프로필 이동.
+- **KakaoStoryNotificationRefreshService** (Android): 백그라운드 알림 폴링 JobService (15분 주기, `KakaoStoryNotificationJobId = 2`).
 
 ### 앱 구조
 
