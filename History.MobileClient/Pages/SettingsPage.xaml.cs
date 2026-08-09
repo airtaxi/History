@@ -62,6 +62,12 @@ public partial class SettingsPage : ContentPage
         var isKakaoStoryNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true;
         KakaoStoryNotificationLabel.Text = isKakaoStoryNotificationEnabled ? OnText : OffText;
 
+        var isKakaoStoryFavoriteFriendNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryFavoriteFriendNotificationEnabled") ?? true;
+        KakaoStoryFavoriteFriendNotificationLabel.Text = isKakaoStoryFavoriteFriendNotificationEnabled ? OnText : OffText;
+
+        var isKakaoStoryEmotionNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryEmotionNotificationEnabled") ?? true;
+        KakaoStoryEmotionNotificationLabel.Text = isKakaoStoryEmotionNotificationEnabled ? OnText : OffText;
+
         var isKakaoStorySessionExpiredNotificationEnabled = Configuration.GetValue<bool?>("KakaoStorySessionExpiredNotificationEnabled") ?? true;
         KakaoStorySessionExpiredNotificationLabel.Text = isKakaoStorySessionExpiredNotificationEnabled ? OnText : OffText;
 
@@ -348,6 +354,26 @@ public partial class SettingsPage : ContentPage
 #endif
         }
         else KakaoStoryNotificationPoller.StopForegroundPolling();
+    }
+
+    private async void OnKakaoStoryFavoriteFriendNotificationGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("카카오스토리 관심 친구 알림", Constants.PromptCancel, null, OnText, OffText);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == OnText;
+        Configuration.SetValue("KakaoStoryFavoriteFriendNotificationEnabled", isEnabled);
+        KakaoStoryFavoriteFriendNotificationLabel.Text = isEnabled ? OnText : OffText;
+    }
+
+    private async void OnKakaoStoryEmotionNotificationGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("카카오스토리 느낌 알림", Constants.PromptCancel, null, OnText, OffText);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == OnText;
+        Configuration.SetValue("KakaoStoryEmotionNotificationEnabled", isEnabled);
+        KakaoStoryEmotionNotificationLabel.Text = isEnabled ? OnText : OffText;
     }
 
     private async void OnKakaoStorySessionExpiredNotificationGridTapped(object sender, TappedEventArgs e)
