@@ -1269,6 +1269,11 @@ public partial class KakaoStoryApiHandler
         webRequest.AutomaticDecompression = DecompressionMethods.GZip;
         webRequest.Date = DateTime.Now;
 
+        // Bound the per-request timeout so failed polls cannot hold a background
+        // task (e.g. the iOS BGAppRefreshTask) past its execution budget.
+        webRequest.Timeout = 15000;
+        webRequest.ReadWriteTimeout = 15000;
+
         return webRequest;
     }
 

@@ -20,7 +20,6 @@ public static class KakaoStoryNotificationPoller
     private const string SessionExpiredNotifiedKey = "KakaoStorySessionExpiredNotified";
 
     private static readonly SemaphoreSlim s_pollSemaphore = new(1, 1);
-    private static readonly PeriodicTimer s_timer = new(TimeSpan.FromSeconds(1));
     private static CancellationTokenSource s_foregroundPollingCts;
     private static Task s_foregroundPollingTask;
 
@@ -53,9 +52,12 @@ public static class KakaoStoryNotificationPoller
 
     private static async Task RunForegroundPollingLoopAsync(CancellationToken cancellationToken)
     {
+        // A per-loop timer keeps a restarting loop from sharing a timer with a
+        // still-finishing previous loop (PeriodicTimer only allows one waiter).
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
         try
         {
-            while (await s_timer.WaitForNextTickAsync(cancellationToken))
+            while (await timer.WaitForNextTickAsync(cancellationToken))
             {
                 try { await PollOnceAsync(); }
                 catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story poll cycle failed: {exception.Message}"); }
@@ -75,7 +77,14 @@ public static class KakaoStoryNotificationPoller
         try
         {
             await s_pollSemaphore.WaitAsync();
-            await PollCoreAsync();
+
+            // Bound retries so a poll cycle fits the platform background budget
+            // (e.g. the iOS BGAppRefreshTask execution window) instead of the
+            // interactive default of 15 retries.
+            var previousMaxRetryCount = KakaoStoryApiHandler.MaxRetryCount;
+            KakaoStoryApiHandler.MaxRetryCount = 2;
+            try { await PollCoreAsync(); }
+            finally { KakaoStoryApiHandler.MaxRetryCount = previousMaxRetryCount; }
         }
         finally { s_pollSemaphore.Release(); }
     }
@@ -136,6 +145,12 @@ public static class KakaoStoryNotificationPoller
     private static void PostNotification(Notification notification)
     {
 #if ANDROID
+        // A transient Notify failure (e.g. channel disabled) must not abort the
+        // cycle before the baseline advances, or the same notification would be
+        // posted again on the next poll.
+        try { KakaoStoryNotificationPoster.Post(notification); }
+        catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story notification post failed: {exception.Message}"); }
+#elif IOS
         try { KakaoStoryNotificationPoster.Post(notification); }
         catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story notification post failed: {exception.Message}"); }
 #endif
@@ -163,6 +178,9 @@ public static class KakaoStoryNotificationPoller
     private static void PostSessionExpiredNotification()
     {
 #if ANDROID
+        try { KakaoStoryNotificationPoster.PostSessionExpired(); }
+        catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story session expired notification post failed: {exception.Message}"); }
+#elif IOS
         try { KakaoStoryNotificationPoster.PostSessionExpired(); }
         catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story session expired notification post failed: {exception.Message}"); }
 #endif
