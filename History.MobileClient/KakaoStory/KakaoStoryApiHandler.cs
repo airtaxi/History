@@ -20,6 +20,17 @@ public partial class KakaoStoryApiHandler
     private static DateTime s_emoticonCredentialUpdatedTime = DateTime.MinValue;
     private static AuthController s_emoticonCredential;
 
+    // X-Kakao-VC generator state. Reverse-engineered from story.kakao.com's
+    // common/api module (p() in common.min.js). The web client keeps a closure
+    // counter `d` that starts at 10000, increments each step, and wraps back to
+    // 10000 once it exceeds 20000. Each request builds VC = concat(hex(timestamp
+    // % d) ...) truncated to 20 chars. Keeping s_vcCounter as a process-wide
+    // counter mirrors the browser session's single shared counter.
+    private const int VcCounterFloor = 10000;
+    private const int VcCounterCeiling = 20000;
+    private const int VcLength = 20;
+    private static int s_vcCounter = VcCounterFloor;
+
     public delegate Task<bool> ReloginRequired();
 
     public static ReloginRequired OnReloginRequired { get; set; }
@@ -878,10 +889,10 @@ public partial class KakaoStoryApiHandler
         if (isEdit)
             requestURI = "https://story.kakao.com/a/activities/" + editPostId + "/content";
 
-        // WritePost uses custom headers (fixed X-Kakao-VC, authority) that must survive retries.
+        // WritePost uses custom headers (dynamic X-Kakao-VC, authority) that must survive retries.
         void Configure(HttpWebRequest request)
         {
-            request.Headers["X-Kakao-VC"] = "185412afe1da9580e67f";
+            request.Headers["X-Kakao-VC"] = GenerateKakaoVC();
             request.Headers["authority"] = "story.kakao.com";
             request.Referer = "https://story.kakao.com";
         }
@@ -910,7 +921,7 @@ public partial class KakaoStoryApiHandler
         request.AddHeader("Sec-Fetch-Site", "same-origin");
         request.AddHeader("X-Kakao-Apilevel", "49");
         request.AddHeader("X-Kakao-Deviceinfo", "web:d;-;-");
-        request.AddHeader("X-Kakao-Vc", "185412afe1da9580e67f");
+        request.AddHeader("X-Kakao-Vc", GenerateKakaoVC());
         request.AddHeader("X-Requested-With", "XMLHttpRequest");
 
         request.AddHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
@@ -951,7 +962,7 @@ public partial class KakaoStoryApiHandler
         request.AddHeader("Sec-Fetch-Site", "same-origin");
         request.AddHeader("X-Kakao-Apilevel", "49");
         request.AddHeader("X-Kakao-Deviceinfo", "web:d;-;-");
-        request.AddHeader("X-Kakao-Vc", "185412afe1da9580e67f");
+        request.AddHeader("X-Kakao-Vc", GenerateKakaoVC());
         request.AddHeader("X-Requested-With", "XMLHttpRequest");
 
         request.AddHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
@@ -987,7 +998,7 @@ public partial class KakaoStoryApiHandler
         request.Headers["X-Kakao-DeviceInfo"] = "web:d;-;-";
         request.Headers["X-Kakao-ApiLevel"] = "45";
         request.Headers["X-Requested-With"] = "XMLHttpRequest";
-        request.Headers["X-Kakao-VC"] = "1b242cf8fa50f1f96765";
+        request.Headers["X-Kakao-VC"] = GenerateKakaoVC();
         request.Headers["Cache-Control"] = "max-age=0";
         request.Headers["Accept-Encoding"] = "gzip, deflate, br";
         request.Headers["Accept-Language"] = "ko-KR,ko;q=0.8,en-US;q=0.6,en;q=0.4";
@@ -1033,7 +1044,7 @@ public partial class KakaoStoryApiHandler
         request.Headers["X-Kakao-DeviceInfo"] = "web:d;-;-";
         request.Headers["X-Kakao-ApiLevel"] = "46";
         request.Headers["X-Requested-With"] = "XMLHttpRequest";
-        request.Headers["X-Kakao-VC"] = "185412afe1da9580e67f";
+        request.Headers["X-Kakao-VC"] = GenerateKakaoVC();
         request.Headers["Cache-Control"] = "max-age=0";
         request.Headers["Accept-Encoding"] = "gzip, deflate, br";
         request.Headers["Accept-Language"] = "ko-KR,ko;q=0.8,en-US;q=0.6,en;q=0.4";
@@ -1077,7 +1088,7 @@ public partial class KakaoStoryApiHandler
         request.Headers["X-Kakao-DeviceInfo"] = "web:d;-;-";
         request.Headers["X-Kakao-ApiLevel"] = "49";
         request.Headers["X-Requested-With"] = "XMLHttpRequest";
-        request.Headers["X-Kakao-VC"] = "185412afe1da9580e67f";
+        request.Headers["X-Kakao-VC"] = GenerateKakaoVC();
         request.Headers["Cache-Control"] = "max-age=0";
 
         request.Headers["Accept-Encoding"] = "gzip, deflate, br";
@@ -1131,7 +1142,7 @@ public partial class KakaoStoryApiHandler
         request.Headers["X-Kakao-DeviceInfo"] = "web:d;-;-";
         request.Headers["X-Kakao-ApiLevel"] = "49";
         request.Headers["X-Requested-With"] = "XMLHttpRequest";
-        request.Headers["X-Kakao-VC"] = "4736c40740682cf57eb2";
+        request.Headers["X-Kakao-VC"] = GenerateKakaoVC();
 
         request.Headers["Accept"] = "application/json";
         request.Headers["Accept-Encoding"] = "gzip, deflate, br, zstd";
@@ -1201,7 +1212,7 @@ public partial class KakaoStoryApiHandler
         webRequest.Headers["X-Kakao-DeviceInfo"] = "web:d;-;-";
         webRequest.Headers["X-Kakao-ApiLevel"] = "49";
         webRequest.Headers["X-Requested-With"] = "XMLHttpRequest";
-        webRequest.Headers["X-Kakao-VC"] = Guid.NewGuid().ToString().ToLower()[..20];
+        webRequest.Headers["X-Kakao-VC"] = GenerateKakaoVC();
         webRequest.Headers["Cache-Control"] = "max-age=0";
 
         webRequest.Headers["Accept-Encoding"] = "gzip, deflate, br";
@@ -1220,6 +1231,37 @@ public partial class KakaoStoryApiHandler
         webRequest.Date = DateTime.Now;
 
         return webRequest;
+    }
+
+    /// <summary>
+    /// Generates an X-Kakao-VC value using the same algorithm as the Kakao Story
+    /// web client (common/api module's p() function). The web client concatenates
+    /// hex(timestampMs % d) where d is a session-wide counter cycling between
+    /// 10000 and 20000, then truncates to 20 chars. This mirrors that behavior so
+    /// server-side VC validation accepts the value. Thread-safe via a lock since
+    /// the counter must advance atomically with each generation.
+    /// </summary>
+    private static string GenerateKakaoVC()
+    {
+        long timestampMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var sb = new StringBuilder(VcLength + 4);
+        int counter;
+        lock (typeof(KakaoStoryApiHandler))
+        {
+            counter = s_vcCounter;
+            // Advance the session counter exactly like the web client: one step per
+            // appended chunk, wrapping back to the floor once it passes the ceiling.
+            while (sb.Length < VcLength)
+            {
+                int remainder = (int)(timestampMs % counter);
+                sb.Append(remainder.ToString("x"));
+                counter++;
+                if (counter > VcCounterCeiling) counter = VcCounterFloor;
+            }
+            s_vcCounter = counter;
+        }
+        // Truncate to the fixed 20-char length the server expects.
+        return sb.Length > VcLength ? sb.ToString(0, VcLength) : sb.ToString();
     }
 }
 #pragma warning restore SYSLIB0014 // Type or member is obsolete
