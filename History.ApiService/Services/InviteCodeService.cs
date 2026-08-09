@@ -92,6 +92,30 @@ public class InviteCodeService(IMongoDatabase database, IServiceProvider service
     }
 
     /// <inheritdoc />
+    public async Task<Result> IssueInitialInviteCodesAsync(string userId)
+    {
+        const int initialCodeCount = 7;
+
+        var codes = new List<InviteCode>();
+        for (int i = 0; i < initialCodeCount; i++)
+        {
+            var code = await GenerateUniqueCodeAsync();
+            codes.Add(new InviteCode
+            {
+                Id = await GenerateUniqueInvitationIdAsync(),
+                Code = code,
+                OwnerId = userId,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        await _inviteCodeCollection.InsertManyAsync(codes);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
     public async Task<Result> ValidateInviteCodeAsync(string code)
     {
         if (string.IsNullOrWhiteSpace(code)) return (ErrorType.BadRequest, "초대 코드를 입력해주세요.");

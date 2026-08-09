@@ -22,6 +22,11 @@ public interface IInviteCodeService
     public Task<Result<List<InviteCode>>> CreateInviteCodesAsync(string ownerId, int count, string moderatorId);
 
     /// <summary>
+    /// Issues the initial 7 invite codes to a newly registered user.
+    /// </summary>
+    public Task<Result> IssueInitialInviteCodesAsync(string userId);
+
+    /// <summary>
     /// Validates an invite code during registration without consuming it. Returns failure if invalid or already used.
     /// </summary>
     public Task<Result> ValidateInviteCodeAsync(string code);

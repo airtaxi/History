@@ -99,6 +99,10 @@ public class UserController(IUserService userService, IFriendshipService friends
             }
         }
 
+        // Issue 7 initial invite codes to the new user (after consume succeeds so rollback leaves no orphaned codes)
+        var issueResult = await inviteCodeService.IssueInitialInviteCodesAsync(payload.Id);
+        if (issueResult.IsFailure) return StatusCode(500, issueResult.FullErrorMessage);
+
         var accessToken = GenerateJwt(newUser, false);
         var refreshToken = GenerateJwt(newUser, true);
         return Ok(new OAuthLoginResponseDto(accessToken, refreshToken));
