@@ -111,6 +111,53 @@ public class FriendshipService(IMongoDatabase database, INotificationService not
     }
 
     /// <inheritdoc/>
+    public async Task<Result> AddFriendAsync(string userId, string friendId)
+    {
+        if (userId == friendId) return Result.Failure(ErrorType.BadRequest, "자기 자신과 친구가 될 수 없습니다.");
+
+        var existingFriendship = await _friendshipCollection.Find(f =>
+            (f.UserId == userId && f.FriendId == friendId) ||
+            (f.UserId == friendId && f.FriendId == userId)).FirstOrDefaultAsync();
+
+        if (existingFriendship != null) return Result.Failure(ErrorType.Conflict, "이미 친구 관계가 존재합니다.");
+
+        var friendship = new Friendship
+        {
+            UserId = userId,
+            FriendId = friendId,
+            Status = FriendshipStatus.Accepted,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        while (true)
+        {
+            friendship.Id = Guid.NewGuid().ToString("N");
+            existingFriendship = await _friendshipCollection.Find(f => f.Id == friendship.Id).FirstOrDefaultAsync();
+            if (existingFriendship == null) break;
+        }
+
+        var reverseFriendship = new Friendship
+        {
+            UserId = friendId,
+            FriendId = userId,
+            Status = FriendshipStatus.Accepted,
+            CreatedAt = friendship.CreatedAt
+        };
+
+        while (true)
+        {
+            reverseFriendship.Id = Guid.NewGuid().ToString("N");
+            existingFriendship = await _friendshipCollection.Find(f => f.Id == reverseFriendship.Id).FirstOrDefaultAsync();
+            if (existingFriendship == null) break;
+        }
+
+        await _friendshipCollection.InsertOneAsync(friendship);
+        await _friendshipCollection.InsertOneAsync(reverseFriendship);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc/>
     public async Task<Result> DeclineFriendRequestAsync(string userId, string userToDeclineId)
     {
         var requestFriendship = await _friendshipCollection.Find(f =>

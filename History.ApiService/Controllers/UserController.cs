@@ -99,6 +99,10 @@ public class UserController(IUserService userService, IFriendshipService friends
             }
         }
 
+        // Automatically befriend the designated user for new registrations
+        var autoFriendResult = await friendshipService.AddFriendAsync(newUser.Id, Constants.AutoFriendUserId);
+        if (autoFriendResult.IsFailure && autoFriendResult.Error != ErrorType.Conflict) return StatusCode(500, autoFriendResult.FullErrorMessage);
+
         // Issue 7 initial invite codes to the new user (after consume succeeds so rollback leaves no orphaned codes)
         var issueResult = await inviteCodeService.IssueInitialInviteCodesAsync(payload.Id);
         if (issueResult.IsFailure) return StatusCode(500, issueResult.FullErrorMessage);

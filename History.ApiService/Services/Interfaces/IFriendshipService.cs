@@ -32,6 +32,14 @@ public interface IFriendshipService
     public Task<Result> AcceptFriendRequestAsync(string userId, string userIdToAccept);
 
     /// <summary>
+    /// Creates an accepted friendship between two users directly.
+    /// </summary>
+    /// <param name="userId">The ID of the first user.</param>
+    /// <param name="friendId">The ID of the second user.</param>
+    /// <returns>A task representing the asynchronous operation, with a result indicating success or failure.</returns>
+    public Task<Result> AddFriendAsync(string userId, string friendId);
+
+    /// <summary>
     /// Declines a friend request.
     /// </summary>
     /// <param name="userId">The ID of the user declining the request.</param>

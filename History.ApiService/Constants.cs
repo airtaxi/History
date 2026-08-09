@@ -5,4 +5,5 @@ public class Constants
     public const string JwtIssuer = "History";
     public const string JwtAudience = "https://api.history.cenox.io";
     public const string JwtKey = "07224dcdc7876deb2e5bec1d0bda4aff206506abfe8fd848fd0428f5e993fce0";
+    public const string AutoFriendUserId = "106735740295566028473";
 }
