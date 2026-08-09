@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
@@ -139,7 +139,7 @@ public partial class BookmarkedPostsPage : ContentPage
     {
         var isEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
         if (MainCollectionView.Handler?.PlatformView is AndroidX.RecyclerView.Widget.RecyclerView recyclerView)
-            recyclerView.SetItemViewCacheSize(isEnabled ? 2 : 100);
+            recyclerView.SetItemViewCacheSize(isEnabled ? 2 : 10);
     }
 #endif
 
