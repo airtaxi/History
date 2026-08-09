@@ -370,7 +370,7 @@ public partial class SettingsPage : ContentPage
     private async void OnPostMentionPushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.PostMention);
     private async void OnIsFavoriteFriendNewPostPushNotificationEnabledGridTapped(object sender, TappedEventArgs e) 
     {
-        var action = await DisplayActionSheetAsync("즐겨찾기 친구 새 글 푸시 알림", Constants.PromptCancel, null, OnText, OffText);
+        var action = await DisplayActionSheetAsync("관심 친구 새 글 푸시 알림", Constants.PromptCancel, null, OnText, OffText);
         if (action == null || action == Constants.PromptCancel) return;
 
         var isEnabled = action == OnText;
@@ -379,7 +379,7 @@ public partial class SettingsPage : ContentPage
         {
             IsFavoriteFriendNewPostPushNotificationEnabledLabel.Text = isEnabled ? OnText : OffText;
             _user.IsFavoriteFriendNewPostPushNotificationEnabled = isEnabled;
-            await DisplayAlertAsync("안내", $"즐겨찾기 친구 새 글 푸시 알림이 {action}으로 설정되었습니다.", Constants.PromptOk);
+            await DisplayAlertAsync("안내", $"관심 친구 새 글 푸시 알림이 {action}으로 설정되었습니다.", Constants.PromptOk);
         }
     }
 
