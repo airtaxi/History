@@ -126,7 +126,8 @@ public partial class CreateStickerPage : ContentPage
 
         _iconFileName = fileName;
 
-        if (fileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase)) _ = Toast.Make("WebP 움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
+        if (fileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
+            _ = Toast.Make("움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
 
 #if ANDROID
         var memoryStream = new MemoryStream(bytes);
@@ -156,10 +157,10 @@ public partial class CreateStickerPage : ContentPage
         foreach (var image in images)
         {
             var mimeType = Commons.MimeTypes.GetMimeType(image.FileName);
-            if (!mimeType.StartsWith("image/") || mimeType.Contains("gif")) continue;
+            if (!mimeType.StartsWith("image/")) continue;
 
-            if (image.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) && addedCount == 0)
-                _ = Toast.Make("WebP 움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
+            if ((image.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) || image.FileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)) && addedCount == 0)
+                _ = Toast.Make("움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
 
             var memoryStream = new MemoryStream(image.Bytes);
             _assets.Add(image.FileName, memoryStream);
@@ -173,7 +174,8 @@ public partial class CreateStickerPage : ContentPage
         var files = results?.Files?.ToArray();
         if (files == null || files.Length == 0) return;
 
-        if (files.Any(x => x.Extension.Equals("webp", StringComparison.OrdinalIgnoreCase))) _ = Toast.Make("WebP 움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
+        if (files.Any(x => x.Extension.Contains("webp", StringComparison.OrdinalIgnoreCase) || x.Extension.Contains("gif", StringComparison.OrdinalIgnoreCase)))
+            _ = Toast.Make("움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
             
         foreach (var file in files)
         {
@@ -184,7 +186,7 @@ public partial class CreateStickerPage : ContentPage
 
             var fileName = file.GenerateFileName();
             var mimeType = Commons.MimeTypes.GetMimeType(fileName);
-            if (!mimeType.StartsWith("image/") || mimeType.Contains("gif")) continue;
+            if (!mimeType.StartsWith("image/")) continue;
 
             _assets.Add(fileName, memoryStream);
             AddAssetToUI(fileName, memoryStream);
