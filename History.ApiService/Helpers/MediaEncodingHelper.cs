@@ -45,11 +45,19 @@ public static class MediaEncodingHelper
         // Not animated — fall back to static conversion
         if (!IsAnimatedWebP(imageBytes)) return ConvertImage(imageBytes, false, noAlpha, maxWidth, maxHeight);
 
+        return ConvertAnimatedImage(imageBytes, noAlpha, maxWidth, maxHeight);
+    }
+
+    public static MediaConvertResult ConvertAnimatedImage(byte[] imageBytes, bool noAlpha = false, uint? maxWidth = null, uint? maxHeight = null)
+    {
+        // Not animated — fall back to static conversion
+        if (!IsAnimatedImage(imageBytes)) return ConvertImage(imageBytes, false, noAlpha, maxWidth, maxHeight);
+
         var tempDir = CreateTempDirectory();
 
         try
         {
-            var inputPath = Path.Combine(tempDir, "input.webp");
+            var inputPath = Path.Combine(tempDir, "input_image");
             File.WriteAllBytes(inputPath, imageBytes);
 
             var (width, height) = ProbeImage(inputPath);

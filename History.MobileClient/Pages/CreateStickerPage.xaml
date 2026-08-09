@@ -221,7 +221,7 @@
 
                     <Label
                         FontSize="12"
-                        Text="최대 50개, 각 파일 10MB 이하, 정적 이미지 및 WebP 움짤 가능&#10;이미지는 384x384 크기로 자동 조정됩니다."
+                        Text="최대 50개, 각 파일 10MB 이하, 정적 이미지 및 움짤(GIF/WebP) 가능&#10;이미지는 384x384 크기로 자동 조정됩니다."
                         TextColor="#808080" />
                 </VerticalStackLayout>
             </VerticalStackLayout>
