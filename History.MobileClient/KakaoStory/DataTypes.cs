@@ -1661,5 +1661,28 @@ public partial class KakaoStoryApiHandler
                 public SectionInfo section_info { get; set; }
             }
         }
+
+        /// <summary>
+        /// OAuth token pair issued by kauth.kakao.com for the story.kakao.com web
+        /// application (rest key). Persisted in Configuration under "KakaoStorySdkTokens"
+        /// and used as the Authorization: KAuth header for story API calls.
+        /// </summary>
+        public class SdkToken
+        {
+            [JsonProperty("access_token")]
+            public string AccessToken { get; set; }
+
+            [JsonProperty("refresh_token")]
+            public string RefreshToken { get; set; }
+
+            [JsonProperty("id_token")]
+            public string IdToken { get; set; }
+
+            [JsonProperty("expires_in")]
+            public int ExpiresIn { get; set; }
+
+            [JsonProperty("refresh_token_expires_in")]
+            public int RefreshTokenExpiresIn { get; set; }
+        }
     }
 }

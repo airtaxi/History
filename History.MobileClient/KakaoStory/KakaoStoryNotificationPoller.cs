@@ -1,5 +1,4 @@
-﻿using System.Net;
-using History.Commons;
+﻿using History.Commons;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
 namespace History.MobileClient.KakaoStory;
@@ -86,17 +85,12 @@ public static class KakaoStoryNotificationPoller
         // The user can disable Kakao Story notifications from the settings page.
         if (Configuration.GetValue<bool?>(IsEnabledKey) == false) return;
 
-        var cookies = Configuration.GetValue<List<Cookie>>("KakaoStoryCookies");
-        if (cookies == null || cookies.Count == 0) return;
+        if (await KakaoStoryApiHandler.EnsureKAuthTokenAsync() == null) return;
 
         var previousBackgroundMode = KakaoStoryApiHandler.IsBackgroundMode;
         KakaoStoryApiHandler.IsBackgroundMode = true;
         try
         {
-            var cookieContainer = new CookieContainer();
-            foreach (var cookie in cookies) cookieContainer.Add(cookie);
-            KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
-
             await FetchAndPostNotificationsAsync();
         }
         finally { KakaoStoryApiHandler.IsBackgroundMode = previousBackgroundMode; }

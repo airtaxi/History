@@ -17,6 +17,32 @@ public partial class KakaoStoryApiHandler
 
     private static CookieContainer s_cookieContainer { get; set; } = null;
     private static string s_kakaoAppKey { get; set; } = "90c1434c4e8916a6ec5aa88109889601";
+
+    // OAuth credentials for the story.kakao.com web application, extracted from the
+    // web client (kakaoSDK config in common.min.js). The rest key authorizes the
+    // authorization_code/refresh_token flows; the app key authorizes the emoticon
+    // API (KakaoAK header) and mirrors the web client's "key".
+    private const string OAuthClientId = "2a8b2aa0dc2c4e9121bbd4b9bdb70bc1";
+    private const string OAuthRedirectUri = "https://story.kakao.com/s/oauth";
+    private const string OAuthTokenUrl = "https://kauth.kakao.com/oauth/token";
+    private const string OAuthAuthorizeUrl = "https://kauth.kakao.com/oauth/authorize";
+
+    private const string SdkTokensConfigurationKey = "KakaoStorySdkTokens";
+    private const string SdkTokensUpdatedTimeConfigurationKey = "KakaoStorySdkTokensUpdatedTime";
+
+    private static readonly SemaphoreSlim s_tokenRefreshSemaphore = new(1, 1);
+
+    // Authorization header scheme the story API accepts for SDK tokens: "KAuth <id_token>"
+    // (reverse-engineered from the Android app's KakaoAccount.h(), ce/c.java).
+    private const string KAuthScheme = "KAuth";
+
+    // The id token is a JWT; keep a safety margin so a token about to expire is
+    // refreshed before a request is sent, instead of failing with a 401 mid-flight.
+    private static readonly TimeSpan s_tokenExpirySafetyMargin = TimeSpan.FromMinutes(5);
+
+    private static string s_kAuthIdToken;
+    private static DateTime? s_kAuthIdTokenExpiry;
+
     private static DateTime s_emoticonCredentialUpdatedTime = DateTime.MinValue;
     private static AuthController s_emoticonCredential;
 
@@ -750,6 +776,17 @@ public partial class KakaoStoryApiHandler
 
             if (statusCode == 401)
             {
+                // A KAuth-signed request that 401s means the id token was revoked
+                // server-side: refresh it once silently via refresh_token and retry.
+                // A 401 on the retried request falls through to the login flow so
+                // an unrecoverable token never loops the refresh forever.
+                if (count == 0 && s_kAuthIdToken != null && await RefreshSdkTokenAsync(refreshToken: LoadSdkTokens()?.RefreshToken) != null)
+                {
+                    var refreshedRequest = GenerateDefaultProfile(webRequest.RequestUri.ToString(), webRequest.Method);
+                    configure?.Invoke(refreshedRequest);
+                    return await GetResponseFromRequest(refreshedRequest, body, ++count, configure);
+                }
+
                 if (IsBackgroundMode)
                 {
                     // Surface the expired session without showing the login modal from the background.
@@ -1215,6 +1252,8 @@ public partial class KakaoStoryApiHandler
         webRequest.Headers["X-Kakao-VC"] = GenerateKakaoVC();
         webRequest.Headers["Cache-Control"] = "max-age=0";
 
+        if (GetKAuthHeaderValue() is { } kAuthHeaderValue) webRequest.Headers["Authorization"] = kAuthHeaderValue;
+
         webRequest.Headers["Accept-Encoding"] = "gzip, deflate, br";
         webRequest.Headers["Accept-Language"] = "ko";
 
@@ -1231,6 +1270,151 @@ public partial class KakaoStoryApiHandler
         webRequest.Date = DateTime.Now;
 
         return webRequest;
+    }
+
+    /// <summary>
+    /// Loads the persisted SDK tokens (access/refresh/id token) from Configuration.
+    /// The tokens are stored as JSON under SdkTokensConfigurationKey; parsing
+    /// failures yield null so the caller falls back to the cookie session flow.
+    /// </summary>
+    private static SdkToken LoadSdkTokens()
+    {
+        var json = Configuration.GetValue<string>(SdkTokensConfigurationKey);
+        if (string.IsNullOrEmpty(json)) return null;
+
+        try { return JsonConvert.DeserializeObject<SdkToken>(json); }
+        catch (Exception) { return null; }
+    }
+
+    /// <summary>
+    /// Persists the SDK tokens together with the current time, which acts as the
+    /// issued-at anchor for computing the id token expiry window. A token that
+    /// becomes invalid server-side (revoked) still gets refreshed lazily: the
+    /// first 401 after expiry triggers a refresh_token round trip.
+    /// </summary>
+    private static void SaveSdkTokens(SdkToken token)
+    {
+        Configuration.SetValue(SdkTokensConfigurationKey, JsonConvert.SerializeObject(token));
+        Configuration.SetValue(SdkTokensUpdatedTimeConfigurationKey, DateTime.UtcNow);
+    }
+
+    /// <summary>
+    /// Stores the SDK tokens obtained by the login page and clears the legacy
+    /// cookie session so the KAuth header flow takes over. Returns the new token.
+    /// </summary>
+    public static SdkToken SetSdkTokens(SdkToken token)
+    {
+        SaveSdkTokens(token);
+        s_kAuthIdToken = token.IdToken;
+        s_kAuthIdTokenExpiry = DateTime.UtcNow.AddSeconds(token.ExpiresIn);
+        Cookies = null;
+        s_cookieContainer = null;
+        return token;
+    }
+
+    /// <summary>
+    /// Removes the persisted SDK tokens and the in-memory KAuth state, forcing the
+    /// next call to fall back to the cookie session or the login flow.
+    /// </summary>
+    public static void ClearSdkTokens()
+    {
+        Configuration.SetValue(SdkTokensConfigurationKey, null);
+        Configuration.SetValue(SdkTokensUpdatedTimeConfigurationKey, null);
+        s_kAuthIdToken = null;
+        s_kAuthIdTokenExpiry = null;
+    }
+
+    /// <summary>
+    /// Performs the OAuth token exchange with kauth.kakao.com. Authorization code
+    /// flows pass the code from the login page; refresh flows pass the persisted
+    /// refresh token. The response is persisted on success.
+    /// </summary>
+    public static async Task<SdkToken> RefreshSdkTokenAsync(string authorizationCode = null, string refreshToken = null)
+    {
+        if (authorizationCode == null && string.IsNullOrEmpty(refreshToken)) return null;
+
+        using var httpClient = new HttpClient();
+        var formData = new List<KeyValuePair<string, string>>
+        {
+            new("client_id", OAuthClientId)
+        };
+
+        if (!string.IsNullOrEmpty(authorizationCode))
+        {
+            formData.Add(new("grant_type", "authorization_code"));
+            formData.Add(new("redirect_uri", OAuthRedirectUri));
+            formData.Add(new("code", authorizationCode));
+        }
+        else
+        {
+            formData.Add(new("grant_type", "refresh_token"));
+            formData.Add(new("refresh_token", refreshToken ?? LoadSdkTokens()?.RefreshToken));
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, OAuthTokenUrl)
+        {
+            Content = new FormUrlEncodedContent(formData)
+        };
+
+        using var response = await httpClient.SendAsync(request).ConfigureAwait(false);
+        var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+        if (!response.IsSuccessStatusCode) return null;
+
+        var token = JsonConvert.DeserializeObject<SdkToken>(content);
+        if (token?.IdToken == null) return null;
+
+        return SetSdkTokens(token);
+    }
+
+    /// <summary>
+    /// Ensures the in-memory KAuth id token is loaded from Configuration and not
+    /// about to expire. A token within the safety margin is refreshed silently via
+    /// the refresh_token grant; a missing/expired refresh token returns null.
+    /// </summary>
+    public static async Task<string> EnsureKAuthTokenAsync()
+    {
+        if (s_kAuthIdToken == null || s_kAuthIdTokenExpiry == null)
+        {
+            var storedToken = LoadSdkTokens();
+            if (storedToken?.IdToken == null) return null;
+
+            // Expiry is relative to the token issue time persisted at SaveSdkTokens,
+            // not to the current process start, so a reloaded token is refreshed at
+            // the correct moment instead of being treated as freshly issued.
+            var storedAt = Configuration.GetValue<DateTime?>(SdkTokensUpdatedTimeConfigurationKey) ?? DateTime.UtcNow;
+            s_kAuthIdToken = storedToken.IdToken;
+            s_kAuthIdTokenExpiry = storedAt.AddSeconds(storedToken.ExpiresIn);
+        }
+
+        if (DateTime.UtcNow + s_tokenExpirySafetyMargin >= s_kAuthIdTokenExpiry)
+        {
+            if (string.IsNullOrEmpty(LoadSdkTokens()?.RefreshToken)) return null;
+
+            await s_tokenRefreshSemaphore.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                // Re-check after acquiring the semaphore; another caller may have refreshed.
+                if (DateTime.UtcNow + s_tokenExpirySafetyMargin >= s_kAuthIdTokenExpiry)
+                {
+                    var refreshed = await RefreshSdkTokenAsync(refreshToken: LoadSdkTokens()?.RefreshToken).ConfigureAwait(false);
+                    if (refreshed == null) return null;
+                }
+            }
+            finally { s_tokenRefreshSemaphore.Release(); }
+        }
+
+        return s_kAuthIdToken;
+    }
+
+    /// <summary>
+    /// Returns the Authorization header value ("KAuth &lt;id_token&gt;") for story API
+    /// requests, refreshing the token first when needed. Returns null when no SDK
+    /// token is available; callers then fall back to the cookie session.
+    /// </summary>
+    private static string GetKAuthHeaderValue()
+    {
+        var idToken = Task.Run(EnsureKAuthTokenAsync).GetAwaiter().GetResult();
+        return idToken == null ? null : $"{KAuthScheme} {idToken}";
     }
 
     /// <summary>
