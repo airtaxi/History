@@ -5,7 +5,6 @@ using History.MobileClient.Helpers;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Newtonsoft.Json;
-using System.Net;
 using System.Text;
 using UraniumUI.Icons.FontAwesome;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
@@ -66,18 +65,14 @@ public static class KakaoStoryUtils
     }
 
     /// <summary>
-    /// Validates the saved cookies and, when they are missing/expired, presents the
-    /// KakaoStoryLoginPage modal. Returns true when a valid session is available.
+    /// Validates the saved SDK tokens (KAuth) and, when they are missing/expired,
+    /// presents the KakaoStoryLoginPage modal. Returns true when a valid session
+    /// is available afterwards.
     /// </summary>
     public static async Task<bool> EnsureLoggedInAsync(Page hostPage)
     {
-        var cookies = Configuration.GetValue<List<Cookie>>("KakaoStoryCookies");
-        if (cookies != null)
+        if (await KakaoStoryApiHandler.EnsureKAuthTokenAsync() != null)
         {
-            var cookieContainer = new CookieContainer();
-            foreach (var cookie in cookies) cookieContainer.Add(cookie);
-
-            KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
             try
             {
                 Shared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
@@ -92,7 +87,7 @@ public static class KakaoStoryUtils
         var savedEncryptedPassword = Configuration.GetValue<string>("KakaoStoryPassword");
         if (savedEmail == null || savedEncryptedPassword == null)
         {
-            var useAutoFill = await hostPage.DisplayAlertAsync("자동 입력", "쿠키 만료로 인해 로그인이 필요합니다. 카카오스토리 로그인 정보를 저장하여 자동 입력하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+            var useAutoFill = await hostPage.DisplayAlertAsync("자동 입력", "세션이 만료되어 로그인이 필요합니다. 카카오스토리 로그인 정보를 저장하여 자동 입력하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
             if (useAutoFill)
             {
                 var email = await hostPage.DisplayPromptAsync("이메일 입력", "카카오 계정 이메일을 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "이메일", -1, Keyboard.Email);
@@ -112,14 +107,9 @@ public static class KakaoStoryUtils
         var kakaoStoryLoginPage = new KakaoStoryLoginPage();
         await App.PushModalAsync(kakaoStoryLoginPage);
 
-        cookies = await kakaoStoryLoginPage.GetResultAsync();
-        if (cookies == null) return false;
+        var isLoggedIn = await kakaoStoryLoginPage.GetResultAsync();
+        if (!isLoggedIn) return false;
 
-        var container = new CookieContainer();
-        foreach (var cookie in cookies) container.Add(cookie);
-
-        KakaoStoryApiHandler.Init(container, cookies, null);
-        Configuration.SetValue("KakaoStoryCookies", cookies);
         await SaveCurrentUserAsync();
         _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
         KakaoStoryNotificationPoller.ResetSessionExpiredNotification();

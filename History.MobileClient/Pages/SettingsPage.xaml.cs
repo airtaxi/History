@@ -314,6 +314,7 @@ public partial class SettingsPage : ContentPage
 
         Configuration.SetValue("KakaoStoryEmail", null);
         Configuration.SetValue("KakaoStoryPassword", null);
+        KakaoStoryApiHandler.ClearSdkTokens();
         await DisplayAlertAsync("안내", "카카오스토리 로그인 정보가 초기화되었습니다.", Constants.PromptOk);
     }
 

@@ -1429,13 +1429,8 @@ public partial class EditPostPage : ContentPage
             }
 
             bool loginNeeded = true;
-            var cookies = Configuration.GetValue<List<Cookie>>("KakaoStoryCookies");
-            if (cookies != null)
+            if (await KakaoStoryApiHandler.EnsureKAuthTokenAsync() != null)
             {
-                var cookieContainer = new CookieContainer();
-                foreach (var cookie in cookies) cookieContainer.Add(cookie);
-
-                KakaoStoryApiHandler.Init(cookieContainer, cookies, null);
                 try
                 {
                     Shared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
