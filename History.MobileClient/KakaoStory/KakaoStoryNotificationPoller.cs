@@ -16,6 +16,8 @@ public static class KakaoStoryNotificationPoller
 {
     private const string LatestNotificationIdKey = "KakaoStoryLatestNotificationId";
     private const string IsEnabledKey = "KakaoStoryNotificationEnabled";
+    private const string FavoriteFriendNotificationEnabledKey = "KakaoStoryFavoriteFriendNotificationEnabled";
+    private const string EmotionNotificationEnabledKey = "KakaoStoryEmotionNotificationEnabled";
     private const string SessionExpiredNotificationEnabledKey = "KakaoStorySessionExpiredNotificationEnabled";
     private const string SessionExpiredNotifiedKey = "KakaoStorySessionExpiredNotified";
 
@@ -129,18 +131,28 @@ public static class KakaoStoryNotificationPoller
         // stored baseline is new. When the baseline fell out of the window
         // (more than 30 new notifications), every fetched item is posted.
         // Notifications already read in the app (is_new == false) are skipped,
-        // while the baseline still advances past them.
+        // while the baseline still advances past them. Favorite friend and
+        // emotion notifications are filtered out when the user disabled them.
+        var isFavoriteFriendNotificationEnabled = Configuration.GetValue<bool?>(FavoriteFriendNotificationEnabledKey) ?? true;
+        var isEmotionNotificationEnabled = Configuration.GetValue<bool?>(EmotionNotificationEnabledKey) ?? true;
         var newNotifications = new List<Notification>();
         foreach (var notification in notifications)
         {
             if (notification.id == storedLatestId) break;
-            if (notification.is_new) newNotifications.Add(notification);
+            if (!notification.is_new) continue;
+            if (IsFavoriteFriendNotification(notification) && !isFavoriteFriendNotificationEnabled) continue;
+            if (IsEmotionNotification(notification) && !isEmotionNotificationEnabled) continue;
+            newNotifications.Add(notification);
         }
 
         foreach (var notification in newNotifications) PostNotification(notification);
 
         Preferences.Set(LatestNotificationIdKey, latestId);
     }
+
+    private static bool IsFavoriteFriendNotification(Notification notification) => notification.decorators is { Count: > 0 } && notification.decorators[0].text?.StartsWith("관심친구") == true;
+
+    private static bool IsEmotionNotification(Notification notification) => notification.emotion != null;
 
     private static void PostNotification(Notification notification)
     {
