@@ -31,7 +31,7 @@ public static class KakaoStoryNotificationPoster
         var notificationId = GetNotificationId(notification);
 
         var title = notification.message ?? string.Empty;
-        var contentText = notification.content ?? notification.actor?.display_name ?? string.Empty;
+        var contentText = notification.content ?? "내용 없음";
 
         var intent = new Intent(context, typeof(MainActivity));
         intent.SetFlags(ActivityFlags.SingleTop | ActivityFlags.ClearTop);
