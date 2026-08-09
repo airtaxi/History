@@ -103,6 +103,7 @@ public partial class TimelinePage : ContentPage
             }
 
             var viewModels = timeline.feeds.Select(CreateKakaoPostViewModel).Where(x => x != null).ToList();
+            _nextSince = timeline.next_since;
             _lastViewModel = viewModels.LastOrDefault();
             foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
         }
