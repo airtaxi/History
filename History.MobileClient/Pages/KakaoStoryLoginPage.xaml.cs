@@ -79,7 +79,10 @@ public partial class KakaoStoryLoginPage : ContentPage
         MainActivityIndicator.IsVisible = false;
         MainActivityIndicator.IsRunning = false;
 
-        _currentUrl = e.Url;
+        // iOS reports a cancelled navigation as a failure carrying the previous
+        // page's URL (the kauth page), which would clobber the s/oauth URL captured
+        // in OnNavigating. Keep the pending code URL so CheckLoginResult completes.
+        if (_currentUrl?.StartsWith(OAuthRedirectUri) != true) _currentUrl = e.Url;
 
         await CheckLoginResult();
         await UncheckSaveSignedInAsync();
