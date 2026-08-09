@@ -4,6 +4,7 @@ using Google.SignIn;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using UIKit;
+using UserNotifications;
 
 namespace History.MobileClient;
 
@@ -27,6 +28,16 @@ public class AppDelegate : MauiUIApplicationDelegate
         NSNotificationCenter.DefaultCenter.AddObserver(
             UIKeyboard.WillHideNotification,
             OnKeyboardWillHide);
+
+        // The Firebase plugin sets itself as the notification center delegate
+        // during WillFinishLaunching; this delegate takes ownership afterwards
+        // and forwards non-Kakao callbacks back to the plugin.
+        UNUserNotificationCenter.Current.Delegate = new KakaoStoryNotificationDelegate();
+
+        // The background task handler must be registered before the app finishes
+        // launching. The refresh is scheduled lazily when the app enters the
+        // background, so no request is pending unless the app was used.
+        KakaoStoryBackgroundRefresh.Register();
 
         return result;
     }

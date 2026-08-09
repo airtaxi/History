@@ -338,7 +338,15 @@ public partial class SettingsPage : ContentPage
         KakaoStoryNotificationLabel.Text = isEnabled ? OnText : OffText;
 
         // Start/stop the foreground polling loop so a disabled setting costs no battery.
-        if (isEnabled) KakaoStoryNotificationPoller.StartForegroundPolling();
+        if (isEnabled)
+        {
+            KakaoStoryNotificationPoller.StartForegroundPolling();
+#if IOS
+            // Re-arm the background refresh so a disable/re-enable cycle without
+            // a background transition (the window Stopped event) still polls.
+            KakaoStoryBackgroundRefresh.ScheduleNext();
+#endif
+        }
         else KakaoStoryNotificationPoller.StopForegroundPolling();
     }
 
