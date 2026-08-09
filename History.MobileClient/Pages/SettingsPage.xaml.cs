@@ -374,7 +374,7 @@ public partial class SettingsPage : ContentPage
         if (action == null || action == Constants.PromptCancel) return;
 
         var isEnabled = action == OnText;
-        var result = await App.ExecuteRequestAsync(new UpdatePushNotificationPermission(PushNotificationType.FavoriteFriendNewPost, IsEnabled ? AccessPermission.Everyone : AccessPermission.OnlyMe));
+        var result = await App.ExecuteRequestAsync(new UpdatePushNotificationPermission(PushNotificationType.FavoriteFriendNewPost, isEnabled ? AccessPermission.Everyone : AccessPermission.OnlyMe));
         if (result.IsSuccess)
         {
             IsFavoriteFriendNewPostPushNotificationEnabledLabel.Text = isEnabled ? OnText : OffText;
