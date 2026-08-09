@@ -28,7 +28,7 @@ public static class KakaoStoryNotificationPoster
             if (!IsAuthorizationGranted(settings)) return;
 
             var title = notification.message ?? string.Empty;
-            var contentText = notification.content ?? notification.actor?.display_name ?? string.Empty;
+            var contentText = notification.content ?? "내용 없음";
 
             var content = new UNMutableNotificationContent
             {
