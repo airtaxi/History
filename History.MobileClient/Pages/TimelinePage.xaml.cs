@@ -303,7 +303,7 @@ public partial class TimelinePage : ContentPage
         {
             // When virtualization is disabled, set a very large item view cache size so
             // off-screen Views are retained instead of being recycled.
-            recyclerView.SetItemViewCacheSize(isEnabled ? 2 : 100);
+            recyclerView.SetItemViewCacheSize(isEnabled ? 2 : 10);
         }
     }
 #endif

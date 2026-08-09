@@ -404,7 +404,7 @@ public partial class UserPage : ContentPage
         // Non-grid (timeline) mode honors the user's virtualization preference.
         var isEnabled = _useGridLayout || (Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false);
         if (MainCollectionView.Handler?.PlatformView is AndroidX.RecyclerView.Widget.RecyclerView recyclerView)
-            recyclerView.SetItemViewCacheSize(isEnabled ? 2 : 100);
+            recyclerView.SetItemViewCacheSize(isEnabled ? 2 : 10);
     }
 #endif
 
