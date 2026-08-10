@@ -68,7 +68,6 @@ public partial class UserPage : ContentPage
         _isKakaoStoryMode = isKakaoStoryMode;
         InitializeComponent();
 
-        // Use _isMyProfile not IsMyProfilePage because PillGrid should only visible when initialized from AppShell.xaml (default constructor).
         PillGrid.IsVisible = showPillGrid;
 
         BanImage.IsVisible = !IsMyProfilePage;
