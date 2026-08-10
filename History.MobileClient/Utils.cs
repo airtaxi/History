@@ -62,7 +62,7 @@ public static partial class Utils
         // Fill contentViewModels with contents
         foreach (var content in contents)
         {
-            if (content is TextContent or ProfileContent or HashtagContent)
+            if (content is TextContent or ProfileContent or HashtagContent or HyperlinkContent)
             {
                 FlushMediaContents();
                 textTypeContents.Add(content);
@@ -141,7 +141,7 @@ public static partial class Utils
         }
         FlushTextContentBuffer();
 
-        var textTypeContents = contents.Where(x => x is TextContent || x is ProfileContent || x is HashtagContent);
+        var textTypeContents = contents.Where(x => x is TextContent || x is ProfileContent || x is HashtagContent || x is HyperlinkContent);
 
         var firstContent = textTypeContents.FirstOrDefault();
         if (firstContent is TextContent firstTextContent) firstTextContent.Text = firstTextContent.Text.TrimStart();
@@ -172,13 +172,14 @@ public static partial class Utils
 
     public static string GenerateTextPreviewFromContents(IEnumerable<BaseContent> contents)
     {
-        var textTypeContents = contents.Where(x => x is TextContent || x is ProfileContent || x is HashtagContent);
+        var textTypeContents = contents.Where(x => x is TextContent || x is ProfileContent || x is HashtagContent || x is HyperlinkContent);
         var builder = new StringBuilder();
         foreach (var content in textTypeContents)
         {
             if (content is TextContent textContent) builder.Append(textContent.Text);
             else if (content is ProfileContent profileContent) builder.Append(profileContent.Nickname);
             else if (content is HashtagContent hashtagContent) builder.Append($"#{hashtagContent.Tag}");
+            else if (content is HyperlinkContent hyperlinkContent) builder.Append(hyperlinkContent.Url);
         }
 
         var result = builder.ToString();
@@ -356,6 +357,26 @@ public static partial class Utils
                 };
 
                 AddTapGestureRecognizerToHashtagSpan(span, hashtagContent.Tag);
+
+                currentLength += span.Text.Length;
+                currentLines += span.Text.Count(x => x == '\n');
+                if (postType != PostType.Unwrapped && (currentLength > maxLength || currentLines > maxLines))
+                {
+                    TrimSpan(span);
+                    AddMoreSpan(span);
+                    break;
+                }
+                else formattedString.Spans.Add(span);
+            }
+            else if (content is HyperlinkContent hyperlinkContent)
+            {
+                var span = new Span
+                {
+                    Text = hyperlinkContent.Url,
+                    TextColor = Application.Current.Resources["Primary"] as Color,
+                };
+
+                AddTapGestureRecognizerToLinkSpan(span, hyperlinkContent.Url);
 
                 currentLength += span.Text.Length;
                 currentLines += span.Text.Count(x => x == '\n');

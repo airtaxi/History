@@ -362,6 +362,10 @@ public static class KakaoStoryUtils
             {
                 if (!string.IsNullOrEmpty(textContent.Text)) quoteDatas.Add(new QuoteData { type = "text", text = textContent.Text });
             }
+            else if (content is HyperlinkContent hyperlinkContent)
+            {
+                if (!string.IsNullOrEmpty(hyperlinkContent.Url)) quoteDatas.Add(new QuoteData { type = "text", text = hyperlinkContent.Url });
+            }
             else if (content is HashtagContent hashtagContent)
             {
                 quoteDatas.Add(new QuoteData

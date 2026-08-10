@@ -1124,7 +1124,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var userResult = await userService.GenerateUserResponseDtoAsync(post.UserId, requesterId);
         if (userResult.IsFailure) return userResult.CastFailure<Result<PostResponseDto>>();
 
-        var profileContents = post.Contents.OfType<ProfileContent>();
+        // Convert URLs in text contents to hyperlink contents (response only, storage stays plain text)
+        var responseContents = Utils.ConvertUrlsToHyperlinkContents(post.Contents);
+
+        var profileContents = responseContents.OfType<ProfileContent>();
         var profileContentUsersResult = await userService.GenerateUserResponseDtosAsync(profileContents.Select(x => x.UserId), requesterId);
         foreach (var profileContent in profileContents)
         {
@@ -1134,7 +1137,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         }
 
         // Fill StickerMediaId for StickerContents
-        var stickerContents = post.Contents.OfType<StickerContent>();
+        var stickerContents = responseContents.OfType<StickerContent>();
         foreach (var stickerContent in stickerContents)
         {
             var assetResult = await stickerService.GetStickerAssetByIdAsync(stickerContent.StickerContentId);
@@ -1146,7 +1149,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         }
 
         // Fill PollContent with vote statistics
-        var pollContents = post.Contents.OfType<PollContent>();
+        var pollContents = responseContents.OfType<PollContent>();
         foreach (var pollContent in pollContents) await FillPollContentAsync(pollContent, requesterId);
 
         if (post.IsPublicPost)
@@ -1157,7 +1160,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                 User = userResult.Value,
                 DiscoveryOption = DiscoveryOption.Everyone,
                 DiscoveryOptionSelectedUserIds = [],
-                Contents = post.Contents,
+                Contents = responseContents,
                 Comments = [],
                 CommentsCount = 0,
                 PostReactions = [],
@@ -1190,7 +1193,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             User = userResult.Value,
             DiscoveryOption = post.DiscoveryOption,
             DiscoveryOptionSelectedUserIds = post.DiscoveryOptionSelectedUserIds,
-            Contents = post.Contents,
+            Contents = responseContents,
             Comments = commentDtosResult.Value,
             CommentsCount = commentsCountResult.Value,
             PostReactions = postReactionDtos.Value,
@@ -1225,7 +1228,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             var parentPostUserResult = await userService.GenerateUserResponseDtoAsync(parentPostResult.Value.UserId, requesterId);
             var parentPostSharedAndRepostedUserDtos = await GenerateSharedAndRepostedUserDtosAsync(post.ParentPostId, requesterId);
 
-            var parentPostProfileContents = parentPostResult.Value.Contents.OfType<ProfileContent>();
+            // Convert URLs in parent post text contents to hyperlink contents (response only)
+            var parentPostResponseContents = Utils.ConvertUrlsToHyperlinkContents(parentPostResult.Value.Contents);
+
+            var parentPostProfileContents = parentPostResponseContents.OfType<ProfileContent>();
             var parentPostProfileContentUsersResult = await userService.GenerateUserResponseDtosAsync(parentPostProfileContents.Select(x => x.UserId), requesterId);
             foreach (var parentPostProfileContent in parentPostProfileContents)
             {
@@ -1235,7 +1241,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             }
 
             // Fill StickerMediaId for parent post StickerContents
-            var parentPostStickerContents = parentPostResult.Value.Contents.OfType<StickerContent>();
+            var parentPostStickerContents = parentPostResponseContents.OfType<StickerContent>();
             foreach (var parentPostStickerContent in parentPostStickerContents)
             {
                 var assetResult = await stickerService.GetStickerAssetByIdAsync(parentPostStickerContent.StickerContentId);
@@ -1254,7 +1260,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
                     User = parentPostUserResult.Value,
                     DiscoveryOption = parentPostResult.Value.DiscoveryOption,
                     DiscoveryOptionSelectedUserIds = parentPostResult.Value.DiscoveryOptionSelectedUserIds,
-                    Contents = parentPostResult.Value.Contents,
+                    Contents = parentPostResponseContents,
                     SharedAndRepostedUsers = parentPostSharedAndRepostedUserDtos,
                     CommentPermission = parentPostResult.Value.CommentPermission,
                     DisallowShare = parentPostResult.Value.DisallowShare,

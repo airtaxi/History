@@ -1360,6 +1360,7 @@ public partial class EditPostPage : ContentPage
             if (content is TextContent text) sb.Append(text.Text);
             else if (content is HashtagContent hashtag) sb.Append('#').Append(hashtag.Tag).Append(' ');
             else if (content is ProfileContent profile) sb.Append('@').Append(profile.Nickname).Append(' ');
+            else if (content is HyperlinkContent hyperlink) sb.Append(hyperlink.Url).Append(' ');
         }
         return sb.ToString().Trim();
     }

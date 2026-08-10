@@ -349,6 +349,9 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         var userResult = await userService.GenerateUserResponseDtoAsync(comment.UserId, requesterId);
         if (userResult.IsFailure) return userResult.CastFailure<CommentResponseDto>();
 
+        // Convert URLs in text contents to hyperlink contents (response only, storage stays plain text)
+        var responseContents = Utils.ConvertUrlsToHyperlinkContents(comment.Contents);
+
         var likedUserIds = await _commentLikeCollection
             .Find(f => f.CommentId == comment.Id)
             .Project(f => f.UserId)
@@ -356,7 +359,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
 
         var likedUserResults = await userService.GenerateUserResponseDtosAsync(likedUserIds.Distinct(), requesterId);
 
-        var profileContents = comment.Contents.OfType<ProfileContent>();
+        var profileContents = responseContents.OfType<ProfileContent>();
         var profileContentUsersResult = await userService.GenerateUserResponseDtosAsync(profileContents.Select(x => x.UserId), requesterId);
         foreach (var profileContent in profileContents)
         {
@@ -366,7 +369,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         }
 
         // Fill StickerMediaId for StickerContents
-        var stickerContents = comment.Contents.OfType<StickerContent>();
+        var stickerContents = responseContents.OfType<StickerContent>();
         foreach (var stickerContent in stickerContents)
         {
             var assetResult = await stickerService.GetStickerAssetByIdAsync(stickerContent.StickerContentId);
@@ -381,7 +384,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         {
             Id = comment.Id,
             User = userResult.Value,
-            Contents = comment.Contents,
+            Contents = responseContents,
             LikedUsers = likedUserResults.Value,
             CreatedAt = comment.CreatedAt,
             ModifiedAt = comment.ModifiedAt,
