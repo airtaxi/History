@@ -32,6 +32,9 @@ public class PostResponseDto
 
     public bool IsBookmarked { get; set; }
 
+    // True if the requester muted notifications for this post
+    public bool IsNotificationsMuted { get; set; }
+
     // For self post only
     public bool HasUnreadNotification { get; set; }
 }

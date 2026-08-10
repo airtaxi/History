@@ -103,6 +103,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
             PreviewText = Utils.GenerateTextPreviewFromPost(post);
             PreviewTimestamp = post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd");
             HasUnreadNotification = post.HasUnreadNotification;
+            IsNotificationsMuted = post.IsNotificationsMuted;
 
             var thumbnailUrl = Utils.GenerateThumbnailUrlFromPost(post);
             PreviewThumbnail = thumbnailUrl != null ? new ImageViewModel(thumbnailUrl)
@@ -176,7 +177,11 @@ public partial class HistoryPostViewModel : BasePostViewModel
         if (Post.IsBookmarked) options.Add("관심글 삭제");
         else options.Add("관심글로 저장");
 
-        if (User.UserId != Shared.UserId) options.Add("이 글 숨기기");
+        if (User.UserId != Shared.UserId)
+        {
+            options.Add(IsNotificationsMuted ? "이 글 알림 받기" : "이 글 알림 안받기");
+            options.Add("이 글 숨기기");
+        }
 
         if (User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제", "프로필에 고정", "게시글 홍보"]);
         else if (Shared.MyRank >= Rank.Moderator) options.AddRange("게시글 삭제");
@@ -252,6 +257,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
         }
         else if (action == "관심글로 저장") await HandleBookmarkAsync();
         else if (action == "관심글 삭제") await HandleUnbookmarkAsync();
+        else if (action is "이 글 알림 받기" or "이 글 알림 안받기") await HandleMuteNotificationsAsync();
         else if (action == "이 글 숨기기") await HandleHidePostAsync();
         else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
@@ -284,6 +290,18 @@ public partial class HistoryPostViewModel : BasePostViewModel
 
         var result = await App.ExecuteRequestAsync(new IgnorePost(Post.Id));
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostResponseDto>(Post));
+    }
+
+    public override async Task HandleMuteNotificationsAsync()
+    {
+        var isMuting = !IsNotificationsMuted;
+        var result = isMuting
+            ? await App.ExecuteRequestAsync(new MuteNotifications(Post.Id))
+            : await App.ExecuteRequestAsync(new UnmuteNotifications(Post.Id));
+        if (result.IsFailure) return;
+
+        await App.Page.DisplayAlertAsync("안내", isMuting ? "이 글의 알림을 끕니다." : "이 글의 알림을 다시 받습니다.", Constants.PromptOk);
+        await RefreshAsync();
     }
 
     public override async Task<Result> RefreshAsync()

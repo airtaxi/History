@@ -102,6 +102,8 @@ public partial class BasePostViewModel : ObservableObject
     [ObservableProperty]
     public partial bool PreviewThumbnailVisible { get; protected set; }
     [ObservableProperty]
+    public partial bool IsNotificationsMuted { get; protected set; }
+    [ObservableProperty]
     public partial bool HasUnreadNotification { get; protected set; }
     [ObservableProperty]
     public partial ImageViewModel PreviewThumbnail { get; protected set; }
@@ -142,6 +144,9 @@ public partial class BasePostViewModel : ObservableObject
 
     [RelayCommand]
     public virtual async Task HandleRepostAsync() => throw new NotSupportedException("[BasePostViewModel] HandleRepostAsync must be overridden");
+
+    [RelayCommand]
+    public virtual async Task HandleMuteNotificationsAsync() => throw new NotSupportedException("[BasePostViewModel] HandleMuteNotificationsAsync must be overridden");
 
     [RelayCommand]
     public virtual async Task HandleReactionTapAsync() => throw new NotSupportedException("[BasePostViewModel] HandleReactionTapAsync must be overridden");

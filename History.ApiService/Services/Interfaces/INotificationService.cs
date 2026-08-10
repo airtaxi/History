@@ -36,4 +36,12 @@ public interface INotificationService
     /// Returns the set of post IDs that have unread notifications for the given user.
     /// </summary>
     public Task<Result<HashSet<string>>> GetPostIdsWithUnreadNotificationsAsync(string userId, IEnumerable<string> postIds);
+
+    /// <summary>
+    /// Removes a user from existing notifications of a post, deleting notifications whose recipients become empty.
+    /// </summary>
+    /// <param name="postId">The ID of the post whose notifications are being cleaned up.</param>
+    /// <param name="userId">The ID of the user to remove from the notifications.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the removal.</returns>
+    public Task<Result> RemoveUserNotificationsForPostAsync(string postId, string userId);
 }

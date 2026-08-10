@@ -69,6 +69,23 @@ public interface IPostService
     public Task<Result> IgnorePostAsync(string postId, string userId);
 
     /// <summary>
+    /// Asynchronously mutes notifications for a specified post. The post remains visible, but the user stops
+    /// receiving in-app notifications and push notifications related to it.
+    /// </summary>
+    /// <param name="postId">Specifies the post whose notifications are being muted.</param>
+    /// <param name="userId">Identifies the user who wants to mute notifications for the post.</param>
+    /// <returns>Returns a task that represents the asynchronous operation, containing the result of the mute action.</returns>
+    public Task<Result> MuteNotificationsAsync(string postId, string userId);
+
+    /// <summary>
+    /// Asynchronously unmutes notifications for a specified post, restoring notification delivery.
+    /// </summary>
+    /// <param name="postId">Specifies the post whose notifications are being unmuted.</param>
+    /// <param name="userId">Identifies the user who wants to unmute notifications for the post.</param>
+    /// <returns>Returns a task that represents the asynchronous operation, containing the result of the unmute action.</returns>
+    public Task<Result> UnmuteNotificationsAsync(string postId, string userId);
+
+    /// <summary>
     /// Asynchronously writes a post using the provided user information, request details, and associated files.
     /// </summary>
     /// <param name="userId">Identifies the user who is creating the post.</param>
@@ -289,4 +306,12 @@ public interface IPostService
     /// <param name="userId">The ID of the user.</param>
     /// <returns>A task that represents the asynchronous operation, containing true if bookmarked, false otherwise.</returns>
     public Task<Result<bool>> IsPostBookmarkedAsync(string postId, string userId);
+
+    /// <summary>
+    /// Checks if notifications are muted for a post by the user.
+    /// </summary>
+    /// <param name="postId">The ID of the post to check.</param>
+    /// <param name="userId">The ID of the user.</param>
+    /// <returns>A task that represents the asynchronous operation, containing true if muted, false otherwise.</returns>
+    public Task<Result<bool>> IsPostNotificationsMutedAsync(string postId, string userId);
 }
