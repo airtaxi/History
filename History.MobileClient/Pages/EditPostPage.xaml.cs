@@ -488,6 +488,7 @@ public partial class EditPostPage : ContentPage
     {
         if (!await _uploadSemaphore.WaitAsync(0)) return;
         _preventDispose = true;
+        IsEnabled = false;
         try
         {
             if (_reservationTime.HasValue)
