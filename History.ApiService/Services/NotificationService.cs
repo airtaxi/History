@@ -15,6 +15,7 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
     private readonly IMongoCollection<Notification> _notificationCollection = database.GetCollection<Notification>("Notifications");
     private readonly IMongoCollection<NotificationRead> _notificationReadCollection = database.GetCollection<NotificationRead>("NotificationReads");
     private readonly IMongoCollection<IgnoredPost> _ignoredPostCollection = database.GetCollection<IgnoredPost>("IgnoredPosts");
+    private readonly IMongoCollection<MutedPost> _mutedPostCollection = database.GetCollection<MutedPost>("MutedPosts");
 
     public async Task<Result<List<Notification>>> GetNotificationsAsync(string userId, string fromNotificationId = null, int limit = 30)
     {
@@ -125,6 +126,9 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
     {
         var notificationResult = await GenerateNotificationAsync(type, associatedId);
         if (notificationResult.IsFailure) return notificationResult.CastFailure();
+
+        // Exclude users who muted notifications for each post from both in-app and push recipients
+        await ApplyMutedPostFilterAsync(notificationResult.Value);
 
         // Delete previous notifications
         var firstNotification = notificationResult.Value.FirstOrDefault();
@@ -988,5 +992,56 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         else if (post.DiscoveryOption == DiscoveryOption.UnselectedUsers) return recipients.Except(post.DiscoveryOptionSelectedUserIds).ToList();
         else if (post.DiscoveryOption == DiscoveryOption.OnlyMe) return new List<string> { post.UserId };
         else return (ErrorType.BadRequest, "Invalid Discovery Option");
+    }
+
+    /// <summary>
+    /// Removes users who muted a post from the recipients of post-related notifications.
+    /// Applies to every notification whose Data contains a PostId.
+    /// </summary>
+    private async Task ApplyMutedPostFilterAsync(List<Notification> notifications)
+    {
+        var postIds = notifications
+            .Where(n => n.Data != null && n.Data.TryGetValue("PostId", out var postId) && !string.IsNullOrEmpty(postId))
+            .Select(n => n.Data["PostId"])
+            .Distinct()
+            .ToList();
+        if (postIds.Count == 0) return;
+
+        var mutedPosts = await _mutedPostCollection
+            .Find(m => postIds.Contains(m.PostId))
+            .Project(m => new { m.PostId, m.UserId })
+            .ToListAsync();
+
+        var mutedUserIdsByPostId = mutedPosts
+            .GroupBy(m => m.PostId)
+            .ToDictionary(g => g.Key, g => g.Select(m => m.UserId).ToHashSet());
+
+        foreach (var notification in notifications)
+        {
+            if (notification.Data == null || !notification.Data.TryGetValue("PostId", out var postId)) continue;
+            if (!mutedUserIdsByPostId.TryGetValue(postId, out var mutedUserIds)) continue;
+
+            notification.Recipients = notification.Recipients.Except(mutedUserIds).Distinct();
+            if (notification.PushNotificationRecipients != null)
+                notification.PushNotificationRecipients = notification.PushNotificationRecipients.Except(mutedUserIds).Distinct();
+        }
+    }
+
+    /// <summary>
+    /// Removes a user from existing notifications of a post (used when the user mutes notifications),
+    /// deleting notifications whose recipients become empty.
+    /// </summary>
+    public async Task<Result> RemoveUserNotificationsForPostAsync(string postId, string userId)
+    {
+        var filter = Builders<Notification>.Filter.Eq("Data.PostId", postId);
+
+        var update = Builders<Notification>.Update
+            .Pull(x => x.Recipients, userId)
+            .Pull(x => x.PushNotificationRecipients, userId);
+        await _notificationCollection.UpdateManyAsync(filter, update);
+
+        await _notificationCollection.DeleteManyAsync(filter & Builders<Notification>.Filter.Size(x => x.Recipients, 0));
+
+        return Result.Success();
     }
 }

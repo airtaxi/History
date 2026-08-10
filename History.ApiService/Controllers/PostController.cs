@@ -164,6 +164,52 @@ public class PostController(IPostService postService, IFriendshipService friends
         else return StatusCode(500, result.FullErrorMessage);
     }
 
+    [HttpPost("{postId}/mute-notifications")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> MuteNotifications(string postId)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var result = await postService.MuteNotificationsAsync(postId, requesterId);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpDelete("{postId}/mute-notifications")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> UnmuteNotifications(string postId)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        var result = await postService.UnmuteNotificationsAsync(postId, requesterId);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
     [HttpPost("bookmark/{postId}")]
     [Authorize]
     [ProducesResponseType<string>(200)]

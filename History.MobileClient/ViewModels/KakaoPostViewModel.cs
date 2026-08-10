@@ -83,6 +83,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
             PreviewTimestamp = postData.created_at.ToLocalTime().ToString("yyyy-MM-dd");
             PreviewThumbnailVisible = postData.media?.FirstOrDefault()?.thumbnail_url != null;
             HasUnreadNotification = postData.has_unread_reaction;
+            IsNotificationsMuted = postData.push_mute;
             PreviewThumbnail = PreviewThumbnailVisible ? new ImageViewModel(postData.media[0].thumbnail_url)
             {
                 Aspect = Aspect.AspectFill,
@@ -275,7 +276,11 @@ public partial class KakaoPostViewModel : BasePostViewModel
             options.Add("공개범위 설정");
             options.Add("게시글 삭제");
         }
-        else options.Add("이 글 숨기기");
+        else
+        {
+            options.Add(IsNotificationsMuted ? "이 글 알림 받기" : "이 글 알림 안받기");
+            options.Add("이 글 숨기기");
+        }
 
         var action = await App.Page.DisplayActionSheetAsync("카카오스토리 게시물 옵션", Constants.PromptCancel, null, [.. options]);
         if (action == null || action == Constants.PromptCancel) return;
@@ -285,6 +290,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         else if (action is "관심글로 저장" or "관심글 삭제") await HandleBookmarkAsync();
         else if (action == "공개범위 설정") await HandleChangePermissionAsync();
         else if (action == "게시글 수정") await HandleEditAsync();
+        else if (action is "이 글 알림 받기" or "이 글 알림 안받기") await HandleMuteNotificationsAsync();
         else if (action == "이 글 숨기기") await HandleHidePostAsync(popModal);
         else if (action == "게시글 삭제") await DeleteAsync(popModal);
     }
@@ -337,6 +343,21 @@ public partial class KakaoPostViewModel : BasePostViewModel
         catch (Exception exception)
         {
             await App.Page.DisplayAlertAsync("오류", $"게시글 숨기기에 실패하였습니다.\n{exception.Message}", Constants.PromptOk);
+        }
+    }
+
+    public override async Task HandleMuteNotificationsAsync()
+    {
+        var isMuting = !IsNotificationsMuted;
+        try
+        {
+            await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.MutePost(_postData.id, isMuting));
+            await App.Page.DisplayAlertAsync("안내", isMuting ? "이 글의 알림을 끕니다." : "이 글의 알림을 다시 받습니다.", Constants.PromptOk);
+            await RefreshAsync();
+        }
+        catch (Exception exception)
+        {
+            await App.Page.DisplayAlertAsync("오류", $"알림 설정 변경에 실패하였습니다.\n{exception.Message}", Constants.PromptOk);
         }
     }
 

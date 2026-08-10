@@ -20,6 +20,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     private readonly IMongoCollection<Post> _postCollection = database.GetCollection<Post>("Posts");
     private readonly IMongoCollection<Post> _publicPostCollection = database.GetCollection<Post>("PublicPosts");
     private readonly IMongoCollection<IgnoredPost> _ignoredPostCollection = database.GetCollection<IgnoredPost>("IgnoredPosts");
+    private readonly IMongoCollection<MutedPost> _mutedPostCollection = database.GetCollection<MutedPost>("MutedPosts");
     private readonly IMongoCollection<BookmarkedPost> _bookmarkedPostCollection = database.GetCollection<BookmarkedPost>("BookmarkedPosts");
     private readonly IMongoCollection<PostReaction> _postReactionCollection = database.GetCollection<PostReaction>("PostReactions");
     private readonly IMongoCollection<PollVote> _pollVoteCollection = database.GetCollection<PollVote>("PollVotes");
@@ -394,6 +395,51 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
     }
 
     /// <inheritdoc/>
+    public async Task<Result> MuteNotificationsAsync(string postId, string userId)
+    {
+        var post = await GetPostByIdAsync(postId);
+        if (post.IsFailure) return post.CastFailure();
+        else if (post.Value.UserId == userId) return (ErrorType.BadRequest, "자신의 게시글은 알림을 끌 수 없습니다.");
+
+        var existingMutedPost = await _mutedPostCollection
+            .Find(m => m.UserId == userId && m.PostId == postId)
+            .FirstOrDefaultAsync();
+        if (existingMutedPost != null) return (ErrorType.BadRequest, "이미 알림이 꺼진 게시글입니다.");
+
+        var mutedPost = new MutedPost
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            UserId = userId,
+            PostId = postId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        while (true)
+        {
+            var conflict = await _mutedPostCollection
+                .Find(m => m.Id == mutedPost.Id).AnyAsync();
+            if (conflict) mutedPost.Id = Guid.NewGuid().ToString("N");
+            else break;
+        }
+
+        await _mutedPostCollection.InsertOneAsync(mutedPost);
+
+        // Clean up previously generated notifications for this post so the user stops receiving them immediately
+        await notificationService.RemoveUserNotificationsForPostAsync(postId, userId);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc/>
+    public async Task<Result> UnmuteNotificationsAsync(string postId, string userId)
+    {
+        var result = await _mutedPostCollection
+            .DeleteOneAsync(m => m.UserId == userId && m.PostId == postId);
+        if (result.DeletedCount == 0) return (ErrorType.NotFound, "알림이 꺼져 있지 않은 게시글입니다.");
+        return Result.Success();
+    }
+
+    /// <inheritdoc/>
     public async Task<Result<Post>> WritePostAsync(string userId, WritePostRequestDto requestDto, IEnumerable<IFormFile> files)
     {
         if (requestDto.CommentPermission.HasValue)
@@ -733,6 +779,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Delete ignored posts associated with the post
         await _ignoredPostCollection.DeleteManyAsync(i => i.PostId == postId);
+
+        // Delete muted posts associated with the post
+        await _mutedPostCollection.DeleteManyAsync(i => i.PostId == postId);
 
         // Delete bookmarked posts associated with the post
         await _bookmarkedPostCollection.DeleteManyAsync(b => b.PostId == postId);
@@ -1187,6 +1236,10 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var isBookmarkedResult = await IsPostBookmarkedAsync(post.Id, requesterId);
         var isBookmarked = isBookmarkedResult.IsSuccess && isBookmarkedResult.Value;
 
+        // Check if the post notifications are muted by the requester
+        var isNotificationsMutedResult = await IsPostNotificationsMutedAsync(post.Id, requesterId);
+        var isNotificationsMuted = isNotificationsMutedResult.IsSuccess && isNotificationsMutedResult.Value;
+
         var postResponse = new PostResponseDto
         {
             Id = post.Id,
@@ -1203,6 +1256,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             Hashtags = ExtractHashtagsFromContents(post.Contents),
             IsRepost = post.IsRepost,
             IsBookmarked = isBookmarked,
+            IsNotificationsMuted = isNotificationsMuted,
             CreatedAt = post.CreatedAt,
             ModifiedAt = post.ModifiedAt
         };
@@ -1354,6 +1408,9 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Delete ignored posts associated with the posts
         await _ignoredPostCollection.DeleteManyAsync(i => postIds.Contains(i.PostId));
+
+        // Delete muted posts for the user and muted posts pointing to the user's posts
+        await _mutedPostCollection.DeleteManyAsync(m => m.UserId == userId || postIds.Contains(m.PostId));
 
         // Delete bookmarked posts for the user (user's own bookmarks) and bookmarks pointing to user's posts
         await _bookmarkedPostCollection.DeleteManyAsync(b => b.UserId == userId || postIds.Contains(b.PostId));
@@ -1638,6 +1695,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
 
         await _ignoredPostCollection.DeleteManyAsync(i => postIds.Contains(i.PostId));
+        await _mutedPostCollection.DeleteManyAsync(i => postIds.Contains(i.PostId));
         await _bookmarkedPostCollection.DeleteManyAsync(b => postIds.Contains(b.PostId));
         await _postReactionCollection.DeleteManyAsync(r => postIds.Contains(r.PostId));
 
@@ -1743,5 +1801,15 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             .FirstOrDefaultAsync();
 
         return bookmark != null;
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<bool>> IsPostNotificationsMutedAsync(string postId, string userId)
+    {
+        var mutedPost = await _mutedPostCollection
+            .Find(m => m.PostId == postId && m.UserId == userId)
+            .FirstOrDefaultAsync();
+
+        return mutedPost != null;
     }
 }

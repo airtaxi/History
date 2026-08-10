@@ -31,6 +31,9 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         // Bookmarks
         var bookmarkedPostCollection = database.GetCollection<BookmarkedPost>("BookmarkedPosts");
 
+        // Muted posts (post notification mutes)
+        var mutedPostCollection = database.GetCollection<MutedPost>("MutedPosts");
+
         // Invite Codes
         var inviteCodeCollection = database.GetCollection<InviteCode>("InviteCodes");
         var inviteCodeRequestCollection = database.GetCollection<InviteCodeRequest>("InviteCodeRequests");
@@ -193,6 +196,15 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
                 Builders<BookmarkedPost>.IndexKeys.Combine(
                     Builders<BookmarkedPost>.IndexKeys.Ascending(x => x.UserId),
                     Builders<BookmarkedPost>.IndexKeys.Ascending(x => x.PostId)),
+                new CreateIndexOptions { Unique = true }),
+            cancellationToken: cancellationToken);
+
+        logger.LogInformation("Creating indexes for MutedPost collection...");
+        await mutedPostCollection.Indexes.CreateOneAsync(
+            new CreateIndexModel<MutedPost>(
+                Builders<MutedPost>.IndexKeys.Combine(
+                    Builders<MutedPost>.IndexKeys.Ascending(x => x.PostId),
+                    Builders<MutedPost>.IndexKeys.Ascending(x => x.UserId)),
                 new CreateIndexOptions { Unique = true }),
             cancellationToken: cancellationToken);
 
