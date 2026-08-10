@@ -39,8 +39,11 @@ public class ModerationService(IMongoDatabase database, INotificationService not
 
         foreach(var record in records)
         {
+            // Convert URLs in text contents to hyperlink contents (response only, storage stays plain text)
+            var responseContents = Utils.ConvertUrlsToHyperlinkContents(record.AssociatedContents);
+
             // Fill profile content user info
-            var profileContents = record.AssociatedContents.OfType<ProfileContent>();
+            var profileContents = responseContents.OfType<ProfileContent>();
             var profileContentUsersResult = await userService.GenerateUserResponseDtosAsync(profileContents.Select(x => x.UserId));
             foreach (var profileContent in profileContents)
             {
@@ -50,7 +53,7 @@ public class ModerationService(IMongoDatabase database, INotificationService not
             }
 
             // Fill in missing sticker media IDs
-            var stickerContents = record.AssociatedContents.OfType<StickerContent>();
+            var stickerContents = responseContents.OfType<StickerContent>();
             foreach (var stickerContent in stickerContents)
             {
                 var assetResult = await stickerService.GetStickerAssetByIdAsync(stickerContent.StickerContentId);
@@ -60,6 +63,8 @@ public class ModerationService(IMongoDatabase database, INotificationService not
                     stickerContent.IsAnimated = assetResult.Value.IsAnimated;
                 }
             }
+
+            record.AssociatedContents = responseContents;
         }
 
         return records;

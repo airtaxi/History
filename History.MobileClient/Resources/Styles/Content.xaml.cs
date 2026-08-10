@@ -40,6 +40,7 @@ public partial class Content : ResourceDictionary
             if (content is TextContent textContent) builder.Append(textContent.Text);
             else if (content is ProfileContent profileContent) builder.Append(profileContent.Nickname);
             else if (content is HashtagContent hashtagContent) builder.Append($"#{hashtagContent.Tag}");
+            else if (content is HyperlinkContent hyperlinkContent) builder.Append(hyperlinkContent.Url);
         }
         var text = builder.ToString().Trim();
 

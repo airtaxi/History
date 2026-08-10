@@ -179,6 +179,7 @@ public partial class TextContentView : ContentView
                 text += tokenText;
             }
             else if (content is TextContent textContent) text += textContent.Text;
+            else if (content is HyperlinkContent hyperlinkContent) text += hyperlinkContent.Url;
         }
 
         MainSuggestingBox.SetContent(text, tokens);

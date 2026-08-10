@@ -236,8 +236,11 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
         // Check if the requester is either the sender or receiver
         if (sender.UserId != requesterId && receiver.UserId != requesterId) return (ErrorType.Forbidden, "이 쪽지를 조회할 권한이 없습니다.");
 
+        // Convert URLs in text contents to hyperlink contents (response only, storage stays plain text)
+        var responseContents = Utils.ConvertUrlsToHyperlinkContents(message.Contents);
+
         // Fill sticker contents
-        var emptyStickerContents = message.Contents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
+        var emptyStickerContents = responseContents.OfType<StickerContent>().Where(x => x.StickerMediaId == null);
         foreach (var emptyStickerContent in emptyStickerContents)
         {
             var assetResult = await stickerService.GetStickerAssetByIdAsync(emptyStickerContent.StickerContentId);
@@ -253,7 +256,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
             Id = message.Id,
             Sender = sender,
             Receiver = receiver,
-            Contents = message.Contents,
+            Contents = responseContents,
             CreatedAt = message.CreatedAt,
             ReadAt = message.ReadAt
         };
@@ -281,8 +284,11 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
 
             if (sender == null || receiver == null) continue;
 
+            // Convert URLs in text contents to hyperlink contents (response only, storage stays plain text)
+            var responseContents = Utils.ConvertUrlsToHyperlinkContents(message.Contents);
+
             // Fill StickerMediaId for StickerContents
-            var stickerContents = message.Contents.OfType<StickerContent>();
+            var stickerContents = responseContents.OfType<StickerContent>();
             foreach (var stickerContent in stickerContents)
             {
                 var assetResult = await stickerService.GetStickerAssetByIdAsync(stickerContent.StickerContentId);
@@ -298,7 +304,7 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
                 Id = message.Id,
                 Sender = sender,
                 Receiver = receiver,
-                Contents = message.Contents,
+                Contents = responseContents,
                 CreatedAt = message.CreatedAt,
                 ReadAt = message.ReadAt
             };

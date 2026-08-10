@@ -81,6 +81,31 @@ public static partial class Utils
         contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrEmpty(textContent.Text));
     }
 
+    public static List<BaseContent> ConvertUrlsToHyperlinkContents(IEnumerable<BaseContent> contents)
+    {
+        var converted = new List<BaseContent>();
+        foreach (var content in contents)
+        {
+            if (content is TextContent textContent)
+            {
+                var matches = UrlRegex().Matches(textContent.Text);
+                int lastIndex = 0;
+                foreach (Match match in matches)
+                {
+                    if (match.Index > lastIndex) converted.Add(new TextContent { Text = textContent.Text[lastIndex..match.Index] });
+                    converted.Add(new HyperlinkContent { Url = match.Value });
+                    lastIndex = match.Index + match.Length;
+                }
+                if (lastIndex < textContent.Text.Length) converted.Add(new TextContent { Text = textContent.Text[lastIndex..] });
+            }
+            else converted.Add(content);
+        }
+        return converted;
+    }
+
+    [GeneratedRegex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled)]
+    private static partial Regex UrlRegex();
+
     [GeneratedRegex(@"[\u0000-\u001F\u007F\u0080-\u009F\u202A-\u202E\u2066-\u2069\u200B-\u200D\u00A0\u202F\u180E]")]
     private static partial Regex SanitizeRegex();
 }
