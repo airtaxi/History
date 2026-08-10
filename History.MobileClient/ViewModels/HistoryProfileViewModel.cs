@@ -10,6 +10,7 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.Helpers;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.Messages;
 using History.MobileClient.Pages;
 using NativeMedia;
@@ -452,7 +453,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
 
     public override async Task HandleProfileSettingsAsync()
     {
-        var action = await App.Page.DisplayActionSheetAsync("프로필 설정", Constants.PromptCancel, null, "닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정", "핸들 변경", "프로필 공개 설정");
+        var action = await App.Page.DisplayActionSheetAsync("프로필 설정", Constants.PromptCancel, null, "닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정", "핸들 변경", "프로필 공개 설정", "프로필 미러링");
 
         if (action == null || action == Constants.PromptCancel) return;
 
@@ -462,5 +463,77 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
         else if (action == "배경 이미지 설정") await HandleChangeBackgroundMediaAsync();
         else if (action == "핸들 변경") await HandleChangeHandleAsync();
         else if (action == "프로필 공개 설정") await HandleChangeProfileVisibilityAsync();
+        else if (action == "프로필 미러링") await HandleProfileMirroringAsync();
+    }
+
+    private async Task HandleProfileMirroringAsync()
+    {
+        var action = await App.Page.DisplayActionSheetAsync("프로필 미러링", Constants.PromptCancel, null, "프로필 사진 미러링", "배경 사진 미러링", "둘 다 미러링");
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var mirrorProfile = action == "프로필 사진 미러링" || action == "둘 다 미러링";
+        var mirrorBackground = action == "배경 사진 미러링" || action == "둘 다 미러링";
+
+        if (mirrorProfile && User.ProfileMediaId == null)
+        {
+            await App.Page.DisplayAlertAsync("안내", "히스토리에 프로필 사진이 없어 미러링할 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+        if (mirrorBackground && User.BackgroundMediaId == null)
+        {
+            await App.Page.DisplayAlertAsync("안내", "히스토리에 배경 사진이 없어 미러링할 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        if (!await KakaoStoryUtils.EnsureLoggedInAsync(App.Page)) return;
+
+        try
+        {
+            if (mirrorProfile)
+            {
+                var imageData = await DownloadImageAsync(Utils.GenerateMediaUri(User.ProfileMediaId));
+                if (imageData == null) return;
+
+                var bytes = await KakaoStoryUtils.TryConvertToKakaoSupportedImageAsync("profile.webp", imageData);
+                if (bytes == null) return;
+
+                var tempFilePath = Path.Combine(FileSystem.CacheDirectory, $"mirror_profile_{Guid.NewGuid():N}.png");
+                try
+                {
+                    await File.WriteAllBytesAsync(tempFilePath, bytes);
+                    var imagePath = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImage(tempFilePath));
+                    await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.SetProfileImage(imagePath));
+                }
+                finally { try { File.Delete(tempFilePath); } catch { } }
+            }
+
+            if (mirrorBackground)
+            {
+                var imageData = await DownloadImageAsync(Utils.GenerateMediaUri(User.BackgroundMediaId));
+                if (imageData == null) return;
+
+                var bytes = await KakaoStoryUtils.TryConvertToKakaoSupportedImageAsync("background.webp", imageData);
+                if (bytes == null) return;
+
+                var tempFilePath = Path.Combine(FileSystem.CacheDirectory, $"mirror_background_{Guid.NewGuid():N}.png");
+                try
+                {
+                    await File.WriteAllBytesAsync(tempFilePath, bytes);
+                    var imagePath = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImage(tempFilePath));
+                    await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.SetBackgroundImage(imagePath));
+                }
+                finally { try { File.Delete(tempFilePath); } catch { } }
+            }
+
+            await App.Page.DisplayAlertAsync("안내", "카카오스토리 프로필에 미러링되었습니다.", Constants.PromptOk);
+            await RefreshAsync();
+        }
+        catch (Exception exception) { await App.Page.DisplayAlertAsync("오류", $"프로필 미러링에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }
+    }
+
+    private static async Task<byte[]> DownloadImageAsync(string imageUrl)
+    {
+        using var httpClient = new HttpClient();
+        return await httpClient.GetByteArrayAsync(imageUrl);
     }
 }

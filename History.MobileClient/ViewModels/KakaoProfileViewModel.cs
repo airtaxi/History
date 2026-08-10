@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using History.Commons;
+using History.Commons.Api.User;
 using History.MobileClient.Helpers;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
-using Microsoft.Maui.Graphics.Platform;
 using NativeMedia;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
@@ -187,7 +187,7 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
 
     public override async Task HandleProfileSettingsAsync()
     {
-        var action = await App.Page.DisplayActionSheetAsync("프로필 설정", Constants.PromptCancel, null, "닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정");
+        var action = await App.Page.DisplayActionSheetAsync("프로필 설정", Constants.PromptCancel, null, "닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정", "프로필 미러링");
 
         if (action == null || action == Constants.PromptCancel) return;
 
@@ -195,6 +195,58 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
         else if (action == "한줄 소개 변경") await HandleChangeDescriptionAsync();
         else if (action == "프로필 이미지 설정") await HandleChangeProfileMediaAsync();
         else if (action == "배경 이미지 설정") await HandleChangeBackgroundMediaAsync();
+        else if (action == "프로필 미러링") await HandleProfileMirroringAsync();
+    }
+
+    private async Task HandleProfileMirroringAsync()
+    {
+        var action = await App.Page.DisplayActionSheetAsync("프로필 미러링", Constants.PromptCancel, null, "프로필 사진 미러링", "배경 사진 미러링", "둘 다 미러링");
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var mirrorProfile = action == "프로필 사진 미러링" || action == "둘 다 미러링";
+        var mirrorBackground = action == "배경 사진 미러링" || action == "둘 다 미러링";
+
+        if (mirrorProfile && !HasProfileImage)
+        {
+            await App.Page.DisplayAlertAsync("안내", "카카오스토리에 프로필 사진이 없어 미러링할 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+        if (mirrorBackground && !HasBackgroundImage)
+        {
+            await App.Page.DisplayAlertAsync("안내", "카카오스토리에 배경 사진이 없어 미러링할 수 없습니다.", Constants.PromptOk);
+            return;
+        }
+
+        try
+        {
+            if (mirrorProfile)
+            {
+                var imageData = await DownloadImageAsync(Profile.profile_image_url2 ?? Profile.profile_image_url);
+                if (imageData == null) return;
+
+                var result = await App.ExecuteRequestAsync(new UpdateProfileMedia("profile.png", imageData));
+                if (result.IsFailure) return;
+            }
+
+            if (mirrorBackground)
+            {
+                var imageData = await DownloadImageAsync(Profile.bg_image_url2 ?? Profile.bg_image_url);
+                if (imageData == null) return;
+
+                var result = await App.ExecuteRequestAsync(new UpdateBackgroundMedia("background.png", imageData));
+                if (result.IsFailure) return;
+            }
+
+            await App.Page.DisplayAlertAsync("안내", "히스토리 프로필에 미러링되었습니다.", Constants.PromptOk);
+            await RefreshAsync();
+        }
+        catch (Exception exception) { await App.Page.DisplayAlertAsync("오류", $"프로필 미러링에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }
+    }
+
+    private static async Task<byte[]> DownloadImageAsync(string imageUrl)
+    {
+        using var httpClient = new HttpClient();
+        return await httpClient.GetByteArrayAsync(imageUrl);
     }
 
     private async Task HandleChangeNicknameAsync()
@@ -295,7 +347,7 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
             fileName = image.FileName;
             bytes = image.Bytes;
 #endif
-            bytes = await TryConvertToKakaoSupportedImageAsync(fileName, bytes);
+            bytes = await KakaoStoryUtils.TryConvertToKakaoSupportedImageAsync(fileName, bytes);
             if (bytes == null) return;
 
             try
@@ -360,7 +412,7 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
             fileName = media.FileName;
             bytes = media.Bytes;
 #endif
-            bytes = await TryConvertToKakaoSupportedImageAsync(fileName, bytes);
+            bytes = await KakaoStoryUtils.TryConvertToKakaoSupportedImageAsync(fileName, bytes);
             if (bytes == null) return;
 
             try
@@ -376,42 +428,6 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
                 finally { try { File.Delete(tempFilePath); } catch { } }
             }
             catch (Exception exception) { await App.Page.DisplayAlertAsync("오류", $"배경 이미지 변경에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }
-        }
-    }
-
-    /// <summary>
-    /// Converts the picked image to PNG when Kakao Story does not accept the format.
-    /// WebP is converted (Kakao Story does not support it); GIF is rejected because
-    /// only static images are allowed. Returns null when the image cannot be used.
-    /// </summary>
-    private static async Task<byte[]> TryConvertToKakaoSupportedImageAsync(string fileName, byte[] bytes)
-    {
-        if (fileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
-        {
-            await App.Page.DisplayAlertAsync("안내", "움직이는 이미지(gif)는 프로필 이미지로 설정할 수 없습니다.", Constants.PromptOk);
-            return null;
-        }
-
-        if (!fileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase)) return bytes;
-
-        try
-        {
-            using var stream = new MemoryStream(bytes);
-            using var image = PlatformImage.FromStream(stream);
-            if (image == null)
-            {
-                await App.Page.DisplayAlertAsync("오류", "이미지를 변환할 수 없습니다. 애니메이션이 포함된 webp 이미지일 수 있습니다.", Constants.PromptOk);
-                return null;
-            }
-
-            using var saveStream = new MemoryStream();
-            await image.SaveAsync(saveStream, ImageFormat.Png);
-            return saveStream.ToArray();
-        }
-        catch
-        {
-            await App.Page.DisplayAlertAsync("오류", "이미지를 변환할 수 없습니다. 애니메이션이 포함된 webp 이미지일 수 있습니다.", Constants.PromptOk);
-            return null;
         }
     }
 
