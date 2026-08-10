@@ -13,13 +13,7 @@ internal class MediaTemplateSelector : DataTemplateSelector
     protected override DataTemplate OnSelectTemplate(object item, BindableObject container)
     {
 #if IOS
-        if (item is ImageViewModel imageViewModel)
-        {
-            if (imageViewModel.IsFullScreen) return FullScreenImageTemplate;
-            else if (imageViewModel.IsAnimated) return ImageTemplate;
-            else if (imageViewModel.PostType != PostType.Unwrapped) return ImageTemplate;
-            else return AppleImageTemplate;
-        }
+        if (item is ImageViewModel imageViewModel) return imageViewModel.IsFullScreen ? FullScreenImageTemplate : ImageTemplate;
 #else
         if (item is ImageViewModel imageViewModel) return imageViewModel.IsFullScreen ? FullScreenImageTemplate : ImageTemplate;
 #endif
