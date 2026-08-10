@@ -4,6 +4,7 @@ using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
+using Microsoft.Maui.Graphics.Platform;
 using Newtonsoft.Json;
 using System.Text;
 using UraniumUI.Icons.FontAwesome;
@@ -395,6 +396,42 @@ public static class KakaoStoryUtils
             }
         }
         return quoteDatas;
+    }
+
+    /// <summary>
+    /// Converts the picked image to PNG when Kakao Story does not accept the format.
+    /// WebP is converted (Kakao Story does not support it); GIF is rejected because
+    /// only static images are allowed. Returns null when the image cannot be used.
+    /// </summary>
+    public static async Task<byte[]> TryConvertToKakaoSupportedImageAsync(string fileName, byte[] bytes)
+    {
+        if (fileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
+        {
+            await App.Page.DisplayAlertAsync("안내", "움직이는 이미지(gif)는 프로필 이미지로 설정할 수 없습니다.", Constants.PromptOk);
+            return null;
+        }
+
+        if (!fileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase)) return bytes;
+
+        try
+        {
+            using var stream = new MemoryStream(bytes);
+            using var image = PlatformImage.FromStream(stream);
+            if (image == null)
+            {
+                await App.Page.DisplayAlertAsync("오류", "이미지를 변환할 수 없습니다. 애니메이션이 포함된 webp 이미지일 수 있습니다.", Constants.PromptOk);
+                return null;
+            }
+
+            using var saveStream = new MemoryStream();
+            await image.SaveAsync(saveStream, ImageFormat.Png);
+            return saveStream.ToArray();
+        }
+        catch
+        {
+            await App.Page.DisplayAlertAsync("오류", "이미지를 변환할 수 없습니다. 애니메이션이 포함된 webp 이미지일 수 있습니다.", Constants.PromptOk);
+            return null;
+        }
     }
 
     public static string GetTimeString(DateTime created_at, DateTime? modified_at = null)
