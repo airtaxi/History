@@ -116,11 +116,16 @@ public partial class LoginPage : ContentPage
         }
         else if (result.Error == ErrorType.NotFound)
         {
+#if IOS
+            await App.PushAsync(new RegisterPage(idToken, socialService, s_appleUserFullName));
+#else
             var willing = await App.Page.DisplayAlertAsync("안내", "가입이 필요합니다. 가입하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (willing) await App.PushAsync(new RegisterPage(idToken, socialService, s_appleUserFullName));
             else await App.Page.DisplayAlertAsync("안내", "서비스 이용을 위해서는 가입이 필요합니다.", Constants.PromptOk);
+#endif
         }
         else if (result.Error == ErrorType.Forbidden) await App.Page.DisplayAlertAsync("안내", "서비스 이용이 제한되었습니다.", Constants.PromptOk);
+        else await App.Page.DisplayAlertAsync("안내", $"알 수 없는 오류가 발생했습니다: {result.Error}/{result.ErrorMessage}", Constants.PromptOk);
 
         return result;
     }
@@ -131,7 +136,11 @@ public partial class LoginPage : ContentPage
         {
             var service = new GoogleAuthService();
             var idToken = await service.AuthenticateAsync();
-            if (idToken == null) return;
+            if (idToken == null)
+            {
+                await DisplayAlertAsync("오류", "구글 로그인에 실패했습니다. 다시 시도해주세요.", Constants.PromptOk);
+                return;
+            }
 
             await service.SignOutAsync();
             await Login(idToken, SocialService.Google);
