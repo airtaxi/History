@@ -498,20 +498,23 @@ public static partial class Utils
 
     public static async Task RefreshFirebaseToken()
     {
-        await CrossFirebaseCloudMessaging.Current.CheckIfValidAsync();
-        var firebaseToken = await CrossFirebaseCloudMessaging.Current.GetTokenAsync();
-        Console.WriteLine($"FCM token: {firebaseToken}");
-
-        if (Shared.ApiHandler == null)
+        try
         {
-            var accessToken = Configuration.GetValue<string>("AccessToken");
-            var refreshToken = Configuration.GetValue<string>("RefreshToken");
+            await CrossFirebaseCloudMessaging.Current.CheckIfValidAsync();
+            var firebaseToken = await CrossFirebaseCloudMessaging.Current.GetTokenAsync();
+            Console.WriteLine($"FCM token: {firebaseToken}");
 
-            if (accessToken != null && refreshToken != null) Shared.ApiHandler = new(accessToken, refreshToken);
-            else return;
+            if (Shared.ApiHandler == null)
+            {
+                var accessToken = Configuration.GetValue<string>("AccessToken");
+                var refreshToken = Configuration.GetValue<string>("RefreshToken");
+
+                if (accessToken != null && refreshToken != null) Shared.ApiHandler = new(accessToken, refreshToken);
+                else return;
+            }
+
+            await Shared.ApiHandler.ExecuteRequestAsync(new RegisterFirebaseToken(firebaseToken));
         }
-
-        try { await Shared.ApiHandler.ExecuteRequestAsync(new RegisterFirebaseToken(firebaseToken)); }
         catch { }
     }
 

@@ -11,11 +11,7 @@ namespace History.MobileClient;
 [Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate
 {
-    public override bool OpenUrl(UIApplication application, NSUrl url, NSDictionary options)
-    {
-        SignIn.SharedInstance.HandleUrl(url);
-        return true;
-    }
+    public override bool OpenUrl(UIApplication application, NSUrl url, NSDictionary options) => SignIn.SharedInstance.HandleUrl(url);
 
     public override bool FinishedLaunching(UIApplication app, NSDictionary options)
     {
