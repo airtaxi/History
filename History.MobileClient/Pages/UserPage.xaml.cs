@@ -58,9 +58,9 @@ public partial class UserPage : ContentPage
         WeakReferenceMessenger.Default.Register<PostPinnedMessage>(this, OnPostPinnedMessageReceived);
     }
 
-    public UserPage(string userId) : this(userId, false, false) { }
+    public UserPage(string userId) : this(userId, false) { }
 
-    public UserPage(string userId, bool isKakaoStoryMode, bool showPillGrid)
+    public UserPage(string userId, bool isKakaoStoryMode, bool showPillGrid = false)
     {
         if (isKakaoStoryMode) KakaoUserId = userId;
         else UserId = userId;
