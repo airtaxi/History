@@ -445,7 +445,12 @@ public partial class UserPage : ContentPage
         else ShouldRefresh = true;
     }
 
-    private async void OnSettingsImageTapped(object sender, TappedEventArgs e) => await App.PushAsync(new SettingsPage((_viewModel as HistoryProfileViewModel)?.User));
+    private async void OnSettingsImageTapped(object sender, TappedEventArgs e)
+    {
+        var user = await Shared.ApiHandler.ExecuteRequestAsync(new GetMyProfile());
+        await App.PushAsync(new SettingsPage(user));
+    }
+
     private async void OnWritePostBorderTapped(object sender, TappedEventArgs e)
     {
         if (_isKakaoStoryMode)
