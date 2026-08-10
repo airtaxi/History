@@ -36,6 +36,7 @@ public partial class TimelinePage : ContentPage
     private BasePostViewModel _lastViewModel;
     private readonly ObservableCollection<BasePostViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
+    private readonly SemaphoreSlim _switchSemaphore = new(1, 1);
 
     public TimelinePage()
     {
@@ -91,11 +92,15 @@ public partial class TimelinePage : ContentPage
 
     private async Task LoadFirstPageAsync()
     {
-        if (_isKakaoStoryMode)
+        var isKakaoStoryMode = _isKakaoStoryMode;
+        if (isKakaoStoryMode)
         {
             if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
 
             var timeline = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetFeed(null));
+            // The mode can change while the feed loads (fast pill switching); discard the stale result, the pending switch reloads.
+            if (isKakaoStoryMode != _isKakaoStoryMode) return;
+
             if (timeline?.feeds == null)
             {
                 await DisplayAlertAsync("오류", "카카오스토리 피드가 비어있습니다.", Constants.PromptOk);
@@ -110,6 +115,9 @@ public partial class TimelinePage : ContentPage
         else
         {
             var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(null, 30));
+            // The mode can change while the posts load (fast pill switching); discard the stale result, the pending switch reloads.
+            if (isKakaoStoryMode != _isKakaoStoryMode) return;
+
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
@@ -163,9 +171,13 @@ public partial class TimelinePage : ContentPage
         {
             await _fetchSemaphore.WaitAsync();
 
-            if (_isKakaoStoryMode)
+            var isKakaoStoryMode = _isKakaoStoryMode;
+            if (isKakaoStoryMode)
             {
                 var timeline = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetFeed(_nextSince));
+                // The mode can change while the feed loads (fast pill switching); discard the stale result, the pending switch reloads.
+                if (isKakaoStoryMode != _isKakaoStoryMode) return;
+
                 if (timeline?.feeds == null)
                 {
                     _areThereNoMorePostsToLoad = true;
@@ -185,6 +197,9 @@ public partial class TimelinePage : ContentPage
 
                 var lastPostId = lastViewModel.RepostId ?? lastViewModel.Post.Id;
                 var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(lastPostId, 30));
+                // The mode can change while the posts load (fast pill switching); discard the stale result, the pending switch reloads.
+                if (isKakaoStoryMode != _isKakaoStoryMode) return;
+
                 if (postsResult.IsSuccess)
                 {
                     var posts = postsResult.Value;
@@ -363,12 +378,23 @@ public partial class TimelinePage : ContentPage
     private async Task SwitchModeAsync(bool isKakaoStoryMode)
     {
         if (_isKakaoStoryMode == isKakaoStoryMode) return;
-        _isKakaoStoryMode = isKakaoStoryMode;
-        UpdatePillVisuals();
-        SearchImage.IsVisible = !isKakaoStoryMode;
-        ShouldRefresh = false;
-        ShouldRefreshKakaoStory = false;
-        await RefreshAsync();
+
+        await _switchSemaphore.WaitAsync();
+        try
+        {
+            // Another tap may have applied this mode already while we waited.
+            if (_isKakaoStoryMode == isKakaoStoryMode) return;
+            _isKakaoStoryMode = isKakaoStoryMode;
+
+            UpdatePillVisuals();
+
+            SearchImage.IsVisible = !isKakaoStoryMode;
+            ShouldRefresh = false;
+            ShouldRefreshKakaoStory = false;
+
+            await RefreshAsync();
+        }
+        finally { _switchSemaphore.Release(); }
     }
 
     private void UpdatePillVisuals()
