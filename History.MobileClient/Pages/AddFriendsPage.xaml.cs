@@ -116,12 +116,14 @@ public partial class AddFriendsPage : ContentPage
         MainCollectionView.Footer = new Grid { HeightRequest = tabBarHeight };
 
 #endif
+#if !IOS
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
         if (safeAreaTopHeight != 0)
         {
             var statusBarHeight = LayoutHelper.GetStatusBarHeight();
             Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
         }
+#endif
     }
 
     protected override void OnDisappearing()

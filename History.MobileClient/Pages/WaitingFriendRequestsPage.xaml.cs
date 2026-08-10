@@ -103,12 +103,14 @@ public partial class WaitingFriendRequestsPage : ContentPage
             await RefreshAsync();
         }
 
+#if !IOS
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
         if (safeAreaTopHeight != 0)
         {
             var statusBarHeight = LayoutHelper.GetStatusBarHeight();
             Padding = new Thickness(Padding.Left, -(safeAreaTopHeight - statusBarHeight), Padding.Right, Padding.Bottom);
         }
+#endif
     }
 
     protected override void OnDisappearing()
