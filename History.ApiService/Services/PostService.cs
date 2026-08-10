@@ -502,7 +502,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Validate media contents
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
-        if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
+        if (mediaCount > CommonsConstants.MaxPostMediaCount) return (ErrorType.BadRequest, $"미디어는 최대 {CommonsConstants.MaxPostMediaCount}개까지 추가할 수 있습니다.");
 
         var mediaContents = contents.OfType<MediaContent>();
         foreach (var mediaContent in mediaContents)
@@ -657,7 +657,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Validate media contents
         var mediaCount = contents.Count(x => x is UploadContent || x is MediaContent);
-        if (mediaCount > 20) return (ErrorType.BadRequest, "미디어는 최대 20개까지 추가할 수 있습니다.");
+        if (mediaCount > CommonsConstants.MaxPostMediaCount) return (ErrorType.BadRequest, $"미디어는 최대 {CommonsConstants.MaxPostMediaCount}개까지 추가할 수 있습니다.");
 
         var originalPostMediaContents = post.Contents.OfType<MediaContent>();
         var mediaContents = contents.OfType<MediaContent>();

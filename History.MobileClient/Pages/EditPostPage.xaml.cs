@@ -296,9 +296,9 @@ public partial class EditPostPage : ContentPage
 
     private async void OnImageInputRequested(object sender, string path)
     {
-        if (_attachmentViewModels.Count == 20)
+        if (_attachmentViewModels.Count == CommonsConstants.MaxPostMediaCount)
         {
-            await Toast.Make("미디어는 최대 20개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
+            await Toast.Make($"미디어는 최대 {CommonsConstants.MaxPostMediaCount}개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
             return;
         }
 
@@ -319,14 +319,14 @@ public partial class EditPostPage : ContentPage
     private async void OnInsertImageTapped(object sender, TappedEventArgs e)
     {
         MainTextContent.UnfocusEditor();
-        if (_attachmentViewModels.Count == 20)
+        if (_attachmentViewModels.Count == CommonsConstants.MaxPostMediaCount)
         {
-            await Toast.Make("미디어는 최대 20개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
+            await Toast.Make($"미디어는 최대 {CommonsConstants.MaxPostMediaCount}개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
             return;
         }
 
         var sizeExceed = false;
-        var maxCount = 20 - _attachmentViewModels.Count;
+        var maxCount = CommonsConstants.MaxPostMediaCount - _attachmentViewModels.Count;
 #if IOS
         var request = new MediaPickRequest(maxCount, MediaFileType.Image) { Title = "이미지 추가" };
 
@@ -392,14 +392,14 @@ public partial class EditPostPage : ContentPage
     {
         MainTextContent.UnfocusEditor();
 
-        if (_attachmentViewModels.Count == 20)
+        if (_attachmentViewModels.Count == CommonsConstants.MaxPostMediaCount)
         {
-            await Toast.Make("미디어는 최대 20개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
+            await Toast.Make($"미디어는 최대 {CommonsConstants.MaxPostMediaCount}개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
             return;
         }
 
         var sizeExceed = false;
-        var maxCount = 20 - _attachmentViewModels.Count;
+        var maxCount = CommonsConstants.MaxPostMediaCount - _attachmentViewModels.Count;
 #if IOS
         var request = new MediaPickRequest(maxCount, MediaFileType.Video) { Title = "비디오 추가" };
 
@@ -1386,11 +1386,19 @@ public partial class EditPostPage : ContentPage
             // KakaoStory allows at most 20 images per post. Stickers are uploaded as images,
             // so ask the user to drop them when the combined count would exceed the limit.
             var photoCount = attachmentViewModels.Count(x => !x.IsVideo);
-            if (stickerContents.Count > 0 && photoCount + stickerContents.Count > 20)
+            if (stickerContents.Count > 0 && photoCount + stickerContents.Count > CommonsConstants.KakaoStoryMaxImageCount)
             {
-                var proceed = await DisplayAlertAsync("경고", $"카카오스토리의 이미지 갯수 제한은 20개입니다. 스티커까지 첨부하면 총 {photoCount + stickerContents.Count}장이 되어 글을 올릴 수 없습니다. 스티커를 업로드하지 않고 사진만 올리시겠습니까?", "사진만 올리기", Constants.PromptCancel);
+                var proceed = await DisplayAlertAsync("경고", $"카카오스토리의 이미지 갯수 제한은 {CommonsConstants.KakaoStoryMaxImageCount}개입니다. 스티커까지 첨부하면 총 {photoCount + stickerContents.Count}장이 되어 글을 올릴 수 없습니다. 스티커를 업로드하지 않고 사진만 올리시겠습니까?", "사진만 올리기", Constants.PromptCancel);
                 if (!proceed) return false;
                 stickerContents = [];
+            }
+
+            // Mirroring restricts the write to KakaoStory's photo limit, so block the
+            // upload when more photos than the KakaoStory limit are attached.
+            if (photoCount > CommonsConstants.KakaoStoryMaxImageCount)
+            {
+                await DisplayAlertAsync("오류", $"카카오스토리에는 사진을 최대 {CommonsConstants.KakaoStoryMaxImageCount}개까지 올릴 수 있습니다. 사진을 {CommonsConstants.KakaoStoryMaxImageCount}개 이하로 줄이거나 카카오스토리 게시를 해제해주세요.", Constants.PromptOk);
+                return false;
             }
 
             // Check for profanity before uploading to KakaoStory
