@@ -156,7 +156,6 @@ public partial class KakaoStoryApiHandler
     {
         var client = new RestClient(EmoticonAuthUrl);
         var request = new RestRequest();
-		Cookies.ForEach(x => request.AddCookie(x.Name, x.Value, x.Path, x.Domain));
 
 		request.Method = Method.Get;
 
@@ -172,7 +171,6 @@ public partial class KakaoStoryApiHandler
     {
         var client = new RestClient(EmoticonListUrl);
         var request = new RestRequest();
-		Cookies.ForEach(x => request.AddCookie(x.Name, x.Value, x.Path, x.Domain));
 
 		request.Method = Method.Get;
 
