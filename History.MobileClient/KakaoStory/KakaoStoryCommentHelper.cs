@@ -16,6 +16,12 @@ public static class KakaoStoryCommentHelper
 {
     public static async Task<(List<QuoteData> Decorators, string Text)> BuildCommentPayloadAsync(List<BaseContent> contents, List<StickerContent> stickerContents, MediaAttachmentViewModel attachmentViewModel)
     {
+        // The editor appends a '\n' after a sticker image token so it renders on its own line.
+        // When a sticker is the last element, that trailing newline becomes a whitespace-only
+        // text content and would be posted as an empty line after the sticker image — so strip
+        // trailing whitespace-only text contents before building the payload.
+        TrimTrailingWhitespaceTextContents(contents);
+
         var quoteDatas = KakaoStoryUtils.GetQuoteDataFromContents(contents);
 
         // Stickers resolve to an uploaded image when possible; failed uploads are ignored.
@@ -77,4 +83,10 @@ public static class KakaoStoryCommentHelper
     }
 
     private static string BuildKakaoMediaPath(UploadedImageProp uploadedImage) => $"{uploadedImage.access_key}/{uploadedImage.info.original.filename}?width={uploadedImage.info.original.width}&height={uploadedImage.info.original.height}&avg={uploadedImage.info.original.avg}";
+
+    private static void TrimTrailingWhitespaceTextContents(List<BaseContent> contents)
+    {
+        while (contents.Count > 0 && contents[^1] is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))
+            contents.RemoveAt(contents.Count - 1);
+    }
 }
