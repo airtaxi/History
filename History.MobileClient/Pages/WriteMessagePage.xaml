@@ -58,7 +58,7 @@
                 <Grid Padding="4,0,4,0" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#000000}">
                     <Editor
                         x:Name="MessageEditor"
-                        AutoSize="Disabled"
+                        AutoSize="TextChanges"
                         MaxLength="100"
                         Placeholder="쪽지 내용을 입력하세요 (최대 100자)" />
                 </Grid>
