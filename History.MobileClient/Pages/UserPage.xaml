@@ -71,7 +71,6 @@
                 <Image
                     x:Name="MessageImage"
                     HeightRequest="32"
-                    IsVisible="False"
                     WidthRequest="32">
                     <Image.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnMessageImageTapped" />

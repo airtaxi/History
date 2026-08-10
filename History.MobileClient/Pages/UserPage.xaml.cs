@@ -57,9 +57,7 @@ public partial class UserPage : ContentPage
         WeakReferenceMessenger.Default.Register<PostPinnedMessage>(this, OnPostPinnedMessageReceived);
     }
 
-    public UserPage(string userId) : this(userId, false)
-    {
-    }
+    public UserPage(string userId) : this(userId, false) { }
 
     public UserPage(string userId, bool isKakaoStoryMode)
     {
@@ -69,16 +67,14 @@ public partial class UserPage : ContentPage
         _isKakaoStoryMode = isKakaoStoryMode;
         InitializeComponent();
 
-        if (!_isKakaoStoryMode)
-        {
-            if (UserId == Shared.UserId)
-            {
-                BanImage.IsVisible = false;
-                MemoImage.IsVisible = false;
-            }
-            else MessageImage.IsVisible = true;
-        }
-        else
+        // Use _isMyProfile not IsMyProfilePage because PillGrid should only visible when initialized from AppShell.xaml (default constructor).
+        PillGrid.IsVisible = _isMyProfile;
+
+        BanImage.IsVisible = !IsMyProfilePage;
+        MemoImage.IsVisible = !_isKakaoStoryMode && !IsMyProfilePage;
+        MessageImage.IsVisible = !isKakaoStoryMode && !IsMyProfilePage;
+
+        if (_isKakaoStoryMode)
         {
             // Kakao Story profile: only back/layout/ban/friends remain; History-only header actions are hidden.
             MessageImage.IsVisible = false;
@@ -87,7 +83,6 @@ public partial class UserPage : ContentPage
             TitleLabel.Text = "프로필";
         }
 
-        PillGrid.IsVisible = IsMyProfilePage;
         UpdatePillVisuals();
 
         MainCollectionView.ItemsSource = _viewModels;
