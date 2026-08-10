@@ -1366,6 +1366,11 @@ public partial class KakaoStoryApiHandler
         var token = JsonConvert.DeserializeObject<SdkToken>(content);
         if (token?.IdToken == null) return null;
 
+        // Kakao keeps the refresh token stable across refresh grants: the refresh
+        // response carries no refresh_token field, so preserve the stored one
+        // instead of letting it be overwritten with null.
+        if (token.RefreshToken == null) token.RefreshToken = LoadSdkTokens()?.RefreshToken;
+
         return SetSdkTokens(token);
     }
 
