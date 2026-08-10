@@ -37,7 +37,7 @@ public class GoogleAuthService : IGoogleAuthService
             });
         }
 
-        try { return await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30)); }
+        try { return await tcs.Task; }
         catch (TimeoutException) { return null; }
     }
 
