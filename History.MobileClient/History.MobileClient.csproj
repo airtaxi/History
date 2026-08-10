@@ -49,6 +49,7 @@
 		<ServerGarbageCollection>true</ServerGarbageCollection>
 		<ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
 		
+		<PublishReadyToRun>true</PublishReadyToRun>
 		<UseMonoRuntime>false</UseMonoRuntime>
 	</PropertyGroup>
 
