@@ -174,6 +174,9 @@ public partial class UserPage : ContentPage
                 FriendsImage.IsVisible = (_viewModel as KakaoProfileViewModel)?.IsFriendsVisible ?? false;
 
                 var viewModels = (profileObject.activities ?? []).Select(KakaoStoryUtils.CreatePostViewModel).Where(x => x != null).ToList();
+                // The profile feed has no next_since; the cursor is the last activity id,
+                // advanced only while more than 15 items are returned (Kakao Story Manager Plus pattern).
+                _nextSince = (profileObject.activities ?? []).Count > 15 ? profileObject.activities.LastOrDefault()?.id : null;
                 _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
