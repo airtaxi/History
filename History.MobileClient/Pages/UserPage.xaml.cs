@@ -45,7 +45,7 @@ public partial class UserPage : ContentPage
     private readonly SemaphoreSlim _switchSemaphore = new(1, 1);
     private string _nextSince;
 
-    public UserPage() : this(Shared.UserId)
+    public UserPage() : this(Shared.UserId, false, true)
     {
         _isMyProfile = true;
         BackImage.IsVisible = false;
@@ -58,9 +58,9 @@ public partial class UserPage : ContentPage
         WeakReferenceMessenger.Default.Register<PostPinnedMessage>(this, OnPostPinnedMessageReceived);
     }
 
-    public UserPage(string userId) : this(userId, false) { }
+    public UserPage(string userId) : this(userId, false, false) { }
 
-    public UserPage(string userId, bool isKakaoStoryMode)
+    public UserPage(string userId, bool isKakaoStoryMode, bool showPillGrid)
     {
         if (isKakaoStoryMode) KakaoUserId = userId;
         else UserId = userId;
@@ -69,7 +69,7 @@ public partial class UserPage : ContentPage
         InitializeComponent();
 
         // Use _isMyProfile not IsMyProfilePage because PillGrid should only visible when initialized from AppShell.xaml (default constructor).
-        PillGrid.IsVisible = _isMyProfile;
+        PillGrid.IsVisible = showPillGrid;
 
         BanImage.IsVisible = !IsMyProfilePage;
         MemoImage.IsVisible = !_isKakaoStoryMode && !IsMyProfilePage;
