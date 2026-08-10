@@ -110,11 +110,6 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
             }
         }
 
-        var finalTextContent = new TextContent() { Text = text };
-        var finalMediaConent = mediaContents.FirstOrDefault();
-        var finalContents = new List<BaseContent>() { finalTextContent };
-        if (finalMediaConent != null) finalContents.Add(finalMediaConent);
-
         string messageId;
         while (true)
         {
@@ -126,6 +121,12 @@ public class MessageService(IMongoDatabase database, IMediaService mediaService,
         // Upload media
         var uploadResult = await mediaService.HandleUploadContentsAsync(MediaBucket.Message, messageId, senderId, contents, files);
         if (uploadResult.IsFailure) return uploadResult;
+
+        // Build final contents after upload (UploadContent is replaced with MediaContent in-place)
+        var finalTextContent = new TextContent() { Text = text };
+        var finalMediaContent = contents.OfType<MediaContent>().FirstOrDefault();
+        var finalContents = new List<BaseContent>() { finalTextContent };
+        if (finalMediaContent != null) finalContents.Add(finalMediaContent);
 
         var message = new Message
         {
