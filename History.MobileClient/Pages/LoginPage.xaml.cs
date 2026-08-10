@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
@@ -126,13 +127,16 @@ public partial class LoginPage : ContentPage
 
     private async void OnGoogleLoginButtonClicked(object sender, EventArgs e)
     {
-        var service = new GoogleAuthService();
-        var idToken = await service.AuthenticateAsync();
-        if (idToken != null)
+        try
         {
+            var service = new GoogleAuthService();
+            var idToken = await service.AuthenticateAsync();
+            if (idToken == null) return;
+
             await service.SignOutAsync();
             await Login(idToken, SocialService.Google);
         }
+        catch (Exception exception) { Debug.WriteLine($"Google login failed: {exception.Message}"); }
     }
 
     private async void OnAppleLoginButtonClicked(object sender, EventArgs e)

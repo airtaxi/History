@@ -17,26 +17,28 @@ public class GoogleAuthService : IGoogleAuthService
     {
         var tcs = new TaskCompletionSource<string>();
 
-        var config = new Configuration(Constants.GoogleAuthAppleClientId, Constants.GoogleAuthWebClientId);
-
         var viewController = GetPresentedViewController();
-        SignIn.SharedInstance.Configuration = config;
-        SignIn.SharedInstance.SignInWithPresentingViewController(viewController, (signInResult, error) =>
+        if (viewController == null) tcs.SetResult(null);
+        else
         {
-            if (error != null)
+            var config = new Configuration(Constants.GoogleAuthAppleClientId, Constants.GoogleAuthWebClientId);
+
+            SignIn.SharedInstance.Configuration = config;
+            SignIn.SharedInstance.SignInWithPresentingViewController(viewController, (signInResult, error) =>
             {
-                tcs.SetException(new Exception($"Error - {error.LocalizedDescription} - {Convert.ToInt32(error.Code)}"));
-                return;
-            }
+                if (error != null)
+                {
+                    tcs.SetResult(null);
+                    return;
+                }
 
-            var user = signInResult.User;
-            var idToken = user.IdToken.TokenString;
+                var idToken = signInResult?.User?.IdToken?.TokenString;
+                tcs.SetResult(string.IsNullOrEmpty(idToken) ? null : idToken);
+            });
+        }
 
-            if (!string.IsNullOrEmpty(idToken)) tcs.SetResult(idToken);
-        });
-
-        var token = await tcs.Task;
-        return token;
+        try { return await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30)); }
+        catch (TimeoutException) { return null; }
     }
 
     public Task<bool> SignOutAsync()
@@ -52,11 +54,15 @@ public class GoogleAuthService : IGoogleAuthService
 
     private static UIViewController GetPresentedViewController()
     {
-        var window = UIApplication.SharedApplication.KeyWindow;
+        var window = UIApplication.SharedApplication.ConnectedScenes
+            .OfType<UIWindowScene>()
+            .SelectMany(scene => scene.Windows)
+            .FirstOrDefault(candidate => candidate.IsKeyWindow)
+            ?? UIApplication.SharedApplication.KeyWindow;
 
-        var viewController = window.RootViewController;
+        var viewController = window?.RootViewController;
 
-        while (viewController.PresentingViewController != null)
+        while (viewController?.PresentingViewController != null)
             viewController = viewController.PresentingViewController;
 
         return viewController;
