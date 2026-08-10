@@ -430,7 +430,7 @@
             <!--  Single-instance slots  -->
             <views:DataTemplatePresenter
                 IsVisible="{x:Binding HasMediaContent}"
-                Template="{StaticResource AndroidWrappedMediaContentsTemplate}"
+                Template="{StaticResource ContentTemplateSelector}"
                 ViewModel="{x:Binding MediaContent}" />
             <views:DataTemplatePresenter
                 IsVisible="{x:Binding HasPollContent}"
