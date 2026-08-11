@@ -1,5 +1,6 @@
 ﻿#pragma warning disable SYSLIB0014 // Type or member is obsolete
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 using History.Commons;
@@ -610,6 +611,97 @@ public partial class KakaoStoryApiHandler
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
         return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
+
+    /// <summary>
+    /// Sends a Kakao Story message through the Android app's API endpoint
+    /// (story-api.kakao.com/messages, HeaderInterceptor from the 7.2.3 APK).
+    /// Unlike the web client, the app posts to story-api.kakao.com with the
+    /// device-style headers (X-Kakao-DeviceInfo "Android:...", ApiLevel 57,
+    /// KAKAOSTORY/7.2.3_26035 user agent) and an MD5-based X-Kakao-VC built
+    /// from "{unixSeconds}001brownbear".
+    /// </summary>
+    public static async Task<bool> SendMailAndroid(string content, string id, bool bomb, string imgURI = null)
+    {
+        const string EndpointUrl = "https://story-api.kakao.com/messages";
+        // The app's default background is a color with value 0 (WriteMessageActivity
+        // passes the unset MessageBgItem color, which intARGBTolong() yields as "0").
+        const string BackgroundColorValue = "0";
+
+        // The message API only accepts the numeric profile id, but callers hold the
+        // string profile uri (e.g. "apitestfelis"); resolve it first.
+        string receiverId = await ResolveNumericProfileIdAsync(id);
+        if (receiverId == null) return false;
+
+        string postData = "content=" + Uri.EscapeDataString("[{\"type\":\"text\",\"text\":\"" + content + "\"}]")
+            + "&object=" + Uri.EscapeDataString("{\"background\":{\"type\":\"color\",\"value\":" + BackgroundColorValue + "}}")
+            + "&bomb=" + bomb.ToString().ToLower()
+            + "&receiver_id%5B%5D=" + receiverId
+            + "&reference_id=";
+
+        var webRequest = GenerateDefaultProfile(EndpointUrl, "POST");
+        ConfigureAndroidRequest(webRequest);
+
+        byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+        return await GetResponseFromRequest(webRequest, byteArray, configure: ConfigureAndroidRequest) != null;
+    }
+
+    /// <summary>
+    /// Resolves a profile uri (e.g. "apitestfelis") to the numeric profile id using
+    /// the app's GET profiles/search?profile_uri= endpoint (ne/e0.java in the
+    /// 7.2.3 APK). Returns null when the uri cannot be resolved.
+    /// </summary>
+    private static async Task<string> ResolveNumericProfileIdAsync(string profileUri)
+    {
+        string requestURI = "https://story-api.kakao.com/profiles/search?profile_uri=" + Uri.EscapeDataString(profileUri);
+        var webRequest = GenerateDefaultProfile(requestURI);
+        ConfigureAndroidRequest(webRequest);
+
+        string response = await GetResponseFromRequest(webRequest, configure: ConfigureAndroidRequest);
+        if (response == null) return null;
+
+        return JsonNode.Parse(response)?["profile"]?["id"]?.ToString();
+    }
+
+    /// <summary>
+    /// Applies the Android app's device headers to a story-api.kakao.com request,
+    /// overriding the web-styled defaults set by GenerateDefaultProfile
+    /// (HeaderInterceptor from the 7.2.3 APK). Re-applied on every retry via the
+    /// configure callback. The Authorization header (KAuth) is set by
+    /// GenerateDefaultProfile when an SDK token exists.
+    /// </summary>
+    private static void ConfigureAndroidRequest(HttpWebRequest webRequest)
+    {
+        webRequest.Headers["X-Kakao-DeviceInfo"] = "Android:" + GetAndroidDeviceId() + ";gcm;";
+        webRequest.Headers["X-Kakao-ApiLevel"] = "57";
+        webRequest.Headers["X-Kakao-TZOffset"] = "9";
+        webRequest.Headers["X-Kakao-MCCMNC"] = "";
+        webRequest.Headers["X-Kakao-Sesstiontime"] = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds().ToString();
+        webRequest.Headers["X-Kakao-VC"] = GenerateKakaoVCAndroid();
+        webRequest.UserAgent = "KAKAOSTORY/7.2.3_26035 Android/" + GetAndroidOsVersion() + " " + GetAndroidModel();
+        webRequest.Headers["Connection"] = "Close";
+        webRequest.Headers["Accept-Encoding"] = "gzip";
+        webRequest.Headers["Accept-Language"] = "ko";
+        // GenerateDefaultProfile pins the Host header to story.kakao.com; the
+        // story-api endpoint must not receive that stale host.
+        webRequest.Host = "story-api.kakao.com";
+    }
+
+    /// <summary>
+    /// Returns a placeholder device UUID for the Android-style X-Kakao-DeviceInfo
+    /// header. The real app uses the Android ID; a stable fake value is enough
+    /// for server-side validation.
+    /// </summary>
+    private static string GetAndroidDeviceId() => "000000000000000000000000";
+
+    /// <summary>
+    /// Returns a placeholder Android OS version for the KAKAOSTORY user agent.
+    /// </summary>
+    private static string GetAndroidOsVersion() => "13";
+
+    /// <summary>
+    /// Returns a placeholder device model for the KAKAOSTORY user agent.
+    /// </summary>
+    private static string GetAndroidModel() => "SM-S918B";
     public static async Task<List<MailData.Mail>> GetMails(string since = null)
     {
         string requestURI = "https://story.kakao.com/a/messages/";
@@ -1454,6 +1546,37 @@ public partial class KakaoStoryApiHandler
         }
         // Truncate to the fixed 20-char length the server expects.
         return sb.Length > VcLength ? sb.ToString(0, VcLength) : sb.ToString();
+    }
+
+    /// <summary>
+    /// Generates an X-Kakao-VC value using the Android app's algorithm
+    /// (HeaderInterceptor in the 7.2.3 APK). The app builds
+    /// "{unixSeconds}001|" followed by every fourth character of
+    /// double-MD5("{unixSeconds}001brownbear"), skipping the first three chars.
+    /// </summary>
+    private static string GenerateKakaoVCAndroid()
+    {
+        long seconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        string doubleMd5 = GetMd5Hex(GetMd5Hex(seconds + "001brownbear"));
+
+        var sb = new StringBuilder();
+        sb.Append(seconds);
+        sb.Append("001|");
+        for (int index = 3; index < doubleMd5.Length; index += 4)
+        {
+            sb.Append(doubleMd5[index]);
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Returns the lowercase hex MD5 of <paramref name="input"/>, mirroring the
+    /// Android app's a1.a.l0() helper.
+    /// </summary>
+    private static string GetMd5Hex(string input)
+    {
+        byte[] hashBytes = MD5.HashData(Encoding.UTF8.GetBytes(input));
+        return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
 }
 #pragma warning restore SYSLIB0014 // Type or member is obsolete
