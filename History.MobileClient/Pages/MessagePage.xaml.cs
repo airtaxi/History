@@ -12,14 +12,15 @@ namespace History.MobileClient.Pages;
 
 public partial class MessagePage : ContentPage
 {
-    private readonly MessageViewModel _viewModel;
-    public MessagePage(MessageViewModel viewModel)
+    private readonly BaseMessageViewModel _viewModel;
+    public MessagePage(BaseMessageViewModel viewModel)
     {
         InitializeComponent();
         _viewModel = viewModel;
         BindingContext = _viewModel;
         Dispatcher.Dispatch(MarkAsReadIfNeeded);
-        ReplyButton.IsVisible = viewModel.Sender?.UserId != Shared.UserId;
+        ReplyButton.IsVisible = viewModel.IsReplyButtonVisible;
+        DeleteButton.IsVisible = viewModel.IsDeleteButtonVisible;
     }
 
     protected override void OnAppearing()
@@ -38,20 +39,22 @@ public partial class MessagePage : ContentPage
 
     private async void MarkAsReadIfNeeded()
     {
-        if (_viewModel.Receiver?.UserId == Shared.UserId && _viewModel.ReadAt == null)
-        {
-            await App.ExecuteRequestAsync(new MarkMessageAsRead(_viewModel.Id));
-        }
+        if (_viewModel is HistoryMessageViewModel historyViewModel && historyViewModel.Receiver?.UserId == Shared.UserId && historyViewModel.ReadAt == null) await App.ExecuteRequestAsync(new MarkMessageAsRead(historyViewModel.Id));
+        else if (_viewModel is KakaoMessageViewModel kakaoViewModel) kakaoViewModel.MarkAsReadLocally();
     }
 
     private async Task MarkMessageNotificationsAsReadAsync()
     {
-        var messageId = _viewModel.Id;
+        if (_viewModel is not HistoryMessageViewModel historyViewModel) return;
+
+        var messageId = historyViewModel.Id;
         var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByMessageId(messageId));
         if (success) WeakReferenceMessenger.Default.Send(new NotificationMessageReadMessage(messageId));
     }
 
     private async void OnBackImageTapped(object sender, TappedEventArgs e) => await App.PopModalAsync();
+
+    private async void OnDeleteButtonTapped(object sender, TappedEventArgs e) => await _viewModel.DeleteAsync(true);
 
     private void OnLoaded(object sender, EventArgs e)
     {
@@ -62,7 +65,17 @@ public partial class MessagePage : ContentPage
 
     private async void OnReplyButtonClicked(object sender, EventArgs e)
     {
-        var senderId = _viewModel.Sender?.UserId;
+        if (_viewModel is KakaoMessageViewModel kakaoViewModel)
+        {
+            var kakaoSenderId = kakaoViewModel.SenderId;
+            if (kakaoSenderId == null) return;
+
+            var kakaoPage = new WriteMessagePage(kakaoSenderId, _viewModel.SenderName, true);
+            await App.PushModalAsync(kakaoPage);
+            return;
+        }
+
+        var senderId = (_viewModel as HistoryMessageViewModel)?.Sender?.UserId;
         if (senderId == null) return;
 
         var page = new WriteMessagePage(senderId, _viewModel.SenderName);

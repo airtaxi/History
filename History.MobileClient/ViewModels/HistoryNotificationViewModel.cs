@@ -1,6 +1,5 @@
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Message;
 using History.Commons.Api.Post;
@@ -8,7 +7,6 @@ using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Enums;
 using History.MobileClient.Pages;
@@ -120,7 +118,7 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel
             var messageResult = await App.ExecuteRequestAsync(new GetMessage(messageId));
             if (!messageResult.IsSuccess) return;
 
-            var viewModel = new MessageViewModel(messageResult.Value);
+            var viewModel = new HistoryMessageViewModel(messageResult.Value);
             await App.PushModalAsync(new MessagePage(viewModel));
         }
         else if (type == NotificationType.FriendRequest)

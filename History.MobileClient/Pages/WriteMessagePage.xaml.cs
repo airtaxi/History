@@ -4,6 +4,7 @@ using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
+using History.MobileClient.KakaoStory;
 
 
 #if IOS
@@ -15,16 +16,28 @@ namespace History.MobileClient.Pages;
 public partial class WriteMessagePage : ContentPage
 {
     private bool _isInForeground;
+    private readonly bool _isKakaoStoryMode;
 
     private byte[] _imageBytes;
     private string _imageFileName;
     private readonly string _receiverId;
 
-    public WriteMessagePage(string receiverId, string nickname)
+    public WriteMessagePage(string receiverId, string nickname) : this(receiverId, nickname, false) { }
+
+    public WriteMessagePage(string receiverId, string nickname, bool isKakaoStoryMode)
     {
         InitializeComponent();
         _receiverId = receiverId;
+        _isKakaoStoryMode = isKakaoStoryMode;
         ReceiverLabel.Text = $"받는 사람: {nickname}";
+
+        // Kakao Story messages are text-only; the image attachment UI stays hidden.
+        if (isKakaoStoryMode)
+        {
+            AttachImageButton.IsVisible = false;
+            RemoveImageButton.IsVisible = false;
+            AttachmentImage.IsVisible = false;
+        }
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
@@ -89,19 +102,37 @@ public partial class WriteMessagePage : ContentPage
             await DisplayAlertAsync("오류", "쪽지는 100자 이내로 작성해야 합니다.", "확인");
             return;
         }
-        var contents = new List<BaseContent> { new TextContent { Text = text } };
-        var files = new Dictionary<string, byte[]>();
-        if (_imageBytes != null && !string.IsNullOrEmpty(_imageFileName))
+
+        if (_isKakaoStoryMode)
         {
-            var uploadContent = new UploadContent { FileName = _imageFileName };
-            contents.Add(uploadContent);
-            files[_imageFileName] = _imageBytes;
+            try
+            {
+                var success = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.SendMail(text, _receiverId, false));
+                if (success)
+                {
+                    await DisplayAlertAsync("성공", "쪽지가 전송되었습니다.", "확인");
+                    await App.PopModalAsync();
+                }
+                else await DisplayAlertAsync("오류", "쪽지 전송에 실패하였습니다.", Constants.PromptOk);
+            }
+            catch (Exception exception) { await DisplayAlertAsync("오류", $"쪽지 전송에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }
         }
-        var result = await App.ExecuteRequestAsync(new SendMessage(_receiverId, contents, files));
-        if (result.IsSuccess)
+        else
         {
-            await DisplayAlertAsync("성공", "쪽지가 전송되었습니다.", "확인");
-            await App.PopModalAsync();
+            var contents = new List<BaseContent> { new TextContent { Text = text } };
+            var files = new Dictionary<string, byte[]>();
+            if (_imageBytes != null && !string.IsNullOrEmpty(_imageFileName))
+            {
+                var uploadContent = new UploadContent { FileName = _imageFileName };
+                contents.Add(uploadContent);
+                files[_imageFileName] = _imageBytes;
+            }
+            var result = await App.ExecuteRequestAsync(new SendMessage(_receiverId, contents, files));
+            if (result.IsSuccess)
+            {
+                await DisplayAlertAsync("성공", "쪽지가 전송되었습니다.", "확인");
+                await App.PopModalAsync();
+            }
         }
     }
 
