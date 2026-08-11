@@ -72,7 +72,7 @@ public partial class UserPage : ContentPage
 
         BanImage.IsVisible = !IsMyProfilePage;
         MemoImage.IsVisible = !_isKakaoStoryMode && !IsMyProfilePage;
-        MessageImage.IsVisible = !isKakaoStoryMode && !IsMyProfilePage;
+        MessageImage.IsVisible = !IsMyProfilePage;
 
         if (_isKakaoStoryMode)
         {
@@ -171,6 +171,7 @@ public partial class UserPage : ContentPage
                 _viewModel = new KakaoProfileViewModel(profileObject.profile, profileObject.mutual_friend);
                 ProfileDataTemplatePresenter.ViewModel = _viewModel;
                 FriendsImage.IsVisible = (_viewModel as KakaoProfileViewModel)?.IsFriendsVisible ?? false;
+                MessageImage.IsVisible = !IsMyProfilePage && profileObject.profile.message_sendable;
 
                 var viewModels = (profileObject.activities ?? []).Select(KakaoStoryUtils.CreatePostViewModel).Where(x => x != null).ToList();
                 // The profile feed has no next_since; the cursor is the last activity id,
@@ -249,7 +250,7 @@ public partial class UserPage : ContentPage
                 // advanced only while more than 15 items are returned (Kakao Story Manager Plus pattern).
                 _nextSince = activities.Count > 15 ? activities.LastOrDefault()?.id : null;
                 _lastViewModel = viewModels.LastOrDefault();
-                _areThereNoMorePostsToLoad = string.IsNullOrEmpty(_nextSince) || !viewModels.Any();
+                _areThereNoMorePostsToLoad = string.IsNullOrEmpty(_nextSince) || viewModels.Count == 0;
                 foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
             }
             else
@@ -432,8 +433,7 @@ public partial class UserPage : ContentPage
     private async void OnMainCollectionViewChildAdded(object sender, ElementEventArgs e)
     {
         var view = e.Element as View;
-        var viewModel = view.BindingContext as BasePostViewModel;
-        if (viewModel == null) return;
+        if (view.BindingContext is not BasePostViewModel viewModel) return;
 
         if (_lastViewModel != null && GetPostId(viewModel) == GetPostId(_lastViewModel as BasePostViewModel))
         {
@@ -501,7 +501,7 @@ public partial class UserPage : ContentPage
             // Another tap may have applied this mode already while we waited.
             if (_isKakaoStoryMode == isKakaoStoryMode) return;
             _isKakaoStoryMode = isKakaoStoryMode;
-            
+
             UpdatePillVisuals();
 
             ShouldRefresh = false;
@@ -619,7 +619,17 @@ public partial class UserPage : ContentPage
 
     private async void OnMessageImageTapped(object sender, TappedEventArgs e)
     {
-        var canSendMessage = await App.ExecuteRequestAsync(new CheckMessagePermission(UserId));
-        if (canSendMessage.IsSuccess) await App.PushModalAsync(new WriteMessagePage(UserId, (_viewModel as HistoryProfileViewModel)?.User.Nickname));
+        if (_isKakaoStoryMode)
+        {
+            var nickname = (_viewModel as KakaoProfileViewModel)?.Nickname;
+            if (string.IsNullOrEmpty(nickname)) return;
+
+            await App.PushModalAsync(new WriteMessagePage(KakaoUserId, nickname, true));
+        }
+        else
+        {
+            var canSendMessage = await App.ExecuteRequestAsync(new CheckMessagePermission(UserId));
+            if (canSendMessage.IsSuccess) await App.PushModalAsync(new WriteMessagePage(UserId, (_viewModel as HistoryProfileViewModel)?.User.Nickname));
+        }
     }
 }

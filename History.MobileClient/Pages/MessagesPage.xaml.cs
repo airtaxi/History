@@ -3,24 +3,29 @@ using History.Commons.Api.Message;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Platform;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
 namespace History.MobileClient.Pages;
 
 public partial class MessagesPage : ContentPage
 {
     private bool _isInForeground;
+    private bool _isKakaoStoryMode;
     private bool _areThereNoMoreMessagesToLoad;
-    private readonly ObservableCollection<MessageViewModel> _viewModels = [];
+    private readonly ObservableCollection<BaseMessageViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
     public MessagesPage()
     {
         InitializeComponent();
         MainCollectionView.ItemsSource = _viewModels;
+        UpdatePillVisuals();
+        WeakReferenceMessenger.Default.Register<ValueDeletedMessage<MailData.Mail>>(this, OnKakaoMailDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
 #if IOS
         WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
@@ -35,19 +40,41 @@ public partial class MessagesPage : ContentPage
         try
         {
             await _fetchSemaphore.WaitAsync();
-            var receivedResult = await App.ExecuteRequestAsync(new GetReceivedMessages());
-            var sentResult = await App.ExecuteRequestAsync(new GetSentMessages());
-            if (receivedResult.IsSuccess && sentResult.IsSuccess)
+
+            if (_isKakaoStoryMode)
             {
-                var allMessages = receivedResult.Value
-                    .Concat(sentResult.Value)
-                    .OrderByDescending(m => m.CreatedAt);
+                if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
 
-                _viewModels.Clear();
-                foreach (var message in allMessages)
-                    _viewModels.Add(new MessageViewModel(message));
+                try
+                {
+                    var mails = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetMails());
+                    if (mails == null)
+                    {
+                        await DisplayAlertAsync("오류", "카카오스토리 쪽지를 불러오지 못했습니다.", Constants.PromptOk);
+                        return;
+                    }
 
-                EmptyLabel.IsVisible = !allMessages.Any();
+                    _viewModels.Clear();
+                    foreach (var mail in mails) _viewModels.Add(new KakaoMessageViewModel(mail));
+                    EmptyLabel.IsVisible = mails.Count == 0;
+                }
+                catch (Exception exception) { await DisplayAlertAsync("오류", $"카카오스토리 쪽지를 불러오지 못했습니다.\n{exception.Message}", Constants.PromptOk); }
+            }
+            else
+            {
+                var receivedResult = await App.ExecuteRequestAsync(new GetReceivedMessages());
+                var sentResult = await App.ExecuteRequestAsync(new GetSentMessages());
+                if (receivedResult.IsSuccess && sentResult.IsSuccess)
+                {
+                    var allMessages = receivedResult.Value
+                        .Concat(sentResult.Value)
+                        .OrderByDescending(m => m.CreatedAt);
+
+                    _viewModels.Clear();
+                    foreach (var message in allMessages) _viewModels.Add(new HistoryMessageViewModel(message));
+
+                    EmptyLabel.IsVisible = !allMessages.Any();
+                }
             }
         }
         finally { _fetchSemaphore.Release(); }
@@ -56,21 +83,22 @@ public partial class MessagesPage : ContentPage
     private async Task LoadMoreAsync()
     {
         if (_fetchSemaphore.CurrentCount == 0) return;
+        else if (_isKakaoStoryMode) return; // Kakao Story mails have no pagination.
         else if (_areThereNoMoreMessagesToLoad) return;
         try
         {
             await _fetchSemaphore.WaitAsync();
-            var lastViewModel = _viewModels.LastOrDefault();
+            var lastViewModel = _viewModels.OfType<HistoryMessageViewModel>().LastOrDefault();
             if (lastViewModel == null)
             {
                 _areThereNoMoreMessagesToLoad = true;
                 return;
             }
 
-            var messagesResult = await App.ExecuteRequestAsync(new GetReceivedMessages(lastViewModel?.Id));
+            var messagesResult = await App.ExecuteRequestAsync(new GetReceivedMessages(lastViewModel.Id));
             if (messagesResult.IsSuccess)
             {
-                var viewModels = messagesResult.Value.Select(x => new MessageViewModel(x));
+                var viewModels = messagesResult.Value.Select(x => new HistoryMessageViewModel(x));
                 _areThereNoMoreMessagesToLoad = !viewModels.Any();
                 foreach (var vm in viewModels) _viewModels.Add(vm);
             }
@@ -120,6 +148,42 @@ public partial class MessagesPage : ContentPage
 #if IOS
     private void OnTabBarHeightChangedMessageReceived(object recipient, TabBarHeightChangedMessage message) => MainCollectionView.Footer = new Grid { HeightRequest = message.Value };
 #endif
+
+    private async void OnHistoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(false);
+
+    private async void OnKakaoStoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(true);
+
+    private void OnKakaoMailDeletedMessageReceived(object recipient, ValueDeletedMessage<MailData.Mail> message)
+    {
+        var viewModels = _viewModels.OfType<KakaoMessageViewModel>().Where(x => x.Id == message.Value.id).ToList(); // ToList is needed (Collection will be modified)
+        foreach (var viewModel in viewModels) _viewModels.Remove(viewModel);
+        if (_isKakaoStoryMode) EmptyLabel.IsVisible = _viewModels.Count == 0;
+    }
+
+    private async Task SwitchModeAsync(bool isKakaoStoryMode)
+    {
+        if (_isKakaoStoryMode == isKakaoStoryMode) return;
+
+        if (isKakaoStoryMode && !await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+
+        _isKakaoStoryMode = isKakaoStoryMode;
+        _areThereNoMoreMessagesToLoad = false;
+        UpdatePillVisuals();
+        await RefreshAsync();
+    }
+
+    private void UpdatePillVisuals()
+    {
+        var primaryColor = Application.Current.Resources["Primary"] as Color ?? Colors.Orange;
+        var isDarkTheme = Utils.GetGlobalAppTheme() == AppTheme.Dark;
+        var inactiveBackgroundColor = isDarkTheme ? Color.FromRgb(0x33, 0x33, 0x33) : Color.FromRgb(0xEA, 0xEA, 0xEA);
+        var inactiveTextColor = isDarkTheme ? Color.FromRgb(0xAA, 0xAA, 0xAA) : Color.FromRgb(0x66, 0x66, 0x66);
+
+        HistoryPillBorder.BackgroundColor = _isKakaoStoryMode ? inactiveBackgroundColor : primaryColor;
+        HistoryPillLabel.TextColor = _isKakaoStoryMode ? inactiveTextColor : Colors.White;
+        KakaoStoryPillBorder.BackgroundColor = _isKakaoStoryMode ? primaryColor : inactiveBackgroundColor;
+        KakaoStoryPillLabel.TextColor = _isKakaoStoryMode ? Colors.White : inactiveTextColor;
+    }
 
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {

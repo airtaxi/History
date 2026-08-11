@@ -343,7 +343,7 @@ public partial class App : Application
             var messageResult = await ExecuteRequestAsync(new GetMessage(messageId));
             if (messageResult.IsFailure) return;
 
-            var messageViewModel = new MessageViewModel(messageResult.Value);
+            var messageViewModel = new HistoryMessageViewModel(messageResult.Value);
             var page = new MessagePage(messageViewModel);
             await PushAsync(page);
         }
