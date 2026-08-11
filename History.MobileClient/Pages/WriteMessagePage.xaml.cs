@@ -107,7 +107,7 @@ public partial class WriteMessagePage : ContentPage
         {
             try
             {
-                var success = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.SendMail(text, _receiverId, false));
+                var success = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.SendMailAndroid(text, _receiverId, false));
                 if (success)
                 {
                     await DisplayAlertAsync("성공", "쪽지가 전송되었습니다.", "확인");
