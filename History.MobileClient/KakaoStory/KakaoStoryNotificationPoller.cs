@@ -15,9 +15,11 @@ namespace History.MobileClient.KakaoStory;
 public static class KakaoStoryNotificationPoller
 {
     private const string LatestNotificationIdKey = "KakaoStoryLatestNotificationId";
+    private const string LatestMailIdKey = "KakaoStoryLatestMailId";
     private const string IsEnabledKey = "KakaoStoryNotificationEnabled";
     private const string FavoriteFriendNotificationEnabledKey = "KakaoStoryFavoriteFriendNotificationEnabled";
     private const string EmotionNotificationEnabledKey = "KakaoStoryEmotionNotificationEnabled";
+    private const string MailNotificationEnabledKey = "KakaoStoryMailNotificationEnabled";
     private const string SessionExpiredNotificationEnabledKey = "KakaoStorySessionExpiredNotificationEnabled";
     private const string SessionExpiredNotifiedKey = "KakaoStorySessionExpiredNotified";
 
@@ -103,6 +105,7 @@ public static class KakaoStoryNotificationPoller
         try
         {
             await FetchAndPostNotificationsAsync();
+            await FetchAndPostMailsAsync();
         }
         finally { KakaoStoryApiHandler.IsBackgroundMode = previousBackgroundMode; }
     }
@@ -150,6 +153,52 @@ public static class KakaoStoryNotificationPoller
         Preferences.Set(LatestNotificationIdKey, latestId);
     }
 
+    /// <summary>
+    /// Polls the Kakao Story mail list and posts a local notification for each
+    /// new unread received mail. The notification fetch API does not carry mail
+    /// events, so mails are watched separately with their own baseline. Only
+    /// received (type == "receive") and unread (read_at == null) mails newer than
+    /// the stored baseline are posted; the baseline advances past read and sent
+    /// mails as well. The user can disable it from the settings page.
+    /// </summary>
+    private static async Task FetchAndPostMailsAsync()
+    {
+        if (Configuration.GetValue<bool?>(MailNotificationEnabledKey) == false) return;
+
+        var mails = await KakaoStoryApiHandler.GetMails();
+        if (mails == null || mails.Count == 0) return;
+
+        var latestId = mails[0].id;
+        if (string.IsNullOrEmpty(latestId)) return;
+
+        var storedLatestId = Preferences.Get(LatestMailIdKey, string.Empty);
+        if (string.IsNullOrEmpty(storedLatestId))
+        {
+            // First poll ever (no baseline recorded yet): only record the baseline
+            // so fresh installs do not blast every past mail at once.
+            Preferences.Set(LatestMailIdKey, latestId);
+            return;
+        }
+
+        if (storedLatestId == latestId) return; // Nothing new.
+
+        // The list is newest-first: everything newer than the stored baseline is
+        // new. Read mails (read_at != null) and sent mails (type != "receive")
+        // are skipped, while the baseline still advances past them.
+        var newMails = new List<MailData.Mail>();
+        foreach (var mail in mails)
+        {
+            if (mail.id == storedLatestId) break;
+            if (mail.type != "receive") continue;
+            if (mail.read_at != null) continue;
+            newMails.Add(mail);
+        }
+
+        foreach (var mail in newMails) PostMail(mail);
+
+        Preferences.Set(LatestMailIdKey, latestId);
+    }
+
     private static bool IsFavoriteFriendNotification(Notification notification) => notification.decorators is { Count: > 0 } && notification.decorators[0].text?.StartsWith("관심친구") == true;
 
     private static bool IsEmotionNotification(Notification notification) => notification.emotion != null;
@@ -165,6 +214,17 @@ public static class KakaoStoryNotificationPoller
 #elif IOS
         try { KakaoStoryNotificationPoster.Post(notification); }
         catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story notification post failed: {exception.Message}"); }
+#endif
+    }
+
+    private static void PostMail(MailData.Mail mail)
+    {
+#if ANDROID
+        try { KakaoStoryNotificationPoster.PostMail(mail); }
+        catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story mail notification post failed: {exception.Message}"); }
+#elif IOS
+        try { KakaoStoryNotificationPoster.PostMail(mail); }
+        catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story mail notification post failed: {exception.Message}"); }
 #endif
     }
 
