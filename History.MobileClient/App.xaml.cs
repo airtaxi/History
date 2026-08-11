@@ -321,6 +321,68 @@ public partial class App : Application
         }
     }
 
+    private const string PendingKakaoStorySchemeKey = "KakaoStoryNotificationSchemePending";
+
+    /// <summary>
+    /// Opens the target of a tapped Kakao Story notification (post or profile)
+    /// based on the scheme stored when the local notification was posted. Shared
+    /// by Android (MainActivity intent extra) and iOS (UNUserNotificationCenter
+    /// delegate), mirroring the FCM HandlePushNotificationAsync pattern: when the
+    /// app shell is not up yet (cold start), the scheme is deferred to
+    /// ReplayPendingKakaoStoryScheme after login.
+    /// </summary>
+    public static async Task HandleKakaoStoryNotificationAsync(string scheme)
+    {
+        if (string.IsNullOrEmpty(scheme)) return;
+
+        if (!AppShell.IsLoaded)
+        {
+            // Cold start: the root page is still the login page and the shell
+            // would discard the pushed page on login. Defer the navigation.
+            Preferences.Set(PendingKakaoStorySchemeKey, scheme);
+            return;
+        }
+
+        await MainThread.InvokeOnMainThreadAsync(async () =>
+        {
+            try
+            {
+                // Post notification: the scheme contains the activity id after "activities/".
+                if (scheme.Contains("?profile_id=") && scheme.Contains("activities/"))
+                {
+                    var postId = scheme.Split(new[] { "activities/" }, StringSplitOptions.None)[1];
+                    var post = await KakaoStory.KakaoStoryApiHandler.GetPost(postId);
+                    if (post == null) return;
+
+                    var postViewModel = new ViewModels.KakaoPostViewModel(post, Enums.PostType.Unwrapped);
+                    await PushAsync(new Pages.PostPage(postViewModel));
+                }
+                // Profile notification: the scheme is a kakaostory:// deep link to the profile.
+                else if (scheme.Contains("kakaostory://profiles/"))
+                {
+                    var profileId = scheme.Replace("kakaostory://profiles/", "");
+                    if (string.IsNullOrEmpty(profileId)) return;
+
+                    await PushAsync(new Pages.UserPage(profileId, true));
+                }
+            }
+            catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story notification navigation failed: {exception.Message}"); }
+        });
+    }
+
+    /// <summary>
+    /// Replays a Kakao Story notification scheme deferred during a cold start
+    /// (the app shell was not up yet). Called from LoginPage.AfterLogin,
+    /// mirroring the FCM PushData preference pattern.
+    /// </summary>
+    public static void ReplayPendingKakaoStoryScheme()
+    {
+        var scheme = Preferences.Get(PendingKakaoStorySchemeKey, null);
+        if (string.IsNullOrEmpty(scheme)) return;
+        Preferences.Set(PendingKakaoStorySchemeKey, null);
+        _ = HandleKakaoStoryNotificationAsync(scheme);
+    }
+
     public static async Task HandlePushNotificationAsync(string pushData)
     {
         Preferences.Remove("PushData");
