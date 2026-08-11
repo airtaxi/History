@@ -623,9 +623,9 @@ public partial class KakaoStoryApiHandler
     public static async Task<bool> SendMailAndroid(string content, string id, bool bomb, string imgURI = null)
     {
         const string EndpointUrl = "https://story-api.kakao.com/messages";
-        // The app's default background is a color with value 0 (WriteMessageActivity
-        // passes the unset MessageBgItem color, which intARGBTolong() yields as "0").
-        const string BackgroundColorValue = "0";
+        // Background color value 0 renders as transparent/black (text unreadable),
+        // so use the soft pink the web client sends (0xE2A0AA = 14852266).
+        const string BackgroundColorValue = "14852266";
 
         // The message API only accepts the numeric profile id, but callers hold the
         // string profile uri (e.g. "apitestfelis"); resolve it first.
