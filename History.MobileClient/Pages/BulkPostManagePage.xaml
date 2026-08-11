@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.BulkPostManagePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Loaded="OnLoaded"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,12,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout Spacing="8">
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="게시글 일괄 변경"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            <Label
+                x:Name="SelectAllLabel"
+                HorizontalOptions="End"
+                Text="전체 선택"
+                TextColor="White"
+                VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSelectAllLabelTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+        </Grid>
+
+        <Grid Grid.Row="1" SafeAreaEdges="None">
+            <RefreshView Refreshing="OnRefreshing" SafeAreaEdges="None">
+                <CollectionView
+                    x:Name="MainCollectionView"
+                    ChildAdded="OnMainCollectionViewChildAdded"
+                    ItemTemplate="{StaticResource PostPreviewTemplate}"
+                    RemainingItemsThreshold="0"
+                    RemainingItemsThresholdReached="OnMainCollectionViewRemainingItemsThresholdReached"
+                    SelectionMode="None">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout
+                            HorizontalItemSpacing="1"
+                            Orientation="Vertical"
+                            Span="4"
+                            VerticalItemSpacing="1" />
+                    </CollectionView.ItemsLayout>
+                </CollectionView>
+            </RefreshView>
+
+            <Border
+                x:Name="ActionBarBorder"
+                Margin="12"
+                Padding="12,8"
+                Background="{AppThemeBinding Light=#FFFFFF,
+                                             Dark=#1A1A1A}"
+                HorizontalOptions="Fill"
+                IsVisible="False"
+                Stroke="{AppThemeBinding Light=#E0E0E0,
+                                         Dark=#333333}"
+                StrokeThickness="1"
+                VerticalOptions="End">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow
+                        Brush="Black"
+                        Opacity="0.15"
+                        Radius="6"
+                        Offset="1,2" />
+                </Border.Shadow>
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                    <Label
+                        x:Name="SelectedCountLabel"
+                        FontSize="14"
+                        Text="0개 선택됨"
+                        VerticalOptions="Center" />
+                    <Button
+                        x:Name="ChangeDiscoveryOptionButton"
+                        Grid.Column="1"
+                        Padding="14,0"
+                        Clicked="OnChangeDiscoveryOptionButtonClicked"
+                        FontAttributes="Bold"
+                        FontSize="13"
+                        HeightRequest="40"
+                        Text="공개 범위 변경"
+                        TextColor="White" />
+                    <Button
+                        x:Name="DeleteButton"
+                        Grid.Column="2"
+                        Padding="14,0"
+                        BackgroundColor="Red"
+                        Clicked="OnDeleteButtonClicked"
+                        FontAttributes="Bold"
+                        FontSize="13"
+                        HeightRequest="40"
+                        Text="삭제"
+                        TextColor="White" />
+                </Grid>
+            </Border>
+
+            <VerticalStackLayout
+                x:Name="EmptyStateLayout"
+                HorizontalOptions="Center"
+                IsVisible="False"
+                Spacing="8"
+                VerticalOptions="Center">
+                <Image HeightRequest="64" WidthRequest="64">
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Build}"
+                            Color="#808080" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontSize="16"
+                    HorizontalOptions="Center"
+                    Text="게시글이 없습니다"
+                    TextColor="#808080" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="2"
+            HorizontalOptions="Center"
+            VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

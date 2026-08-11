@@ -108,6 +108,12 @@ public partial class BasePostViewModel : ObservableObject
     [ObservableProperty]
     public partial ImageViewModel PreviewThumbnail { get; protected set; }
 
+    // Multi-select surface used by the bulk post management page.
+    [ObservableProperty]
+    public partial bool IsSelectable { get; protected set; }
+    [ObservableProperty]
+    public partial bool IsSelected { get; protected set; }
+
     // Repost attribution surface shared by History and Kakao Story repost view models.
     [ObservableProperty]
     public partial string RepostId { get; protected set; }

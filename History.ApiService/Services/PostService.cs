@@ -1670,6 +1670,34 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         return await DeletePostsAsync(filter);
     }
 
+    /// <inheritdoc />
+    public async Task<Result<long>> BulkChangeDiscoveryOptionAsync(string userId, List<string> postIds, DiscoveryOption to)
+    {
+        if (userId == null) return (ErrorType.BadRequest, "유저 ID가 제공되지 않았습니다.");
+        if (postIds == null || postIds.Count == 0) return (ErrorType.BadRequest, "게시글 ID가 제공되지 않았습니다.");
+
+        var filter = Builders<Post>.Filter.Eq(p => p.UserId, userId)
+            & Builders<Post>.Filter.In(p => p.Id, postIds);
+
+        var update = Builders<Post>.Update
+            .Set(p => p.DiscoveryOption, to)
+            .Set(p => p.DiscoveryOptionSelectedUserIds, null);
+        var result = await _postCollection.UpdateManyAsync(filter, update);
+        return result.ModifiedCount;
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<long>> BulkDeletePostsAsync(string userId, List<string> postIds)
+    {
+        if (userId == null) return (ErrorType.BadRequest, "유저 ID가 제공되지 않았습니다.");
+        if (postIds == null || postIds.Count == 0) return (ErrorType.BadRequest, "게시글 ID가 제공되지 않았습니다.");
+
+        var filter = Builders<Post>.Filter.Eq(p => p.UserId, userId)
+            & Builders<Post>.Filter.In(p => p.Id, postIds);
+
+        return await DeletePostsAsync(filter);
+    }
+
     private async Task<Result<long>> DeletePostsAsync(FilterDefinition<Post> filter)
     {
         // NOTE: Keep cleanup scope in sync with DeletePostAsync.
