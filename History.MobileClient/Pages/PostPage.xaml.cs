@@ -234,7 +234,13 @@ public partial class PostPage : ContentPage
             var contents = CommentTextContentView.GetContents();
             var stickerContents = contents.OfType<StickerContent>().ToList();
 
-            var (decorators, text) = await KakaoStoryCommentHelper.BuildCommentPayloadAsync(contents, stickerContents, _commentMediaAttachmentViewModel);
+            var payload = await KakaoStoryCommentHelper.BuildCommentPayloadAsync(contents, stickerContents, _commentMediaAttachmentViewModel);
+            if (payload == null)
+            {
+                await DisplayAlertAsync("오류", "첨부한 webp 이미지를 png로 변환하는 데 실패하여 댓글을 작성할 수 없습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
+                return;
+            }
+            var (decorators, text) = payload.Value;
 
             var postId = KakaoViewModel.PostData.id;
             await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.ReplyToPost(postId, text, decorators));
