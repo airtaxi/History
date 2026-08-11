@@ -273,8 +273,8 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 - **Helpers**: 플랫폼별 유틸리티 (미디어 피커, 웹뷰 쿠키)
 - **DataTypes**: 메시징 및 데이터 전송용 클래스
 - **Enums**: 상호작용 타입, 포스트 타입 등
-- **KakaoStoryNotificationPoller**: 카카오스토리 알림 폴링 공용 로직 (포그라운드 1초 / Android 백그라운드 15분 JobScheduler / iOS BGAppRefreshTask 공유). 전체 알림 목록을 주기 폴링하고 최신 알림 ID 베이스라인 이후의 새 알림만 로컬 알림으로 표시. 401 시 로그인 UI를 절대 띄우지 않음.
-- **KakaoStoryNotificationPoster** (Android/iOS): 카카오스토리 알림을 로컬 알림으로 표시 (Android: 기존 push 채널 `{PackageName}.push` / iOS: UNUserNotificationCenter, Firebase 미사용). 탭하면 scheme 기반으로 게시글/프로필 이동.
+- **KakaoStoryNotificationPoller**: 카카오스토리 알림 폴링 공용 로직 (포그라운드 1초 / Android 백그라운드 15분 JobScheduler / iOS BGAppRefreshTask 공유). 전체 알림 목록을 주기 폴링하고 최신 알림 ID 베이스라인 이후의 새 알림만 로컬 알림으로 표시. 알림 fetch API가 쪽지 이벤트를 전달하지 않으므로 쪽지 목록(`GetMails`)도 별도 베이스라인으로 스캔하여 `type == "receive"` && `read_at == null`인 새 쪽지만 로컬 알림으로 표시. 401 시 로그인 UI를 절대 띄우지 않음.
+- **KakaoStoryNotificationPoster** (Android/iOS): 카카오스토리 알림을 로컬 알림으로 표시 (Android: 기존 push 채널 `{PackageName}.push` / iOS: UNUserNotificationCenter, Firebase 미사용). 탭하면 scheme 기반으로 게시글/프로필 이동. 쪽지 알림은 커스텀 scheme `kakaostory://messages/{id}`로 쪽지 상세(MessagePage)를 열며, 제목은 `{보낸 사람}님이 쪽지를 보냈습니다` 형식.
 - **KakaoStoryNotificationRefreshService** (Android): 백그라운드 알림 폴링 JobService (15분 주기, `KakaoStoryNotificationJobId = 2`).
 - **KakaoStoryNotificationDelegate** (iOS): UNUserNotificationCenter 델리게이트 소유자. 카카오 알림은 직접 처리(포그라운드 배너/탭 네비게이션), 그 외는 Firebase 플러그인으로 콜백 forwarding 하여 기존 FCM 푸시 동작 보존. AppDelegate.FinishedLaunching에서 Firebase 플러그인이 설정한 델리게이트를 교체.
 - **KakaoStoryBackgroundRefresh** (iOS): 백그라운드 알림 폴링 BGAppRefreshTask (`com.airtaxi.history.kakaostoryrefresh`, 시스템 결정 시점 ~15분 간격). 앱이 백그라운드 진입 시(Window.Stopped) 다음 실행을 예약.

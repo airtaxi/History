@@ -68,6 +68,9 @@ public partial class SettingsPage : ContentPage
         var isKakaoStoryEmotionNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryEmotionNotificationEnabled") ?? true;
         KakaoStoryEmotionNotificationLabel.Text = isKakaoStoryEmotionNotificationEnabled ? OnText : OffText;
 
+        var isKakaoStoryMailNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryMailNotificationEnabled") ?? true;
+        KakaoStoryMailNotificationLabel.Text = isKakaoStoryMailNotificationEnabled ? OnText : OffText;
+
         var isKakaoStorySessionExpiredNotificationEnabled = Configuration.GetValue<bool?>("KakaoStorySessionExpiredNotificationEnabled") ?? true;
         KakaoStorySessionExpiredNotificationLabel.Text = isKakaoStorySessionExpiredNotificationEnabled ? OnText : OffText;
 
@@ -374,6 +377,16 @@ public partial class SettingsPage : ContentPage
         var isEnabled = action == OnText;
         Configuration.SetValue("KakaoStoryEmotionNotificationEnabled", isEnabled);
         KakaoStoryEmotionNotificationLabel.Text = isEnabled ? OnText : OffText;
+    }
+
+    private async void OnKakaoStoryMailNotificationGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("카카오스토리 쪽지 알림", Constants.PromptCancel, null, OnText, OffText);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == OnText;
+        Configuration.SetValue("KakaoStoryMailNotificationEnabled", isEnabled);
+        KakaoStoryMailNotificationLabel.Text = isEnabled ? OnText : OffText;
     }
 
     private async void OnKakaoStorySessionExpiredNotificationGridTapped(object sender, TappedEventArgs e)

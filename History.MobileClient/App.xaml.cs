@@ -365,6 +365,27 @@ public partial class App : Application
 
                     await PushAsync(new Pages.UserPage(profileId, true));
                 }
+                // Mail notification: the scheme is a custom kakaostory://messages/ deep link.
+                else if (scheme.Contains("kakaostory://messages/"))
+                {
+                    var mailId = scheme.Replace("kakaostory://messages/", "");
+                    if (string.IsNullOrEmpty(mailId)) return;
+
+                    var mailDetail = await KakaoStory.KakaoStoryApiHandler.GetMailDetail(mailId);
+                    if (mailDetail == null) return;
+
+                    var mail = new KakaoStory.KakaoStoryApiHandler.DataType.MailData.Mail
+                    {
+                        id = mailDetail.id,
+                        type = mailDetail.type,
+                        summary = mailDetail.content,
+                        sender = mailDetail.sender,
+                        created_at = mailDetail.created_at,
+                        read_at = mailDetail.read_at,
+                    };
+                    var mailViewModel = new ViewModels.KakaoMessageViewModel(mail);
+                    await PushModalAsync(new Pages.MessagePage(mailViewModel));
+                }
             }
             catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story notification navigation failed: {exception.Message}"); }
         });
