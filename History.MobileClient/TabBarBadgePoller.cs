@@ -64,11 +64,14 @@ public static class TabBarBadgePoller
     }
 
     /// <summary>
-    /// Resumes the foreground polling loop after a login.
+    /// Resumes the foreground polling loop after a login. Polls once immediately
+    /// so the badges reflect the current state right away, then continues on the
+    /// 10-second cadence.
     /// </summary>
     public static void TryStart()
     {
         s_isPaused = false;
+        _ = PollOnceAsync();
         StartForegroundPolling();
     }
 
