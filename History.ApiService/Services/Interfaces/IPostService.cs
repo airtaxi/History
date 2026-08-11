@@ -275,6 +275,23 @@ public interface IPostService
     public Task<Result<long>> BulkDeletePostsAsync(string userId, DiscoveryOption? discoveryOption);
 
     /// <summary>
+    /// Bulk changes discovery option for specific posts of the requester.
+    /// </summary>
+    /// <param name="userId">The ID of the user who requests the operation.</param>
+    /// <param name="postIds">The IDs of posts whose discovery option will be changed.</param>
+    /// <param name="to">New discovery option to set.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the count of affected posts.</returns>
+    public Task<Result<long>> BulkChangeDiscoveryOptionAsync(string userId, List<string> postIds, DiscoveryOption to);
+
+    /// <summary>
+    /// Bulk deletes specific posts of the requester.
+    /// </summary>
+    /// <param name="userId">The ID of the user who requests the operation.</param>
+    /// <param name="postIds">The IDs of posts to delete.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the count of deleted posts.</returns>
+    public Task<Result<long>> BulkDeletePostsAsync(string userId, List<string> postIds);
+
+    /// <summary>
     /// Bookmarks a post for the user.
     /// </summary>
     /// <param name="postId">The ID of the post to bookmark.</param>

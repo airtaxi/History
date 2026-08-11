@@ -74,6 +74,7 @@ public partial class MorePage : ContentPage
             "게시글 일괄 관리",
             Constants.PromptCancel,
             null,
+            "원하는 게시글만 선택해 변경/삭제",
             "특정 공개 범위를 다른 범위로 일괄 전환",
             "특정 공개 범위를 가진 글을 전부 삭제",
             "모든 글을 특정 공개 범위로 전환",
@@ -81,7 +82,12 @@ public partial class MorePage : ContentPage
 
         if (action == null || action == Constants.PromptCancel) return;
 
-        if (action == "특정 공개 범위를 다른 범위로 일괄 전환") await ChangeDiscoveryOptionByFilterAsync();
+        if (action == "원하는 게시글만 선택해 변경/삭제")
+        {
+            var page = new BulkPostManagePage();
+            await App.PushAsync(page);
+        }
+        else if (action == "특정 공개 범위를 다른 범위로 일괄 전환") await ChangeDiscoveryOptionByFilterAsync();
         else if (action == "특정 공개 범위를 가진 글을 전부 삭제") await DeletePostsByFilterAsync();
         else if (action == "모든 글을 특정 공개 범위로 전환") await ChangeAllDiscoveryOptionsAsync();
         else if (action == "모든 글 삭제") await DeleteAllPostsAsync();

@@ -140,6 +140,55 @@ public class PostController(IPostService postService, IFriendshipService friends
         else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
+
+    [HttpPut("bulk/discovery-option/by-ids")]
+    [Authorize]
+    [ProducesResponseType<long>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> BulkChangeDiscoveryOptionByPostIds([FromBody] BulkChangeDiscoveryOptionByPostIdsRequestDto request)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        if (request.PostIds == null || request.PostIds.Count == 0) return BadRequest("게시글 ID가 제공되지 않았습니다.");
+
+        if (request.To == DiscoveryOption.SelectedUsers || request.To == DiscoveryOption.UnselectedUsers)
+            return BadRequest("특정 친구 (비)공개 공개 범위로는 일괄 전환할 수 없습니다.");
+
+        var result = await postService.BulkChangeDiscoveryOptionAsync(requesterId, request.PostIds, request.To);
+        if (result.IsSuccess) return Ok(result.Value);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpDelete("bulk/by-ids")]
+    [Authorize]
+    [ProducesResponseType<long>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(403)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> BulkDeletePostsByPostIds([FromBody] BulkDeletePostsByPostIdsRequestDto request)
+    {
+        var requesterId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (requesterId == null) return Unauthorized("로그인이 필요합니다.");
+
+        if (request.PostIds == null || request.PostIds.Count == 0) return BadRequest("게시글 ID가 제공되지 않았습니다.");
+
+        var result = await postService.BulkDeletePostsAsync(requesterId, request.PostIds);
+        if (result.IsSuccess) return Ok(result.Value);
+        else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
     
     [HttpPost("ignore/{postId}")]
     [Authorize]

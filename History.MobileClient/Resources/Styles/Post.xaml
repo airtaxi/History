@@ -374,6 +374,46 @@
                     ViewModel="{x:Binding PreviewThumbnail}" />
                 <Border
                     Grid.RowSpan="2"
+                    Margin="0,-2,-2,0"
+                    Padding="0"
+                    BackgroundColor="#80000000"
+                    HeightRequest="24"
+                    HorizontalOptions="End"
+                    IsVisible="{x:Binding IsSelectable}"
+                    Stroke="{AppThemeBinding Dark=White,
+                                             Light=Black}"
+                    StrokeThickness="1"
+                    VerticalOptions="Start"
+                    WidthRequest="24">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    <Border.Triggers>
+                        <DataTrigger
+                            Binding="{x:Binding IsSelected}"
+                            TargetType="Border"
+                            Value="True">
+                            <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                            <Setter Property="StrokeThickness" Value="0" />
+                        </DataTrigger>
+                    </Border.Triggers>
+                    <Image
+                        HeightRequest="16"
+                        HorizontalOptions="Center"
+                        IsVisible="{x:Binding IsSelected}"
+                        VerticalOptions="Center"
+                        WidthRequest="16">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Check}"
+                                Size="16"
+                                Color="White" />
+                        </Image.Source>
+                    </Image>
+                </Border>
+                <Border
+                    Grid.RowSpan="2"
                     Margin="0,0,4,4"
                     Padding="0"
                     BackgroundColor="{StaticResource Primary}"
