@@ -14,7 +14,11 @@ namespace History.MobileClient.KakaoStory;
 // from the editor contents (type="profile" with the friend id), not parsed from text.
 public static class KakaoStoryCommentHelper
 {
-    public static async Task<(List<QuoteData> Decorators, string Text)> BuildCommentPayloadAsync(List<BaseContent> contents, List<StickerContent> stickerContents, MediaAttachmentViewModel attachmentViewModel)
+    /// <summary>
+    /// Builds the Kakao Story comment payload. Returns null when the picker image
+    /// (webp) cannot be converted to PNG, so the caller can abort the comment.
+    /// </summary>
+    public static async Task<(List<QuoteData> Decorators, string Text)?> BuildCommentPayloadAsync(List<BaseContent> contents, List<StickerContent> stickerContents, MediaAttachmentViewModel attachmentViewModel)
     {
         // The editor appends a '\n' after a sticker image token so it renders on its own line.
         // When a sticker is the last element, that trailing newline becomes a whitespace-only
@@ -67,13 +71,38 @@ public static class KakaoStoryCommentHelper
         // The picker image goes first; the API renders the first decorator as the comment image.
         if (attachmentViewModel != null && attachmentViewModel.FilePath != null)
         {
-            var uploadedImage = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImageProp(attachmentViewModel.FilePath));
-            imageQuoteDatas.Insert(0, new QuoteData
+            string filePath = attachmentViewModel.FilePath;
+            var isWebp = attachmentViewModel.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase);
+            if (isWebp)
             {
-                type = "image",
-                text = "(Image) ",
-                media_path = BuildKakaoMediaPath(uploadedImage)
-            });
+                // KakaoStory does not accept webp; convert to PNG before uploading,
+                // same as the sticker flow above.
+                var fileName = Path.GetFileNameWithoutExtension(filePath) + ".png";
+                filePath = Path.GetTempPath() + "c_" + fileName;
+                using var stream = File.OpenRead(attachmentViewModel.FilePath);
+                using var image = PlatformImage.FromStream(stream);
+                if (image == null) return null; // Conversion failed; abort the comment.
+                using var saveStream = File.Create(filePath);
+                await image.SaveAsync(saveStream, ImageFormat.Png);
+            }
+
+            try
+            {
+                var uploadedImage = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImageProp(filePath));
+                imageQuoteDatas.Insert(0, new QuoteData
+                {
+                    type = "image",
+                    text = "(Image) ",
+                    media_path = BuildKakaoMediaPath(uploadedImage)
+                });
+            }
+            finally
+            {
+                if (filePath != attachmentViewModel.FilePath)
+                {
+                    try { File.Delete(filePath); } catch { }
+                }
+            }
         }
 
         var decorators = imageQuoteDatas.Concat(quoteDatas).ToList();

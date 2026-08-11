@@ -148,7 +148,13 @@ public partial class EditCommentPage : ContentPage
 
         try
         {
-            var (decorators, text) = await KakaoStoryCommentHelper.BuildCommentPayloadAsync(contents, stickerContents, _attachmentViewModel);
+            var payload = await KakaoStoryCommentHelper.BuildCommentPayloadAsync(contents, stickerContents, _attachmentViewModel);
+            if (payload == null)
+            {
+                await DisplayAlertAsync("오류", "첨부한 webp 이미지를 png로 변환하는 데 실패하여 댓글을 수정할 수 없습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
+                return;
+            }
+            var (decorators, text) = payload.Value;
 
             // The old image is preserved only when the user kept it (server medium, not re-uploaded).
             var hadOriginalImage = _kakaoComment.decorators?.Any(x => x.media_path != null) == true;
