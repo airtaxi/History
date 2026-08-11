@@ -83,6 +83,8 @@ public static partial class Utils
 
     public static List<BaseContent> ConvertUrlsToHyperlinkContents(IEnumerable<BaseContent> contents)
     {
+        return [.. contents];
+
         var converted = new List<BaseContent>();
         foreach (var content in contents)
         {
