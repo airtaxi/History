@@ -16,6 +16,7 @@ catch (Exception exception) { /* handle */ }
 - 가능하면 반드시 primary constructor를 사용해주세요.
 - 가능하면 반드시 collection expression을 사용해주세요.
 - C# 최신 문법을 적극 활용해주세요.
+- 써드파티에서 이식한 소스(예: `ShellTabBarBadge` 플러그인)는 원본의 코드 스타일을 유지합니다. 이식 소스는 우리 코드 스타일의 기준이 아니므로, 새 코드를 작성할 때 이식 소스의 스타일을 참고하지 마세요.
 
 ## 프로젝트 개요
 
@@ -273,7 +274,8 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 - **Helpers**: 플랫폼별 유틸리티 (미디어 피커, 웹뷰 쿠키)
 - **DataTypes**: 메시징 및 데이터 전송용 클래스
 - **Enums**: 상호작용 타입, 포스트 타입 등
-- **KakaoStoryNotificationPoller**: 카카오스토리 알림 폴링 공용 로직 (포그라운드 1초 / Android 백그라운드 15분 JobScheduler / iOS BGAppRefreshTask 공유). 전체 알림 목록을 주기 폴링하고 최신 알림 ID 베이스라인 이후의 새 알림만 로컬 알림으로 표시. 알림 fetch API가 쪽지 이벤트를 전달하지 않으므로 쪽지 목록(`GetMails`)도 별도 베이스라인으로 스캔하여 `type == "receive"` && `read_at == null`인 새 쪽지만 로컬 알림으로 표시. 401 시 로그인 UI를 절대 띄우지 않음.
+- **KakaoStoryNotificationPoller**: 카카오스토리 알림 폴링 공용 로직 (포그라운드 1초 / Android 백그라운드 15분 JobScheduler / iOS BGAppRefreshTask 공유). 전체 알림 목록을 주기 폴링하고 최신 알림 ID 베이스라인 이후의 새 알림만 로컬 알림으로 표시. 알림 fetch API가 쪽지 이벤트를 전달하지 않으므로 쪽지 목록(`GetMails`)도 별도 베이스라인으로 스캔하여 `type == "receive"` && `read_at == null`인 새 쪽지만 로컬 알림으로 표시. 401 시 로그인 UI를 절대 띄우지 않음. 탭 바 배지는 이 폴러와 무관하며 `TabBarBadgePoller`와 목록 페이지들이 관리함.
+- **TabBarBadgePoller**: 탭 바 배지 전용 포그라운드 폴러 (10초). History 알림(`HistoryUnreadNotificationCount`), 받은 쪽지(`HistoryUnreadMailCount`), 친구 요청(`HistoryPendingFriendRequestCount`)과 카카오스토리 알림/쪽지/초대장(`KakaoStory*Count`)을 폴링하여 배지 카운트를 갱신. 카카오스토리 알림 설정(`KakaoStoryNotificationEnabled`)과 독립적이라 알림이 꺼져 있어도 배지는 계속 갱신됨. 카카오 구간은 `IsBackgroundMode = true` + `MaxRetryCount = 2`로 로그인 모달을 띄우지 않음.
 - **KakaoStoryNotificationPoster** (Android/iOS): 카카오스토리 알림을 로컬 알림으로 표시 (Android: 기존 push 채널 `{PackageName}.push` / iOS: UNUserNotificationCenter, Firebase 미사용). 탭하면 scheme 기반으로 게시글/프로필 이동. 쪽지 알림은 커스텀 scheme `kakaostory://messages/{id}`로 쪽지 상세(MessagePage)를 열며, 제목은 `{보낸 사람}님이 쪽지를 보냈습니다` 형식.
 - **KakaoStoryNotificationRefreshService** (Android): 백그라운드 알림 폴링 JobService (15분 주기, `KakaoStoryNotificationJobId = 2`).
 - **KakaoStoryNotificationDelegate** (iOS): UNUserNotificationCenter 델리게이트 소유자. 카카오 알림은 직접 처리(포그라운드 배너/탭 네비게이션), 그 외는 Firebase 플러그인으로 콜백 forwarding 하여 기존 FCM 푸시 동작 보존. AppDelegate.FinishedLaunching에서 Firebase 플러그인이 설정한 델리게이트를 교체.

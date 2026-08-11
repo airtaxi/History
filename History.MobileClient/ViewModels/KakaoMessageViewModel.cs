@@ -41,6 +41,8 @@ public partial class KakaoMessageViewModel(MailData.Mail mail) : BaseMessageView
 
         mail.read_at = DateTime.UtcNow;
         OnPropertyChanged(nameof(IsUnread));
+
+        if (Shared.KakaoStoryUnreadMailCount > 0) Shared.KakaoStoryUnreadMailCount--;
     }
 
     public override async Task OpenMessageAsync()

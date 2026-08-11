@@ -39,7 +39,11 @@ public partial class MessagePage : ContentPage
 
     private async void MarkAsReadIfNeeded()
     {
-        if (_viewModel is HistoryMessageViewModel historyViewModel && historyViewModel.Receiver?.UserId == Shared.UserId && historyViewModel.ReadAt == null) await App.ExecuteRequestAsync(new MarkMessageAsRead(historyViewModel.Id));
+        if (_viewModel is HistoryMessageViewModel historyViewModel && historyViewModel.Receiver?.UserId == Shared.UserId && historyViewModel.ReadAt == null)
+        {
+            var result = await App.ExecuteRequestAsync(new MarkMessageAsRead(historyViewModel.Id));
+            if (result.IsSuccess && Shared.HistoryUnreadMailCount > 0) Shared.HistoryUnreadMailCount--;
+        }
         else if (_viewModel is KakaoMessageViewModel kakaoViewModel) kakaoViewModel.MarkAsReadLocally();
     }
 

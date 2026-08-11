@@ -1,6 +1,7 @@
 ﻿using History.Commons;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.MobileClient.ShellTabBarBadge;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
 namespace History.MobileClient;
@@ -14,4 +15,101 @@ public static class Shared
     public static List<FriendData.Profile> KakaoFriends { get; set; }
     public static DiscoveryOption LastUsedPostDiscoveryOption { get; set; }
     public static string KakaoUserId { get; set; }
+
+    public static int HistoryUnreadNotificationCount
+    {
+        get;
+        set
+        {
+            field = value;
+            UpdateTabBadge();
+        }
+    }
+
+    public static int KakaoStoryUnreadNotificationCount
+    {
+        get;
+        set
+        {
+            field = value;
+            UpdateTabBadge();
+        }
+    }
+
+    public static int HistoryUnreadMailCount
+    {
+        get;
+        set
+        {
+            field = value;
+            UpdateTabBadge();
+        }
+    }
+
+    public static int KakaoStoryUnreadMailCount
+    {
+        get;
+        set
+        {
+            field = value;
+            UpdateTabBadge();
+        }
+    }
+
+    public static int HistoryPendingFriendRequestCount
+    {
+        get;
+        set
+        {
+            field = value;
+            UpdateTabBadge();
+        }
+    }
+
+    public static int KakaoStoryPendingFriendRequestCount
+    {
+        get;
+        set
+        {
+            field = value;
+            UpdateTabBadge();
+        }
+    }
+
+    private static int s_lastBadgeTotalCount = -1;
+    private static int s_lastFriendRequestCount = -1;
+
+    // The pollers run on background threads, so the badge view update must be
+    // marshalled to the main thread. The badge API is a no-op when no Shell is up.
+    private static void UpdateTabBadge()
+    {
+        var totalCount = HistoryUnreadNotificationCount + KakaoStoryUnreadNotificationCount + HistoryUnreadMailCount + KakaoStoryUnreadMailCount;
+        if (totalCount != s_lastBadgeTotalCount)
+        {
+            s_lastBadgeTotalCount = totalCount;
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (totalCount > 0) TabBarBadge.Set(1, totalCount.ToString(), textColor: Colors.White, color: Colors.Red);
+                else TabBarBadge.Set(1, style: BadgeStyle.Hidden);
+            });
+        }
+
+        var friendRequestCount = HistoryPendingFriendRequestCount + KakaoStoryPendingFriendRequestCount;
+        if (friendRequestCount == s_lastFriendRequestCount) return; // Skip identical renders (1s Kakao Story cadence).
+        s_lastFriendRequestCount = friendRequestCount;
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (friendRequestCount > 0) TabBarBadge.Set(2, friendRequestCount.ToString(), textColor: Colors.White, color: Colors.Red);
+            else TabBarBadge.Set(2, style: BadgeStyle.Hidden);
+        });
+    }
+
+    // Forces the next UpdateTabBadge call to re-apply the badges. Called after
+    // login because pre-login Set calls are dropped (no Shell yet) and the
+    // change guard would otherwise skip the re-application.
+    public static void ResetTabBadgeCache()
+    {
+        s_lastBadgeTotalCount = -1;
+        s_lastFriendRequestCount = -1;
+    }
 }

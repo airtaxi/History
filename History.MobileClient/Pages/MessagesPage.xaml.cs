@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.Commons.Api.Message;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
@@ -61,6 +62,8 @@ public partial class MessagesPage : ContentPage
                     _viewModels.Clear();
                     foreach (var mail in mails) _viewModels.Add(new KakaoMessageViewModel(mail));
                     EmptyLabel.IsVisible = mails.Count == 0;
+
+                    Shared.KakaoStoryUnreadMailCount = mails.Count(x => x.type == "receive" && x.read_at == null);
                 }
                 catch (Exception exception) { await DisplayAlertAsync("오류", $"카카오스토리 쪽지를 불러오지 못했습니다.\n{exception.Message}", Constants.PromptOk); }
             }
@@ -81,6 +84,8 @@ public partial class MessagesPage : ContentPage
                     foreach (var message in allMessages) _viewModels.Add(new HistoryMessageViewModel(message));
 
                     EmptyLabel.IsVisible = !allMessages.Any();
+
+                    Shared.HistoryUnreadMailCount = receivedResult.Value.Count(x => x.ReadAt == null);
                 }
             }
         }
@@ -171,6 +176,9 @@ public partial class MessagesPage : ContentPage
         var viewModels = _viewModels.OfType<KakaoMessageViewModel>().Where(x => x.Id == message.Value.id).ToList(); // ToList is needed (Collection will be modified)
         foreach (var viewModel in viewModels) _viewModels.Remove(viewModel);
         if (_isKakaoStoryMode) EmptyLabel.IsVisible = _viewModels.Count == 0;
+
+        // An unread received mail leaving the list lowers the badge count.
+        if (message.Value.type == "receive" && message.Value.read_at == null && Shared.KakaoStoryUnreadMailCount > 0) Shared.KakaoStoryUnreadMailCount--;
     }
 
     private async Task SwitchModeAsync(bool isKakaoStoryMode)

@@ -8,6 +8,7 @@ using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.MobileClient.Auth;
 using History.MobileClient.DataTypes;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.Messages;
 using Result = History.Commons.Result;
 
@@ -46,6 +47,13 @@ public partial class LoginPage : ContentPage
 #else
             App.Page = new AppShell();
 #endif
+
+            // Resume the foreground pollers paused on logout; the Kakao Story
+            // poller respects its notification setting. The badge cache reset
+            // re-applies the badge now that the Shell exists.
+            TabBarBadgePoller.TryStart();
+            KakaoStoryNotificationPoller.TryStart();
+            Shared.ResetTabBadgeCache();
 
             App.Page.Dispatcher.Dispatch(async () =>
             {

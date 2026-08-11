@@ -64,6 +64,8 @@ public partial class NotificationsPage : ContentPage
                     var viewModels = notifications.Select(x => (BaseNotificationViewModel)new KakaoNotificationViewModel(x)).ToList();
                     _viewModels.Clear();
                     foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
+
+                    Shared.KakaoStoryUnreadNotificationCount = notifications.Count(x => x.is_new);
                 }
                 catch (Exception exception) { await DisplayAlertAsync("오류", $"카카오스토리 알림을 불러오지 못했습니다.\n{exception.Message}", Constants.PromptOk); }
             }
@@ -73,7 +75,11 @@ public partial class NotificationsPage : ContentPage
                 // The mode can change while the notifications load (fast pill switching); discard the stale result, the pending switch reloads.
                 if (isKakaoStoryMode != _isKakaoStoryMode) return;
 
-                if (notifications.IsSuccess) WeakReferenceMessenger.Default.Send(new NotificationsMessage(notifications.Value));
+                if (notifications.IsSuccess)
+                {
+                    Shared.HistoryUnreadNotificationCount = notifications.Value.Count(x => x.IsUnread);
+                    WeakReferenceMessenger.Default.Send(new NotificationsMessage(notifications.Value));
+                }
             }
         }
         finally { _fetchSemaphore.Release(); }
@@ -159,6 +165,8 @@ public partial class NotificationsPage : ContentPage
         var notifications = message.Value;
         if (notifications == null) return;
 
+        Shared.HistoryUnreadNotificationCount = notifications.Count(x => x.IsUnread);
+
         _viewModels.Clear();
         var viewModels = notifications.Select(x => new HistoryNotificationViewModel(x));
         foreach (var viewModel in viewModels) _viewModels.Add(viewModel);
@@ -182,7 +190,11 @@ public partial class NotificationsPage : ContentPage
         if (!hasUnread) return;
 
         var result = await App.ExecuteRequestAsync(new ReadAllNotifications());
-        if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new NotificationsReadAllMessage());
+        if (result.IsSuccess)
+        {
+            Shared.HistoryUnreadNotificationCount = 0;
+            WeakReferenceMessenger.Default.Send(new NotificationsReadAllMessage());
+        }
     }
 
     private async void OnHistoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(false);
