@@ -357,3 +357,4 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 
 ## 기타
 Windows 환경에서 iOS 빌드 오류는 무시해도 괜찮습니다.
+`net10.0-android` 빌드에서 `XALNS7015` 오류(Writing mixed-mode assemblies is not supported)가 발생해도 빌드 성공이므로 무시해도 됩니다.
