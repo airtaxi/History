@@ -163,7 +163,7 @@ public static class KakaoStoryNotificationPoller
     /// </summary>
     private static async Task FetchAndPostMailsAsync()
     {
-        if (Configuration.GetValue<bool?>(MailNotificationEnabledKey) == false) return;
+        if (!(Configuration.GetValue<bool?>(MailNotificationEnabledKey) ?? true)) return;
 
         var mails = await KakaoStoryApiHandler.GetMails();
         if (mails == null || mails.Count == 0) return;
@@ -235,7 +235,7 @@ public static class KakaoStoryNotificationPoller
     /// </summary>
     private static void HandleSessionExpired()
     {
-        if (Configuration.GetValue<bool?>(SessionExpiredNotificationEnabledKey) == false) return;
+        if (!(Configuration.GetValue<bool?>(SessionExpiredNotificationEnabledKey) ?? true)) return;
         if (Preferences.Get(SessionExpiredNotifiedKey, false)) return; // Already notified for this expired session.
 
         Preferences.Set(SessionExpiredNotifiedKey, true);
