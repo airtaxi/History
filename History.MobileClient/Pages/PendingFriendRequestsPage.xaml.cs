@@ -46,6 +46,7 @@ public partial class PendingFriendRequestsPage : ContentPage
                 if (isKakaoStoryMode != _isKakaoStoryMode) return;
 
                 _viewModels = [.. invitations.Where(x => x.type == "received").Select(x => (BaseFriendshipViewModel)new KakaoFriendshipViewModel(x))];
+                Shared.KakaoStoryPendingFriendRequestCount = invitations.Count(x => x.type == "received");
                 UpdateList();
             }
             catch (Exception exception) { await DisplayAlertAsync("오류", $"카카오스토리 받은 신청 목록을 불러오지 못했습니다.\n{exception.Message}", Constants.PromptOk); }
@@ -59,6 +60,7 @@ public partial class PendingFriendRequestsPage : ContentPage
             if (pendingUsersResult.IsSuccess)
             {
                 _viewModels = [.. pendingUsersResult.Value.Select(x => (BaseFriendshipViewModel)new HistoryFriendshipViewModel(x))];
+                Shared.HistoryPendingFriendRequestCount = pendingUsersResult.Value.Count;
                 UpdateList();
             }
         }
@@ -77,7 +79,8 @@ public partial class PendingFriendRequestsPage : ContentPage
         var data = message.Value;
         if (_viewModels == null) return; // First load has not happened yet; it will fetch the latest data.
 
-        _viewModels.RemoveAll(x => (x as HistoryFriendshipViewModel)?.User.UserId == data.UserId);
+        var removedCount = _viewModels.RemoveAll(x => (x as HistoryFriendshipViewModel)?.User.UserId == data.UserId);
+        if (removedCount > 0 && Shared.HistoryPendingFriendRequestCount > 0) Shared.HistoryPendingFriendRequestCount--;
 
         UpdateList();
     }

@@ -94,6 +94,16 @@ public partial class SettingsPage : ContentPage
         Shared.LastUsedPostDiscoveryOption = default;
         Shared.Friends = default;
         Shared.KakaoFriends = default;
+        Shared.HistoryUnreadNotificationCount = 0;
+        Shared.KakaoStoryUnreadNotificationCount = 0;
+        Shared.HistoryUnreadMailCount = 0;
+        Shared.KakaoStoryUnreadMailCount = 0;
+        Shared.HistoryPendingFriendRequestCount = 0;
+        Shared.KakaoStoryPendingFriendRequestCount = 0;
+
+        // Pause the foreground pollers so the counts stay reset until login.
+        TabBarBadgePoller.Pause();
+        KakaoStoryNotificationPoller.Pause();
     }
 
     private async Task SetupPushNotificationPermission(PushNotificationType type)

@@ -4,13 +4,15 @@ using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 namespace History.MobileClient.KakaoStory;
 
 /// <summary>
-/// Polls the Kakao Story notification list and raises local notifications for
-/// new notifications. The newest notification id is persisted as a baseline; any
-/// item newer than that baseline (the API list is newest-first and capped at 30)
-/// is posted. Shared by the foreground 1-second poller (started while the window
-/// is resumed) and the Android background JobService (15-minute cadence).
-/// 401 responses never open the login modal from here; the poll cycle just ends
-/// silently and the saved cookies are revalidated on the next cycle.
+/// Polls the Kakao Story notification and mail lists and raises local
+/// notifications for new items. The newest notification id is persisted as a
+/// baseline; any item newer than that baseline (the API list is newest-first and
+/// capped at 30) is posted. Shared by the foreground 1-second poller (started
+/// while the window is resumed) and the Android background JobService
+/// (15-minute cadence). 401 responses never open the login modal from here; the
+/// poll cycle just ends silently and the saved cookies are revalidated on the
+/// next cycle. The tab bar badges are not this poller's concern: they are kept
+/// up to date by <see cref="TabBarBadgePoller"/> and the list pages.
 /// </summary>
 public static class KakaoStoryNotificationPoller
 {
@@ -26,15 +28,18 @@ public static class KakaoStoryNotificationPoller
     private static readonly SemaphoreSlim s_pollSemaphore = new(1, 1);
     private static CancellationTokenSource s_foregroundPollingCts;
     private static Task s_foregroundPollingTask;
+    private static bool s_isPaused;
 
     static KakaoStoryNotificationPoller() => KakaoStoryApiHandler.OnBackgroundReloginRequired += HandleSessionExpired;
 
     /// <summary>
-    /// Starts the foreground polling loop (1 request/second against the cheap
-    /// new_count endpoint). No-op when the loop is already running.
+    /// Starts the foreground polling loop (1 request/second against the
+    /// notification list). No-op when the loop is already running or paused
+    /// (see <see cref="Pause"/>).
     /// </summary>
     public static void StartForegroundPolling()
     {
+        if (s_isPaused) return;
         if (s_foregroundPollingTask != null) return;
 
         s_foregroundPollingCts = new CancellationTokenSource();
@@ -52,6 +57,27 @@ public static class KakaoStoryNotificationPoller
         s_foregroundPollingCts.Cancel();
         s_foregroundPollingTask = null;
         s_foregroundPollingCts = null;
+    }
+
+    /// <summary>
+    /// Pauses the foreground polling loop (used on logout). The loop stays
+    /// paused across window resume cycles until <see cref="TryStart"/> is called.
+    /// </summary>
+    public static void Pause()
+    {
+        s_isPaused = true;
+        StopForegroundPolling();
+    }
+
+    /// <summary>
+    /// Resumes the foreground polling loop after a login, respecting the
+    /// Kakao Story notification setting.
+    /// </summary>
+    public static void TryStart()
+    {
+        s_isPaused = false;
+        if ((Configuration.GetValue<bool?>(IsEnabledKey) ?? true) == false) return;
+        StartForegroundPolling();
     }
 
     private static async Task RunForegroundPollingLoopAsync(CancellationToken cancellationToken)
@@ -96,7 +122,7 @@ public static class KakaoStoryNotificationPoller
     private static async Task PollCoreAsync()
     {
         // The user can disable Kakao Story notifications from the settings page.
-        if (!(Configuration.GetValue<bool?>(IsEnabledKey) ?? true)) return;
+        if ((Configuration.GetValue<bool?>(IsEnabledKey) ?? true) == false) return;
 
         if (await KakaoStoryApiHandler.EnsureKAuthTokenAsync() == null) return;
 
@@ -163,7 +189,7 @@ public static class KakaoStoryNotificationPoller
     /// </summary>
     private static async Task FetchAndPostMailsAsync()
     {
-        if (!(Configuration.GetValue<bool?>(MailNotificationEnabledKey) ?? true)) return;
+        if ((Configuration.GetValue<bool?>(IsEnabledKey) ?? true) == false || (Configuration.GetValue<bool?>(MailNotificationEnabledKey) ?? true) == false) return;
 
         var mails = await KakaoStoryApiHandler.GetMails();
         if (mails == null || mails.Count == 0) return;
@@ -235,7 +261,7 @@ public static class KakaoStoryNotificationPoller
     /// </summary>
     private static void HandleSessionExpired()
     {
-        if (!(Configuration.GetValue<bool?>(SessionExpiredNotificationEnabledKey) ?? true)) return;
+        if ((Configuration.GetValue<bool?>(SessionExpiredNotificationEnabledKey) ?? true) == false) return;
         if (Preferences.Get(SessionExpiredNotifiedKey, false)) return; // Already notified for this expired session.
 
         Preferences.Set(SessionExpiredNotifiedKey, true);

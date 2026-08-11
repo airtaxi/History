@@ -272,6 +272,7 @@ public partial class App : Application
         // Default to enabled when the setting was never touched, matching the
         // SettingsPage label fallback (?? true).
         if (Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true) KakaoStoryNotificationPoller.StartForegroundPolling();
+        TabBarBadgePoller.StartForegroundPolling();
 #endif
         return MainWindow;
     }
@@ -282,7 +283,8 @@ public partial class App : Application
         // Foreground polling: 1 request/second against the Kakao Story
         // notification list while the app is visible. The user can disable it
         // from the settings page; the background refresh respects the same setting.
-        if (!(Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true)) return;
+        TabBarBadgePoller.StartForegroundPolling();
+        if ((Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true) == false) return;
         KakaoStoryNotificationPoller.StartForegroundPolling();
     }
 
@@ -291,6 +293,7 @@ public partial class App : Application
         // The 15-minute Android JobService / the iOS background refresh task
         // takes over while the app is in the background.
         KakaoStoryNotificationPoller.StopForegroundPolling();
+        TabBarBadgePoller.StopForegroundPolling();
 #if IOS
         KakaoStoryBackgroundRefresh.ScheduleNext();
 #endif
