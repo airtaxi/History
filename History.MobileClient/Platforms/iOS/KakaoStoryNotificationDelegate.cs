@@ -20,8 +20,6 @@ public class KakaoStoryNotificationDelegate : UNUserNotificationCenterDelegate
     private static readonly Lazy<IUNUserNotificationCenterDelegate> s_firebaseDelegate = new(
         () => CrossFirebaseCloudMessaging.Current as IUNUserNotificationCenterDelegate);
 
-    private const string PendingSchemeKey = "KakaoStoryNotificationSchemePending";
-
     public override void WillPresentNotification(UNUserNotificationCenter center, UNNotification notification, Action<UNNotificationPresentationOptions> completionHandler)
     {
         // The session-expired notification has no UserInfo, so it must be
@@ -46,7 +44,7 @@ public class KakaoStoryNotificationDelegate : UNUserNotificationCenterDelegate
         var scheme = GetScheme(response.Notification.Request.Content.UserInfo);
         if (!string.IsNullOrEmpty(scheme))
         {
-            HandleScheme(scheme);
+            App.HandleKakaoStoryNotificationAsync(scheme);
             completionHandler();
             return;
         }
@@ -57,60 +55,10 @@ public class KakaoStoryNotificationDelegate : UNUserNotificationCenterDelegate
         else completionHandler();
     }
 
-    /// <summary>
-    /// Replays a notification scheme deferred during a cold start (the app
-    /// shell was not up yet). Called from LoginPage.AfterLogin, mirroring the
-    /// FCM PushData preference pattern.
-    /// </summary>
-    public static void ReplayPendingScheme()
-    {
-        var scheme = Preferences.Get(PendingSchemeKey, null);
-        if (string.IsNullOrEmpty(scheme)) return;
-        Preferences.Set(PendingSchemeKey, null);
-        HandleScheme(scheme);
-    }
-
     private static string GetScheme(NSDictionary userInfo)
     {
         if (userInfo == null) return null;
         var value = userInfo[new NSString(KakaoStoryNotificationPoster.SchemeExtraKey)] as NSString;
         return value?.ToString();
-    }
-
-    private static void HandleScheme(string scheme)
-    {
-        if (!AppShell.IsLoaded)
-        {
-            // Cold start: the root page is still the login page and the shell
-            // would discard the pushed page on login. Defer the navigation.
-            Preferences.Set(PendingSchemeKey, scheme);
-            return;
-        }
-
-        MainThread.BeginInvokeOnMainThread(async () =>
-        {
-            try
-            {
-                // Post notification: the scheme contains the activity id after "activities/".
-                if (scheme.Contains("?profile_id=") && scheme.Contains("activities/"))
-                {
-                    var postId = scheme.Split(new[] { "activities/" }, StringSplitOptions.None)[1];
-                    var post = await KakaoStory.KakaoStoryApiHandler.GetPost(postId);
-                    if (post == null) return;
-
-                    var postViewModel = new ViewModels.KakaoPostViewModel(post, Enums.PostType.Unwrapped);
-                    await App.PushAsync(new Pages.PostPage(postViewModel));
-                }
-                // Profile notification: the scheme is a kakaostory:// deep link to the profile.
-                else if (scheme.Contains("kakaostory://profiles/"))
-                {
-                    var profileId = scheme.Replace("kakaostory://profiles/", "");
-                    if (string.IsNullOrEmpty(profileId)) return;
-
-                    await App.PushAsync(new Pages.UserPage(profileId, true));
-                }
-            }
-            catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story notification navigation failed: {exception.Message}"); }
-        });
     }
 }

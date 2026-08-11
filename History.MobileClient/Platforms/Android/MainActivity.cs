@@ -285,41 +285,6 @@ public class MainActivity : MauiAppCompatActivity
     [SupportedOSPlatform("android33.0")]
     private static bool CheckNotificationPermissionGranted() => ContextCompat.CheckSelfPermission(Platform.AppContext, Manifest.Permission.PostNotifications) == Permission.Granted;
 
-    /// <summary>
-    /// Opens the target of a tapped Kakao Story notification (post or profile)
-    /// based on the scheme stored when the local notification was posted.
-    /// </summary>
-    private static void HandleKakaoStoryNotificationScheme(string scheme)
-    {
-        if (string.IsNullOrEmpty(scheme)) return;
-
-        MainThread.BeginInvokeOnMainThread(async () =>
-        {
-            try
-            {
-                // Post notification: the scheme contains the activity id after "activities/".
-                if (scheme.Contains("?profile_id=") && scheme.Contains("activities/"))
-                {
-                    var postId = scheme.Split(new[] { "activities/" }, StringSplitOptions.None)[1];
-                    var post = await KakaoStoryApiHandler.GetPost(postId);
-                    if (post == null) return;
-
-                    var postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);
-                    await App.PushAsync(new PostPage(postViewModel));
-                }
-                // Profile notification: the scheme is a kakaostory:// deep link to the profile.
-                else if (scheme.Contains("kakaostory://profiles/"))
-                {
-                    var profileId = scheme.Replace("kakaostory://profiles/", "");
-                    if (string.IsNullOrEmpty(profileId)) return;
-
-                    await App.PushAsync(new UserPage(profileId, true));
-                }
-            }
-            catch (Exception exception) { Log.Error(TAG, $"Kakao Story notification navigation failed: {exception.Message}"); }
-        });
-    }
-
     private void ScheduleKakaoStoryNotificationJob()
     {
         try
@@ -362,7 +327,7 @@ public class MainActivity : MauiAppCompatActivity
         var scheme = intent.GetStringExtra(KakaoStoryNotificationPoster.SchemeExtraKey);
         if (!string.IsNullOrEmpty(scheme))
         {
-            HandleKakaoStoryNotificationScheme(scheme);
+            _ = App.HandleKakaoStoryNotificationAsync(scheme);
             return;
         }
 

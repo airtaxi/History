@@ -52,11 +52,9 @@ public partial class LoginPage : ContentPage
                 var pushData = Preferences.Get("PushData", null);
                 if (!string.IsNullOrEmpty(pushData)) await App.HandlePushNotificationAsync(pushData);
 
-#if IOS
                 // Replay a Kakao Story notification tapped during a cold start,
                 // deferred until the app shell was up.
-                KakaoStoryNotificationDelegate.ReplayPendingScheme();
-#endif
+                App.ReplayPendingKakaoStoryScheme();
 
                 var mediaData = Preferences.Get("MediaData", null);
                 if (!string.IsNullOrEmpty(mediaData))
