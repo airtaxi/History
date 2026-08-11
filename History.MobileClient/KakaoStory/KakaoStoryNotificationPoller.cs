@@ -96,7 +96,7 @@ public static class KakaoStoryNotificationPoller
     private static async Task PollCoreAsync()
     {
         // The user can disable Kakao Story notifications from the settings page.
-        if (Configuration.GetValue<bool?>(IsEnabledKey) == false) return;
+        if (!(Configuration.GetValue<bool?>(IsEnabledKey) ?? true)) return;
 
         if (await KakaoStoryApiHandler.EnsureKAuthTokenAsync() == null) return;
 

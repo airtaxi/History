@@ -63,7 +63,7 @@ public static class KakaoStoryBackgroundRefresh
     /// </summary>
     public static void ScheduleNext()
     {
-        if (Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") == false) return;
+        if (!(Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true)) return;
 
         BGTaskScheduler.Shared.Cancel(TaskIdentifier);
 
