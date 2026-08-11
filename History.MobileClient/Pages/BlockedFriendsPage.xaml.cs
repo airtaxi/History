@@ -15,6 +15,7 @@ public partial class BlockedFriendsPage : ContentPage
     private bool _isInForeground;
     private bool _isKakaoStoryMode;
     private List<BaseFriendshipViewModel> _viewModels;
+    private readonly SemaphoreSlim _switchSemaphore = new(1, 1);
 
     public BlockedFriendsPage()
 	{
@@ -34,13 +35,17 @@ public partial class BlockedFriendsPage : ContentPage
 
     private async Task RefreshAsync()
     {
-        if (_isKakaoStoryMode)
+        var isKakaoStoryMode = _isKakaoStoryMode;
+        if (isKakaoStoryMode)
         {
             if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
 
             try
             {
                 var bannedUsers = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetBannedUsers());
+                // The mode can change while the list loads (fast pill switching); discard the stale result, the pending switch reloads.
+                if (isKakaoStoryMode != _isKakaoStoryMode) return;
+
                 _viewModels = [.. bannedUsers.Select(x => (BaseFriendshipViewModel)new KakaoFriendshipViewModel(x))];
                 UpdateList();
             }
@@ -49,6 +54,9 @@ public partial class BlockedFriendsPage : ContentPage
         else
         {
             var pendingUsersResult = await App.ExecuteRequestAsync(new GetBlockedUsers());
+            // The mode can change while the list loads (fast pill switching); discard the stale result, the pending switch reloads.
+            if (isKakaoStoryMode != _isKakaoStoryMode) return;
+
             if (pendingUsersResult.IsSuccess)
             {
                 _viewModels = [.. pendingUsersResult.Value.Select(x => (BaseFriendshipViewModel)new HistoryFriendshipViewModel(x))];
@@ -145,9 +153,16 @@ public partial class BlockedFriendsPage : ContentPage
 
         if (isKakaoStoryMode && !await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
 
-        _isKakaoStoryMode = isKakaoStoryMode;
-        UpdatePillVisuals();
-        await RefreshAsync();
+        await _switchSemaphore.WaitAsync();
+        try
+        {
+            // Another tap may have applied this mode already while we waited.
+            if (_isKakaoStoryMode == isKakaoStoryMode) return;
+            _isKakaoStoryMode = isKakaoStoryMode;
+            UpdatePillVisuals();
+            await RefreshAsync();
+        }
+        finally { _switchSemaphore.Release(); }
     }
 
     private void UpdatePillVisuals()

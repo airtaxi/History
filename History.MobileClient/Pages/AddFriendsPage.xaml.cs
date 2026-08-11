@@ -17,6 +17,7 @@ public partial class AddFriendsPage : ContentPage
 {
     private bool _isInForeground;
     private bool _isKakaoStoryMode;
+    private readonly SemaphoreSlim _switchSemaphore = new(1, 1);
 
 	public AddFriendsPage()
 	{
@@ -45,15 +46,19 @@ public partial class AddFriendsPage : ContentPage
     private async Task SearchAsync(string query)
     {
         var sequence = ++_searchSequence;
+        var isKakaoStoryMode = _isKakaoStoryMode;
         var viewModels = new List<BaseFriendshipViewModel>();
 
-        if (_isKakaoStoryMode)
+        if (isKakaoStoryMode)
         {
             if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
 
             try
             {
                 var searchResults = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.SearchUsers(query));
+                // The mode can change while the search runs (fast pill switching); discard the stale result, the pending switch reloads.
+                if (isKakaoStoryMode != _isKakaoStoryMode) return;
+
                 viewModels = [.. searchResults.search_results.Select(x => (BaseFriendshipViewModel)new KakaoFriendshipViewModel(x))];
             }
             catch (Exception exception) { await DisplayAlertAsync("오류", $"카카오스토리 검색에 실패하였습니다.\n{exception.Message}", Constants.PromptOk); }
@@ -69,6 +74,8 @@ public partial class AddFriendsPage : ContentPage
             // Add nickname results
             var nicknameResults = await App.ExecuteRequestAsync(new FindUsersByNickname(query));
             if (nicknameResults.IsSuccess) results.AddRange(nicknameResults.Value);
+            // The mode can change while the search runs (fast pill switching); discard the stale result, the pending switch reloads.
+            if (isKakaoStoryMode != _isKakaoStoryMode) return;
 
             // Remove myself from results
             results.RemoveAll(x => x.UserId == Shared.UserId);
@@ -165,12 +172,19 @@ public partial class AddFriendsPage : ContentPage
 
         if (isKakaoStoryMode && !await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
 
-        _isKakaoStoryMode = isKakaoStoryMode;
-        UpdatePillVisuals();
-        MainSearchBar.Placeholder = _isKakaoStoryMode ? "카카오스토리 ID 검색" : "친구의 닉네임 또는 핸들 검색";
-        MainSearchBar.Text = string.Empty;
-        MainCollectionView.ItemsSource = null;
-        EmptyLabel.IsVisible = false;
+        await _switchSemaphore.WaitAsync();
+        try
+        {
+            // Another tap may have applied this mode already while we waited.
+            if (_isKakaoStoryMode == isKakaoStoryMode) return;
+            _isKakaoStoryMode = isKakaoStoryMode;
+            UpdatePillVisuals();
+            MainSearchBar.Placeholder = _isKakaoStoryMode ? "카카오스토리 ID 검색" : "친구의 닉네임 또는 핸들 검색";
+            MainSearchBar.Text = string.Empty;
+            MainCollectionView.ItemsSource = null;
+            EmptyLabel.IsVisible = false;
+        }
+        finally { _switchSemaphore.Release(); }
     }
 
     private void UpdatePillVisuals()

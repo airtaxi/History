@@ -21,6 +21,7 @@ public partial class NotificationsPage : ContentPage
     private bool _areThereNoMoreNotificationsToLoad;
     private readonly ObservableCollection<BaseNotificationViewModel> _viewModels = [];
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
+    private readonly SemaphoreSlim _switchSemaphore = new(1, 1);
 
     public NotificationsPage()
 	{
@@ -39,19 +40,21 @@ public partial class NotificationsPage : ContentPage
 
     public async Task RefreshAsync()
     {
-        if (_fetchSemaphore.CurrentCount == 0) return;
-
         try
         {
             await _fetchSemaphore.WaitAsync();
 
-            if (_isKakaoStoryMode)
+            var isKakaoStoryMode = _isKakaoStoryMode;
+            if (isKakaoStoryMode)
             {
                 if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
 
                 try
                 {
                     var notifications = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetNotifications());
+                    // The mode can change while the notifications load (fast pill switching); discard the stale result, the pending switch reloads.
+                    if (isKakaoStoryMode != _isKakaoStoryMode) return;
+
                     if (notifications == null)
                     {
                         await DisplayAlertAsync("오류", "카카오스토리 알림이 비어있습니다.", Constants.PromptOk);
@@ -67,6 +70,9 @@ public partial class NotificationsPage : ContentPage
             else
             {
                 var notifications = await App.ExecuteRequestAsync(new GetNotifications());
+                // The mode can change while the notifications load (fast pill switching); discard the stale result, the pending switch reloads.
+                if (isKakaoStoryMode != _isKakaoStoryMode) return;
+
                 if (notifications.IsSuccess) WeakReferenceMessenger.Default.Send(new NotificationsMessage(notifications.Value));
             }
         }
@@ -76,16 +82,20 @@ public partial class NotificationsPage : ContentPage
     private async Task LoadMoreAsync()
     {
         if (_fetchSemaphore.CurrentCount == 0) return;
-        else if (_isKakaoStoryMode) return; // Kakao Story notifications have no pagination.
         else if (_areThereNoMoreNotificationsToLoad) return;
 
         try
         {
-
             await _fetchSemaphore.WaitAsync();
+
+            var isKakaoStoryMode = _isKakaoStoryMode;
+            if (isKakaoStoryMode) return; // Kakao Story notifications have no pagination.
 
             var lastViewModel = _viewModels.OfType<HistoryNotificationViewModel>().LastOrDefault();
             var notificationsResult = await App.ExecuteRequestAsync(new GetNotifications(lastViewModel.Notification.Id));
+            // The mode can change while the notifications load (fast pill switching); discard the stale result, the pending switch reloads.
+            if (isKakaoStoryMode != _isKakaoStoryMode) return;
+
             if (notificationsResult.IsSuccess)
             {
                 var notifications = notificationsResult.Value;
@@ -185,10 +195,17 @@ public partial class NotificationsPage : ContentPage
 
         if (isKakaoStoryMode && !await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
 
-        _isKakaoStoryMode = isKakaoStoryMode;
-        UpdatePillVisuals();
-        ReadAllImage.IsVisible = !isKakaoStoryMode;
-        await RefreshAsync();
+        await _switchSemaphore.WaitAsync();
+        try
+        {
+            // Another tap may have applied this mode already while we waited.
+            if (_isKakaoStoryMode == isKakaoStoryMode) return;
+            _isKakaoStoryMode = isKakaoStoryMode;
+            UpdatePillVisuals();
+            ReadAllImage.IsVisible = !isKakaoStoryMode;
+            await RefreshAsync();
+        }
+        finally { _switchSemaphore.Release(); }
     }
 
     private void UpdatePillVisuals()
