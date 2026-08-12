@@ -394,6 +394,7 @@ public static partial class Utils
     }
 
     // Kakao Story variant: renders QuoteData (text/hashtag/profile/emoticon) into a FormattedString.
+    // URLs inside text decorators are rendered as tappable links, matching the History path.
     public static FormattedString GenerateFormattedStringFromQuoteData(List<QuoteData> quoteDatas, PostType postType)
     {
         var formattedString = new FormattedString();
@@ -433,26 +434,57 @@ public static partial class Utils
                 }
             }
 
-            var isEmoticon = data.type == "emoticon";
-            var span = new Span
+            // Adds a span with trimming applied; returns false when the text limit is reached.
+            bool TryAddSpan(Span span)
             {
-                Text = isEmoticon ? "(이모티콘) " : data.text,
-                TextColor = data.type is "hashtag" or "profile" ? Application.Current.Resources["Primary"] as Color : null,
-                FontAttributes = data.type is "hashtag" or "profile" ? FontAttributes.Bold : FontAttributes.None
-            };
-
-            // Kakao Story @-mention: open the mentioned user's Kakao Story profile on tap.
-            if (data.type == "profile" && data.id != null) AddTapGestureRecognizerToKakaoProfileSpan(span, data.id);
-
-            currentLength += span.Text.Length;
-            currentLines += span.Text.Count(x => x == '\n');
-            if (postType != PostType.Unwrapped && (currentLength > maxLength || currentLines > maxLines))
-            {
-                TrimSpan(span);
-                AddMoreSpan(span);
-                break;
+                currentLength += span.Text.Length;
+                currentLines += span.Text.Count(x => x == '\n');
+                if (postType != PostType.Unwrapped && (currentLength > maxLength || currentLines > maxLines))
+                {
+                    TrimSpan(span);
+                    AddMoreSpan(span);
+                    return false;
+                }
+                formattedString.Spans.Add(span);
+                return true;
             }
-            else formattedString.Spans.Add(span);
+
+            if (data.type == "text")
+            {
+                var text = data.text ?? string.Empty;
+                var matches = UrlRegex().Matches(text);
+                int lastIndex = 0;
+                foreach (Match match in matches)
+                {
+                    if (match.Index > lastIndex && !TryAddSpan(new Span { Text = text[lastIndex..match.Index] })) return formattedString;
+
+                    var url = match.Value;
+                    var linkSpan = new Span
+                    {
+                        Text = url,
+                        TextColor = Application.Current.Resources["Primary"] as Color,
+                    };
+                    AddTapGestureRecognizerToLinkSpan(linkSpan, url);
+                    lastIndex = match.Index + match.Length;
+                    if (!TryAddSpan(linkSpan)) return formattedString;
+                }
+
+                if (lastIndex < text.Length && !TryAddSpan(new Span { Text = text[lastIndex..] })) return formattedString;
+            }
+            else
+            {
+                var span = new Span
+                {
+                    Text = data.text,
+                    TextColor = data.type is "hashtag" or "profile" ? Application.Current.Resources["Primary"] as Color : null,
+                    FontAttributes = data.type is "hashtag" or "profile" ? FontAttributes.Bold : FontAttributes.None
+                };
+
+                // Kakao Story @-mention: open the mentioned user's Kakao Story profile on tap.
+                if (data.type == "profile" && data.id != null) AddTapGestureRecognizerToKakaoProfileSpan(span, data.id);
+
+                if (!TryAddSpan(span)) return formattedString;
+            }
         }
 
         return formattedString;
