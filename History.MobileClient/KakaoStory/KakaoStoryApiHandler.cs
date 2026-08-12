@@ -94,6 +94,14 @@ public partial class KakaoStoryApiHandler
         ProfileData.ProfileObject obj = JsonConvert.DeserializeObject<ProfileData.ProfileObject>(response);
         return obj;
     }
+    public static async Task<HighlightData.Highlight> GetProfileHighlight(string id)
+    {
+        string requestURI = "https://story.kakao.com/a/profiles/" + id + "?with=highlight";
+        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
+        string response = await GetResponseFromRequest(webRequest);
+        HighlightData.Highlight obj = JsonConvert.DeserializeObject<HighlightData.Highlight>(response);
+        return obj;
+    }
     public static async Task<ProfileData.Profile> GetBiography(string id)
     {
         string requestURI = "https://story.kakao.com/a/profiles/" + id + "/biography";
