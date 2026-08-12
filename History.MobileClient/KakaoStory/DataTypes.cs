@@ -1294,6 +1294,24 @@ public partial class KakaoStoryApiHandler
                 public Profile profile { get; set; }
             }
         }
+        public class HighlightData
+        {
+            public class CountsObject
+            {
+                public int activity_count { get; set; }
+            }
+
+            public class HighlightItem
+            {
+                public string type { get; set; }
+                public CountsObject @object { get; set; }
+            }
+
+            public class Highlight
+            {
+                public List<HighlightItem> highlight { get; set; }
+            }
+        }
         public class TimeLineData
         {
             public class Relation

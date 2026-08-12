@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.KakaoStoryExtrasPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Loaded="OnLoaded"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,12,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout Spacing="8">
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="카카오스토리 부가기능"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="0,12" Spacing="0">
+                <!--  친구 일괄 삭제  -->
+                <Grid Padding="16,12" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1A1A1A}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBatchDeleteFriendsGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="48" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Image
+                        Grid.Column="0"
+                        HeightRequest="32"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Center"
+                        WidthRequest="32">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Person_remove}"
+                                Color="{StaticResource Primary}" />
+                        </Image.Source>
+                    </Image>
+                    <VerticalStackLayout
+                        Grid.Column="1"
+                        Spacing="2"
+                        VerticalOptions="Center">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="친구 일괄 삭제" />
+                        <Label
+                            FontSize="12"
+                            Text="제한된 사용자 정리 / 관심 친구 선택 해제"
+                            TextColor="#808080" />
+                    </VerticalStackLayout>
+                    <Image
+                        Grid.Column="2"
+                        HeightRequest="24"
+                        VerticalOptions="Center"
+                        WidthRequest="24">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Chevron_right}"
+                                Color="#808080" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
+
+                <Rectangle
+                    Fill="#808080"
+                    HeightRequest="0.5"
+                    HorizontalOptions="Fill"
+                    Opacity="0.5" />
+
+                <!--  스토리 일괄 삭제  -->
+                <Grid Padding="16,12" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1A1A1A}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBatchDeletePostsGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="48" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Image
+                        Grid.Column="0"
+                        HeightRequest="32"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Center"
+                        WidthRequest="32">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Delete_sweep}"
+                                Color="{StaticResource Primary}" />
+                        </Image.Source>
+                    </Image>
+                    <VerticalStackLayout
+                        Grid.Column="1"
+                        Spacing="2"
+                        VerticalOptions="Center">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="스토리 일괄 삭제" />
+                        <Label
+                            FontSize="12"
+                            Text="공개 범위 / 제한된 게시글 필터로 일괄 삭제"
+                            TextColor="#808080" />
+                    </VerticalStackLayout>
+                    <Image
+                        Grid.Column="2"
+                        HeightRequest="24"
+                        VerticalOptions="Center"
+                        WidthRequest="24">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Chevron_right}"
+                                Color="#808080" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
+
+                <Rectangle
+                    Fill="#808080"
+                    HeightRequest="0.5"
+                    HorizontalOptions="Fill"
+                    Opacity="0.5" />
+
+                <!--  스토리 일괄 변경  -->
+                <Grid Padding="16,12" BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1A1A1A}">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBatchChangePermissionGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="48" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Image
+                        Grid.Column="0"
+                        HeightRequest="32"
+                        HorizontalOptions="Start"
+                        VerticalOptions="Center"
+                        WidthRequest="32">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Swap_horiz}"
+                                Color="{StaticResource Primary}" />
+                        </Image.Source>
+                    </Image>
+                    <VerticalStackLayout
+                        Grid.Column="1"
+                        Spacing="2"
+                        VerticalOptions="Center">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="16"
+                            Text="스토리 일괄 변경" />
+                        <Label
+                            FontSize="12"
+                            Text="공개 범위 일괄 전환"
+                            TextColor="#808080" />
+                    </VerticalStackLayout>
+                    <Image
+                        Grid.Column="2"
+                        HeightRequest="24"
+                        VerticalOptions="Center"
+                        WidthRequest="24">
+                        <Image.Source>
+                            <FontImageSource
+                                FontFamily="MaterialSharp"
+                                Glyph="{x:Static m:MaterialSharp.Chevron_right}"
+                                Color="#808080" />
+                        </Image.Source>
+                    </Image>
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

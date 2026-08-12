@@ -1,0 +1,214 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.BatchDeleteFriendsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:views="clr-namespace:History.MobileClient.ContentViews"
+    xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
+    x:DataType="vm:SelectableKakaoFriendViewModel"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,12,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Image
+                Grid.Column="0"
+                HeightRequest="24"
+                VerticalOptions="Center"
+                WidthRequest="24">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                </Image.GestureRecognizers>
+                <Image.Source>
+                    <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                </Image.Source>
+            </Image>
+            <Label
+                Grid.Column="1"
+                FontAttributes="Bold"
+                FontSize="20"
+                Text="친구 일괄 삭제"
+                TextColor="White"
+                VerticalOptions="Center" />
+            <Label
+                x:Name="DeleteLabel"
+                Grid.Column="2"
+                FontAttributes="Bold"
+                IsVisible="False"
+                Text="삭제"
+                TextColor="White"
+                VerticalOptions="Center">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnDeleteLabelTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+        </Grid>
+
+        <!--  Friend list  -->
+        <CollectionView
+            x:Name="MainCollectionView"
+            Grid.Row="1"
+            SelectionMode="None">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:SelectableKakaoFriendViewModel">
+                    <Grid>
+                        <Grid Padding="12,8,12,8" ColumnSpacing="12">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Command="{x:Binding HandleTapCommand}" />
+                            </Grid.GestureRecognizers>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <views:DataTemplatePresenter
+                                Grid.Column="0"
+                                HeightRequest="40"
+                                Template="{StaticResource MediaTemplateSelector}"
+                                VerticalOptions="Center"
+                                ViewModel="{x:Binding ProfileMedia}"
+                                WidthRequest="40">
+                                <views:DataTemplatePresenter.Clip>
+                                    <EllipseGeometry
+                                        Center="20,20"
+                                        RadiusX="20"
+                                        RadiusY="20" />
+                                </views:DataTemplatePresenter.Clip>
+                            </views:DataTemplatePresenter>
+                            <VerticalStackLayout
+                                Grid.Column="1"
+                                Spacing="2"
+                                VerticalOptions="Center">
+                                <Label
+                                    FontAttributes="Bold"
+                                    FontSize="16"
+                                    LineBreakMode="TailTruncation"
+                                    Text="{x:Binding Nickname}" />
+                                <HorizontalStackLayout Spacing="4">
+                                    <Label
+                                        FontSize="12"
+                                        IsVisible="{x:Binding IsBlockedBadgeVisible}"
+                                        Text="{x:Binding Id}"
+                                        TextColor="#bd0000" />
+                                    <Label
+                                        FontSize="12"
+                                        IsVisible="{x:Binding IsFavoriteBadgeVisible}"
+                                        Text="관심 친구"
+                                        TextColor="{StaticResource Primary}" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                            <CheckBox
+                                Grid.Column="2"
+                                IsChecked="{x:Binding IsSelected}"
+                                VerticalOptions="Center" />
+                        </Grid>
+                        <Rectangle
+                            Margin="4,0,4,0"
+                            Fill="#808080"
+                            HeightRequest="{OnPlatform iOS=1.5,
+                                                       Android=1}"
+                            HorizontalOptions="Fill"
+                            Opacity="0.5"
+                            VerticalOptions="End" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Label
+            x:Name="EmptyLabel"
+            Grid.Row="1"
+            FontAttributes="Bold"
+            FontSize="16"
+            HorizontalOptions="Center"
+            IsVisible="False"
+            Text="친구가 없습니다"
+            VerticalOptions="Center" />
+
+        <!--  Bottom action bar  -->
+        <VerticalStackLayout
+            x:Name="ActionBarLayout"
+            Grid.Row="2"
+            Padding="12,8"
+            BackgroundColor="{AppThemeBinding Light=#FFFFFF,
+                                              Dark=#1A1A1A}"
+            Spacing="8">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button
+                    x:Name="SelectAllButton"
+                    Clicked="OnSelectAllButtonClicked"
+                    FontAttributes="Bold"
+                    FontSize="13"
+                    HeightRequest="40"
+                    Text="전체 선택"
+                    TextColor="White" />
+                <Button
+                    x:Name="SelectBlockedButton"
+                    Grid.Column="1"
+                    Clicked="OnSelectBlockedButtonClicked"
+                    FontAttributes="Bold"
+                    FontSize="13"
+                    HeightRequest="40"
+                    Text="제한된 사용자 선택"
+                    TextColor="White" />
+            </Grid>
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button
+                    x:Name="DeselectFavoriteButton"
+                    Clicked="OnDeselectFavoriteButtonClicked"
+                    FontAttributes="Bold"
+                    FontSize="13"
+                    HeightRequest="40"
+                    Text="관심 친구 선택 해제"
+                    TextColor="White" />
+                <Button
+                    x:Name="InvertSelectionButton"
+                    Grid.Column="1"
+                    Clicked="OnInvertSelectionButtonClicked"
+                    FontAttributes="Bold"
+                    FontSize="13"
+                    HeightRequest="40"
+                    Text="선택 반전"
+                    TextColor="White" />
+            </Grid>
+            <ProgressBar x:Name="ProgressBar" IsVisible="False" />
+            <Label
+                x:Name="ProgressLabel"
+                FontSize="13"
+                HorizontalOptions="Center"
+                IsVisible="False"
+                TextColor="#808080" />
+        </VerticalStackLayout>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="3"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
+    </Grid>
+</ContentPage>

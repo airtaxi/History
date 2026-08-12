@@ -7,6 +7,7 @@ using History.Commons.Api.PushNotification;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using History.MobileClient.Enums;
+using History.MobileClient.Helpers;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
@@ -497,6 +498,26 @@ public static partial class Utils
         else if (theme == AppTheme.Light) theme = AppTheme.Light;
         else if (theme == AppTheme.Dark) theme = AppTheme.Dark;
         return theme;
+    }
+
+    // Returns the Korean subject particle (이/가) for the given word.
+    public static string GetSubjectParticle(string word) => HasJongsung(word) ? "이" : "가";
+
+    // Returns the Korean topic particle (은/는) for the given word.
+    public static string GetTopicParticle(string word) => HasJongsung(word) ? "은" : "는";
+
+    // Returns the Korean object particle (을/를) for the given word.
+    public static string GetObjectParticle(string word) => HasJongsung(word) ? "을" : "를";
+
+    private static bool HasJongsung(string word)
+    {
+        if (string.IsNullOrEmpty(word)) return false;
+
+        var lastCharacter = word[^1];
+        if (!KoreanHelper.IsKoreanCharacrer(lastCharacter)) return false;
+
+        var split = KoreanHelper.SplitCharacter(lastCharacter);
+        return split.Length == 3 && split[2] != ' ';
     }
 
     private static void AddTapGestureRecognizerToLinkSpan(Span linkSpan, string url)

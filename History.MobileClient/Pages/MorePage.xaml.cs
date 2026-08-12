@@ -1,6 +1,7 @@
 ﻿using History.Commons.Enums;
 using History.Commons.Api.Post;
 using History.MobileClient.Helpers;
+using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient.Pages;
 
@@ -24,6 +25,9 @@ public partial class MorePage : ContentPage
 
         BulkPostManagementDivider.IsVisible = true;
         BulkPostManagementGrid.IsVisible = true;
+
+        KakaoStoryExtrasDivider.IsVisible = true;
+        KakaoStoryExtrasGrid.IsVisible = true;
 
         var isModerator = Shared.MyRank >= Rank.Moderator;
         ModerationDivider.IsVisible = isModerator;
@@ -91,6 +95,14 @@ public partial class MorePage : ContentPage
         else if (action == "특정 공개 범위를 가진 글을 전부 삭제") await DeletePostsByFilterAsync();
         else if (action == "모든 글을 특정 공개 범위로 전환") await ChangeAllDiscoveryOptionsAsync();
         else if (action == "모든 글 삭제") await DeleteAllPostsAsync();
+    }
+
+    private async void OnKakaoStoryExtrasGridTapped(object sender, TappedEventArgs e)
+    {
+        if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+
+        var page = new KakaoStoryExtrasPage();
+        await App.PushModalAsync(page);
     }
 
     private static string[] GetDiscoveryOptionDisplayStrings() =>

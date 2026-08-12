@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.BatchManagePostsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  Header  -->
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,12,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Image
+                Grid.Column="0"
+                HeightRequest="24"
+                VerticalOptions="Center"
+                WidthRequest="24">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                </Image.GestureRecognizers>
+                <Image.Source>
+                    <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                </Image.Source>
+            </Image>
+            <Label
+                x:Name="TitleLabel"
+                Grid.Column="1"
+                FontAttributes="Bold"
+                FontSize="20"
+                Text="스토리 일괄 삭제"
+                TextColor="White"
+                VerticalOptions="Center" />
+        </Grid>
+
+        <!--  Filter area  -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="16,16" Spacing="20">
+                <VerticalStackLayout Spacing="8">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="15"
+                        Text="대상 필터" />
+                    <ScrollView
+                        HorizontalScrollBarVisibility="Never"
+                        Orientation="Horizontal">
+                        <HorizontalStackLayout Spacing="8">
+                            <Button
+                                x:Name="AllFilterButton"
+                                Clicked="OnAllFilterButtonClicked"
+                                FontAttributes="Bold"
+                                FontSize="13"
+                                HeightRequest="36"
+                                Text="모든 게시글" />
+                            <Button
+                                x:Name="PublicFilterButton"
+                                Clicked="OnPublicFilterButtonClicked"
+                                FontAttributes="Bold"
+                                FontSize="13"
+                                HeightRequest="36"
+                                Text="전체 공개" />
+                            <Button
+                                x:Name="FriendsFilterButton"
+                                Clicked="OnFriendsFilterButtonClicked"
+                                FontAttributes="Bold"
+                                FontSize="13"
+                                HeightRequest="36"
+                                Text="친구 공개" />
+                            <Button
+                                x:Name="OnlyMeFilterButton"
+                                Clicked="OnOnlyMeFilterButtonClicked"
+                                FontAttributes="Bold"
+                                FontSize="13"
+                                HeightRequest="36"
+                                Text="나만 보기" />
+                            <Button
+                                x:Name="BlindedFilterButton"
+                                Clicked="OnBlindedFilterButtonClicked"
+                                FontAttributes="Bold"
+                                FontSize="13"
+                                HeightRequest="36"
+                                Text="제한된 게시글" />
+                        </HorizontalStackLayout>
+                    </ScrollView>
+                </VerticalStackLayout>
+
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                    <CheckBox
+                        x:Name="ExcludeBookmarkedCheckBox"
+                        VerticalOptions="Center" />
+                    <Label
+                        Grid.Column="1"
+                        FontSize="14"
+                        Text="관심글 제외"
+                        VerticalOptions="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnExcludeBookmarkedLabelTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </Grid>
+
+                <Label
+                    FontSize="12"
+                    Text="내가 작성한 게시글만 대상이 됩니다. 실행 시 내 프로필 피드를 순회하며 조건에 맞는 게시글을 순차 처리합니다."
+                    TextColor="#808080" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!--  Bottom action bar  -->
+        <VerticalStackLayout
+            Grid.Row="2"
+            Padding="12,8"
+            BackgroundColor="{AppThemeBinding Light=#FFFFFF,
+                                              Dark=#1A1A1A}"
+            Spacing="8">
+            <ProgressBar
+                x:Name="ScanProgressBar"
+                IsVisible="False" />
+            <Label
+                x:Name="ProgressLabel"
+                FontSize="13"
+                HorizontalOptions="Center"
+                IsVisible="False"
+                TextColor="#808080" />
+            <Button
+                x:Name="ExecuteButton"
+                Clicked="OnExecuteButtonClicked"
+                FontAttributes="Bold"
+                FontSize="15"
+                HeightRequest="44"
+                Text="삭제"
+                TextColor="White" />
+        </VerticalStackLayout>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="3"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="False"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
+    </Grid>
+</ContentPage>
