@@ -157,7 +157,8 @@ public partial class EditCommentPage : ContentPage
             var (decorators, text) = payload.Value;
 
             // The old image is preserved only when the user kept it (server medium, not re-uploaded).
-            var hadOriginalImage = _kakaoComment.decorators?.Any(x => x.media_path != null) == true;
+            // The API returns the image nested as media.media_path (top-level media_path is null).
+            var hadOriginalImage = _kakaoComment.decorators?.Any(x => x.media?.media_path != null) == true;
             var preserveOldImage = hadOriginalImage && _attachmentViewModel != null && !_attachmentViewModel.IsUpload;
             var comment = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.EditComment(_kakaoComment, _kakaoPostId, decorators, text, preserveOldImage));
 
