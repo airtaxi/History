@@ -555,7 +555,8 @@ public static partial class Utils
                 return;
             }
 #if ANDROID
-            await App.Page.DisplayAlertAsync("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})\nGoogle Play에서 업데이트해 주세요.", Constants.PromptOk);
+            var update = await App.Page.DisplayAlertAsync("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})\nGoogle Play에서 업데이트해 주세요.", Constants.PromptOk, Constants.PromptCancel);
+            if (update) await Launcher.Default.OpenAsync("market://details?id=com.airtaxi.history");
 #else
             await App.Page.DisplayAlertAsync("업데이트 알림", $"새로운 버전이 있습니다. ({localVersionString} → {remoteVersionString})", Constants.PromptOk);
 #endif
