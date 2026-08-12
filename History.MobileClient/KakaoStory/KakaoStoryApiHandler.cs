@@ -788,13 +788,13 @@ public partial class KakaoStoryApiHandler
         {
             foreach (QuoteData qdata in comment.decorators)
             {
-                if (qdata.media_path != null)
+                // The comment image arrives nested as media.media_path; the API accepts the
+                // flat media_path decorator (trailing comma joins the next decorator), same
+                // shape as the ReplyToPost image decorator.
+                if (qdata.media?.media_path != null)
                 {
                     imageData2 = "(Image) ";
-                    string imageData = JsonConvert.SerializeObject(qdata, Formatting.None, new JsonSerializerSettings()
-                    {
-                        NullValueHandling = NullValueHandling.Ignore
-                    });
+                    string imageData = "{\"media_path\":\"" + qdata.media.media_path + "\",\"type\":\"image\",\"text\":\"(Image) \"},";
                     textContent = textContent.Insert(3, Uri.EscapeDataString(imageData));
                 }
             }
