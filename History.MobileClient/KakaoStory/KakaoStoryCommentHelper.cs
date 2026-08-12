@@ -21,9 +21,11 @@ public static class KakaoStoryCommentHelper
     public static async Task<(List<QuoteData> Decorators, string Text)?> BuildCommentPayloadAsync(List<BaseContent> contents, List<StickerContent> stickerContents, MediaAttachmentViewModel attachmentViewModel)
     {
         // The editor appends a '\n' after a sticker image token so it renders on its own line.
-        // When a sticker is the last element, that trailing newline becomes a whitespace-only
-        // text content and would be posted as an empty line after the sticker image — so strip
-        // trailing whitespace-only text contents before building the payload.
+        // Stickers become image decorators, so that newline must not leak into the following
+        // text decorator (sticker + body would post "\nbody" with an empty first line) — strip
+        // the leading newlines from the text that follows each sticker, and strip trailing
+        // whitespace-only text contents (sticker alone) before building the payload.
+        TrimNewlinesAfterStickers(contents);
         TrimTrailingWhitespaceTextContents(contents);
 
         var quoteDatas = KakaoStoryUtils.GetQuoteDataFromContents(contents);
@@ -117,5 +119,21 @@ public static class KakaoStoryCommentHelper
     {
         while (contents.Count > 0 && contents[^1] is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))
             contents.RemoveAt(contents.Count - 1);
+    }
+
+    private static void TrimNewlinesAfterStickers(List<BaseContent> contents)
+    {
+        for (int index = 0; index < contents.Count; index++)
+        {
+            if (contents[index] is not StickerContent) continue;
+
+            // Strip the leading newlines from the text that follows the sticker
+            // (the '\n' the editor appends after a sticker token plus any user-typed ones).
+            if (index + 1 < contents.Count && contents[index + 1] is TextContent bodyContent)
+            {
+                bodyContent.Text = bodyContent.Text.TrimStart('\n');
+                if (string.IsNullOrWhiteSpace(bodyContent.Text)) contents.RemoveAt(index + 1);
+            }
+        }
     }
 }
