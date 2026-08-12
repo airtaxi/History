@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.Enums;
@@ -8,10 +8,7 @@ namespace History.MobileClient.ViewModels;
 
 public partial class SelectablePostViewModel : HistoryPostViewModel
 {
-    public SelectablePostViewModel(PostResponseDto post) : base(post, PostType.Timeline)
-    {
-        IsSelectable = true;
-    }
+    public SelectablePostViewModel(PostResponseDto post) : base(post, PostType.Timeline) => IsSelectable = true;
 
     public override async Task HandleTapAsync()
     {
