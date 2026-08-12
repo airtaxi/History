@@ -7,7 +7,9 @@ namespace History.MobileClient.KakaoStory;
 /// Polls the Kakao Story notification and mail lists and raises local
 /// notifications for new items. The newest notification id is persisted as a
 /// baseline; any item newer than that baseline (the API list is newest-first and
-/// capped at 30) is posted. Shared by the foreground 1-second poller (started
+/// capped at 30) is posted. A bounded set of already-posted ids (50) guards
+/// against re-posting when the baseline falls out of the 30-item window. Shared
+/// by the foreground 1-second poller (started
 /// while the window is resumed) and the Android background JobService
 /// (15-minute cadence). 401 responses never open the login modal from here; the
 /// poll cycle just ends silently and the saved cookies are revalidated on the
@@ -18,6 +20,9 @@ public static class KakaoStoryNotificationPoller
 {
     private const string LatestNotificationIdKey = "KakaoStoryLatestNotificationId";
     private const string LatestMailIdKey = "KakaoStoryLatestMailId";
+    private const string KnownNotificationIdsKey = "KakaoStoryKnownNotificationIds";
+    private const string KnownMailIdsKey = "KakaoStoryKnownMailIds";
+    private const int MaxKnownIds = 50;
     private const string IsEnabledKey = "KakaoStoryNotificationEnabled";
     private const string FavoriteFriendNotificationEnabledKey = "KakaoStoryFavoriteFriendNotificationEnabled";
     private const string EmotionNotificationEnabledKey = "KakaoStoryEmotionNotificationEnabled";
@@ -162,8 +167,11 @@ public static class KakaoStoryNotificationPoller
         // Notifications already read in the app (is_new == false) are skipped,
         // while the baseline still advances past them. Favorite friend and
         // emotion notifications are filtered out when the user disabled them.
+        // The known-id set (bounded at 50) keeps already-posted notifications
+        // from being posted again when the baseline fell out of the window.
         var isFavoriteFriendNotificationEnabled = Configuration.GetValue<bool?>(FavoriteFriendNotificationEnabledKey) ?? true;
         var isEmotionNotificationEnabled = Configuration.GetValue<bool?>(EmotionNotificationEnabledKey) ?? true;
+        var knownIds = new HashSet<string>(GetKnownIds(KnownNotificationIdsKey));
         var newNotifications = new List<Notification>();
         foreach (var notification in notifications)
         {
@@ -171,10 +179,15 @@ public static class KakaoStoryNotificationPoller
             if (!notification.is_new) continue;
             if (IsFavoriteFriendNotification(notification) && !isFavoriteFriendNotificationEnabled) continue;
             if (IsEmotionNotification(notification) && !isEmotionNotificationEnabled) continue;
+            if (notification.id == null || !knownIds.Add(notification.id)) continue;
             newNotifications.Add(notification);
         }
 
-        foreach (var notification in newNotifications) PostNotification(notification);
+        if (newNotifications.Count > 0)
+        {
+            foreach (var notification in newNotifications) PostNotification(notification);
+            SaveKnownIds(KnownNotificationIdsKey, [.. knownIds]);
+        }
 
         Preferences.Set(LatestNotificationIdKey, latestId);
     }
@@ -210,17 +223,25 @@ public static class KakaoStoryNotificationPoller
 
         // The list is newest-first: everything newer than the stored baseline is
         // new. Read mails (read_at != null) and sent mails (type != "receive")
-        // are skipped, while the baseline still advances past them.
+        // are skipped, while the baseline still advances past them. The known-id
+        // set (bounded at 50) keeps already-posted mails from being posted again
+        // when the baseline fell out of the window.
+        var knownIds = new HashSet<string>(GetKnownIds(KnownMailIdsKey));
         var newMails = new List<MailData.Mail>();
         foreach (var mail in mails)
         {
             if (mail.id == storedLatestId) break;
             if (mail.type != "receive") continue;
             if (mail.read_at != null) continue;
+            if (mail.id == null || !knownIds.Add(mail.id)) continue;
             newMails.Add(mail);
         }
 
-        foreach (var mail in newMails) PostMail(mail);
+        if (newMails.Count > 0)
+        {
+            foreach (var mail in newMails) PostMail(mail);
+            SaveKnownIds(KnownMailIdsKey, [.. knownIds]);
+        }
 
         Preferences.Set(LatestMailIdKey, latestId);
     }
@@ -282,5 +303,17 @@ public static class KakaoStoryNotificationPoller
         try { KakaoStoryNotificationPoster.PostSessionExpired(); }
         catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story session expired notification post failed: {exception.Message}"); }
 #endif
+    }
+
+    private static List<string> GetKnownIds(string key)
+    {
+        var raw = Preferences.Get(key, string.Empty);
+        return string.IsNullOrEmpty(raw) ? [] : [.. raw.Split(',', StringSplitOptions.RemoveEmptyEntries)];
+    }
+
+    private static void SaveKnownIds(string key, List<string> ids)
+    {
+        if (ids.Count > MaxKnownIds) ids = ids[..MaxKnownIds];
+        Preferences.Set(key, string.Join(',', ids));
     }
 }
