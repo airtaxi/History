@@ -1078,9 +1078,6 @@ public partial class EditPostPage : ContentPage
 
     private async void OnLoaded(object sender, EventArgs e)
     {
-#if IOS
-        AppleSwipeGestureHelper.ApplyToPage(this);
-#endif
         await Task.Delay(100);
         MainTextContent.FocusEditor();
 
