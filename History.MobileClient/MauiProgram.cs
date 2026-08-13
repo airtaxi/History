@@ -68,6 +68,9 @@ public static class MauiProgram
 #if IOS
                 c.AddHandler(typeof(Shell), typeof(CustomShellRenderer));
 #endif
+#if ANDROID
+                c.AddHandler(typeof(Shell), typeof(AndroidShellRenderer));
+#endif
             })
             .RegisterFirebaseServices();
 
