@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Mvvm.Messaging;
+using History.MobileClient.Messages;
 using System.Diagnostics;
 
 namespace History.MobileClient;
@@ -26,5 +28,13 @@ public partial class AppShell : Shell
         }
         else Environment.Exit(0);
         return true;
+    }
+
+    protected override void OnNavigating(ShellNavigatingEventArgs args)
+    {
+        base.OnNavigating(args);
+
+        // On iOS, selecting does trigger OnNavigating, but Android does not. See AndroidShellRenderer.cs for the workaround.
+        if (args.Source == ShellNavigationSource.ShellSectionChanged && args.Current?.Location == args.Target?.Location) WeakReferenceMessenger.Default.Send(new TabReselectedMessage());
     }
 }

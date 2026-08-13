@@ -46,6 +46,7 @@ public partial class TimelinePage : ContentPage
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnHistoryPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostData>>(this, OnKakaoPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<TabReselectedMessage>(this, OnTabReselectedMessageReceived);
 #if ANDROID
         WeakReferenceMessenger.Default.Register<TimelineVirtualizationChangedMessage>(this, OnTimelineVirtualizationChangedMessageReceived);
 #endif
@@ -441,5 +442,20 @@ public partial class TimelinePage : ContentPage
     {
         var page = new SearchPostsPage();
         await App.PushAsync(page);
+    }
+
+    private void OnTabReselectedMessageReceived(object recipient, TabReselectedMessage message)
+    {
+        if (!_isInForeground) return;
+
+        var firstViewModel = _viewModels.FirstOrDefault();
+        if (firstViewModel == null) return;
+
+        try { MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false); }
+        catch (Exception) { return; }
+
+        // Hide immediately so the border does not linger until the next 1-second polling tick.
+        ScrollToTopBorder.IsVisible = false;
+        _lastScrollToTopBorderVisible = false;
     }
 }

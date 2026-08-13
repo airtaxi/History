@@ -29,6 +29,7 @@ public partial class MessagesPage : ContentPage
         UpdatePillVisuals();
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<MailData.Mail>>(this, OnKakaoMailDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<TabReselectedMessage>(this, OnTabReselectedMessageReceived);
 #if IOS
         WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
 
@@ -223,5 +224,16 @@ public partial class MessagesPage : ContentPage
             MainActivityIndicator.IsRunning = isLoading;
             IsEnabled = !isLoading;
         });
+    }
+
+    private void OnTabReselectedMessageReceived(object recipient, TabReselectedMessage message)
+    {
+        if (!_isInForeground) return;
+
+        var firstViewModel = _viewModels.FirstOrDefault();
+        if (firstViewModel == null) return;
+
+        try { MainCollectionView.ScrollTo(firstViewModel, null, ScrollToPosition.Start, false); }
+        catch (Exception) { return; }
     }
 }
