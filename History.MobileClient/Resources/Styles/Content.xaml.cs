@@ -67,11 +67,8 @@ public partial class Content : ResourceDictionary
         }
         if (bindingContext is null) return;
 
-#if ANDROID
-        // For Android, BaseCommentViewModel's HandleTapCommand doesn't fire automatically. still needs manaual event fire
         if (bindingContext is BaseCommentViewModel commentViewModel) await commentViewModel.HandleTapAsync();
-#endif
-        if (bindingContext is HistoryPublicPostViewModel publicPostViewModel) await publicPostViewModel.HandleProfileTapAsync();
+        else if (bindingContext is HistoryPublicPostViewModel publicPostViewModel) await publicPostViewModel.HandleProfileTapAsync();
         else if (bindingContext is BasePostViewModel postViewModel && (postViewModel.PostType != Enums.PostType.Unwrapped || postViewModel.IsParentPost)) await postViewModel.HandleTapAsync();
     }
 
