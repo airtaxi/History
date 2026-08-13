@@ -185,10 +185,7 @@ public partial class TextContentView : ContentView
         MainSuggestingBox.SetContent(text, tokens);
     }
 
-    public void FocusEditor()
-    {
-        MainSuggestingBox.Focus();
-    }
+    public void FocusEditor() => MainSuggestingBox.FocusEditor();
 
     public void UnfocusEditor() => MainSuggestingBox.Unfocus();
 

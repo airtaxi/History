@@ -83,14 +83,14 @@ public static class MentionHelper
         existingTokens.Add(new SuggestingBoxTokenInfo(tokenStartIndex, "@", nickname, s_mentionFormat, profileContent));
         suggestingBox.SetContent(newText, existingTokens);
 
-        if (showKeyboard) suggestingBox.Focus();
+        if (showKeyboard) suggestingBox.FocusEditor();
     }
 
     public static async Task<bool> AppendStickerAsync(SuggestingBox.Maui.SuggestingBox suggestingBox, StickerContent stickerContent, bool showKeyboard = false)
     {
         var inserted = await InsertStickerAsync(suggestingBox, stickerContent);
 
-        if (showKeyboard) suggestingBox.Focus();
+        if (showKeyboard) suggestingBox.FocusEditor();
         return inserted;
     }
 
