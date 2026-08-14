@@ -1,0 +1,646 @@
+﻿/* Timeline Blazor feed styles — mirrors the XAML timeline templates. */
+
+@font-face {
+    font-family: "MaterialSharp";
+    src: url("fonts/MaterialSymbolsSharp.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "FASolid";
+    src: url("fonts/fa-solid-900.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "FARegular";
+    src: url("fonts/fa-regular-400.woff2") format("woff2");
+    font-weight: normal;
+    font-style: normal;
+}
+
+:root,
+html[data-theme="light"] {
+    --bg: #FFFFFF;
+    --card-bg: #FFFFFF;
+    --text: #000000;
+    --text-secondary: #808080;
+    --primary: #ed664d;
+    --divider: #808080;
+    --poll-bg: #F0F0F0;
+    --poll-option-bg: #FFFFFF;
+    --pill-bg: #EAEAEA;
+    --pill-text: #666666;
+    --badge-repost-bg: #555555;
+    --badge-repost-icon: #FFFFFF;
+}
+
+html[data-theme="dark"] {
+    --bg: #1f1f1f;
+    --card-bg: #000000;
+    --text: #FFFFFF;
+    --text-secondary: #808080;
+    --primary: #ed664d;
+    --divider: #808080;
+    --poll-bg: #2A2A2A;
+    --poll-option-bg: #3A3A3A;
+    --pill-bg: #333333;
+    --pill-text: #AAAAAA;
+    --badge-repost-bg: #AAAAAA;
+    --badge-repost-icon: #000000;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Noto Sans KR", sans-serif;
+    font-size: 14px;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.mi { font-family: "MaterialSharp"; }
+.fa-solid { font-family: "FASolid"; }
+.fa-regular { font-family: "FARegular"; }
+
+.status-bar-safe-area { display: none; }
+@supports (-webkit-touch-callout: none) {
+    .status-bar-safe-area {
+        display: flex;
+        position: sticky;
+        top: 0;
+        height: env(safe-area-inset-top);
+        background-color: var(--bg);
+        width: 100%;
+        z-index: 1;
+    }
+}
+
+.timeline { min-height: 100%; }
+
+.pull-indicator {
+    height: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    transition: height 0.15s ease-out;
+}
+
+.pills {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+}
+
+.pill {
+    height: 34px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 17px;
+    background: var(--pill-bg);
+    color: var(--pill-text);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pill-active {
+    background: var(--primary);
+    color: #FFFFFF;
+}
+
+.feed { padding-bottom: 24px; }
+
+/* Masonry (staggered) mode: grid takes over horizontal spacing via the JS gutter;
+   cards keep only the vertical gap. Mirrors TimelinePage.OnSizeChanged span > 1. */
+#masonry-grid { position: relative; }
+
+#masonry-grid.masonry-active { padding: 0 6px; }
+
+#masonry-grid.masonry-active .card {
+    margin: 0 0 12px 0;
+    /* The JS columnWidth is the outer width; content-box padding would push each
+       card past one column and Masonry would treat it as spanning 2 columns. */
+    box-sizing: border-box;
+}
+
+.card {
+    margin: 6px;
+    padding: 12px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 48px;
+    position: relative;
+}
+
+.card-header-repost {
+    height: 36px;
+}
+
+.avatar { border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.avatar-36 { width: 36px; height: 36px; }
+.avatar-32 { width: 32px; height: 32px; }
+.avatar-28 { width: 28px; height: 28px; }
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.name-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+
+.name {
+    font-size: 14px;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.badge-icon { flex-shrink: 0; }
+.badge-crown { font-family: "FASolid"; font-size: 14px; color: #f78501; }
+.badge-gavel { font-family: "FASolid"; font-size: 14px; color: #1a5bf3; }
+
+.time-row {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.discovery-glyph { font-family: "FASolid"; font-size: 12px; color: var(--text-secondary); }
+
+.icon-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 24px;
+}
+
+.post-text {
+    line-height: 1.45;
+    word-break: break-word;
+    white-space: pre-line;
+}
+
+.tap-span { cursor: pointer; }
+
+.sticker {
+    max-width: 120px;
+    max-height: 120px;
+    display: block;
+}
+
+.sticker-fallback {
+    display: inline-block;
+    color: var(--text-secondary);
+}
+
+/* Media carousel */
+.carousel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 6px;
+}
+
+.carousel-track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+}
+
+.carousel-track::-webkit-scrollbar { display: none; }
+
+.carousel-item {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    position: relative;
+    background: #808080;
+    aspect-ratio: 1 / 1;
+}
+
+.media-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.media-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: #000;
+}
+
+.play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.play-icon { font-size: 150px; color: #FFFFFF; }
+
+.spoiler-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #000000;
+    color: #FFFFFF;
+}
+
+.spoiler-icon { font-size: 48px; }
+.spoiler-title { margin-top: 8px; font-weight: 700; }
+.spoiler-subtitle { font-size: 12px; color: #CCCCCC; }
+
+.media-description {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 0 12px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.carousel-indicator {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 2;
+    padding: 6px 4px;
+    border-radius: 16px;
+    background: rgba(128, 128, 128, 0.5);
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+/* Shared post */
+.shared-post {
+    margin: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.divider {
+    height: 1px;
+    background: var(--divider);
+}
+
+.shared-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.shared-name-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.share-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text);
+}
+
+.share-count .mi { font-size: 14px; }
+.share-count-text { font-size: 14px; font-weight: 700; }
+
+/* Action row */
+.action-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 24px;
+    color: var(--text);
+}
+
+.action-count {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.comments-icon { font-size: 24px; }
+
+/* Interaction row */
+.interaction-row {
+    display: flex;
+    margin-top: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.interaction-row::-webkit-scrollbar { display: none; }
+
+.interaction-item {
+    position: relative;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.interaction-badge {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.interaction-glyph { color: #FFFFFF; line-height: 1; }
+
+/* Comment preview */
+.comment-preview-block { margin-top: 4px; }
+
+.comment-preview {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 0 0 6px 6px;
+}
+
+.comment-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Mirrors the XAML CommentTemplate: the outer stack has no spacing, while the
+   contents stack inside uses Spacing=8 between content items only. */
+.comment-contents {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.comment-nickname {
+    display: block;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.comment-sticker {
+    max-width: 120px;
+    max-height: 120px;
+}
+
+.comment-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.comment-sep { color: var(--text); }
+
+/* Repost attribution */
+.repost-attribution { margin-top: 4px; }
+
+.repost-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 0 0 6px 6px;
+}
+
+.repost-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    background: var(--badge-repost-bg);
+    color: var(--badge-repost-icon);
+    flex-shrink: 0;
+}
+
+.repost-badge .mi { font-size: 28px; }
+
+.repost-text { font-size: 14px; }
+
+.tap-name { font-weight: 700; cursor: pointer; }
+
+/* Poll */
+.poll {
+    margin: 8px 0;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--poll-bg);
+}
+
+.poll-question { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+
+.poll-option {
+    margin-top: 6px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--poll-option-bg);
+}
+
+/* XAML VerticalStackLayout spacing is 8 between the question and the options stack,
+   while options are spaced 6 apart from each other. */
+.poll-question + .poll-option { margin-top: 0; }
+
+.poll-progress {
+    height: 3.5px;
+    width: 100%;
+    margin-bottom: 6px;
+    border-radius: 2px;
+    background: var(--pill-bg);
+}
+
+.poll-progress-fill {
+    height: 3.5px;
+    border-radius: 2px;
+    background: var(--primary);
+}
+
+/* The XAML row grid always carries a 6px top margin; when the progress bar is shown
+   it sits right above, so the row margin is zeroed instead. */
+.poll-progress + .poll-option-row { margin-top: 0; }
+
+.poll-option-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.poll-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid var(--primary);
+    flex-shrink: 0;
+}
+
+.poll-circle-selected { background: var(--primary); }
+
+.poll-check { font-size: 12px; color: #FFFFFF; }
+
+.poll-option-text { flex: 1; }
+
+.poll-percentage { font-weight: 700; color: var(--primary); }
+
+.poll-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--pill-text);
+}
+
+.poll-votes { flex: 1; }
+
+.poll-results { color: var(--primary); cursor: pointer; }
+
+/* External URL */
+.external-url {
+    height: 250px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(128, 128, 128, 0.4);
+}
+
+.external-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.external-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.external-info {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+}
+
+.external-domain {
+    font-size: 12px;
+    color: #CCCCCC;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.external-title {
+    margin-top: 4px;
+    font-size: 16px;
+    color: #FFFFFF;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.external-desc {
+    margin-top: 2px;
+    font-size: 14px;
+    color: #CCCCCC;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#blazor-error-ui {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}

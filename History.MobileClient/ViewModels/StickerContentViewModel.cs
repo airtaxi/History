@@ -64,7 +64,7 @@ public partial class StickerContentViewModel : ObservableObject, IContentViewMod
     public ImageViewModel Media { get; }
 
     [RelayCommand]
-    private async Task NavigateToStickerDetailAsync()
+    public async Task NavigateToStickerDetailAsync()
     {
         if (IsKakaoEmoticon)
         {

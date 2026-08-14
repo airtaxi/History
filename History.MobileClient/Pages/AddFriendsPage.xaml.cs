@@ -111,7 +111,7 @@ public partial class AddFriendsPage : ContentPage
         collectionView.SelectedItem = null;
 
         var viewModel = e.CurrentSelection as HistoryFriendshipViewModel;
-        await App.PushAsync(new UserPage(viewModel.User.UserId));
+        await App.PushAsync(new BlazorUserPage(viewModel.User.UserId));
     }
 
     protected override void OnAppearing()

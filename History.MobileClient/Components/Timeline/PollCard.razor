@@ -1,0 +1,37 @@
+@inherits MvvmCardBase<PollContentViewModel>
+
+<div class="poll">
+    <div class="poll-question">@ViewModel.Question</div>
+
+    @foreach (var option in ViewModel.Options)
+    {
+        <div class="poll-option" @onclick="() => option.SelectCommand.Execute(null)" @onclick:stopPropagation="true">
+            @if (option.ShowResults)
+            {
+                <div class="poll-progress"><div class="poll-progress-fill" style="width:@(option.Percentage * 100)%"></div></div>
+            }
+            <div class="poll-option-row">
+                <span class="poll-circle @(option.IsSelected ? "poll-circle-selected" : string.Empty)">
+                    @if (option.IsSelected)
+                    {
+                        <span class="mi poll-check">@MaterialSharp.Check</span>
+                    }
+                </span>
+                <span class="poll-option-text">@option.Text</span>
+                @if (option.ShowResults)
+                {
+                    <span class="poll-percentage">@option.PercentageText</span>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="poll-footer">
+        <span class="poll-votes">@ViewModel.TotalVotesText</span>
+        @if (ViewModel.ShowResultsButton)
+        {
+            <span class="poll-results" @onclick="() => ViewModel.ViewResultsCommand.Execute(null)" @onclick:stopPropagation="true">결과보기</span>
+        }
+        <span class="poll-expiry">@ViewModel.ExpiresAtText</span>
+    </div>
+</div>

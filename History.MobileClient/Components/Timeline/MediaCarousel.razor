@@ -1,0 +1,100 @@
+@inherits MvvmCardBase<BaseWrappedMediaContentsViewModel>
+@using System.ComponentModel
+@inject IJSRuntime JSRuntime
+
+<div class="carousel" @ref="_carouselElement">
+    @if (ViewModel.CarouselSwipeEnabled)
+    {
+        <div class="carousel-indicator">@ViewModel.CarouselPositionText</div>
+    }
+    <div class="carousel-track" data-interop-carousel>
+        @foreach (var media in ViewModel.Medias)
+        {
+            <div class="carousel-item" @key="media">
+                @if (media.Media is VideoViewModel videoViewModel)
+                {
+                    <video class="media-video" src="@videoViewModel.Uri" muted autoplay loop playsinline @onclick="() => OnMediaClicked(media)" @onclick:stopPropagation="true"></video>
+                }
+                else
+                {
+                    <img class="media-image" src="@media.Media?.Uri" decoding="async" @onclick="() => OnMediaClicked(media)" @onclick:stopPropagation="true" />
+                }
+
+                @if (media.IsVideo && media.Media is not VideoViewModel)
+                {
+                    <div class="play-overlay" @onclick="() => OnMediaClicked(media)" @onclick:stopPropagation="true"><span class="mi play-icon">@MaterialSharp.Play_circle</span></div>
+                }
+
+                @if (media.IsSpoilerOverlayVisible)
+                {
+                    <div class="spoiler-overlay" @onclick="() => media.HandleSpoilerOverlayTapCommand.Execute(null)" @onclick:stopPropagation="true">
+                        <span class="mi spoiler-icon">@MaterialSharp.Visibility_off</span>
+                        <div class="spoiler-title">가려진 미디어</div>
+                        <div class="spoiler-subtitle">탭하여 확인하기</div>
+                    </div>
+                }
+
+                @if (media.HasDescription)
+                {
+                    <div class="media-description">@media.Description</div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private readonly List<BaseMediaContentViewModel> _subscribedMedias = [];
+    private ElementReference _carouselElement;
+    private DotNetObjectReference<MediaCarousel> _dotNetReference;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Mirrors the XAML EventToCommandBehavior(Unloaded): when the carousel scrolls
+        // out of view, playing videos reset to their thumbnail + play overlay.
+        _dotNetReference = DotNetObjectReference.Create(this);
+        await JSRuntime.InvokeVoidAsync("timelineInterop.attachVideoVisibility", _carouselElement, _dotNetReference, nameof(OnVideoOutOfView));
+    }
+
+    [JSInvokable]
+    public void OnVideoOutOfView()
+    {
+        // Unloaded() is a no-op for images; videos reset to thumbnail + overlay.
+        foreach (var media in ViewModel.Medias.Where(m => m.IsVideo)) media.UnloadedCommand.Execute(null);
+    }
+
+    protected override void OnViewModelChanged(BaseWrappedMediaContentsViewModel viewModel)
+    {
+        // Media items own live state (overlay visibility, video swapping) so the
+        // carousel must re-render on their property changes as well.
+        foreach (var media in viewModel.Medias)
+        {
+            if (_subscribedMedias.Contains(media)) continue;
+            media.PropertyChanged += OnMediaPropertyChanged;
+            _subscribedMedias.Add(media);
+        }
+    }
+
+    private void OnMediaPropertyChanged(object sender, PropertyChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    public override void Dispose()
+    {
+        if (_dotNetReference != null)
+        {
+            _ = JSRuntime.InvokeVoidAsync("timelineInterop.detachVideoVisibility", _carouselElement);
+            _dotNetReference.Dispose();
+        }
+
+        foreach (var media in _subscribedMedias) media.PropertyChanged -= OnMediaPropertyChanged;
+        _subscribedMedias.Clear();
+        base.Dispose();
+    }
+
+    private Task OnMediaClicked(BaseMediaContentViewModel media)
+    {
+        if (media.IsVideo && media.IsOverlayVisible) return media.HandleOverlayTapCommand.ExecuteAsync(null);
+        return media.HandleTapCommand.ExecuteAsync(null);
+    }
+}

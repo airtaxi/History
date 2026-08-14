@@ -39,7 +39,7 @@ public partial class KakaoRepostViewModel : KakaoPostViewModel
             return;
         }
 
-        var profilePage = new UserPage(actorId, true);
+        var profilePage = new BlazorUserPage(actorId, true);
         await App.PushAsync(profilePage);
     }
 }

@@ -85,7 +85,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel
             }
             else if (postResult.Error == ErrorType.Forbidden) await App.Page.DisplayAlertAsync("안내", "해당 게시글을 읽을 수 있는 권한이 없습니다.", Constants.PromptOk);
         }
-        else await App.PushAsync(new UserPage(User.UserId));
+        else await App.PushAsync(new BlazorUserPage(User.UserId));
     }
 
     public override async Task HandleFriendshipActionAsync()

@@ -1,0 +1,47 @@
+@inherits MvvmCardBase<BaseCommentViewModel>
+
+<div class="comment-preview" @onclick="OnCommentClicked">
+    <img class="avatar avatar-32" src="@ViewModel.ProfileMedia?.Uri" />
+    <div class="comment-content">
+        <CascadingValue Value="ViewModel">
+            <span class="comment-nickname">@ViewModel.Nickname</span>
+            <div class="comment-contents">
+                @if (ViewModel.Contents != null)
+                {
+                    @foreach (var content in ViewModel.Contents)
+                    {
+                        @if (content is TextTypeContentsViewModel textContents)
+                        {
+                            <TextContents ViewModel="textContents" />
+                        }
+                        else if (content is StickerContentViewModel sticker && sticker.Media?.Uri != null)
+                        {
+                            <img class="sticker comment-sticker" src="@sticker.Media.Uri" />
+                        }
+                        else if (content is BaseWrappedMediaContentsViewModel wrappedMedia)
+                        {
+                            <MediaCarousel ViewModel="wrappedMedia" />
+                        }
+                    }
+                }
+            </div>
+        </CascadingValue>
+        <div class="comment-meta">
+            <span>@ViewModel.TimestampText</span>
+            @if (ViewModel.HasLikes)
+            {
+                <span class="comment-sep"> · </span>
+                <span class="tap-span" @onclick="OnLikeClicked" @onclick:stopPropagation="true">좋아요 @ViewModel.LikesCount</span>
+            }
+        </div>
+    </div>
+    <span class="icon-button" @onclick="OnMoreClicked" @onclick:stopPropagation="true"><span class="mi">@MaterialSharp.More_horiz</span></span>
+</div>
+
+@code {
+    private Task OnCommentClicked() => ViewModel.HandleTapCommand.ExecuteAsync(null);
+
+    private Task OnLikeClicked() => ViewModel.HandleCommentLikeTapCommand.ExecuteAsync(null);
+
+    private Task OnMoreClicked() => ViewModel.HandleMoreCommand.ExecuteAsync(null);
+}

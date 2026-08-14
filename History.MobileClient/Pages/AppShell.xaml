@@ -11,7 +11,7 @@
             <Tab.Icon>
                 <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.View_timeline}" />
             </Tab.Icon>
-            <ShellContent Title="히스토리" ContentTemplate="{DataTemplate pages:TimelinePage}" />
+            <ShellContent Title="히스토리" ContentTemplate="{DataTemplate pages:BlazorTimelinePage}" />
         </Tab>
         <Tab Title="알림/쪽지">
             <Tab.Icon>
@@ -41,7 +41,7 @@
             <Tab.Icon>
                 <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Person}" />
             </Tab.Icon>
-            <ShellContent ContentTemplate="{DataTemplate pages:UserPage}" />
+            <ShellContent ContentTemplate="{DataTemplate pages:BlazorUserPage}" />
         </Tab>
     </TabBar>
 </Shell>

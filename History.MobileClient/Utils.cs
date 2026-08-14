@@ -531,14 +531,14 @@ public static partial class Utils
     private static void AddTapGestureRecognizerToProfileContentSnap(Span span, string userId)
     {
         var tapGestureRecognizer = new TapGestureRecognizer();
-        tapGestureRecognizer.Tapped += async (s, e) => await App.PushAsync(new UserPage(userId));
+        tapGestureRecognizer.Tapped += async (s, e) => await App.PushAsync(new BlazorUserPage(userId));
         span.GestureRecognizers.Add(tapGestureRecognizer);
     }
 
     private static void AddTapGestureRecognizerToKakaoProfileSpan(Span span, string kakaoUserId)
     {
         var tapGestureRecognizer = new TapGestureRecognizer();
-        tapGestureRecognizer.Tapped += async (s, e) => await App.PushAsync(new UserPage(kakaoUserId, true));
+        tapGestureRecognizer.Tapped += async (s, e) => await App.PushAsync(new BlazorUserPage(kakaoUserId, true));
         span.GestureRecognizers.Add(tapGestureRecognizer);
     }
 

@@ -49,7 +49,7 @@ public partial class HistoryMessageViewModel(MessageResponseDto message) : BaseM
             return;
         }
 
-        var page = new UserPage(Sender.UserId);
+        var page = new BlazorUserPage(Sender.UserId);
         await App.PushModalAsync(page);
     }
 }

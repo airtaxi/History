@@ -61,7 +61,7 @@ public partial class KakaoNotificationViewModel : BaseNotificationViewModel
         {
             var profileId = scheme.Replace("kakaostory://profiles/", "");
             if (string.IsNullOrEmpty(profileId)) await App.Page.DisplayAlertAsync("안내", "프로필을 불러올 수 없습니다.", Constants.PromptOk);
-            else await App.PushAsync(new UserPage(profileId, true));
+            else await App.PushAsync(new BlazorUserPage(profileId, true));
         }
         else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 알림입니다.", Constants.PromptOk);
     }
@@ -75,7 +75,7 @@ public partial class KakaoNotificationViewModel : BaseNotificationViewModel
             return;
         }
 
-        var profilePage = new UserPage(profileId, true);
+        var profilePage = new BlazorUserPage(profileId, true);
         await App.PushAsync(profilePage);
     }
 

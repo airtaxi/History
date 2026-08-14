@@ -51,7 +51,7 @@ public partial class KakaoInteractionViewModel : BaseInteractionViewModel
             return;
         }
 
-        var profilePage = new UserPage(Share.actor.id, true);
+        var profilePage = new BlazorUserPage(Share.actor.id, true);
         await App.PushAsync(profilePage);
     }
 }

@@ -226,7 +226,7 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
             return;
         }
 
-        var userPage = new UserPage(_commentUserId, true);
+        var userPage = new BlazorUserPage(_commentUserId, true);
         await App.PushAsync(userPage);
     }
 

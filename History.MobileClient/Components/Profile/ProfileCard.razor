@@ -1,0 +1,107 @@
+@inherits MvvmCardBase<BaseProfileViewModel>
+@inject IJSRuntime JSRuntime
+
+<div class="profile-card">
+    @if (ViewModel.BackgroundMedia != null)
+    {
+        <img class="profile-bg" src="@ViewModel.BackgroundMedia.Uri" @onclick="OnBackgroundClicked" />
+    }
+    <div class="profile-overlay"></div>
+    <div class="profile-top">
+        <div class="profile-avatar-wrap">
+            @if (ViewModel.ProfileMedia != null)
+            {
+                <img class="profile-avatar" src="@ViewModel.ProfileMedia.Uri" @ref="ProfileImageElement" @onclick="OnProfileClicked" />
+            }
+            @if (ViewModel.IsFriend)
+            {
+                <button type="button" class="profile-favorite" @onclick="OnFavoriteClicked" @onclick:stopPropagation="true">
+                    <span class="fa-solid" style="color:@(ViewModel.FavoriteColor?.ToArgbHex())">@Solid.Star</span>
+                </button>
+            }
+        </div>
+        <div class="profile-info">
+            <div class="profile-name-row">
+                <span class="profile-nickname">@ViewModel.Nickname</span>
+                @if (ViewModel.IsAdmin)
+                {
+                    <span class="badge-icon badge-crown">@Solid.Crown</span>
+                }
+                @if (ViewModel.IsModerator)
+                {
+                    <span class="badge-icon badge-gavel">@Solid.Gavel</span>
+                }
+            </div>
+            <span class="profile-description">@ViewModel.Description</span>
+            <span class="profile-friendship">@ViewModel.FriendshipDescription</span>
+        </div>
+    </div>
+    <div class="profile-bottom">
+        @if (ViewModel.IsNotBlocked)
+        {
+            <div class="profile-actions">
+                @if (ViewModel.IsMe)
+                {
+                    <button type="button" class="profile-button" @onclick="OnProfileSettingsClicked">프로필 설정</button>
+                }
+                @if (ViewModel.IsNotMe)
+                {
+                    <button type="button" class="profile-button" @onclick="OnFriendshipActionClicked">@ViewModel.FriendButtonText</button>
+                }
+                @if (ViewModel.IsFeedBlockAvailable)
+                {
+                    <button type="button" class="profile-button profile-button-secondary" @onclick="OnFeedBlockClicked">@ViewModel.FeedBlockButtonText</button>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="profile-blocked">
+                <span class="profile-blocked-title">제한된 사용자</span>
+                <span class="profile-blocked-id">@ViewModel.BlockedUserIdText</span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private ElementReference ProfileImageElement;
+    private DotNetObjectReference<ProfileCard> _dotNetReference;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Chromium webviews never fire the 'longpress' DOM event, so Blazor's
+        // @onlongpress is dead code there. The interop script watches raw touch input
+        // and invokes HandleProfileLongPressAsync after a 500ms hold.
+        if (!firstRender || _dotNetReference != null) return;
+
+        _dotNetReference = DotNetObjectReference.Create(this);
+        await JSRuntime.InvokeVoidAsync("timelineInterop.attachLongPress", ProfileImageElement, _dotNetReference, nameof(HandleProfileLongPressAsync));
+    }
+
+    [JSInvokable]
+    public Task HandleProfileLongPressAsync() => ViewModel.HandleProfileLongPressAsync();
+
+    private Task OnProfileClicked() => ViewModel.HandleProfileTapCommand.ExecuteAsync(null);
+
+    private Task OnBackgroundClicked() => ViewModel.HandleBackgroundTapCommand.ExecuteAsync(null);
+
+    private Task OnFavoriteClicked() => ViewModel.HandleFavoriteCommand.ExecuteAsync(null);
+
+    private Task OnProfileSettingsClicked() => ViewModel.HandleProfileSettingsCommand.ExecuteAsync(null);
+
+    private Task OnFriendshipActionClicked() => ViewModel.HandleFriendshipActionCommand.ExecuteAsync(null);
+
+    private Task OnFeedBlockClicked() => ViewModel.HandleFeedBlockCommand.ExecuteAsync(null);
+
+    public override void Dispose()
+    {
+        if (_dotNetReference != null)
+        {
+            _ = JSRuntime.InvokeVoidAsync("timelineInterop.detachLongPress", ProfileImageElement);
+            _dotNetReference.Dispose();
+        }
+
+        base.Dispose();
+    }
+}

@@ -22,6 +22,6 @@ public partial class PollVoterViewModel : ObservableObject
     [RelayCommand]
     private async Task NavigateToProfileAsync()
     {
-        await App.PushAsync(new UserPage(UserId));
+        await App.PushAsync(new BlazorUserPage(UserId));
     }
 }
