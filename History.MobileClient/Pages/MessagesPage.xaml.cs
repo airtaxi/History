@@ -27,7 +27,9 @@ public partial class MessagesPage : ContentPage
         InitializeComponent();
         MainCollectionView.ItemsSource = _viewModels;
         UpdatePillVisuals();
+        UpdatePillBadges();
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<MailData.Mail>>(this, OnKakaoMailDeletedMessageReceived);
+        WeakReferenceMessenger.Default.Register<BadgeCountsChangedMessage>(this, OnBadgeCountsChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<TabReselectedMessage>(this, OnTabReselectedMessageReceived);
 #if IOS
@@ -213,6 +215,18 @@ public partial class MessagesPage : ContentPage
         KakaoStoryPillBorder.BackgroundColor = _isKakaoStoryMode ? primaryColor : inactiveBackgroundColor;
         KakaoStoryPillLabel.TextColor = _isKakaoStoryMode ? Colors.White : inactiveTextColor;
     }
+
+    private void UpdatePillBadges()
+    {
+        PillBadgeHelper.Apply(HistoryPillBadgeBorder, HistoryPillBadgeLabel, Shared.HistoryUnreadMailCount);
+
+        // The Kakao Story badge respects the badge sum setting, mirroring the tab bar badge.
+        var isKakaoStoryBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryMailBadgeEnabled") ?? true;
+        PillBadgeHelper.Apply(KakaoStoryPillBadgeBorder, KakaoStoryPillBadgeLabel, isKakaoStoryBadgeEnabled ? Shared.KakaoStoryUnreadMailCount : 0);
+    }
+
+    // The pollers run on background threads; the badge update must be marshalled to the main thread.
+    private void OnBadgeCountsChangedMessageReceived(object recipient, BadgeCountsChangedMessage message) => Dispatcher.Dispatch(UpdatePillBadges);
 
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)
     {
