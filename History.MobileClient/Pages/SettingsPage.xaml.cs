@@ -74,6 +74,15 @@ public partial class SettingsPage : ContentPage
         var isKakaoStorySessionExpiredNotificationEnabled = Configuration.GetValue<bool?>("KakaoStorySessionExpiredNotificationEnabled") ?? true;
         KakaoStorySessionExpiredNotificationLabel.Text = isKakaoStorySessionExpiredNotificationEnabled ? OnText : OffText;
 
+        var isKakaoStoryNotificationBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryNotificationBadgeEnabled") ?? true;
+        KakaoStoryNotificationBadgeLabel.Text = isKakaoStoryNotificationBadgeEnabled ? OnText : OffText;
+
+        var isKakaoStoryMailBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryMailBadgeEnabled") ?? true;
+        KakaoStoryMailBadgeLabel.Text = isKakaoStoryMailBadgeEnabled ? OnText : OffText;
+
+        var isKakaoStoryFriendRequestBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryFriendRequestBadgeEnabled") ?? true;
+        KakaoStoryFriendRequestBadgeLabel.Text = isKakaoStoryFriendRequestBadgeEnabled ? OnText : OffText;
+
 #if ANDROID
         // Virtualization toggle (default: off for smoother scroll with less View recreation)
         var isTimelineVirtualizationEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
@@ -407,6 +416,48 @@ public partial class SettingsPage : ContentPage
         var isEnabled = action == OnText;
         Configuration.SetValue("KakaoStorySessionExpiredNotificationEnabled", isEnabled);
         KakaoStorySessionExpiredNotificationLabel.Text = isEnabled ? OnText : OffText;
+    }
+
+    private async void OnKakaoStoryNotificationBadgeGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("알림 배지 합산", Constants.PromptCancel, null, OnText, OffText);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == OnText;
+        Configuration.SetValue("KakaoStoryNotificationBadgeEnabled", isEnabled);
+        KakaoStoryNotificationBadgeLabel.Text = isEnabled ? OnText : OffText;
+
+        // Re-render the badge immediately; when enabled, poll once so the count refreshes right away.
+        Shared.RefreshTabBadges();
+        if (isEnabled) _ = TabBarBadgePoller.PollOnceAsync();
+    }
+
+    private async void OnKakaoStoryMailBadgeGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("쪽지 배지 합산", Constants.PromptCancel, null, OnText, OffText);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == OnText;
+        Configuration.SetValue("KakaoStoryMailBadgeEnabled", isEnabled);
+        KakaoStoryMailBadgeLabel.Text = isEnabled ? OnText : OffText;
+
+        // Re-render the badge immediately; when enabled, poll once so the count refreshes right away.
+        Shared.RefreshTabBadges();
+        if (isEnabled) _ = TabBarBadgePoller.PollOnceAsync();
+    }
+
+    private async void OnKakaoStoryFriendRequestBadgeGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("친구 신청 배지 합산", Constants.PromptCancel, null, OnText, OffText);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == OnText;
+        Configuration.SetValue("KakaoStoryFriendRequestBadgeEnabled", isEnabled);
+        KakaoStoryFriendRequestBadgeLabel.Text = isEnabled ? OnText : OffText;
+
+        // Re-render the badge immediately; when enabled, poll once so the count refreshes right away.
+        Shared.RefreshTabBadges();
+        if (isEnabled) _ = TabBarBadgePoller.PollOnceAsync();
     }
 
     private async void OnCheckForUpdateGridTapped(object sender, TappedEventArgs e) => await Utils.CheckForUpdateAsync();

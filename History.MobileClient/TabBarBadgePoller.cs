@@ -16,8 +16,12 @@ namespace History.MobileClient;
 /// by the list pages themselves; this poller only keeps the badges up to date
 /// while the user is elsewhere in the app. The Kakao Story poll section is
 /// independent of the Kakao Story notification setting: the badge counts stay
-/// fresh even when local notifications are disabled. History 401 responses are
-/// handled by the ApiHandler token refresh; a failed cycle is skipped silently.
+/// fresh even when local notifications are disabled. Each Kakao Story badge
+/// category can be excluded from the badge sum via the
+/// KakaoStoryNotificationBadgeEnabled/KakaoStoryMailBadgeEnabled/
+/// KakaoStoryFriendRequestBadgeEnabled settings; disabled categories are not
+/// polled at all. History 401 responses are handled by the ApiHandler token
+/// refresh; a failed cycle is skipped silently.
 /// </summary>
 public static class TabBarBadgePoller
 {
@@ -125,6 +129,13 @@ public static class TabBarBadgePoller
 
     private static async Task PollKakaoStoryBadgesAsync()
     {
+        // Disabled badge categories are not polled at all; when every category
+        // is disabled, skip the Kakao Story session work entirely.
+        var isNotificationBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryNotificationBadgeEnabled") ?? true;
+        var isMailBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryMailBadgeEnabled") ?? true;
+        var isFriendRequestBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryFriendRequestBadgeEnabled") ?? true;
+        if (!isNotificationBadgeEnabled && !isMailBadgeEnabled && !isFriendRequestBadgeEnabled) return;
+
         // A missing Kakao Story session is not an error; the badge stays at its
         // current value (0 on a fresh install).
         if (await KakaoStoryApiHandler.EnsureKAuthTokenAsync() == null) return;
@@ -137,14 +148,23 @@ public static class TabBarBadgePoller
         KakaoStoryApiHandler.MaxRetryCount = 2;
         try
         {
-            var notifications = await KakaoStoryApiHandler.GetNotifications();
-            Shared.KakaoStoryUnreadNotificationCount = notifications?.Count(x => x.is_new) ?? 0;
+            if (isNotificationBadgeEnabled)
+            {
+                var notifications = await KakaoStoryApiHandler.GetNotifications();
+                Shared.KakaoStoryUnreadNotificationCount = notifications?.Count(x => x.is_new) ?? 0;
+            }
 
-            var mails = await KakaoStoryApiHandler.GetMails();
-            Shared.KakaoStoryUnreadMailCount = mails?.Count(x => x.type == "receive" && x.read_at == null) ?? 0;
+            if (isMailBadgeEnabled)
+            {
+                var mails = await KakaoStoryApiHandler.GetMails();
+                Shared.KakaoStoryUnreadMailCount = mails?.Count(x => x.type == "receive" && x.read_at == null) ?? 0;
+            }
 
-            var invitations = await KakaoStoryApiHandler.GetInvitations();
-            Shared.KakaoStoryPendingFriendRequestCount = invitations?.Count(x => x.type == "received") ?? 0;
+            if (isFriendRequestBadgeEnabled)
+            {
+                var invitations = await KakaoStoryApiHandler.GetInvitations();
+                Shared.KakaoStoryPendingFriendRequestCount = invitations?.Count(x => x.type == "received") ?? 0;
+            }
         }
         finally
         {

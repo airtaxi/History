@@ -795,6 +795,105 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
+                <Grid
+                    Padding="14,0,14,0"
+                    Background="{AppThemeBinding Dark={StaticResource CategoryDarkBackground},
+                                                 Light={StaticResource CategoryLightBackground}}"
+                    HeightRequest="24">
+                    <Label
+                        FontSize="14"
+                        Text="카카오스토리 알림 배지"
+                        TextColor="{AppThemeBinding Dark={StaticResource CategoryDarkForeground},
+                                                    Light={StaticResource CategoryLightForeground}}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnKakaoStoryNotificationBadgeGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="알림 배지 합산"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="KakaoStoryNotificationBadgeLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnKakaoStoryMailBadgeGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="쪽지 배지 합산"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="KakaoStoryMailBadgeLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnKakaoStoryFriendRequestBadgeGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="친구 신청 배지 합산"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="KakaoStoryFriendRequestBadgeLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
             </VerticalStackLayout>
         </ScrollView>
 
