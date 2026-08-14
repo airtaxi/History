@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.Commons.Api.Friendship;
 using History.MobileClient.DataTypes;
 using History.MobileClient.KakaoStory;
@@ -22,8 +23,10 @@ public partial class PendingFriendRequestsPage : ContentPage
 
         PillGrid.IsVisible = true;
         UpdatePillVisuals();
+        UpdatePillBadges();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+        WeakReferenceMessenger.Default.Register<BadgeCountsChangedMessage>(this, OnBadgeCountsChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<FriendshipChangedMessage>(this, OnFriendshipChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<TabReselectedMessage>(this, OnTabReselectedMessageReceived);
 #if IOS
@@ -175,6 +178,18 @@ public partial class PendingFriendRequestsPage : ContentPage
         KakaoStoryPillBorder.BackgroundColor = _isKakaoStoryMode ? primaryColor : inactiveBackgroundColor;
         KakaoStoryPillLabel.TextColor = _isKakaoStoryMode ? Colors.White : inactiveTextColor;
     }
+
+    private void UpdatePillBadges()
+    {
+        PillBadgeHelper.Apply(HistoryPillBadgeBorder, HistoryPillBadgeLabel, Shared.HistoryPendingFriendRequestCount);
+
+        // The Kakao Story badge respects the badge sum setting, mirroring the tab bar badge.
+        var isKakaoStoryBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryFriendRequestBadgeEnabled") ?? true;
+        PillBadgeHelper.Apply(KakaoStoryPillBadgeBorder, KakaoStoryPillBadgeLabel, isKakaoStoryBadgeEnabled ? Shared.KakaoStoryPendingFriendRequestCount : 0);
+    }
+
+    // The pollers run on background threads; the badge update must be marshalled to the main thread.
+    private void OnBadgeCountsChangedMessageReceived(object recipient, BadgeCountsChangedMessage message) => Dispatcher.Dispatch(UpdatePillBadges);
 
     private void OnTabReselectedMessageReceived(object recipient, TabReselectedMessage message)
     {

@@ -48,6 +48,28 @@
                             VerticalOptions="Center" />
                     </Border>
                     <Border
+                        x:Name="HistoryPillBadgeBorder"
+                        Grid.Column="0"
+                        Margin="0,-8,-8,0"
+                        BackgroundColor="#E53935"
+                        HeightRequest="18"
+                        HorizontalOptions="End"
+                        IsVisible="False"
+                        StrokeThickness="0"
+                        VerticalOptions="Start"
+                        WidthRequest="18">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="9" />
+                        </Border.StrokeShape>
+                        <Label
+                            x:Name="HistoryPillBadgeLabel"
+                            FontAttributes="Bold"
+                            FontSize="10"
+                            HorizontalOptions="Center"
+                            TextColor="White"
+                            VerticalOptions="Center" />
+                    </Border>
+                    <Border
                         x:Name="KakaoStoryPillBorder"
                         Grid.Column="1"
                         HeightRequest="34"
@@ -65,6 +87,28 @@
                             FontSize="13"
                             HorizontalOptions="Center"
                             Text="카카오스토리"
+                            VerticalOptions="Center" />
+                    </Border>
+                    <Border
+                        x:Name="KakaoStoryPillBadgeBorder"
+                        Grid.Column="1"
+                        Margin="0,-8,-8,0"
+                        BackgroundColor="#E53935"
+                        HeightRequest="18"
+                        HorizontalOptions="End"
+                        IsVisible="False"
+                        StrokeThickness="0"
+                        VerticalOptions="Start"
+                        WidthRequest="18">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="9" />
+                        </Border.StrokeShape>
+                        <Label
+                            x:Name="KakaoStoryPillBadgeLabel"
+                            FontAttributes="Bold"
+                            FontSize="10"
+                            HorizontalOptions="Center"
+                            TextColor="White"
                             VerticalOptions="Center" />
                     </Border>
                 </Grid>

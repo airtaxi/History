@@ -1,6 +1,8 @@
-﻿using History.Commons;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.MobileClient.Messages;
 using History.MobileClient.ShellTabBarBadge;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
@@ -22,7 +24,7 @@ public static class Shared
         set
         {
             field = value;
-            UpdateTabBadge();
+            OnBadgeCountChanged();
         }
     }
 
@@ -32,7 +34,7 @@ public static class Shared
         set
         {
             field = value;
-            UpdateTabBadge();
+            OnBadgeCountChanged();
         }
     }
 
@@ -42,7 +44,7 @@ public static class Shared
         set
         {
             field = value;
-            UpdateTabBadge();
+            OnBadgeCountChanged();
         }
     }
 
@@ -52,7 +54,7 @@ public static class Shared
         set
         {
             field = value;
-            UpdateTabBadge();
+            OnBadgeCountChanged();
         }
     }
 
@@ -62,7 +64,7 @@ public static class Shared
         set
         {
             field = value;
-            UpdateTabBadge();
+            OnBadgeCountChanged();
         }
     }
 
@@ -72,12 +74,21 @@ public static class Shared
         set
         {
             field = value;
-            UpdateTabBadge();
+            OnBadgeCountChanged();
         }
     }
 
     private static int s_lastBadgeTotalCount = -1;
     private static int s_lastFriendRequestCount = -1;
+
+    // Notifies the pill badge subscribers (the list pages) whenever a badge
+    // count changes. The tab bar badge update is skipped when the summed total
+    // is unchanged, so the pill badges need their own notification.
+    private static void OnBadgeCountChanged()
+    {
+        UpdateTabBadge();
+        WeakReferenceMessenger.Default.Send(new BadgeCountsChangedMessage());
+    }
 
     // The pollers run on background threads, so the badge view update must be
     // marshalled to the main thread. The badge API is a no-op when no Shell is up.
@@ -124,9 +135,12 @@ public static class Shared
 
     // Re-applies the badges after a badge setting toggle; the change guard
     // would otherwise skip the re-render since the raw counts did not change.
+    // The pill badge subscribers are notified as well so the Kakao Story pill
+    // badges reflect the toggled setting right away.
     public static void RefreshTabBadges()
     {
         ResetTabBadgeCache();
         UpdateTabBadge();
+        WeakReferenceMessenger.Default.Send(new BadgeCountsChangedMessage());
     }
 }
