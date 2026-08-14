@@ -9,7 +9,7 @@ public class BoolToUnreadBackgroundConverter : IValueConverter
         if (value is bool isUnread && isUnread)
         {
             var isDark = Application.Current.RequestedTheme == AppTheme.Dark;
-            return isDark ? Color.FromArgb("#2A2A2A") : Color.FromArgb("#F0F0F0");
+            return isDark ? Color.FromArgb("#333333") : Color.FromArgb("#FBE0DB");
         }
         return Colors.Transparent;
     }
