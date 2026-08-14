@@ -349,7 +349,7 @@ public partial class SettingsPage : ContentPage
 
     private async void OnKakaoStoryNotificationGridTapped(object sender, TappedEventArgs e)
     {
-        var action = await DisplayActionSheetAsync("카카오스토리 알림", Constants.PromptCancel, null, OnText, OffText);
+        var action = await DisplayActionSheetAsync("카카오스토리 푸시 알림", Constants.PromptCancel, null, OnText, OffText);
         if (action == null || action == Constants.PromptCancel) return;
 
         var isEnabled = action == OnText;
@@ -371,7 +371,7 @@ public partial class SettingsPage : ContentPage
 
     private async void OnKakaoStoryFavoriteFriendNotificationGridTapped(object sender, TappedEventArgs e)
     {
-        var action = await DisplayActionSheetAsync("카카오스토리 관심 친구 알림", Constants.PromptCancel, null, OnText, OffText);
+        var action = await DisplayActionSheetAsync("카카오스토리 관심 친구 푸시 알림", Constants.PromptCancel, null, OnText, OffText);
         if (action == null || action == Constants.PromptCancel) return;
 
         var isEnabled = action == OnText;
@@ -381,7 +381,7 @@ public partial class SettingsPage : ContentPage
 
     private async void OnKakaoStoryEmotionNotificationGridTapped(object sender, TappedEventArgs e)
     {
-        var action = await DisplayActionSheetAsync("카카오스토리 느낌 알림", Constants.PromptCancel, null, OnText, OffText);
+        var action = await DisplayActionSheetAsync("카카오스토리 느낌 푸시 알림", Constants.PromptCancel, null, OnText, OffText);
         if (action == null || action == Constants.PromptCancel) return;
 
         var isEnabled = action == OnText;
@@ -391,7 +391,7 @@ public partial class SettingsPage : ContentPage
 
     private async void OnKakaoStoryMailNotificationGridTapped(object sender, TappedEventArgs e)
     {
-        var action = await DisplayActionSheetAsync("카카오스토리 쪽지 알림", Constants.PromptCancel, null, OnText, OffText);
+        var action = await DisplayActionSheetAsync("카카오스토리 쪽지 푸시 알림", Constants.PromptCancel, null, OnText, OffText);
         if (action == null || action == Constants.PromptCancel) return;
 
         var isEnabled = action == OnText;
@@ -401,7 +401,7 @@ public partial class SettingsPage : ContentPage
 
     private async void OnKakaoStorySessionExpiredNotificationGridTapped(object sender, TappedEventArgs e)
     {
-        var action = await DisplayActionSheetAsync("카카오스토리 로그인 만료 알림", Constants.PromptCancel, null, OnText, OffText);
+        var action = await DisplayActionSheetAsync("카카오스토리 로그인 만료 푸시 알림", Constants.PromptCancel, null, OnText, OffText);
         if (action == null || action == Constants.PromptCancel) return;
 
         var isEnabled = action == OnText;
