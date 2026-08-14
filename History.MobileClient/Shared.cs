@@ -83,7 +83,15 @@ public static class Shared
     // marshalled to the main thread. The badge API is a no-op when no Shell is up.
     private static void UpdateTabBadge()
     {
-        var totalCount = HistoryUnreadNotificationCount + KakaoStoryUnreadNotificationCount + HistoryUnreadMailCount + KakaoStoryUnreadMailCount;
+        // Kakao Story counts are only summed into the badges when their badge
+        // settings are enabled; the raw counts stay tracked regardless.
+        var isKakaoStoryNotificationBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryNotificationBadgeEnabled") ?? true;
+        var isKakaoStoryMailBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryMailBadgeEnabled") ?? true;
+        var isKakaoStoryFriendRequestBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryFriendRequestBadgeEnabled") ?? true;
+
+        var totalCount = HistoryUnreadNotificationCount + HistoryUnreadMailCount;
+        if (isKakaoStoryNotificationBadgeEnabled) totalCount += KakaoStoryUnreadNotificationCount;
+        if (isKakaoStoryMailBadgeEnabled) totalCount += KakaoStoryUnreadMailCount;
         if (totalCount != s_lastBadgeTotalCount)
         {
             s_lastBadgeTotalCount = totalCount;
@@ -94,7 +102,8 @@ public static class Shared
             });
         }
 
-        var friendRequestCount = HistoryPendingFriendRequestCount + KakaoStoryPendingFriendRequestCount;
+        var friendRequestCount = HistoryPendingFriendRequestCount;
+        if (isKakaoStoryFriendRequestBadgeEnabled) friendRequestCount += KakaoStoryPendingFriendRequestCount;
         if (friendRequestCount == s_lastFriendRequestCount) return; // Skip identical renders (1s Kakao Story cadence).
         s_lastFriendRequestCount = friendRequestCount;
         MainThread.BeginInvokeOnMainThread(() =>
@@ -111,5 +120,13 @@ public static class Shared
     {
         s_lastBadgeTotalCount = -1;
         s_lastFriendRequestCount = -1;
+    }
+
+    // Re-applies the badges after a badge setting toggle; the change guard
+    // would otherwise skip the re-render since the raw counts did not change.
+    public static void RefreshTabBadges()
+    {
+        ResetTabBadgeCache();
+        UpdateTabBadge();
     }
 }
