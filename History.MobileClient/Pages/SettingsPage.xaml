@@ -644,6 +644,27 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
+                <Grid
+                    Padding="14,0,14,0"
+                    Background="{AppThemeBinding Dark={StaticResource CategoryDarkBackground},
+                                                 Light={StaticResource CategoryLightBackground}}"
+                    HeightRequest="24">
+                    <Label
+                        FontSize="14"
+                        Text="카카오스토리 푸시 알림"
+                        TextColor="{AppThemeBinding Dark={StaticResource CategoryDarkForeground},
+                                                    Light={StaticResource CategoryLightForeground}}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
                 <Grid Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnKakaoStoryNotificationGridTapped" />
@@ -651,7 +672,7 @@
                     <Label
                         FontSize="16"
                         HorizontalOptions="Start"
-                        Text="카카오스토리 알림"
+                        Text="카카오스토리 푸시 알림"
                         VerticalOptions="Center" />
 
                     <Label
@@ -677,7 +698,7 @@
                     <Label
                         FontSize="16"
                         HorizontalOptions="Start"
-                        Text="카카오스토리 관심 친구 알림"
+                        Text="카카오스토리 관심 친구 푸시 알림"
                         VerticalOptions="Center" />
 
                     <Label
@@ -703,7 +724,7 @@
                     <Label
                         FontSize="16"
                         HorizontalOptions="Start"
-                        Text="카카오스토리 느낌 알림"
+                        Text="카카오스토리 느낌 푸시 알림"
                         VerticalOptions="Center" />
 
                     <Label
@@ -729,7 +750,7 @@
                     <Label
                         FontSize="16"
                         HorizontalOptions="Start"
-                        Text="카카오스토리 쪽지 알림"
+                        Text="카카오스토리 쪽지 푸시 알림"
                         VerticalOptions="Center" />
 
                     <Label
@@ -755,7 +776,7 @@
                     <Label
                         FontSize="16"
                         HorizontalOptions="Start"
-                        Text="카카오스토리 로그인 만료 알림"
+                        Text="카카오스토리 로그인 만료 푸시 알림"
                         VerticalOptions="Center" />
 
                     <Label
