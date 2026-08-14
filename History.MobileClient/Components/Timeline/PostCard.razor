@@ -1,0 +1,126 @@
+@inherits MvvmCardBase<BasePostViewModel>
+
+<article class="card" @onclick="OnCardClicked">
+    <div class="card-header @(ViewModel.IsRepost ? "card-header-repost" : string.Empty)">
+        <img class="avatar avatar-36" src="@ViewModel.ProfileMedia?.Uri" @onclick="OnProfileClicked" @onclick:stopPropagation="true" />
+        <div class="header-text">
+            <div class="name-row">
+                <span class="name">@ViewModel.Nickname</span>
+                @if (ViewModel.IsAdmin)
+                {
+                    <span class="badge-icon badge-crown">@Solid.Crown</span>
+                }
+                @if (ViewModel.IsModerator)
+                {
+                    <span class="badge-icon badge-gavel">@Solid.Gavel</span>
+                }
+            </div>
+            <div class="time-row">
+                <span class="time">@ViewModel.TimestampText</span>
+                <span class="time"> · </span>
+                <span class="discovery-glyph">@ViewModel.DiscoveryOptionGlyph</span>
+            </div>
+        </div>
+        @if (!ViewModel.IsRepost)
+        {
+            <button type="button" class="icon-button more-button" @onclick="OnMoreClicked" @onclick:stopPropagation="true"><span class="mi">@MaterialSharp.More_horiz</span></button>
+        }
+    </div>
+
+    @if (ViewModel.TimelineContents != null)
+    {
+        <PostContents ViewModel="ViewModel.TimelineContents" />
+    }
+
+    @if (!ViewModel.IsRepost && ViewModel.IsShare && ViewModel.ParentPost != null)
+    {
+        <div class="shared-post" @onclick="OnParentPostClicked" @onclick:stopPropagation="true">
+            <div class="divider"></div>
+            <div class="shared-header">
+                <img class="avatar avatar-28" src="@ViewModel.ParentPost.ProfileMedia?.Uri" />
+                <div class="shared-name-row">
+                    <span class="name">@ViewModel.ParentPost.Nickname</span>
+                    @if (ViewModel.ParentPost.IsAdmin)
+                    {
+                        <span class="badge-icon badge-crown">@Solid.Crown</span>
+                    }
+                    @if (ViewModel.ParentPost.IsModerator)
+                    {
+                        <span class="badge-icon badge-gavel">@Solid.Gavel</span>
+                    }
+                </div>
+                <span class="share-count">
+                    <span class="mi">@MaterialSharp.Share</span>
+                    <span class="share-count-text">@ViewModel.SharedUsersCount</span>
+                </span>
+            </div>
+            @if (ViewModel.ParentPost.TimelineContents != null)
+            {
+                <PostContents ViewModel="ViewModel.ParentPost.TimelineContents" />
+            }
+        </div>
+    }
+
+    @if (!ViewModel.IsRepost)
+    {
+        <div class="action-row">
+            <div class="action" @onclick="OnReactionClicked" @onclick:stopPropagation="true">
+                <span class="reaction-glyph" style="font-family:@ViewModel.ReactionFontFamily;color:@(ViewModel.ReactionColor?.ToArgbHex() ?? "inherit")">@ViewModel.ReactionGlyph</span>
+                <span class="action-count">@ViewModel.ReactionsCount</span>
+            </div>
+            <div class="action">
+                <span class="fa-regular comments-icon">@Regular.Comments</span>
+                <span class="action-count">@ViewModel.CommentsCount</span>
+            </div>
+            @if (ViewModel.HasSharedUsers)
+            {
+                <div class="action">
+                    <span class="mi">@MaterialSharp.Share</span>
+                    <span class="action-count">@ViewModel.SharedUsersCount</span>
+                </div>
+            }
+            @if (ViewModel.HasRepostedUsers)
+            {
+                <div class="action">
+                    <span class="mi">@MaterialSharp.Shift_lock</span>
+                    <span class="action-count">@ViewModel.RepostedUsersCount</span>
+                </div>
+            }
+        </div>
+
+        @if (ViewModel.HasComments && ViewModel.LatestComment != null)
+        {
+            <div class="comment-preview-block">
+                <div class="divider"></div>
+                <CommentPreview ViewModel="ViewModel.LatestComment" />
+            </div>
+        }
+    }
+
+    @if (ViewModel.IsRepost)
+    {
+        <div class="repost-attribution">
+            <div class="divider"></div>
+            <div class="repost-row">
+                <span class="repost-badge"><span class="mi">@MaterialSharp.Shift_lock</span></span>
+                <span class="repost-text">
+                    <span class="tap-name" @onclick="OnRepostedUserClicked" @onclick:stopPropagation="true">@ViewModel.RepostedUserNickname</span><span>@ViewModel.RepostPostfix</span>
+                </span>
+            </div>
+        </div>
+    }
+</article>
+
+@code {
+    private Task OnCardClicked() => ViewModel.HandleTapCommand.ExecuteAsync(null);
+
+    private Task OnProfileClicked() => ViewModel.HandleProfileTapCommand.ExecuteAsync(null);
+
+    private Task OnMoreClicked() => ViewModel.HandleMoreTapCommand.ExecuteAsync(null);
+
+    private Task OnReactionClicked() => ViewModel.HandleReactionCommand.ExecuteAsync(null);
+
+    private Task OnParentPostClicked() => ViewModel.ParentPost.HandleTapCommand.ExecuteAsync(null);
+
+    private Task OnRepostedUserClicked() => ViewModel.HandleRepostedUserTapCommand.ExecuteAsync(null);
+}

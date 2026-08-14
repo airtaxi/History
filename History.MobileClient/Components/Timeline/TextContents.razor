@@ -1,0 +1,100 @@
+@using Microsoft.Maui.Controls
+@using Microsoft.Maui.Devices
+@using Microsoft.Maui.ApplicationModel.DataTransfer
+@using CommunityToolkit.Maui.Alerts
+@using CommunityToolkit.Maui.Core
+@using History.Commons.DataTypes.Contents
+@using System.Reflection
+@implements IDisposable
+@inject IJSRuntime JSRuntime
+
+<div class="post-text" @ref="_textElement" @oncontextmenu:preventDefault="true">
+    @foreach (var span in ViewModel.FormattedString.Spans)
+    {
+        @if (span.GestureRecognizers.OfType<TapGestureRecognizer>().FirstOrDefault() is { } tapGesture)
+        {
+            <span class="tap-span" style="@GetSpanStyle(span)" @onclick="() => InvokeTap(tapGesture)" @onclick:stopPropagation="true">@span.Text</span>
+        }
+        else
+        {
+            <span style="@GetSpanStyle(span)">@span.Text</span>
+        }
+    }
+</div>
+
+@code {
+    private ElementReference _textElement;
+    private DotNetObjectReference<TextContents> _dotNetReference;
+
+    // TextTypeContentsViewModel is immutable once built (it holds a precomputed
+    // FormattedString), so plain parameter re-rendering is enough — no INPC needed.
+    [Parameter, EditorRequired]
+    public TextTypeContentsViewModel ViewModel { get; set; }
+
+    // Set by CommentPreview so a comment long-press marks the host view model like the
+    // XAML TouchBehavior did (suppresses the follow-up tap navigation).
+    [CascadingParameter]
+    public BaseCommentViewModel CommentHost { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Chromium webviews never fire the 'longpress' DOM event, so Blazor's
+        // @onlongpress is dead code there. The interop script watches raw touch input
+        // and invokes CopyTextAsync after a 500ms hold.
+        _dotNetReference = DotNetObjectReference.Create(this);
+        await JSRuntime.InvokeVoidAsync("timelineInterop.attachLongPress", _textElement, _dotNetReference, nameof(CopyTextAsync));
+    }
+
+    [JSInvokable]
+    public async Task CopyTextAsync()
+    {
+        if (CommentHost != null) CommentHost.IsLongPressed = true;
+
+        var builder = new StringBuilder();
+        foreach (var content in ViewModel.TextTypeContents)
+        {
+            if (content is TextContent textContent) builder.Append(textContent.Text);
+            else if (content is ProfileContent profileContent) builder.Append(profileContent.Nickname);
+            else if (content is HashtagContent hashtagContent) builder.Append($"#{hashtagContent.Tag}");
+            else if (content is HyperlinkContent hyperlinkContent) builder.Append(hyperlinkContent.Url);
+        }
+        var text = builder.ToString().Trim();
+
+        HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
+        await Clipboard.Default.SetTextAsync(text);
+        await Toast.Make("텍스트가 클립보드에 복사되었습니다.").Show();
+    }
+
+    public void Dispose()
+    {
+        if (_dotNetReference == null) return;
+        _ = JSRuntime.InvokeVoidAsync("timelineInterop.detachLongPress", _textElement);
+        _dotNetReference.Dispose();
+    }
+
+    // The span tap behaviors (open URL / open hashtag editor / open profile) live in
+    // closures registered on the recognizer's Tapped event. MAUI exposes no public way
+    // to raise that event, so we invoke the handler list through reflection to keep
+    // the exact existing behavior.
+    private static readonly FieldInfo s_tappedEventField = typeof(TapGestureRecognizer).GetField("Tapped", BindingFlags.Instance | BindingFlags.NonPublic);
+
+    private static void InvokeTap(TapGestureRecognizer tapGesture)
+    {
+        if (s_tappedEventField?.GetValue(tapGesture) is not Delegate handler) return;
+
+        foreach (var invocation in handler.GetInvocationList())
+        {
+            invocation.Method.Invoke(invocation.Target, [tapGesture, new TappedEventArgs(null)]);
+        }
+    }
+
+    private static string GetSpanStyle(Span span)
+    {
+        var builder = new StringBuilder();
+        if (span.TextColor != null) builder.Append($"color:{span.TextColor.ToArgbHex()};");
+        if (span.FontAttributes == FontAttributes.Bold) builder.Append("font-weight:700;");
+        return builder.ToString();
+    }
+}

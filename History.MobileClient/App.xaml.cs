@@ -368,7 +368,7 @@ public partial class App : Application
                     var profileId = scheme.Replace("kakaostory://profiles/", "");
                     if (string.IsNullOrEmpty(profileId)) return;
 
-                    await PushAsync(new Pages.UserPage(profileId, true));
+                    await PushAsync(new Pages.BlazorUserPage(profileId, true));
                 }
             }
             catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story notification navigation failed: {exception.Message}"); }
@@ -401,7 +401,7 @@ public partial class App : Application
         {
             if (!data.TryGetValue("UserId", out var userId)) return;
 
-            var page = new UserPage(userId);
+            var page = new BlazorUserPage(userId);
             await PushAsync(page);
         }
         else if (type == NotificationType.Message)

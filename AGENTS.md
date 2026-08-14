@@ -281,6 +281,28 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 - **KakaoStoryNotificationDelegate** (iOS): UNUserNotificationCenter 델리게이트 소유자. 카카오 알림은 직접 처리(포그라운드 배너/탭 네비게이션), 그 외는 Firebase 플러그인으로 콜백 forwarding 하여 기존 FCM 푸시 동작 보존. AppDelegate.FinishedLaunching에서 Firebase 플러그인이 설정한 델리게이트를 교체.
 - **KakaoStoryBackgroundRefresh** (iOS): 백그라운드 알림 폴링 BGAppRefreshTask (`com.airtaxi.history.kakaostoryrefresh`, 시스템 결정 시점 ~15분 간격). 앱이 백그라운드 진입 시(Window.Stopped) 다음 실행을 예약.
 
+### Blazor 타임라인 (BlazorTimelinePage)
+
+`BlazorTimelinePage`는 타임라인 피드를 BlazorWebView로 렌더링하는 대체 구현입니다 (`TimelinePage` → `TimelineViewModel` 로직 이식):
+
+- **BlazorTimelinePage** (`Pages/BlazorTimelinePage.xaml`): `BlazorWebView` 호스트 페이지. Android 핸들러에서 `HapticFeedbackEnabled = false`(네이티브 롱클릭 햅틱 차단), `MediaPlaybackRequiresUserGesture = false`(인라인 영상 autoplay 허용), 테마 색 WebView 배경 지정.
+- **TimelineViewModel** (`ViewModels/TimelineViewModel.cs`): 포스트 로드/새로고침/모드 전환 로직. `TimelinePage.xaml.cs`에서 이식.
+- **Components/Timeline/**: Blazor 컴포넌트. `Timeline.razor`(피드 루트), `PostCard.razor`, `CommentPreview.razor`, `MediaCarousel.razor`, `TextContents.razor`, `PollCard.razor`, `ExternalUrlCard.razor`. `MvvmCardBase<T>`가 MAUI의 BindingContext를 대체 (PropertyChanged 구독 → 재렌더).
+- **wwwroot/timeline-interop.js**: DOM 전용 로직 (테마, 무한 스크롤, 캐러셀 인디케이터/높이, 당겨서 새로고침, 롱프레스 복사, IntersectionObserver 기반 영상 시야 이탈 리셋, 피드 영상 강제 뮤트, Masonry 스태거드).
+- **wwwroot/masonry.pkgd.min.js**: 로컬 번들 Masonry.js 4.2.2 (오프라인 동작). `TimelinePage.OnSizeChanged`와 동일하게 `floor(내부폭 / 700) + 1` 컬럼으로 스태거드 배치 — 1컬럼은 일반 문서 흐름(LinearItemsLayout 대응), 2컬럼 이상만 Masonry 활성화(`#masonry-grid.masonry-active`).
+- **wwwroot/timeline.css**: 피드 스타일. `data-theme` 속성 기반 다크/라이트 테마. `index.html`의 인라인 스크립트가 `prefers-color-scheme`으로 첫 페인트 전 테마를 선적용해 다크 모드 흰색 플래시 방지.
+
+### Blazor 프로필 (BlazorUserPage)
+
+`BlazorUserPage`는 사용자 프로필을 BlazorWebView로 렌더링하는 대체 구현입니다 (`UserPage` → `UserProfileViewModel` 로직 이식). 기존 `UserPage`는 다른 페이지들이 설정하는 정적 `ShouldRefresh`/`ShouldRefreshKakaoStory` 플래그 보관용 데드코드로 유지됩니다:
+
+- **BlazorUserPage** (`Pages/BlazorUserPage.xaml`): 헤더(뒤로가기/타이틀/레이아웃 토글/쪽지/메모/친구/차단/설정 아이콘), `BlazorWebView`, 글쓰기 FAB, 스크롤 탑 버튼을 네이티브 크롬으로 유지. 헤더 아이콘 visibility는 `UserProfileViewModel` INPC 프로퍼티에 바인딩. Android 핸들러 설정(햅틱/autoplay/테마 배경/`ApplyWebViewSize`)은 BlazorTimelinePage와 동일.
+- **UserProfileViewModel** (`ViewModels/UserProfileViewModel.cs`): `UserPage.xaml.cs`에서 이식한 로드/새로고침/모드 전환/레이아웃 토글/헤더 액션 로직. `ProfileVm`(`BaseProfileViewModel`)과 `Items`(`BasePostViewModel` 컬렉션) 소유. `IsMyProfileTab`(파라미터리스 생성자=내 프로필 탭)과 `ShowPillGrid`를 별도 보유.
+- **Components/Profile/**: `Profile.razor`(루트), `ProfileCard.razor`(`ProfileTemplate` 이식 — 배경/프로필 미디어, 즐겨찾기 별, 액션 버튼, 프로필 이미지 롱프레스는 `attachLongPress` 사용), `PostPreviewCard.razor`(`PostPreviewTemplate` 이식 — 3열 그리드 셀).
+- **그리드 모드 ↔ 타임라인 모드**: `UseGridLayout`에 따라 `.preview-grid`(CSS grid 3열, `GridItemsLayout` Span=3/Spacing=1 대응)와 `#masonry-grid` + `PostCard` 재사용을 전환. 레이아웃 토글은 리사이즈 없이 DOM만 바뀌므로 `Profile.razor`가 `timelineInterop.initMasonry`/`destroyMasonry`를 명시 호출.
+- **wwwroot/profile.css**: 프로필 카드/미리보기 그리드 스타일 (`index.html`에서 timeline.css 뒤에 로드).
+- 유의: XAML `CollectionView` 기반 기능(RecyclerView 가상화 설정, iOS 스크롤 위치 저장/복원, 1초 스크롤 폴링)은 Blazor 패턴(IntersectionObserver/scroll 이벤트)으로 대체됨.
+
 ### 앱 구조
 
 앱쉘(AppShell.xaml)은 다음 탭으로 구성됩니다:

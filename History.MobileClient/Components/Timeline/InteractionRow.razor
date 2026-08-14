@@ -1,0 +1,19 @@
+<div class="interaction-row">
+    @foreach (var interaction in Interactions)
+    {
+        <div class="interaction-item" @onclick="() => interaction.HandleTapCommand.Execute(null)">
+            <img class="avatar avatar-36" src="@interaction.ProfileMedia?.Uri" />
+            @if (interaction.Glyph != null)
+            {
+                <span class="interaction-badge" style="background:@interaction.Color?.ToArgbHex()">
+                    <span class="interaction-glyph" style="font-family:@interaction.FontFamily;font-size:@(interaction.IconSize)px">@interaction.Glyph</span>
+                </span>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<BaseInteractionViewModel> Interactions { get; set; } = [];
+}

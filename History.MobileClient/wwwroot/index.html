@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Timeline</title>
+    <base href="/" />
+    <link rel="icon" href="data:," />
+    <script>
+        // Apply the OS-requested theme before the first paint so dark mode doesn't
+        // flash white while Blazor boots. timelineInterop.init corrects it right
+        // after when the app forces a different theme.
+        (function () {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="timeline.css" />
+    <link rel="stylesheet" href="profile.css" />
+</head>
+<body>
+    <div class="status-bar-safe-area"></div>
+
+    <div id="app">Loading...</div>
+
+    <div id="blazor-error-ui" data-nosnippet>
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">×</span>
+    </div>
+
+    <script src="masonry.pkgd.min.js"></script>
+    <script src="timeline-interop.js"></script>
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
+</body>
+</html>

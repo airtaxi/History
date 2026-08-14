@@ -1,0 +1,27 @@
+@inherits MvvmCardBase<BasePostViewModel>
+
+<div class="preview-cell" @onclick="OnClicked">
+    <span class="preview-text">@ViewModel.PreviewText</span>
+    <span class="preview-time">@ViewModel.PreviewTimestamp</span>
+    @if (ViewModel.PreviewThumbnailVisible)
+    {
+        <img class="preview-thumbnail" src="@ViewModel.PreviewThumbnail?.Uri" />
+    }
+    @if (ViewModel.IsSelectable)
+    {
+        <span class="preview-select @(ViewModel.IsSelected ? "preview-selected" : string.Empty)">
+            @if (ViewModel.IsSelected)
+            {
+                <span class="mi">@MaterialSharp.Check</span>
+            }
+        </span>
+    }
+    @if (ViewModel.HasUnreadNotification)
+    {
+        <span class="preview-unread">N</span>
+    }
+</div>
+
+@code {
+    private Task OnClicked() => ViewModel.HandleTapCommand.ExecuteAsync(null);
+}

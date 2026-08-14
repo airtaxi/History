@@ -114,7 +114,7 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
         }
         else if (UserId != null)
         {
-            var profilePage = new UserPage(UserId, true);
+            var profilePage = new BlazorUserPage(UserId, true);
             await App.PushAsync(profilePage);
         }
         else await App.Page.DisplayAlertAsync("안내", "프로필을 불러올 수 없습니다.", Constants.PromptOk);

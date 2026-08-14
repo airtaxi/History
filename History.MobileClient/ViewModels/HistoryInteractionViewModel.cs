@@ -78,7 +78,7 @@ public partial class HistoryInteractionViewModel : BaseInteractionViewModel
 
     public override async Task HandleTapAsync()
     {
-        var userPage = new UserPage(User.UserId);
+        var userPage = new BlazorUserPage(User.UserId);
         await App.PushAsync(userPage);
     }
 }

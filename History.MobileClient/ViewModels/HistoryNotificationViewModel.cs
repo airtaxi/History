@@ -125,7 +125,7 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel
         {
             if (!Notification.Data.TryGetValue("UserId", out var userId)) return;
 
-            var page = new UserPage(userId);
+            var page = new BlazorUserPage(userId);
             await App.PushAsync(page);
         }
         else if (type == NotificationType.InviteCodeRequest) await App.PushAsync(new InviteCodeRequestsPage());
@@ -146,7 +146,7 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel
 
     public override async Task HandleProfileTapAsync()
     {
-        var profilePage = new UserPage(Notification.User.UserId);
+        var profilePage = new BlazorUserPage(Notification.User.UserId);
         await App.PushAsync(profilePage);
     }
 

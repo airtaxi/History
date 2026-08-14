@@ -1,0 +1,130 @@
+@using System.Collections.Specialized
+@using System.ComponentModel
+@implements IDisposable
+@inject IJSRuntime JSRuntime
+@using Microsoft.Maui.Controls
+
+<div class="profile-page">
+    <div class="pull-indicator" id="pull-indicator"></div>
+
+    <div class="feed" id="feed">
+        @if (ViewModel.ShowPillGrid)
+        {
+            <div class="pills">
+                <button type="button" class="pill @(ViewModel.IsKakaoStoryMode ? string.Empty : "pill-active")" @onclick="OnHistoryPillClick">히스토리</button>
+                <button type="button" class="pill @(ViewModel.IsKakaoStoryMode ? "pill-active" : string.Empty)" @onclick="OnKakaoStoryPillClick">카카오스토리</button>
+            </div>
+        }
+
+        @if (ViewModel.ProfileVm != null)
+        {
+            <ProfileCard ViewModel="ViewModel.ProfileVm" />
+        }
+
+        @if (ViewModel.UseGridLayout)
+        {
+            <div class="preview-grid">
+                @foreach (var post in ViewModel.Items)
+                {
+                    <PostPreviewCard ViewModel="post" @key="GetPostKey(post)" />
+                }
+            </div>
+        }
+        else
+        {
+            <div id="masonry-grid">
+                @foreach (var post in ViewModel.Items)
+                {
+                    <PostCard ViewModel="post" @key="GetPostKey(post)" />
+                }
+            </div>
+        }
+
+        <div id="load-more-sentinel"></div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public UserProfileViewModel ViewModel { get; set; }
+
+    private DotNetObjectReference<Profile> _dotNetReference;
+    private bool _lastMasonryMode;
+
+    protected override void OnInitialized()
+    {
+        ViewModel.Items.CollectionChanged += OnItemsCollectionChanged;
+        ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+        ViewModel.ScrollToTopRequested += OnScrollToTopRequested;
+        Application.Current.RequestedThemeChanged += OnRequestedThemeChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _dotNetReference == null)
+        {
+            _dotNetReference = DotNetObjectReference.Create(this);
+            var theme = Utils.GetGlobalAppTheme() == AppTheme.Dark ? "dark" : "light";
+            await JSRuntime.InvokeVoidAsync("timelineInterop.init", _dotNetReference, theme);
+        }
+
+        // The masonry grid is created/destroyed by the layout toggle without a window
+        // resize, so the interop must be told explicitly when the mode flips.
+        var isMasonryMode = !ViewModel.UseGridLayout;
+        if (isMasonryMode != _lastMasonryMode)
+        {
+            _lastMasonryMode = isMasonryMode;
+            await JSRuntime.InvokeVoidAsync(isMasonryMode ? "timelineInterop.initMasonry" : "timelineInterop.destroyMasonry");
+        }
+    }
+
+    private void OnItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    // Only the profile surface, layout mode, and pills drive full re-renders; the feed
+    // items re-render through their own MvvmCardBase subscriptions.
+    private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(UserProfileViewModel.ProfileVm) or nameof(UserProfileViewModel.UseGridLayout) or nameof(UserProfileViewModel.IsKakaoStoryMode))
+            InvokeAsync(StateHasChanged);
+    }
+
+    private void OnScrollToTopRequested() => _ = JSRuntime.InvokeVoidAsync("timelineInterop.scrollToTop");
+
+    private void OnRequestedThemeChanged(object sender, AppThemeChangedEventArgs e)
+    {
+        var theme = Utils.GetGlobalAppTheme() == AppTheme.Dark ? "dark" : "light";
+        _ = JSRuntime.InvokeVoidAsync("timelineInterop.setTheme", theme);
+    }
+
+    private Task OnHistoryPillClick() => ViewModel.SwitchModeAsync(false);
+
+    private Task OnKakaoStoryPillClick() => ViewModel.SwitchModeAsync(true);
+
+    private static string GetPostKey(BasePostViewModel viewModel)
+    {
+        return viewModel.RepostId ?? viewModel switch
+        {
+            HistoryPostViewModel historyViewModel => historyViewModel.Post.Id,
+            KakaoPostViewModel kakaoViewModel => kakaoViewModel.PostData.id,
+            _ => viewModel.GetHashCode().ToString()
+        };
+    }
+
+    [JSInvokable]
+    public Task LoadMoreAsync() => ViewModel.LoadMoreAsync();
+
+    [JSInvokable]
+    public void ScrollChanged(double offsetY) => ViewModel.SetScrollToTopVisible(offsetY > 0);
+
+    [JSInvokable]
+    public Task PullToRefreshAsync() => ViewModel.RefreshAsync();
+
+    public void Dispose()
+    {
+        Application.Current.RequestedThemeChanged -= OnRequestedThemeChanged;
+        ViewModel.Items.CollectionChanged -= OnItemsCollectionChanged;
+        ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        ViewModel.ScrollToTopRequested -= OnScrollToTopRequested;
+        _dotNetReference?.Dispose();
+    }
+}

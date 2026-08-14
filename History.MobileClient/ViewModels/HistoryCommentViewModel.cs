@@ -170,7 +170,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel
 
     public override async Task HandleProfileTap()
     {
-        var userPage = new UserPage(Comment.User.UserId);
+        var userPage = new BlazorUserPage(Comment.User.UserId);
         await App.PushAsync(userPage);
     }
 }

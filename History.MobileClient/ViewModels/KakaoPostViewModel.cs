@@ -415,7 +415,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
             return;
         }
 
-        var profilePage = new UserPage(_postData.actor.id, true);
+        var profilePage = new BlazorUserPage(_postData.actor.id, true);
         await App.PushAsync(profilePage);
     }
 

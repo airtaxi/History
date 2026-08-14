@@ -165,7 +165,7 @@ public partial class StickerDetailPage : ContentPage
     {
         if (_sticker.Author == null) return;
 
-        var page = new UserPage(_sticker.Author.UserId);
+        var page = new BlazorUserPage(_sticker.Author.UserId);
         await App.PushAsync(page);
     }
 

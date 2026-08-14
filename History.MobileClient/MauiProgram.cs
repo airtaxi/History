@@ -23,6 +23,7 @@ using Syncfusion.Maui.Toolkit.Hosting;
 using Syncfusion.Maui.Core.Hosting;
 using History.Commons.Api.Message;
 using CommunityToolkit.Maui.Core;
+using Microsoft.Extensions.DependencyInjection;
 
 #if IOS
 using Plugin.Firebase.Core.Platforms.iOS;
@@ -73,6 +74,8 @@ public static class MauiProgram
 #endif
             })
             .RegisterFirebaseServices();
+
+        builder.Services.AddMauiBlazorWebView();
 
 #if IOS
         Microsoft.Maui.Handlers.SearchBarHandler.Mapper.AppendToMapping("NoBackground", (h, v) =>

@@ -73,7 +73,7 @@ public partial class KakaoMessageViewModel(MailData.Mail mail) : BaseMessageView
             return;
         }
 
-        var page = new UserPage(mail.sender.id, true);
+        var page = new BlazorUserPage(mail.sender.id, true);
         await App.PushAsync(page);
     }
 

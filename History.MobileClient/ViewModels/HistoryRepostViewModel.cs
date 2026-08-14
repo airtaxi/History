@@ -20,6 +20,6 @@ public partial class HistoryRepostViewModel : HistoryPostViewModel
     {
         if (_repostedUser == null) return;
 
-        await App.PushAsync(new UserPage(_repostedUser.UserId));
+        await App.PushAsync(new BlazorUserPage(_repostedUser.UserId));
     }
 }

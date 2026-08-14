@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.BlazorUserPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
+    xmlns:blazor="clr-namespace:Microsoft.AspNetCore.Components.WebView.Maui;assembly=Microsoft.AspNetCore.Components.WebView.Maui"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    IsEnabled="{Binding IsEnabled}"
+    Loaded="OnLoaded"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,12,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout>
+                <Image
+                    x:Name="BackImage"
+                    HeightRequest="32"
+                    IsVisible="{Binding IsBackVisible}"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    x:Name="TitleLabel"
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="{Binding TitleText}"
+                    TextColor="White"
+                    VerticalOptions="Center">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnTitleLabelTapped" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </HorizontalStackLayout>
+            <HorizontalStackLayout HorizontalOptions="End" Spacing="16">
+                <Image
+                    HeightRequest="32"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnLayoutImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            x:Name="LayoutFontImageSource"
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Lists}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image
+                    x:Name="MessageImage"
+                    HeightRequest="32"
+                    IsVisible="{Binding IsMessageVisible}"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMessageImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Mail}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image
+                    x:Name="MemoImage"
+                    HeightRequest="32"
+                    IsVisible="{Binding IsMemoVisible}"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMemoImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Edit_square}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image
+                    x:Name="FriendsImage"
+                    HeightRequest="32"
+                    IsVisible="{Binding IsFriendsVisible}"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnFriendsImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Group}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image
+                    x:Name="BanImage"
+                    HeightRequest="24"
+                    IsVisible="{Binding IsBanVisible}"
+                    VerticalOptions="Center"
+                    WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBanUserImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="FASolid"
+                            Glyph="{x:Static fa:Solid.UserSlash}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image
+                    x:Name="SettingsImage"
+                    HeightRequest="32"
+                    IsVisible="{Binding IsSettingsVisible}"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSettingsImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Settings}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+            </HorizontalStackLayout>
+        </Grid>
+
+        <Grid Grid.Row="1" SafeAreaEdges="None">
+            <blazor:BlazorWebView x:Name="UserBlazorWebView" HostPage="wwwroot/index.html" />
+        </Grid>
+
+        <Border
+            x:Name="WritePostBorder"
+            Grid.Row="1"
+            Margin="12"
+            Background="{StaticResource Primary}"
+            HeightRequest="60"
+            HorizontalOptions="End"
+            IsVisible="{Binding IsWritePostVisible}"
+            StrokeThickness="0"
+            VerticalOptions="End"
+            WidthRequest="60">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnWritePostBorderTapped" />
+            </Border.GestureRecognizers>
+            <Border.Shadow>
+                <Shadow
+                    Brush="Black"
+                    Opacity="1"
+                    Radius="6"
+                    Offset="1,2" />
+            </Border.Shadow>
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="30" />
+            </Border.StrokeShape>
+            <Image HeightRequest="44" WidthRequest="44">
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Edit_note}"
+                        Size="80"
+                        Color="White" />
+                </Image.Source>
+            </Image>
+        </Border>
+
+        <Border
+            x:Name="ScrollToTopBorder"
+            Grid.Row="1"
+            Margin="12"
+            Background="#808080"
+            HeightRequest="48"
+            HorizontalOptions="Start"
+            IsVisible="{Binding IsScrollToTopVisible}"
+            Opacity="0.8"
+            StrokeThickness="0"
+            VerticalOptions="End"
+            WidthRequest="48">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnScrollToTopBorderTapped" />
+            </Border.GestureRecognizers>
+            <Border.Shadow>
+                <Shadow
+                    Brush="Black"
+                    Opacity="0.4"
+                    Radius="3"
+                    Offset="1,2" />
+            </Border.Shadow>
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="30" />
+            </Border.StrokeShape>
+            <Image HeightRequest="52" WidthRequest="52">
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Keyboard_arrow_up}"
+                        Size="80"
+                        Color="White" />
+                </Image.Source>
+            </Image>
+        </Border>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="2"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="{Binding IsLoading}"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
+    </Grid>
+</ContentPage>

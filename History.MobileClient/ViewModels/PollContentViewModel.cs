@@ -109,7 +109,7 @@ public partial class PollContentViewModel : ObservableObject, IContentViewModel
     }
 
     [RelayCommand]
-    private async Task ViewResultsAsync()
+    public async Task ViewResultsAsync()
     {
         await App.PushAsync(new PollResultsPage(_postId, PollId));
     }

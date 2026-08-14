@@ -1,0 +1,11 @@
+@inherits MvvmCardBase<ExternalUrlContentViewModel>
+
+<div class="external-url" @onclick="() => ViewModel.HandleTapCommand.Execute(null)" @onclick:stopPropagation="true">
+    <img class="external-thumb" src="@ViewModel.ThumbnailImage?.Uri" loading="lazy" decoding="async" />
+    <div class="external-overlay"></div>
+    <div class="external-info">
+        <div class="external-domain">@ViewModel.Domain</div>
+        <div class="external-title">@ViewModel.Title</div>
+        <div class="external-desc">@ViewModel.Description</div>
+    </div>
+</div>

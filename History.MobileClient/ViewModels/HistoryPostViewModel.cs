@@ -363,7 +363,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
 
     public override async Task HandleProfileTapAsync()
     {
-        var profilePage = new UserPage(Post.User.UserId);
+        var profilePage = new BlazorUserPage(Post.User.UserId);
         await App.PushAsync(profilePage);
     }
 

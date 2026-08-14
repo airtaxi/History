@@ -1,0 +1,53 @@
+@inherits MvvmCardBase<TimelineContentsViewModel>
+
+@if (ViewModel.HasText1)
+{
+    <TextContents ViewModel="ViewModel.Text1" />
+}
+@if (ViewModel.HasSticker1)
+{
+    @StickerImage(ViewModel.Sticker1)
+}
+@if (ViewModel.HasText2)
+{
+    <TextContents ViewModel="ViewModel.Text2" />
+}
+@if (ViewModel.HasSticker2)
+{
+    @StickerImage(ViewModel.Sticker2)
+}
+@if (ViewModel.HasText3)
+{
+    <TextContents ViewModel="ViewModel.Text3" />
+}
+@if (ViewModel.HasSticker3)
+{
+    @StickerImage(ViewModel.Sticker3)
+}
+@if (ViewModel.HasMediaContent)
+{
+    <MediaCarousel ViewModel="ViewModel.MediaContent" />
+}
+@if (ViewModel.HasPollContent)
+{
+    <PollCard ViewModel="ViewModel.PollContent" />
+}
+@if (ViewModel.HasExternalUrlContent)
+{
+    <ExternalUrlCard ViewModel="ViewModel.ExternalUrlContent" />
+}
+
+@code {
+    // Rendered inline to avoid creating a component per sticker slot.
+    private RenderFragment StickerImage(StickerContentViewModel sticker) =>
+    @<text>
+        @if (sticker.Media?.Uri != null)
+        {
+            <img class="sticker" src="@sticker.Media.Uri" @onclick="() => sticker.NavigateToStickerDetailCommand.Execute(null)" @onclick:stopPropagation="true" />
+        }
+        else
+        {
+            <span class="sticker-fallback">(이모티콘)</span>
+        }
+    </text>;
+}
