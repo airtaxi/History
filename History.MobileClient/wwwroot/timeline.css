@@ -23,7 +23,7 @@
 
 :root,
 html[data-theme="light"] {
-    --bg: #FFFFFF;
+    --bg: #F0F0F0;
     --card-bg: #FFFFFF;
     --text: #000000;
     --text-secondary: #808080;

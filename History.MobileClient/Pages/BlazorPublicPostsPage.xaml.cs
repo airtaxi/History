@@ -47,7 +47,7 @@ public partial class BlazorPublicPostsPage : ContentPage
         // paints. Match it to the app theme's page background so dark mode doesn't
         // flicker white during load.
         var isDark = Utils.GetGlobalAppTheme() == AppTheme.Dark;
-        webView.SetBackgroundColor(isDark ? Android.Graphics.Color.ParseColor("#1F1F1F") : Android.Graphics.Color.White);
+        webView.SetBackgroundColor(isDark ? Android.Graphics.Color.ParseColor("#1F1F1F") : Android.Graphics.Color.ParseColor("#F0F0F0"));
 
         // The webview can miss its size when the handler connects before the first
         // layout pass; re-apply once the layout pass has run.
