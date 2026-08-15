@@ -20,7 +20,7 @@ public class InviteCodeService(IMongoDatabase database, IServiceProvider service
     private const int MaxRequestCount = 50;
 
     // Hardcoded invite codes for store review — always valid, never consumed
-    private static readonly HashSet<string> HardcodedCodes = ["HISTORY7K", "KIMBEOMSU"];
+    private static readonly HashSet<string> HardcodedCodes = ["HISTORY7K", "KIMBUMSU"];
     private const int MaxAdminCreateCount = 100;
 
     /// <inheritdoc />
