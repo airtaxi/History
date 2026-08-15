@@ -112,14 +112,9 @@ public partial class EditPostPage : ContentPage
             var isVideo = mimeType.StartsWith("video/");
             var maxSize = isVideo ? CommonsConstants.MaxUploadFileSize : CommonsConstants.MaxImageUploadFileSize;
 
-            if (mediaFile.Size > maxSize)
+            if (mediaFile.Bytes.Length > maxSize)
             {
                 sizeExceed = true;
-                if (mediaFile.FilePath != null)
-                {
-                    try { File.Delete(mediaFile.FilePath); }
-                    catch { }
-                }
                 continue;
             }
 
@@ -133,7 +128,7 @@ public partial class EditPostPage : ContentPage
                 if (!isExists) break;
             }
             while (true);
-            _attachmentViewModels.Add(mediaFile.FilePath != null ? new MediaAttachmentViewModel(randomFileName, mediaFile.FilePath, isVideo) : new MediaAttachmentViewModel(randomFileName, mediaFile.Bytes, isVideo));
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, mediaFile.Bytes, isVideo));
         }
 
         if (sizeExceed) Toast.Make("용량을 초과하는 미디어는 자동으로 제외되었습니다.").Show();
@@ -309,6 +304,7 @@ public partial class EditPostPage : ContentPage
 
         var fileName = Path.GetFileName(path);
         var extension = Path.GetExtension(fileName);
+        var bytes = File.ReadAllBytes(path);
         string randomFileName;
         do
         {
@@ -317,10 +313,7 @@ public partial class EditPostPage : ContentPage
             if (!isExists) break;
         }
         while (true);
-
-        var tempPath = Path.Combine(Path.GetTempPath(), randomFileName);
-        await Task.Run(() => File.Copy(path, tempPath, true));
-        _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, tempPath));
+        _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, bytes));
     }
 
     private async void OnInsertImageTapped(object sender, TappedEventArgs e)
@@ -343,29 +336,24 @@ public partial class EditPostPage : ContentPage
 
         if (files.Any(x => x.Extension.Equals("webp", StringComparison.OrdinalIgnoreCase)))
             _ = Toast.Make("webp 애니메이션 파일을 선택하신 경우, 업로드를 처리하는 데 시간이 오래 걸릴 수 있습니다.").Show();
-
-        // Copy every stream to a temp file concurrently instead of buffering
-        // full images in memory on the UI thread.
-        var loadedFiles = await Task.WhenAll(files.Select(async file =>
+            
+        foreach (var file in files)
         {
-            var fileName = file.GenerateFileName();
-            var tempPath = Path.Combine(Path.GetTempPath(), fileName);
             using var stream = await file.OpenReadAsync();
-            using var fileStream = File.Create(tempPath);
-            await stream.CopyToAsync(fileStream);
-            return (File: file, FileName: fileName, TempPath: tempPath);
-        }));
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream); 
+            memoryStream.Seek(0, SeekOrigin.Begin);
 
-        foreach (var (file, fileName, tempPath) in loadedFiles)
-        {
-            if (new FileInfo(tempPath).Length > CommonsConstants.MaxImageUploadFileSize)
+            var fileName = file.GenerateFileName();
+            var bytes = memoryStream.ToArray();
+            
+            if(bytes.Length > CommonsConstants.MaxImageUploadFileSize)
             {
                 sizeExceed = true;
-                File.Delete(tempPath);
                 continue;
             }
 
-            _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, tempPath));
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, bytes));
             file.Dispose();
         }
 #elif ANDROID
@@ -378,13 +366,9 @@ public partial class EditPostPage : ContentPage
 
         foreach (var image in images)
         {
-            if (image.Size > CommonsConstants.MaxImageUploadFileSize)
+            if(image.Bytes.Length > CommonsConstants.MaxImageUploadFileSize)
             {
                 sizeExceed = true;
-                if (image.FilePath != null)
-                {
-                    try { File.Delete(image.FilePath); } catch { }
-                }
                 continue;
             }
 
@@ -397,7 +381,7 @@ public partial class EditPostPage : ContentPage
                 if (!isExists) break;
             }
             while (true);
-            _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, image.FilePath));
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, image.Bytes));
         }
 #endif
 
@@ -423,26 +407,23 @@ public partial class EditPostPage : ContentPage
         var files = results?.Files?.ToArray();
         if (files == null || files.Length == 0) return;
 
-        var loadedFiles = await Task.WhenAll(files.Select(async file =>
+        foreach (var file in files)
         {
-            var fileName = file.GenerateFileName();
-            var tempPath = Path.Combine(Path.GetTempPath(), fileName);
             using var stream = await file.OpenReadAsync();
-            using var fileStream = File.Create(tempPath);
-            await stream.CopyToAsync(fileStream);
-            return (File: file, FileName: fileName, TempPath: tempPath);
-        }));
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            memoryStream.Seek(0, SeekOrigin.Begin);
 
-        foreach (var (file, fileName, tempPath) in loadedFiles)
-        {
-            if (new FileInfo(tempPath).Length > CommonsConstants.MaxUploadFileSize)
+            var fileName = file.GenerateFileName();
+            var bytes = memoryStream.ToArray();
+            
+            if(bytes.Length > CommonsConstants.MaxUploadFileSize)
             {
                 sizeExceed = true;
-                File.Delete(tempPath);
                 continue;
             }
 
-            _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, tempPath, true));
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, bytes, true));
             file.Dispose();
         }
 #elif ANDROID
@@ -452,13 +433,9 @@ public partial class EditPostPage : ContentPage
 
         foreach (var video in videos)
         {
-            if (video.Size > CommonsConstants.MaxUploadFileSize)
+            if (video.Bytes.Length > CommonsConstants.MaxUploadFileSize)
             {
                 sizeExceed = true;
-                if (video.FilePath != null)
-                {
-                    try { File.Delete(video.FilePath); } catch { }
-                }
                 continue;
             }
 
@@ -471,7 +448,7 @@ public partial class EditPostPage : ContentPage
                 if (!isExists) break;
             }
             while (true);
-            _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, video.FilePath, true));
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, video.Bytes, true));
         }
 #endif
 
@@ -538,6 +515,7 @@ public partial class EditPostPage : ContentPage
                             IsSpoiler = viewModel.IsSpoiler
                         };
                         mediaAndUploadContents.Add(uploadContent);
+                        files.Add(viewModel.FileName, viewModel.Data);
                     }
                     else
                     {
@@ -547,12 +525,6 @@ public partial class EditPostPage : ContentPage
                         mediaAndUploadContents.Add(mediaContent);
                     }
                 }
-
-                // Read attachment bytes off the UI thread; large media files would
-                // otherwise freeze the editor during upload preparation.
-                files = await Task.Run(() => _attachmentViewModels
-                    .Where(viewModel => viewModel.IsUpload)
-                    .ToDictionary(viewModel => viewModel.FileName, viewModel => viewModel.Data));
             }
 
             var contents = editorContents.Concat(mediaAndUploadContents).ToList();
@@ -590,7 +562,7 @@ public partial class EditPostPage : ContentPage
             }
 
             // Save draft before upload to prevent data loss on crash or error
-            if (_post == null && !_isKakaoShare && !_isKakaoEdit && !_isKakaoOnlyWrite && HasDraftableContent()) await SaveDraftAsync();
+            if (_post == null && !_isKakaoShare && !_isKakaoEdit && !_isKakaoOnlyWrite && HasDraftableContent()) SaveDraft();
 
             MainActivityIndicator.IsRunning = true;
 
@@ -783,7 +755,7 @@ public partial class EditPostPage : ContentPage
     /// Saves the current editor state as a draft to disk.
     /// Media files are copied to a dedicated draft directory to avoid disposal.
     /// </summary>
-    private async Task SaveDraftAsync()
+    private void SaveDraft()
     {
         var draftDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "History", "Drafts", "Media");
         if (!Directory.Exists(draftDirectoryPath)) Directory.CreateDirectory(draftDirectoryPath);
@@ -806,11 +778,7 @@ public partial class EditPostPage : ContentPage
 
             // Copy media data to draft directory to prevent loss on Dispose
             var draftMediaPath = Path.Combine(draftDirectoryPath, viewModel.FileName);
-            await Task.Run(() =>
-            {
-                if (viewModel.FilePath != null && File.Exists(viewModel.FilePath)) File.Copy(viewModel.FilePath, draftMediaPath, true);
-                else File.WriteAllBytes(draftMediaPath, viewModel.Data);
-            });
+            File.WriteAllBytes(draftMediaPath, viewModel.Data);
 
             draft.MediaAttachments.Add(new PostDraftMediaAttachment
             {
@@ -837,14 +805,8 @@ public partial class EditPostPage : ContentPage
         {
             if (!File.Exists(attachment.FilePath)) continue;
 
-            // Copy the draft file to a temp path so the draft directory can be
-            // deleted afterwards without breaking the restored attachments.
-            var extension = Path.GetExtension(attachment.FileName);
-            var randomFileName = Path.GetRandomFileName().Replace(".", string.Empty) + extension;
-            var tempPath = Path.Combine(Path.GetTempPath(), randomFileName);
-            await Task.Run(() => File.Copy(attachment.FilePath, tempPath));
-
-            var viewModel = new MediaAttachmentViewModel(attachment.FileName, tempPath, attachment.IsVideo)
+            var bytes = File.ReadAllBytes(attachment.FilePath);
+            var viewModel = new MediaAttachmentViewModel(attachment.FileName, bytes, attachment.IsVideo)
             {
                 Description = attachment.Description ?? string.Empty,
                 IsSpoiler = attachment.IsSpoiler
@@ -893,7 +855,7 @@ public partial class EditPostPage : ContentPage
         if (!HasDraftableContent()) return true;
 
         var saveDraft = await DisplayAlertAsync("임시 저장", "작성 중인 내용이 있습니다. 임시 저장하시겠습니까?", "임시 저장", "저장하지 않음");
-        if (saveDraft) await SaveDraftAsync();
+        if (saveDraft) SaveDraft();
 
         return true;
     }
@@ -1257,7 +1219,7 @@ public partial class EditPostPage : ContentPage
             await App.PushModalAsync(page);
 
             var bytes = await page.GetResultAsync();
-            if (bytes != null) await viewModel.ApplyEditAsync(bytes);
+            if (bytes != null) viewModel.ApplyEdit(bytes);
         }
         finally { _preventDispose = false; }
     }
@@ -1585,7 +1547,7 @@ public partial class EditPostPage : ContentPage
                         }
                         else
                         {
-                            if (!File.Exists(attachment.FilePath)) File.WriteAllBytes(attachment.FilePath, attachment.Data);
+                            File.WriteAllBytes(attachment.FilePath, attachment.Data);
                             var key = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadVideo(attachment.FilePath));
                             media.media_path = key;
                             await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.WaitForVideoUploadFinish(key));
@@ -1792,7 +1754,7 @@ public partial class EditPostPage : ContentPage
             }
             else
             {
-                if (!File.Exists(attachment.FilePath)) File.WriteAllBytes(attachment.FilePath, attachment.Data);
+                File.WriteAllBytes(attachment.FilePath, attachment.Data);
                 var key = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadVideo(attachment.FilePath));
                 media.media_path = key;
                 await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.WaitForVideoUploadFinish(key));

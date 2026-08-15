@@ -8,18 +8,7 @@ namespace History.MobileClient.ViewModels;
 
 public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
 {
-    private byte[] _data;
-
-    public byte[] Data
-    {
-        get
-        {
-            if (_data == null && IsUpload && FilePath != null && File.Exists(FilePath)) _data = File.ReadAllBytes(FilePath);
-            return _data;
-        }
-        private set { _data = value; }
-    }
-
+    public byte[] Data { get; private set; }
     public MediaContent ServerContent { get; }
     public string KakaoServerPath { get; }
 
@@ -80,27 +69,19 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
         else ImageSource = ImageSource.FromFile("video.png");
     }
 
-    public MediaAttachmentViewModel(string fileName, string filePath, bool isVideo = false)
-    {
-        FileName = fileName;
-        FilePath = filePath;
-        IsVideo = isVideo;
-        ImageSource = isVideo ? ImageSource.FromFile("video.png") : ImageSource.FromFile(filePath);
-    }
-
-    public async Task ApplyEditAsync(byte[] imageBytes)
+    public void ApplyEdit(byte[] imageBytes)
     {
         if (IsVideo || !IsUpload) return;
 
+        if (File.Exists(FilePath)) File.Delete(FilePath);
+
+        Data = imageBytes;
+
         var fileExtension = Path.GetExtension(FilePath);
         var randomFileName = Path.GetRandomFileName().Replace(".", string.Empty) + fileExtension;
-        var newFilePath = Path.Combine(Path.GetTempPath(), randomFileName);
+        FilePath = Path.Combine(Path.GetTempPath(), randomFileName);
 
-        await Task.Run(() => File.WriteAllBytes(newFilePath, imageBytes));
-
-        if (File.Exists(FilePath)) File.Delete(FilePath);
-        Data = imageBytes;
-        FilePath = newFilePath;
+        File.WriteAllBytes(FilePath, imageBytes);
         ImageSource = ImageSource.FromFile(FilePath);
     }
 
