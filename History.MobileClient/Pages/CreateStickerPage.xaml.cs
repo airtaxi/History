@@ -162,7 +162,7 @@ public partial class CreateStickerPage : ContentPage
             if ((image.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) || image.FileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)) && addedCount == 0)
                 _ = Toast.Make("움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
 
-            var memoryStream = new MemoryStream(image.Bytes);
+            var memoryStream = new MemoryStream(image.GetBytes());
             _assets.Add(image.FileName, memoryStream);
             AddAssetToUI(image.FileName, memoryStream);
             addedCount++;
