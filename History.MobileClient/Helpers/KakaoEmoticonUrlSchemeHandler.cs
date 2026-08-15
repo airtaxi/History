@@ -1,4 +1,4 @@
-#if IOS
+﻿#if IOS
 
 using System.Collections.Concurrent;
 using System.Net;
@@ -33,16 +33,18 @@ public sealed class KakaoEmoticonUrlSchemeHandler : NSObject, IWKUrlSchemeHandle
 
     public void StartUrlSchemeTask(WKWebView webView, IWKUrlSchemeTask urlSchemeTask)
     {
-        var rawUri = GetRawUri(urlSchemeTask.Request?.Url);
+        var request = urlSchemeTask.Request;
+        var rawUri = GetRawUri(request == null ? null : request.Url);
         if (rawUri == null)
         {
-            urlSchemeTask.DidFailWithError(new NSError(NSError.NSUrlErrorDomain, (nint)NSURLError.BadURL));
+            // NSURLErrorBadURL
+            urlSchemeTask.DidFailWithError(new NSError(NSError.NSUrlErrorDomain, -1000));
             return;
         }
 
         if (s_cache.TryGetValue(rawUri, out var cachedBytes))
         {
-            Respond(urlSchemeTask, urlSchemeTask.Request.Url, cachedBytes);
+            Respond(urlSchemeTask, request.Url, cachedBytes);
             return;
         }
 
@@ -59,7 +61,8 @@ public sealed class KakaoEmoticonUrlSchemeHandler : NSObject, IWKUrlSchemeHandle
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                urlSchemeTask.DidFailWithError(new NSError(NSError.NSUrlErrorDomain, (nint)NSURLError.BadServerResponse));
+                // NSURLErrorBadServerResponse
+                urlSchemeTask.DidFailWithError(new NSError(NSError.NSUrlErrorDomain, -1011));
                 return;
             }
 
@@ -71,13 +74,14 @@ public sealed class KakaoEmoticonUrlSchemeHandler : NSObject, IWKUrlSchemeHandle
             if (s_cache.Count >= CacheEntryLimit) s_cache.Clear();
             s_cache[rawUri] = bytes;
 
-            Respond(urlSchemeTask, urlSchemeTask.Request.Url, bytes);
+            Respond(urlSchemeTask, request.Url, bytes);
         }
         catch
         {
             // Fetching with the Referer failed; fail this image load (the page
             // itself must survive).
-            urlSchemeTask.DidFailWithError(new NSError(NSError.NSUrlErrorDomain, (nint)NSURLError.CannotLoadFromNetwork));
+            // NSURLErrorCannotLoadFromNetwork
+            urlSchemeTask.DidFailWithError(new NSError(NSError.NSUrlErrorDomain, -2000));
         }
     }
 
@@ -88,7 +92,9 @@ public sealed class KakaoEmoticonUrlSchemeHandler : NSObject, IWKUrlSchemeHandle
 
     private static string GetRawUri(NSUrl displayUrl)
     {
-        var query = displayUrl?.Query; // "?url=<encoded>" or null
+        if (displayUrl == null) return null;
+
+        var query = displayUrl.Query; // "?url=<encoded>"
         if (string.IsNullOrEmpty(query) || !query.StartsWith("?url=", StringComparison.Ordinal)) return null;
 
         return Uri.UnescapeDataString(query[5..]);
@@ -96,7 +102,7 @@ public sealed class KakaoEmoticonUrlSchemeHandler : NSObject, IWKUrlSchemeHandle
 
     private static void Respond(IWKUrlSchemeTask urlSchemeTask, NSUrl displayUrl, byte[] bytes)
     {
-        urlSchemeTask.DidReceiveResponse(NSUrlResponse.FromUrl(displayUrl, "image/png", bytes.Length, null));
+        urlSchemeTask.DidReceiveResponse(new NSUrlResponse(displayUrl, "image/png", bytes.Length, null));
         urlSchemeTask.DidReceiveData(NSData.FromArray(bytes));
         urlSchemeTask.DidFinish();
     }
