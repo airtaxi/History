@@ -109,6 +109,7 @@
                                         <ffimageloading:CachedImage
                                             Grid.Row="0"
                                             Aspect="AspectFill"
+                                            BitmapOptimizations="True"
                                             DownsampleToViewSize="True"
                                             Source="{x:Binding ImageSource,
                                                                Mode=OneWay}" />
