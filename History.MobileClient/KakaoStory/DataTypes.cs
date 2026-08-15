@@ -160,10 +160,16 @@ public partial class KakaoStoryApiHandler
             {
                 public string media_type;
                 public string media_path;
-                public List<string> caption;
+                public List<CaptionData> caption;
             }
             public string media_type;
             public List<MediaObject> media = new List<MediaObject>();
+
+            public class CaptionData
+            {
+                public string type = "text";
+                public string text;
+            }
         }
 
         public class UploadedImageProp
