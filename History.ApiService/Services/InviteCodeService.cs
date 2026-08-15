@@ -19,8 +19,8 @@ public class InviteCodeService(IMongoDatabase database, IServiceProvider service
     private const int CodeLength = 8;
     private const int MaxRequestCount = 50;
 
-    // Hardcoded invite code for store review — always valid, never consumed
-    private const string StoreReviewCode = "HISTORY7K";
+    // Hardcoded invite codes for store review — always valid, never consumed
+    private static readonly HashSet<string> HardcodedCodes = ["HISTORY7K", "KIMBEOMSU"];
     private const int MaxAdminCreateCount = 100;
 
     /// <inheritdoc />
@@ -122,7 +122,7 @@ public class InviteCodeService(IMongoDatabase database, IServiceProvider service
 
         code = code.Trim().ToUpper();
 
-        if (code == StoreReviewCode) return Result.Success();
+        if (HardcodedCodes.Contains(code)) return Result.Success();
 
         var existing = await _inviteCodeCollection.Find(x => x.Code == code).FirstOrDefaultAsync();
         if (existing == null) return (ErrorType.NotFound, "초대 코드를 찾을 수 없습니다.");
@@ -138,8 +138,8 @@ public class InviteCodeService(IMongoDatabase database, IServiceProvider service
 
         code = code.Trim().ToUpper();
 
-        // Store review code is never consumed — always remains valid
-        if (code == StoreReviewCode) return Result.Success();
+        // Hardcoded codes are never consumed — always remain valid
+        if (HardcodedCodes.Contains(code)) return Result.Success();
 
         var filter = Builders<InviteCode>.Filter.Eq(x => x.Code, code) & Builders<InviteCode>.Filter.Eq(x => x.IsActive, true);
         var update = Builders<InviteCode>.Update
