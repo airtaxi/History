@@ -38,13 +38,13 @@ public partial class MorePage : ContentPage
 
     private async void OnBookmarkedPostsGridTapped(object sender, TappedEventArgs e)
     {
-        var page = new BookmarkedPostsPage();
+        var page = new BlazorBookmarkedPostsPage();
         await App.PushAsync(page);
     }
 
     private async void OnPublicPostGridTapped(object sender, TappedEventArgs e)
     {
-        var page = new PublicPostsPage();
+        var page = new BlazorPublicPostsPage();
         await App.PushAsync(page);
     }
 

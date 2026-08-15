@@ -19,7 +19,7 @@ namespace History.MobileClient.ViewModels;
 // and load/refresh/switch logic; the Blazor feed renders Items and the native chrome binds
 // to the loading/scroll-to-top state. The legacy TimelinePage (dead code) keeps the static
 // ShouldRefresh flags that other pages still set.
-public partial class TimelineViewModel : ObservableObject
+public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
 {
     private bool _isInForeground;
     private bool _isKakaoStoryMode;
@@ -276,5 +276,5 @@ public partial class TimelineViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public Task SearchAsync() => App.PushAsync(new SearchPostsPage());
+    public Task SearchAsync() => App.PushAsync(new BlazorSearchPostsPage());
 }

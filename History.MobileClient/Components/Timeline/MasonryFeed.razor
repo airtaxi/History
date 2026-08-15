@@ -1,0 +1,104 @@
+@using System.Collections.Specialized
+@implements IDisposable
+@inject IJSRuntime JSRuntime
+@using Microsoft.Maui.Controls
+
+<div class="masonry-feed">
+    @if (EnablePullToRefresh)
+    {
+        <div class="pull-indicator" id="pull-indicator"></div>
+    }
+
+    @Header
+
+    <div class="feed" id="feed">
+        <div id="masonry-grid">
+            @foreach (var post in Feed.Items)
+            {
+                @if (ItemTemplate != null)
+                {
+                    @ItemTemplate(post)
+                }
+                else
+                {
+                    <PostCard ViewModel="post" @key="GetPostKey(post)" />
+                }
+            }
+        </div>
+        <div id="load-more-sentinel"></div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public IBlazorFeedViewModel Feed { get; set; }
+
+    // Content rendered inside the scroll area above the masonry grid (e.g. the mode pills).
+    [Parameter]
+    public RenderFragment? Header { get; set; }
+
+    // Card selector replacing the XAML ItemTemplateSelector. Defaults to the standard
+    // post card; feeds with multiple card types (public posts) pass their own template.
+    [Parameter]
+    public RenderFragment<BasePostViewModel>? ItemTemplate { get; set; }
+
+    // The search page has no pull-to-refresh; it disables the gesture and the indicator.
+    [Parameter]
+    public bool EnablePullToRefresh { get; set; } = true;
+
+    private DotNetObjectReference<MasonryFeed> _dotNetReference;
+
+    public static string GetPostKey(BasePostViewModel viewModel)
+    {
+        return viewModel.RepostId ?? viewModel switch
+        {
+            HistoryPostViewModel historyViewModel => historyViewModel.Post.Id,
+            KakaoPostViewModel kakaoViewModel => kakaoViewModel.PostData.id,
+            _ => viewModel.GetHashCode().ToString()
+        };
+    }
+
+    protected override void OnInitialized()
+    {
+        Feed.Items.CollectionChanged += OnItemsCollectionChanged;
+        Feed.ScrollToTopRequested += OnScrollToTopRequested;
+        Application.Current.RequestedThemeChanged += OnRequestedThemeChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _dotNetReference == null)
+        {
+            _dotNetReference = DotNetObjectReference.Create(this);
+            var theme = Utils.GetGlobalAppTheme() == AppTheme.Dark ? "dark" : "light";
+            await JSRuntime.InvokeVoidAsync("timelineInterop.init", _dotNetReference, theme);
+        }
+    }
+
+    private void OnItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    private void OnScrollToTopRequested() => _ = JSRuntime.InvokeVoidAsync("timelineInterop.scrollToTop");
+
+    private void OnRequestedThemeChanged(object sender, AppThemeChangedEventArgs e)
+    {
+        var theme = Utils.GetGlobalAppTheme() == AppTheme.Dark ? "dark" : "light";
+        _ = JSRuntime.InvokeVoidAsync("timelineInterop.setTheme", theme);
+    }
+
+    [JSInvokable]
+    public Task LoadMoreAsync() => Feed.LoadMoreAsync();
+
+    [JSInvokable]
+    public void ScrollChanged(double offsetY) => Feed.SetScrollToTopVisible(offsetY > 0);
+
+    [JSInvokable]
+    public Task PullToRefreshAsync() => Feed.RefreshAsync();
+
+    public void Dispose()
+    {
+        Application.Current.RequestedThemeChanged -= OnRequestedThemeChanged;
+        Feed.Items.CollectionChanged -= OnItemsCollectionChanged;
+        Feed.ScrollToTopRequested -= OnScrollToTopRequested;
+        _dotNetReference?.Dispose();
+    }
+}
