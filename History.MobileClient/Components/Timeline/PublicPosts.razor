@@ -1,0 +1,17 @@
+<MasonryFeed Feed="ViewModel">
+    <ItemTemplate>
+        @if (context is HistoryPublicPostViewModel publicViewModel)
+        {
+            <PublicPostCard ViewModel="publicViewModel" @key="MasonryFeed.GetPostKey(publicViewModel)" />
+        }
+        else
+        {
+            <PostCard ViewModel="context" @key="MasonryFeed.GetPostKey(context)" />
+        }
+    </ItemTemplate>
+</MasonryFeed>
+
+@code {
+    [Parameter, EditorRequired]
+    public PublicPostsViewModel ViewModel { get; set; }
+}

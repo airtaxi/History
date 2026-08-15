@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.BlazorSearchPostsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:blazor="clr-namespace:Microsoft.AspNetCore.Components.WebView.Maui;assembly=Microsoft.AspNetCore.Components.WebView.Maui"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    IsEnabled="{Binding IsEnabled}"
+    Loaded="OnLoaded"
+    Shell.NavBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,0,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout>
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="게시글 검색"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <SearchBar
+            x:Name="MainSearchBar"
+            Grid.Row="1"
+            Placeholder="게시글 내용 또는 #해시태그 검색"
+            SearchButtonPressed="OnSearchButtonPressed" />
+
+        <Grid Grid.Row="2" SafeAreaEdges="None">
+            <blazor:BlazorWebView x:Name="MainBlazorWebView" HostPage="wwwroot/index.html" />
+        </Grid>
+
+        <Label
+            x:Name="EmptyLabel"
+            Grid.Row="2"
+            FontAttributes="Bold"
+            FontSize="16"
+            HorizontalOptions="Center"
+            IsVisible="{Binding IsEmptyVisible}"
+            Text="비어있음"
+            VerticalOptions="Center" />
+
+        <Border
+            x:Name="ScrollToTopBorder"
+            Grid.Row="2"
+            Margin="12"
+            Background="#808080"
+            HeightRequest="48"
+            HorizontalOptions="Start"
+            IsVisible="{Binding IsScrollToTopVisible}"
+            Opacity="0.8"
+            StrokeThickness="0"
+            VerticalOptions="End"
+            WidthRequest="48">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnScrollToTopBorderTapped" />
+            </Border.GestureRecognizers>
+            <Border.Shadow>
+                <Shadow
+                    Brush="Black"
+                    Opacity="0.4"
+                    Radius="3"
+                    Offset="1,2" />
+            </Border.Shadow>
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="30" />
+            </Border.StrokeShape>
+            <Image HeightRequest="52" WidthRequest="52">
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Keyboard_arrow_up}"
+                        Size="80"
+                        Color="White" />
+                </Image.Source>
+            </Image>
+        </Border>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="3"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="{Binding IsLoading}"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
+    </Grid>
+</ContentPage>

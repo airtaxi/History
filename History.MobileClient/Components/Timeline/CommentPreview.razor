@@ -1,6 +1,6 @@
 @inherits MvvmCardBase<BaseCommentViewModel>
 
-<div class="comment-preview" @onclick="OnCommentClicked">
+<div class="comment-preview" @onclick="OnCommentClicked" @onclick:stopPropagation="true">
     <img class="avatar avatar-32" src="@ViewModel.ProfileMedia?.Uri" />
     <div class="comment-content">
         <CascadingValue Value="ViewModel">

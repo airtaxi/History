@@ -288,6 +288,7 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 - **BlazorTimelinePage** (`Pages/BlazorTimelinePage.xaml`): `BlazorWebView` 호스트 페이지. Android 핸들러에서 `HapticFeedbackEnabled = false`(네이티브 롱클릭 햅틱 차단), `MediaPlaybackRequiresUserGesture = false`(인라인 영상 autoplay 허용), 테마 색 WebView 배경 지정.
 - **TimelineViewModel** (`ViewModels/TimelineViewModel.cs`): 포스트 로드/새로고침/모드 전환 로직. `TimelinePage.xaml.cs`에서 이식.
 - **Components/Timeline/**: Blazor 컴포넌트. `Timeline.razor`(피드 루트), `PostCard.razor`, `CommentPreview.razor`, `MediaCarousel.razor`, `TextContents.razor`, `PollCard.razor`, `ExternalUrlCard.razor`. `MvvmCardBase<T>`가 MAUI의 BindingContext를 대체 (PropertyChanged 구독 → 재렌더).
+- **MasonryFeed.razor**: 타임라인 피드의 공용 렌더러 (피드 마크업/무한스크롤/인터롭 init/Dispose/스크롤탑/풀투리프레시). `IFeed`(IBlazorFeedViewModel) 파라미터로 데이터 소스와 무관하게 동작하며, `Header`(스크롤 영역 상단 콘텐츠, 타임라인 pills), `ItemTemplate`(XAML ItemTemplateSelector 대응, 기본 PostCard), `EnablePullToRefresh`(검색 페이지는 false) 파라미터 제공. `Timeline.razor`는 pills + MasonryFeed 조합으로 축소됨.
 - **wwwroot/timeline-interop.js**: DOM 전용 로직 (테마, 무한 스크롤, 캐러셀 인디케이터/높이, 당겨서 새로고침, 롱프레스 복사, IntersectionObserver 기반 영상 시야 이탈 리셋, 피드 영상 강제 뮤트, Masonry 스태거드).
 - **wwwroot/masonry.pkgd.min.js**: 로컬 번들 Masonry.js 4.2.2 (오프라인 동작). `TimelinePage.OnSizeChanged`와 동일하게 `floor(내부폭 / 700) + 1` 컬럼으로 스태거드 배치 — 1컬럼은 일반 문서 흐름(LinearItemsLayout 대응), 2컬럼 이상만 Masonry 활성화(`#masonry-grid.masonry-active`).
 - **wwwroot/timeline.css**: 피드 스타일. `data-theme` 속성 기반 다크/라이트 테마. `index.html`의 인라인 스크립트가 `prefers-color-scheme`으로 첫 페인트 전 테마를 선적용해 다크 모드 흰색 플래시 방지.
@@ -302,6 +303,16 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 - **그리드 모드 ↔ 타임라인 모드**: `UseGridLayout`에 따라 `.preview-grid`(CSS grid 3열, `GridItemsLayout` Span=3/Spacing=1 대응)와 `#masonry-grid` + `PostCard` 재사용을 전환. 레이아웃 토글은 리사이즈 없이 DOM만 바뀌므로 `Profile.razor`가 `timelineInterop.initMasonry`/`destroyMasonry`를 명시 호출.
 - **wwwroot/profile.css**: 프로필 카드/미리보기 그리드 스타일 (`index.html`에서 timeline.css 뒤에 로드).
 - 유의: XAML `CollectionView` 기반 기능(RecyclerView 가상화 설정, iOS 스크롤 위치 저장/복원, 1초 스크롤 폴링)은 Blazor 패턴(IntersectionObserver/scroll 이벤트)으로 대체됨.
+
+### Blazor 서브 피드 페이지 (발견/검색/관심글)
+
+`BlazorPublicPostsPage`(발견), `BlazorSearchPostsPage`(게시글 검색), `BlazorBookmarkedPostsPage`(관심글)는 각각 `PublicPostsPage`/`SearchPostsPage`/`BookmarkedPostsPage`의 Blazor 이식입니다. 셋 다 `MasonryFeed`를 공유 피드로 사용하며 페이지 크롬(헤더/검색바/빈 상태/스크롤탑/인디케이터)은 네이티브로 유지합니다:
+
+- **뷰모델**: `PublicPostsViewModel`(`GetPublicPosts` 페이징, `PublicPostsPage.ShouldRefresh` 체크), `SearchPostsViewModel`(`SearchAsync(query)`/LoadMore, `IsEmptyVisible`), `BookmarkedPostsViewModel`(`GetBookmarkedPosts` 20개 페이징, `PostUnbookmarkedMessage` 처리, `IsEmptyVisible`, 스크롤탑 표면) — 모두 `IBlazorFeedViewModel` 구현. 코드비하인드(페이지)에서 이식.
+- **루트 컴포넌트**: `PublicPosts.razor`(ItemTemplate 셀렉터: `HistoryPublicPostViewModel` → PublicPostCard, 리포스트 → PostCard), `SearchPosts.razor`(풀투리프레시 비활성), `BookmarkedPosts.razor`.
+- **PublicPostCard.razor**: `PublicPostTemplate` 이식 — 카드 탭이 프로필 이동(`HandleProfileTapCommand`), 더보기는 `HandlePublicPostMoreTapCommand`, 액션 행/댓글 프리뷰 없음, 공유 섹션 유지.
+- **네이티브 크롬**: 검색 페이지는 네이티브 SearchBar 유지(검색 실행 시 키보드 숨김, iOS 소프트 키보드 SafeAreaEdges). 관심글 페이지는 빈 상태 오버레이(네이티브) + **스크롤탑 버튼 포함**(레거시 XAML 페이지의 누락 버그 수정).
+- 구 페이지 3개는 데드코드로 유지(`PublicPostsPage.ShouldRefresh`는 HistoryPostViewModel/BulkPostManagePage/MorePage에서 설정되므로 필수 보관).
 
 ### 앱 구조
 

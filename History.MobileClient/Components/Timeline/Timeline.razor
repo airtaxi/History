@@ -1,88 +1,17 @@
-﻿@using System.Collections.Specialized
-@implements IDisposable
-@inject IJSRuntime JSRuntime
-@using Microsoft.Maui.Controls
-
-<div class="timeline">
-    <div class="pull-indicator" id="pull-indicator"></div>
-
-    <div class="pills">
-        <button type="button" class="pill @(ViewModel.IsKakaoStoryMode ? string.Empty : "pill-active")" @onclick="OnHistoryPillClick">히스토리</button>
-        <button type="button" class="pill @(ViewModel.IsKakaoStoryMode ? "pill-active" : string.Empty)" @onclick="OnKakaoStoryPillClick">카카오스토리</button>
-    </div>
-
-    <div class="feed" id="feed">
-        <div id="masonry-grid">
-            @foreach (var post in ViewModel.Items)
-            {
-                <PostCard ViewModel="post" @key="GetPostKey(post)" />
-            }
+﻿<MasonryFeed Feed="ViewModel">
+    <Header>
+        <div class="pills">
+            <button type="button" class="pill @(ViewModel.IsKakaoStoryMode ? string.Empty : "pill-active")" @onclick="OnHistoryPillClick">히스토리</button>
+            <button type="button" class="pill @(ViewModel.IsKakaoStoryMode ? "pill-active" : string.Empty)" @onclick="OnKakaoStoryPillClick">카카오스토리</button>
         </div>
-        <div id="load-more-sentinel"></div>
-    </div>
-</div>
+    </Header>
+</MasonryFeed>
 
 @code {
     [Parameter, EditorRequired]
     public TimelineViewModel ViewModel { get; set; }
 
-    private DotNetObjectReference<Timeline> _dotNetReference;
-
-    protected override void OnInitialized()
-    {
-        ViewModel.Items.CollectionChanged += OnItemsCollectionChanged;
-        ViewModel.ScrollToTopRequested += OnScrollToTopRequested;
-        Application.Current.RequestedThemeChanged += OnRequestedThemeChanged;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && _dotNetReference == null)
-        {
-            _dotNetReference = DotNetObjectReference.Create(this);
-            var theme = Utils.GetGlobalAppTheme() == AppTheme.Dark ? "dark" : "light";
-            await JSRuntime.InvokeVoidAsync("timelineInterop.init", _dotNetReference, theme);
-        }
-    }
-
-    private void OnItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => InvokeAsync(StateHasChanged);
-
-    private void OnScrollToTopRequested() => _ = JSRuntime.InvokeVoidAsync("timelineInterop.scrollToTop");
-
-    private void OnRequestedThemeChanged(object sender, AppThemeChangedEventArgs e)
-    {
-        var theme = Utils.GetGlobalAppTheme() == AppTheme.Dark ? "dark" : "light";
-        _ = JSRuntime.InvokeVoidAsync("timelineInterop.setTheme", theme);
-    }
-
     private Task OnHistoryPillClick() => ViewModel.SwitchModeAsync(false);
 
     private Task OnKakaoStoryPillClick() => ViewModel.SwitchModeAsync(true);
-
-    private static string GetPostKey(BasePostViewModel viewModel)
-    {
-        return viewModel.RepostId ?? viewModel switch
-        {
-            HistoryPostViewModel historyViewModel => historyViewModel.Post.Id,
-            KakaoPostViewModel kakaoViewModel => kakaoViewModel.PostData.id,
-            _ => viewModel.GetHashCode().ToString()
-        };
-    }
-
-    [JSInvokable]
-    public Task LoadMoreAsync() => ViewModel.LoadMoreAsync();
-
-    [JSInvokable]
-    public void ScrollChanged(double offsetY) => ViewModel.SetScrollToTopVisible(offsetY > 0);
-
-    [JSInvokable]
-    public Task PullToRefreshAsync() => ViewModel.RefreshAsync();
-
-    public void Dispose()
-    {
-        Application.Current.RequestedThemeChanged -= OnRequestedThemeChanged;
-        ViewModel.Items.CollectionChanged -= OnItemsCollectionChanged;
-        ViewModel.ScrollToTopRequested -= OnScrollToTopRequested;
-        _dotNetReference?.Dispose();
-    }
 }

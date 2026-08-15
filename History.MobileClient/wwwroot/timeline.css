@@ -86,7 +86,7 @@ body {
     }
 }
 
-.timeline { min-height: 100%; }
+.timeline, .masonry-feed { min-height: 100%; }
 
 .pull-indicator {
     height: 0;

@@ -22,7 +22,7 @@ namespace History.MobileClient.ViewModels;
 // logic; the Blazor profile renders Items + ProfileVm and the native chrome binds to the
 // header/loading/scroll-to-top state. The legacy UserPage (dead code) keeps the static
 // ShouldRefresh flags that other pages still set.
-public partial class UserProfileViewModel : ObservableObject
+public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewModel
 {
     private bool _isInForeground;
     private bool _isKakaoStoryMode;

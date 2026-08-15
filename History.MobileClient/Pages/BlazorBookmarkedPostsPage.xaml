@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="History.MobileClient.Pages.BlazorBookmarkedPostsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:blazor="clr-namespace:Microsoft.AspNetCore.Components.WebView.Maui;assembly=Microsoft.AspNetCore.Components.WebView.Maui"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    IsEnabled="{Binding IsEnabled}"
+    Loaded="OnLoaded"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
+        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+    </ContentPage.Behaviors>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid
+            Grid.Row="0"
+            Padding="12,0,0,0"
+            BackgroundColor="{StaticResource Primary}"
+            HeightRequest="48">
+            <HorizontalStackLayout Spacing="8">
+                <Image HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Arrow_back_ios}" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontAttributes="Bold"
+                    FontSize="20"
+                    Text="관심글"
+                    TextColor="White"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <Grid Grid.Row="1" SafeAreaEdges="None">
+            <blazor:BlazorWebView x:Name="MainBlazorWebView" HostPage="wwwroot/index.html" />
+
+            <VerticalStackLayout
+                x:Name="EmptyStateLayout"
+                HorizontalOptions="Center"
+                IsVisible="{Binding IsEmptyVisible}"
+                Spacing="8"
+                VerticalOptions="Center">
+                <Image HeightRequest="64" WidthRequest="64">
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Bookmark}"
+                            Color="#808080" />
+                    </Image.Source>
+                </Image>
+                <Label
+                    FontSize="16"
+                    HorizontalOptions="Center"
+                    Text="관심글이 없습니다"
+                    TextColor="#808080" />
+                <Label
+                    FontSize="12"
+                    HorizontalOptions="Center"
+                    Text="게시글 옵션에서 '관심글로 저장'을 선택하세요"
+                    TextColor="#808080" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <Border
+            x:Name="ScrollToTopBorder"
+            Grid.Row="1"
+            Margin="12"
+            Background="#808080"
+            HeightRequest="48"
+            HorizontalOptions="Start"
+            IsVisible="{Binding IsScrollToTopVisible}"
+            Opacity="0.8"
+            StrokeThickness="0"
+            VerticalOptions="End"
+            WidthRequest="48">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnScrollToTopBorderTapped" />
+            </Border.GestureRecognizers>
+            <Border.Shadow>
+                <Shadow
+                    Brush="Black"
+                    Opacity="0.4"
+                    Radius="3"
+                    Offset="1,2" />
+            </Border.Shadow>
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="30" />
+            </Border.StrokeShape>
+            <Image HeightRequest="52" WidthRequest="52">
+                <Image.Source>
+                    <FontImageSource
+                        FontFamily="MaterialSharp"
+                        Glyph="{x:Static m:MaterialSharp.Keyboard_arrow_up}"
+                        Size="80"
+                        Color="White" />
+                </Image.Source>
+            </Image>
+        </Border>
+
+        <ActivityIndicator
+            x:Name="MainActivityIndicator"
+            Grid.RowSpan="2"
+            HeightRequest="100"
+            HorizontalOptions="Center"
+            IsRunning="{Binding IsLoading}"
+            VerticalOptions="Center"
+            WidthRequest="100"
+            Color="{StaticResource Primary}" />
+    </Grid>
+</ContentPage>
