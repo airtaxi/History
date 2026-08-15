@@ -314,6 +314,18 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 - **네이티브 크롬**: 검색 페이지는 네이티브 SearchBar 유지(검색 실행 시 키보드 숨김, iOS 소프트 키보드 SafeAreaEdges). 관심글 페이지는 빈 상태 오버레이(네이티브) + **스크롤탑 버튼 포함**(레거시 XAML 페이지의 누락 버그 수정).
 - 구 페이지 3개는 데드코드로 유지(`PublicPostsPage.ShouldRefresh`는 HistoryPostViewModel/BulkPostManagePage/MorePage에서 설정되므로 필수 보관).
 
+### 레거시 XAML 페이지 (취급 불필요)
+
+다음 XAML 페이지는 각각 Blazor 버전으로 대체되어 **레거시**로 간주합니다. 코드 수정·리팩토링·스타일 참고 대상에서 제외하고, 신규 기능 구현 시 Blazor 버전을 기준으로 삼습니다:
+
+- `Pages/TimelinePage.xaml` → `Pages/BlazorTimelinePage.xaml` (타임라인)
+- `Pages/UserPage.xaml` → `Pages/BlazorUserPage.xaml` (프로필)
+- `Pages/PublicPostsPage.xaml` → `Pages/BlazorPublicPostsPage.xaml` (발견)
+- `Pages/SearchPostsPage.xaml` → `Pages/BlazorSearchPostsPage.xaml` (게시글 검색)
+- `Pages/BookmarkedPostsPage.xaml` → `Pages/BlazorBookmarkedPostsPage.xaml` (관심글)
+
+단, `UserPage`(정적 `ShouldRefresh`/`ShouldRefreshKakaoStory` 플래그)와 발견/검색/관심글 페이지 3개(정적 `PublicPostsPage.ShouldRefresh` 플래그)는 다른 페이지들이 설정하는 정적 플래그 보관용 데드코드로 유지되므로 **삭제하지 않습니다**. 해당 정적 플래그 프로퍼티와 코드비하인드의 기본 골격만 유지하고, 그 외 로직은 취급하지 않습니다.
+
 ### 앱 구조
 
 앱쉘(AppShell.xaml)은 다음 탭으로 구성됩니다:
