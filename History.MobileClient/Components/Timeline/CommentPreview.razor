@@ -16,7 +16,7 @@
                         }
                         else if (content is StickerContentViewModel sticker && sticker.Media?.Uri != null)
                         {
-                            <img class="sticker comment-sticker" src="@sticker.Media.Uri" />
+                            <img class="sticker comment-sticker" src="@KakaoEmoticonUriHelper.GetDisplayUri(sticker.Media.Uri)" />
                         }
                         else if (content is BaseWrappedMediaContentsViewModel wrappedMedia)
                         {

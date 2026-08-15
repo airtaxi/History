@@ -31,10 +31,10 @@ public partial class BlazorTimelinePage : ContentPage
 
         _viewModel.ModeChanged += OnModeChanged;
 
-#if ANDROID
-        // Long-press copy is handled by the app itself (timelineInterop.attachLongPress),
-        // so suppress the native webview long-click haptic — otherwise every long-press
-        // (including on media) vibrates even when it doesn't copy anything.
+#if ANDROID || IOS
+        // Android: suppress the webview long-click haptic (timelineInterop.attachLongPress
+        // handles copy) and install the kakao emoticon interceptor. iOS: register the
+        // kakao emoticon scheme handler.
         TimelineBlazorWebView.HandlerChanged += OnTimelineBlazorWebViewHandlerChanged;
 #endif
 
@@ -93,6 +93,17 @@ public partial class BlazorTimelinePage : ContentPage
 
         Android.Util.Log.Info("BlazorSize", $"webview {webView.Width}x{webView.Height} parent {parentWidth}x{parentHeight}");
         if (webView.Width != parentWidth || webView.Height != parentHeight) webView.Layout(0, 0, parentWidth, parentHeight);
+    }
+#endif
+
+#if IOS
+    private void OnTimelineBlazorWebViewHandlerChanged(object sender, EventArgs e)
+    {
+        // Kakao emoticon images require the story.kakao.com Referer header, which
+        // WKWebView's <img> loader never sends. Razor rewrites those URLs to a
+        // custom scheme; register the handler that fetches them with the Referer.
+        if (TimelineBlazorWebView.Handler?.PlatformView is WebKit.WKWebView webView)
+            KakaoEmoticonUrlSchemeHandler.EnsureRegistered(webView.Configuration);
     }
 #endif
 
