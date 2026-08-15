@@ -9,7 +9,7 @@ public partial class KakaoMediaContentViewModel : BaseMediaContentViewModel
     private readonly Medium _medium;
     private readonly List<Medium> _allMedias;
 
-    public KakaoMediaContentViewModel(Medium medium, IEnumerable<Medium> allMedias, PostType postType) : base(medium.content_type?.StartsWith("video", StringComparison.OrdinalIgnoreCase) == true, false, null, postType, false)
+    public KakaoMediaContentViewModel(Medium medium, IEnumerable<Medium> allMedias, PostType postType) : base(medium.content_type?.StartsWith("video", StringComparison.OrdinalIgnoreCase) == true, false, GetCaptionText(medium), postType, false)
     {
         _medium = medium;
         _allMedias = [.. allMedias];
@@ -17,6 +17,14 @@ public partial class KakaoMediaContentViewModel : BaseMediaContentViewModel
         var index = _allMedias.FindIndex(x => x.media_path == medium.media_path || x.url == medium.url);
         SetFullScreenMedias(Math.Max(0, index), _allMedias.Count > 1);
         SetMediaAndOverlay();
+    }
+
+    // Kakao Story per-photo captions render as the media description overlay,
+    // mirroring the History media description surface.
+    private static string GetCaptionText(Medium medium)
+    {
+        var caption = medium.caption?.FirstOrDefault(x => x.type == "text")?.text;
+        return string.IsNullOrEmpty(caption) ? null : caption;
     }
 
     protected override List<IMediaViewModel> CreateFullScreenMedias(bool moreThanOneMedias) => [.. _allMedias.Select(medium => CreateMedia(medium, true, moreThanOneMedias, PostType))];

@@ -805,6 +805,7 @@ public partial class KakaoStoryApiHandler
                 public int height { get; set; }
                 public string sq_url { get; set; }
                 public string media_path { get; set; }
+                public List<MediaData.CaptionData> caption { get; set; }
                 public bool searchable { get; set; }
                 public string iid { get; set; }
                 public string preview_url { get; set; }
