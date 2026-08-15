@@ -1,4 +1,4 @@
-namespace History.MobileClient.Helpers;
+﻿namespace History.MobileClient.Helpers;
 
 // Shared constants and display-URI logic for Kakao Story emoticon images.
 //
@@ -18,10 +18,9 @@ public static class KakaoEmoticonUriHelper
 #if IOS
     // The signed URL lives in the query string because its signature is
     // case-sensitive and URL hosts may get case-normalized.
-    public static string GetDisplayUri(string rawUri) =>
-        rawUri != null && rawUri.StartsWith(EmoticonUrlPrefix, StringComparison.Ordinal)
-            ? $"{DisplayScheme}://emoticon?url={Uri.EscapeDataString(rawUri)}"
-            : rawUri;
+    public static string GetDisplayUri(string rawUri) => rawUri != null && rawUri.StartsWith(EmoticonUrlPrefix, StringComparison.Ordinal)
+        ? $"{DisplayScheme}://emoticon?url={Uri.EscapeDataString(rawUri)}"
+        : rawUri;
 #else
     public static string GetDisplayUri(string rawUri) => rawUri;
 #endif
