@@ -37,7 +37,7 @@ public partial class BlazorUserPage : ContentPage
         {
             Selector = "#app",
             ComponentType = typeof(Profile),
-            Parameters = new Dictionary<string, object?>
+            Parameters = new Dictionary<string, object>
             {
                 [nameof(Profile.ViewModel)] = _viewModel
             }

@@ -23,7 +23,7 @@ public partial class BlazorTimelinePage : ContentPage
         {
             Selector = "#app",
             ComponentType = typeof(Timeline),
-            Parameters = new Dictionary<string, object?>
+            Parameters = new Dictionary<string, object>
             {
                 [nameof(Timeline.ViewModel)] = _viewModel
             }
