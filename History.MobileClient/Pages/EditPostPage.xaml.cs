@@ -1402,6 +1402,12 @@ public partial class EditPostPage : ContentPage
     }
 
     /// <summary>
+    /// Builds the KakaoStory media caption payload from a media description.
+    /// An empty description maps to an empty caption array (verified web request format).
+    /// </summary>
+    private static List<MediaData.CaptionData> BuildKakaoStoryMediaCaption(string description) => string.IsNullOrEmpty(description) ? [] : [new KakaoStoryApiHandler.DataType.MediaData.CaptionData { text = description }];
+
+    /// <summary>
     /// Handles the full KakaoStory upload flow: cookie restoration/relogin, profanity
     /// filter, media upload, scrap, and WritePost. Returns true when the upload completed
     /// (or no longer needed), false when the caller should abort the surrounding flow.
@@ -1585,6 +1591,9 @@ public partial class EditPostPage : ContentPage
                             await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.WaitForVideoUploadFinish(key));
                             media.media_type = "video";
                         }
+
+                        // Mirror the per-photo description as the KakaoStory media caption.
+                        media.caption = BuildKakaoStoryMediaCaption(attachment.Description);
                         medias.Add(media);
                     }
                     // The spoiler marker comes first, then the sticker images, then the photos.
@@ -1789,6 +1798,10 @@ public partial class EditPostPage : ContentPage
                 await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.WaitForVideoUploadFinish(key));
                 media.media_type = "video";
             }
+
+            // New uploads mirror the description as the KakaoStory media caption.
+            // Existing server media keep caption null so their server-side caption is left untouched.
+            if (attachment.IsUpload) media.caption = BuildKakaoStoryMediaCaption(attachment.Description);
             medias.Add(media);
         }
         mediaData.media = medias;
