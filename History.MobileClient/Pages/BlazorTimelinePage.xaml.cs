@@ -42,6 +42,8 @@ public partial class BlazorTimelinePage : ContentPage
         // Capture the original XAML margins before any tab bar inset is applied.
         _scrollToTopBorderBaseMargin = ScrollToTopBorder.Margin;
         _writePostBorderBaseMargin = WritePostBorder.Margin;
+
+        RootGrid.SafeAreaEdges = new(SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.SoftInput);
 #endif
     }
 
