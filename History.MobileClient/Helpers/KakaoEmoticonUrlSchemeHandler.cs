@@ -94,10 +94,11 @@ public sealed class KakaoEmoticonUrlSchemeHandler : NSObject, IWKUrlSchemeHandle
     {
         if (displayUrl == null) return null;
 
-        var query = displayUrl.Query; // "?url=<encoded>"
-        if (string.IsNullOrEmpty(query) || !query.StartsWith("?url=", StringComparison.Ordinal)) return null;
+        // NSUrl.Query excludes the leading '?'.
+        var query = displayUrl.Query; // "url=<encoded>"
+        if (string.IsNullOrEmpty(query) || !query.StartsWith("url=", StringComparison.Ordinal)) return null;
 
-        return Uri.UnescapeDataString(query[5..]);
+        return Uri.UnescapeDataString(query[4..]);
     }
 
     private static void Respond(IWKUrlSchemeTask urlSchemeTask, NSUrl displayUrl, byte[] bytes)

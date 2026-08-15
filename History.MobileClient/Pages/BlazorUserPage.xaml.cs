@@ -1,6 +1,7 @@
-using History.MobileClient.Components.Profile;
+﻿using History.MobileClient.Components.Profile;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
+using Microsoft.AspNetCore.Components.WebView;
 using Microsoft.AspNetCore.Components.WebView.Maui;
 using System.ComponentModel;
 using UraniumUI.Icons.MaterialSymbols;
@@ -45,14 +46,19 @@ public partial class BlazorUserPage : ContentPage
 
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
-#if ANDROID || IOS
-        // Android: suppress the webview long-click haptic (timelineInterop.attachLongPress
-        // handles copy) and install the kakao emoticon interceptor. iOS: register the
-        // kakao emoticon scheme handler.
+#if ANDROID
+        // Suppress the webview long-click haptic (timelineInterop.attachLongPress
+        // handles copy) and install the kakao emoticon interceptor.
         UserBlazorWebView.HandlerChanged += OnUserBlazorWebViewHandlerChanged;
 #endif
 
 #if IOS
+        // The kakao emoticon scheme handler must be registered before the WKWebView is
+        // created, because WKWebView copies its configuration at creation time and
+        // ignores later mutations. BlazorWebViewInitializing exposes the pre-creation
+        // configuration for exactly this purpose.
+        UserBlazorWebView.BlazorWebViewInitializing += OnUserBlazorWebViewInitializing;
+
         // Capture the original XAML margins before any tab bar inset is applied.
         _scrollToTopBorderBaseMargin = ScrollToTopBorder.Margin;
         _writePostBorderBaseMargin = WritePostBorder.Margin;
@@ -118,14 +124,11 @@ public partial class BlazorUserPage : ContentPage
 #endif
 
 #if IOS
-    private void OnUserBlazorWebViewHandlerChanged(object sender, EventArgs e)
-    {
-        // Kakao emoticon images require the story.kakao.com Referer header, which
-        // WKWebView's <img> loader never sends. Razor rewrites those URLs to a
-        // custom scheme; register the handler that fetches them with the Referer.
-        if (UserBlazorWebView.Handler?.PlatformView is WebKit.WKWebView webView)
-            KakaoEmoticonUrlSchemeHandler.EnsureRegistered(webView.Configuration);
-    }
+    // Kakao emoticon images require the story.kakao.com Referer header, which
+    // WKWebView's <img> loader never sends. Razor rewrites those URLs to a
+    // custom scheme; registering the handler on the pre-creation configuration
+    // is what makes WKWebView actually route those requests to it.
+    private void OnUserBlazorWebViewInitializing(object sender, BlazorWebViewInitializingEventArgs e) => KakaoEmoticonUrlSchemeHandler.EnsureRegistered(e.Configuration);
 #endif
 
     protected override void OnAppearing()
