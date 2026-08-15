@@ -173,7 +173,7 @@
                     FontAttributes="Bold"
                     FontSize="18"
                     IsTextPredictionEnabled="False"
-                    MaxLength="8"
+                    MaxLength="9"
                     Placeholder="초대 코드를 입력하세요"
                     TextChanged="OnInviteCodeTextChanged" />
             </Border>
