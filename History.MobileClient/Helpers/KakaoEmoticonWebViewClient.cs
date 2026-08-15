@@ -19,8 +19,6 @@ namespace History.MobileClient.Helpers;
 // takes over emoticon image requests.
 public sealed class KakaoEmoticonWebViewClient : Android.Webkit.WebViewClient
 {
-    private const string EmoticonUrlPrefix = "https://mk.kakaocdn.net/dna/emoticons";
-    private const string KakaoStoryReferer = "https://story.kakao.com/";
     private const int CacheEntryLimit = 300;
 
     private static readonly HttpClient s_httpClient = new();
@@ -33,7 +31,7 @@ public sealed class KakaoEmoticonWebViewClient : Android.Webkit.WebViewClient
     public override Android.Webkit.WebResourceResponse ShouldInterceptRequest(Android.Webkit.WebView view, Android.Webkit.IWebResourceRequest request)
     {
         var url = request?.Url?.ToString();
-        if (url == null || !url.StartsWith(EmoticonUrlPrefix, StringComparison.Ordinal))
+        if (url == null || !url.StartsWith(KakaoEmoticonUriHelper.EmoticonUrlPrefix, StringComparison.Ordinal))
             return _inner.ShouldInterceptRequest(view, request);
 
         if (s_cache.TryGetValue(url, out var cachedBytes)) return CreateResponse(cachedBytes);
@@ -41,7 +39,7 @@ public sealed class KakaoEmoticonWebViewClient : Android.Webkit.WebViewClient
         try
         {
             using var message = new HttpRequestMessage(HttpMethod.Get, url);
-            message.Headers.Referrer = new Uri(KakaoStoryReferer);
+            message.Headers.Referrer = new Uri(KakaoEmoticonUriHelper.KakaoStoryReferer);
 
             // The synchronous HttpClient.Send overload is not supported by Android's
             // handler (PlatformNotSupportedException). Block on the async call instead

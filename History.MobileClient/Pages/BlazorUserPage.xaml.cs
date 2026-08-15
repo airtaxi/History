@@ -45,7 +45,10 @@ public partial class BlazorUserPage : ContentPage
 
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
-#if ANDROID
+#if ANDROID || IOS
+        // Android: suppress the webview long-click haptic (timelineInterop.attachLongPress
+        // handles copy) and install the kakao emoticon interceptor. iOS: register the
+        // kakao emoticon scheme handler.
         UserBlazorWebView.HandlerChanged += OnUserBlazorWebViewHandlerChanged;
 #endif
 
@@ -111,6 +114,17 @@ public partial class BlazorUserPage : ContentPage
 
         Android.Util.Log.Info("BlazorSize", $"webview {webView.Width}x{webView.Height} parent {parentWidth}x{parentHeight}");
         if (webView.Width != parentWidth || webView.Height != parentHeight) webView.Layout(0, 0, parentWidth, parentHeight);
+    }
+#endif
+
+#if IOS
+    private void OnUserBlazorWebViewHandlerChanged(object sender, EventArgs e)
+    {
+        // Kakao emoticon images require the story.kakao.com Referer header, which
+        // WKWebView's <img> loader never sends. Razor rewrites those URLs to a
+        // custom scheme; register the handler that fetches them with the Referer.
+        if (UserBlazorWebView.Handler?.PlatformView is WebKit.WKWebView webView)
+            KakaoEmoticonUrlSchemeHandler.EnsureRegistered(webView.Configuration);
     }
 #endif
 

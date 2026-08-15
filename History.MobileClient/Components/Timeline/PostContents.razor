@@ -43,7 +43,7 @@
     @<text>
         @if (sticker.Media?.Uri != null)
         {
-            <img class="sticker" src="@sticker.Media.Uri" @onclick="() => sticker.NavigateToStickerDetailCommand.Execute(null)" @onclick:stopPropagation="true" />
+            <img class="sticker" src="@KakaoEmoticonUriHelper.GetDisplayUri(sticker.Media.Uri)" @onclick="() => sticker.NavigateToStickerDetailCommand.Execute(null)" @onclick:stopPropagation="true" />
         }
         else
         {
