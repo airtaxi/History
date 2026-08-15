@@ -359,16 +359,24 @@ public class MainActivity : MauiAppCompatActivity
         var mediaUri = GetParcelableExtraSafe<Android.Net.Uri>(intent, Intent.ExtraStream);
         if (mediaUri == null) return;
 
-        var mediaInfo = AndroidMediaPickerHelper.GetMediaFile(mediaUri);
-        var mediaFiles = new List<MediaFile> { mediaInfo };
-
-        HandleMediaFiles(mediaFiles);
+        LoadAndHandleMediaFiles([mediaUri]);
     }
 
     private static void HandleMultipleMedia(Intent intent)
     {
         var mediaUris = GetParcelableListSafe<Android.Net.Uri>(intent, Intent.ExtraStream);
-        var mediaFiles = mediaUris.Select(AndroidMediaPickerHelper.GetMediaFile).ToList();
+        LoadAndHandleMediaFiles(mediaUris);
+    }
+
+    private static async void LoadAndHandleMediaFiles(List<Android.Net.Uri> mediaUris)
+    {
+        List<MediaFile> mediaFiles;
+        try
+        {
+            // Copy the shared media off the UI thread, in parallel for multiple files.
+            mediaFiles = await Task.Run(() => AndroidMediaPickerHelper.LoadMediaFiles(mediaUris));
+        }
+        catch { return; }
 
         HandleMediaFiles(mediaFiles);
     }
