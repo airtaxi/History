@@ -1,6 +1,7 @@
 #if ANDROID
 
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Http;
 
 namespace History.MobileClient.Helpers;
@@ -32,33 +33,40 @@ public sealed class KakaoEmoticonWebViewClient : Android.Webkit.WebViewClient
     public override Android.Webkit.WebResourceResponse ShouldInterceptRequest(Android.Webkit.WebView view, Android.Webkit.IWebResourceRequest request)
     {
         var url = request?.Url?.ToString();
-        if (url != null && url.StartsWith(EmoticonUrlPrefix, StringComparison.Ordinal))
+        if (url == null || !url.StartsWith(EmoticonUrlPrefix, StringComparison.Ordinal))
+            return _inner.ShouldInterceptRequest(view, request);
+
+        if (s_cache.TryGetValue(url, out var cachedBytes)) return CreateResponse(cachedBytes);
+
+        try
         {
-            if (s_cache.TryGetValue(url, out var cachedBytes)) return CreateResponse(cachedBytes);
+            using var message = new HttpRequestMessage(HttpMethod.Get, url);
+            message.Headers.Referrer = new Uri(KakaoStoryReferer);
 
-            try
-            {
-                using var message = new HttpRequestMessage(HttpMethod.Get, url);
-                message.Headers.Referrer = new Uri(KakaoStoryReferer);
-                using var response = s_httpClient.Send(message);
-                using var responseStream = response.Content.ReadAsStream();
-                using var memoryStream = new MemoryStream();
-                responseStream.CopyTo(memoryStream);
+            // The synchronous HttpClient.Send overload is not supported by Android's
+            // handler (PlatformNotSupportedException). Block on the async call instead
+            // — ShouldInterceptRequest runs on the webview's IO thread without a
+            // SynchronizationContext, so no deadlock is possible.
+            using var response = s_httpClient.SendAsync(message).ConfigureAwait(false).GetAwaiter().GetResult();
 
-                var bytes = memoryStream.ToArray();
-                if (s_cache.Count >= CacheEntryLimit) s_cache.Clear();
-                s_cache[url] = bytes;
+            if (response.StatusCode != HttpStatusCode.OK) return _inner.ShouldInterceptRequest(view, request);
 
-                return CreateResponse(bytes);
-            }
-            catch
-            {
-                // Fetching with the Referer failed; fall back to the native request
-                // (likely rejected by the CDN, but the page load must survive).
-            }
+            using var responseStream = response.Content.ReadAsStream();
+            using var memoryStream = new MemoryStream();
+            responseStream.CopyTo(memoryStream);
+
+            var bytes = memoryStream.ToArray();
+            if (s_cache.Count >= CacheEntryLimit) s_cache.Clear();
+            s_cache[url] = bytes;
+
+            return CreateResponse(bytes);
         }
-
-        return _inner.ShouldInterceptRequest(view, request);
+        catch
+        {
+            // Fetching with the Referer failed; fall back to the native request
+            // (likely rejected by the CDN, but the page load must survive).
+            return _inner.ShouldInterceptRequest(view, request);
+        }
     }
 
     public override bool ShouldOverrideUrlLoading(Android.Webkit.WebView view, Android.Webkit.IWebResourceRequest request) =>

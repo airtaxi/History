@@ -57,7 +57,8 @@ public partial class BlazorTimelinePage : ContentPage
         // Kakao emoticon images require the story.kakao.com Referer header, which the
         // webview's <img> loader never sends. Intercept and re-issue those requests
         // while delegating everything else to MAUI's own webview client.
-        webView.SetWebViewClient(new KakaoEmoticonWebViewClient(webView.WebViewClient));
+        if (webView.WebViewClient is not KakaoEmoticonWebViewClient)
+            webView.SetWebViewClient(new KakaoEmoticonWebViewClient(webView.WebViewClient));
 
         // Inline videos are swapped in by the viewmodel after the user's tap, so the
         // gesture happens before the <video> element exists. Allow muted autoplay
