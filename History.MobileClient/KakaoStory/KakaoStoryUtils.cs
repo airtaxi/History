@@ -160,10 +160,17 @@ public static class KakaoStoryUtils
     /// - bundled_feed.type == "share" -> inject the original activity into activities[0].@object
     ///                                    so the shared card renders the original post.
     /// Returns null when the post author is banned (relation.ban == "A") so callers skip it.
+    /// Also returns null for aggregated feeds (e.g. timehop) whose payload lives in
+    /// object.objects instead of the single-post surface the app can render.
     /// </summary>
     public static BasePostViewModel CreatePostViewModel(PostData postData)
     {
         if (postData.actor?.relation?.ban == "A") return null;
+
+        // Aggregated feeds bundle multiple original posts into object.objects
+        // (e.g. timehop memories, verb == "aggregated") which cannot be rendered
+        // as a single post card; skip them so the timeline stays compatible.
+        if (postData.verb == "aggregated") return null;
 
         var bundledFeed = postData.bundled_feed;
         if (postData.verb == "bundled_feed" && bundledFeed != null)
