@@ -157,7 +157,7 @@ public partial class UserPage : ContentPage
             var isKakaoStoryMode = _isKakaoStoryMode;
             if (isKakaoStoryMode)
             {
-                if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+                if ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false) return;
 
                 var profileObject = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetProfileFeed(KakaoUserId, null));
                 // The mode can change while the feed loads (fast pill switching); discard the stale result, the pending switch reloads.
@@ -487,7 +487,7 @@ public partial class UserPage : ContentPage
         {
             // The pill is only visible on my profile; the Kakao Story user id is
             // resolved from the saved session so the profile feed can be fetched.
-            if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+            if ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false) return;
             KakaoUserId = Shared.KakaoUserId;
             if (KakaoUserId == null)
             {

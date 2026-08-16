@@ -485,7 +485,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
             return;
         }
 
-        if (!await KakaoStoryUtils.EnsureLoggedInAsync(App.Page)) return;
+        if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.Page)) == false) return;
 
         try
         {

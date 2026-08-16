@@ -80,7 +80,7 @@ public partial class BatchManagePostsPage : ContentPage
     {
         if (_isRunning) return;
 
-        if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+        if ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false) return;
 
         var userId = Shared.KakaoUserId;
         if (userId == null)

@@ -158,7 +158,7 @@ public partial class KakaoStoryLoginPage : ContentPage
     private async Task CheckLoginResult()
     {
         if (_gotLoginResult) return;
-        if (!await _checkLoginSemaphore.WaitAsync(0)) return;
+        if ((await _checkLoginSemaphore.WaitAsync(0)) == false) return;
         try
         {
             if (_gotLoginResult) return;

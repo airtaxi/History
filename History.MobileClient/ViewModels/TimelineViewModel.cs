@@ -79,7 +79,7 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
         var isKakaoStoryMode = _isKakaoStoryMode;
         if (isKakaoStoryMode)
         {
-            if (!await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) return;
+            if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return;
 
             var timeline = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetFeed(null));
             // The mode can change while the feed loads (fast pill switching); discard the stale result, the pending switch reloads.

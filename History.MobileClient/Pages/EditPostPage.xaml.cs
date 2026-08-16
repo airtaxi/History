@@ -509,7 +509,7 @@ public partial class EditPostPage : ContentPage
 
     private async void OnUploadButtonClicked(object sender, EventArgs e)
     {
-        if (!await _uploadSemaphore.WaitAsync(0)) return;
+        if ((await _uploadSemaphore.WaitAsync(0)) == false) return;
         _preventDispose = true;
         IsEnabled = false;
         try
@@ -572,7 +572,7 @@ public partial class EditPostPage : ContentPage
 
                 var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
                 var kakaoOnlyDiscoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
-                if (!await TryWritePostToKakaoStoryAsync(editorContents, [.. _attachmentViewModels], _externalUrlContentViewModel, kakaoOnlyDiscoveryOption, stickerContents, isSoleDestination: true)) return;
+                if ((await TryWritePostToKakaoStoryAsync(editorContents, [.. _attachmentViewModels], _externalUrlContentViewModel, kakaoOnlyDiscoveryOption, stickerContents, isSoleDestination: true)) == false) return;
 
                 if (RefreshSwitch.IsToggled)
                 {
@@ -719,7 +719,7 @@ public partial class EditPostPage : ContentPage
                         // Samsung pass will overwrite the text content, fetch the text content before logging in to KakaoStory
                         var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
 
-                        if (!await TryWritePostToKakaoStoryAsync(editorContents, [.. _attachmentViewModels], _externalUrlContentViewModel, discoveryOption, stickerContents)) return;
+                        if ((await TryWritePostToKakaoStoryAsync(editorContents, [.. _attachmentViewModels], _externalUrlContentViewModel, discoveryOption, stickerContents)) == false) return;
                     }
                 }
 
@@ -1504,7 +1504,7 @@ public partial class EditPostPage : ContentPage
 
             if (loginNeeded)
             {
-                if (!await KakaoStoryUtils.EnsureLoggedInAsync(this))
+                if ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false)
                 {
                     await DisplayAlertAsync("오류", "카카오스토리 로그인에 실패하였습니다.", Constants.PromptOk);
                     return false;

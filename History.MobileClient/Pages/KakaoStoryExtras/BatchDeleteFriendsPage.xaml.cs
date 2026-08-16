@@ -38,7 +38,7 @@ public partial class BatchDeleteFriendsPage : ContentPage
 
     private async Task RefreshAsync()
     {
-        if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+        if ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false) return;
 
         try
         {
