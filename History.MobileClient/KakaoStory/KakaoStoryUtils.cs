@@ -386,14 +386,15 @@ public static class KakaoStoryUtils
             }
             else if (content is ProfileContent profileContent)
             {
-                var friend = Shared.KakaoFriends?.FirstOrDefault(profile => profile.display_name == profileContent.Nickname);
+                // Resolve by the exact user id first; a nickname-only match is unreliable.
+                var friend = Shared.KakaoFriends?.FirstOrDefault(profile => profile.id == profileContent.UserId) ?? Shared.KakaoFriends?.FirstOrDefault(profile => profile.display_name == profileContent.Nickname);
                 if (friend != null)
                 {
                     quoteDatas.Add(new QuoteData
                     {
                         type = "profile",
                         id = friend.id,
-                        text = profileContent.Nickname
+                        text = friend.display_name ?? profileContent.Nickname
                     });
                 }
                 else
