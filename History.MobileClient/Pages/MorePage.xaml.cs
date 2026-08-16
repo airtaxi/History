@@ -99,7 +99,7 @@ public partial class MorePage : ContentPage
 
     private async void OnKakaoStoryExtrasGridTapped(object sender, TappedEventArgs e)
     {
-        if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+        if ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false) return;
 
         var page = new KakaoStoryExtrasPage();
         await App.PushModalAsync(page);

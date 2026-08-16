@@ -96,7 +96,7 @@ public partial class TimelinePage : ContentPage
         var isKakaoStoryMode = _isKakaoStoryMode;
         if (isKakaoStoryMode)
         {
-            if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+            if ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false) return;
 
             var timeline = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetFeed(null));
             // The mode can change while the feed loads (fast pill switching); discard the stale result, the pending switch reloads.

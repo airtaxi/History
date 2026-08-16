@@ -39,7 +39,7 @@ public partial class WaitingFriendRequestsPage : ContentPage
         var isKakaoStoryMode = _isKakaoStoryMode;
         if (isKakaoStoryMode)
         {
-            if (!await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+            if ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false) return;
 
             try
             {
@@ -152,7 +152,7 @@ public partial class WaitingFriendRequestsPage : ContentPage
     {
         if (_isKakaoStoryMode == isKakaoStoryMode) return;
 
-        if (isKakaoStoryMode && !await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
+        if (isKakaoStoryMode && ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false)) return;
 
         await _switchSemaphore.WaitAsync();
         try
