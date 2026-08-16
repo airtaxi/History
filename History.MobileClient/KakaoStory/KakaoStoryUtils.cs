@@ -79,6 +79,11 @@ public static class KakaoStoryUtils
                 Shared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
                 await SaveCurrentUserAsync();
                 _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
+#if ANDROID
+                // A valid Kakao Story session is available; arm the realtime
+                // notification service (no-op when already running).
+                KakaoStoryRealtimeNotificationManager.StartIfEnabled();
+#endif
                 return true;
             }
             catch { }
@@ -114,6 +119,11 @@ public static class KakaoStoryUtils
         await SaveCurrentUserAsync();
         _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
         KakaoStoryNotificationPoller.ResetSessionExpiredNotification();
+#if ANDROID
+        // The Kakao Story login just succeeded; arm the realtime notification
+        // service (no-op when already running).
+        KakaoStoryRealtimeNotificationManager.StartIfEnabled();
+#endif
         return true;
     }
 
