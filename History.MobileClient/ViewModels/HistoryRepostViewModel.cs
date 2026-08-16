@@ -14,6 +14,9 @@ public partial class HistoryRepostViewModel : HistoryPostViewModel
         RepostId = postId;
         RepostedUserNickname = _repostedUser?.Nickname;
         RepostPostfix = "님이 리포스트 했어요";
+
+        IsRepost = true;
+        IsShare = false;
     }
 
     public override async Task HandleRepostedUserTap()
