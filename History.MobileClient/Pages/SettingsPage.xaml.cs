@@ -87,6 +87,9 @@ public partial class SettingsPage : ContentPage
         // Virtualization toggle (default: off for smoother scroll with less View recreation)
         var isTimelineVirtualizationEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
         TimelineVirtualizationLabel.Text = isTimelineVirtualizationEnabled ? OnText : OffText;
+
+        // Realtime Kakao Story notification foreground service (default: on)
+        KakaoStoryRealtimeNotificationLabel.Text = KakaoStoryRealtimeNotificationManager.IsEnabled ? OnText : OffText;
 #endif
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
@@ -113,6 +116,11 @@ public partial class SettingsPage : ContentPage
         // Pause the foreground pollers so the counts stay reset until login.
         TabBarBadgePoller.Pause();
         KakaoStoryNotificationPoller.Pause();
+#if ANDROID
+        // The realtime notification service polls Kakao Story, which is
+        // meaningless while logged out.
+        KakaoStoryRealtimeNotificationManager.Stop();
+#endif
     }
 
     private async Task SetupPushNotificationPermission(PushNotificationType type)
@@ -377,6 +385,31 @@ public partial class SettingsPage : ContentPage
         }
         else KakaoStoryNotificationPoller.StopForegroundPolling();
     }
+
+#if ANDROID
+    private async void OnKakaoStoryRealtimeNotificationGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("실시간 카카오스토리 알림", Constants.PromptCancel, null, OnText, OffText);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == OnText;
+        if (isEnabled)
+        {
+            // The ongoing notification is required to keep the service alive;
+            // confirm it before enabling so the user is not surprised.
+            var confirmed = await DisplayAlertAsync("안내", "실시간 알림을 사용하면 알림 표시줄에 상시 알림이 표시됩니다. 계속하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+            if (!confirmed) return;
+        }
+
+        Configuration.SetValue(KakaoStoryRealtimeNotificationManager.EnabledKey, isEnabled);
+        KakaoStoryRealtimeNotificationLabel.Text = isEnabled ? OnText : OffText;
+
+        if (isEnabled) KakaoStoryRealtimeNotificationManager.StartIfEnabled();
+        else KakaoStoryRealtimeNotificationManager.Stop();
+    }
+#else
+    private void OnKakaoStoryRealtimeNotificationGridTapped(object sender, TappedEventArgs e) { }
+#endif
 
     private async void OnKakaoStoryFavoriteFriendNotificationGridTapped(object sender, TappedEventArgs e)
     {
