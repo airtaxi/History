@@ -10,6 +10,8 @@ using Android.OS;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
+using AndroidX.Activity.Result;
+using AndroidX.Activity.Result.Contract;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using AndroidX.Core.View;
@@ -31,7 +33,7 @@ using Plugin.Firebase.CloudMessaging;
 
 namespace History.MobileClient;
 
-[Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, ResizeableActivity = true, EnableOnBackInvokedCallback = false, WindowSoftInputMode = SoftInput.AdjustResize, LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+[Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, ResizeableActivity = true, EnableOnBackInvokedCallback = false, WindowSoftInputMode = SoftInput.AdjustResize, LaunchMode = LaunchMode.SingleInstance, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
 [IntentFilter(new[] { Intent.ActionSend },
         Categories = new[] { Intent.CategoryDefault },
         DataMimeType = "*/*")]
@@ -65,6 +67,14 @@ public class MainActivity : MauiAppCompatActivity
             .SetAutoCancel(true);
 
         NativeMedia.Platform.Init(this, savedInstanceState);
+
+        // Register the media picker launcher here (before the activity is resumed).
+        // Using ActivityResultLauncher instead of StartActivityForResult keeps the
+        // result delivery working with the system chooser under SingleInstance launch mode.
+        var mediaPickerLauncher = RegisterForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new AndroidMediaPickerHelper.MediaPickActivityResultCallback());
+        AndroidMediaPickerHelper.Initialize(mediaPickerLauncher);
 
         Window.SetSoftInputMode(SoftInput.AdjustResize | SoftInput.StateHidden);
 
@@ -176,8 +186,6 @@ public class MainActivity : MauiAppCompatActivity
     {
         if (NativeMedia.Platform.CheckCanProcessResult(requestCode, resultCode, data))
             NativeMedia.Platform.OnActivityResult(requestCode, resultCode, data);
-
-        PlatformActivityResultHandler.OnActivityResult(requestCode, resultCode, data);
 
         base.OnActivityResult(requestCode, resultCode, data);
 
