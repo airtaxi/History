@@ -1,4 +1,4 @@
-using Android.App;
+﻿using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
@@ -114,7 +114,7 @@ public class KakaoStoryRealtimeNotificationService : Service
         var builder = new NotificationCompat.Builder(this, $"{PackageName}.realtime")
             .SetSmallIcon(Resource.Mipmap.appicon)
             .SetContentTitle("카카오스토리 실시간 알림")
-            .SetContentText("백그라운드에서 카카오스토리 알림을 확인하고 있습니다.")
+            .SetContentText("백그라운드에서 카카오스토리 알림을 확인하고 있습니다. 프로필 → 설정 → 실시간 카카오스토리 알림 설정에서 끌 수 있습니다.")
             .SetPriority(NotificationCompat.PriorityLow)
             .SetOngoing(true)
             .SetSilent(true)

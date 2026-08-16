@@ -26,7 +26,16 @@ public partial class AppShell : Shell
             s_lastBackPressedTime = DateTime.UtcNow;
             Toast.Make("나가려면 한번 더 누르세요").Show();
         }
-        else Environment.Exit(0);
+        else
+        {
+#if ANDROID
+            // Background the app instead of exiting so the process (and the
+            // realtime notification foreground service) stays alive.
+            Platform.CurrentActivity?.MoveTaskToBack(true);
+#else
+            Environment.Exit(0);
+#endif
+        }
         return true;
     }
 
