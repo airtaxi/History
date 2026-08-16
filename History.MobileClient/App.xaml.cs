@@ -356,6 +356,10 @@ public partial class App : Application
                 if (scheme.Contains("?profile_id=") && scheme.Contains("activities/"))
                 {
                     var postId = scheme.Split(new[] { "activities/" }, StringSplitOptions.None)[1];
+
+                    // Refresh friends before entering so comment mentions resolve to profile type.
+                    if (!await KakaoStoryUtils.EnsureLoggedInAsync(TopPage)) return;
+
                     var post = await KakaoStory.KakaoStoryApiHandler.GetPost(postId);
                     if (post == null) return;
 
