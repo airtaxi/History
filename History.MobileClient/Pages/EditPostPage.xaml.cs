@@ -1618,6 +1618,7 @@ public partial class EditPostPage : ContentPage
 
                 string scrap = null;
                 var scrapTryCount = 0;
+                const int scrapMaxRetryCount = 5;
                 if (mediaData == null && externalUrlContentViewModel != null)
                 {
                     async Task DoScrap()
@@ -1626,7 +1627,16 @@ public partial class EditPostPage : ContentPage
                         catch (WebException)
                         {
                             scrapTryCount++;
-                            if (scrapTryCount > 3) throw;
+                            if (scrapTryCount >= scrapMaxRetryCount) throw;
+                            else await DoScrap();
+                        }
+
+                        // A scraper response without a thumbnail is usually a transient
+                        // server-side scrape failure, so it is retried like an exception.
+                        if (!KakaoStoryApiHandler.IsScrapDataUsable(scrap))
+                        {
+                            scrapTryCount++;
+                            if (scrapTryCount >= scrapMaxRetryCount) return;
                             else await DoScrap();
                         }
                     }
