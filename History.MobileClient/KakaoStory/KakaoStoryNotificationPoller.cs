@@ -1,4 +1,6 @@
-﻿using History.Commons;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
+using History.Commons;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
 namespace History.MobileClient.KakaoStory;
@@ -173,6 +175,7 @@ public static class KakaoStoryNotificationPoller
         var isEmotionNotificationEnabled = Configuration.GetValue<bool?>(EmotionNotificationEnabledKey) ?? true;
         var knownIds = new HashSet<string>(GetKnownIds(KnownNotificationIdsKey));
         var newNotifications = new List<Notification>();
+        var postIds = new HashSet<string>();
         foreach (var notification in notifications)
         {
             if (notification.id == storedLatestId) break;
@@ -180,6 +183,7 @@ public static class KakaoStoryNotificationPoller
             if (IsFavoriteFriendNotification(notification) && !isFavoriteFriendNotificationEnabled) continue;
             if (IsEmotionNotification(notification) && !isEmotionNotificationEnabled) continue;
             if (notification.id == null || !knownIds.Add(notification.id)) continue;
+            if (TryGetPostId(notification.scheme, out var postId)) postIds.Add(postId);
             newNotifications.Add(notification);
         }
 
@@ -188,6 +192,8 @@ public static class KakaoStoryNotificationPoller
             foreach (var notification in newNotifications) PostNotification(notification);
             SaveKnownIds(KnownNotificationIdsKey, [.. knownIds]);
         }
+
+        if (postIds.Count > 0) await RefreshActivePostsAsync(postIds);
 
         Preferences.Set(LatestNotificationIdKey, latestId);
     }
@@ -315,5 +321,41 @@ public static class KakaoStoryNotificationPoller
     {
         if (ids.Count > MaxKnownIds) ids = ids[..MaxKnownIds];
         Preferences.Set(key, string.Join(',', ids));
+    }
+
+    /// <summary>
+    /// Extracts the activity id from a post notification scheme
+    /// (e.g. kakaostory://activities/{activityId}?profile_id={profileId}).
+    /// The profile_id guard keeps schemes that carry an activity id without the
+    /// profile context from being treated as post notifications.
+    /// </summary>
+    private static bool TryGetPostId(string scheme, out string postId)
+    {
+        postId = null;
+        if (string.IsNullOrEmpty(scheme)) return false;
+        if (!scheme.Contains("?profile_id=") || !scheme.Contains("activities/")) return false;
+        postId = scheme.Split(new[] { "activities/" }, StringSplitOptions.None)[1];
+        var queryIndex = postId.IndexOf('?');
+        if (queryIndex >= 0) postId = postId[..queryIndex];
+        return !string.IsNullOrEmpty(postId);
+    }
+
+    /// <summary>
+    /// Refreshes active Kakao Story post view models via the same
+    /// ValueChangedMessage&lt;PostData&gt; broadcast used by RefreshAsync. Per-post
+    /// try-catch keeps a single failure from aborting the rest of the poll cycle.
+    /// </summary>
+    private static async Task RefreshActivePostsAsync(IEnumerable<string> postIds)
+    {
+        foreach (var postId in postIds)
+        {
+            try
+            {
+                var post = await KakaoStoryApiHandler.GetPost(postId);
+                if (post == null) continue;
+                MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostData>(post)));
+            }
+            catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story post refresh failed: {exception.Message}"); }
+        }
     }
 }
