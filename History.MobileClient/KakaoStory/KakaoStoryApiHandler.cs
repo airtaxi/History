@@ -293,6 +293,31 @@ public partial class KakaoStoryApiHandler
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         return await GetResponseFromRequest(webRequest);
     }
+
+    /// <summary>
+    /// Returns whether a scraper response carries a usable link preview.
+    /// A scrap is considered failed only when it has no OpenGraph data, no
+    /// thumbnail, and no extractable content (title/description). Such a blank
+    /// result is usually a transient server-side scrape failure, so callers
+    /// retry until the scrap becomes usable. Pages without a thumbnail but with
+    /// real content are still usable and are not retried.
+    /// </summary>
+    public static bool IsScrapDataUsable(string scrapJson)
+    {
+        if (string.IsNullOrEmpty(scrapJson)) return false;
+        var scrap = JsonConvert.DeserializeObject<DataType.TimeLineData.Scrap>(scrapJson);
+        if (scrap == null) return false;
+
+        // OpenGraph data or a thumbnail alone is enough for a usable preview.
+        if (scrap.is_opengraph) return true;
+        if (scrap.image is { Count: > 0 }) return true;
+
+        // Without OpenGraph and a thumbnail the preview is usable only when it
+        // carries some real content rather than a placeholder like "- YouTube".
+        bool hasDescription = !string.IsNullOrWhiteSpace(scrap.description);
+        bool hasRealTitle = !string.IsNullOrWhiteSpace(scrap.title) && scrap.title != "- YouTube";
+        return hasDescription || hasRealTitle;
+    }
     public static async Task<bool> SetActivityProfile(string id, string permission, bool enable_share, bool comment_all_writable, bool is_must_read)
     {
         string requestURI = "https://story.kakao.com/a/activities/" + id;
