@@ -39,11 +39,7 @@ public partial class ExternalUrlContentViewModel : ObservableObject, IContentVie
     public ImageViewModel ThumbnailImage => new(ExternalUrlContent.ThumbnailImageUrl) { Aspect = Aspect.AspectFill };
 
     [RelayCommand]
-    public async Task HandleTapAsync()
-    {
-        var uri = new Uri(ExternalUrlContent.SourceUrl);
-        await Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred);
-    }
+    public async Task HandleTapAsync() => await Utils.OpenLinkAsync(ExternalUrlContent.SourceUrl);
 
     [RelayCommand]
     public async Task HandleLongPressAsync()
