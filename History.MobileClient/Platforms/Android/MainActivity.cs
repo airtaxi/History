@@ -31,7 +31,7 @@ using Plugin.Firebase.CloudMessaging;
 
 namespace History.MobileClient;
 
-[Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, ResizeableActivity = true, EnableOnBackInvokedCallback = false, WindowSoftInputMode = SoftInput.AdjustResize, LaunchMode = LaunchMode.SingleInstance, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+[Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, ResizeableActivity = true, EnableOnBackInvokedCallback = false, WindowSoftInputMode = SoftInput.AdjustResize, LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
 [IntentFilter(new[] { Intent.ActionSend },
         Categories = new[] { Intent.CategoryDefault },
         DataMimeType = "*/*")]
