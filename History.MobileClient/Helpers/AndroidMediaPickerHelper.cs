@@ -4,6 +4,8 @@ using Android.App;
 using Android.Content;
 using Android.Database;
 using Android.Provider;
+using AndroidX.Activity.Result;
+using AndroidX.Activity.Result.Contract;
 using AndroidX.DocumentFile.Provider;
 using History.MobileClient.DataTypes;
 using System;
@@ -15,20 +17,32 @@ using Application = Android.App.Application;
 
 namespace History.MobileClient.Helpers;
 
-public static class PlatformActivityResultHandler
-{
-    public static event Action<int, Result, Intent> ActivityResultReceived;
-
-    public static void OnActivityResult(int requestCode, Result resultCode, Intent data) => ActivityResultReceived?.Invoke(requestCode, resultCode, data);
-}
-
 public static class AndroidMediaPickerHelper
 {
     private static TaskCompletionSource<List<MediaFile>> _completionSource = null!;
     private static int _maxSelection = 1;
     private static bool _allowMultiple = false;
+    private static ActivityResultLauncher _launcher = null!;
 
-    private const int MediaRequestCode = 39001;
+    /// <summary>
+    /// Registers the ActivityResultLauncher used to pick media. Must be called
+    /// from the activity's OnCreate before the activity is resumed.
+    /// </summary>
+    public static void Initialize(ActivityResultLauncher launcher) => _launcher = launcher;
+
+    /// <summary>
+    /// Bridges the ActivityResultLauncher callback (the Java binding is non-generic)
+    /// into the helper, unwrapping the AndroidX <see cref="ActivityResult"/> payload.
+    /// </summary>
+    public sealed class MediaPickActivityResultCallback : Java.Lang.Object, IActivityResultCallback
+    {
+        public void OnActivityResult(Java.Lang.Object result)
+        {
+            var activityResult = result as ActivityResult;
+            var resultCode = activityResult?.ResultCode;
+            AndroidMediaPickerHelper.OnActivityResult(resultCode.HasValue ? (Result)resultCode.Value : Result.Canceled, activityResult?.Data);
+        }
+    }
 
     public static Task<List<MediaFile>> PickMediasAsync(int maxCount, bool includeImage, bool includeVideo)
     {
@@ -50,10 +64,7 @@ public static class AndroidMediaPickerHelper
     private static Task<List<MediaFile>> LaunchPickerAsync(bool includeImage, bool includeVideo)
     {
         if (!includeImage && !includeVideo) throw new ArgumentException("At least one of includeImage or includeVideo must be true.");
-        
 
-        //var intent = new Intent(Intent.ActionOpenDocument);
-        //intent.AddCategory(Intent.CategoryOpenable);
         var intent = new Intent(Intent.ActionPick);
         if (includeImage && includeVideo)
         {
@@ -68,23 +79,15 @@ public static class AndroidMediaPickerHelper
         else if (includeVideo) intent.SetType("video/*");
         if (_allowMultiple) intent.PutExtra(Intent.ExtraAllowMultiple, _allowMultiple);
 
-        var activity = Platform.CurrentActivity ?? Application.Context as Activity;
         _completionSource = new TaskCompletionSource<List<MediaFile>>();
 
-        activity!.StartActivityForResult(intent, MediaRequestCode);
-
-        PlatformActivityResultHandler.ActivityResultReceived -= OnActivityResult;
-        PlatformActivityResultHandler.ActivityResultReceived += OnActivityResult;
+        _launcher.Launch(intent);
 
         return _completionSource.Task;
     }
 
-    private static void OnActivityResult(int requestCode, Result resultCode, Intent data)
+    public static void OnActivityResult(Result resultCode, Intent data)
     {
-        if (requestCode != MediaRequestCode) return;
-
-        PlatformActivityResultHandler.ActivityResultReceived -= OnActivityResult;
-
         var uris = new List<Android.Net.Uri>();
         if (resultCode == Result.Ok && data != null)
         {
