@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient.KakaoStory;
 
