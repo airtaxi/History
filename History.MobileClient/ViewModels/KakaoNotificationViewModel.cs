@@ -47,6 +47,8 @@ public partial class KakaoNotificationViewModel : BaseNotificationViewModel
         if (scheme.Contains("?profile_id=") && scheme.Contains("activities/"))
         {
             var postId = scheme.Split(new[] { "activities/" }, StringSplitOptions.None)[1];
+            var queryIndex = postId.IndexOf('?');
+            if (queryIndex >= 0) postId = postId[..queryIndex];
             var post = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetPost(postId));
             if (post != null)
             {
