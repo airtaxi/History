@@ -523,9 +523,50 @@ public static partial class Utils
     private static void AddTapGestureRecognizerToLinkSpan(Span linkSpan, string url)
     {
         var tapGesture = new TapGestureRecognizer();
-        tapGesture.Tapped += (s, e) => Launcher.Default.OpenAsync(url);
+        tapGesture.Tapped += async (s, e) => await OpenLinkAsync(url);
 
         linkSpan.GestureRecognizers.Add(tapGesture);
+    }
+
+    // Opens a link. Kakao Story post URLs (https://story.kakao.com/{username}/{postId})
+    // navigate to the in-app post page instead of the external browser.
+    public static async Task OpenLinkAsync(string url)
+    {
+        if (TryGetKakaoStoryPostId(url, out var postId))
+        {
+            await OpenKakaoStoryPostAsync(postId);
+            return;
+        }
+
+        await Launcher.Default.OpenAsync(url);
+    }
+
+    private static bool TryGetKakaoStoryPostId(string url, out string postId)
+    {
+        postId = null;
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return false;
+        if (uri.Host != "story.kakao.com") return false;
+
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length != 2) return false;
+
+        postId = segments[1];
+        return true;
+    }
+
+    private static async Task OpenKakaoStoryPostAsync(string postId)
+    {
+        try
+        {
+            if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return;
+
+            var post = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetPost(postId));
+            if (post == null) return;
+
+            var postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);
+            await App.PushAsync(new PostPage(postViewModel));
+        }
+        catch (Exception exception) { Debug.WriteLine($"Kakao Story post link navigation failed: {exception.Message}"); }
     }
 
     private static void AddTapGestureRecognizerToProfileContentSnap(Span span, string userId)
