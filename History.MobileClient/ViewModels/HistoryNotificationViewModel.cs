@@ -18,6 +18,9 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel
     public HistoryNotificationViewModel(NotificationResponseDto notification)
     {
         Notification = notification;
+
+        if (Notification.Type == NotificationType.FriendRequest && Notification.Data != null && Notification.Data.TryGetValue("FriendshipStatus", out var friendshipStatus)) IsAccepted = friendshipStatus != nameof(FriendshipStatus.Waiting);
+
         WeakReferenceMessenger.Default.Register<NotificationsReadAllMessage>(this, OnNotificationsReadAllMessage);
         WeakReferenceMessenger.Default.Register<NotificationPostReadMessage>(this, OnNotificationPostReadMessage);
         WeakReferenceMessenger.Default.Register<NotificationMessageReadMessage>(this, OnNotificationMessageReadMessage);
