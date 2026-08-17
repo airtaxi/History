@@ -528,20 +528,31 @@ public static partial class Utils
         linkSpan.GestureRecognizers.Add(tapGesture);
     }
 
-    // Opens a link. Kakao Story post URLs (https://story.kakao.com/{username}/{postId})
-    // navigate to the in-app post page instead of the external browser.
+    // Opens a link. Kakao Story post URLs (https://story.kakao.com/{username}/{postCode})
+    // navigate to the in-app post page instead of the external browser. The post id is
+    // resolved by fetching the page and extracting the embedded feed_id.
     public static async Task OpenLinkAsync(string url)
     {
-        if (TryGetKakaoStoryPostId(url, out var postId))
+        if (await TryGetKakaoStoryPostIdAsync(url, out var postId))
         {
             await OpenKakaoStoryPostAsync(postId);
+            return;
+        }
+
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Host == "story.kakao.com")
+        {
+            await App.TopPage.DisplayAlertAsync("오류", "카카오스토리 게시글을 불러오지 못했습니다.", Constants.PromptOk);
             return;
         }
 
         await Launcher.Default.OpenAsync(url);
     }
 
-    private static bool TryGetKakaoStoryPostId(string url, out string postId)
+    // Resolves the real post id of a story.kakao.com post URL. The URL only carries
+    // a short code (e.g. eNOIUHoOHQA), so the authenticated page must be fetched to
+    // read the embedded feed_id (e.g. "_63msr.6MgT2Z7CfP9"). Returns false when the
+    // URL is not a story post URL or the id cannot be resolved.
+    private static async Task<bool> TryGetKakaoStoryPostIdAsync(string url, out string postId)
     {
         postId = null;
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return false;
@@ -550,7 +561,15 @@ public static partial class Utils
         var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length != 2) return false;
 
-        postId = segments[1];
+        if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return false;
+
+        var page = await KakaoStoryApiHandler.GetPostPageAsync(url);
+        if (page == null) return false;
+
+        var match = KakaoStoryFeedIdRegex().Match(page);
+        if (!match.Success) return false;
+
+        postId = match.Groups[1].Value;
         return true;
     }
 
@@ -628,6 +647,11 @@ public static partial class Utils
 
     [GeneratedRegex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled)]
     public static partial Regex UrlRegex();
+
+    // Captures the feed_id from a story.kakao.com post page response. The feed_id
+    // is the real post id used by the story API (e.g. "_63msr.6MgT2Z7CfP9").
+    [GeneratedRegex("\"feed_id\"\\s*:\\s*\"([^\"]+)\"", RegexOptions.Compiled)]
+    private static partial Regex KakaoStoryFeedIdRegex();
 
     public static async Task CheckForUpdateAsync()
     {

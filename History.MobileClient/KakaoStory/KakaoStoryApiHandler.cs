@@ -505,6 +505,26 @@ public partial class KakaoStoryApiHandler
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
         return await GetResponseFromRequest(webRequest, byteArray) != null;
     }
+    /// <summary>
+    /// Fetches the story.kakao.com post page with the authenticated session.
+    /// The response embeds the real post id (feed_id) that the share URL
+    /// (https://story.kakao.com/{username}/{postCode}) does not expose.
+    /// Returns null when the page cannot be fetched. The request is sent as a
+    /// plain browser page load (no XHR marker) because the page route serves
+    /// server-rendered HTML only to non-XHR requests.
+    /// </summary>
+    public static async Task<string> GetPostPageAsync(string url)
+    {
+        void ConfigurePageRequest(HttpWebRequest webRequest)
+        {
+            webRequest.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+            webRequest.Headers.Remove("X-Requested-With");
+        }
+
+        var webRequest = GenerateDefaultProfile(url);
+        ConfigurePageRequest(webRequest);
+        return await GetResponseFromRequest(webRequest, configure: ConfigurePageRequest);
+    }
     public static async Task<PostData> GetPost(string activityID)
     {
         string requestURI = "https://story.kakao.com/a/activities/" + activityID;
