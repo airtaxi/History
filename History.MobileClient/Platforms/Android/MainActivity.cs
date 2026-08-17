@@ -33,7 +33,7 @@ using Plugin.Firebase.CloudMessaging;
 
 namespace History.MobileClient;
 
-[Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, ResizeableActivity = true, EnableOnBackInvokedCallback = false, WindowSoftInputMode = SoftInput.AdjustResize, LaunchMode = LaunchMode.SingleInstance, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
+[Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, ResizeableActivity = true, EnableOnBackInvokedCallback = false, WindowSoftInputMode = SoftInput.AdjustResize, LaunchMode = LaunchMode.SingleTask, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
 [IntentFilter(new[] { Intent.ActionSend },
         Categories = new[] { Intent.CategoryDefault },
         DataMimeType = "*/*")]
@@ -47,10 +47,25 @@ public class MainActivity : MauiAppCompatActivity
     private bool _isKeyboardVisible = false;
     private int _lastKeyboardHeight = 0;
 
+    private static MainActivity _instance;
+
     public static event EventHandler<string> LoginCompleted;
 
     protected override void OnCreate(Bundle savedInstanceState)
     {
+        // A for-result share intent (e.g., the Google app) may launch a second
+        // instance under SingleTask. Forward the incoming intent to the existing
+        // instance, bring its task forward, and close this duplicate instead of
+        // spinning up a second MAUI window.
+        if (_instance != null)
+        {
+            _instance.HandleIntent(Intent);
+            MoveExistingTaskToFront();
+            Finish();
+            return;
+        }
+
+        _instance = this;
         base.OnCreate(savedInstanceState);
 
         ScheduleJob();
@@ -71,7 +86,7 @@ public class MainActivity : MauiAppCompatActivity
 
         // Register the media picker launcher here (before the activity is resumed).
         // Using ActivityResultLauncher instead of StartActivityForResult keeps the
-        // result delivery working with the system chooser under SingleInstance launch mode.
+        // result delivery working with the system chooser under SingleTask launch mode.
         var mediaPickerLauncher = RegisterForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new AndroidMediaPickerHelper.MediaPickActivityResultCallback());
@@ -86,6 +101,19 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnNewIntent(intent);
         HandleIntent(intent);
+    }
+
+    protected override void OnDestroy()
+    {
+        if (_instance == this) _instance = null;
+        base.OnDestroy();
+    }
+
+    private void MoveExistingTaskToFront()
+    {
+        if (_instance == null) return;
+        var activityManager = (ActivityManager)GetSystemService(ActivityService);
+        activityManager.MoveTaskToFront(_instance.TaskId, MoveTaskFlags.WithHome);
     }
 
     private void SetupKeyboardDetection()
