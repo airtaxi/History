@@ -10,13 +10,14 @@ using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
 using UraniumUI.Icons.FontAwesome;
 using History.Commons.DataTypes.ResponseDtos;
-using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Graphics.Platform;
+using CommunityToolkit.Mvvm.Messaging;
+using History.MobileClient.Messages;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
 
 namespace History.MobileClient;
@@ -629,6 +630,7 @@ public static partial class Utils
 
     private static async Task OpenKakaoStoryPostAsync(string postId)
     {
+        WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
         try
         {
             if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return;
@@ -640,6 +642,7 @@ public static partial class Utils
             await App.PushAsync(new PostPage(postViewModel));
         }
         catch (Exception exception) { Debug.WriteLine($"Kakao Story post link navigation failed: {exception.Message}"); }
+        finally { WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(false)); }
     }
 
     private static void AddTapGestureRecognizerToProfileContentSnap(Span span, string userId)
