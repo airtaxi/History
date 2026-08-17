@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
     x:Class="History.MobileClient.Pages.BlazorUserPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -6,14 +6,13 @@
     xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:blazor="clr-namespace:Microsoft.AspNetCore.Components.WebView.Maui;assembly=Microsoft.AspNetCore.Components.WebView.Maui"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
-    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:behaviors="clr-namespace:History.MobileClient.Behaviors"
     IsEnabled="{Binding IsEnabled}"
     Loaded="OnLoaded"
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False">
     <ContentPage.Behaviors>
-        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
-        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+        <behaviors:StatusBarBehavior StatusBarColor="{StaticResource Primary}" StatusBarTheme="Dark" />
     </ContentPage.Behaviors>
 
     <Grid x:Name="RootGrid">
