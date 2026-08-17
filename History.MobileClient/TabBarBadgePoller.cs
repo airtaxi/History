@@ -41,7 +41,10 @@ public static class TabBarBadgePoller
         if (s_foregroundPollingTask != null) return;
 
         s_foregroundPollingCts = new CancellationTokenSource();
-        s_foregroundPollingTask = RunForegroundPollingLoopAsync(s_foregroundPollingCts.Token);
+        // Run the loop on a threadpool thread so the poll work (JSON parsing,
+        // count computation) never touches the UI thread. The badge view update
+        // and messenger sends are already marshalled to the main thread.
+        s_foregroundPollingTask = Task.Run(() => RunForegroundPollingLoopAsync(s_foregroundPollingCts.Token));
     }
 
     /// <summary>

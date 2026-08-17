@@ -51,7 +51,10 @@ public static class KakaoStoryNotificationPoller
         if (s_foregroundPollingTask != null) return;
 
         s_foregroundPollingCts = new CancellationTokenSource();
-        s_foregroundPollingTask = RunForegroundPollingLoopAsync(s_foregroundPollingCts.Token);
+        // Run the loop on a threadpool thread so the poll work (JSON parsing,
+        // notification posting) never touches the UI thread. The messenger sends
+        // and local notification posts are already marshalled to the main thread.
+        s_foregroundPollingTask = Task.Run(() => RunForegroundPollingLoopAsync(s_foregroundPollingCts.Token));
     }
 
     /// <summary>
