@@ -21,8 +21,7 @@ public enum StatusBarTheme
 
 /// <summary>
 /// PlatformBehavior that controls the status bar color and icon theme.
-/// Automatically applies on page navigation (NavigatedTo) — no ApplyOn configuration needed.
-/// Re-applies on display info changes (foldable screen resize / rotation) to fix Android sizing issues.
+/// Applies on page Appearing — fires reliably for Shell tabs, PushAsync, PopAsync, and modal navigation.
 /// </summary>
 public partial class StatusBarBehavior : PlatformBehavior<Page, object>
 {
@@ -59,21 +58,30 @@ public partial class StatusBarBehavior : PlatformBehavior<Page, object>
     {
         base.OnAttachedTo(page, platformView);
 
-        // Apply immediately on attachment — Window.SetStatusBarColor is size-independent,
-        // so no foldable/rotation re-apply is needed (unlike the CommunityToolkit overlay approach).
-        PlatformSetColor(StatusBarColor);
-        PlatformSetTheme(StatusBarTheme);
-
-        page.NavigatedTo += OnPageNavigatedTo;
+        page.Appearing += OnPageAppearing;
+        OnAttachedToPlatform(page, platformView);
     }
 
     /// <inheritdoc />
     protected override void OnDetachedFrom(Page page, object platformView)
     {
-        page.NavigatedTo -= OnPageNavigatedTo;
+        page.Appearing -= OnPageAppearing;
+        OnDetachedFromPlatform(page, platformView);
 
         base.OnDetachedFrom(page, platformView);
     }
+
+    /// <summary>
+    /// Optional platform hook point so platform partials can attach listeners
+    /// that keep the status bar color and height in sync. Empty by default.
+    /// </summary>
+    static partial void OnAttachedToPlatform(Page page, object platformView);
+
+    /// <summary>
+    /// Optional platform hook point so platform partials can detach the
+    /// listeners attached in <see cref="OnAttachedToPlatform(Page, object)"/>.
+    /// </summary>
+    static partial void OnDetachedFromPlatform(Page page, object platformView);
 
     /// <inheritdoc />
     protected override void OnPropertyChanged([CallerMemberName] string propertyName = null)
@@ -86,7 +94,7 @@ public partial class StatusBarBehavior : PlatformBehavior<Page, object>
         else if (propertyName == StatusBarThemeProperty.PropertyName) PlatformSetTheme(StatusBarTheme);
     }
 
-    void OnPageNavigatedTo(object sender, NavigatedToEventArgs eventArgs)
+    void OnPageAppearing(object sender, EventArgs eventArgs)
     {
         PlatformSetColor(StatusBarColor);
         PlatformSetTheme(StatusBarTheme);
