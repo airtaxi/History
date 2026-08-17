@@ -633,12 +633,19 @@ public static partial class Utils
         WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
         try
         {
-            if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return;
+            KakaoPostViewModel postViewModel = null;
+            await Task.Run(async () =>
+            {
+                if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return;
 
-            var post = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetPost(postId));
-            if (post == null) return;
+                var post = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetPost(postId));
+                if (post == null) return;
 
-            var postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);
+                postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);
+            });
+
+            if(postViewModel == null) return;
+
             await App.PushAsync(new PostPage(postViewModel));
         }
         catch (Exception exception) { Debug.WriteLine($"Kakao Story post link navigation failed: {exception.Message}"); }
