@@ -111,7 +111,7 @@
                                             Aspect="AspectFill"
                                             BitmapOptimizations="True"
                                             DownsampleToViewSize="True"
-                                            Source="{x:Binding ImageSource,
+                                            Source="{x:Binding Thumbnail,
                                                                Mode=OneWay}" />
                                         <Grid Grid.Row="0" IsVisible="{x:Binding IsEditImageVisible}">
                                             <Grid.GestureRecognizers>

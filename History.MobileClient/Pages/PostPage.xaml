@@ -164,8 +164,8 @@
                         x:DataType="vm:MediaAttachmentViewModel"
                         Aspect="AspectFill"
                         DownsampleToViewSize="True"
-                        Source="{x:Binding ImageSource,
-                                           Mode=OneTime}" />
+                        Source="{x:Binding Thumbnail,
+                                           Mode=OneWay}" />
                     <Rectangle
                         Fill="Black"
                         HorizontalOptions="Fill"

@@ -1253,7 +1253,7 @@ public partial class EditPostPage : ContentPage
         try
         {
             _preventDispose = true;
-            var page = new ImageEditorPage(viewModel.ImageSource);
+            var page = new ImageEditorPage(ImageSource.FromFile(viewModel.FilePath));
             await App.PushModalAsync(page);
 
             var bytes = await page.GetResultAsync();
