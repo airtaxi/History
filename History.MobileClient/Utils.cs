@@ -15,7 +15,6 @@ using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
 using UraniumUI.Icons.FontAwesome;
 using History.Commons.DataTypes.ResponseDtos;
-using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Graphics.Platform;
 
 
