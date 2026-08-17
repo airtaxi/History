@@ -59,15 +59,18 @@ public partial class StatusBarBehavior : PlatformBehavior<Page, object>
     {
         base.OnAttachedTo(page, platformView);
 
+        // Apply immediately on attachment — Window.SetStatusBarColor is size-independent,
+        // so no foldable/rotation re-apply is needed (unlike the CommunityToolkit overlay approach).
+        PlatformSetColor(StatusBarColor);
+        PlatformSetTheme(StatusBarTheme);
+
         page.NavigatedTo += OnPageNavigatedTo;
-        DeviceDisplay.Current.MainDisplayInfoChanged += OnMainDisplayInfoChanged;
     }
 
     /// <inheritdoc />
     protected override void OnDetachedFrom(Page page, object platformView)
     {
         page.NavigatedTo -= OnPageNavigatedTo;
-        DeviceDisplay.Current.MainDisplayInfoChanged -= OnMainDisplayInfoChanged;
 
         base.OnDetachedFrom(page, platformView);
     }
@@ -85,13 +88,6 @@ public partial class StatusBarBehavior : PlatformBehavior<Page, object>
 
     void OnPageNavigatedTo(object sender, NavigatedToEventArgs eventArgs)
     {
-        PlatformSetColor(StatusBarColor);
-        PlatformSetTheme(StatusBarTheme);
-    }
-
-    void OnMainDisplayInfoChanged(object sender, DisplayInfoChangedEventArgs eventArgs)
-    {
-        // Re-apply on foldable screen resize / rotation to keep the status bar in sync.
         PlatformSetColor(StatusBarColor);
         PlatformSetTheme(StatusBarTheme);
     }
