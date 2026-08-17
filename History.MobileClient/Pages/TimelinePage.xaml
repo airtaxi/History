@@ -5,12 +5,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
-    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:behaviors="clr-namespace:History.MobileClient.Behaviors"
     Shell.NavBarIsVisible="False"
     SizeChanged="OnSizeChanged">
     <ContentPage.Behaviors>
-        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
-        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+        <behaviors:StatusBarBehavior StatusBarColor="{StaticResource Primary}" StatusBarTheme="Dark" />
     </ContentPage.Behaviors>
     <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>

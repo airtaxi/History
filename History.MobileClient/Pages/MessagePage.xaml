@@ -5,14 +5,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
-    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:behaviors="clr-namespace:History.MobileClient.Behaviors"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
     x:DataType="vm:BaseMessageViewModel"
     Loaded="OnLoaded"
     Shell.NavBarIsVisible="False">
     <ContentPage.Behaviors>
-        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
-        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+        <behaviors:StatusBarBehavior StatusBarColor="{StaticResource Primary}" StatusBarTheme="Dark" />
     </ContentPage.Behaviors>
     <Grid RowSpacing="0">
         <Grid.RowDefinitions>

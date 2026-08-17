@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
-    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    xmlns:behaviors="clr-namespace:History.MobileClient.Behaviors"
     Title="SettingsPage"
     Background="{AppThemeBinding Dark=Black,
                                  Light=White}"
@@ -21,8 +21,7 @@
         <Color x:Key="DividerLight">#5F5F5F</Color>
     </ContentPage.Resources>
     <ContentPage.Behaviors>
-        <toolkit:StatusBarBehavior ApplyOn="OnPageNavigatedTo" StatusBarColor="{StaticResource Primary}" />
-        <toolkit:StatusBarBehavior ApplyOn="OnBehaviorAttachedTo" StatusBarColor="{StaticResource Primary}" />
+        <behaviors:StatusBarBehavior StatusBarColor="{StaticResource Primary}" StatusBarTheme="Dark" />
     </ContentPage.Behaviors>
     <Grid>
         <Grid.RowDefinitions>
