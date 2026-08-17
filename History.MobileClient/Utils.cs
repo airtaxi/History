@@ -15,6 +15,8 @@ using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
 using UraniumUI.Icons.FontAwesome;
 using History.Commons.DataTypes.ResponseDtos;
+using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Graphics.Platform;
 
 
 namespace History.MobileClient;
@@ -209,6 +211,59 @@ public static partial class Utils
         var imageUrl = GenerateThumbnailUrlFromContents(post.Contents);
         if (imageUrl == null && post.ParentPost != null) imageUrl = GenerateThumbnailUrlFromContents(post.ParentPost.Contents);
         return imageUrl;
+    }
+
+    /// <summary>
+    /// Resizes image bytes into a thumbnail that fits within the given size box
+    /// (aspect ratio preserved) using the built-in MAUI image converter. Falls back
+    /// to the original bytes when the conversion fails (e.g. GIF/webp animation).
+    /// </summary>
+    public static Task<byte[]> ResizeImageToThumbnailAsync(byte[] imageBytes, int maxSize = 256)
+    {
+        return Task.Run(async () =>
+        {
+            try
+            {
+                using var stream = new MemoryStream(imageBytes);
+                using var image = PlatformImage.FromStream(stream);
+                if (image == null) return imageBytes;
+
+                using var resized = image.Downsize(maxSize, maxSize);
+                using var output = new MemoryStream();
+                await resized.SaveAsync(output, ImageFormat.Png).ConfigureAwait(false);
+                return output.ToArray();
+            }
+            catch { return imageBytes; }
+        });
+    }
+
+    /// <summary>
+    /// Resizes an image file into a thumbnail that fits within the given size box
+    /// (aspect ratio preserved) using the built-in MAUI image converter. Falls back
+    /// to the original file bytes when the conversion fails (e.g. GIF/webp animation),
+    /// or returns null when the file is no longer readable.
+    /// </summary>
+    public static Task<byte[]> ResizeImageToThumbnailAsync(string filePath, int maxSize = 256)
+    {
+        return Task.Run(async () =>
+        {
+            try
+            {
+                using var stream = File.OpenRead(filePath);
+                using var image = PlatformImage.FromStream(stream);
+                if (image == null) return await File.ReadAllBytesAsync(filePath).ConfigureAwait(false);
+
+                using var resized = image.Downsize(maxSize, maxSize);
+                using var output = new MemoryStream();
+                await resized.SaveAsync(output, ImageFormat.Png).ConfigureAwait(false);
+                return output.ToArray();
+            }
+            catch
+            {
+                try { return await File.ReadAllBytesAsync(filePath).ConfigureAwait(false); }
+                catch { return null; }
+            }
+        });
     }
 
     public static string GenerateTextPreviewFromPost(PostResponseDto post)
@@ -533,7 +588,8 @@ public static partial class Utils
     // resolved by fetching the page and extracting the embedded feed_id.
     public static async Task OpenLinkAsync(string url)
     {
-        if (await TryGetKakaoStoryPostIdAsync(url, out var postId))
+        var postId = await GetKakaoStoryPostIdAsync(url);
+        if (postId != null)
         {
             await OpenKakaoStoryPostAsync(postId);
             return;
@@ -552,25 +608,23 @@ public static partial class Utils
     // a short code (e.g. eNOIUHoOHQA), so the authenticated page must be fetched to
     // read the embedded feed_id (e.g. "_63msr.6MgT2Z7CfP9"). Returns false when the
     // URL is not a story post URL or the id cannot be resolved.
-    private static async Task<bool> TryGetKakaoStoryPostIdAsync(string url, out string postId)
+    private static async Task<string> GetKakaoStoryPostIdAsync(string url)
     {
-        postId = null;
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return false;
-        if (uri.Host != "story.kakao.com") return false;
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return null;
+        if (uri.Host != "story.kakao.com") return null;
 
         var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Length != 2) return false;
+        if (segments.Length != 2) return null;
 
-        if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return false;
+        if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return null;
 
         var page = await KakaoStoryApiHandler.GetPostPageAsync(url);
-        if (page == null) return false;
+        if (page == null) return null;
 
         var match = KakaoStoryFeedIdRegex().Match(page);
-        if (!match.Success) return false;
+        if (!match.Success) return null;
 
-        postId = match.Groups[1].Value;
-        return true;
+        return match.Groups[1].Value;
     }
 
     private static async Task OpenKakaoStoryPostAsync(string postId)

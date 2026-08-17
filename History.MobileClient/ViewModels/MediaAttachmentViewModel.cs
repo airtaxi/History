@@ -29,7 +29,7 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
     public string FileName { get; }
 
     [ObservableProperty]
-    public partial ImageSource ImageSource { get; private set; }
+    public partial ImageSource Thumbnail { get; private set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDescriptionEmpty))]
@@ -53,8 +53,8 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
         // Set Description
         Description = serverContent.Description ?? string.Empty;
 
-        // Set ImageSource
-        ImageSource = ImageSource.FromUri(new(Utils.GenerateMediaUri(serverContent.ThumbnailMediaId)));
+        // Set Thumbnail
+        Thumbnail = ImageSource.FromUri(new(Utils.GenerateMediaUri(serverContent.ThumbnailMediaId)));
     }
 
     public MediaAttachmentViewModel(Medium media)
@@ -62,8 +62,8 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
         KakaoServerPath = media.media_path;
         IsVideo = media.content_type?.StartsWith("video", StringComparison.OrdinalIgnoreCase) == true;
 
-        // Set ImageSource
-        ImageSource = ImageSource.FromUri(new(media.thumbnail_url ?? media.origin_url ?? media.url));
+        // Set Thumbnail
+        Thumbnail = ImageSource.FromUri(new(media.thumbnail_url ?? media.origin_url ?? media.url));
     }
 
     public MediaAttachmentViewModel(string fileName, byte[] imageBytes, bool isVideo = false)
@@ -75,9 +75,9 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
         if (!isVideo)
         {
             File.WriteAllBytes(FilePath, imageBytes);
-            ImageSource = ImageSource.FromFile(FilePath);
+            _ = InitializeThumbnailAsync(imageBytes);
         }
-        else ImageSource = ImageSource.FromFile("video.png");
+        else Thumbnail = ImageSource.FromFile("video.png");
     }
 
     public MediaAttachmentViewModel(string fileName, string filePath, bool isVideo = false)
@@ -85,7 +85,20 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
         FileName = fileName;
         FilePath = filePath;
         IsVideo = isVideo;
-        ImageSource = isVideo ? ImageSource.FromFile("video.png") : ImageSource.FromFile(filePath);
+        if (isVideo) Thumbnail = ImageSource.FromFile("video.png");
+        else _ = InitializeThumbnailAsync(filePath);
+    }
+
+    private async Task InitializeThumbnailAsync(byte[] imageBytes)
+    {
+        var thumbnailBytes = await Utils.ResizeImageToThumbnailAsync(imageBytes);
+        if (thumbnailBytes != null) Thumbnail = ImageSource.FromStream(() => new MemoryStream(thumbnailBytes));
+    }
+
+    private async Task InitializeThumbnailAsync(string filePath)
+    {
+        var thumbnailBytes = await Utils.ResizeImageToThumbnailAsync(filePath);
+        if (thumbnailBytes != null) Thumbnail = ImageSource.FromStream(() => new MemoryStream(thumbnailBytes));
     }
 
     public async Task ApplyEditAsync(byte[] imageBytes)
@@ -101,7 +114,8 @@ public partial class MediaAttachmentViewModel : ObservableObject, IDisposable
         if (File.Exists(FilePath)) File.Delete(FilePath);
         Data = imageBytes;
         FilePath = newFilePath;
-        ImageSource = ImageSource.FromFile(FilePath);
+        var thumbnailBytes = await Utils.ResizeImageToThumbnailAsync(imageBytes);
+        if (thumbnailBytes != null) Thumbnail = ImageSource.FromStream(() => new MemoryStream(thumbnailBytes));
     }
 
     public void Dispose()
