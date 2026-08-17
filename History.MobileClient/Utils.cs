@@ -630,15 +630,15 @@ public static partial class Utils
 
     private static async Task OpenKakaoStoryPostAsync(string postId)
     {
+        if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return;
+
         WeakReferenceMessenger.Default.Send(new LoadingStateChangedMessage(true));
         try
         {
             KakaoPostViewModel postViewModel = null;
             await Task.Run(async () =>
             {
-                if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return;
-
-                var post = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetPost(postId));
+                var post = await KakaoStoryApiHandler.GetPost(postId);
                 if (post == null) return;
 
                 postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);
