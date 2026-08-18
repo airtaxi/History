@@ -626,7 +626,11 @@ public static partial class Utils
         try
         {
             var result = await App.ExecuteRequestAsync(new GetPost(postId));
-            if (result.IsFailure) return;
+            if (result.IsFailure)
+            {
+                await App.Page.DisplayAlertAsync("오류", "게시글을 불러오지 못했습니다.", Constants.PromptOk);
+                return;
+            }
 
             var postViewModel = new HistoryPostViewModel(result.Value, PostType.Unwrapped);
             await App.PushAsync(new PostPage(postViewModel));
@@ -664,7 +668,11 @@ public static partial class Utils
             if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return;
 
             var post = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetPost(postId));
-            if (post == null) return;
+            if (post == null)
+            {
+                await App.Page.DisplayAlertAsync("오류", "카카오스토리 게시글을 불러오지 못했습니다.", Constants.PromptOk);
+                return;
+            }
 
             var postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);
             await App.PushAsync(new PostPage(postViewModel));
