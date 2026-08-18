@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
@@ -20,7 +20,7 @@ namespace History.MobileClient.ViewModels;
 
 // Blazor user profile view model, ported from UserPage.xaml.cs. Owns the profile feed
 // collection, the loaded BaseProfileViewModel, and the load/refresh/switch/layout-toggle
-// logic; the Blazor profile renders Items + ProfileVm and the native chrome binds to the
+// logic; the Blazor profile renders Items + ProfileViewModel and the native chrome binds to the
 // header/loading/scroll-to-top state. The legacy UserPage (dead code) keeps the static
 // ShouldRefresh flags that other pages still set.
 public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewModel
@@ -51,7 +51,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
     public partial bool IsScrollToTopVisible { get; set; }
 
     [ObservableProperty]
-    public partial BaseProfileViewModel ProfileVm { get; private set; }
+    public partial BaseProfileViewModel ProfileViewModel { get; private set; }
 
     [ObservableProperty]
     public partial bool UseGridLayout { get; private set; } = true;
@@ -188,8 +188,8 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
                     return;
                 }
 
-                ProfileVm = new KakaoProfileViewModel(profileObject.profile, profileObject.mutual_friend);
-                IsFriendsVisible = (ProfileVm as KakaoProfileViewModel)?.IsFriendsVisible ?? false;
+                ProfileViewModel = new KakaoProfileViewModel(profileObject.profile, profileObject.mutual_friend);
+                IsFriendsVisible = (ProfileViewModel as KakaoProfileViewModel)?.IsFriendsVisible ?? false;
                 IsMessageVisible = !IsMyProfilePage && profileObject.profile.message_sendable;
 
                 var viewModels = (profileObject.activities ?? []).Select(KakaoStoryUtils.CreatePostViewModel).Where(x => x != null).ToList();
@@ -208,7 +208,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
                 // The mode can change while the profile loads (fast pill switching); discard the stale result, the pending switch reloads.
                 if (isKakaoStoryMode != _isKakaoStoryMode) return;
 
-                if (user.IsSuccess) ProfileVm = new HistoryProfileViewModel(user.Value);
+                if (user.IsSuccess) ProfileViewModel = new HistoryProfileViewModel(user.Value);
                 else
                 {
                     await App.PopAsync();
@@ -330,7 +330,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
     {
         if (_isKakaoStoryMode)
         {
-            var permalink = (ProfileVm as KakaoProfileViewModel)?.Profile?.permalink;
+            var permalink = (ProfileViewModel as KakaoProfileViewModel)?.Profile?.permalink;
             if (string.IsNullOrEmpty(permalink))
             {
                 await App.TopPage.DisplayAlertAsync("안내", "이 프로필은 URL이 존재하지 않습니다.", Constants.PromptOk);
@@ -350,7 +350,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
     {
         if (_isKakaoStoryMode)
         {
-            var nickname = (ProfileVm as KakaoProfileViewModel)?.Nickname;
+            var nickname = (ProfileViewModel as KakaoProfileViewModel)?.Nickname;
             if (string.IsNullOrEmpty(nickname)) return;
 
             await App.PushModalAsync(new WriteMessagePage(KakaoUserId, nickname, true));
@@ -358,7 +358,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
         else
         {
             var canSendMessage = await App.ExecuteRequestAsync(new CheckMessagePermission(UserId));
-            if (canSendMessage.IsSuccess) await App.PushModalAsync(new WriteMessagePage(UserId, (ProfileVm as HistoryProfileViewModel)?.User.Nickname));
+            if (canSendMessage.IsSuccess) await App.PushModalAsync(new WriteMessagePage(UserId, (ProfileViewModel as HistoryProfileViewModel)?.User.Nickname));
         }
     }
 
@@ -368,7 +368,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
         if (memo == null) return;
 
         var response = await App.ExecuteRequestAsync(new UpdateMemo(UserId, memo.Trim()));
-        if (response.IsSuccess) await ProfileVm.RefreshAsync();
+        if (response.IsSuccess) await ProfileViewModel.RefreshAsync();
     }
 
     public async Task FriendsAsync()
@@ -385,7 +385,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
         }
     }
 
-    public async Task BanAsync() => await ProfileVm.HandleBanAsync();
+    public async Task BanAsync() => await ProfileViewModel.HandleBanAsync();
 
     public async Task SettingsAsync()
     {
