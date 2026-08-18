@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
@@ -282,6 +283,8 @@ public partial class KakaoPostViewModel : BasePostViewModel
             options.Add("이 글 숨기기");
         }
 
+        options.Add("게시글 URL 복사");
+
         var action = await App.Page.DisplayActionSheetAsync("카카오스토리 게시물 옵션", Constants.PromptCancel, null, [.. options]);
         if (action == null || action == Constants.PromptCancel) return;
 
@@ -293,6 +296,17 @@ public partial class KakaoPostViewModel : BasePostViewModel
         else if (action is "이 글 알림 받기" or "이 글 알림 안받기") await HandleMuteNotificationsAsync();
         else if (action == "이 글 숨기기") await HandleHidePostAsync(popModal);
         else if (action == "게시글 삭제") await DeleteAsync(popModal);
+        else if (action == "게시글 URL 복사")
+        {
+            if (_postData.permalink == null)
+            {
+                await App.Page.DisplayAlertAsync("안내", "이 게시글은 URL이 존재하지 않습니다.", Constants.PromptOk);
+                return;
+            }
+
+            await Clipboard.SetTextAsync(_postData.permalink);
+            await Toast.Make("게시글 URL이 클립보드에 복사되었습니다.").Show();
+        }
     }
 
     private async Task HandleChangePermissionAsync()

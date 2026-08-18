@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -187,6 +188,8 @@ public partial class HistoryPostViewModel : BasePostViewModel
         else if (Shared.MyRank >= Rank.Moderator) options.AddRange("게시글 삭제");
         else options.AddRange("게시글 신고");
 
+        options.Add("게시글 URL 복사");
+
         var action = await App.Page.DisplayActionSheetAsync("게시물 옵션", Constants.PromptCancel, null, [.. options]);
         if (action == null || action == Constants.PromptCancel) return;
 
@@ -259,6 +262,11 @@ public partial class HistoryPostViewModel : BasePostViewModel
         else if (action == "관심글 삭제") await HandleUnbookmarkAsync();
         else if (action is "이 글 알림 받기" or "이 글 알림 안받기") await HandleMuteNotificationsAsync();
         else if (action == "이 글 숨기기") await HandleHidePostAsync();
+        else if (action == "게시글 URL 복사")
+        {
+            await Clipboard.SetTextAsync($"https://historyweb.cc/post/{Post.Id}");
+            await Toast.Make("게시글 URL이 클립보드에 복사되었습니다.").Show();
+        }
         else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
 
