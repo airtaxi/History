@@ -578,26 +578,35 @@ public static partial class Utils
         linkSpan.GestureRecognizers.Add(tapGesture);
     }
 
-    // Opens a link. Kakao Story post URLs (https://story.kakao.com/{username}/{postCode})
+    // Opens a link. Kakao Story post URLs (https://story.kakao.com/{userId}/{postCode})
     // navigate to the in-app post page instead of the external browser. The post id is
     // resolved by fetching the page and extracting the embedded feed_id.
+    // Kakao Story user profile URLs (https://story.kakao.com/{userId}) navigate to the
+    // in-app user profile page; the user id is extracted directly from the URL path.
     // History post URLs (https://historyweb.cc/post/{postId}) also navigate to the
     // in-app post page; the post id is extracted directly from the URL path.
     // History user profile URLs (https://historyweb.cc/u/{userId}) navigate to the
     // in-app user profile page.
     public static async Task OpenLinkAsync(string url)
     {
-        var postId = GetHistoryPostId(url);
-        if (postId != null)
-        {
-            await OpenHistoryPostAsync(postId);
-            return;
-        }
-
         var userId = GetHistoryUserId(url);
         if (userId != null)
         {
             await App.PushAsync(new BlazorUserPage(userId));
+            return;
+        }
+
+        var kakaoStoryUserId = GetKakaoStoryUserId(url);
+        if (kakaoStoryUserId != null)
+        {
+            await App.PushAsync(new BlazorUserPage(kakaoStoryUserId, true));
+            return;
+        }
+
+        var postId = GetHistoryPostId(url);
+        if (postId != null)
+        {
+            await OpenHistoryPostAsync(postId);
             return;
         }
 
@@ -641,6 +650,19 @@ public static partial class Utils
         if (segments.Length != 2 || segments[0] != "u") return null;
 
         return segments[1];
+    }
+
+    // Extracts the user id from a story.kakao.com/{userId} URL. Returns null when
+    // the URL is not a Kakao Story user profile URL.
+    private static string GetKakaoStoryUserId(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return null;
+        if (uri.Host != "story.kakao.com") return null;
+
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length != 1) return null;
+
+        return segments[0];
     }
 
     private static async Task OpenHistoryPostAsync(string postId)
