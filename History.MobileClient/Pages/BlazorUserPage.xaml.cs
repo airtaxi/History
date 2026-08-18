@@ -178,6 +178,8 @@ public partial class BlazorUserPage : ContentPage
 
     private void OnLayoutImageTapped(object sender, TappedEventArgs e) => _viewModel.ToggleLayout();
 
+    private async void OnLinkImageTapped(object sender, TappedEventArgs e) => await _viewModel.CopyProfileLinkAsync();
+
     private async void OnMessageImageTapped(object sender, TappedEventArgs e) => await _viewModel.MessageAsync();
 
     private async void OnMemoImageTapped(object sender, TappedEventArgs e) => await _viewModel.MemoAsync();
