@@ -94,12 +94,7 @@ public static partial class Utils
             else if (content is MediaContent mediaContent)
             {
                 FlushTextTypeContents();
-#if ANDROID
                 mediaContents.Add(mediaContent);
-#else
-                if (postType != PostType.Unwrapped) mediaContents.Add(mediaContent);
-                else contentViewModels.Add(new HistoryMediaContentViewModel(mediaContent, allMediaContents, postType, isParentPost));
-#endif
             }
         }
 
