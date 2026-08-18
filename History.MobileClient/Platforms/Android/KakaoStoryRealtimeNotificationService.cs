@@ -10,14 +10,17 @@ namespace History.MobileClient;
 
 /// <summary>
 /// Foreground service that polls the Kakao Story notification and mail lists
-/// every 10 seconds while the app is in the background. The ongoing
+/// every 20 seconds while the app is in the background. The ongoing
 /// notification keeps the process alive so the poll cadence is effectively
 /// real-time; the 15-minute JobService remains the fallback when this service
 /// is not running (e.g. after the Android 15 dataSync 6-hour timeout, until
-/// the app is opened again and MainActivity restarts it). The poll cycle is
-/// the shared <see cref="KakaoStoryNotificationPoller.PollOnceAsync"/>, so the
-/// Kakao Story notification setting and the login-modal suppression
-/// (IsBackgroundMode) behave exactly like the other pollers.
+/// the app is opened again and MainActivity restarts it). In battery saver
+/// mode the poll is throttled to once every 3 minutes to save battery, but the
+/// 10-second timer keeps ticking so a poll runs immediately when the device
+/// wakes up from Doze. The poll cycle is the shared
+/// <see cref="KakaoStoryNotificationPoller.PollOnceAsync"/>, so the Kakao Story
+/// notification setting and the login-modal suppression (IsBackgroundMode)
+/// behave exactly like the other pollers.
 /// </summary>
 [Service(Name = "com.airtaxi.history.KakaoStoryRealtimeNotificationService", ForegroundServiceType = ForegroundService.TypeDataSync)]
 public class KakaoStoryRealtimeNotificationService : Service
@@ -78,16 +81,33 @@ public class KakaoStoryRealtimeNotificationService : Service
     {
         // A per-loop timer keeps a restarting loop from sharing a timer with a
         // still-finishing previous loop (PeriodicTimer only allows one waiter).
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(20));
+        var lastPollTime = DateTime.UtcNow;
         try
         {
             while (await timer.WaitForNextTickAsync(cancellationToken))
             {
+                // In battery saver mode the poll is throttled to once every
+                // 3 minutes. The timer keeps ticking at 20 seconds so a poll
+                // runs immediately when the device wakes up from Doze, instead
+                // of waiting for the next throttled tick.
+                if (IsPowerSaveMode && DateTime.UtcNow - lastPollTime < TimeSpan.FromMinutes(3)) continue;
+
+                lastPollTime = DateTime.UtcNow;
                 try { await KakaoStoryNotificationPoller.PollOnceAsync(); }
                 catch (Exception exception) { Log.Error(TAG, $"Kakao Story realtime poll cycle failed: {exception.Message}"); }
             }
         }
         catch (System.OperationCanceledException) { }
+    }
+
+    private bool IsPowerSaveMode
+    {
+        get
+        {
+            var powerManager = (PowerManager)GetSystemService(PowerService);
+            return powerManager.IsPowerSaveMode;
+        }
     }
 
     private void CreateNotificationChannelIfNeeded()
