@@ -121,7 +121,9 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
     private void UpdateHeaderSurface()
     {
         IsBackVisible = !_isMyProfile;
-        TitleText = _isMyProfile ? "내 프로필" : "프로필";
+        // The AppShell tab (History my profile) already distinguishes modes with the pill grid,
+        // so the prefix is only applied to pushed pages in Kakao Story mode.
+        TitleText = _isKakaoStoryMode ? "카카오스토리 프로필" : (_isMyProfile ? "내 프로필" : "프로필");
         IsBanVisible = !IsMyProfilePage;
         IsMemoVisible = !_isKakaoStoryMode && !IsMyProfilePage;
         IsMessageVisible = !IsMyProfilePage;

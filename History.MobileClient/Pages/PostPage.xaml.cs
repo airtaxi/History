@@ -54,7 +54,11 @@ public partial class PostPage : ContentPage
 
         ViewModel = viewModel;
         InitializeComponent();
-        if (IsKakaoStory) UpdateRepostStatus(KakaoViewModel.PostData);
+        if (IsKakaoStory)
+        {
+            TitleLabel.Text = "카카오스토리 게시글";
+            UpdateRepostStatus(KakaoViewModel.PostData);
+        }
         else UpdateRepostStatus(((HistoryPostViewModel)ViewModel).Post);
 
         CommentStickerCollectionView.SetTextContentView(CommentTextContentView);

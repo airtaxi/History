@@ -42,6 +42,7 @@
                     </Image>
                 </Grid>
                 <Label
+                    x:Name="TitleLabel"
                     FontAttributes="Bold"
                     FontSize="20"
                     Text="게시글"
