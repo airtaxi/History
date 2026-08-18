@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Maui.Alerts;
 using History.Commons;
+using History.Commons.Api.Post;
 using History.Commons.Api.PushNotification;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
@@ -580,12 +581,21 @@ public static partial class Utils
     // Opens a link. Kakao Story post URLs (https://story.kakao.com/{username}/{postCode})
     // navigate to the in-app post page instead of the external browser. The post id is
     // resolved by fetching the page and extracting the embedded feed_id.
+    // History post URLs (https://historyweb.cc/post/{postId}) also navigate to the
+    // in-app post page; the post id is extracted directly from the URL path.
     public static async Task OpenLinkAsync(string url)
     {
-        var postId = await GetKakaoStoryPostIdAsync(url);
+        var postId = GetHistoryPostId(url);
         if (postId != null)
         {
-            await OpenKakaoStoryPostAsync(postId);
+            await OpenHistoryPostAsync(postId);
+            return;
+        }
+
+        var kakaoStoryPostId = await GetKakaoStoryPostIdAsync(url);
+        if (kakaoStoryPostId != null)
+        {
+            await OpenKakaoStoryPostAsync(kakaoStoryPostId);
             return;
         }
 
@@ -596,6 +606,32 @@ public static partial class Utils
         }
 
         await Launcher.Default.OpenAsync(url);
+    }
+
+    // Extracts the post id from a historyweb.cc/post/{postId} URL. Returns null when
+    // the URL is not a History post URL.
+    private static string GetHistoryPostId(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return null;
+        if (uri.Host != "historyweb.cc") return null;
+
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length != 2 || segments[0] != "post") return null;
+
+        return segments[1];
+    }
+
+    private static async Task OpenHistoryPostAsync(string postId)
+    {
+        try
+        {
+            var result = await App.ExecuteRequestAsync(new GetPost(postId));
+            if (result.IsFailure) return;
+
+            var postViewModel = new HistoryPostViewModel(result.Value, PostType.Unwrapped);
+            await App.PushAsync(new PostPage(postViewModel));
+        }
+        catch (Exception exception) { Debug.WriteLine($"History post link navigation failed: {exception.Message}"); }
     }
 
     // Resolves the real post id of a story.kakao.com post URL. The URL only carries
