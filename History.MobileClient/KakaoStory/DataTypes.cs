@@ -1585,6 +1585,7 @@ public partial class KakaoStoryApiHandler
                 public List<TitleDecorator> title_decorators { get; set; }
                 public Scrap scrap { get; set; }
                 public CommentData.PostData original_activity { get; set; }
+                public CommentData.PostData activity { get; set; }
                 public List<CommentData.PostData> activities { get; set; }
                 public int total_count { get; set; }
                 public bool more_activities { get; set; }

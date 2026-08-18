@@ -169,6 +169,8 @@ public static class KakaoStoryUtils
     /// - bundled_feed.type == "up"    -> render the original activity as a repost card.
     /// - bundled_feed.type == "share" -> inject the original activity into activities[0].@object
     ///                                    so the shared card renders the original post.
+    /// - bundled_feed.type == "scrap" -> render only the most recent activity
+    ///                                    (bundled_feed.activity) as a normal link-embedded post.
     /// Returns null when the post author is banned (relation.ban == "A") so callers skip it.
     /// Also returns null for aggregated feeds (e.g. timehop) whose payload lives in
     /// object.objects instead of the single-post surface the app can render.
@@ -197,6 +199,16 @@ public static class KakaoStoryUtils
             {
                 var activity = bundledFeed.activities[0];
                 activity.@object = bundledFeed.original_activity;
+                return new KakaoPostViewModel(activity);
+            }
+
+            // bundled_feed.type == "scrap" -> N people shared the same link; render only the
+            // most recent activity (bundled_feed.activity) as a normal link-embedded post.
+            if (bundledFeed.type == "scrap")
+            {
+                var activity = bundledFeed.activity ?? bundledFeed.activities?.FirstOrDefault();
+                if (activity == null) return null;
+                if (activity.actor?.relation?.ban == "A") return null;
                 return new KakaoPostViewModel(activity);
             }
         }
