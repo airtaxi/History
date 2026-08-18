@@ -583,12 +583,21 @@ public static partial class Utils
     // resolved by fetching the page and extracting the embedded feed_id.
     // History post URLs (https://historyweb.cc/post/{postId}) also navigate to the
     // in-app post page; the post id is extracted directly from the URL path.
+    // History user profile URLs (https://historyweb.cc/u/{userId}) navigate to the
+    // in-app user profile page.
     public static async Task OpenLinkAsync(string url)
     {
         var postId = GetHistoryPostId(url);
         if (postId != null)
         {
             await OpenHistoryPostAsync(postId);
+            return;
+        }
+
+        var userId = GetHistoryUserId(url);
+        if (userId != null)
+        {
+            await App.PushAsync(new BlazorUserPage(userId));
             return;
         }
 
@@ -617,6 +626,19 @@ public static partial class Utils
 
         var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length != 2 || segments[0] != "post") return null;
+
+        return segments[1];
+    }
+
+    // Extracts the user id from a historyweb.cc/u/{userId} URL. Returns null when
+    // the URL is not a History user profile URL.
+    private static string GetHistoryUserId(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return null;
+        if (uri.Host != "historyweb.cc") return null;
+
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length != 2 || segments[0] != "u") return null;
 
         return segments[1];
     }
