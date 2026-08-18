@@ -26,7 +26,6 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
     private bool _areThereNoMorePostsToLoad;
     private bool _isFirstLoad = true;
     private string _nextSince;
-    private BasePostViewModel _lastViewModel;
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
     private readonly SemaphoreSlim _switchSemaphore = new(1, 1);
 
@@ -60,14 +59,12 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
     {
         var viewModels = Items.OfType<HistoryPostViewModel>().Where(x => x.Post.Id == message.Value.Id).ToList(); // ToList is needed (Collection will be modified)
         foreach (var viewModel in viewModels) Items.Remove(viewModel);
-        _lastViewModel = Items.LastOrDefault();
     }
 
     private void OnKakaoPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostData> message)
     {
         var viewModels = Items.OfType<KakaoPostViewModel>().Where(x => x.PostData.id == message.Value.id).ToList(); // ToList is needed (Collection will be modified)
         foreach (var viewModel in viewModels) Items.Remove(viewModel);
-        _lastViewModel = Items.LastOrDefault();
     }
 
     // Kakao Story bundles multiple share/UP activities into a single feed (WPF pattern);
@@ -93,7 +90,6 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
 
             var viewModels = timeline.feeds.Select(CreateKakaoPostViewModel).Where(x => x != null).ToList();
             _nextSince = timeline.next_since;
-            _lastViewModel = viewModels.LastOrDefault();
             foreach (var viewModel in viewModels) Items.Add(viewModel);
         }
         else
@@ -106,7 +102,6 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
                 var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User) : new HistoryPostViewModel(x, PostType.Timeline)));
-                _lastViewModel = viewModels.LastOrDefault();
                 foreach (var viewModel in viewModels) Items.Add(viewModel);
             }
         }
@@ -166,7 +161,6 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
 
                 var viewModels = timeline.feeds.Select(CreateKakaoPostViewModel).Where(x => x != null).ToList();
                 _nextSince = timeline.next_since;
-                _lastViewModel = viewModels.LastOrDefault();
                 _areThereNoMorePostsToLoad = string.IsNullOrEmpty(_nextSince) || !viewModels.Any();
                 foreach (var viewModel in viewModels) Items.Add(viewModel);
             }
@@ -184,7 +178,6 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
                 {
                     var posts = postsResult.Value;
                     var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User) : new HistoryPostViewModel(x, PostType.Timeline)));
-                    _lastViewModel = viewModels.LastOrDefault();
                     _areThereNoMorePostsToLoad = !viewModels.Any();
                     foreach (var viewModel in viewModels) Items.Add(viewModel);
                 }
