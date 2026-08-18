@@ -70,6 +70,21 @@
                     </Image.Source>
                 </Image>
                 <Image
+                    x:Name="LinkImage"
+                    HeightRequest="32"
+                    VerticalOptions="Center"
+                    WidthRequest="32">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnLinkImageTapped" />
+                    </Image.GestureRecognizers>
+                    <Image.Source>
+                        <FontImageSource
+                            FontFamily="MaterialSharp"
+                            Glyph="{x:Static m:MaterialSharp.Link}"
+                            Color="White" />
+                    </Image.Source>
+                </Image>
+                <Image
                     x:Name="MessageImage"
                     HeightRequest="32"
                     IsVisible="{Binding IsMessageVisible}"

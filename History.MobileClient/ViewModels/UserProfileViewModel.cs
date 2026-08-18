@@ -1,3 +1,4 @@
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
@@ -324,6 +325,24 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
     }
 
     public void ToggleLayout() => UseGridLayout = !UseGridLayout;
+
+    public async Task CopyProfileLinkAsync()
+    {
+        if (_isKakaoStoryMode)
+        {
+            var permalink = (ProfileVm as KakaoProfileViewModel)?.Profile?.permalink;
+            if (string.IsNullOrEmpty(permalink))
+            {
+                await App.TopPage.DisplayAlertAsync("안내", "이 프로필은 URL이 존재하지 않습니다.", Constants.PromptOk);
+                return;
+            }
+
+            await Clipboard.SetTextAsync(permalink);
+        }
+        else await Clipboard.SetTextAsync($"https://historyweb.cc/u/{UserId}");
+
+        await Toast.Make("프로필 URL이 클립보드에 복사되었습니다.").Show();
+    }
 
     public async Task BackAsync() => await App.PopAsync();
 
