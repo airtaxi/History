@@ -1,12 +1,18 @@
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
+using dccon.NET;
+using dccon.NET.Models;
 using FFImageLoading.Maui;
 using History.Commons.Api.Sticker;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
+using InvenSticker.NET;
+using InvenSticker.NET.Models;
 using Microsoft.Maui.Controls.Shapes;
+using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using UraniumUI.Icons.MaterialSymbols;
+using Path = System.IO.Path;
 
 #if IOS
 using NativeMedia;
@@ -254,9 +260,286 @@ public partial class CreateStickerPage : ContentPage
         AssetsFlexLayout.Children.Add(grid);
     }
 
-    private void UpdateAssetCount()
+    private void UpdateAssetCount() => AssetCountLabel.Text = $"({_assets.Count}/{MaxAssets})";
+
+    private async void OnLoadExternalStickerBorderTapped(object sender, TappedEventArgs e)
     {
-        AssetCountLabel.Text = $"({_assets.Count}/{MaxAssets})";
+        var action = await DisplayActionSheetAsync("스티커 불러오기", Constants.PromptCancel, null, "디시콘", "아카콘", "인벤스티커");
+        if (action == null || action == Constants.PromptCancel) return;
+
+        if (action == "디시콘") await LoadDcconStickerAsync();
+        else if (action == "아카콘") await LoadArcaLiveEmoticonAsync();
+        else if (action == "인벤스티커") await LoadInvenStickerAsync();
+    }
+
+    private async Task LoadDcconStickerAsync()
+    {
+        var url = await DisplayPromptAsync("디시콘 불러오기", "디시콘 URL을 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "https://dccon.dcinside.com/#15276", -1, Keyboard.Url);
+        if (string.IsNullOrWhiteSpace(url)) return;
+
+        var hashIndex = url.IndexOf('#');
+        if (hashIndex == -1 || hashIndex == url.Length - 1 || !int.TryParse(url[(hashIndex + 1)..], out var packageIndex) || packageIndex <= 0)
+        {
+            await DisplayAlertAsync("오류", "올바른 디시콘 URL을 입력해주세요.", "확인");
+            return;
+        }
+
+        try
+        {
+            using var client = new DcconClient();
+            var detail = await client.GetPackageDetailAsync(packageIndex);
+
+            // Fill only empty fields
+            if (string.IsNullOrWhiteSpace(NameEntry.Text)) NameEntry.Text = detail.Title;
+
+            if (string.IsNullOrWhiteSpace(CategoryEntry.Text) && detail.Tags.Count > 0) CategoryEntry.Text = string.Join(", ", detail.Tags.Select(x => x.Replace("#", string.Empty));
+
+            if (string.IsNullOrWhiteSpace(DescriptionEditor.Text)) DescriptionEditor.Text = detail.Description;
+            await App.ExecuteWithLoadingAsync(async () =>
+            {
+                await DownloadDcconIconAsync(client, detail);
+
+                var addedCount = 0;
+                var failedCount = 0;
+                var usedFileNames = new HashSet<string>();
+                foreach (var sticker in detail.Stickers)
+                {
+                    if (_assets.Count >= MaxAssets)
+                    {
+                        await DisplayAlertAsync("알림", $"스티커 에셋은 최대 {MaxAssets}개까지 추가할 수 있어 나머지는 건너뜁니다.", "확인");
+                        break;
+                    }
+
+                    var fileName = GetDcconStickerFileName(sticker);
+                    var suffix = 2;
+                    while (!usedFileNames.Add(fileName)) fileName = $"{Path.GetFileNameWithoutExtension(fileName)}_{suffix++}.{sticker.Extension}";
+
+                    try
+                    {
+                        var bytes = await client.DownloadStickerAsync(sticker);
+                        var memoryStream = new MemoryStream(bytes);
+                        _assets.Add(fileName, memoryStream);
+                        AddAssetToUI(fileName, memoryStream);
+                        addedCount++;
+                    }
+                    catch (Exception stickerException)
+                    {
+                        failedCount++;
+                        await DisplayAlertAsync("오류", $"일부 스티커를 불러오지 못했습니다: {sticker.Title} ({stickerException.Message})", "확인");
+                    }
+                }
+
+                if (addedCount > 0) UpdateAssetCount();
+
+                if (addedCount == 0 && failedCount == detail.Stickers.Count)
+                {
+                    await DisplayAlertAsync("오류", "디시콘 스티커를 불러오지 못했습니다.", "확인");
+                    return;
+                }
+
+                if (addedCount > 0 && failedCount > 0) await DisplayAlertAsync("알림", $"스티커 {addedCount}개를 불러왔고 {failedCount}개를 불러오지 못했습니다.", "확인");
+                else if (failedCount > 0) await DisplayAlertAsync("알림", $"스티커 {failedCount}개를 불러오지 못했습니다.", "확인");
+                else if (addedCount > 0) await DisplayAlertAsync("성공", $"스티커 {addedCount}개를 불러왔습니다!", "확인");
+            });
+        }
+        catch (Exception exception) { await DisplayAlertAsync("오류", $"디시콘을 불러오는 중 오류가 발생했습니다: {exception.Message}", "확인"); }
+    }
+
+    private async Task DownloadDcconIconAsync(DcconClient client, DcconPackageDetail detail)
+    {
+        try
+        {
+            var iconBytes = await client.DownloadStickerAsync(new DcconSticker { Path = detail.MainImagePath });
+            var iconExtension = detail.Stickers.Count > 0 ? detail.Stickers[0].Extension : "png";
+            var iconFileName = string.IsNullOrWhiteSpace(detail.MainImagePath) ? $"sticker_icon.{iconExtension}" : $"{detail.MainImagePath}.{iconExtension}";
+
+            _iconFileName = iconFileName;
+            _iconStream?.Dispose();
+            _iconStream = new MemoryStream(iconBytes);
+
+            var iconStreamCopy = _iconStream;
+            IconImage.Source = ImageSource.FromStream(() => iconStreamCopy);
+            IconImage.IsVisible = true;
+            IconPlaceholderImage.IsVisible = false;
+
+            if (iconFileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) || iconFileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)) _ = Toast.Make("움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
+        }
+        catch (Exception exception) { _ = Toast.Make($"아이콘을 불러오지 못했습니다: {exception.Message}").Show(); }
+    }
+
+    private static string GetDcconStickerFileName(DcconSticker sticker) =>
+        $"{(!string.IsNullOrWhiteSpace(sticker.Path) ? sticker.Path : $"sticker_{sticker.SortNumber}")}.{sticker.Extension}";
+
+    private async Task LoadInvenStickerAsync()
+    {
+        var url = await DisplayPromptAsync("인벤 스티커 불러오기", "인벤 스티커 URL을 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "https://imart.inven.co.kr/shop/sticker/1164", -1, Keyboard.Url);
+        if (string.IsNullOrWhiteSpace(url)) return;
+
+        var packageIdMatch = Regex.Match(url, @"/shop/sticker/(\d+)");
+        if (!int.TryParse(packageIdMatch.Groups[1].Value, out var packageId) || packageId <= 0)
+        {
+            await DisplayAlertAsync("오류", "올바른 인벤 스티커 URL을 입력해주세요.", "확인");
+            return;
+        }
+
+        try
+        {
+            using var client = new InvenStickerClient();
+            var detail = await client.GetDetailAsync(packageId);
+
+            // Fill only empty fields
+            if (string.IsNullOrWhiteSpace(NameEntry.Text)) NameEntry.Text = detail.Title;
+
+            if (string.IsNullOrWhiteSpace(CategoryEntry.Text) && detail.Tags.Count > 0) CategoryEntry.Text = string.Join(", ", detail.Tags.Select(x => x.Replace("#", string.Empty));
+
+            await App.ExecuteWithLoadingAsync(async () =>
+            {
+                await DownloadInvenStickerIconAsync(client, detail);
+
+                var addedCount = 0;
+                var failedCount = 0;
+                for (var index = 0; index < detail.Images.Count; index++)
+                {
+                    if (_assets.Count >= MaxAssets)
+                    {
+                        await DisplayAlertAsync("알림", $"스티커 에셋은 최대 {MaxAssets}개까지 추가할 수 있어 나머지는 건너뜁니다.", "확인");
+                        break;
+                    }
+
+                    var fileName = InvenStickerFileNameHelper.GetStickerFileName(detail.Images[index], index);
+
+                    try
+                    {
+                        var bytes = await client.DownloadImageAsync(detail.Images[index]);
+                        var memoryStream = new MemoryStream(bytes);
+                        _assets.Add(fileName, memoryStream);
+                        AddAssetToUI(fileName, memoryStream);
+                        addedCount++;
+                    }
+                    catch (Exception stickerException)
+                    {
+                        failedCount++;
+                        await DisplayAlertAsync("오류", $"일부 스티커를 불러오지 못했습니다: {fileName} ({stickerException.Message})", "확인");
+                    }
+                }
+
+                if (addedCount > 0) UpdateAssetCount();
+
+                if (addedCount == 0 && failedCount == detail.Images.Count)
+                {
+                    await DisplayAlertAsync("오류", "인벤 스티커를 불러오지 못했습니다.", "확인");
+                    return;
+                }
+
+                if (addedCount > 0 && failedCount > 0) await DisplayAlertAsync("알림", $"스티커 {addedCount}개를 불러왔고 {failedCount}개를 불러오지 못했습니다.", "확인");
+                else if (failedCount > 0) await DisplayAlertAsync("알림", $"스티커 {failedCount}개를 불러오지 못했습니다.", "확인");
+                else await DisplayAlertAsync("성공", $"스티커 {addedCount}개를 불러왔습니다!", "확인");
+            });
+        }
+        catch (Exception exception) { await DisplayAlertAsync("오류", $"인벤 스티커를 불러오는 중 오류가 발생했습니다: {exception.Message}", "확인"); }
+    }
+
+    private async Task DownloadInvenStickerIconAsync(InvenStickerClient client, InvenStickerPackageDetail detail)
+    {
+        try
+        {
+            var iconBytes = await client.DownloadImageAsync(new InvenStickerImage { Url = detail.ThumbnailUrl });
+            var iconExtension = detail.Images.Count > 0 ? detail.Images[0].Extension : "png";
+            var iconFileName = $"sticker_icon.{iconExtension}";
+
+            _iconFileName = iconFileName;
+            _iconStream?.Dispose();
+            _iconStream = new MemoryStream(iconBytes);
+
+            var iconStreamCopy = _iconStream;
+            IconImage.Source = ImageSource.FromStream(() => iconStreamCopy);
+            IconImage.IsVisible = true;
+            IconPlaceholderImage.IsVisible = false;
+
+            if (iconFileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) || iconFileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)) _ = Toast.Make("움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
+        }
+        catch (Exception exception) { _ = Toast.Make($"아이콘을 불러오지 못했습니다: {exception.Message}").Show(); }
+    }
+
+    private async Task LoadArcaLiveEmoticonAsync()
+    {
+        var url = await DisplayPromptAsync("아카콘 불러오기", "아카콘 URL을 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "https://arca.live/e/52863", -1, Keyboard.Url);
+        if (string.IsNullOrWhiteSpace(url)) return;
+
+        var emoticonIndex = Regex.Match(url, @"/(?:e|emoticon)/(\d+)").Groups[1].Value;
+        if (!int.TryParse(emoticonIndex, out var emoticonId) || emoticonId <= 0)
+        {
+            await DisplayAlertAsync("오류", "올바른 아카콘 URL을 입력해주세요.", "확인");
+            return;
+        }
+        
+        try
+        {
+            await App.ExecuteWithLoadingAsync(async () =>
+            {
+                var stickers = await FetchArcaLiveEmoticonsAsync(emoticonId);
+                if (stickers.Count == 0)
+                {
+                    await DisplayAlertAsync("오류", "아카콘 스티커를 불러오지 못했습니다.", "확인");
+                    return;
+                }
+
+                var addedCount = 0;
+                var failedCount = 0;
+                var usedFileNames = new HashSet<string>();
+                using var httpClient = new HttpClient();
+                foreach (var stickerNode in stickers)
+                {
+                    if (_assets.Count >= MaxAssets)
+                    {
+                        await DisplayAlertAsync("알림", $"스티커 에셋은 최대 {MaxAssets}개까지 추가할 수 있어 나머지는 건너뜁니다.", "확인");
+                        break;
+                    }
+
+                    var imageUrl = stickerNode["imageUrl"]?.GetValue<string>();
+                    if (string.IsNullOrWhiteSpace(imageUrl)) continue;
+
+                    var fileName = GetArcaLiveEmoticonFileName(imageUrl);
+                    var suffix = 2;
+                    while (!usedFileNames.Add(fileName)) fileName = $"{Path.GetFileNameWithoutExtension(fileName)}_{suffix++}{Path.GetExtension(fileName)}";
+
+                    try
+                    {
+                        var bytes = await httpClient.GetByteArrayAsync(imageUrl);
+                        var memoryStream = new MemoryStream(bytes);
+                        _assets.Add(fileName, memoryStream);
+                        AddAssetToUI(fileName, memoryStream);
+                        addedCount++;
+                    }
+                    catch (Exception stickerException)
+                    {
+                        failedCount++;
+                        await DisplayAlertAsync("오류", $"일부 스티커를 불러오지 못했습니다: {fileName} ({stickerException.Message})", "확인");
+                    }
+                }
+
+                if (addedCount > 0) UpdateAssetCount();
+
+                if (addedCount > 0 && failedCount > 0) await DisplayAlertAsync("알림", $"스티커 {addedCount}개를 불러왔고 {failedCount}개를 불러오지 못했습니다.", "확인");
+                else if (failedCount > 0) await DisplayAlertAsync("알림", $"스티커 {failedCount}개를 불러오지 못했습니다.", "확인");
+                else await DisplayAlertAsync("성공", $"스티커 {addedCount}개를 불러왔습니다!", "확인");
+            });
+        }
+        catch (Exception exception) { await DisplayAlertAsync("오류", $"아카콘을 불러오는 중 오류가 발생했습니다: {exception.Message}", "확인"); }
+    }
+
+    private static async Task<JsonArray> FetchArcaLiveEmoticonsAsync(int emoticonId)
+    {
+        using var httpClient = new HttpClient();
+        var json = await httpClient.GetStringAsync($"https://arca.live/api/emoticon/{emoticonId}");
+        return JsonNode.Parse(json)?.AsArray() ?? [];
+    }
+
+    private static string GetArcaLiveEmoticonFileName(string imageUrl)
+    {
+        var urlWithoutQuery = imageUrl.Split('?')[0];
+        var fileName = Path.GetFileName(urlWithoutQuery);
+        return string.IsNullOrWhiteSpace(fileName) ? $"arcalive_{new Guid().ToString()[..8]}.png" : fileName;
     }
 
     private async void OnCreateButtonClicked(object sender, EventArgs e)
