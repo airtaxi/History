@@ -538,6 +538,10 @@ public partial class SettingsPage : ContentPage
         Configuration.SetValue("Theme", themeValue);
         Application.Current.UserAppTheme = appTheme;
         ThemeLabel.Text = action;
+
+        await DisplayAlertAsync("안내", "테마 변경을 적용하려면 앱을 다시 시작해야 합니다.", Constants.PromptOk);
+        Configuration.WriteBuffer();
+        Environment.Exit(0);
     }
 
 #if ANDROID
