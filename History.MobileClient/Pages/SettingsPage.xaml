@@ -429,8 +429,7 @@
                 <Grid
                     Padding="14,0,14,0"
                     HeightRequest="36"
-                    IsVisible="{OnPlatform Android=True,
-                                           iOS=False}">
+                    IsVisible="False">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTimelineVirtualizationGridTapped" />
                     </Grid.GestureRecognizers>
