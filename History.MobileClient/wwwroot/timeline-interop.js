@@ -72,7 +72,23 @@ window.timelineInterop = (() => {
         for (const card of grid.querySelectorAll('.card')) card.style.width = `${masonryColumnWidth}px`;
     }
 
+    // Measure/layout session: Masonry reads every card's real height while placing
+    // items, but cards far from the viewport are content-visibility skipped and would
+    // answer with their intrinsic-size estimate only. Temporarily unskipping all cards
+    // during the synchronous layout call keeps the staggered positions correct.
+    function measureMasonry(work) {
+        const html = document.documentElement;
+        try {
+            html.classList.add('masonry-measuring');
+            work();
+        }
+        finally {
+            html.classList.remove('masonry-measuring');
+        }
+    }
+
     function destroyMasonry() {
+        document.documentElement.classList.remove('masonry-measuring');
         if (!masonry) return;
         masonry.destroy();
         masonry = null;
@@ -100,28 +116,32 @@ window.timelineInterop = (() => {
         // The column count can stay the same while the width changes (fold/rotate);
         // Masonry does not recompute columnWidth on its own, so update it explicitly.
         if (masonry && masonryColumns === columns) {
-            if (columnWidth !== masonryColumnWidth) {
-                masonryColumnWidth = columnWidth;
-                masonry.options.columnWidth = columnWidth;
-                applyMasonryItemWidths(grid);
-            }
-            masonry.layout();
+            measureMasonry(() => {
+                if (columnWidth !== masonryColumnWidth) {
+                    masonryColumnWidth = columnWidth;
+                    masonry.options.columnWidth = columnWidth;
+                    applyMasonryItemWidths(grid);
+                }
+                masonry.layout();
+            });
             return;
         }
 
         destroyMasonry();
 
         masonryColumnWidth = columnWidth;
-        masonry = new Masonry(grid, {
-            itemSelector: '.card',
-            columnWidth: masonryColumnWidth,
-            gutter: gutter,
-            transitionDuration: 0,
-            resize: false
+        measureMasonry(() => {
+            masonry = new Masonry(grid, {
+                itemSelector: '.card',
+                columnWidth: masonryColumnWidth,
+                gutter: gutter,
+                transitionDuration: 0,
+                resize: false
+            });
+            masonryColumns = columns;
+            grid.classList.add('masonry-active');
+            applyMasonryItemWidths(grid);
         });
-        masonryColumns = columns;
-        grid.classList.add('masonry-active');
-        applyMasonryItemWidths(grid);
     }
 
     function scheduleMasonryUpdate() {
@@ -132,8 +152,10 @@ window.timelineInterop = (() => {
             if (!masonry) return;
             const grid = document.getElementById('masonry-grid');
             if (grid) applyMasonryItemWidths(grid);
-            masonry.reloadItems();
-            masonry.layout();
+            measureMasonry(() => {
+                masonry.reloadItems();
+                masonry.layout();
+            });
         });
     }
 
