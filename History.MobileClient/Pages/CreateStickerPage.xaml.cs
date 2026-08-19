@@ -292,7 +292,7 @@ public partial class CreateStickerPage : ContentPage
             // Fill only empty fields
             if (string.IsNullOrWhiteSpace(NameEntry.Text)) NameEntry.Text = detail.Title;
 
-            if (string.IsNullOrWhiteSpace(CategoryEntry.Text) && detail.Tags.Count > 0) CategoryEntry.Text = string.Join(", ", detail.Tags.Select(x => x.Replace("#", string.Empty));
+            if (string.IsNullOrWhiteSpace(CategoryEntry.Text) && detail.Tags.Count > 0) CategoryEntry.Text = string.Join(", ", detail.Tags.Select(x => x.Replace("#", string.Empty)));
 
             if (string.IsNullOrWhiteSpace(DescriptionEditor.Text)) DescriptionEditor.Text = detail.Description;
             await App.ExecuteWithLoadingAsync(async () =>
@@ -390,7 +390,7 @@ public partial class CreateStickerPage : ContentPage
             // Fill only empty fields
             if (string.IsNullOrWhiteSpace(NameEntry.Text)) NameEntry.Text = detail.Title;
 
-            if (string.IsNullOrWhiteSpace(CategoryEntry.Text) && detail.Tags.Count > 0) CategoryEntry.Text = string.Join(", ", detail.Tags.Select(x => x.Replace("#", string.Empty));
+            if (string.IsNullOrWhiteSpace(CategoryEntry.Text) && detail.Tags.Count > 0) CategoryEntry.Text = string.Join(", ", detail.Tags.Select(x => x.Replace("#", string.Empty)));
 
             await App.ExecuteWithLoadingAsync(async () =>
             {
