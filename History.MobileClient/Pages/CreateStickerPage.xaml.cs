@@ -301,6 +301,7 @@ public partial class CreateStickerPage : ContentPage
 
                 var addedCount = 0;
                 var failedCount = 0;
+                var failureMessages = new List<string>();
                 var usedFileNames = new HashSet<string>();
                 foreach (var sticker in detail.Stickers)
                 {
@@ -325,7 +326,7 @@ public partial class CreateStickerPage : ContentPage
                     catch (Exception stickerException)
                     {
                         failedCount++;
-                        await DisplayAlertAsync("오류", $"일부 스티커를 불러오지 못했습니다: {sticker.Title} ({stickerException.Message})", "확인");
+                        failureMessages.Add($"{sticker.Title} ({stickerException.Message})");
                     }
                 }
 
@@ -337,7 +338,11 @@ public partial class CreateStickerPage : ContentPage
                     return;
                 }
 
-                if (addedCount > 0 && failedCount > 0) await DisplayAlertAsync("알림", $"스티커 {addedCount}개를 불러왔고 {failedCount}개를 불러오지 못했습니다.", "확인");
+                if (addedCount > 0 && failedCount > 0)
+                {
+                    foreach (var failureMessage in failureMessages) await DisplayAlertAsync("오류", $"일부 스티커를 불러오지 못했습니다: {failureMessage}", "확인");
+                    await DisplayAlertAsync("알림", $"스티커 {addedCount}개를 불러왔고 {failedCount}개를 불러오지 못했습니다.", "확인");
+                }
                 else if (failedCount > 0) await DisplayAlertAsync("알림", $"스티커 {failedCount}개를 불러오지 못했습니다.", "확인");
                 else if (addedCount > 0) await DisplayAlertAsync("성공", $"스티커 {addedCount}개를 불러왔습니다!", "확인");
             });
@@ -398,6 +403,7 @@ public partial class CreateStickerPage : ContentPage
 
                 var addedCount = 0;
                 var failedCount = 0;
+                var failureMessages = new List<string>();
                 for (var index = 0; index < detail.Images.Count; index++)
                 {
                     if (_assets.Count >= MaxAssets)
@@ -419,7 +425,7 @@ public partial class CreateStickerPage : ContentPage
                     catch (Exception stickerException)
                     {
                         failedCount++;
-                        await DisplayAlertAsync("오류", $"일부 스티커를 불러오지 못했습니다: {fileName} ({stickerException.Message})", "확인");
+                        failureMessages.Add($"{fileName} ({stickerException.Message})");
                     }
                 }
 
@@ -431,7 +437,11 @@ public partial class CreateStickerPage : ContentPage
                     return;
                 }
 
-                if (addedCount > 0 && failedCount > 0) await DisplayAlertAsync("알림", $"스티커 {addedCount}개를 불러왔고 {failedCount}개를 불러오지 못했습니다.", "확인");
+                if (addedCount > 0 && failedCount > 0)
+                {
+                    foreach (var failureMessage in failureMessages) await DisplayAlertAsync("오류", $"일부 스티커를 불러오지 못했습니다: {failureMessage}", "확인");
+                    await DisplayAlertAsync("알림", $"스티커 {addedCount}개를 불러왔고 {failedCount}개를 불러오지 못했습니다.", "확인");
+                }
                 else if (failedCount > 0) await DisplayAlertAsync("알림", $"스티커 {failedCount}개를 불러오지 못했습니다.", "확인");
                 else await DisplayAlertAsync("성공", $"스티커 {addedCount}개를 불러왔습니다!", "확인");
             });
@@ -486,6 +496,7 @@ public partial class CreateStickerPage : ContentPage
 
                 var addedCount = 0;
                 var failedCount = 0;
+                var failureMessages = new List<string>();
                 var usedFileNames = new HashSet<string>();
                 using var httpClient = new HttpClient();
                 foreach (var stickerNode in stickers)
@@ -498,6 +509,8 @@ public partial class CreateStickerPage : ContentPage
 
                     var imageUrl = stickerNode["imageUrl"]?.GetValue<string>();
                     if (string.IsNullOrWhiteSpace(imageUrl)) continue;
+
+                    if (imageUrl.StartsWith("//")) imageUrl = $"https:{imageUrl}";
 
                     var fileName = GetArcaLiveEmoticonFileName(imageUrl);
                     var suffix = 2;
@@ -514,13 +527,23 @@ public partial class CreateStickerPage : ContentPage
                     catch (Exception stickerException)
                     {
                         failedCount++;
-                        await DisplayAlertAsync("오류", $"일부 스티커를 불러오지 못했습니다: {fileName} ({stickerException.Message})", "확인");
+                        failureMessages.Add($"{fileName} ({stickerException.Message})");
                     }
                 }
 
                 if (addedCount > 0) UpdateAssetCount();
 
-                if (addedCount > 0 && failedCount > 0) await DisplayAlertAsync("알림", $"스티커 {addedCount}개를 불러왔고 {failedCount}개를 불러오지 못했습니다.", "확인");
+                if (addedCount == 0 && failedCount == stickers.Count)
+                {
+                    await DisplayAlertAsync("오류", "아카콘 스티커를 불러오지 못했습니다.", "확인");
+                    return;
+                }
+
+                if (addedCount > 0 && failedCount > 0)
+                {
+                    foreach (var failureMessage in failureMessages) await DisplayAlertAsync("오류", $"일부 스티커를 불러오지 못했습니다: {failureMessage}", "확인");
+                    await DisplayAlertAsync("알림", $"스티커 {addedCount}개를 불러왔고 {failedCount}개를 불러오지 못했습니다.", "확인");
+                }
                 else if (failedCount > 0) await DisplayAlertAsync("알림", $"스티커 {failedCount}개를 불러오지 못했습니다.", "확인");
                 else await DisplayAlertAsync("성공", $"스티커 {addedCount}개를 불러왔습니다!", "확인");
             });
