@@ -16,7 +16,7 @@ public class StickerService(IMongoDatabase database, IMediaService mediaService,
     private readonly IMongoCollection<RecentStickerUsage> _recentUsageCollection = database.GetCollection<RecentStickerUsage>("RecentStickerUsages");
 
     private const int MaxStickerSize = 384;
-    private const int MaxAssetCount = 50;
+    private const int MaxAssetCount = 200;
     private const long MaxFileSize = 10 * 1024 * 1024; // 10MB
     private const int MaxRecentUsageCount = 50;
 

@@ -202,7 +202,7 @@
                         <Label
                             x:Name="AssetCountLabel"
                             FontSize="12"
-                            Text="(0/50)"
+                            Text="(0/200)"
                             TextColor="#808080"
                             VerticalOptions="Center" />
                     </HorizontalStackLayout>
@@ -220,7 +220,7 @@
 
                     <Label
                         FontSize="12"
-                        Text="최대 50개, 각 파일 10MB 이하, 정적 이미지 및 움짤(GIF/WebP) 가능&#10;이미지는 384x384 크기로 자동 조정됩니다."
+                        Text="최대 200개, 각 파일 10MB 이하, 정적 이미지 및 움짤(GIF/WebP) 가능&#10;이미지는 384x384 크기로 자동 조정됩니다."
                         TextColor="#808080" />
                 </VerticalStackLayout>
             </VerticalStackLayout>
