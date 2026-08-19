@@ -26,7 +26,7 @@ public partial class CreateStickerPage : ContentPage
     private string _iconFileName;
     private MemoryStream _iconStream;
     private readonly Dictionary<string, MemoryStream> _assets = [];
-    private const int MaxAssets = 50;
+    private const int MaxAssets = 200;
 
     public CreateStickerPage()
     {
