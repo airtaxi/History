@@ -13,6 +13,19 @@ public class AppDelegate : MauiUIApplicationDelegate
 {
     public override bool OpenUrl(UIApplication application, NSUrl url, NSDictionary options) => SignIn.SharedInstance.HandleUrl(url);
 
+    public override bool ContinueUserActivity(UIApplication application, NSUserActivity userActivity, UIApplicationRestorationHandler completionHandler)
+    {
+        // Universal link (https://historyweb.cc/post/{postId} or /u/{userId}):
+        // verified against apple-app-site-association via applinks:historyweb.cc.
+        if (userActivity.WebPageUrl != null)
+        {
+            _ = App.HandleAppLinkAsync(userActivity.WebPageUrl.AbsoluteString);
+            return true;
+        }
+
+        return false;
+    }
+
     public override bool FinishedLaunching(UIApplication app, NSDictionary options)
     {
         var result = base.FinishedLaunching(app, options);

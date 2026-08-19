@@ -40,6 +40,11 @@ namespace History.MobileClient;
 [IntentFilter(new[] { Intent.ActionSendMultiple },
         Categories = new[] { Intent.CategoryDefault },
         DataMimeType = "*/*")]
+[IntentFilter(new[] { Intent.ActionView },
+        Categories = new[] { Intent.CategoryDefault, Intent.CategoryBrowsable },
+        DataScheme = "https",
+        DataHost = "historyweb.cc",
+        AutoVerify = true)]
 public class MainActivity : MauiAppCompatActivity
 {
     private const string TAG = "History";
@@ -379,6 +384,18 @@ public class MainActivity : MauiAppCompatActivity
 
         var action = intent.Action;
         var type = intent.Type;
+
+        // App link (https://historyweb.cc/post/{postId} or /u/{userId}):
+        // verified against assetlinks.json via android:autoVerify.
+        if (Intent.ActionView.Equals(action))
+        {
+            var appLinkData = intent.DataString;
+            if (!string.IsNullOrEmpty(appLinkData))
+            {
+                _ = App.HandleAppLinkAsync(appLinkData);
+                return;
+            }
+        }
 
         if (!string.IsNullOrEmpty(type))
         {

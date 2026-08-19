@@ -64,6 +64,10 @@ public partial class LoginPage : ContentPage
                 // deferred until the app shell was up.
                 App.ReplayPendingKakaoStoryScheme();
 
+                // Replay an app link (historyweb.cc) tapped during a cold start,
+                // deferred until the app shell was up.
+                App.ReplayPendingAppLinkUrl();
+
                 var mediaData = Preferences.Get("MediaData", null);
                 if (!string.IsNullOrEmpty(mediaData))
                 {
