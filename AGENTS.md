@@ -121,6 +121,14 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
 - `BasePostViewModel`에서 파생된 플랫폼별 포스트 뷰모델(`HistoryPostViewModel`, `KakaoPostViewModel`)에서 `ContentTemplateSelector`가 처리하는 새 콘텐츠 타입(`IContentViewModel` 구현)이 추가되면, **반드시** `TimelineContentsViewModel`(`ViewModels/TimelineContentsViewModel.cs`)에 해당 타입 슬롯과 `IsVisible` 플래그를 추가하고, `TimelineContentsTemplate` XAML에 `DataTemplatePresenter` 슬롯을 추가해야 합니다.
 - `PostContentTemplate`(PostPage 상세)과 `CommentTemplate`은 전체 콘텐츠를 순서대로 표시해야 하므로 `BindableLayout` + `ContentTemplateSelector`를 유지합니다.
 
+### 게시글 조회 메신저 갱신 규칙
+
+- 히스토리든 카카오스토리든 게시글을 조회(`GetPost`/`KakaoStoryApiHandler.GetPost`)해서 새 데이터를 얻게 되면, 네비게이션(PostPage 푸시) 여부와 무관하게 **반드시** WeakReferenceMessenger로 갱신을 알립니다.
+  - 히스토리: `WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post));`
+  - 카카오스토리: `WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostData>(post));`
+- 갱신 전송은 성공 분기 안에서만 하며, 조회 결과가 null이 아님이 확인된 뒤에 보냅니다(실패 시 null 메시지 전송 금지).
+- 이미 `RefreshAsync`가 위 메시지를 전송하므로, `RefreshAsync`를 경유하는 경로는 추가 전송이 불필요합니다. `RefreshAsync`를 경유하지 않고 직접 조회하는 경로(앱 링크, 알림 탭, 상호작용 목록 탭, 임베디드 카드 탭 등)에서 누락하지 않아야 합니다.
+
 ### 플랫폼 포스트/댓글 ViewModel 분리 규칙
 
 - `BasePostViewModel`/`BaseCommentViewModel`(`History.MobileClient/ViewModels/`)은 **DTO·업데이트 로직·메신저 없이** 공통 UI 표면(`[ObservableProperty] protected set`)과 `[RelayCommand]` virtual 명령 계약만 보유합니다.
