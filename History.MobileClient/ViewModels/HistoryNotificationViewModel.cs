@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.Api.Message;
 using History.Commons.Api.Post;
 using History.Commons.Api.Friendship;
@@ -140,6 +141,7 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel
             var postResult = await App.ExecuteRequestAsync(new GetPost(postId));
             if (!postResult.IsSuccess) return;
 
+            WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(postResult.Value));
             var post = postResult.Value;
             var viewModel = new HistoryPostViewModel(post, PostType.Unwrapped);
             var page = new PostPage(viewModel);

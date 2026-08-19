@@ -2,6 +2,8 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.Api.Post;
 using History.Commons.Api.PushNotification;
@@ -11,12 +13,13 @@ using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
 using UraniumUI.Icons.FontAwesome;
 using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.Maui.Graphics.Platform;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 
 namespace History.MobileClient;
@@ -676,6 +679,7 @@ public static partial class Utils
                 return;
             }
 
+            WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
             var postViewModel = new HistoryPostViewModel(result.Value, PostType.Unwrapped);
             await App.PushAsync(new PostPage(postViewModel));
         }
@@ -718,6 +722,7 @@ public static partial class Utils
                 return;
             }
 
+            WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostData>(post));
             var postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);
             await App.PushAsync(new PostPage(postViewModel));
         }

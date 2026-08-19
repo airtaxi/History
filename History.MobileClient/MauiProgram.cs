@@ -155,7 +155,7 @@ public static class MauiProgram
             if (data.TryGetValue("PostId", out var postId))
             {
                 var post = await Shared.ApiHandler.ExecuteRequestAsync(new GetPost(postId));
-                MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post)));
+                if (post != null) MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post)));
             }
             else if (type == NotificationType.FriendRequest && data.TryGetValue("UserId", out var userId))
             {

@@ -1,10 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.MobileClient.Enums;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
 using UraniumUI.Icons.FontAwesome;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient.ViewModels;
 
@@ -106,6 +109,7 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
             var post = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetPost(InteractionViewModel.TargetPostId));
             if (post != null)
             {
+                WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostData>(post));
                 var postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);
                 var postPage = new PostPage(postViewModel);
                 await App.PushAsync(postPage);

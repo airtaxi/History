@@ -407,6 +407,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
                 return;
             }
 
+            WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostData>(originalPost));
             var originalViewModel = new KakaoPostViewModel(originalPost, PostType.Unwrapped);
             var originalPostPage = new PostPage(originalViewModel);
             await App.PushAsync(originalPostPage);
