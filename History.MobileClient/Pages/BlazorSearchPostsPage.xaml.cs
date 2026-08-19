@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui.Core.Platform;
+﻿using CommunityToolkit.Maui.Core.Platform;
 using CommunityToolkit.Mvvm.Messaging;
 using History.MobileClient.Components.Timeline;
 using History.MobileClient.Helpers;
@@ -23,7 +23,7 @@ public partial class BlazorSearchPostsPage : ContentPage
         {
             Selector = "#app",
             ComponentType = typeof(SearchPosts),
-            Parameters = new Dictionary<string, object?>
+            Parameters = new Dictionary<string, object>
             {
                 [nameof(SearchPosts.ViewModel)] = _viewModel
             }

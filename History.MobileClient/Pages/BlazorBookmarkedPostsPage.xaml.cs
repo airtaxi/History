@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.MobileClient.Components.Timeline;
 using History.MobileClient.Helpers;
 using History.MobileClient.Messages;
@@ -22,7 +22,7 @@ public partial class BlazorBookmarkedPostsPage : ContentPage
         {
             Selector = "#app",
             ComponentType = typeof(BookmarkedPosts),
-            Parameters = new Dictionary<string, object?>
+            Parameters = new Dictionary<string, object>
             {
                 [nameof(BookmarkedPosts.ViewModel)] = _viewModel
             }
