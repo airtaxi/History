@@ -45,13 +45,25 @@ public partial class BlazorSearchPostsPage : ContentPage
 #if ANDROID
         Android.Util.Log.Info("BlazorHibernation", $"[{DateTime.Now:HH:mm:ss.fff}] hibernation={message.Value}, platform view is webview: {MainBlazorWebView.Handler?.PlatformView is Android.Webkit.WebView}");
 
-        // WebView.OnPause halts JS timers, animations, and video playback, so a
-        // backgrounded Blazor tab cannot keep burning CPU while the realtime
-        // foreground service keeps the process alive.
+        // WebView.OnPause halts rendering (animations, video) and pauseTimers
+        // halts JS timers/WebSockets, so a backgrounded Blazor tab cannot keep
+        // burning CPU while the realtime foreground service keeps the process
+        // alive. Hiding the view (GONE) additionally removes it from layout and
+        // draw passes; it is restored to VISIBLE on resume.
         if (MainBlazorWebView.Handler?.PlatformView is Android.Webkit.WebView webView)
         {
-            if (message.Value) webView.OnPause();
-            else webView.OnResume();
+            if (message.Value)
+            {
+                webView.OnPause();
+                webView.PauseTimers();
+                webView.Visibility = Android.Views.ViewStates.Gone;
+            }
+            else
+            {
+                webView.Visibility = Android.Views.ViewStates.Visible;
+                webView.ResumeTimers();
+                webView.OnResume();
+            }
         }
 #endif
     }
