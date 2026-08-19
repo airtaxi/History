@@ -135,7 +135,16 @@ body {
     /* The JS columnWidth is the outer width; content-box padding would push each
        card past one column and Masonry would treat it as spanning 2 columns. */
     box-sizing: border-box;
+    /* Masonry measures every item's real height to compute column positions.
+       Skipped cards would report only their estimated size and misplace the
+       staggered layout, so the multi-column mode opts out of skip rendering. */
+    content-visibility: visible;
+    contain-intrinsic-size: none;
 }
+
+/* While Masonry is (re)entering the multi-column layout it must read every card's
+   real height, so measuring temporarily disables skip rendering. */
+html.masonry-measuring .card { content-visibility: visible !important; }
 
 .card {
     margin: 6px;
@@ -146,6 +155,13 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    /* Virtualization: only cards near the viewport pay style/layout/paint cost,
+       and their images are not fetched until they become visible. Skipped cards
+       keep their last measured size ("auto") so repeated scroll passes are
+       jump-free; the two declarations handle the auto-keyword's browser support. */
+    content-visibility: auto;
+    contain-intrinsic-size: 200px;
+    contain-intrinsic-size: auto 200px;
 }
 
 .card-header {
