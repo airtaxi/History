@@ -83,6 +83,13 @@ public partial class SettingsPage : ContentPage
         var isKakaoStoryFriendRequestBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryFriendRequestBadgeEnabled") ?? true;
         KakaoStoryFriendRequestBadgeLabel.Text = isKakaoStoryFriendRequestBadgeEnabled ? OnText : OffText;
 
+        KakaoStoryForegroundPollIntervalLabel.Text = FormatPollInterval(Configuration.GetValue<double?>(KakaoStoryNotificationPoller.ForegroundPollIntervalSecondsKey) ?? 5.0);
+
+#if ANDROID
+        KakaoStoryRealtimeScreenOnPollIntervalLabel.Text = FormatPollInterval(Configuration.GetValue<double?>(KakaoStoryRealtimeNotificationService.ScreenOnPollIntervalSecondsKey) ?? 40.0);
+        KakaoStoryRealtimeScreenOffPollIntervalLabel.Text = FormatPollInterval(Configuration.GetValue<double?>(KakaoStoryRealtimeNotificationService.ScreenOffPollIntervalSecondsKey) ?? 300.0);
+#endif
+
 #if ANDROID
         // Virtualization toggle (default: off for smoother scroll with less View recreation)
         var isTimelineVirtualizationEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
@@ -94,6 +101,8 @@ public partial class SettingsPage : ContentPage
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
+
+    private static string FormatPollInterval(double seconds) => seconds < 60 ? $"{seconds:0}초" : $"{seconds / 60:0}분";
 
     private static void CleanupSharedVariables()
     {
@@ -410,6 +419,57 @@ public partial class SettingsPage : ContentPage
 #else
     private void OnKakaoStoryRealtimeNotificationGridTapped(object sender, TappedEventArgs e) { }
 #endif
+
+    private async void OnKakaoStoryForegroundPollIntervalGridTapped(object sender, TappedEventArgs e)
+    {
+        var options = new[] { "1초", "3초", "5초", "10초", "20초", "30초", "40초", "1분" };
+        var action = await DisplayActionSheetAsync("앱 사용중 폴링 주기", Constants.PromptCancel, null, options);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var seconds = ParsePollInterval(action);
+        Configuration.SetValue(KakaoStoryNotificationPoller.ForegroundPollIntervalSecondsKey, seconds);
+        KakaoStoryForegroundPollIntervalLabel.Text = action;
+
+        // Restart the loop so the new interval applies immediately; the loop
+        // re-evaluates the period every cycle, but a restart also covers the
+        // case where the loop is not running yet.
+        if (KakaoStoryNotificationPoller.IsForegroundPollingRunning)
+        {
+            KakaoStoryNotificationPoller.StopForegroundPolling();
+            KakaoStoryNotificationPoller.StartForegroundPolling();
+        }
+    }
+
+#if ANDROID
+    private async void OnKakaoStoryRealtimeScreenOnPollIntervalGridTapped(object sender, TappedEventArgs e)
+    {
+        var options = new[] { "5초", "10초", "20초", "30초", "40초", "1분", "2분", "5분" };
+        var action = await DisplayActionSheetAsync("실시간 알림 (화면 켜짐) 폴링 주기", Constants.PromptCancel, null, options);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        Configuration.SetValue(KakaoStoryRealtimeNotificationService.ScreenOnPollIntervalSecondsKey, ParsePollInterval(action));
+        KakaoStoryRealtimeScreenOnPollIntervalLabel.Text = action;
+    }
+
+    private async void OnKakaoStoryRealtimeScreenOffPollIntervalGridTapped(object sender, TappedEventArgs e)
+    {
+        var options = new[] { "1분", "2분", "3분", "5분", "10분" };
+        var action = await DisplayActionSheetAsync("실시간 알림 (화면 꺼짐) 폴링 주기", Constants.PromptCancel, null, options);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        Configuration.SetValue(KakaoStoryRealtimeNotificationService.ScreenOffPollIntervalSecondsKey, ParsePollInterval(action));
+        KakaoStoryRealtimeScreenOffPollIntervalLabel.Text = action;
+    }
+#else
+    private void OnKakaoStoryRealtimeScreenOnPollIntervalGridTapped(object sender, TappedEventArgs e) { }
+    private void OnKakaoStoryRealtimeScreenOffPollIntervalGridTapped(object sender, TappedEventArgs e) { }
+#endif
+
+    private static double ParsePollInterval(string text)
+    {
+        var value = double.Parse(text[..^1]);
+        return text.EndsWith("분") ? value * 60 : value;
+    }
 
     private async void OnKakaoStoryFavoriteFriendNotificationGridTapped(object sender, TappedEventArgs e)
     {

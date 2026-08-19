@@ -282,9 +282,10 @@ public partial class App : Application
         IsForeground = true;
         WeakReferenceMessenger.Default.Send(new BlazorWebViewHibernationMessage(false));
 
-        // Foreground polling: 1 request/2.5 seconds against the Kakao Story
-        // notification list while the app is visible. The user can disable it
-        // from the settings page; the background refresh respects the same setting.
+        // Foreground polling: 1 request per configurable interval (default
+        // 5 seconds) against the Kakao Story notification list while the app is
+        // visible. The user can disable it from the settings page; the
+        // background refresh respects the same setting.
         TabBarBadgePoller.StartForegroundPolling();
         if ((Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true) == false) return;
         KakaoStoryNotificationPoller.StartForegroundPolling();

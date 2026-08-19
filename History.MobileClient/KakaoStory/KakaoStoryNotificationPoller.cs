@@ -12,9 +12,10 @@ namespace History.MobileClient.KakaoStory;
 /// baseline; any item newer than that baseline (the API list is newest-first and
 /// capped at 30) is posted. A bounded set of already-posted ids (50) guards
 /// against re-posting when the baseline falls out of the 30-item window. Shared
-/// by the foreground 2.5-second poller (started
-/// while the window is resumed) and the Android background JobService
-/// (15-minute cadence). 401 responses never open the login modal from here; the
+/// by the foreground poller (started while the window is resumed, interval
+/// configurable from the settings page, default 5 seconds) and the Android
+/// background JobService (15-minute cadence). 401 responses never open the
+/// login modal from here; the
 /// poll cycle just ends silently and the saved cookies are revalidated on the
 /// next cycle. The tab bar badges are not this poller's concern: they are kept
 /// up to date by <see cref="TabBarBadgePoller"/> and the list pages.
@@ -28,6 +29,7 @@ public static class KakaoStoryNotificationPoller
     private const int MaxKnownIds = 50;
     private const bool IsPollLoggingEnabled = true;
     private const string IsEnabledKey = "KakaoStoryNotificationEnabled";
+    public const string ForegroundPollIntervalSecondsKey = "KakaoStoryForegroundPollIntervalSeconds";
     private const string FavoriteFriendNotificationEnabledKey = "KakaoStoryFavoriteFriendNotificationEnabled";
     private const string EmotionNotificationEnabledKey = "KakaoStoryEmotionNotificationEnabled";
     private const string MailNotificationEnabledKey = "KakaoStoryMailNotificationEnabled";
@@ -52,9 +54,9 @@ public static class KakaoStoryNotificationPoller
     }
 
     /// <summary>
-    /// Starts the foreground polling loop (1 request/2.5 seconds against the
-    /// notification list). No-op when the loop is already running or paused
-    /// (see <see cref="Pause"/>).
+    /// Starts the foreground polling loop (1 request per configurable interval,
+    /// default 5 seconds, against the notification list). No-op when the loop is
+    /// already running or paused (see <see cref="Pause"/>).
     /// </summary>
     public static void StartForegroundPolling()
     {
@@ -83,6 +85,8 @@ public static class KakaoStoryNotificationPoller
         s_foregroundPollingCts = null;
     }
 
+    public static bool IsForegroundPollingRunning => s_foregroundPollingTask != null;
+
     /// <summary>
     /// Pauses the foreground polling loop (used on logout). The loop stays
     /// paused across window resume cycles until <see cref="TryStart"/> is called.
@@ -104,11 +108,15 @@ public static class KakaoStoryNotificationPoller
         StartForegroundPolling();
     }
 
+    private static TimeSpan GetForegroundPollInterval() => TimeSpan.FromSeconds(Configuration.GetValue<double?>(ForegroundPollIntervalSecondsKey) ?? 5.0);
+
     private static async Task RunForegroundPollingLoopAsync(CancellationToken cancellationToken)
     {
         // A per-loop timer keeps a restarting loop from sharing a timer with a
         // still-finishing previous loop (PeriodicTimer only allows one waiter).
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(2.5));
+        // The period is re-evaluated every cycle so a settings change takes
+        // effect on the next cycle without a restart.
+        using var timer = new PeriodicTimer(GetForegroundPollInterval());
         try
         {
             while (await timer.WaitForNextTickAsync(cancellationToken))
@@ -117,6 +125,8 @@ public static class KakaoStoryNotificationPoller
                 // fail to stop this loop, it must never poll while the app is not
                 // visible. Background coverage is owned by the background pollers.
                 if (!App.IsForeground) continue;
+
+                timer.Period = GetForegroundPollInterval();
 
                 LogPoll("Kakao Story poll cycle.");
                 try { await PollOnceAsync(); }
