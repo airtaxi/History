@@ -12,7 +12,7 @@ namespace History.MobileClient.KakaoStory;
 /// baseline; any item newer than that baseline (the API list is newest-first and
 /// capped at 30) is posted. A bounded set of already-posted ids (50) guards
 /// against re-posting when the baseline falls out of the 30-item window. Shared
-/// by the foreground 5-second poller (started
+/// by the foreground 2.5-second poller (started
 /// while the window is resumed) and the Android background JobService
 /// (15-minute cadence). 401 responses never open the login modal from here; the
 /// poll cycle just ends silently and the saved cookies are revalidated on the
@@ -52,7 +52,7 @@ public static class KakaoStoryNotificationPoller
     }
 
     /// <summary>
-    /// Starts the foreground polling loop (1 request/5 seconds against the
+    /// Starts the foreground polling loop (1 request/2.5 seconds against the
     /// notification list). No-op when the loop is already running or paused
     /// (see <see cref="Pause"/>).
     /// </summary>
@@ -108,7 +108,7 @@ public static class KakaoStoryNotificationPoller
     {
         // A per-loop timer keeps a restarting loop from sharing a timer with a
         // still-finishing previous loop (PeriodicTimer only allows one waiter).
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(2.5));
         try
         {
             while (await timer.WaitForNextTickAsync(cancellationToken))
