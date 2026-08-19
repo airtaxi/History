@@ -71,6 +71,11 @@ public partial class KakaoStoryApiHandler
 
     public static int MaxRetryCount { get; set; } = 15;
 
+    // Bound on the video processing check loop (500ms delay per attempt): a stuck
+    // upload cannot poll the server forever from the background. 240 attempts
+    // give the server roughly 4 minutes of processing time before giving up.
+    private const int MaxVideoProcessingWaitCount = 240;
+
     /// <summary>
     /// When true, 401 responses abort the request instead of invoking OnReloginRequired,
     /// so background pollers never pop up the login modal. The saved cookies are simply
@@ -1299,18 +1304,16 @@ public partial class KakaoStoryApiHandler
             var statusCodeObject = e.Response as HttpWebResponse;
             if (statusCodeObject?.StatusCode != null) statusCode = (int)statusCodeObject.StatusCode;
 
+            // 403/404 are terminal; every other failure (including 401) retries
+            // up to MaxRetryCount so a dead session cannot recurse forever.
             if (statusCode == 403) return false;
             else if (statusCode == 404) return false;
-            else if (statusCode == 401) return await WaitForMetaVideoFinish(access_key, ++retryCount);
-            else
-            {
-                if (retryCount < MaxRetryCount)
-                    return await WaitForMetaVideoFinish(access_key, ++retryCount);
-            }
+            else if (retryCount < MaxRetryCount)
+                return await WaitForMetaVideoFinish(access_key, ++retryCount);
         }
         return false;
     }
-    public static async Task<bool> WaitForVideoUploadFinish(string access_key, int retryCount = 0)
+    public static async Task<bool> WaitForVideoUploadFinish(string access_key, int retryCount = 0, int waitCount = 0)
     {
         string requestURI = await GetVideoCheckUrl(access_key);
         HttpWebRequest request = WebRequest.CreateHttp(requestURI);
@@ -1352,27 +1355,32 @@ public partial class KakaoStoryApiHandler
             VideoData.Percent pecrentData = JsonConvert.DeserializeObject<VideoData.Percent>(respResult);
             if (pecrentData.code == 200 && pecrentData.percent == 100)
                 return await WaitForMetaVideoFinish(access_key);
-            else
-                await Task.Delay(500);
-            return await WaitForVideoUploadFinish(access_key);
+
+            // The video is still processing server-side: wait and check again,
+            // bounded so a stuck upload cannot poll forever in the background.
+            await Task.Delay(500);
+            if (waitCount >= MaxVideoProcessingWaitCount) return false;
+            return await WaitForVideoUploadFinish(access_key, retryCount, ++waitCount);
         }
         catch (WebException e)
         {
             int statusCode = -1;
             var statusCodeObject = e.Response as HttpWebResponse;
-            var respReader = statusCodeObject.GetResponseStream();
-            using var reader = new StreamReader(respReader);
-            string respResult = reader.ReadToEnd();
+            // A connection failure carries no HTTP response; drain the error body
+            // only when one exists.
+            if (statusCodeObject?.GetResponseStream() is { } errorStream)
+            {
+                using var errorReader = new StreamReader(errorStream);
+                errorReader.ReadToEnd();
+            }
             if (statusCodeObject?.StatusCode != null) statusCode = (int)statusCodeObject.StatusCode;
 
+            // 403/404 are terminal; every other failure (including 401) retries
+            // up to MaxRetryCount so a dead session cannot recurse forever.
             if (statusCode == 403) return false;
             else if (statusCode == 404) return false;
-            else if (statusCode == 401) return await WaitForVideoUploadFinish(access_key, ++retryCount);
-            else
-            {
-                if (retryCount < MaxRetryCount)
-                    return await WaitForVideoUploadFinish(access_key, ++retryCount);
-            }
+            else if (retryCount < MaxRetryCount)
+                return await WaitForVideoUploadFinish(access_key, ++retryCount, waitCount);
         }
         return false;
     }

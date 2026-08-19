@@ -1,4 +1,4 @@
-using BackgroundTasks;
+﻿using BackgroundTasks;
 using Foundation;
 using History.Commons;
 using History.MobileClient.KakaoStory;
@@ -8,8 +8,7 @@ namespace History.MobileClient;
 /// <summary>
 /// Background polling of Kakao Story notifications while the app is suspended,
 /// via BGAppRefreshTask (the iOS mirror of the Android JobService). The system
-/// decides when the task runs, so it is not real-time; the "늦어도 괜찮음"
-/// requirement is satisfied by the foreground 1-second poller. The task runs
+/// decides when the task runs, so it is not real-time; The task runs
 /// about 30 seconds at most, which fits the single poll cycle. The poller never
 /// opens the login modal from here (IsBackgroundMode).
 /// </summary>

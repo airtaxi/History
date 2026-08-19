@@ -32,6 +32,8 @@ public partial class App : Application
 
     public static Window MainWindow { get; private set; }
 
+    public static bool IsForeground { get; private set; }
+
     public App()
     {
         InitializeComponent();
@@ -266,6 +268,7 @@ public partial class App : Application
     {
         MainWindow ??= new Window(new LoginPage());
 #if ANDROID || IOS
+        IsForeground = true;
         MainWindow.Resumed += OnWindowResumed;
         MainWindow.Stopped += OnWindowStopped;
 
@@ -280,7 +283,9 @@ public partial class App : Application
 #if ANDROID || IOS
     private void OnWindowResumed(object sender, EventArgs e)
     {
-        // Foreground polling: 1 request/second against the Kakao Story
+        IsForeground = true;
+
+        // Foreground polling: 1 request/5 seconds against the Kakao Story
         // notification list while the app is visible. The user can disable it
         // from the settings page; the background refresh respects the same setting.
         TabBarBadgePoller.StartForegroundPolling();
@@ -290,6 +295,8 @@ public partial class App : Application
 
     private void OnWindowStopped(object sender, EventArgs e)
     {
+        IsForeground = false;
+
         // The 15-minute Android JobService / the iOS background refresh task
         // takes over while the app is in the background.
         KakaoStoryNotificationPoller.StopForegroundPolling();
