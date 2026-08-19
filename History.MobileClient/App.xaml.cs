@@ -1,27 +1,23 @@
 ﻿using System.Diagnostics;
 using System.Net;
-using System.Reflection;
 using System.Resources;
 using System.Text.Json;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
-using History.Commons.Api.Friendship;
 using History.Commons.Api.Message;
 using History.Commons.Api.Post;
-using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.Commons.Interfaces;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Enums;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
-using Plugin.Firebase.CloudMessaging;
-using ShimSkiaSharp;
-using Syncfusion.Maui.Toolkit.Localization;
 using Syncfusion.Maui.Toolkit.Picker;
+using History.Commons.DataTypes.ResponseDtos;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient;
 
@@ -374,7 +370,8 @@ public partial class App : Application
                     var post = await KakaoStory.KakaoStoryApiHandler.GetPost(postId);
                     if (post == null) return;
 
-                    var postViewModel = new ViewModels.KakaoPostViewModel(post, Enums.PostType.Unwrapped);
+                    WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostData>(post));
+                    var postViewModel = new ViewModels.KakaoPostViewModel(post, PostType.Unwrapped);
                     await PushAsync(new Pages.PostPage(postViewModel));
                 }
                 // Profile notification: the scheme is a kakaostory:// deep link to the profile.
@@ -490,6 +487,7 @@ public partial class App : Application
             var postResult = await ExecuteRequestAsync(new GetPost(postId));
             if (postResult.IsFailure) return;
 
+            WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(postResult.Value));
             var postViewModel = new HistoryPostViewModel(postResult.Value, PostType.Unwrapped);
             var page = new PostPage(postViewModel);
             await PushAsync(page);

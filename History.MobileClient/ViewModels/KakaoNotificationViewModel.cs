@@ -1,11 +1,14 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Enums;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient.ViewModels;
 
@@ -52,6 +55,7 @@ public partial class KakaoNotificationViewModel : BaseNotificationViewModel
             var post = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetPost(postId));
             if (post != null)
             {
+                WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostData>(post));
                 var postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);
                 var postPage = new PostPage(postViewModel);
                 await App.PushAsync(postPage);

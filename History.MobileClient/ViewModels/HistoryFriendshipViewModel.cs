@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
@@ -79,6 +80,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel
             var postResult = await App.ExecuteRequestAsync(new GetPost(InteractionViewModel.TargetPostId), ErrorType.Forbidden);
             if (postResult.IsSuccess)
             {
+                WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(postResult.Value));
                 var postViewModel = new HistoryPostViewModel(postResult.Value, PostType.Unwrapped);
                 var postPage = new PostPage(postViewModel);
                 await App.PushAsync(postPage);
