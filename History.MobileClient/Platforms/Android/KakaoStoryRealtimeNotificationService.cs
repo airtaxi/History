@@ -1,9 +1,10 @@
-﻿using Android.App;
+using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using Android.Util;
 using AndroidX.Core.App;
+using History.Commons;
 using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient;
@@ -14,11 +15,12 @@ namespace History.MobileClient;
 /// process alive so the poll cadence is effectively real-time; the 15-minute
 /// JobService remains the fallback when this service is not running (e.g. after
 /// the Android 15 dataSync 6-hour timeout, until the app is opened again and
-/// MainActivity restarts it). The poll interval is 10 seconds normally and
-/// 1 minute in battery saver mode; the wait is re-evaluated every cycle so a
-/// power-save change takes effect on the next cycle. While the app is in the
-/// foreground the poll is skipped because the 2.5-second foreground poller
-/// already covers the lists. The poll cycle is the shared
+/// MainActivity restarts it). The poll interval is configurable from the
+/// settings page: 40 seconds by default while the screen is on and 5 minutes
+/// while the screen is off; the wait is re-evaluated every cycle so a screen
+/// state or settings change takes effect on the next cycle. While the app is in
+/// the foreground the poll is skipped because the foreground poller already
+/// covers the lists. The poll cycle is the shared
 /// <see cref="KakaoStoryNotificationPoller.PollOnceAsync"/>, so the Kakao Story
 /// notification setting and the login-modal suppression (IsBackgroundMode)
 /// behave exactly like the other pollers.
@@ -29,8 +31,8 @@ public class KakaoStoryRealtimeNotificationService : Service
     private const string TAG = "History";
     private const int NotificationId = 9003;
     private const bool IsPollLoggingEnabled = true;
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(10);
-    private static readonly TimeSpan PowerSavePollInterval = TimeSpan.FromMinutes(1);
+    public const string ScreenOnPollIntervalSecondsKey = "KakaoStoryRealtimeScreenOnPollIntervalSeconds";
+    public const string ScreenOffPollIntervalSecondsKey = "KakaoStoryRealtimeScreenOffPollIntervalSeconds";
 
     private CancellationTokenSource _pollingCts;
     private Task _pollingTask;
@@ -81,6 +83,10 @@ public class KakaoStoryRealtimeNotificationService : Service
         StopSelf();
     }
 
+    private static TimeSpan GetScreenOnPollInterval() => TimeSpan.FromSeconds(Configuration.GetValue<double?>(ScreenOnPollIntervalSecondsKey) ?? 40.0);
+
+    private static TimeSpan GetScreenOffPollInterval() => TimeSpan.FromSeconds(Configuration.GetValue<double?>(ScreenOffPollIntervalSecondsKey) ?? 300.0);
+
     private async Task RunPollingLoopAsync(CancellationToken cancellationToken)
     {
         var powerManager = (PowerManager)GetSystemService(PowerService);
@@ -88,12 +94,14 @@ public class KakaoStoryRealtimeNotificationService : Service
         {
             while (true)
             {
-                // The wait is re-evaluated every cycle so a battery saver mode
-                // change takes effect on the next cycle without a broadcast
-                // receiver: 10 seconds normally, 1 minute in battery saver mode.
-                await Task.Delay(powerManager.IsPowerSaveMode ? PowerSavePollInterval : PollInterval, cancellationToken);
+                // The wait is re-evaluated every cycle so a screen state or
+                // settings change takes effect on the next cycle without a
+                // broadcast receiver: 40 seconds while the screen is on,
+                // 5 minutes while the screen is off (configurable).
+                var pollInterval = powerManager.IsInteractive ? GetScreenOnPollInterval() : GetScreenOffPollInterval();
+                await Task.Delay(pollInterval, cancellationToken);
 
-                // The 2.5-second foreground poller covers the notification and mail
+                // The foreground poller covers the notification and mail
                 // lists while the app is visible; polling here too would double
                 // the requests during the most battery-expensive screen-on time.
                 if (App.IsForeground) continue;
