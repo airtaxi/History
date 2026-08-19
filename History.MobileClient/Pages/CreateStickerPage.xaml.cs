@@ -523,6 +523,21 @@ public partial class CreateStickerPage : ContentPage
                         _assets.Add(fileName, memoryStream);
                         AddAssetToUI(fileName, memoryStream);
                         addedCount++;
+
+                        // Arca Live packages have no separate thumbnail, so the first
+                        // successfully downloaded image doubles as the sticker icon.
+                        // Skip it when the user already picked a custom icon.
+                        if (_iconFileName == null)
+                        {
+                            _iconFileName = fileName;
+                            _iconStream?.Dispose();
+                            _iconStream = new MemoryStream(bytes);
+
+                            var iconStreamCopy = _iconStream;
+                            IconImage.Source = ImageSource.FromStream(() => iconStreamCopy);
+                            IconImage.IsVisible = true;
+                            IconPlaceholderImage.IsVisible = false;
+                        }
                     }
                     catch (Exception stickerException)
                     {
