@@ -403,6 +403,45 @@ public partial class App : Application
         _ = HandleKakaoStoryNotificationAsync(scheme);
     }
 
+    private const string PendingAppLinkUrlKey = "AppLinkUrlPending";
+
+    /// <summary>
+    /// Opens the target of a tapped historyweb.cc app link (post or profile)
+    /// via Utils.OpenLinkAsync. Shared by Android (MainActivity intent data)
+    /// and iOS (ContinueUserActivity), mirroring the Kakao Story notification
+    /// scheme pattern: when the app shell is not up yet (cold start), the URL
+    /// is deferred to ReplayPendingAppLinkUrl after login.
+    /// </summary>
+    public static async Task HandleAppLinkAsync(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return;
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return;
+        if (uri.Host != "historyweb.cc") return;
+
+        if (!AppShell.IsLoaded)
+        {
+            // Cold start: the root page is still the login page and the shell
+            // would discard the pushed page on login. Defer the navigation.
+            Preferences.Set(PendingAppLinkUrlKey, url);
+            return;
+        }
+
+        await MainThread.InvokeOnMainThreadAsync(() => Utils.OpenLinkAsync(url));
+    }
+
+    /// <summary>
+    /// Replays an app link URL deferred during a cold start (the app shell was
+    /// not up yet). Called from LoginPage.AfterLogin, mirroring the Kakao Story
+    /// notification scheme pattern.
+    /// </summary>
+    public static void ReplayPendingAppLinkUrl()
+    {
+        var url = Preferences.Get(PendingAppLinkUrlKey, null);
+        if (string.IsNullOrEmpty(url)) return;
+        Preferences.Set(PendingAppLinkUrlKey, null);
+        _ = HandleAppLinkAsync(url);
+    }
+
     public static async Task HandlePushNotificationAsync(string pushData)
     {
         Preferences.Remove("PushData");

@@ -143,6 +143,13 @@ API에는 다음과 같은 컨트롤러가 있으며, 각 컨트롤러는 특정
   - `MediaId`(프로필 상세/풀스크린 표시) → `profile_image_url2`
 - TODO: `profile_image_url2` 사용처를 모두 구현하고 나면 이 매핑 규칙 안내는 삭제하세요.
 
+### 앱 링크 (App Links / Universal Links)
+
+- `https://historyweb.cc/post/{postId}` / `https://historyweb.cc/u/{userId}` 링크는 외부 URL 내용 탭(`Utils.OpenLinkAsync`)뿐만 아니라 네이티브 앱 링크로도 처리됩니다. `Utils.OpenLinkAsync`가 게시글/프로필 이동, 그 외는 브라우저를 엽니다.
+- 서버 측 검증 파일: `https://historyweb.cc/.well-known/assetlinks.json` (Android, `com.airtaxi.history` + 로컬/스토어 키스토어 SHA256 지문 2개) / `https://historyweb.cc/apple-app-site-association` (iOS, `UP6EXS2HJJ.com.airtaxi.history`, paths `/post/*`, `/u/*`). 두 파일 모두 JSON MIME 타입으로 200 응답해야 합니다.
+- 수신 경로: Android는 `MainActivity`의 `[IntentFilter(Action.View, AutoVerify)]` → `HandleIntent`의 `Intent.DataString` → `App.HandleAppLinkAsync` → `Utils.OpenLinkAsync`. iOS는 `Entitlements.plist`의 `applinks:historyweb.cc` (사이트에 Associated Domains capability 필요) → `AppDelegate.ContinueUserActivity`(NSUserActivity.WebPageUrl) → 동일.
+- 콜드 스타트(로그인 전)에는 URL을 `Preferences`의 `AppLinkUrlPending` 키에 보관 후 `LoginPage.AfterLogin`의 `App.ReplayPendingAppLinkUrl()`로 재생하며, `App.HandleKakaoStoryNotificationAsync` 패턴을 미러링합니다.
+
 ### 보안
 
 - 미들웨어에서 JWT 검증
