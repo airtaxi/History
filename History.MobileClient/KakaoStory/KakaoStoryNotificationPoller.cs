@@ -12,7 +12,7 @@ namespace History.MobileClient.KakaoStory;
 /// baseline; any item newer than that baseline (the API list is newest-first and
 /// capped at 30) is posted. A bounded set of already-posted ids (50) guards
 /// against re-posting when the baseline falls out of the 30-item window. Shared
-/// by the foreground 1-second poller (started
+/// by the foreground 5-second poller (started
 /// while the window is resumed) and the Android background JobService
 /// (15-minute cadence). 401 responses never open the login modal from here; the
 /// poll cycle just ends silently and the saved cookies are revalidated on the
@@ -26,6 +26,7 @@ public static class KakaoStoryNotificationPoller
     private const string KnownNotificationIdsKey = "KakaoStoryKnownNotificationIds";
     private const string KnownMailIdsKey = "KakaoStoryKnownMailIds";
     private const int MaxKnownIds = 50;
+    private const bool IsPollLoggingEnabled = true;
     private const string IsEnabledKey = "KakaoStoryNotificationEnabled";
     private const string FavoriteFriendNotificationEnabledKey = "KakaoStoryFavoriteFriendNotificationEnabled";
     private const string EmotionNotificationEnabledKey = "KakaoStoryEmotionNotificationEnabled";
@@ -40,8 +41,18 @@ public static class KakaoStoryNotificationPoller
 
     static KakaoStoryNotificationPoller() => KakaoStoryApiHandler.OnBackgroundReloginRequired += HandleSessionExpired;
 
+    private static void LogPoll(string message)
+    {
+        if (!IsPollLoggingEnabled) return;
+#if ANDROID
+        Android.Util.Log.Debug("History", $"[{DateTime.Now:HH:mm:ss.fff}] {message}");
+#elif IOS
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {message}");
+#endif
+    }
+
     /// <summary>
-    /// Starts the foreground polling loop (1 request/second against the
+    /// Starts the foreground polling loop (1 request/5 seconds against the
     /// notification list). No-op when the loop is already running or paused
     /// (see <see cref="Pause"/>).
     /// </summary>
@@ -51,6 +62,7 @@ public static class KakaoStoryNotificationPoller
         if (s_foregroundPollingTask != null) return;
 
         s_foregroundPollingCts = new CancellationTokenSource();
+        LogPoll("Kakao Story foreground polling started.");
         // Run the loop on a threadpool thread so the poll work (JSON parsing,
         // notification posting) never touches the UI thread. The messenger sends
         // and local notification posts are already marshalled to the main thread.
@@ -65,6 +77,7 @@ public static class KakaoStoryNotificationPoller
     {
         if (s_foregroundPollingTask == null) return;
 
+        LogPoll("Kakao Story foreground polling stopped.");
         s_foregroundPollingCts.Cancel();
         s_foregroundPollingTask = null;
         s_foregroundPollingCts = null;
@@ -95,13 +108,19 @@ public static class KakaoStoryNotificationPoller
     {
         // A per-loop timer keeps a restarting loop from sharing a timer with a
         // still-finishing previous loop (PeriodicTimer only allows one waiter).
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
         try
         {
             while (await timer.WaitForNextTickAsync(cancellationToken))
             {
+                // Belt-and-suspenders guard: even if the window lifecycle events
+                // fail to stop this loop, it must never poll while the app is not
+                // visible. Background coverage is owned by the background pollers.
+                if (!App.IsForeground) continue;
+
+                LogPoll("Kakao Story poll cycle.");
                 try { await PollOnceAsync(); }
-                catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story poll cycle failed: {exception.Message}"); }
+                catch (Exception exception) { LogPoll($"Kakao Story poll cycle failed: {exception.Message}"); }
             }
         }
         catch (OperationCanceledException) { }

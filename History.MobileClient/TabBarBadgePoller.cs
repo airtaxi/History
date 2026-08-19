@@ -25,10 +25,21 @@ namespace History.MobileClient;
 /// </summary>
 public static class TabBarBadgePoller
 {
+    private const bool IsPollLoggingEnabled = true;
     private static readonly SemaphoreSlim s_pollSemaphore = new(1, 1);
     private static CancellationTokenSource s_foregroundPollingCts;
     private static Task s_foregroundPollingTask;
     private static bool s_isPaused;
+
+    private static void LogPoll(string message)
+    {
+        if (!IsPollLoggingEnabled) return;
+#if ANDROID
+        Android.Util.Log.Debug("History", $"[{DateTime.Now:HH:mm:ss.fff}] {message}");
+#elif IOS
+        Console.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {message}");
+#endif
+    }
 
     /// <summary>
     /// Starts the foreground polling loop (1 request/10 seconds against the
@@ -41,6 +52,7 @@ public static class TabBarBadgePoller
         if (s_foregroundPollingTask != null) return;
 
         s_foregroundPollingCts = new CancellationTokenSource();
+        LogPoll("Tab bar badge polling started.");
         // Run the loop on a threadpool thread so the poll work (JSON parsing,
         // count computation) never touches the UI thread. The badge view update
         // and messenger sends are already marshalled to the main thread.
@@ -55,6 +67,7 @@ public static class TabBarBadgePoller
     {
         if (s_foregroundPollingTask == null) return;
 
+        LogPoll("Tab bar badge polling stopped.");
         s_foregroundPollingCts.Cancel();
         s_foregroundPollingTask = null;
         s_foregroundPollingCts = null;
@@ -91,8 +104,14 @@ public static class TabBarBadgePoller
         {
             while (await timer.WaitForNextTickAsync(cancellationToken))
             {
+                // Belt-and-suspenders guard: even if the window lifecycle events
+                // fail to stop this loop, it must never poll while the app is not
+                // visible. Background coverage is owned by the background pollers.
+                if (!App.IsForeground) continue;
+
+                LogPoll("Tab bar badge poll cycle.");
                 try { await PollOnceAsync(); }
-                catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Tab bar badge poll cycle failed: {exception.Message}"); }
+                catch (Exception exception) { LogPoll($"Tab bar badge poll cycle failed: {exception.Message}"); }
             }
         }
         catch (OperationCanceledException) { }
