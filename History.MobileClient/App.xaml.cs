@@ -284,6 +284,7 @@ public partial class App : Application
     private void OnWindowResumed(object sender, EventArgs e)
     {
         IsForeground = true;
+        WeakReferenceMessenger.Default.Send(new BlazorWebViewHibernationMessage(false));
 
         // Foreground polling: 1 request/5 seconds against the Kakao Story
         // notification list while the app is visible. The user can disable it
@@ -296,6 +297,7 @@ public partial class App : Application
     private void OnWindowStopped(object sender, EventArgs e)
     {
         IsForeground = false;
+        WeakReferenceMessenger.Default.Send(new BlazorWebViewHibernationMessage(true));
 
         // The 15-minute Android JobService / the iOS background refresh task
         // takes over while the app is in the background.

@@ -286,6 +286,7 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 
 `BlazorTimelinePage`는 타임라인 피드를 BlazorWebView로 렌더링하는 대체 구현입니다 (`TimelinePage` → `TimelineViewModel` 로직 이식):
 
+- **WebView 하이버네이션 공통**: 모든 Blazor 페이지는 `WeakReferenceMessenger`의 `BlazorWebViewHibernationMessage`(bool)를 수신해 앱이 백그라운드로 가면(`App.OnWindowStopped`) Android `WebView.OnPause()`를, 포그라운드 복귀(`OnWindowResumed`) 시 `OnResume()`을 호출. OnPause는 JS 타이머/애니메이션/영상 재생을 정지시키므로, 실시간 알림 FGS가 프로세스를 살려두어도 백그라운드 Blazor 탭이 CPU를 태우지 않음.
 - **BlazorTimelinePage** (`Pages/BlazorTimelinePage.xaml`): `BlazorWebView` 호스트 페이지. Android 핸들러에서 `HapticFeedbackEnabled = false`(네이티브 롱클릭 햅틱 차단), `MediaPlaybackRequiresUserGesture = false`(인라인 영상 autoplay 허용), 테마 색 WebView 배경 지정.
 - **TimelineViewModel** (`ViewModels/TimelineViewModel.cs`): 포스트 로드/새로고침/모드 전환 로직. `TimelinePage.xaml.cs`에서 이식.
 - **Components/Timeline/**: Blazor 컴포넌트. `Timeline.razor`(피드 루트), `PostCard.razor`, `CommentPreview.razor`, `MediaCarousel.razor`, `TextContents.razor`, `PollCard.razor`, `ExternalUrlCard.razor`. `MvvmCardBase<T>`가 MAUI의 BindingContext를 대체 (PropertyChanged 구독 → 재렌더).

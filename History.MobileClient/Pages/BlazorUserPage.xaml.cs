@@ -1,5 +1,7 @@
-﻿using History.MobileClient.Components.Profile;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using History.MobileClient.Components.Profile;
 using History.MobileClient.Helpers;
+using History.MobileClient.Messages;
 using History.MobileClient.ViewModels;
 using Microsoft.AspNetCore.Components.WebView;
 using Microsoft.AspNetCore.Components.WebView.Maui;
@@ -46,6 +48,8 @@ public partial class BlazorUserPage : ContentPage
 
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
+        WeakReferenceMessenger.Default.Register<BlazorWebViewHibernationMessage>(this, OnBlazorWebViewHibernationMessageReceived);
+
 #if ANDROID
         // Suppress the webview long-click haptic (timelineInterop.attachLongPress
         // handles copy) and install the kakao emoticon interceptor.
@@ -73,6 +77,22 @@ public partial class BlazorUserPage : ContentPage
     }
 
     private void UpdateLayoutGlyph() => LayoutFontImageSource.Glyph = _viewModel.UseGridLayout ? MaterialSharp.Lists : MaterialSharp.Dataset;
+
+    private void OnBlazorWebViewHibernationMessageReceived(object recipient, BlazorWebViewHibernationMessage message)
+    {
+#if ANDROID
+        Android.Util.Log.Info("BlazorHibernation", $"[{DateTime.Now:HH:mm:ss.fff}] hibernation={message.Value}, platform view is webview: {UserBlazorWebView.Handler?.PlatformView is Android.Webkit.WebView}");
+
+        // WebView.OnPause halts JS timers, animations, and video playback, so a
+        // backgrounded Blazor tab cannot keep burning CPU while the realtime
+        // foreground service keeps the process alive.
+        if (UserBlazorWebView.Handler?.PlatformView is Android.Webkit.WebView webView)
+        {
+            if (message.Value) webView.OnPause();
+            else webView.OnResume();
+        }
+#endif
+    }
 
 #if ANDROID
     private void OnUserBlazorWebViewHandlerChanged(object sender, EventArgs e)

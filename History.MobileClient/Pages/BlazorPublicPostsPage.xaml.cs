@@ -1,5 +1,7 @@
+using CommunityToolkit.Mvvm.Messaging;
 using History.MobileClient.Components.Timeline;
 using History.MobileClient.Helpers;
+using History.MobileClient.Messages;
 using History.MobileClient.ViewModels;
 using Microsoft.AspNetCore.Components.WebView.Maui;
 
@@ -13,6 +15,8 @@ public partial class BlazorPublicPostsPage : ContentPage
     {
         InitializeComponent();
         BindingContext = _viewModel;
+
+        WeakReferenceMessenger.Default.Register<BlazorWebViewHibernationMessage>(this, OnBlazorWebViewHibernationMessageReceived);
 
         MainBlazorWebView.RootComponents.Add(new RootComponent
         {
@@ -28,6 +32,22 @@ public partial class BlazorPublicPostsPage : ContentPage
         // Long-press copy is handled by the app itself (timelineInterop.attachLongPress),
         // so suppress the native webview long-click haptic.
         MainBlazorWebView.HandlerChanged += OnMainBlazorWebViewHandlerChanged;
+#endif
+    }
+
+    private void OnBlazorWebViewHibernationMessageReceived(object recipient, BlazorWebViewHibernationMessage message)
+    {
+#if ANDROID
+        Android.Util.Log.Info("BlazorHibernation", $"[{DateTime.Now:HH:mm:ss.fff}] hibernation={message.Value}, platform view is webview: {MainBlazorWebView.Handler?.PlatformView is Android.Webkit.WebView}");
+
+        // WebView.OnPause halts JS timers, animations, and video playback, so a
+        // backgrounded Blazor tab cannot keep burning CPU while the realtime
+        // foreground service keeps the process alive.
+        if (MainBlazorWebView.Handler?.PlatformView is Android.Webkit.WebView webView)
+        {
+            if (message.Value) webView.OnPause();
+            else webView.OnResume();
+        }
 #endif
     }
 
