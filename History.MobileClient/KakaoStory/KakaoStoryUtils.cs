@@ -429,6 +429,45 @@ public static class KakaoStoryUtils
     }
 
     /// <summary>
+    /// Converts Kakao Story QuoteData decorators (text/hashtag/profile/emoticon)
+    /// into BaseContent so shared rendering/edit surfaces (e.g. PostImageRendererHelper)
+    /// can consume Kakao Story posts. The emoticon is preserved as a "(이모티콘)"
+    /// placeholder text token so editing keeps it instead of dropping it entirely;
+    /// when preserveEmoticon is true it becomes a StickerContent carrying the
+    /// Referer-signed emoticon URL (image rendering only), falling back to the
+    /// placeholder text when the credential is not available.
+    /// </summary>
+    public static List<BaseContent> ConvertToBaseContents(List<QuoteData> quoteDatas, bool preserveEmoticon = false)
+    {
+        var contents = new List<BaseContent>();
+        foreach (var data in quoteDatas)
+        {
+            switch (data.type)
+            {
+                case "text":
+                    contents.Add(new TextContent { Text = data.text });
+                    break;
+                case "hashtag":
+                    contents.Add(new HashtagContent { Tag = data.text.TrimStart('#') });
+                    break;
+                case "profile":
+                    contents.Add(new ProfileContent { UserId = data.id, Nickname = data.text });
+                    break;
+                case "emoticon":
+                    if (preserveEmoticon)
+                    {
+                        var emoticonUrl = KakaoStoryApiHandler.GetEmoticonUrlSync(data.item_id, data.resource_id.ToString());
+                        if (emoticonUrl != null) contents.Add(new StickerContent { StickerMediaId = emoticonUrl, IsAnimated = false });
+                        else contents.Add(new TextContent { Text = "(이모티콘)" });
+                    }
+                    else contents.Add(new TextContent { Text = "(이모티콘)" });
+                    break;
+            }
+        }
+        return contents;
+    }
+
+    /// <summary>
     /// Converts the picked image to PNG when Kakao Story does not accept the format.
     /// WebP is converted (Kakao Story does not support it); GIF is rejected because
     /// only static images are allowed. Returns null when the image cannot be used.

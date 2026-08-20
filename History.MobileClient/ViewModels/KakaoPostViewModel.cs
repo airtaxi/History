@@ -1,9 +1,11 @@
-﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
+using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 using History.MobileClient.Messages;
 using History.MobileClient.Enums;
 using History.MobileClient.KakaoStory;
@@ -284,6 +286,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         }
 
         options.Add("게시글 URL 복사");
+        options.Add("게시글 이미지로 저장");
 
         var action = await App.Page.DisplayActionSheetAsync("카카오스토리 게시물 옵션", Constants.PromptCancel, null, [.. options]);
         if (action == null || action == Constants.PromptCancel) return;
@@ -307,6 +310,43 @@ public partial class KakaoPostViewModel : BasePostViewModel
             await Clipboard.SetTextAsync(_postData.permalink);
             await Toast.Make("게시글 URL이 클립보드에 복사되었습니다.").Show();
         }
+        else if (action == "게시글 이미지로 저장")
+        {
+            var confirm = await App.Page.DisplayAlertAsync("게시글 이미지로 저장", "이 게시글을 이미지로 저장하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+            if (confirm) await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), _postData.actor?.profile_image_url, _postData.actor?.display_name, PostImageRendererHelper.BuildFullTimestampText(CreatedAt, ModifiedAt));
+        }
+    }
+
+    // Converts the Kakao post into BaseContent for image export: text decorators
+    // (emoticons preserved as Referer-signed stickers), scrap card, and media.
+    private static List<BaseContent> BuildBaseContents(PostData postData)
+    {
+        var contents = new List<BaseContent>();
+
+        if (postData.content_decorators is { Count: > 0 }) contents.AddRange(KakaoStoryUtils.ConvertToBaseContents(postData.content_decorators, true));
+        else if (!string.IsNullOrWhiteSpace(postData.content)) contents.AddRange(KakaoStoryUtils.ConvertToBaseContents(KakaoStoryUtils.GetQuoteDataFromString(postData.content), true));
+
+        if (postData.scrap != null) contents.Add(new ExternalUrlContent { Title = postData.scrap.title, Description = postData.scrap.description, SourceUrl = postData.scrap.dest_url ?? postData.scrap.url, ThumbnailImageUrl = postData.scrap.image?.FirstOrDefault() });
+
+        if (postData.media is { Count: > 0 })
+        {
+            foreach (var medium in postData.media)
+            {
+                var isVideo = medium.content_type?.StartsWith("video", StringComparison.OrdinalIgnoreCase) == true;
+                var mediaUrl = medium.url ?? medium.url2 ?? medium.thumbnail_url;
+                var thumbnail = medium.preview_url ?? medium.preview_url_hq ?? medium.thumbnail_url ?? medium.url;
+                var caption = medium.caption?.FirstOrDefault(x => x.type == "text")?.text;
+                contents.Add(new MediaContent
+                {
+                    MediaId = mediaUrl,
+                    ThumbnailMediaId = isVideo ? thumbnail : null,
+                    MimeType = isVideo ? "video/mp4" : "image/jpeg",
+                    Description = caption
+                });
+            }
+        }
+
+        return contents;
     }
 
     private async Task HandleChangePermissionAsync()

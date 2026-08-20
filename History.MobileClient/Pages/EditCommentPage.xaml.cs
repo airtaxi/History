@@ -71,7 +71,7 @@ public partial class EditCommentPage : ContentPage
     {
         // Emoticons are preserved as "(이모티콘)" text placeholders; the comment image
         // is loaded into the attachment grid so it can be kept, replaced, or removed.
-        await MainTextContent.SetContentsAsync(TextTypeContentsViewModel.ConvertToBaseContents(comment.decorators ?? []));
+        await MainTextContent.SetContentsAsync(KakaoStoryUtils.ConvertToBaseContents(comment.decorators ?? []));
 
         var commentMedia = comment.decorators?.FirstOrDefault(x => x.media?.thumbnail_url != null)?.media;
         if (commentMedia != null)
