@@ -95,7 +95,7 @@ public partial class SettingsPage : ContentPage
         var isTimelineVirtualizationEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
         TimelineVirtualizationLabel.Text = isTimelineVirtualizationEnabled ? OnText : OffText;
 
-        // Realtime Kakao Story notification foreground service (default: on)
+        // Realtime Kakao Story notification foreground service (default: off)
         KakaoStoryRealtimeNotificationLabel.Text = KakaoStoryRealtimeNotificationManager.IsEnabled ? OnText : OffText;
 #endif
 

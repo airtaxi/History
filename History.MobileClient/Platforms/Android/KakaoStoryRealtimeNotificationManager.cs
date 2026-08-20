@@ -15,7 +15,7 @@ public static class KakaoStoryRealtimeNotificationManager
 {
     public const string EnabledKey = "KakaoStoryRealtimeNotificationEnabled";
 
-    public static bool IsEnabled => Configuration.GetValue<bool?>(EnabledKey) ?? true;
+    public static bool IsEnabled => Configuration.GetValue<bool?>(EnabledKey) ?? false;
 
     public static void Start()
     {
