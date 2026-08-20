@@ -1,4 +1,4 @@
-﻿#if ANDROID
+#if ANDROID
 using History.MobileClient.ThirdParty.StaggeredLayout;
 #elif IOS
 using NativeMedia;
@@ -167,8 +167,7 @@ public partial class EditPostPage : ContentPage
         if (_isKakaoEdit)
         {
             ButtonUpload.Text = "수정";
-            if (_kakaoPost.content_decorators is { Count: > 0 })
-                await MainTextContent.SetContentsAsync(TextTypeContentsViewModel.ConvertToBaseContents(_kakaoPost.content_decorators));
+            if (_kakaoPost.content_decorators is { Count: > 0 }) await MainTextContent.SetContentsAsync(KakaoStoryUtils.ConvertToBaseContents(_kakaoPost.content_decorators));
             foreach (var medium in _kakaoPost.media ?? []) _attachmentViewModels.Add(new MediaAttachmentViewModel(medium));
             if (_kakaoPost.scrap != null)
             {
@@ -700,7 +699,7 @@ public partial class EditPostPage : ContentPage
                 var shouldWritePostToKakaoStory = false;
                 var isFortuneOnly = false;
 
-                if (_post == null)
+                if (_post == null || _isHistoryShare)
                 {
                     shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory") ?? false;
                     if (!Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory").HasValue)
@@ -708,7 +707,10 @@ public partial class EditPostPage : ContentPage
                         shouldWritePostToKakaoStory = await DisplayAlertAsync("안내", "카카오스토리에도 게시글을 작성하는 옵션을 활성화하시겠습니까? 이 옵션은 글쓰기 하단의 설정을 펼쳐 언제든지 변경할 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
                         Configuration.SetValue("ShouldWritePostToKakaoStory", shouldWritePostToKakaoStory);
                     }
+                }
 
+                if (_post == null)
+                {
                     // Detect a fortune-only post (#오늘의운세 hashtag alone). The server replaces its
                     // contents with the generated fortune message, so KakaoStory mirroring must happen
                     // AFTER the server response to keep both platforms in sync.
@@ -720,6 +722,35 @@ public partial class EditPostPage : ContentPage
                         var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
 
                         if ((await TryWritePostToKakaoStoryAsync(editorContents, [.. _attachmentViewModels], _externalUrlContentViewModel, discoveryOption, stickerContents)) == false) return;
+                    }
+                }
+
+                // When mirroring a share post, only the rendered shared-post image is
+                // attached on KakaoStory. Warn beforehand that the user's own media
+                // attachments and stickers are not mirrored; declining skips the mirror.
+                MediaAttachmentViewModel sharedPostRenderAttachment = null;
+                if (shouldWritePostToKakaoStory && _isHistoryShare)
+                {
+                    var excludedKakaoItems = new List<string>();
+                    if (_attachmentViewModels.Count > 0) excludedKakaoItems.Add("사진/영상");
+                    if (stickerContents.Count > 0) excludedKakaoItems.Add("스티커");
+
+                    if (excludedKakaoItems.Count > 0)
+                    {
+                        var proceed = await DisplayAlertAsync("안내", $"카카오스토리에는 {string.Join(", ", excludedKakaoItems)}이 게시되지 않으며, 공유 게시글의 렌더 이미지만 카카오스토리에 첨부됩니다. 계속하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+                        if (!proceed) shouldWritePostToKakaoStory = false;
+                    }
+
+                    if (shouldWritePostToKakaoStory)
+                    {
+                        // Render before the History write so a failure aborts the whole
+                        // upload and never produces a partially mirrored share post.
+                        sharedPostRenderAttachment = await BuildSharedPostRenderAttachmentAsync(_post);
+                        if (sharedPostRenderAttachment == null)
+                        {
+                            await DisplayAlertAsync("오류", "공유 게시글의 렌더 이미지를 생성하지 못해 카카오스토리 게시글 작성을 중단합니다.", Constants.PromptOk);
+                            return;
+                        }
                     }
                 }
 
@@ -743,6 +774,23 @@ public partial class EditPostPage : ContentPage
                         // After-the-fact KakaoStory mirroring using the server-generated fortune contents
                         var fortuneText = BuildTextFromPostContents(result.Value?.Contents);
                         if (!string.IsNullOrWhiteSpace(fortuneText)) await TryWritePostToKakaoStoryAsync([new TextContent { Text = fortuneText }], [.. _attachmentViewModels], _externalUrlContentViewModel, discoveryOption, stickerContents);
+                    }
+                    else if (shouldWritePostToKakaoStory && _isHistoryShare && sharedPostRenderAttachment != null)
+                    {
+                        // After-the-fact KakaoStory mirroring of a share post: the History share
+                        // URL is appended after the user text, and the rendered shared post image
+                        // replaces the user's media attachments. The temporary rendered file is
+                        // disposed after the upload completes (or when the user declines).
+                        var shareUrl = $"https://historyweb.cc/post/{result.Value.Id}";
+                        var userText = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
+                        var kakaoText = string.IsNullOrWhiteSpace(userText) ? shareUrl : $"{userText}\n{shareUrl}";
+
+                        var shareMedias = new List<MediaAttachmentViewModel> { sharedPostRenderAttachment };
+
+                        // KakaoStory cannot post a URL scrap and media at the same time;
+                        // only the rendered shared post image is attached.
+                        try { await TryWritePostToKakaoStoryAsync([new TextContent { Text = kakaoText }], shareMedias, null, discoveryOption, []); }
+                        finally { sharedPostRenderAttachment.Dispose(); }
                     }
 
                     await App.PopAsync();
@@ -1070,7 +1118,7 @@ public partial class EditPostPage : ContentPage
 
         var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory");
         if (shouldWritePostToKakaoStory.HasValue) WritePostToKakaoStorySwitch.IsToggled = shouldWritePostToKakaoStory.Value;
-        WritePostToKakaoStoryGrid.IsVisible = !_isHistoryShare && !_isKakaoShare && !_isKakaoEdit && !_isKakaoOnlyWrite && _post == null;
+        WritePostToKakaoStoryGrid.IsVisible = !_isKakaoShare && !_isKakaoEdit && !_isKakaoOnlyWrite && (_post == null || _isHistoryShare);
 
         if (_isKakaoOnlyWrite || _isKakaoEdit || _isKakaoShare) MainTextContent.IsKakaoMentionMode = true;
 
@@ -1382,6 +1430,22 @@ public partial class EditPostPage : ContentPage
             else if (content is HashtagContent hashtag) sb.Append('#').Append(hashtag.Tag).Append(' ');
         }
         return sb.ToString().Trim();
+    }
+
+    /// <summary>
+    /// Renders the shared (parent) post into a PNG attachment for KakaoStory mirroring.
+    /// The profile header is included to reproduce the share card. Returns null when
+    /// the rendering fails; the caller then aborts the whole upload.
+    /// </summary>
+    private static async Task<MediaAttachmentViewModel> BuildSharedPostRenderAttachmentAsync(PostResponseDto post)
+    {
+        var bytes = await PostImageRendererHelper.RenderAsync(post.Contents, Utils.GenerateMediaUri(post.User?.ProfileMediaId), post.User?.Nickname, PostImageRendererHelper.BuildFullTimestampText(post.CreatedAt, post.ModifiedAt));
+        if (bytes == null) return null;
+
+        var randomFileName = Path.GetRandomFileName().Replace(".", string.Empty) + ".png";
+        var tempPath = Path.Combine(Path.GetTempPath(), randomFileName);
+        await File.WriteAllBytesAsync(tempPath, bytes);
+        return new MediaAttachmentViewModel(randomFileName, tempPath);
     }
 
     /// <summary>

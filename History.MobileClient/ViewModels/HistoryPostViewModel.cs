@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -13,6 +13,7 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
+using History.MobileClient.Helpers;
 using History.MobileClient.Messages;
 using History.MobileClient.Enums;
 using History.MobileClient.Pages;
@@ -189,6 +190,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
         else options.AddRange("게시글 신고");
 
         options.Add("게시글 URL 복사");
+        options.Add("게시글 이미지로 저장");
 
         var action = await App.Page.DisplayActionSheetAsync("게시물 옵션", Constants.PromptCancel, null, [.. options]);
         if (action == null || action == Constants.PromptCancel) return;
@@ -266,6 +268,11 @@ public partial class HistoryPostViewModel : BasePostViewModel
         {
             await Clipboard.SetTextAsync($"https://historyweb.cc/post/{Post.Id}");
             await Toast.Make("게시글 URL이 클립보드에 복사되었습니다.").Show();
+        }
+        else if (action == "게시글 이미지로 저장")
+        {
+            var confirm = await App.Page.DisplayAlertAsync("게시글 이미지로 저장", "이 게시글을 이미지로 저장하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+            if (confirm) await PostImageRendererHelper.SaveAsync(Post.Contents, Utils.GenerateMediaUri(Post.User.ProfileMediaId), Post.User.Nickname, PostImageRendererHelper.BuildFullTimestampText(CreatedAt, ModifiedAt));
         }
         else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }
