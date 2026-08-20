@@ -4,7 +4,7 @@
 
 window.timelineInterop = (() => {
     let dotnetRef = null;
-    let sentinelObserver = null;
+    let loadMorePending = false;
     let scrollTicking = false;
     let feedObserver = null;
     const carouselObserved = new Set();
@@ -27,6 +27,7 @@ window.timelineInterop = (() => {
         window.requestAnimationFrame(() => {
             scrollTicking = false;
             if (dotnetRef) dotnetRef.invokeMethodAsync('ScrollChanged', window.scrollY || document.documentElement.scrollTop);
+            checkSentinel(LOAD_MORE_MARGIN);
         });
     }
 
@@ -165,7 +166,32 @@ window.timelineInterop = (() => {
         requestAnimationFrame(() => {
             masonryResizeScheduled = false;
             initMasonry();
+            checkSentinel();
         });
+    }
+
+    // Load-ahead margin in px: while the user scrolls, fetching starts when the
+    // sentinel is still up to 800px below the viewport so the next page is ready
+    // before the scroll reaches it (matches the old observer's rootMargin). Checks
+    // that are NOT scroll-driven (init, feed mutation, resize) pass no margin, so only
+    // a sentinel already inside the viewport auto-loads — a fresh profile must not
+    // prefetch its second page before the user ever scrolled. Checks run on every
+    // scroll tick instead of an IntersectionObserver because observers only fire on
+    // visibility TRANSITIONS; a short feed that keeps the sentinel inside the margin
+    // (e.g. the Kakao Story profile grid: 18 square cells can never push it past 800px
+    // on a folded screen) never transitions, so the observer silently stopped loading
+    // after the first page.
+    const LOAD_MORE_MARGIN = 800;
+
+    function checkSentinel(prefetchMargin = 0) {
+        if (!dotnetRef || loadMorePending) return;
+        const sentinel = document.getElementById('load-more-sentinel');
+        if (!sentinel) return;
+        if (sentinel.getBoundingClientRect().top > window.innerHeight + prefetchMargin) return;
+        loadMorePending = true;
+        dotnetRef.invokeMethodAsync('LoadMoreAsync')
+            .then(() => { loadMorePending = false; })
+            .catch(() => { loadMorePending = false; });
     }
 
     function attachCarousels() {
@@ -192,7 +218,7 @@ window.timelineInterop = (() => {
     function watchFeedForCarousels() {
         const feed = document.getElementById('feed');
         if (!feed || feedObserver) return;
-        feedObserver = new MutationObserver(() => { attachCarousels(); muteFeedVideos(); scheduleMasonryUpdate(); });
+        feedObserver = new MutationObserver(() => { attachCarousels(); muteFeedVideos(); scheduleMasonryUpdate(); checkSentinel(); });
         feedObserver.observe(feed, { childList: true, subtree: true });
     }
 
@@ -369,14 +395,6 @@ window.timelineInterop = (() => {
         document.addEventListener('contextmenu', (event) => event.preventDefault());
         document.addEventListener('selectionchange', () => window.getSelection()?.removeAllRanges());
 
-        const sentinel = document.getElementById('load-more-sentinel');
-        if (sentinel && !sentinelObserver) {
-            sentinelObserver = new IntersectionObserver((entries) => {
-                if (entries.length > 0 && entries[0].isIntersecting && dotnetRef) dotnetRef.invokeMethodAsync('LoadMoreAsync');
-            }, { root: null, rootMargin: '800px 0px 800px 0px', threshold: 0 });
-            sentinelObserver.observe(sentinel);
-        }
-
         window.addEventListener('scroll', onScroll, { passive: true });
         document.addEventListener('scroll', onCaptureScroll, { capture: true, passive: true });
         document.addEventListener('load', onImageLoaded, { capture: true, passive: true });
@@ -386,6 +404,7 @@ window.timelineInterop = (() => {
         watchFeedForCarousels();
         muteFeedVideos();
         initMasonry();
+        checkSentinel();
     }
 
     return { init, setTheme, scrollToTop, attachLongPress, detachLongPress, attachVideoVisibility, detachVideoVisibility, initMasonry, destroyMasonry };
