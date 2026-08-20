@@ -3,52 +3,21 @@
     x:Class="History.MobileClient.Pages.NotificationsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:behaviors="clr-namespace:History.MobileClient.Behaviors"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels"
     Shell.NavBarIsVisible="False">
     <ContentPage.Behaviors>
         <behaviors:StatusBarBehavior StatusBarColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource OffBlack}}" StatusBarTheme="{AppThemeBinding Light=Light, Dark=Dark}" />
     </ContentPage.Behaviors>
-    <Grid x:Name="RootGrid" RowSpacing="6">
+    <Grid x:Name="RootGrid">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid
-            Grid.Row="0"
-            Padding="12,8,12,8"
-            BackgroundColor="{AppThemeBinding Light={StaticResource White},
-                                              Dark={StaticResource OffBlack}}">
-            <Label
-                FontAttributes="Bold"
-                FontSize="18"
-                HorizontalOptions="Start"
-                Text="알림"
-                VerticalOptions="Center" />
-            <Image
-                x:Name="ReadAllImage"
-                HeightRequest="28"
-                HorizontalOptions="End"
-                VerticalOptions="Center"
-                WidthRequest="28">
-                <Image.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnReadAllImageTapped" />
-                </Image.GestureRecognizers>
-                <Image.Source>
-                    <FontImageSource
-                        FontFamily="MaterialSharp"
-                        Glyph="{x:Static m:MaterialSharp.Done_all}"
-                        Color="{AppThemeBinding Light={StaticResource Gray600},
-                                                Dark={StaticResource Gray300}}" />
-                </Image.Source>
-            </Image>
-        </Grid>
-
         <RefreshView
-            Grid.Row="1"
+            Grid.Row="0"
             Refreshing="OnRefreshing"
             SafeAreaEdges="None">
             <CollectionView
@@ -61,6 +30,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <Border
                             x:Name="HistoryPillBorder"
@@ -146,6 +116,24 @@
                                 TextColor="White"
                                 VerticalOptions="Center" />
                         </Border>
+                        <Image
+                            x:Name="ReadAllImage"
+                            Grid.Column="2"
+                            HeightRequest="28"
+                            HorizontalOptions="End"
+                            VerticalOptions="Center"
+                            WidthRequest="28">
+                            <Image.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnReadAllImageTapped" />
+                            </Image.GestureRecognizers>
+                            <Image.Source>
+                                <FontImageSource
+                                    FontFamily="MaterialSharp"
+                                    Glyph="{x:Static m:MaterialSharp.Done_all}"
+                                    Color="{AppThemeBinding Light={StaticResource Gray600},
+                                                            Dark={StaticResource Gray300}}" />
+                            </Image.Source>
+                        </Image>
                     </Grid>
                 </CollectionView.Header>
                 <CollectionView.ItemTemplate>
@@ -251,7 +239,6 @@
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"
-            Grid.Row="1"
             HeightRequest="100"
             HorizontalOptions="Center"
             IsRunning="False"
