@@ -217,12 +217,20 @@ window.timelineInterop = (() => {
     function onImageLoaded(event) {
         if (!(event.target instanceof HTMLImageElement)) return;
         const item = event.target.closest('.carousel-item');
-        if (!item) return;
-        const track = event.target.closest('[data-interop-carousel]');
-        if (!track) return;
-        if (event.target.naturalWidth > 0) item.dataset.ratio = (event.target.naturalWidth / event.target.naturalHeight).toFixed(4);
-        updateCarouselHeight(track);
-        scheduleMasonryUpdate();
+        if (item) {
+            const track = event.target.closest('[data-interop-carousel]');
+            if (!track) return;
+            if (event.target.naturalWidth > 0) item.dataset.ratio = (event.target.naturalWidth / event.target.naturalHeight).toFixed(4);
+            updateCarouselHeight(track);
+            scheduleMasonryUpdate();
+            return;
+        }
+
+        // Kakao emoticons swap in asynchronously after a credential fetch; the
+        // mutation-triggered remeasure races ahead of the image decode, so re-layout
+        // once the intrinsic size is known. Fixed-box images (.avatar, carousel items
+        // above) are skipped.
+        if (event.target.closest('.sticker')) scheduleMasonryUpdate();
     }
 
     // Chromium-based webviews never fire the 'longpress' DOM event, so long-press is
