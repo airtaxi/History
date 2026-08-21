@@ -6,11 +6,12 @@ using History.MobileClient.KakaoStory;
 namespace History.MobileClient;
 
 /// <summary>
-/// Background polling of Kakao Story notifications while the app is suspended,
-/// via BGAppRefreshTask (the iOS mirror of the Android JobService). The system
-/// decides when the task runs, so it is not real-time; The task runs
-/// about 30 seconds at most, which fits the single poll cycle. The poller never
-/// opens the login modal from here (IsBackgroundMode).
+/// Background polling of Kakao Story mails and re-uploading of the KAuth token
+/// to the server while the app is suspended, via BGAppRefreshTask (the iOS
+/// mirror of the Android JobService). The system decides when the task runs, so
+/// it is not real-time; The task runs about 30 seconds at most, which fits the
+/// single poll cycle. The poller never opens the login modal from here
+/// (IsBackgroundMode).
 /// </summary>
 public static class KakaoStoryBackgroundRefresh
 {
@@ -50,7 +51,12 @@ public static class KakaoStoryBackgroundRefresh
 
             Task.Run(async () =>
             {
-                try { await KakaoStoryNotificationPoller.PollOnceAsync(); CompleteTask(true); }
+                try
+                {
+                    await KakaoStoryMailPoller.PollOnceAsync();
+                    await KakaoStoryUtils.UploadTokenToServerAsync();
+                    CompleteTask(true);
+                }
                 catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story background poll failed: {exception.Message}"); CompleteTask(false); }
             });
         });

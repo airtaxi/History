@@ -3,6 +3,7 @@ using DotNet.RateLimiter.Extensions;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using History.ApiService;
+using History.ApiService.Helpers;
 using History.ApiService.Services;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
@@ -77,6 +78,9 @@ builder.Services.AddScoped<IFortuneService, FortuneService>();
 builder.Services.AddHostedService<DatabaseInitService>();
 builder.Services.AddHostedService<MigrationService>();
 builder.Services.AddHostedService<BirthdayService>();
+builder.Services.AddSingleton<KakaoStoryWorkerClient>();
+builder.Services.AddSingleton<KakaoStoryPollingService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<KakaoStoryPollingService>());
 builder.Services.AddRateLimitService(builder.Configuration);
 
 // Unlock the file upload size limit.

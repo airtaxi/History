@@ -6,9 +6,10 @@ using History.MobileClient.KakaoStory;
 namespace History.MobileClient;
 
 /// <summary>
-/// Background JobService that polls Kakao Story notifications while the app is
-/// not running (15-minute cadence, JobScheduler minimum). Mirror of
-/// TokenRefreshService; the poller never opens the login modal from here.
+/// Background JobService that polls Kakao Story mails and re-uploads the KAuth
+/// token to the server while the app is not running (15-minute cadence,
+/// JobScheduler minimum). Notification polling is owned by the server (FCM
+/// push); the poller never opens the login modal from here.
 /// </summary>
 [Service(Name = "com.airtaxi.history.KakaoStoryNotificationRefreshService", Permission = "android.permission.BIND_JOB_SERVICE")]
 public class KakaoStoryNotificationRefreshService : JobService
@@ -21,7 +22,11 @@ public class KakaoStoryNotificationRefreshService : JobService
 
         Task.Run(async () =>
         {
-            try { await KakaoStoryNotificationPoller.PollOnceAsync(); }
+            try
+            {
+                await KakaoStoryMailPoller.PollOnceAsync();
+                await KakaoStoryUtils.UploadTokenToServerAsync();
+            }
             catch (Exception exception) { Log.Error(TAG, $"Kakao Story notification poll failed: {exception.Message}"); }
             finally { JobFinished(jobParameters, false); }
         });

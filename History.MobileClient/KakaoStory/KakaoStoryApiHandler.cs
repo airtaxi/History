@@ -62,13 +62,6 @@ public partial class KakaoStoryApiHandler
 
     public static ReloginRequired OnReloginRequired { get; set; }
 
-    /// <summary>
-    /// Invoked when a request fails with 401 while IsBackgroundMode is enabled, so
-    /// background pollers can surface a session-expired notification without opening
-    /// the login modal.
-    /// </summary>
-    public static Action OnBackgroundReloginRequired { get; set; }
-
     public static int MaxRetryCount { get; set; } = 15;
 
     // Bound on the video processing check loop (500ms delay per attempt): a stuck
@@ -938,7 +931,6 @@ public partial class KakaoStoryApiHandler
                 if (IsBackgroundMode)
                 {
                     // Surface the expired session without showing the login modal from the background.
-                    OnBackgroundReloginRequired?.Invoke();
                     return null;
                 }
                 var success = await OnReloginRequired?.Invoke();

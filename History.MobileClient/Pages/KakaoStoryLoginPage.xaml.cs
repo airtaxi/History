@@ -180,6 +180,10 @@ public partial class KakaoStoryLoginPage : ContentPage
             _gotLoginResult = true;
             _taskCompletionSource.TrySetResult(true);
 
+            // Register the server session immediately so notifications start
+            // flowing without waiting for the next 15-minute job.
+            await KakaoStoryUtils.UploadTokenToServerAsync();
+
             await App.PopModalAsync();
         }
         catch { }

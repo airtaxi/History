@@ -1,4 +1,4 @@
-﻿using History.Commons.DataTypes;
+using History.Commons.DataTypes;
 using History.Commons.Enums;
 using MongoDB.Driver;
 
@@ -37,6 +37,9 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         // Invite Codes
         var inviteCodeCollection = database.GetCollection<InviteCode>("InviteCodes");
         var inviteCodeRequestCollection = database.GetCollection<InviteCodeRequest>("InviteCodeRequests");
+
+        // Kakao Story notification deduplication state
+        var kakaoStoryNotificationStateCollection = database.GetCollection<KakaoStoryNotificationState>("KakaoStoryNotificationStates");
 
         // Create indexes
         logger.LogInformation("Creating indexes...");
@@ -234,6 +237,9 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         // Partial unique index: a user may have at most one Pending request at a time
         var partialIndexCommand = MongoDB.Bson.BsonDocument.Parse("{ 'createIndexes': 'InviteCodeRequests', 'indexes': [{ 'key': { 'RequesterId': 1 }, 'name': 'UniquePendingRequesterId', 'unique': true, 'partialFilterExpression': { 'Status': 'Pending' } }] }");
         await database.RunCommandAsync<MongoDB.Bson.BsonDocument>(partialIndexCommand, cancellationToken: cancellationToken);
+
+        logger.LogInformation("Creating indexes for KakaoStoryNotificationState collection...");
+        await kakaoStoryNotificationStateCollection.Indexes.CreateOneAsync(new CreateIndexModel<KakaoStoryNotificationState>(Builders<KakaoStoryNotificationState>.IndexKeys.Ascending(x => x.UserId), new CreateIndexOptions { Unique = true }), cancellationToken: cancellationToken);
 
         logger.LogInformation("Indexes created successfully.");
 
