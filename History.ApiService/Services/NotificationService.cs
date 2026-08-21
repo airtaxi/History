@@ -244,7 +244,8 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
                 {
                     ChannelId = AndroidChannelId,
                     ImageUrl = imageUrl,
-                    NotificationCount = 1
+                    NotificationCount = 1,
+                    EventTimestamp = DateTime.UtcNow
                 },
             }
         };
