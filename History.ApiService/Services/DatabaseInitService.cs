@@ -93,6 +93,7 @@ public class DatabaseInitService(IMongoDatabase database, ILogger<DatabaseInitSe
         logger.LogInformation("Creating indexes for Comment collection...");
         await commentCollection.Indexes.CreateOneAsync(new CreateIndexModel<Comment>(Builders<Comment>.IndexKeys.Ascending(x => x.PostId)), cancellationToken: cancellationToken);
         await commentCollection.Indexes.CreateOneAsync(new CreateIndexModel<Comment>(Builders<Comment>.IndexKeys.Ascending(x => x.UserId)), cancellationToken: cancellationToken);
+        await commentCollection.Indexes.CreateOneAsync(new CreateIndexModel<Comment>(Builders<Comment>.IndexKeys.Text(x => x.SearchIndex)), cancellationToken: cancellationToken);
         await commentCollection.Indexes.CreateOneAsync(new CreateIndexModel<Comment>(Builders<Comment>.IndexKeys.Descending(x => x.CreatedAt)), cancellationToken: cancellationToken);
 
         logger.LogInformation("Creating indexes for Media collection...");

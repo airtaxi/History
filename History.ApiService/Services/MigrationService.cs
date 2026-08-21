@@ -11,6 +11,7 @@ public class MigrationService(IMongoDatabase database, ILogger<MigrationService>
     private readonly IMongoCollection<MigrationRecord> _migrations = database.GetCollection<MigrationRecord>("Migrations");
     private readonly IMongoCollection<Post> _postCollection = database.GetCollection<Post>("Posts");
     private readonly IMongoCollection<Post> _publicPostCollection = database.GetCollection<Post>("PublicPosts");
+    private readonly IMongoCollection<Comment> _commentCollection = database.GetCollection<Comment>("Comments");
     private readonly IMongoCollection<User> _userCollection = database.GetCollection<User>("Users");
     private readonly IMongoCollection<InviteCode> _inviteCodeCollection = database.GetCollection<InviteCode>("InviteCodes");
 
@@ -31,6 +32,7 @@ public class MigrationService(IMongoDatabase database, ILogger<MigrationService>
         await ApplyMigrationAsync(1, "MigrateHashtagsToHashtagContent", MigrateHashtagsToHashtagContentAsync);
         await ApplyMigrationAsync(2, "IssueInviteCodesToExistingUsers", IssueInviteCodesToExistingUsersAsync);
         await ApplyMigrationAsync(3, "IssueInviteCodesToUsersWithNoCodes", IssueInviteCodesToUsersWithNoCodesAsync);
+        await ApplyMigrationAsync(4, "BackfillCommentSearchIndex", BackfillCommentSearchIndexAsync);
     }
 
     private async Task ApplyMigrationAsync(int version, string name, Func<Task> migration)
@@ -202,5 +204,29 @@ public class MigrationService(IMongoDatabase database, ILogger<MigrationService>
         }
 
         logger.LogInformation("[MIGRATION] Issued {Count} invite codes to {UserCount} users.", totalIssued, users.Count);
+    }
+
+    /// <summary>
+    /// v4: Backfill SearchIndex for existing comments.
+    /// </summary>
+    private async Task BackfillCommentSearchIndexAsync()
+    {
+        var comments = await _commentCollection.Find(FilterDefinition<Comment>.Empty).ToListAsync();
+        logger.LogInformation("[MIGRATION] Found {Count} comments to backfill search index for.", comments.Count);
+
+        var migratedCount = 0;
+        foreach (var comment in comments)
+        {
+            var searchIndex = Utils.GenerateSearchIndexFromContents(comment.Contents);
+            if (comment.SearchIndex == searchIndex) continue;
+
+            var filter = Builders<Comment>.Filter.Eq(x => x.Id, comment.Id);
+            var update = Builders<Comment>.Update.Set(x => x.SearchIndex, searchIndex);
+
+            await _commentCollection.UpdateOneAsync(filter, update);
+            migratedCount++;
+        }
+
+        logger.LogInformation("[MIGRATION] Backfilled search index for {Count} comments.", migratedCount);
     }
 }

@@ -103,6 +103,19 @@ public static partial class Utils
         return converted;
     }
 
+    public static string GenerateSearchIndexFromContents(IEnumerable<BaseContent> contents)
+    {
+        var body = string.Join(" ", contents.OfType<TextContent>().Select(s => s.Text))
+            .ReplaceLineEndings()
+            .ToLower()
+            .Replace(Environment.NewLine, " ");
+
+        var hashtagTexts = contents.OfType<HashtagContent>().Select(x => $"#{x.Tag}");
+        var hashtag = string.Join(" ", hashtagTexts).ToLower();
+
+        return $"{body} {hashtag}".Trim();
+    }
+
     [GeneratedRegex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled)]
     private static partial Regex UrlRegex();
 

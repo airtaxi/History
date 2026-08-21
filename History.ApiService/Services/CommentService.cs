@@ -131,6 +131,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
             UserId = requesterId,
             Contents = contents,
             CreatedAt = DateTime.UtcNow,
+            SearchIndex = Utils.GenerateSearchIndexFromContents(contents),
         };
 
         while (true)
@@ -245,7 +246,7 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
 
         // Update Comment
         var filter = Builders<Comment>.Filter.Eq(f => f.Id, commentId);
-        var update = Builders<Comment>.Update.Set(f => f.Contents, contents).Set(f => f.ModifiedAt, DateTime.UtcNow);
+        var update = Builders<Comment>.Update.Set(f => f.Contents, contents).Set(f => f.ModifiedAt, DateTime.UtcNow).Set(f => f.SearchIndex, Utils.GenerateSearchIndexFromContents(contents));
 
         var result = await _commentCollection.UpdateOneAsync(filter, update);
 
