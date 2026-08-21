@@ -103,12 +103,45 @@ window.timelineInterop = (() => {
         }
     }
 
+    // Masonry has no built-in scroll anchoring: a column-count or width change
+    // (resize, fold/rotate, grid toggle) re-places every card, so the same scroll
+    // offset would show a different post afterwards. The card at the top of the
+    // viewport is pinned before the re-layout, then the scroll is shifted back to it.
+    function captureAnchor() {
+        const cards = document.querySelectorAll('#masonry-grid .card');
+        const viewportHeight = window.innerHeight;
+        let straddler = null;
+        for (const card of cards) {
+            const top = card.getBoundingClientRect().top;
+            if (top >= viewportHeight) break; // everything further down is off-screen
+            if (top >= 0) return { card, top }; // first card starting inside the viewport
+            if (!straddler || top > straddler.top) straddler = { card, top }; // closest card crossing the top edge
+        }
+        return straddler;
+    }
+
+    function restoreAnchor(anchor) {
+        if (!anchor) return;
+        const top = anchor.card.getBoundingClientRect().top;
+        const delta = top - anchor.top;
+        if (!delta) return;
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        window.scrollTo({ top: scrollTop + delta, behavior: 'auto' });
+    }
+
     function initMasonry() {
         const grid = document.getElementById('masonry-grid');
         if (!grid) return;
 
+        // Keep the anchor card at its old viewport position across the re-layout.
+        const anchor = captureAnchor();
+
         const columns = getMasonryColumns();
-        if (columns <= 1) { destroyMasonry(); return; }
+        if (columns <= 1) {
+            destroyMasonry();
+            restoreAnchor(anchor);
+            return;
+        }
 
         const gutter = 12; // matches the 6px card margins of the single-column flow
         const padding = 12;
@@ -125,6 +158,7 @@ window.timelineInterop = (() => {
                 }
                 masonry.layout();
             });
+            restoreAnchor(anchor);
             return;
         }
 
@@ -143,6 +177,7 @@ window.timelineInterop = (() => {
             grid.classList.add('masonry-active');
             applyMasonryItemWidths(grid);
         });
+        restoreAnchor(anchor);
     }
 
     function scheduleMasonryUpdate() {
