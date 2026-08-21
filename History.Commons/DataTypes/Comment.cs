@@ -33,4 +33,9 @@ public class Comment
     /// Represents the date and time when the entity was last modified.
     /// </summary>
     public DateTime? ModifiedAt { get; set; }
+
+    /// <summary>
+    /// The data used when searching for this comment.
+    /// </summary>
+    public string SearchIndex { get; set; } = string.Empty;
 }

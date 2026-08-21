@@ -582,7 +582,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
             DiscoveryOption = requestDto.DiscoveryOption,
             DiscoveryOptionSelectedUserIds = (requestDto.DiscoveryOption == DiscoveryOption.SelectedUsers || requestDto.DiscoveryOption == DiscoveryOption.UnselectedUsers) ? (requestDto.DiscoveryOptionSelectedUserIds ?? []) : null,
             ParentPostId = requestDto.ParentPostId,
-            SearchIndex = GenerateSearchIndexFromContents(contents),
+            SearchIndex = Utils.GenerateSearchIndexFromContents(contents),
             CommentPermission = requestDto.CommentPermission,
             DisallowShare = requestDto.DisallowShare,
             Hashtags = [],
@@ -724,7 +724,7 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Update the post contents
         post.Contents = contents;
-        post.SearchIndex = GenerateSearchIndexFromContents(contents);
+        post.SearchIndex = Utils.GenerateSearchIndexFromContents(contents);
         post.CommentPermission = requestDto.CommentPermission;
         post.DisallowShare = requestDto.DisallowShare;
         post.Hashtags = [];
@@ -924,7 +924,14 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         var friendshipService = serviceProvider.GetRequiredService<IFriendshipService>();
 
         var loweredQuery = query.ToLower();
-        var filter = Builders<Post>.Filter.Text(loweredQuery);
+        var commentMatchedPostIds = await _commentCollection
+            .Find(Builders<Comment>.Filter.Text(loweredQuery))
+            .Project(c => c.PostId)
+            .ToListAsync();
+
+        var textFilter = Builders<Post>.Filter.Text(loweredQuery);
+        var commentMatchFilter = Builders<Post>.Filter.In(p => p.Id, commentMatchedPostIds.Distinct());
+        var filter = Builders<Post>.Filter.Or(textFilter, commentMatchFilter);
         if (!string.IsNullOrEmpty(fromPostId))
         {
             var fromPost = await _postCollection.Find(p => p.Id == fromPostId).FirstOrDefaultAsync();
@@ -1435,19 +1442,6 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
         await _publicPostCollection.DeleteManyAsync(p => p.UserId == userId);
 
         return Result.Success();
-    }
-
-    private static string GenerateSearchIndexFromContents(IEnumerable<BaseContent> contents)
-    {
-        var body = string.Join(" ", contents.OfType<TextContent>().Select(s => s.Text))
-        .ReplaceLineEndings()
-        .ToLower()
-        .Replace(Environment.NewLine, " ");
-
-        var hashtagTexts = contents.OfType<HashtagContent>().Select(x => $"#{x.Tag}");
-        var hashtag = string.Join(" ", hashtagTexts).ToLower();
-
-        return $"{body} {hashtag}".Trim();
     }
 
     /// <summary>
