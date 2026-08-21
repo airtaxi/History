@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
@@ -197,6 +198,9 @@ public partial class NotificationsPage : ContentPage
         {
             Shared.HistoryUnreadNotificationCount = 0;
             WeakReferenceMessenger.Default.Send(new NotificationsReadAllMessage());
+
+            HapticFeedback.Default.Perform(HapticFeedbackType.Click);
+            await Toast.Make("모든 알림을 읽음 처리했습니다.").Show();
         }
     }
 
