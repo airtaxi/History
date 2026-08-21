@@ -87,7 +87,7 @@ public static class PostImageRendererHelper
         using var fillPaint = new SKPaint { IsAntialias = true };
 
         var metrics = bodyFont.Metrics;
-        var lineHeight = (metrics.Descent - metrics.Ascent) * 1.4f;
+        var lineHeight = (metrics.Descent - metrics.Ascent) * 1.2f;
 
         var blocks = await BuildBlocksAsync(contentList, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight);
         if (hasHeader)
