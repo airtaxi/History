@@ -67,6 +67,9 @@ public partial class KakaoNotificationViewModel : BaseNotificationViewModel
         {
             var profileId = scheme.Replace("kakaostory://profiles/", "");
             if (string.IsNullOrEmpty(profileId)) await App.Page.DisplayAlertAsync("안내", "프로필을 불러올 수 없습니다.", Constants.PromptOk);
+            // "myfollowers" is a Kakao Story deep link to the my-followers page,
+            // which is not implemented in this app yet.
+            else if (profileId == "myfollowers") await App.Page.DisplayAlertAsync("안내", "소식받는 친구 목록 조회는 아직 지원하지 않습니다.", Constants.PromptOk);
             else await App.PushAsync(new BlazorUserPage(profileId, true));
         }
         else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 알림입니다.", Constants.PromptOk);
