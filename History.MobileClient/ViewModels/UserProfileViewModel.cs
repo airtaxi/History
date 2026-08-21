@@ -241,6 +241,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
     {
         if (_fetchSemaphore.CurrentCount == 0) return;
         else if (_areThereNoMorePostsToLoad) return;
+        else if (!_isInForeground) return;
 
         try
         {
