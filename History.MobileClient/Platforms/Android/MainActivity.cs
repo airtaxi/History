@@ -75,7 +75,6 @@ public class MainActivity : MauiAppCompatActivity
 
         ScheduleJob();
         ScheduleKakaoStoryNotificationJob();
-        RestartKakaoStoryRealtimeNotificationServiceIfEnabled();
         CheckNotificationPermission();
         CreateNotificationChannelIfNeeded();
         HandleIntent(Intent);
@@ -358,16 +357,6 @@ public class MainActivity : MauiAppCompatActivity
         {
             Log.Error(TAG, $"Kakao Story notification job scheduling failed: {exception.Message}\n{exception.StackTrace}");
         }
-    }
-    /// <summary>
-    /// Restarts the realtime notification foreground service when the setting
-    /// is enabled. This re-arms the service after the Android 15 dataSync
-    /// 6-hour timeout stopped it, and after a process restart.
-    /// </summary>
-    private void RestartKakaoStoryRealtimeNotificationServiceIfEnabled()
-    {
-        if (string.IsNullOrEmpty(History.Commons.Configuration.GetValue<string>("AccessToken"))) return;
-        KakaoStoryRealtimeNotificationManager.StartIfEnabled();
     }
 
 #pragma warning disable CA1422, CA1416

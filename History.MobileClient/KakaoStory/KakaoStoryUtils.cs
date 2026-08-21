@@ -1,5 +1,7 @@
 ﻿using History.Commons;
+using History.Commons.Api.KakaoStory;
 using History.Commons.DataTypes.Contents;
+using History.Commons.DataTypes.RequestDtos;
 using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.Pages;
@@ -39,6 +41,41 @@ public static class KakaoStoryUtils
     private static bool s_isRelogging;
 
     /// <summary>
+    /// Uploads the current Kakao Story KAuth id token to the server so the
+    /// server-side polling service can deliver Kakao Story notifications via FCM.
+    /// The notification filter flags mirror the settings page. Skipped when the
+    /// master notification toggle is off (the server session is deleted instead).
+    /// Failures are swallowed: polling is a best-effort convenience feature.
+    /// </summary>
+    public static async Task UploadTokenToServerAsync()
+    {
+        try
+        {
+            if ((Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true) == false) return;
+            var idToken = await KakaoStoryApiHandler.EnsureKAuthTokenAsync();
+            if (idToken == null) return;
+
+            var requestDto = new UpdateKakaoStoryTokenRequestDto
+            {
+                IdToken = idToken,
+                IsFavoriteFriendNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryFavoriteFriendNotificationEnabled") ?? true,
+                IsEmotionNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryEmotionNotificationEnabled") ?? true
+            };
+            await Shared.ApiHandler.TryExecuteRequestAsync(new UpdateKakaoStoryToken(requestDto));
+        }
+        catch { }
+    }
+
+    /// <summary>
+    /// Removes the user's Kakao Story session from the server polling service.
+    /// </summary>
+    public static async Task DeleteTokenFromServerAsync()
+    {
+        try { await Shared.ApiHandler.TryExecuteRequestAsync(new DeleteKakaoStoryToken()); }
+        catch { }
+    }
+
+    /// <summary>
     /// Relogin entry point used by KakaoStoryApiHandler when a request returns 401.
     /// Presents the login modal (or auto-fill) and updates the stored cookies.
     /// Returns true when a valid session is available afterwards.
@@ -57,8 +94,8 @@ public static class KakaoStoryUtils
             {
                 // Refresh the cached user id after relogin so post action sheets stay accurate.
                 await SaveCurrentUserAsync();
-                // Allow the background 401 flow to notify about the next expired session.
-                KakaoStoryNotificationPoller.ResetSessionExpiredNotification();
+                // Re-register the server session with the fresh token.
+                await UploadTokenToServerAsync();
             }
             return success;
         }
@@ -79,11 +116,7 @@ public static class KakaoStoryUtils
                 Shared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
                 await SaveCurrentUserAsync();
                 _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
-#if ANDROID
-                // A valid Kakao Story session is available; arm the realtime
-                // notification service (no-op when already running).
-                KakaoStoryRealtimeNotificationManager.StartIfEnabled();
-#endif
+                await UploadTokenToServerAsync();
                 return true;
             }
             catch { }
@@ -118,12 +151,7 @@ public static class KakaoStoryUtils
 
         await SaveCurrentUserAsync();
         _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
-        KakaoStoryNotificationPoller.ResetSessionExpiredNotification();
-#if ANDROID
-        // The Kakao Story login just succeeded; arm the realtime notification
-        // service (no-op when already running).
-        KakaoStoryRealtimeNotificationManager.StartIfEnabled();
-#endif
+        await UploadTokenToServerAsync();
         return true;
     }
 

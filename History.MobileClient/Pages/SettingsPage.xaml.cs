@@ -71,9 +71,6 @@ public partial class SettingsPage : ContentPage
         var isKakaoStoryMailNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryMailNotificationEnabled") ?? true;
         KakaoStoryMailNotificationLabel.Text = isKakaoStoryMailNotificationEnabled ? OnText : OffText;
 
-        var isKakaoStorySessionExpiredNotificationEnabled = Configuration.GetValue<bool?>("KakaoStorySessionExpiredNotificationEnabled") ?? true;
-        KakaoStorySessionExpiredNotificationLabel.Text = isKakaoStorySessionExpiredNotificationEnabled ? OnText : OffText;
-
         var isKakaoStoryNotificationBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryNotificationBadgeEnabled") ?? true;
         KakaoStoryNotificationBadgeLabel.Text = isKakaoStoryNotificationBadgeEnabled ? OnText : OffText;
 
@@ -83,26 +80,14 @@ public partial class SettingsPage : ContentPage
         var isKakaoStoryFriendRequestBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryFriendRequestBadgeEnabled") ?? true;
         KakaoStoryFriendRequestBadgeLabel.Text = isKakaoStoryFriendRequestBadgeEnabled ? OnText : OffText;
 
-        KakaoStoryForegroundPollIntervalLabel.Text = FormatPollInterval(Configuration.GetValue<double?>(KakaoStoryNotificationPoller.ForegroundPollIntervalSecondsKey) ?? 5.0);
-
-#if ANDROID
-        KakaoStoryRealtimeScreenOnPollIntervalLabel.Text = FormatPollInterval(Configuration.GetValue<double?>(KakaoStoryRealtimeNotificationService.ScreenOnPollIntervalSecondsKey) ?? 40.0);
-        KakaoStoryRealtimeScreenOffPollIntervalLabel.Text = FormatPollInterval(Configuration.GetValue<double?>(KakaoStoryRealtimeNotificationService.ScreenOffPollIntervalSecondsKey) ?? 300.0);
-#endif
-
 #if ANDROID
         // Virtualization toggle (default: off for smoother scroll with less View recreation)
         var isTimelineVirtualizationEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
         TimelineVirtualizationLabel.Text = isTimelineVirtualizationEnabled ? OnText : OffText;
-
-        // Realtime Kakao Story notification foreground service (default: off)
-        KakaoStoryRealtimeNotificationLabel.Text = KakaoStoryRealtimeNotificationManager.IsEnabled ? OnText : OffText;
 #endif
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
     }
-
-    private static string FormatPollInterval(double seconds) => seconds < 60 ? $"{seconds:0}초" : $"{seconds / 60:0}분";
 
     private static void CleanupSharedVariables()
     {
@@ -124,12 +109,6 @@ public partial class SettingsPage : ContentPage
 
         // Pause the foreground pollers so the counts stay reset until login.
         TabBarBadgePoller.Pause();
-        KakaoStoryNotificationPoller.Pause();
-#if ANDROID
-        // The realtime notification service polls Kakao Story, which is
-        // meaningless while logged out.
-        KakaoStoryRealtimeNotificationManager.Stop();
-#endif
     }
 
     private async Task SetupPushNotificationPermission(PushNotificationType type)
@@ -192,6 +171,8 @@ public partial class SettingsPage : ContentPage
         var result = await DisplayAlertAsync("안내", "정말로 로그아웃을 하시겠습니까?", "네", "아니오");
         if (!result) return;
 
+        await KakaoStoryUtils.DeleteTokenFromServerAsync();
+
         CleanupSharedVariables();
 
         App.Page = new LoginPage();
@@ -211,6 +192,8 @@ public partial class SettingsPage : ContentPage
         var response = await App.ExecuteRequestAsync(new Withdraw());
         if (response.IsSuccess)
         {
+            await KakaoStoryUtils.DeleteTokenFromServerAsync();
+
             CleanupSharedVariables();
 
             await DisplayAlertAsync("안내", "회원 탈퇴가 완료되었습니다. 이용해 주셔서 감사합니다.", "확인");
@@ -360,6 +343,7 @@ public partial class SettingsPage : ContentPage
         Configuration.SetValue("KakaoStoryEmail", null);
         Configuration.SetValue("KakaoStoryPassword", null);
         KakaoStoryApiHandler.ClearSdkTokens();
+        await KakaoStoryUtils.DeleteTokenFromServerAsync();
         await DisplayAlertAsync("안내", "카카오스토리 로그인 정보가 초기화되었습니다.", Constants.PromptOk);
     }
 
@@ -382,93 +366,10 @@ public partial class SettingsPage : ContentPage
         Configuration.SetValue("KakaoStoryNotificationEnabled", isEnabled);
         KakaoStoryNotificationLabel.Text = isEnabled ? OnText : OffText;
 
-        // Start/stop the foreground polling loop so a disabled setting costs no battery.
-        if (isEnabled)
-        {
-            KakaoStoryNotificationPoller.StartForegroundPolling();
-#if IOS
-            // Re-arm the background refresh so a disable/re-enable cycle without
-            // a background transition (the window Stopped event) still polls.
-            KakaoStoryBackgroundRefresh.ScheduleNext();
-#endif
-        }
-        else KakaoStoryNotificationPoller.StopForegroundPolling();
-    }
-
-#if ANDROID
-    private async void OnKakaoStoryRealtimeNotificationGridTapped(object sender, TappedEventArgs e)
-    {
-        var action = await DisplayActionSheetAsync("실시간 카카오스토리 알림", Constants.PromptCancel, null, OnText, OffText);
-        if (action == null || action == Constants.PromptCancel) return;
-
-        var isEnabled = action == OnText;
-        if (isEnabled)
-        {
-            // The ongoing notification is required to keep the service alive;
-            // confirm it before enabling so the user is not surprised.
-            var confirmed = await DisplayAlertAsync("안내", "실시간 알림을 사용하면 알림 표시줄에 상시 알림이 표시됩니다. 계속하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
-            if (!confirmed) return;
-        }
-
-        Configuration.SetValue(KakaoStoryRealtimeNotificationManager.EnabledKey, isEnabled);
-        KakaoStoryRealtimeNotificationLabel.Text = isEnabled ? OnText : OffText;
-
-        if (isEnabled) KakaoStoryRealtimeNotificationManager.StartIfEnabled();
-        else KakaoStoryRealtimeNotificationManager.Stop();
-    }
-#else
-    private void OnKakaoStoryRealtimeNotificationGridTapped(object sender, TappedEventArgs e) { }
-#endif
-
-    private async void OnKakaoStoryForegroundPollIntervalGridTapped(object sender, TappedEventArgs e)
-    {
-        var options = new[] { "1초", "3초", "5초", "10초", "20초", "30초", "40초", "1분" };
-        var action = await DisplayActionSheetAsync("앱 사용중 폴링 주기", Constants.PromptCancel, null, options);
-        if (action == null || action == Constants.PromptCancel) return;
-
-        var seconds = ParsePollInterval(action);
-        Configuration.SetValue(KakaoStoryNotificationPoller.ForegroundPollIntervalSecondsKey, seconds);
-        KakaoStoryForegroundPollIntervalLabel.Text = action;
-
-        // Restart the loop so the new interval applies immediately; the loop
-        // re-evaluates the period every cycle, but a restart also covers the
-        // case where the loop is not running yet.
-        if (KakaoStoryNotificationPoller.IsForegroundPollingRunning)
-        {
-            KakaoStoryNotificationPoller.StopForegroundPolling();
-            KakaoStoryNotificationPoller.StartForegroundPolling();
-        }
-    }
-
-#if ANDROID
-    private async void OnKakaoStoryRealtimeScreenOnPollIntervalGridTapped(object sender, TappedEventArgs e)
-    {
-        var options = new[] { "5초", "10초", "20초", "30초", "40초", "1분", "2분", "5분" };
-        var action = await DisplayActionSheetAsync("실시간 알림 (화면 켜짐) 폴링 주기", Constants.PromptCancel, null, options);
-        if (action == null || action == Constants.PromptCancel) return;
-
-        Configuration.SetValue(KakaoStoryRealtimeNotificationService.ScreenOnPollIntervalSecondsKey, ParsePollInterval(action));
-        KakaoStoryRealtimeScreenOnPollIntervalLabel.Text = action;
-    }
-
-    private async void OnKakaoStoryRealtimeScreenOffPollIntervalGridTapped(object sender, TappedEventArgs e)
-    {
-        var options = new[] { "1분", "2분", "3분", "5분", "10분" };
-        var action = await DisplayActionSheetAsync("실시간 알림 (화면 꺼짐) 폴링 주기", Constants.PromptCancel, null, options);
-        if (action == null || action == Constants.PromptCancel) return;
-
-        Configuration.SetValue(KakaoStoryRealtimeNotificationService.ScreenOffPollIntervalSecondsKey, ParsePollInterval(action));
-        KakaoStoryRealtimeScreenOffPollIntervalLabel.Text = action;
-    }
-#else
-    private void OnKakaoStoryRealtimeScreenOnPollIntervalGridTapped(object sender, TappedEventArgs e) { }
-    private void OnKakaoStoryRealtimeScreenOffPollIntervalGridTapped(object sender, TappedEventArgs e) { }
-#endif
-
-    private static double ParsePollInterval(string text)
-    {
-        var value = double.Parse(text[..^1]);
-        return text.EndsWith("분") ? value * 60 : value;
+        // The master toggle controls the server session: off deletes it, on
+        // (re-)registers it with the current token and filter flags.
+        if (isEnabled) await KakaoStoryUtils.UploadTokenToServerAsync();
+        else await KakaoStoryUtils.DeleteTokenFromServerAsync();
     }
 
     private async void OnKakaoStoryFavoriteFriendNotificationGridTapped(object sender, TappedEventArgs e)
@@ -479,6 +380,9 @@ public partial class SettingsPage : ContentPage
         var isEnabled = action == OnText;
         Configuration.SetValue("KakaoStoryFavoriteFriendNotificationEnabled", isEnabled);
         KakaoStoryFavoriteFriendNotificationLabel.Text = isEnabled ? OnText : OffText;
+
+        // Re-upload so the server applies the new filter flag.
+        await KakaoStoryUtils.UploadTokenToServerAsync();
     }
 
     private async void OnKakaoStoryEmotionNotificationGridTapped(object sender, TappedEventArgs e)
@@ -489,6 +393,9 @@ public partial class SettingsPage : ContentPage
         var isEnabled = action == OnText;
         Configuration.SetValue("KakaoStoryEmotionNotificationEnabled", isEnabled);
         KakaoStoryEmotionNotificationLabel.Text = isEnabled ? OnText : OffText;
+
+        // Re-upload so the server applies the new filter flag.
+        await KakaoStoryUtils.UploadTokenToServerAsync();
     }
 
     private async void OnKakaoStoryMailNotificationGridTapped(object sender, TappedEventArgs e)
@@ -499,16 +406,6 @@ public partial class SettingsPage : ContentPage
         var isEnabled = action == OnText;
         Configuration.SetValue("KakaoStoryMailNotificationEnabled", isEnabled);
         KakaoStoryMailNotificationLabel.Text = isEnabled ? OnText : OffText;
-    }
-
-    private async void OnKakaoStorySessionExpiredNotificationGridTapped(object sender, TappedEventArgs e)
-    {
-        var action = await DisplayActionSheetAsync("카카오스토리 로그인 만료 푸시 알림", Constants.PromptCancel, null, OnText, OffText);
-        if (action == null || action == Constants.PromptCancel) return;
-
-        var isEnabled = action == OnText;
-        Configuration.SetValue("KakaoStorySessionExpiredNotificationEnabled", isEnabled);
-        KakaoStorySessionExpiredNotificationLabel.Text = isEnabled ? OnText : OffText;
     }
 
     private async void OnKakaoStoryNotificationBadgeGridTapped(object sender, TappedEventArgs e)

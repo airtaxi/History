@@ -48,11 +48,9 @@ public partial class LoginPage : ContentPage
             App.Page = new AppShell();
 #endif
 
-            // Resume the foreground pollers paused on logout; the Kakao Story
-            // poller respects its notification setting. The badge cache reset
-            // re-applies the badge now that the Shell exists.
+            // Resume the foreground pollers paused on logout. The badge cache
+            // reset re-applies the badge now that the Shell exists.
             TabBarBadgePoller.TryStart();
-            KakaoStoryNotificationPoller.TryStart();
             Shared.ResetTabBadgeCache();
 
             App.Page.Dispatcher.Dispatch(async () =>

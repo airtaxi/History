@@ -19,5 +19,6 @@ public enum NotificationType
     Report,
     Message,
     InviteCodeRequest,
-    InviteCodeRequestResult
+    InviteCodeRequestResult,
+    KakaoStory
 }

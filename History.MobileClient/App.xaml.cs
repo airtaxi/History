@@ -267,10 +267,6 @@ public partial class App : Application
         IsForeground = true;
         MainWindow.Resumed += OnWindowResumed;
         MainWindow.Stopped += OnWindowStopped;
-
-        // Default to enabled when the setting was never touched, matching the
-        // SettingsPage label fallback (?? true).
-        if (Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true) KakaoStoryNotificationPoller.StartForegroundPolling();
         TabBarBadgePoller.StartForegroundPolling();
 #endif
         return MainWindow;
@@ -281,14 +277,7 @@ public partial class App : Application
     {
         IsForeground = true;
         WeakReferenceMessenger.Default.Send(new BlazorWebViewHibernationMessage(false));
-
-        // Foreground polling: 1 request per configurable interval (default
-        // 5 seconds) against the Kakao Story notification list while the app is
-        // visible. The user can disable it from the settings page; the
-        // background refresh respects the same setting.
         TabBarBadgePoller.StartForegroundPolling();
-        if ((Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true) == false) return;
-        KakaoStoryNotificationPoller.StartForegroundPolling();
     }
 
     private void OnWindowStopped(object sender, EventArgs e)
@@ -298,7 +287,6 @@ public partial class App : Application
 
         // The 15-minute Android JobService / the iOS background refresh task
         // takes over while the app is in the background.
-        KakaoStoryNotificationPoller.StopForegroundPolling();
         TabBarBadgePoller.StopForegroundPolling();
 #if IOS
         KakaoStoryBackgroundRefresh.ScheduleNext();
@@ -481,6 +469,11 @@ public partial class App : Application
         }
         else if (type == NotificationType.InviteCodeRequest) await PushAsync(new InviteCodeRequestsPage());
         else if (type == NotificationType.InviteCodeRequestResult) await PushAsync(new InviteCodesPage());
+        else if (type == NotificationType.KakaoStory)
+        {
+            if (!data.TryGetValue("Scheme", out var scheme)) return;
+            await HandleKakaoStoryNotificationAsync(scheme);
+        }
         else
         {
             if (!data.TryGetValue("PostId", out var postId)) return;
