@@ -89,8 +89,8 @@ public partial class FullScreenMediaViewerPage : ContentPage
             var action = await DisplayActionSheetAsync("다운로드 옵션", Constants.PromptCancel, null, downloadAll, downloadImagesOnly, downloadVideosOnly);
             if (action == null || action == Constants.PromptCancel) return;
 
-            if (action == downloadImagesOnly) targets = allMedias.Where(x => x is ImageViewModel).ToList();
-            else if (action == downloadVideosOnly) targets = allMedias.Where(x => x is VideoViewModel).ToList();
+            if (action == downloadImagesOnly) targets = [.. allMedias.Where(x => x is ImageViewModel)];
+            else if (action == downloadVideosOnly) targets = [.. allMedias.Where(x => x is VideoViewModel)];
             else targets = [.. allMedias];
         }
         else targets = [.. allMedias];
@@ -100,23 +100,27 @@ public partial class FullScreenMediaViewerPage : ContentPage
 
         var failedCount = 0;
         var tempPath = Path.GetTempPath();
+        var downloadItems = targets.Select(media =>
+        {
+            var isImage = media is ImageViewModel;
+            var fileName = isImage ? $"{media.Uri.GetHashCode()}.webp" : $"{media.Uri.GetHashCode()}.mp4";
+            return (Media: media, IsImage: isImage, FilePath: Path.Combine(tempPath, fileName));
+        }).ToList();
+
         try
         {
-            foreach (var media in targets)
-            {
-                var isImage = media is ImageViewModel;
-                var fileName = isImage ? $"{media.Uri.GetHashCode()}.webp" : $"{media.Uri.GetHashCode()}.mp4";
-                var filePath = Path.Combine(tempPath, fileName);
+            await ParallelDownloader.DownloadFilesAsync(downloadItems.Select(item => (item.Media.Uri, item.FilePath)));
 
-                try
-                {
-                    await Downloader.DownloadFileAsync(media.Uri, filePath);
-                    await MediaGallery.SaveAsync(isImage ? MediaFileType.Image : MediaFileType.Video, filePath);
-                }
+            foreach (var (media, isImage, filePath) in downloadItems.AsEnumerable().Reverse())
+            {
+                try { await MediaGallery.SaveAsync(isImage ? MediaFileType.Image : MediaFileType.Video, filePath); }
                 catch { failedCount++; }
                 finally
                 {
-                    if (File.Exists(filePath)) File.Delete(filePath);
+                    if (File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                    }
                 }
             }
         }
