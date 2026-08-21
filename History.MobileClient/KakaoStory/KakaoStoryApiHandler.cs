@@ -1528,6 +1528,37 @@ public partial class KakaoStoryApiHandler
     }
 
     /// <summary>
+    /// Exchanges a browser cookie session (the raw Cookie header captured from
+    /// story.kakao.com, e.g. from a curl request) for SDK tokens by replaying
+    /// the web client's OAuth flow: the kauth authorize endpoint issues an
+    /// authorization code for the signed-in session, which is then exchanged
+    /// at the token endpoint for an id_token (KAuth). Returns the new token,
+    /// or null when the cookie session is not authenticated.
+    /// </summary>
+    public static async Task<SdkToken> SetSdkTokensFromCookiesAsync(string cookieHeader)
+    {
+        if (string.IsNullOrEmpty(cookieHeader)) return null;
+
+        using var httpClient = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false });
+        httpClient.DefaultRequestHeaders.Add("Cookie", cookieHeader);
+
+        var state = Guid.NewGuid().ToString("N");
+        var authorizeUrl = $"{OAuthAuthorizeUrl}?client_id={OAuthClientId}&redirect_uri={Uri.EscapeDataString(OAuthRedirectUri)}&response_type=code&state={state}";
+
+        using var authorizeResponse = await httpClient.GetAsync(authorizeUrl).ConfigureAwait(false);
+        if (authorizeResponse.StatusCode != HttpStatusCode.Redirect) return null;
+
+        var location = authorizeResponse.Headers.Location?.ToString();
+        if (string.IsNullOrEmpty(location)) return null;
+
+        var query = location.Contains('?') ? location.Substring(location.IndexOf('?') + 1) : null;
+        var code = query?.Split('&').FirstOrDefault(parameter => parameter.StartsWith("code="))?.Substring("code=".Length);
+        if (string.IsNullOrEmpty(code)) return null;
+
+        return await RefreshSdkTokenAsync(authorizationCode: code).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Ensures the in-memory KAuth id token is loaded from Configuration and not
     /// about to expire. A token within the safety margin is refreshed silently via
     /// the refresh_token grant; a missing/expired refresh token returns null.
