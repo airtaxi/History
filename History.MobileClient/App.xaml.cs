@@ -369,6 +369,14 @@ public partial class App : Application
                     var profileId = scheme.Replace("kakaostory://profiles/", "");
                     if (string.IsNullOrEmpty(profileId)) return;
 
+                    // "myfollowers" is a Kakao Story deep link to the my-followers page,
+                    // which is not implemented in this app yet.
+                    if (profileId == "myfollowers")
+                    {
+                        await Page.DisplayAlertAsync("안내", "소식받는 친구 목록 조회는 아직 지원하지 않습니다.", Constants.PromptOk);
+                        return;
+                    }
+
                     await PushAsync(new Pages.BlazorUserPage(profileId, true));
                 }
             }
