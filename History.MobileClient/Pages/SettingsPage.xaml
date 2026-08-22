@@ -455,6 +455,32 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnOnlyMePostContinuationPromptGridTapped" />
+                    </Grid.GestureRecognizers>
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="나만 보기 연속 작성 안내"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="OnlyMePostContinuationPromptLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
                 <Grid
                     Padding="14,0,14,0"
                     Background="{AppThemeBinding Dark={StaticResource CategoryDarkBackground},

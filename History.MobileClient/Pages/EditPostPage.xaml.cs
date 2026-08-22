@@ -517,6 +517,20 @@ public partial class EditPostPage : ContentPage
         IsEnabled = false;
         try
         {
+            // Name-only posts are usually written once; prompt when the most
+            // recent post is private and the current selection is private too.
+            var isOnlyMePostContinuationPromptEnabled = Configuration.GetValue<bool?>("OnlyMePostContinuationPromptEnabled") ?? true;
+            if (_post == null && !_isHistoryShare && isOnlyMePostContinuationPromptEnabled && (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex == DiscoveryOption.OnlyMe)
+            {
+                var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(Shared.UserId, null, 1));
+                if (postsResult.IsSuccess && postsResult.Value is { Count: > 0 } && postsResult.Value[0].DiscoveryOption == DiscoveryOption.OnlyMe)
+                {
+                    // This guide can be turned off in 프로필 -> 설정.
+                    var proceed = await DisplayAlertAsync("안내", "마지막으로 작성한 게시글이 나만 보기로 설정되어 있습니다. 이 글도 나만 보기로 작성하시겠습니까?\n\n이 알림은 프로필 → 설정에서 끌 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
+                    if (!proceed) return;
+                }
+            }
+
             if (_reservationTime.HasValue)
             {
                 var proceed = await DisplayAlertAsync("안내", "예약 시간을 설정하셨습니다. 예약 게시글은 예약 시간이 지나야 게시되며, 게시가 되기 전 까지는 게시글을 수정할 수 없습니다. 예약 게시글을 작성하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);

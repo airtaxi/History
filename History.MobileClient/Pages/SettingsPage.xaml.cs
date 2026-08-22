@@ -80,6 +80,9 @@ public partial class SettingsPage : ContentPage
         var isKakaoStoryFriendRequestBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryFriendRequestBadgeEnabled") ?? true;
         KakaoStoryFriendRequestBadgeLabel.Text = isKakaoStoryFriendRequestBadgeEnabled ? OnText : OffText;
 
+        var isOnlyMePostContinuationPromptEnabled = Configuration.GetValue<bool?>("OnlyMePostContinuationPromptEnabled") ?? true;
+        OnlyMePostContinuationPromptLabel.Text = isOnlyMePostContinuationPromptEnabled ? OnText : OffText;
+
 #if ANDROID
         // Virtualization toggle (default: off for smoother scroll with less View recreation)
         var isTimelineVirtualizationEnabled = Configuration.GetValue<bool?>("TimelineVirtualizationEnabled") ?? false;
@@ -451,6 +454,16 @@ public partial class SettingsPage : ContentPage
     }
 
     private async void OnCheckForUpdateGridTapped(object sender, TappedEventArgs e) => await Utils.CheckForUpdateAsync();
+
+    private async void OnOnlyMePostContinuationPromptGridTapped(object sender, TappedEventArgs e)
+    {
+        var action = await DisplayActionSheetAsync("나만 보기 연속 작성 안내", Constants.PromptCancel, null, OnText, OffText);
+        if (action == null || action == Constants.PromptCancel) return;
+
+        var isEnabled = action == OnText;
+        Configuration.SetValue("OnlyMePostContinuationPromptEnabled", isEnabled);
+        OnlyMePostContinuationPromptLabel.Text = isEnabled ? OnText : OffText;
+    }
 
     private async void OnCommentPushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.Comment);
     private async void OnCommentMentionPushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.CommentMention);
