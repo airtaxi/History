@@ -474,7 +474,7 @@ public static class KakaoStoryUtils
     }
 
     /// <summary>
-    /// Converts Kakao Story QuoteData decorators (text/hashtag/profile/emoticon)
+    /// Converts Kakao Story QuoteData decorators (text/hashtag/profile/emoticon/image)
     /// into BaseContent so shared rendering/edit surfaces (e.g. PostImageRendererHelper)
     /// can consume Kakao Story posts. The emoticon is preserved as a "(이모티콘)"
     /// placeholder text token so editing keeps it instead of dropping it entirely;
@@ -485,6 +485,7 @@ public static class KakaoStoryUtils
     public static List<BaseContent> ConvertToBaseContents(List<QuoteData> quoteDatas, bool preserveEmoticon = false)
     {
         var contents = new List<BaseContent>();
+        var mediaContents = new List<BaseContent>();
         foreach (var data in quoteDatas)
         {
             switch (data.type)
@@ -498,6 +499,13 @@ public static class KakaoStoryUtils
                 case "profile":
                     contents.Add(new ProfileContent { UserId = data.id, Nickname = data.text });
                     break;
+                case "image":
+                    // Appended after all text fragments to mirror the UI layout
+                    // (FormattedText first, media carousel last).
+                    var mediaUrl = data.media?.url ?? data.media?.thumbnail_url;
+                    if (mediaUrl != null) mediaContents.Add(new MediaContent { MediaId = mediaUrl, MimeType = "image/jpeg" });
+                    else mediaContents.Add(new TextContent { Text = "(이미지)" });
+                    break;
                 case "emoticon":
                     if (preserveEmoticon)
                     {
@@ -509,6 +517,7 @@ public static class KakaoStoryUtils
                     break;
             }
         }
+        contents.AddRange(mediaContents);
         return contents;
     }
 

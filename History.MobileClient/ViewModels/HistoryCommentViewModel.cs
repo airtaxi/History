@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.Api.Comment;
 using History.Commons.Api.Moderation;
 using History.Commons.Api.Report;
+using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
@@ -73,6 +74,8 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel
         catch (ObjectDisposedException) { } // The view is disposed. this view model also will be removed on next GC
         catch (Exception) { } // Ignore any exceptions during update, as the view might be in the foreground.
     }
+
+    public override List<BaseContent> GetRenderRawContents() => Comment.Contents;
 
     public override async Task HandleMore()
     {

@@ -313,8 +313,17 @@ public partial class KakaoPostViewModel : BasePostViewModel
         else if (action == "게시글 이미지로 저장")
         {
             var confirm = await App.Page.DisplayAlertAsync("게시글 이미지로 저장", "이 게시글을 이미지로 저장하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
-            if (confirm) await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), this);
+            if (!confirm) return;
+
+            var includeComments = await ConfirmIncludeCommentsAsync();
+            await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), this, includeComments ? Comments : null);
         }
+    }
+
+    private async Task<bool> ConfirmIncludeCommentsAsync()
+    {
+        if (Comments.Count == 0) return false;
+        return await App.Page.DisplayAlertAsync("게시글 이미지로 저장", $"댓글 {Comments.Count}개를 포함해서 저장하시겠습니까?", "포함", "미포함");
     }
 
     // Converts the Kakao post into BaseContent for image export: text decorators

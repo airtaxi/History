@@ -38,6 +38,13 @@ public static class PostImageRendererHelper
     private const float HeaderProfileSize = 144f;
     private const float HeaderColumnSpacing = 24f;
 
+    // Comment layout (CommentTemplate 3x: 32dp profile, ColumnSpacing 8, name, 12dp timestamp)
+    private const float CommentProfileSize = 96f;
+    private const float CommentColumnSpacing = 24f;
+    private const float CommentMediaMaxWidth = 600f;
+    private const float CommentRowSpacing = 12f;
+    private const float CommentSeparatorHeight = 3f;
+
     private static readonly SKColor PrimaryColor = new(0xED, 0x66, 0x4D);
     private static readonly SKColor TextColor = new(0x24, 0x24, 0x24);
     private static readonly SKColor SecondaryTextColor = new(0x80, 0x80, 0x80);
@@ -69,12 +76,14 @@ public static class PostImageRendererHelper
     /// Optional header (profile image, nickname, timestamp) is drawn above the contents;
     /// header values are derived from the shared post view model surface, and the
     /// timestamp is always absolute (relative timestamps are meaningless in exported images).
+    /// Optional comments are drawn below the contents under a thin separator, with the
+    /// same absolute timestamp rule; contents are built from the comment view model surface.
     /// </summary>
-    public static async Task<byte[]> RenderAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null)
+    public static async Task<byte[]> RenderAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null, IEnumerable<BaseCommentViewModel> comments = null)
     {
         var contentList = contents?.ToList() ?? [];
         var hasHeader = post != null;
-        if (contentList.Count == 0 && !hasHeader) return null;
+        if (contentList.Count == 0 && !hasHeader && comments == null) return null;
 
         var (regularTypeface, boldTypeface) = await GetTypefacesAsync();
 
@@ -92,12 +101,14 @@ public static class PostImageRendererHelper
         var metrics = bodyFont.Metrics;
         var lineHeight = (metrics.Descent - metrics.Ascent) * 1.2f;
 
-        var blocks = await BuildBlocksAsync(contentList, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight);
+        var contentWidth = CanvasWidth - Padding * 2;
+        var blocks = await BuildBlocksAsync(contentList, contentWidth, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight);
         if (hasHeader)
         {
             var headerBlock = await BuildHeaderBlockAsync(post.ProfileMedia?.Uri, post.Nickname, BuildFullTimestampText(post.CreatedAt, post.ModifiedAt), bodyFont, titleFont, textPaint, secondaryPaint);
             if (headerBlock != null) blocks.Insert(0, headerBlock);
         }
+        if (comments != null) blocks.AddRange(await BuildCommentBlocksAsync(comments, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight));
         if (blocks.Count == 0) return null;
 
         var totalHeight = (int)Math.Ceiling(Padding * 2 + blocks.Sum(x => x.Height) + ContentSpacing * Math.Max(0, blocks.Count - 1));
@@ -121,17 +132,17 @@ public static class PostImageRendererHelper
     /// <summary>
     /// Renders the post contents with a header derived from the shared post view model
     /// surface (profile media URI, nickname, absolute timestamp) and saves the resulting
-    /// PNG to the device gallery. Mirrors the save flow of FullScreenMediaViewerPage
-    /// (permission → temp file → gallery → cleanup) and surfaces the result through a
-    /// toast or an error alert.
+    /// PNG to the device gallery. Comments are appended below the contents when provided.
+    /// Mirrors the save flow of FullScreenMediaViewerPage (permission → temp file →
+    /// gallery → cleanup) and surfaces the result through a toast or an error alert.
     /// </summary>
-    public static async Task SaveAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null)
+    public static async Task SaveAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null, IEnumerable<BaseCommentViewModel> comments = null)
     {
         var status = await Permissions.RequestAsync<SaveMediaPermission>();
         if (status != PermissionStatus.Granted) return;
 
         byte[] bytes;
-        try { bytes = await RenderAsync(contents, post); }
+        try { bytes = await RenderAsync(contents, post, comments); }
         catch
         {
             await App.TopPage.DisplayAlertAsync("오류", "게시글 이미지 생성 중 오류가 발생하였습니다.", Constants.PromptOk);
@@ -163,10 +174,9 @@ public static class PostImageRendererHelper
         }
     }
 
-    private static async Task<List<RenderBlock>> BuildBlocksAsync(List<BaseContent> contents, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight)
+    private static async Task<List<RenderBlock>> BuildBlocksAsync(List<BaseContent> contents, float contentWidth, float maxMediaWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight)
     {
         var blocks = new List<RenderBlock>();
-        var contentWidth = CanvasWidth - Padding * 2;
         var textRuns = new List<TextRun>();
 
         void FlushText()
@@ -212,7 +222,7 @@ public static class PostImageRendererHelper
                 }
                 else if (content is MediaContent mediaContent)
                 {
-                    var block = await BuildMediaBlockAsync(mediaContent, contentWidth, boldFont, whitePaint, fillPaint, lineHeight);
+                    var block = await BuildMediaBlockAsync(mediaContent, contentWidth, maxMediaWidth, boldFont, whitePaint, fillPaint, lineHeight);
                     if (block != null) blocks.Add(block);
                 }
                 else if (content is PollContent pollContent)
@@ -234,23 +244,11 @@ public static class PostImageRendererHelper
     private static async Task<RenderBlock> BuildHeaderBlockAsync(string profileImageUrl, string nickname, string timestampText, SKFont bodyFont, SKFont nameFont, SKPaint textPaint, SKPaint secondaryPaint)
     {
         var hasProfile = profileImageUrl != null;
+        var image = hasProfile ? await DownloadProfileImageOrDefaultAsync(profileImageUrl) : null;
+        if (image == null) hasProfile = false;
+
         var hasName = !string.IsNullOrEmpty(nickname);
         var hasTimestamp = !string.IsNullOrEmpty(timestampText);
-
-        var image = hasProfile ? await DownloadImageAsync(profileImageUrl) : null;
-        if (image == null && hasProfile)
-        {
-            // Fall back to the bundled default profile image
-            try
-            {
-                using var stream = await FileSystem.OpenAppPackageFileAsync(Constants.DefaultProfileImageFileName);
-                using var data = SKData.Create(stream);
-                image = SKImage.FromEncodedData(data);
-            }
-            catch { }
-            if (image == null) hasProfile = false;
-        }
-
         if (!hasProfile && !hasName && !hasTimestamp) return null;
 
         var maxTextWidth = CanvasWidth - Padding * 2 - HeaderProfileSize - HeaderColumnSpacing;
@@ -308,6 +306,105 @@ public static class PostImageRendererHelper
         });
     }
 
+    // Assembles a single comment block mirroring CommentTemplate: a circular profile
+    // avatar on the left and a text column on the right (bold nickname, contents via
+    // the shared block builders, absolute timestamp). Media inside a comment is capped
+    // at the comment UI width (200dp x 3) because the comment carousel limits it.
+    private static async Task<RenderBlock> BuildCommentBlockAsync(BaseCommentViewModel comment, float contentWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight)
+    {
+        var image = await DownloadProfileImageOrDefaultAsync(comment.ProfileMedia?.Uri);
+        var hasProfile = image != null;
+
+        var columnWidth = contentWidth - CommentProfileSize - CommentColumnSpacing;
+        var innerBlocks = await BuildBlocksAsync(comment.GetRenderRawContents() ?? [], columnWidth, CommentMediaMaxWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight);
+        var innerHeight = innerBlocks.Count > 0 ? innerBlocks.Sum(block => block.Height) + ContentSpacing * (innerBlocks.Count - 1) : 0;
+
+        var nameLineHeight = boldFont.Metrics.Descent - boldFont.Metrics.Ascent;
+        var timestampLineHeight = smallFont.Metrics.Descent - smallFont.Metrics.Ascent;
+        var columnHeight = nameLineHeight + CommentRowSpacing + innerHeight + CommentRowSpacing + timestampLineHeight;
+        var height = Math.Max(CommentProfileSize, columnHeight);
+
+        return new RenderBlock(height, (canvas, x, y) =>
+        {
+            try
+            {
+                if (hasProfile)
+                {
+                    canvas.Save();
+                    var center = new SKPoint(x + CommentProfileSize / 2, y + CommentProfileSize / 2);
+                    var circleBuilder = new SKPathBuilder();
+                    circleBuilder.AddCircle(center.X, center.Y, CommentProfileSize / 2);
+                    canvas.ClipPath(circleBuilder.Detach());
+
+                    // Cover crop (AspectFill) so the full circle is filled
+                    var scale = Math.Max(CommentProfileSize / (float)image.Width, CommentProfileSize / (float)image.Height);
+                    var drawWidth = image.Width * scale;
+                    var drawHeight = image.Height * scale;
+                    var dest = new SKRect(center.X - drawWidth / 2, center.Y - drawHeight / 2, center.X + drawWidth / 2, center.Y + drawHeight / 2);
+                    canvas.DrawImage(image, dest, new SKSamplingOptions(SKFilterMode.Linear));
+                    canvas.Restore();
+                }
+
+                var textLeft = x + CommentProfileSize + CommentColumnSpacing;
+                var nickname = TruncateText(comment.Nickname, boldFont, columnWidth);
+                if (nickname != null) canvas.DrawText(nickname, textLeft, y - boldFont.Metrics.Ascent, SKTextAlign.Left, boldFont, textPaint);
+
+                var cursorY = y + nameLineHeight + CommentRowSpacing;
+                for (var index = 0; index < innerBlocks.Count; index++)
+                {
+                    innerBlocks[index].Draw(canvas, textLeft, cursorY);
+                    cursorY += innerBlocks[index].Height;
+                    if (index < innerBlocks.Count - 1) cursorY += ContentSpacing;
+                }
+
+                canvas.DrawText(BuildFullTimestampText(comment.CreatedAt, comment.ModifiedAt), textLeft, cursorY + CommentRowSpacing - smallFont.Metrics.Ascent, SKTextAlign.Left, smallFont, secondaryPaint);
+            }
+            finally { image?.Dispose(); }
+        });
+    }
+
+    // Assembles all comment blocks into a single list, inserting a thin light-gray
+    // separator before the section so the comment area is visually distinct from the
+    // post contents. Returns an empty list when there are no comments.
+    private static async Task<List<RenderBlock>> BuildCommentBlocksAsync(IEnumerable<BaseCommentViewModel> comments, float contentWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight)
+    {
+        var blocks = new List<RenderBlock>();
+        var commentList = comments?.ToList() ?? [];
+        if (commentList.Count == 0) return blocks;
+
+        blocks.Add(new RenderBlock(CommentSeparatorHeight, (canvas, x, y) =>
+        {
+            fillPaint.Color = ProgressTrackColor;
+            canvas.DrawRect(x, y, contentWidth, CommentSeparatorHeight, fillPaint);
+        }));
+
+        foreach (var comment in commentList)
+        {
+            var block = await BuildCommentBlockAsync(comment, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight);
+            if (block != null) blocks.Add(block);
+        }
+        return blocks;
+    }
+
+    // Downloads the profile image, falling back to the bundled default profile image
+    // when the URL is missing or the download fails.
+    private static async Task<SKImage> DownloadProfileImageOrDefaultAsync(string profileImageUrl)
+    {
+        if (profileImageUrl != null)
+        {
+            var image = await DownloadImageAsync(profileImageUrl);
+            if (image != null) return image;
+        }
+
+        try
+        {
+            using var stream = await FileSystem.OpenAppPackageFileAsync(Constants.DefaultProfileImageFileName);
+            using var data = SKData.Create(stream);
+            return SKImage.FromEncodedData(data);
+        }
+        catch { return null; }
+    }
+
     private static async Task<RenderBlock> BuildStickerBlockAsync(StickerContent stickerContent, SKPaint whitePaint)
     {
         var mediaId = stickerContent.StickerMediaId;
@@ -330,14 +427,14 @@ public static class PostImageRendererHelper
         });
     }
 
-    private static async Task<RenderBlock> BuildMediaBlockAsync(MediaContent mediaContent, float contentWidth, SKFont boldFont, SKPaint whitePaint, SKPaint fillPaint, float lineHeight)
+    private static async Task<RenderBlock> BuildMediaBlockAsync(MediaContent mediaContent, float contentWidth, float maxMediaWidth, SKFont boldFont, SKPaint whitePaint, SKPaint fillPaint, float lineHeight)
     {
         var isVideo = mediaContent.IsVideo;
         var mediaId = isVideo ? mediaContent.ThumbnailMediaId ?? mediaContent.MediaId : mediaContent.MediaId;
         var image = mediaId != null ? await DownloadImageAsync(Uri.IsWellFormedUriString(mediaId, UriKind.Absolute) ? mediaId : Utils.GenerateMediaUri(mediaId)) : null;
 
-        float drawWidth = contentWidth;
-        float drawHeight = contentWidth;
+        var drawWidth = Math.Min(contentWidth, maxMediaWidth);
+        var drawHeight = drawWidth;
         if (image != null)
         {
             var aspect = (float)image.Width / image.Height;
@@ -388,7 +485,7 @@ public static class PostImageRendererHelper
                     fillPaint.Color = OverlayColor;
                     canvas.DrawRect(barRect, fillPaint);
 
-                    var lines = WrapRuns([new TextRun(mediaContent.Description, boldFont, whitePaint)], contentWidth);
+                    var lines = WrapRuns([new TextRun(mediaContent.Description, boldFont, whitePaint)], drawWidth);
                     var baseline = barRect.MidY - (lines.Count - 1) * lineHeight / 2 - boldFont.Metrics.Ascent;
                     foreach (var line in lines.Take(2))
                     {

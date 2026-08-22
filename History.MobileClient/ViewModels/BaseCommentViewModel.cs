@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons;
+using History.Commons.DataTypes.Contents;
 using History.MobileClient.Enums;
 
 namespace History.MobileClient.ViewModels;
@@ -36,6 +37,11 @@ public partial class BaseCommentViewModel : ObservableObject
     public partial DateTime? ModifiedAt { get; protected set; }
     [ObservableProperty]
     public partial string TimestampText { get; protected set; }
+
+    // Raw render contents (BaseContent) for image export; the UI-level Contents
+    // are indexable-compatible only (IContentViewModel), so each platform provides
+    // its own raw backing data.
+    public virtual List<BaseContent> GetRenderRawContents() => throw new NotSupportedException("[BaseCommentViewModel] GetRenderRawContents must be overridden");
 
     public bool IsLongPressed { get; set; }
 

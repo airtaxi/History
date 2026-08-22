@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
+using History.Commons.DataTypes.Contents;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Enums;
@@ -109,6 +110,8 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
         // is available; until then the "(이모티콘)" text placeholder is shown.
         _ = AttachEmoticonsAsync(version);
     }
+
+    public override List<BaseContent> GetRenderRawContents() => KakaoStoryUtils.ConvertToBaseContents(Comment.decorators is { Count: > 0 } ? Comment.decorators : KakaoStoryUtils.GetQuoteDataFromString(Comment.text ?? string.Empty), true);
 
     private async Task AttachEmoticonsAsync(int version)
     {
