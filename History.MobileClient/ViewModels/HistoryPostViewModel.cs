@@ -272,7 +272,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
         else if (action == "게시글 이미지로 저장")
         {
             var confirm = await App.Page.DisplayAlertAsync("게시글 이미지로 저장", "이 게시글을 이미지로 저장하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
-            if (confirm) await PostImageRendererHelper.SaveAsync(Post.Contents, Utils.GenerateMediaUri(Post.User.ProfileMediaId), Post.User.Nickname, PostImageRendererHelper.BuildFullTimestampText(CreatedAt, ModifiedAt));
+            if (confirm) await PostImageRendererHelper.SaveAsync(Post.Contents, this);
         }
         else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }

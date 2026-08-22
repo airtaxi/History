@@ -47,6 +47,7 @@ public partial class EditPostPage : ContentPage
     private readonly PostResponseDto _post;
     private readonly PostData _kakaoPost;
     private readonly TextContent _sharedTextContent;
+    private BasePostViewModel _shareTargetPostViewModel;
 
     private DateTime? _reservationTime;
     private AccessPermission? _commentPermission;
@@ -190,7 +191,8 @@ public partial class EditPostPage : ContentPage
         if (_isKakaoShare)
         {
             ButtonUpload.Text = "공유";
-            ShareTargetPostDataTemplatePresenter.ViewModel = new KakaoPostViewModel(_kakaoPost);
+            _shareTargetPostViewModel = new KakaoPostViewModel(_kakaoPost);
+            ShareTargetPostDataTemplatePresenter.ViewModel = _shareTargetPostViewModel;
             ShareTargetPostDataTemplatePresenter.IsVisible = true;
             return;
         }
@@ -217,14 +219,16 @@ public partial class EditPostPage : ContentPage
             }
             if (_post.ParentPost != null)
             {
-                ShareTargetPostDataTemplatePresenter.ViewModel = new HistoryPostViewModel(_post.ParentPost, PostType.Timeline);
+                _shareTargetPostViewModel = new HistoryPostViewModel(_post.ParentPost, PostType.Timeline);
+                ShareTargetPostDataTemplatePresenter.ViewModel = _shareTargetPostViewModel;
                 ShareTargetPostDataTemplatePresenter.IsVisible = true;
             }
         }
         else
         {
             ButtonUpload.Text = "공유";
-            ShareTargetPostDataTemplatePresenter.ViewModel = new HistoryPostViewModel(_post, PostType.Timeline);
+            _shareTargetPostViewModel = new HistoryPostViewModel(_post, PostType.Timeline);
+            ShareTargetPostDataTemplatePresenter.ViewModel = _shareTargetPostViewModel;
             ShareTargetPostDataTemplatePresenter.IsVisible = true;
         }
 
@@ -745,7 +749,7 @@ public partial class EditPostPage : ContentPage
                     {
                         // Render before the History write so a failure aborts the whole
                         // upload and never produces a partially mirrored share post.
-                        sharedPostRenderAttachment = await BuildSharedPostRenderAttachmentAsync(_post);
+                        sharedPostRenderAttachment = await BuildSharedPostRenderAttachmentAsync(_post, _shareTargetPostViewModel);
                         if (sharedPostRenderAttachment == null)
                         {
                             await DisplayAlertAsync("오류", "공유 게시글의 렌더 이미지를 생성하지 못해 카카오스토리 게시글 작성을 중단합니다.", Constants.PromptOk);
@@ -1434,12 +1438,13 @@ public partial class EditPostPage : ContentPage
 
     /// <summary>
     /// Renders the shared (parent) post into a PNG attachment for KakaoStory mirroring.
-    /// The profile header is included to reproduce the share card. Returns null when
-    /// the rendering fails; the caller then aborts the whole upload.
+    /// The profile header is included to reproduce the share card (header values are
+    /// derived from the shared post view model). Returns null when the rendering fails;
+    /// the caller then aborts the whole upload.
     /// </summary>
-    private static async Task<MediaAttachmentViewModel> BuildSharedPostRenderAttachmentAsync(PostResponseDto post)
+    private static async Task<MediaAttachmentViewModel> BuildSharedPostRenderAttachmentAsync(PostResponseDto post, BasePostViewModel viewModel)
     {
-        var bytes = await PostImageRendererHelper.RenderAsync(post.Contents, Utils.GenerateMediaUri(post.User?.ProfileMediaId), post.User?.Nickname, PostImageRendererHelper.BuildFullTimestampText(post.CreatedAt, post.ModifiedAt));
+        var bytes = await PostImageRendererHelper.RenderAsync(post.Contents, viewModel);
         if (bytes == null) return null;
 
         var randomFileName = Path.GetRandomFileName().Replace(".", string.Empty) + ".png";

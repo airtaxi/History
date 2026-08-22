@@ -313,7 +313,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
         else if (action == "게시글 이미지로 저장")
         {
             var confirm = await App.Page.DisplayAlertAsync("게시글 이미지로 저장", "이 게시글을 이미지로 저장하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
-            if (confirm) await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), _postData.actor?.profile_image_url, _postData.actor?.display_name, PostImageRendererHelper.BuildFullTimestampText(CreatedAt, ModifiedAt));
+            if (confirm) await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), this);
         }
     }
 

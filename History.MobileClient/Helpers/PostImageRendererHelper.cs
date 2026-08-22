@@ -1,5 +1,6 @@
 using CommunityToolkit.Maui.Alerts;
 using History.Commons.DataTypes.Contents;
+using History.MobileClient.ViewModels;
 using NativeMedia;
 using SkiaSharp;
 using System.Net.Http;
@@ -65,12 +66,14 @@ public static class PostImageRendererHelper
 
     /// <summary>
     /// Renders the given post contents into PNG bytes.
-    /// Optional header (profile image, nickname, timestamp) is drawn above the contents.
+    /// Optional header (profile image, nickname, timestamp) is drawn above the contents;
+    /// header values are derived from the shared post view model surface, and the
+    /// timestamp is always absolute (relative timestamps are meaningless in exported images).
     /// </summary>
-    public static async Task<byte[]> RenderAsync(IEnumerable<BaseContent> contents, string profileImageUrl = null, string nickname = null, string timestampText = null)
+    public static async Task<byte[]> RenderAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null)
     {
         var contentList = contents?.ToList() ?? [];
-        var hasHeader = profileImageUrl != null || nickname != null || timestampText != null;
+        var hasHeader = post != null;
         if (contentList.Count == 0 && !hasHeader) return null;
 
         var (regularTypeface, boldTypeface) = await GetTypefacesAsync();
@@ -92,7 +95,7 @@ public static class PostImageRendererHelper
         var blocks = await BuildBlocksAsync(contentList, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight);
         if (hasHeader)
         {
-            var headerBlock = await BuildHeaderBlockAsync(profileImageUrl, nickname, timestampText, bodyFont, titleFont, textPaint, secondaryPaint);
+            var headerBlock = await BuildHeaderBlockAsync(post.ProfileMedia?.Uri, post.Nickname, BuildFullTimestampText(post.CreatedAt, post.ModifiedAt), bodyFont, titleFont, textPaint, secondaryPaint);
             if (headerBlock != null) blocks.Insert(0, headerBlock);
         }
         if (blocks.Count == 0) return null;
@@ -116,25 +119,19 @@ public static class PostImageRendererHelper
     }
 
     /// <summary>
-    /// Renders the post contents and saves the resulting PNG to the device gallery.
-    /// Mirrors the save flow of FullScreenMediaViewerPage (permission → temp file →
-    /// gallery → cleanup) and surfaces the result through a toast or an error alert.
+    /// Renders the post contents with a header derived from the shared post view model
+    /// surface (profile media URI, nickname, absolute timestamp) and saves the resulting
+    /// PNG to the device gallery. Mirrors the save flow of FullScreenMediaViewerPage
+    /// (permission → temp file → gallery → cleanup) and surfaces the result through a
+    /// toast or an error alert.
     /// </summary>
-    public static async Task SaveAsync(IEnumerable<BaseContent> contents) => await SaveAsyncInternalAsync(contents, null, null, null);
-
-    /// <summary>
-    /// Renders the post contents with a header (profile image, nickname, timestamp)
-    /// and saves the resulting PNG to the device gallery.
-    /// </summary>
-    public static async Task SaveAsync(IEnumerable<BaseContent> contents, string profileImageUrl, string nickname, string timestampText) => await SaveAsyncInternalAsync(contents, profileImageUrl, nickname, timestampText);
-
-    private static async Task SaveAsyncInternalAsync(IEnumerable<BaseContent> contents, string profileImageUrl, string nickname, string timestampText)
+    public static async Task SaveAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null)
     {
         var status = await Permissions.RequestAsync<SaveMediaPermission>();
         if (status != PermissionStatus.Granted) return;
 
         byte[] bytes;
-        try { bytes = await RenderAsync(contents, profileImageUrl, nickname, timestampText); }
+        try { bytes = await RenderAsync(contents, post); }
         catch
         {
             await App.TopPage.DisplayAlertAsync("오류", "게시글 이미지 생성 중 오류가 발생하였습니다.", Constants.PromptOk);
