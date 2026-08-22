@@ -15,7 +15,7 @@ namespace History.MobileClient.Helpers;
 public static class PostImageRendererHelper
 {
     // Layout constants (3x scale of the XAML templates)
-    private const int CanvasWidth = 1080;
+    private const int CanvasWidth = 1520;
     private const float Padding = 48f;
     private const float ContentSpacing = 24f;
     private const float BodyFontSize = 42f;
