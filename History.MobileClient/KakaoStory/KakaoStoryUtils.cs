@@ -192,6 +192,20 @@ public static class KakaoStoryUtils
     }
 
     /// <summary>
+    /// Feed verbs that are not a user's post and have no single-post surface to render:
+    /// - "suggest"    -> Kakao Story's own recommendation card (오늘의 추천 친구).
+    /// - "aggregated" -> timehop-style bundles carrying several posts in object.objects.
+    /// Add to this set as new ones turn up.
+    ///
+    /// This is deliberately a blocklist rather than an allowlist of renderable verbs.
+    /// Kakao Story's verb vocabulary is undocumented, and a verb other than "post" can
+    /// still be a real post (@object is "the shared post, for a share activity"), so an
+    /// allowlist would fail closed and silently drop content with nothing on screen to
+    /// say so. A blocklist fails open: an unknown card is visible and is one line to fix.
+    /// </summary>
+    private static readonly HashSet<string> NonPostVerbs = ["suggest", "aggregated"];
+
+    /// <summary>
     /// Creates the post view model for a Kakao Story feed item, unwrapping bundled feeds
     /// (share/UP activities) into the shared post/repost surfaces (WPF pattern):
     /// - bundled_feed.type == "up"    -> render the original activity as a repost card.
@@ -200,21 +214,22 @@ public static class KakaoStoryUtils
     /// - bundled_feed.type == "scrap" -> render only the most recent activity
     ///                                    (bundled_feed.activity) as a normal link-embedded post.
     /// Returns null when the post author is banned (relation.ban == "A") so callers skip it.
-    /// Also returns null for aggregated feeds (e.g. timehop) whose payload lives in
-    /// object.objects instead of the single-post surface the app can render.
+    /// Also returns null for the verbs in <see cref="NonPostVerbs"/>, which are not a
+    /// user's post at all, and for a bundled_feed whose type has no rule here.
     /// </summary>
     public static BasePostViewModel CreatePostViewModel(PostData postData)
     {
         if (postData.actor?.relation?.ban == "A") return null;
 
-        // Aggregated feeds bundle multiple original posts into object.objects
-        // (e.g. timehop memories, verb == "aggregated") which cannot be rendered
-        // as a single post card; skip them so the timeline stays compatible.
-        if (postData.verb == "aggregated") return null;
+        if (postData.verb != null && NonPostVerbs.Contains(postData.verb)) return null;
 
         var bundledFeed = postData.bundled_feed;
-        if (postData.verb == "bundled_feed" && bundledFeed != null)
+        if (postData.verb == "bundled_feed")
         {
+            // The wrapper carries no content of its own, so a bundle this method has
+            // no rule for would render as an empty card.
+            if (bundledFeed == null) return null;
+
             // The repost card renders the original activity's content, so the original
             // author is also checked for a ban (relation.ban == "A").
             if (bundledFeed.type == "up" && bundledFeed.original_activity != null)
@@ -239,6 +254,8 @@ public static class KakaoStoryUtils
                 if (activity.actor?.relation?.ban == "A") return null;
                 return new KakaoPostViewModel(activity);
             }
+
+            return null;
         }
 
         return new KakaoPostViewModel(postData);
