@@ -139,7 +139,6 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
-		<PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Annotation.Jvm" ExcludeAssets="all" Version="1.11.4" />
 		<PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.6.0.1" />
 	</ItemGroup>
 
