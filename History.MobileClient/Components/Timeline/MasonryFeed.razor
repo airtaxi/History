@@ -30,17 +30,19 @@
 </div>
 
 @code {
+    #nullable enable
+
     [Parameter, EditorRequired]
     public IBlazorFeedViewModel Feed { get; set; }
 
     // Content rendered inside the scroll area above the masonry grid (e.g. the mode pills).
     [Parameter]
-    public RenderFragment? Header { get; set; }
+    public RenderFragment Header { get; set; }
 
     // Card selector replacing the XAML ItemTemplateSelector. Defaults to the standard
     // post card; feeds with multiple card types (public posts) pass their own template.
     [Parameter]
-    public RenderFragment<BasePostViewModel>? ItemTemplate { get; set; }
+    public RenderFragment<BasePostViewModel> ItemTemplate { get; set; }
 
     // The search page has no pull-to-refresh; it disables the gesture and the indicator.
     [Parameter]
