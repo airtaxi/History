@@ -47,6 +47,7 @@ public partial class TimelinePage : ContentPage
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostData>>(this, OnKakaoPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<TabReselectedMessage>(this, OnTabReselectedMessageReceived);
+        WeakReferenceMessenger.Default.Register<KakaoStoryFeaturesEnabledMessage>(this, OnKakaoStoryFeaturesEnabledMessageReceived);
 #if ANDROID
         WeakReferenceMessenger.Default.Register<TimelineVirtualizationChangedMessage>(this, OnTimelineVirtualizationChangedMessageReceived);
 #endif
@@ -61,6 +62,7 @@ public partial class TimelinePage : ContentPage
 #endif
 
         UpdatePillVisuals();
+        ApplyKakaoStoryVisibility();
     }
 
     private void OnHistoryPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
@@ -409,6 +411,15 @@ public partial class TimelinePage : ContentPage
         HistoryPillLabel.TextColor = _isKakaoStoryMode ? inactiveTextColor : Colors.White;
         KakaoStoryPillBorder.BackgroundColor = _isKakaoStoryMode ? primaryColor : inactiveBackgroundColor;
         KakaoStoryPillLabel.TextColor = _isKakaoStoryMode ? Colors.White : inactiveTextColor;
+    }
+
+    // Easter egg gate: the kakao story pill stays hidden until the switch is unlocked on the settings page.
+    private void ApplyKakaoStoryVisibility() => KakaoStoryPillBorder.IsVisible = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
+
+    private void OnKakaoStoryFeaturesEnabledMessageReceived(object recipient, KakaoStoryFeaturesEnabledMessage message)
+    {
+        KakaoStoryPillBorder.IsVisible = true;
+        UpdatePillVisuals();
     }
 
     private async Task PollScrollPositionAsync(PeriodicTimer timer)

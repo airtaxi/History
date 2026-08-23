@@ -59,6 +59,10 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
     [ObservableProperty]
     public partial bool IsKakaoStoryMode { get; private set; }
 
+    // Easter egg switch: hides the profile pill row until it is unlocked on the settings page.
+    [ObservableProperty]
+    public partial bool IsKakaoStoryFeaturesEnabled { get; private set; }
+
     // Header surface bound by the native chrome.
     [ObservableProperty]
     public partial bool IsBackVisible { get; private set; }
@@ -110,14 +114,18 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
 
         _isKakaoStoryMode = isKakaoStoryMode;
         _showPillGrid = showPillGrid;
+        IsKakaoStoryFeaturesEnabled = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostData>>(this, OnKakaoPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<TabReselectedMessage>(this, OnTabReselectedMessageReceived);
+        WeakReferenceMessenger.Default.Register<KakaoStoryFeaturesEnabledMessage>(this, OnKakaoStoryFeaturesEnabledMessageReceived);
 
         UpdateHeaderSurface();
     }
+
+    private void OnKakaoStoryFeaturesEnabledMessageReceived(object recipient, KakaoStoryFeaturesEnabledMessage message) => IsKakaoStoryFeaturesEnabled = true;
 
     private void UpdateHeaderSurface()
     {

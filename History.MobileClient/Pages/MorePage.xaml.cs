@@ -1,7 +1,10 @@
-﻿using History.Commons.Enums;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
+using History.Commons.Enums;
 using History.Commons.Api.Post;
 using History.MobileClient.Helpers;
 using History.MobileClient.KakaoStory;
+using History.MobileClient.Messages;
 
 namespace History.MobileClient.Pages;
 
@@ -10,6 +13,23 @@ public partial class MorePage : ContentPage
     public MorePage()
     {
         InitializeComponent();
+        ApplyKakaoStoryFeaturesVisibility();
+
+        WeakReferenceMessenger.Default.Register<KakaoStoryFeaturesEnabledMessage>(this, OnKakaoStoryFeaturesEnabledMessageReceived);
+    }
+
+    // Easter egg gate: the kakao story extras entry stays hidden until the switch is unlocked on the settings page.
+    private void ApplyKakaoStoryFeaturesVisibility()
+    {
+        var isKakaoStoryFeaturesEnabled = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
+        KakaoStoryExtrasDivider.IsVisible = isKakaoStoryFeaturesEnabled;
+        KakaoStoryExtrasGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+    }
+
+    private void OnKakaoStoryFeaturesEnabledMessageReceived(object recipient, KakaoStoryFeaturesEnabledMessage message)
+    {
+        KakaoStoryExtrasDivider.IsVisible = true;
+        KakaoStoryExtrasGrid.IsVisible = true;
     }
 
     protected override void OnAppearing()
@@ -25,9 +45,6 @@ public partial class MorePage : ContentPage
 
         BulkPostManagementDivider.IsVisible = true;
         BulkPostManagementGrid.IsVisible = true;
-
-        KakaoStoryExtrasDivider.IsVisible = true;
-        KakaoStoryExtrasGrid.IsVisible = true;
 
         var isModerator = Shared.MyRank >= Rank.Moderator;
         ModerationDivider.IsVisible = isModerator;

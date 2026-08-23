@@ -24,11 +24,13 @@ public partial class PendingFriendRequestsPage : ContentPage
         PillGrid.IsVisible = true;
         UpdatePillVisuals();
         UpdatePillBadges();
+        ApplyKakaoStoryFeaturesVisibility();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<BadgeCountsChangedMessage>(this, OnBadgeCountsChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<FriendshipChangedMessage>(this, OnFriendshipChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<TabReselectedMessage>(this, OnTabReselectedMessageReceived);
+        WeakReferenceMessenger.Default.Register<KakaoStoryFeaturesEnabledMessage>(this, OnKakaoStoryFeaturesEnabledMessageReceived);
 #if IOS
         WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
 
@@ -183,9 +185,24 @@ public partial class PendingFriendRequestsPage : ContentPage
     {
         PillBadgeHelper.Apply(HistoryPillBadgeBorder, HistoryPillBadgeLabel, Shared.HistoryPendingFriendRequestCount);
 
-        // The Kakao Story badge respects the badge sum setting, mirroring the tab bar badge.
-        var isKakaoStoryBadgeEnabled = Configuration.GetValue<bool?>("KakaoStoryFriendRequestBadgeEnabled") ?? true;
+        // The Kakao Story badge respects the badge sum setting, mirroring the tab bar badge,
+        // and stays hidden until the easter egg switch is unlocked on the settings page.
+        var isKakaoStoryBadgeEnabled = (Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false) && (Configuration.GetValue<bool?>("KakaoStoryFriendRequestBadgeEnabled") ?? true);
         PillBadgeHelper.Apply(KakaoStoryPillBadgeBorder, KakaoStoryPillBadgeLabel, isKakaoStoryBadgeEnabled ? Shared.KakaoStoryPendingFriendRequestCount : 0);
+    }
+
+    // Easter egg gate: the kakao story pill stays hidden until the switch is unlocked on the settings page.
+    private void ApplyKakaoStoryFeaturesVisibility()
+    {
+        var isKakaoStoryFeaturesEnabled = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
+        KakaoStoryPillBorder.IsVisible = isKakaoStoryFeaturesEnabled;
+        if (!isKakaoStoryFeaturesEnabled) UpdatePillBadges();
+    }
+
+    private void OnKakaoStoryFeaturesEnabledMessageReceived(object recipient, KakaoStoryFeaturesEnabledMessage message)
+    {
+        KakaoStoryPillBorder.IsVisible = true;
+        UpdatePillBadges();
     }
 
     // The pollers run on background threads; the badge update must be marshalled to the main thread.

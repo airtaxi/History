@@ -503,6 +503,9 @@
                         VerticalOptions="End" />
                 </Grid>
                 <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnVersionGridTapped" />
+                    </Grid.GestureRecognizers>
                     <Label
                         FontSize="16"
                         HorizontalOptions="Start"
@@ -584,6 +587,7 @@
                 </Grid>
 
                 <Grid
+                    x:Name="KakaoStoryIntegrationCategoryGrid"
                     Padding="14,0,14,0"
                     Background="{AppThemeBinding Dark={StaticResource CategoryDarkBackground},
                                                  Light={StaticResource CategoryLightBackground}}"
@@ -604,7 +608,7 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
-                <Grid Padding="14,0,14,0" HeightRequest="36">
+                <Grid x:Name="KakaoStoryLoginGrid" Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnKakaoStoryLoginGridTapped" />
                     </Grid.GestureRecognizers>
@@ -623,7 +627,7 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
-                <Grid Padding="14,0,14,0" HeightRequest="36">
+                <Grid x:Name="KakaoStoryCredentialResetGrid" Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnKakaoStoryCredentialResetGridTapped" />
                     </Grid.GestureRecognizers>
@@ -642,7 +646,7 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
-                <Grid Padding="14,0,14,0" HeightRequest="36">
+                <Grid x:Name="KakaoStoryProfanityCheckGrid" Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnKakaoStoryProfanityCheckGridTapped" />
                     </Grid.GestureRecognizers>
@@ -669,6 +673,7 @@
                         VerticalOptions="End" />
                 </Grid>
                 <Grid
+                    x:Name="KakaoStoryPushNotificationCategoryGrid"
                     Padding="14,0,14,0"
                     Background="{AppThemeBinding Dark={StaticResource CategoryDarkBackground},
                                                  Light={StaticResource CategoryLightBackground}}"
@@ -689,7 +694,7 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
-                <Grid Padding="14,0,14,0" HeightRequest="36">
+                <Grid x:Name="KakaoStoryNotificationGrid" Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnKakaoStoryNotificationGridTapped" />
                     </Grid.GestureRecognizers>
@@ -715,7 +720,7 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
-                <Grid Padding="14,0,14,0" HeightRequest="36">
+                <Grid x:Name="KakaoStoryFavoriteFriendNotificationGrid" Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnKakaoStoryFavoriteFriendNotificationGridTapped" />
                     </Grid.GestureRecognizers>
@@ -741,7 +746,7 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
-                <Grid Padding="14,0,14,0" HeightRequest="36">
+                <Grid x:Name="KakaoStoryEmotionNotificationGrid" Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnKakaoStoryEmotionNotificationGridTapped" />
                     </Grid.GestureRecognizers>
@@ -767,7 +772,7 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
-                <Grid Padding="14,0,14,0" HeightRequest="36">
+                <Grid x:Name="KakaoStoryMailNotificationGrid" Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnKakaoStoryMailNotificationGridTapped" />
                     </Grid.GestureRecognizers>
@@ -794,6 +799,7 @@
                         VerticalOptions="End" />
                 </Grid>
                 <Grid
+                    x:Name="KakaoStoryNotificationBadgeCategoryGrid"
                     Padding="14,0,14,0"
                     Background="{AppThemeBinding Dark={StaticResource CategoryDarkBackground},
                                                  Light={StaticResource CategoryLightBackground}}"
@@ -814,7 +820,7 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
-                <Grid Padding="14,0,14,0" HeightRequest="36">
+                <Grid x:Name="KakaoStoryNotificationBadgeGrid" Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnKakaoStoryNotificationBadgeGridTapped" />
                     </Grid.GestureRecognizers>
@@ -840,7 +846,7 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
-                <Grid Padding="14,0,14,0" HeightRequest="36">
+                <Grid x:Name="KakaoStoryMailBadgeGrid" Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnKakaoStoryMailBadgeGridTapped" />
                     </Grid.GestureRecognizers>
@@ -866,7 +872,7 @@
                         HorizontalOptions="Fill"
                         VerticalOptions="End" />
                 </Grid>
-                <Grid Padding="14,0,14,0" HeightRequest="36">
+                <Grid x:Name="KakaoStoryFriendRequestBadgeGrid" Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnKakaoStoryFriendRequestBadgeGridTapped" />
                     </Grid.GestureRecognizers>

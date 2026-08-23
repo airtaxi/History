@@ -14,6 +14,8 @@ namespace History.MobileClient.Pages;
 public partial class SettingsPage : ContentPage
 {
     private bool _isInForeground;
+    private int _versionTapCount;
+    private DateTime? _lastVersionTapTime;
 
     private UserResponseDto _user;
 
@@ -90,6 +92,51 @@ public partial class SettingsPage : ContentPage
 #endif
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
+
+        ApplyKakaoStoryFeaturesVisibility();
+    }
+
+    // Easter egg gate: the whole kakao story settings surface stays hidden until the switch is
+    // unlocked by tapping the version row 10 times.
+    private void ApplyKakaoStoryFeaturesVisibility()
+    {
+        var isKakaoStoryFeaturesEnabled = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
+
+        KakaoStoryIntegrationCategoryGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+        KakaoStoryLoginGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+        KakaoStoryCredentialResetGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+        KakaoStoryProfanityCheckGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+
+        KakaoStoryPushNotificationCategoryGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+        KakaoStoryNotificationGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+        KakaoStoryFavoriteFriendNotificationGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+        KakaoStoryEmotionNotificationGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+        KakaoStoryMailNotificationGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+
+        KakaoStoryNotificationBadgeCategoryGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+        KakaoStoryNotificationBadgeGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+        KakaoStoryMailBadgeGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+        KakaoStoryFriendRequestBadgeGrid.IsVisible = isKakaoStoryFeaturesEnabled;
+    }
+
+    // Easter egg unlock: tapping the version row 10 times (within 1 second gaps) enables
+    // the kakao story features app-wide.
+    private void OnVersionGridTapped(object sender, TappedEventArgs e)
+    {
+        var now = DateTime.Now;
+        if (_lastVersionTapTime == null || (now - _lastVersionTapTime.Value).TotalSeconds > 1) _versionTapCount = 1;
+        else _versionTapCount++;
+
+        _lastVersionTapTime = now;
+
+        if (_versionTapCount < 6) return;
+
+        _versionTapCount = 0;
+        _lastVersionTapTime = null;
+
+        Configuration.SetValue("KakaoStoryFeaturesEnabled", true);
+        ApplyKakaoStoryFeaturesVisibility();
+        WeakReferenceMessenger.Default.Send(new KakaoStoryFeaturesEnabledMessage());
     }
 
     private static void CleanupSharedVariables()

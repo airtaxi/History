@@ -42,6 +42,10 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
 
     public bool IsKakaoStoryMode => _isKakaoStoryMode;
 
+    // Easter egg switch: hides the kakao story pill until it is unlocked on the settings page.
+    [ObservableProperty]
+    public partial bool IsKakaoStoryFeaturesEnabled { get; private set; }
+
     // Plain events (deliberately not INPC) consumed by the Blazor feed and the native
     // chrome without triggering full-list re-renders.
     public event Action ScrollToTopRequested;
@@ -49,11 +53,16 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
 
     public TimelineViewModel()
     {
+        IsKakaoStoryFeaturesEnabled = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
+
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnHistoryPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostData>>(this, OnKakaoPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<TabReselectedMessage>(this, OnTabReselectedMessageReceived);
+        WeakReferenceMessenger.Default.Register<KakaoStoryFeaturesEnabledMessage>(this, OnKakaoStoryFeaturesEnabledMessageReceived);
     }
+
+    private void OnKakaoStoryFeaturesEnabledMessageReceived(object recipient, KakaoStoryFeaturesEnabledMessage message) => IsKakaoStoryFeaturesEnabled = true;
 
     private void OnHistoryPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {

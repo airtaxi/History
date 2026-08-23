@@ -69,6 +69,7 @@ public partial class UserPage : ContentPage
         InitializeComponent();
 
         PillGrid.IsVisible = showPillGrid;
+        if (showPillGrid) ApplyKakaoStoryVisibility();
 
         BanImage.IsVisible = !IsMyProfilePage;
         MemoImage.IsVisible = !_isKakaoStoryMode && !IsMyProfilePage;
@@ -91,6 +92,7 @@ public partial class UserPage : ContentPage
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostData>>(this, OnKakaoPostDeletedMessageReceived);
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<TabReselectedMessage>(this, OnTabReselectedMessageReceived);
+        WeakReferenceMessenger.Default.Register<KakaoStoryFeaturesEnabledMessage>(this, OnKakaoStoryFeaturesEnabledMessageReceived);
 #if ANDROID
         WeakReferenceMessenger.Default.Register<TimelineVirtualizationChangedMessage>(this, OnTimelineVirtualizationChangedMessageReceived);
 #endif
@@ -106,6 +108,10 @@ public partial class UserPage : ContentPage
     }
 
     private bool IsMyProfilePage => _isKakaoStoryMode ? KakaoUserId == Shared.KakaoUserId : UserId == Shared.UserId;
+
+    // Easter egg gate: the pill row stays hidden until the switch is unlocked on the settings page.
+    private void ApplyKakaoStoryVisibility() => PillGrid.IsVisible = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
+    private void OnKakaoStoryFeaturesEnabledMessageReceived(object recipient, KakaoStoryFeaturesEnabledMessage message) => PillGrid.IsVisible = true;
 
     private void OnPostDeletedMessageReceived(object recipient, ValueDeletedMessage<PostResponseDto> message)
     {

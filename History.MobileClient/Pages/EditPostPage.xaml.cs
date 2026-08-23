@@ -1,4 +1,4 @@
-#if ANDROID
+﻿#if ANDROID
 using History.MobileClient.ThirdParty.StaggeredLayout;
 #elif IOS
 using NativeMedia;
@@ -719,8 +719,9 @@ public partial class EditPostPage : ContentPage
 
                 if (_post == null || _isHistoryShare)
                 {
-                    shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory") ?? false;
-                    if (!Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory").HasValue)
+                    var isKakaoStoryFeaturesEnabled = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
+                    shouldWritePostToKakaoStory = isKakaoStoryFeaturesEnabled && (Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory") ?? false);
+                    if (isKakaoStoryFeaturesEnabled && !Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory").HasValue)
                     {
                         shouldWritePostToKakaoStory = await DisplayAlertAsync("안내", "카카오스토리에도 게시글을 작성하는 옵션을 활성화하시겠습니까? 이 옵션은 글쓰기 하단의 설정을 펼쳐 언제든지 변경할 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
                         Configuration.SetValue("ShouldWritePostToKakaoStory", shouldWritePostToKakaoStory);
@@ -1136,7 +1137,7 @@ public partial class EditPostPage : ContentPage
 
         var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory");
         if (shouldWritePostToKakaoStory.HasValue) WritePostToKakaoStorySwitch.IsToggled = shouldWritePostToKakaoStory.Value;
-        WritePostToKakaoStoryGrid.IsVisible = !_isKakaoShare && !_isKakaoEdit && !_isKakaoOnlyWrite && (_post == null || _isHistoryShare);
+        WritePostToKakaoStoryGrid.IsVisible = (Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false) && !_isKakaoShare && !_isKakaoEdit && !_isKakaoOnlyWrite && (_post == null || _isHistoryShare);
 
         if (_isKakaoOnlyWrite || _isKakaoEdit || _isKakaoShare) MainTextContent.IsKakaoMentionMode = true;
 

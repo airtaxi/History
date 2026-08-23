@@ -25,10 +25,12 @@ public partial class AddFriendsPage : ContentPage
 
         PillGrid.IsVisible = true;
         UpdatePillVisuals();
+        ApplyKakaoStoryFeaturesVisibility();
 
         WeakReferenceMessenger.Default.Register<LoadingStateChangedMessage>(this, OnLoadingStateChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<FriendshipChangedMessage>(this, OnFriendshipChangedMessageReceived);
         WeakReferenceMessenger.Default.Register<TabReselectedMessage>(this, OnTabReselectedMessageReceived);
+        WeakReferenceMessenger.Default.Register<KakaoStoryFeaturesEnabledMessage>(this, OnKakaoStoryFeaturesEnabledMessageReceived);
 #if IOS
         WeakReferenceMessenger.Default.Register<TabBarHeightChangedMessage>(this, OnTabBarHeightChangedMessageReceived);
 
@@ -200,6 +202,10 @@ public partial class AddFriendsPage : ContentPage
         KakaoStoryPillBorder.BackgroundColor = _isKakaoStoryMode ? primaryColor : inactiveBackgroundColor;
         KakaoStoryPillLabel.TextColor = _isKakaoStoryMode ? Colors.White : inactiveTextColor;
     }
+
+    // Easter egg gate: the pill row stays hidden until the switch is unlocked on the settings page.
+    private void ApplyKakaoStoryFeaturesVisibility() => PillGrid.IsVisible = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
+    private void OnKakaoStoryFeaturesEnabledMessageReceived(object recipient, KakaoStoryFeaturesEnabledMessage message) => PillGrid.IsVisible = true;
 
     private void OnTabReselectedMessageReceived(object recipient, TabReselectedMessage message)
     {

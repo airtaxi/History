@@ -1,15 +1,31 @@
-﻿<MasonryFeed Feed="ViewModel">
+﻿@using System.ComponentModel
+
+<MasonryFeed Feed="ViewModel">
     <Header>
-        <div class="pills">
-            <button type="button" class="pill @(ViewModel.IsKakaoStoryMode ? string.Empty : "pill-active")" @onclick="OnHistoryPillClick">히스토리</button>
-            <button type="button" class="pill @(ViewModel.IsKakaoStoryMode ? "pill-active" : string.Empty)" @onclick="OnKakaoStoryPillClick">카카오스토리</button>
-        </div>
+        @if (ViewModel.IsKakaoStoryFeaturesEnabled)
+        {
+            <div class="pills">
+                <button type="button" class="pill @(ViewModel.IsKakaoStoryMode ? string.Empty : "pill-active")" @onclick="OnHistoryPillClick">히스토리</button>
+                <button type="button" class="pill @(ViewModel.IsKakaoStoryMode ? "pill-active" : string.Empty)" @onclick="OnKakaoStoryPillClick">카카오스토리</button>
+            </div>
+        }
     </Header>
 </MasonryFeed>
 
 @code {
     [Parameter, EditorRequired]
     public TimelineViewModel ViewModel { get; set; }
+
+    protected override void OnInitialized() => ViewModel.PropertyChanged += OnViewModelPropertyChanged;
+
+    // The pills appear/disappear when the easter egg switch is flipped, so the
+    // pill row must be re-rendered when the feature flag changes.
+    private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TimelineViewModel.IsKakaoStoryFeaturesEnabled)) InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
 
     private Task OnHistoryPillClick() => ViewModel.SwitchModeAsync(false);
 
