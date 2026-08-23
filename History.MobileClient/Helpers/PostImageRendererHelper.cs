@@ -51,8 +51,8 @@ public static class PostImageRendererHelper
     private static readonly SKColor LightTextColor = new(0xCC, 0xCC, 0xCC);
     private static readonly SKColor CardColor = new(0xF0, 0xF0, 0xF0);
     private static readonly SKColor ProgressTrackColor = new(0xE0, 0xE0, 0xE0);
-    private static readonly SKColor OverlayColor = new(0x80, 0x00, 0x00, 0x00);
-    private static readonly SKColor ExternalOverlayColor = new(0x66, 0x00, 0x00, 0x00);
+    private static readonly SKColor OverlayColor = new(0x00, 0x00, 0x00, 0x80);
+    private static readonly SKColor ExternalOverlayColor = new(0x00, 0x00, 0x00, 0x66);
 
     private static readonly HttpClient s_httpClient = new();
     private static readonly SemaphoreSlim s_typefaceSemaphore = new(1, 1);
@@ -442,7 +442,7 @@ public static class PostImageRendererHelper
         }
 
         var hasDescription = !string.IsNullOrEmpty(mediaContent.Description);
-        var height = drawHeight + (hasDescription ? DescriptionBarHeight : 0);
+        var height = drawHeight;
 
         return new RenderBlock(height, (canvas, x, y) =>
         {
@@ -477,16 +477,16 @@ public static class PostImageRendererHelper
                     fillPaint.Color = SKColors.White;
                     canvas.DrawPath(triangle.Detach(), fillPaint);
                 }
-                canvas.Restore();
-
+                // Description overlay (top, mirrors MediaContentTemplate: 40dp bar at VerticalOptions=Start)
                 if (hasDescription)
                 {
-                    var barRect = new SKRect(x, y + drawHeight, x + drawWidth, y + drawHeight + DescriptionBarHeight);
+                    var barRect = new SKRect(x, y, x + drawWidth, y + DescriptionBarHeight);
                     fillPaint.Color = OverlayColor;
                     canvas.DrawRect(barRect, fillPaint);
 
                     var lines = WrapRuns([new TextRun(mediaContent.Description, boldFont, whitePaint)], drawWidth);
-                    var baseline = barRect.MidY - (lines.Count - 1) * lineHeight / 2 - boldFont.Metrics.Ascent;
+                    var fontHeight = boldFont.Metrics.Descent - boldFont.Metrics.Ascent;
+                    var baseline = barRect.MidY - (lines.Count - 1) * lineHeight / 2 - fontHeight / 2 - boldFont.Metrics.Ascent;
                     foreach (var line in lines.Take(2))
                     {
                         var lineWidth = line.Runs.Sum(run => run.Font.MeasureText(run.Text));
@@ -499,6 +499,7 @@ public static class PostImageRendererHelper
                         baseline += lineHeight;
                     }
                 }
+                canvas.Restore();
             }
             finally { image?.Dispose(); }
         });
