@@ -16,21 +16,6 @@ public partial class AppShell : Shell
         IsLoaded = true;
     }
 
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-
-        var isKakaoStoryFeaturesEnabled = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
-        var isGuideDismissed = Configuration.GetValue<bool?>("KakaoStoryGuideDismissed") ?? false;
-        if (!isKakaoStoryFeaturesEnabled && !isGuideDismissed) _ = ShowKakaoStoryGuideAsync();
-    }
-
-    private async Task ShowKakaoStoryGuideAsync()
-    {
-        var doNotShowAgain = await DisplayAlertAsync("안내", "카카오스토리 기능은 프로필 → 설정에서 앱 버전을 6번 탭하면 사용할 수 있습니다.\n컴플라이언스 이슈로 비밀 기능으로 전환되는 관계로, 이 안내는 9월 중순까지만 표시될 예정이고 이후에는 이 메시지가 보여지지 않습니다.", Constants.PromptOk, "다시 보지 않기");
-        if (doNotShowAgain) Configuration.SetValue("KakaoStoryGuideDismissed", true);
-    }
-
     private static DateTime s_lastBackPressedTime = DateTime.MinValue;
     protected override bool OnBackButtonPressed()
     {
