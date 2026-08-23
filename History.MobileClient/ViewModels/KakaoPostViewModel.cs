@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
@@ -316,7 +316,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
             if (!confirm) return;
 
             var includeComments = await ConfirmIncludeCommentsAsync();
-            await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), this, includeComments ? Comments : null);
+            await App.ExecuteWithLoadingAsync(async () => await Task.Run(async () => await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), this, includeComments ? Comments : null)));
         }
     }
 
