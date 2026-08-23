@@ -275,7 +275,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
             if (!confirm) return;
 
             var includeComments = await ConfirmIncludeCommentsAsync();
-            await App.ExecuteWithLoadingAsync(async () => await Task.Run(async () => await PostImageRendererHelper.SaveAsync(Post.Contents, this, includeComments ? Comments : null)));
+            await App.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.SaveAsync(Post.Contents, this, includeComments ? Comments : null));
         }
         else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }

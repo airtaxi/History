@@ -1,4 +1,4 @@
-using CommunityToolkit.Maui.Alerts;
+﻿using CommunityToolkit.Maui.Alerts;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.ViewModels;
 using NativeMedia;
@@ -79,7 +79,7 @@ public static class PostImageRendererHelper
     /// Optional comments are drawn below the contents under a thin separator, with the
     /// same absolute timestamp rule; contents are built from the comment view model surface.
     /// </summary>
-    public static async Task<byte[]> RenderAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null, IEnumerable<BaseCommentViewModel> comments = null)
+    public static async Task<byte[]> RenderAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null, IEnumerable<BaseCommentViewModel> comments = null) => await Task.Run(async () =>
     {
         var contentList = contents?.ToList() ?? [];
         var hasHeader = post != null;
@@ -127,7 +127,7 @@ public static class PostImageRendererHelper
         using var image = surface.Snapshot();
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         return data.ToArray();
-    }
+    });
 
     /// <summary>
     /// Renders the post contents with a header derived from the shared post view model

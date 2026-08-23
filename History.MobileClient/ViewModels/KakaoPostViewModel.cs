@@ -316,7 +316,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
             if (!confirm) return;
 
             var includeComments = await ConfirmIncludeCommentsAsync();
-            await App.ExecuteWithLoadingAsync(async () => await Task.Run(async () => await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), this, includeComments ? Comments : null)));
+            await App.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), this, includeComments ? Comments : null));
         }
     }
 
