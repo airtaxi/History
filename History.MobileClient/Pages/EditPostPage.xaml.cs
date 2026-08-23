@@ -1575,28 +1575,16 @@ public partial class EditPostPage : ContentPage
                 }
             }
 
-            bool loginNeeded = true;
-            if (await KakaoStoryApiHandler.EnsureKAuthTokenAsync() != null)
+            // The login gate refreshes the friends cache when it is empty, which
+            // covers the cold-start case for the mention sheet.
+            if ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false)
             {
-                try
-                {
-                    Shared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
-                    loginNeeded = false;
-                }
-                catch { }
+                await DisplayAlertAsync("오류", "카카오스토리 로그인에 실패하였습니다.", Constants.PromptOk);
+                return false;
             }
 
-            if (loginNeeded)
-            {
-                if ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false)
-                {
-                    await DisplayAlertAsync("오류", "카카오스토리 로그인에 실패하였습니다.", Constants.PromptOk);
-                    return false;
-                }
-
-                IsEnabled = false;
-                MainActivityIndicator.IsRunning = true;
-            }
+            IsEnabled = false;
+            MainActivityIndicator.IsRunning = true;
 
             try
             {

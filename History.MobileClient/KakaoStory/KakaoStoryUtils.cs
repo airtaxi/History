@@ -105,23 +105,51 @@ public static class KakaoStoryUtils
     /// <summary>
     /// Validates the saved SDK tokens (KAuth) and, when they are missing/expired,
     /// presents the KakaoStoryLoginPage modal. Returns true when a valid session
-    /// is available afterwards.
+    /// is available afterwards. When the session is already valid, the friends
+    /// and user-id caches are refreshed only when they are empty (cold start or
+    /// an earlier cache wipe); otherwise routine navigation costs no extra requests.
+    /// The login page itself refreshes friends/token on success, so the modal
+    /// path needs no additional reload here.
     /// </summary>
     public static async Task<bool> EnsureLoggedInAsync(Page hostPage)
     {
         if (await KakaoStoryApiHandler.EnsureKAuthTokenAsync() != null)
         {
-            try
+            if (Shared.KakaoFriends == null || Shared.KakaoUserId == null)
             {
-                Shared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
-                await SaveCurrentUserAsync();
-                _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
-                await UploadTokenToServerAsync();
+                await RefreshSessionCachesAsync();
                 return true;
             }
-            catch { }
+
+            _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
+            return true;
         }
 
+        return await ShowLoginModalAsync(hostPage);
+    }
+
+    /// <summary>
+    /// Reloads the friends list and the current user id. Used when the caches are
+    /// empty (cold start) so mention surfaces and post action sheets stay accurate.
+    /// Failures leave the caches untouched: the next caller retries the refresh.
+    /// </summary>
+    private static async Task RefreshSessionCachesAsync()
+    {
+        try
+        {
+            Shared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
+            await SaveCurrentUserAsync();
+        }
+        catch { }
+        _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
+    }
+
+    /// <summary>
+    /// Presents the auto-fill prompt (when no credential is saved) and the login modal.
+    /// The login page refreshes friends and uploads the poll token on success.
+    /// </summary>
+    private static async Task<bool> ShowLoginModalAsync(Page hostPage)
+    {
         var savedEmail = Configuration.GetValue<string>("KakaoStoryEmail");
         var savedEncryptedPassword = Configuration.GetValue<string>("KakaoStoryPassword");
         if (savedEmail == null || savedEncryptedPassword == null)
@@ -146,13 +174,7 @@ public static class KakaoStoryUtils
         var kakaoStoryLoginPage = new KakaoStoryLoginPage();
         await App.PushModalAsync(kakaoStoryLoginPage);
 
-        var isLoggedIn = await kakaoStoryLoginPage.GetResultAsync();
-        if (!isLoggedIn) return false;
-
-        await SaveCurrentUserAsync();
-        _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
-        await UploadTokenToServerAsync();
-        return true;
+        return await kakaoStoryLoginPage.GetResultAsync();
     }
 
     /// <summary>
