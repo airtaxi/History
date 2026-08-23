@@ -13,7 +13,9 @@ using History.MobileClient.Helpers;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Messages;
 using History.MobileClient.Pages;
+#if !WINDOWS
 using NativeMedia;
+#endif
 
 namespace History.MobileClient.ViewModels;
 
@@ -244,6 +246,12 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
 
             fileName = image.FileName;
             bytes = image.Bytes;
+#elif WINDOWS
+            var image = await WindowsMediaPickerHelper.PickMediaAsync(true, false);
+            if (image == null) return;
+
+            fileName = image.FileName;
+            bytes = image.Bytes;
 #endif
             bytes = await TryEditStillImageAsync(fileName, bytes);
             if (bytes == null) return;
@@ -290,6 +298,12 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
             bytes = memoryStream.ToArray();
 #elif ANDROID
             var media = await AndroidMediaPickerHelper.PickMediaAsync(true, true);
+            if (media == null) return;
+
+            fileName = media.FileName;
+            bytes = media.Bytes;
+#elif WINDOWS
+            var media = await WindowsMediaPickerHelper.PickMediaAsync(true, true);
             if (media == null) return;
 
             fileName = media.FileName;

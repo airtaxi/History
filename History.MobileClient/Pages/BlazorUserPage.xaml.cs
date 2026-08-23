@@ -21,7 +21,6 @@ public partial class BlazorUserPage : ContentPage
 
     public BlazorUserPage() : this(new UserProfileViewModel())
     {
-        Shell.SetTabBarIsVisible(this, true);
     }
 
     public BlazorUserPage(string userId) : this(new UserProfileViewModel(userId)) { }

@@ -5,7 +5,9 @@ using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
+#if !WINDOWS
 using NativeMedia;
+#endif
 using UraniumUI.Extensions;
 
 namespace History.MobileClient.Pages;
@@ -39,8 +41,10 @@ public partial class FullScreenMediaViewerPage : ContentPage
 
     private async void OnDownloadImageTapped(object sender, TappedEventArgs e)
     {
+#if !WINDOWS
         var status = await Permissions.RequestAsync<SaveMediaPermission>();
         if (status != PermissionStatus.Granted) return;
+#endif
 
         IsEnabled = false;
         MainActivityIndicator.IsRunning = true;
@@ -55,7 +59,11 @@ public partial class FullScreenMediaViewerPage : ContentPage
         try
         {
             await Downloader.DownloadFileAsync(viewModel.Uri, filePath);
+#if WINDOWS
+            await WindowsMediaPickerHelper.SaveMediaAsync(filePath);
+#else
             await MediaGallery.SaveAsync(viewModel is ImageViewModel ? MediaFileType.Image : MediaFileType.Video, filePath);
+#endif
         }
         catch
         {
@@ -72,8 +80,10 @@ public partial class FullScreenMediaViewerPage : ContentPage
 
     private async void OnDownloadAllImageTapped(object sender, TappedEventArgs e)
     {
+#if !WINDOWS
         var status = await Permissions.RequestAsync<SaveMediaPermission>();
         if (status != PermissionStatus.Granted) return;
+#endif
 
         var allMedias = _viewModel.FullScreenMedias;
         var hasImages = allMedias.Any(x => x is ImageViewModel);
@@ -113,7 +123,11 @@ public partial class FullScreenMediaViewerPage : ContentPage
 
             foreach (var (media, isImage, filePath) in downloadItems.AsEnumerable().Reverse())
             {
+#if WINDOWS
+                try { await WindowsMediaPickerHelper.SaveMediaAsync(filePath); }
+#else
                 try { await MediaGallery.SaveAsync(isImage ? MediaFileType.Image : MediaFileType.Video, filePath); }
+#endif
                 catch { failedCount++; }
                 finally
                 {

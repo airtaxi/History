@@ -14,12 +14,15 @@ using History.MobileClient.Helpers;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
-using Plugin.Firebase.CloudMessaging;
 using UraniumUI.Icons.FontAwesome;
 using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.Maui.Graphics.Platform;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+
+#if !WINDOWS
+using Plugin.Firebase.CloudMessaging;
+#endif
 
 
 namespace History.MobileClient;
@@ -752,6 +755,7 @@ public static partial class Utils
 
     public static async Task RefreshFirebaseToken()
     {
+#if !WINDOWS
         try
         {
             await CrossFirebaseCloudMessaging.Current.CheckIfValidAsync();
@@ -770,6 +774,7 @@ public static partial class Utils
             await Shared.ApiHandler.ExecuteRequestAsync(new RegisterFirebaseToken(firebaseToken));
         }
         catch { }
+#endif
     }
 
     public static string GetDiscoveryOptionGlyph(DiscoveryOption option)

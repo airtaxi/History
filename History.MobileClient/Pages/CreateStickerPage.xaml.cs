@@ -90,6 +90,12 @@ public partial class CreateStickerPage : ContentPage
 
         fileName = image.FileName;
         bytes = image.Bytes;
+#elif WINDOWS
+        var image = await WindowsMediaPickerHelper.PickMediaAsync(true, false);
+        if (image == null) return;
+
+        fileName = image.FileName;
+        bytes = image.Bytes;
 #else
         var request = new MediaPickRequest(1, MediaFileType.Image)
         {
@@ -135,7 +141,7 @@ public partial class CreateStickerPage : ContentPage
         if (fileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase))
             _ = Toast.Make("움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
 
-#if ANDROID
+#if ANDROID || WINDOWS
         var memoryStream = new MemoryStream(bytes);
 #endif
         _iconStream?.Dispose();
@@ -157,6 +163,24 @@ public partial class CreateStickerPage : ContentPage
 
 #if ANDROID
         var images = await AndroidMediaPickerHelper.PickMediasAsync(maxCount, true, false);
+        if (images == null || images.Count == 0) return;
+
+        var addedCount = 0;
+        foreach (var image in images)
+        {
+            var mimeType = Commons.MimeTypes.GetMimeType(image.FileName);
+            if (!mimeType.StartsWith("image/")) continue;
+
+            if ((image.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) || image.FileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)) && addedCount == 0)
+                _ = Toast.Make("움짤 파일의 경우 업로드 처리에 시간이 오래 걸릴 수 있습니다.").Show();
+
+            var memoryStream = new MemoryStream(image.GetBytes());
+            _assets.Add(image.FileName, memoryStream);
+            AddAssetToUI(image.FileName, memoryStream);
+            addedCount++;
+        }
+#elif WINDOWS
+        var images = await WindowsMediaPickerHelper.PickMediasAsync(maxCount, true, false);
         if (images == null || images.Count == 0) return;
 
         var addedCount = 0;

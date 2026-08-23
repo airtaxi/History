@@ -42,8 +42,8 @@ public partial class LoginPage : ContentPage
             await RefreshFriendsAsync();
             await Utils.RefreshFirebaseToken();
 
-#if ANDROID
-            App.Page = new AppShell();
+#if WINDOWS
+            App.Page = new WindowsAppShell();
 #else
             App.Page = new AppShell();
 #endif

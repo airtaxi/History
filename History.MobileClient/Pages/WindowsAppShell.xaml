@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Shell
+    x:Class="History.MobileClient.WindowsAppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
+    xmlns:pages="clr-namespace:History.MobileClient.Pages"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit">
+    <FlyoutItem Title="타임라인">
+        <FlyoutItem.Icon>
+            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.View_timeline}" />
+        </FlyoutItem.Icon>
+        <ShellContent Title="히스토리" ContentTemplate="{DataTemplate pages:BlazorTimelinePage}" />
+    </FlyoutItem>
+    <FlyoutItem Title="알림/쪽지">
+        <FlyoutItem.Icon>
+            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Notifications}" />
+        </FlyoutItem.Icon>
+        <ShellContent Title="알림" ContentTemplate="{DataTemplate pages:NotificationsPage}" />
+        <ShellContent Title="쪽지" ContentTemplate="{DataTemplate pages:MessagesPage}" />
+    </FlyoutItem>
+    <FlyoutItem Title="친구">
+        <FlyoutItem.Icon>
+            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Group}" />
+        </FlyoutItem.Icon>
+        <ShellContent Title="친구 목록" ContentTemplate="{DataTemplate pages:FriendListPage}" />
+        <ShellContent Title="친구 추가" ContentTemplate="{DataTemplate pages:AddFriendsPage}" />
+        <ShellContent Title="보낸 신청" ContentTemplate="{DataTemplate pages:WaitingFriendRequestsPage}" />
+        <ShellContent Title="받은 신청" ContentTemplate="{DataTemplate pages:PendingFriendRequestsPage}" />
+        <ShellContent Title="무시한 친구" ContentTemplate="{DataTemplate pages:IgnoredFriendsPage}" />
+        <ShellContent Title="차단한 친구" ContentTemplate="{DataTemplate pages:BlockedFriendsPage}" />
+    </FlyoutItem>
+    <FlyoutItem Title="더보기">
+        <FlyoutItem.Icon>
+            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.More_horiz}" />
+        </FlyoutItem.Icon>
+        <ShellContent ContentTemplate="{DataTemplate pages:MorePage}" />
+    </FlyoutItem>
+    <FlyoutItem Title="프로필">
+        <FlyoutItem.Icon>
+            <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.Person}" />
+        </FlyoutItem.Icon>
+        <ShellContent ContentTemplate="{DataTemplate pages:BlazorUserPage}" />
+    </FlyoutItem>
+</Shell>

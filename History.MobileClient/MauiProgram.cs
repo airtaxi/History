@@ -4,8 +4,6 @@ using History.MobileClient.ThirdParty.StaggeredLayout;
 using SuggestingBox.Maui;
 using UraniumUI;
 using Microsoft.Maui.LifecycleEvents;
-using Plugin.Firebase.CloudMessaging;
-using Plugin.Firebase.CloudMessaging.EventArgs;
 using System.Text.Json;
 using History.Commons.Enums;
 using History.Commons.Api.Post;
@@ -29,6 +27,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Plugin.Firebase.Core.Platforms.iOS;
 #elif ANDROID
 using Plugin.Firebase.Core.Platforms.Android;
+#endif
+
+#if !WINDOWS
+using Plugin.Firebase.CloudMessaging;
+using Plugin.Firebase.CloudMessaging.EventArgs;
 #endif
 
 namespace History.MobileClient;
@@ -130,6 +133,7 @@ public static class MauiProgram
         return builder;
     }
 
+#if !WINDOWS
     private static void OnNotificationTapped(object sender, FCMNotificationTappedEventArgs e)
     {
         var data = e.Notification.Data;
@@ -143,6 +147,7 @@ public static class MauiProgram
     }
 
     private static void OnNotificationReceived(object sender, FCMNotificationReceivedEventArgs e) => UpdateNotificationContext(e.Notification.Data);
+#endif
 
     private static async void UpdateNotificationContext(IDictionary<string, string> data)
     {

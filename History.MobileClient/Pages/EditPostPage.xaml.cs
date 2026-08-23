@@ -31,6 +31,7 @@ using Svg;
 using System.Threading.Tasks;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using History.MobileClient.ThirdParty.StaggeredLayout;
 
 
 namespace History.MobileClient.Pages;
@@ -64,13 +65,14 @@ public partial class EditPostPage : ContentPage
     {
         InitializeComponent();
         Initialize();
-#if IOS
+#if IOS || WINDOWS
         MediaCollectionView.ItemsLayout = new GridItemsLayout(3, ItemsLayoutOrientation.Vertical);
         DateTimePicker.WidthRequest = 300;
         DateTimePicker.HeightRequest = 300;
         DateTimePicker.HorizontalOptions = LayoutOptions.Center;
         DateTimePicker.VerticalOptions = LayoutOptions.Center;
-#else
+#elif ANDROID
+        MediaCollectionView.ItemsLayout = new StaggeredItemsLayout();
         DateTimePicker.IsVisible = true;
         DateTimePicker.Opacity = 0;
         DateTimePicker.Mode = PickerMode.Dialog;
@@ -402,6 +404,27 @@ public partial class EditPostPage : ContentPage
             while (true);
             _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, image.FilePath));
         }
+#elif WINDOWS
+        var images = await WindowsMediaPickerHelper.PickMediasAsync(maxCount, true, false);
+        if (images == null || images.Count == 0) return;
+
+        if (images.Any(x => x.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) || x.FileName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)))
+            await Toast.Make("애니메이션 이미지 파일(gif, webp)을 선택하신 경우, 업로드를 처리하는 데 시간이 오래 걸릴 수 있습니다.").Show();
+
+        foreach (var image in images)
+        {
+            if (image.Size > CommonsConstants.MaxImageUploadFileSize)
+            {
+                sizeExceed = true;
+                if (image.FilePath != null)
+                {
+                    try { File.Delete(image.FilePath); } catch { }
+                }
+                continue;
+            }
+
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(image.FileName, image.FilePath));
+        }
 #endif
 
         if (sizeExceed) await Toast.Make("용량을 초과하는 미디어는 자동으로 제외되었습니다.").Show();
@@ -475,6 +498,24 @@ public partial class EditPostPage : ContentPage
             }
             while (true);
             _attachmentViewModels.Add(new MediaAttachmentViewModel(randomFileName, video.FilePath, true));
+        }
+#elif WINDOWS
+        var videos = await WindowsMediaPickerHelper.PickMediasAsync(maxCount, false, true);
+        if (videos == null || videos.Count == 0) return;
+
+        foreach (var video in videos)
+        {
+            if (video.Size > CommonsConstants.MaxUploadFileSize)
+            {
+                sizeExceed = true;
+                if (video.FilePath != null)
+                {
+                    try { File.Delete(video.FilePath); } catch { }
+                }
+                continue;
+            }
+
+            _attachmentViewModels.Add(new MediaAttachmentViewModel(video.FileName, video.FilePath, true));
         }
 #endif
 
@@ -852,8 +893,12 @@ public partial class EditPostPage : ContentPage
     /// </summary>
     private async Task SaveDraftAsync()
     {
-        var draftDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "History", "Drafts", "Media");
-        if (!Directory.Exists(draftDirectoryPath)) Directory.CreateDirectory(draftDirectoryPath);
+#if WINDOWS
+        var draftMediaDirectoryPath = Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "History", "Drafts", "Media");
+#else
+        var draftMediaDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "History", "Drafts", "Media");
+#endif
+        if (!Directory.Exists(draftMediaDirectoryPath)) Directory.CreateDirectory(draftMediaDirectoryPath);
 
         var draft = new PostDraft
         {
@@ -872,7 +917,7 @@ public partial class EditPostPage : ContentPage
             if (!viewModel.IsUpload) continue;
 
             // Copy media data to draft directory to prevent loss on Dispose
-            var draftMediaPath = Path.Combine(draftDirectoryPath, viewModel.FileName);
+            var draftMediaPath = Path.Combine(draftMediaDirectoryPath, viewModel.FileName);
             await Task.Run(() =>
             {
                 if (viewModel.FilePath != null && File.Exists(viewModel.FilePath)) File.Copy(viewModel.FilePath, draftMediaPath, true);

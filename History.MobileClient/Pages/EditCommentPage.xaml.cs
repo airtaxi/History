@@ -219,6 +219,12 @@ public partial class EditCommentPage : ContentPage
 
             fileName = image.FileName;
             bytes = image.Bytes;
+#elif WINDOWS
+            var image = await WindowsMediaPickerHelper.PickMediaAsync(true, false);
+            if (image == null) return;
+
+            fileName = image.FileName;
+            bytes = image.Bytes;
 #endif
 
             _attachmentViewModel = new MediaAttachmentViewModel(fileName, bytes);

@@ -9,7 +9,11 @@ namespace History.MobileClient.DataTypes;
 /// </summary>
 public class PostDraft
 {
+#if WINDOWS
+    private static readonly string DraftDirectoryPath = Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "History", "Drafts");
+#else
     private static readonly string DraftDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "History", "Drafts");
+#endif
     private static readonly string DraftFilePath = Path.Combine(DraftDirectoryPath, "post_draft.json");
 
     private static readonly JsonSerializerOptions JsonOptions = new()

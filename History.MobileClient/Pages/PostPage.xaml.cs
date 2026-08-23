@@ -158,6 +158,12 @@ public partial class PostPage : ContentPage
 
             _commentMediaAttachmentViewModel?.Dispose();
             _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(image.FileName, image.Bytes);
+#elif WINDOWS
+            var image = await WindowsMediaPickerHelper.PickMediaAsync(true, false);
+            if (image == null) return;
+
+            _commentMediaAttachmentViewModel?.Dispose();
+            _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(image.FileName, image.Bytes);
 #endif
             CommentMediaFontImageSource.Glyph = MaterialSharp.Hide_image;
             AttachmentImage.BindingContext = _commentMediaAttachmentViewModel;
@@ -310,6 +316,12 @@ public partial class PostPage : ContentPage
         _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(fileName, bytes);
 #elif ANDROID
         var image = await AndroidMediaPickerHelper.PickMediaAsync(true, false);
+        if (image == null) return;
+
+        _commentMediaAttachmentViewModel?.Dispose();
+        _commentMediaAttachmentViewModel = new MediaAttachmentViewModel(image.FileName, image.Bytes);
+#elif WINDOWS
+        var image = await WindowsMediaPickerHelper.PickMediaAsync(true, false);
         if (image == null) return;
 
         _commentMediaAttachmentViewModel?.Dispose();

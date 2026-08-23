@@ -72,6 +72,11 @@ public partial class WriteMessagePage : ContentPage
         if (image == null) return;
         _imageFileName = image.FileName;
         _imageBytes = image.Bytes;
+#elif WINDOWS
+        var image = await WindowsMediaPickerHelper.PickMediaAsync(true, false);
+        if (image == null) return;
+        _imageFileName = image.FileName;
+        _imageBytes = image.Bytes;
 #endif
         AttachmentImage.Source = ImageSource.FromStream(() => new MemoryStream(_imageBytes));
         AttachmentImage.IsVisible = true;

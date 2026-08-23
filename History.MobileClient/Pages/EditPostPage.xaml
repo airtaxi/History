@@ -3,6 +3,7 @@
     x:Class="History.MobileClient.Pages.EditPostPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:behaviors="clr-namespace:History.MobileClient.Behaviors"
     xmlns:editPost="clr-namespace:History.MobileClient.ContentViews.EditPost"
     xmlns:fa="clr-namespace:UraniumUI.Icons.FontAwesome;assembly=UraniumUI.Icons.FontAwesome"
     xmlns:ffimageloading="clr-namespace:FFImageLoading.Maui;assembly=FFImageLoading.Maui"
@@ -10,7 +11,6 @@
     xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
     xmlns:picker="clr-namespace:Syncfusion.Maui.Toolkit.Picker;assembly=Syncfusion.Maui.Toolkit"
     xmlns:staggered="clr-namespace:History.MobileClient.ThirdParty.StaggeredLayout"
-    xmlns:behaviors="clr-namespace:History.MobileClient.Behaviors"
     xmlns:views="clr-namespace:History.MobileClient.ContentViews"
     xmlns:vm="clr-namespace:History.MobileClient.ViewModels;assembly=History.MobileClient"
     Loaded="OnLoaded"
@@ -90,9 +90,6 @@
                     x:Name="MediaCollectionView"
                     CanReorderItems="True"
                     SelectionMode="None">
-                    <CollectionView.ItemsLayout>
-                        <staggered:StaggeredItemsLayout Span="10000" />
-                    </CollectionView.ItemsLayout>
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="vm:MediaAttachmentViewModel">
                             <Grid>

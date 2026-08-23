@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using History.Commons.DataTypes.Contents;
 using History.MobileClient.ViewModels;
+#if !WINDOWS
 using NativeMedia;
+#endif
 using SkiaSharp;
 using System.Net.Http;
 
@@ -138,8 +140,10 @@ public static class PostImageRendererHelper
     /// </summary>
     public static async Task SaveAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null, IEnumerable<BaseCommentViewModel> comments = null)
     {
+#if !WINDOWS
         var status = await Permissions.RequestAsync<SaveMediaPermission>();
         if (status != PermissionStatus.Granted) return;
+#endif
 
         byte[] bytes;
         try { bytes = await RenderAsync(contents, post, comments); }
@@ -161,7 +165,11 @@ public static class PostImageRendererHelper
         try
         {
             await File.WriteAllBytesAsync(filePath, bytes);
+#if WINDOWS
+            await WindowsMediaPickerHelper.SaveMediaAsync(filePath);
+#else
             await MediaGallery.SaveAsync(MediaFileType.Image, filePath);
+#endif
             await Toast.Make("게시글 이미지가 저장되었습니다.").Show();
         }
         catch { await App.TopPage.DisplayAlertAsync("오류", "게시글 이미지 저장 중 오류가 발생하였습니다.", Constants.PromptOk); }
