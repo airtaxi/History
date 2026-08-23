@@ -31,7 +31,7 @@ public partial class AppShell : Shell
         if (doNotShowAgain) Configuration.SetValue("KakaoStoryGuideDismissed", true);
     }
 
-    public static DateTime s_lastBackPressedTime = DateTime.MinValue;
+    private static DateTime s_lastBackPressedTime = DateTime.MinValue;
     protected override bool OnBackButtonPressed()
     {
         if (Navigation.NavigationStack.Count > 1) return base.OnBackButtonPressed();
