@@ -811,7 +811,7 @@ public partial class EditPostPage : ContentPage
                     }
                 }
 
-                var result = await App.ExecuteRequestAsync<PostResponseDto>(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isHistoryShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null), ErrorType.BadRequest);
+                var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, _commentPermission, disallowShare, _isHistoryShare ? _post.Id : null, discoveryOptionSelectedUserIds, files, _reservationTime.HasValue ? _reservationTime.Value.ToUniversalTime() : null), ErrorType.BadRequest);
                 if (!result.IsSuccess) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                 else
                 {
@@ -1644,22 +1644,22 @@ public partial class EditPostPage : ContentPage
                 var quoteDatas = KakaoStoryUtils.GetQuoteDataFromContents(contents);
 
                 // Sticker images are uploaded and inserted at the front of the photo queue.
-                var stickerMedias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
+                var stickerMedias = new List<MediaData.MediaObject>();
                 if (stickerContents.Count > 0) stickerMedias = await UploadStickerMediaAsync(stickerContents);
 
                 // The spoiler marker image is uploaded ahead of the stickers.
-                var spoilerMedias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
+                var spoilerMedias = new List<MediaData.MediaObject>();
                 if (includeSpoilerMarker) spoilerMedias = await UploadSpoilerMediaAsync();
 
                 var conversionFailedCount = 0;
-                KakaoStoryApiHandler.DataType.MediaData mediaData;
+                MediaData mediaData;
                 if (attachmentViewModels.Count > 0 || stickerMedias.Count > 0 || spoilerMedias.Count > 0)
                 {
                     mediaData = new();
-                    var medias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
+                    var medias = new List<MediaData.MediaObject>();
                     foreach (var attachment in attachmentViewModels)
                     {
-                        var media = new KakaoStoryApiHandler.DataType.MediaData.MediaObject();
+                        var media = new MediaData.MediaObject();
                         if (!attachment.IsVideo)
                         {
                             string filePath = attachment.FilePath;
@@ -1790,9 +1790,9 @@ public partial class EditPostPage : ContentPage
     /// KakaoStory does not accept, so they are converted to PNG before uploading.
     /// Stickers that fail to upload are skipped.
     /// </summary>
-    private static async Task<List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>> UploadStickerMediaAsync(List<StickerContent> stickerContents)
+    private static async Task<List<MediaData.MediaObject>> UploadStickerMediaAsync(List<StickerContent> stickerContents)
     {
-        var stickerMedias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
+        var stickerMedias = new List<MediaData.MediaObject>();
         foreach (var stickerContent in stickerContents)
         {
             if (stickerContent.StickerMediaId == null) continue;
@@ -1819,7 +1819,7 @@ public partial class EditPostPage : ContentPage
             try
             {
                 var key = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImage(tempFilePath));
-                stickerMedias.Add(new KakaoStoryApiHandler.DataType.MediaData.MediaObject { media_path = key, media_type = "image" });
+                stickerMedias.Add(new MediaData.MediaObject { media_path = key, media_type = "image" });
             }
             finally { try { File.Delete(tempFilePath); } catch { } }
         }
@@ -1831,7 +1831,7 @@ public partial class EditPostPage : ContentPage
     /// supported by KakaoStory, so the marker is uploaded as the first photo to
     /// indicate that the following photos contain spoilers.
     /// </summary>
-    private static async Task<List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>> UploadSpoilerMediaAsync()
+    private static async Task<List<MediaData.MediaObject>> UploadSpoilerMediaAsync()
     {
         var spoilerFilePath = Path.Combine(FileSystem.CacheDirectory, $"post_spoiler_{Guid.NewGuid():N}.png");
         try
@@ -1849,7 +1849,7 @@ public partial class EditPostPage : ContentPage
         try
         {
             var key = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImage(spoilerFilePath));
-            return [new KakaoStoryApiHandler.DataType.MediaData.MediaObject { media_path = key, media_type = "image" }];
+            return [new MediaData.MediaObject { media_path = key, media_type = "image" }];
         }
         finally
         {
@@ -1863,15 +1863,15 @@ public partial class EditPostPage : ContentPage
     /// uploaded and return fresh keys; existing server media (KakaoServerPath) are kept
     /// as-is so they are not re-uploaded.
     /// </summary>
-    private async Task<KakaoStoryApiHandler.DataType.MediaData> BuildKakaoMediaDataAsync()
+    private async Task<MediaData> BuildKakaoMediaDataAsync()
     {
         if (_attachmentViewModels.Count == 0) return null;
 
-        var mediaData = new KakaoStoryApiHandler.DataType.MediaData();
-        var medias = new List<KakaoStoryApiHandler.DataType.MediaData.MediaObject>();
+        var mediaData = new MediaData();
+        var medias = new List<MediaData.MediaObject>();
         foreach (var attachment in _attachmentViewModels)
         {
-            var media = new KakaoStoryApiHandler.DataType.MediaData.MediaObject();
+            var media = new MediaData.MediaObject();
             if (!attachment.IsUpload)
             {
                 // Existing server media: keep the server path without re-uploading.

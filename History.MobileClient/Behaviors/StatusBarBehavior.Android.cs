@@ -102,7 +102,7 @@ public partial class StatusBarBehavior
 
     static void ApplyStatusBarOverlay(Android.Views.Window window, PlatformColor platformColor)
     {
-        if (window.DecorView?.RootView is not Android.Views.ViewGroup decorGroup) return;
+        if (window.DecorView?.RootView is not ViewGroup decorGroup) return;
 
         var overlay = decorGroup.FindViewWithTag(statusBarOverlayTag);
         if (overlay is null)
@@ -127,7 +127,7 @@ public partial class StatusBarBehavior
     {
         if (Platform.CurrentActivity is not Activity activity) return;
         var window = activity.Window;
-        if (window?.DecorView?.RootView is not Android.Views.ViewGroup decorGroup) return;
+        if (window?.DecorView?.RootView is not ViewGroup decorGroup) return;
 
         var overlay = decorGroup.FindViewWithTag(statusBarOverlayTag);
         if (overlay?.LayoutParameters is not Android.Widget.FrameLayout.LayoutParams layoutParams) return;

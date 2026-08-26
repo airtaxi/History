@@ -251,7 +251,7 @@ public class MainActivity : MauiAppCompatActivity
                 if (denied)
                 {
                     Intent intent = new Intent("android.settings.APPLICATION_DETAILS_SETTINGS");
-                    var uri = global::Android.Net.Uri.FromParts("package", PackageName, null);
+                    var uri = Android.Net.Uri.FromParts("package", PackageName, null);
                     intent.SetData(uri);
                     StartActivity(intent);
                 }

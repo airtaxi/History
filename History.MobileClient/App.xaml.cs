@@ -361,8 +361,8 @@ public partial class App : Application
                     if (post == null) return;
 
                     WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostData>(post));
-                    var postViewModel = new ViewModels.KakaoPostViewModel(post, PostType.Unwrapped);
-                    await PushAsync(new Pages.PostPage(postViewModel));
+                    var postViewModel = new KakaoPostViewModel(post, PostType.Unwrapped);
+                    await PushAsync(new PostPage(postViewModel));
                 }
                 // Profile notification: the scheme is a kakaostory:// deep link to the profile.
                 else if (scheme.Contains("kakaostory://profiles/"))
@@ -378,7 +378,7 @@ public partial class App : Application
                         return;
                     }
 
-                    await PushAsync(new Pages.BlazorUserPage(profileId, true));
+                    await PushAsync(new BlazorUserPage(profileId, true));
                 }
             }
             catch (Exception exception) { System.Diagnostics.Debug.WriteLine($"Kakao Story notification navigation failed: {exception.Message}"); }
