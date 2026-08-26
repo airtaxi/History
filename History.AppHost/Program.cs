@@ -1,18 +1,23 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
-var username = builder.AddParameter("username", "admin");
-var password = builder.AddParameter("password", "***REMOVED***", secret: true);
+static string Env(string name, string fallback) => Environment.GetEnvironmentVariable(name) ?? fallback;
+static string RequiredEnv(string name) => Environment.GetEnvironmentVariable(name) ?? throw new InvalidOperationException($"Environment variable '{name}' is required.");
 
-var mongodb = builder.AddMongoDB("MongoDB", 27017, username, password)
+var username = builder.AddParameter("username", Env("HISTORY_MONGODB_USERNAME", "admin"));
+var password = builder.AddParameter("password", RequiredEnv("HISTORY_MONGODB_PASSWORD"), secret: true);
+
+var mongodbPort = int.Parse(Env("HISTORY_MONGODB_PORT", "27017"));
+
+var mongodb = builder.AddMongoDB("MongoDB", mongodbPort, username, password)
     .WithLifetime(ContainerLifetime.Persistent)
     .WithMongoExpress()
-    .WithDataBindMount("C:\\HistoryData")
-    .AddDatabase("History");
+    .WithDataBindMount(Env("HISTORY_MONGODB_DATA_MOUNT", "C:\\HistoryData"))
+    .AddDatabase(Env("HISTORY_MONGODB_DATABASE", "History"));
 
-var kakaoStoryWorkerUrl = builder.AddParameter("kakao-story-worker-url", "https://kakao-story-proxy.history-kakao.workers.dev");
-var kakaoStoryWorkerSecret = builder.AddParameter("kakao-story-worker-secret", "***REMOVED***", secret: true);
-var kakaoStoryPollIntervalSeconds = builder.AddParameter("kakao-story-poll-interval-seconds", "10");
-var kakaoStoryBatchSize = builder.AddParameter("kakao-story-batch-size", "30");
+var kakaoStoryWorkerUrl = builder.AddParameter("kakao-story-worker-url", Env("HISTORY_KAKAO_WORKER_URL", "https://kakao-story-proxy.history-kakao.workers.dev"));
+var kakaoStoryWorkerSecret = builder.AddParameter("kakao-story-worker-secret", RequiredEnv("HISTORY_KAKAO_WORKER_SECRET"), secret: true);
+var kakaoStoryPollIntervalSeconds = builder.AddParameter("kakao-story-poll-interval-seconds", Env("HISTORY_KAKAO_POLL_INTERVAL_SECONDS", "10"));
+var kakaoStoryBatchSize = builder.AddParameter("kakao-story-batch-size", Env("HISTORY_KAKAO_BATCH_SIZE", "30"));
 
 var api = builder.AddProject<Projects.History_ApiService>("ApiService")
     .WithReference(mongodb)
@@ -22,9 +27,11 @@ var api = builder.AddProject<Projects.History_ApiService>("ApiService")
     .WithEnvironment("KakaoStoryPolling__BatchSize", kakaoStoryBatchSize)
     .WaitFor(mongodb);
 
+var vuePort = Env("HISTORY_VUE_PORT", "5173");
+
 builder.AddDockerfile("vue", "../History.WebFront")
     .WithLifetime(ContainerLifetime.Persistent)
     .WaitFor(api)
-    .WithContainerRuntimeArgs("-p", "5173:80");
+    .WithContainerRuntimeArgs("-p", $"{vuePort}:80");
 
 builder.Build().Run();

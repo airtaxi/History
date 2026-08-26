@@ -9,8 +9,7 @@
       "environmentVariables": {
         "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "http://localhost:19137",
         "DOTNET_RESOURCE_SERVICE_ENDPOINT_URL": "http://localhost:20013",
-        "ASPIRE_ALLOW_UNSECURED_TRANSPORT": "true",
-        "ASPIRE_DASHBOARD_FRONTEND_BROWSERTOKEN": "***REMOVED***"
+        "ASPIRE_ALLOW_UNSECURED_TRANSPORT": "true"
       }
     }
   }

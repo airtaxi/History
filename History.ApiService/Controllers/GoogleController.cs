@@ -10,19 +10,19 @@ namespace History.ApiService.Controllers;
 [ApiController]
 [Route("api/auth/google")]
 [RateLimit(Limit = 1, PeriodInSec = 1)]
-public class GoogleController : ControllerBase
+public class GoogleController(IConfiguration configuration) : ControllerBase
 {
-    private const string ClientId = "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com";
-    private const string ClientSecret = "***REMOVED***";
     private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
-    private const string RedirectUri = "https://api.history.cenox.io/api/auth/google/callback";
+    private readonly string _clientId = configuration["HISTORY_GOOGLE_CLIENT_ID"] ?? "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com";
+    private readonly string _clientSecret = configuration["HISTORY_GOOGLE_CLIENT_SECRET"] ?? throw new InvalidOperationException("Environment variable 'HISTORY_GOOGLE_CLIENT_SECRET' is required.");
+    private readonly string _redirectUri = configuration["HISTORY_GOOGLE_REDIRECT_URI"] ?? "https://api.history.cenox.io/api/auth/google/callback";
 
     [HttpGet("login")]
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(429)]
     public IActionResult Login([FromQuery] string redirectUrl) => Redirect($"{AuthorizationEndpoint}?response_type=code" +
-        $"&client_id={HttpUtility.UrlEncode(ClientId)}" +
-        $"&redirect_uri={HttpUtility.UrlEncode(RedirectUri)}" +
+        $"&client_id={HttpUtility.UrlEncode(_clientId)}" +
+        $"&redirect_uri={HttpUtility.UrlEncode(_redirectUri)}" +
         $"&scope={HttpUtility.UrlEncode("openid email profile")}" +
         $"&state={HttpUtility.UrlEncode(redirectUrl)}");
 
@@ -38,9 +38,9 @@ public class GoogleController : ControllerBase
         var tokenRequestParams = new Dictionary<string, string>
         {
             { "code", code },
-            { "client_id", ClientId },
-            { "client_secret", ClientSecret },
-            { "redirect_uri", RedirectUri },
+            { "client_id", _clientId },
+            { "client_secret", _clientSecret },
+            { "redirect_uri", _redirectUri },
             { "grant_type", "authorization_code" }
         };
 

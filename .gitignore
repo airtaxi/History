@@ -356,6 +356,10 @@ healthchecksdb
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
 
+# Secrets - never commit credentials
+*.p8
+firebaseServiceAccountKey.json
+
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 

@@ -12,23 +12,23 @@ namespace History.ApiService.Controllers;
 [ApiController]
 [Route("api/auth/apple")]
 [RateLimit(Limit = 1, PeriodInSec = 1)]
-public class AppleController : ControllerBase
+public class AppleController(IConfiguration configuration) : ControllerBase
 {
-    private const string KeyId = "DGK52ABR8V";
-    private const string TeamId = "UP6EXS2HJJ";
-    private const string ClientId = "com.airtaxi.history.as";
-    private readonly static string PrivateKeyPath = Path.Combine(AppContext.BaseDirectory, "AuthKey_DGK52ABR8V.p8");
     private const string AuthorizationEndpoint = "https://appleid.apple.com/auth/authorize";
-    private const string RedirectUri = "https://api.history.cenox.io/api/auth/apple/callback";
+    private readonly string _keyId = configuration["HISTORY_APPLE_KEY_ID"] ?? "DGK52ABR8V";
+    private readonly string _teamId = configuration["HISTORY_APPLE_TEAM_ID"] ?? "UP6EXS2HJJ";
+    private readonly string _clientId = configuration["HISTORY_APPLE_CLIENT_ID"] ?? "com.airtaxi.history.as";
+    private readonly string _redirectUri = configuration["HISTORY_APPLE_REDIRECT_URI"] ?? "https://api.history.cenox.io/api/auth/apple/callback";
+    private readonly string _privateKeyPath = configuration["HISTORY_APPLE_PRIVATE_KEY_PATH"] ?? Path.Combine(AppContext.BaseDirectory, "AuthKey_DGK52ABR8V.p8");
 
-    public static string GenerateJwtToken() => AppleIdTokenHelper.GenerateJwtToken(KeyId, TeamId, ClientId, PrivateKeyPath);
+    public string GenerateJwtToken() => AppleIdTokenHelper.GenerateJwtToken(_keyId, _teamId, _clientId, _privateKeyPath);
 
     [HttpGet("login")]
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(429)]
     public IActionResult Login([FromQuery] string redirectUrl) => Redirect($"{AuthorizationEndpoint}?response_type=code" +
-        $"&client_id={HttpUtility.UrlEncode(ClientId)}" +
-        $"&redirect_uri={HttpUtility.UrlEncode(RedirectUri)}" +
+        $"&client_id={HttpUtility.UrlEncode(_clientId)}" +
+        $"&redirect_uri={HttpUtility.UrlEncode(_redirectUri)}" +
         $"&scope={HttpUtility.UrlEncode("name email")}" +
         $"&response_mode=form_post" +
         $"&state={HttpUtility.UrlEncode(redirectUrl)}");
@@ -46,11 +46,11 @@ public class AppleController : ControllerBase
         {
             var request = new RestRequest() { Method = Method.Post };
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
-            request.AddParameter("client_id", ClientId, ParameterType.GetOrPost);
+            request.AddParameter("client_id", _clientId, ParameterType.GetOrPost);
             request.AddParameter("client_secret", GenerateJwtToken(), ParameterType.GetOrPost);
             request.AddParameter("code", code, ParameterType.GetOrPost);
             request.AddParameter("grant_type", "authorization_code", ParameterType.GetOrPost);
-            request.AddParameter("redirect_uri", RedirectUri, ParameterType.GetOrPost);
+            request.AddParameter("redirect_uri", _redirectUri, ParameterType.GetOrPost);
 
             var response = await client.ExecuteAsync(request);
             var content = response.Content;

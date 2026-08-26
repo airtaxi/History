@@ -23,7 +23,7 @@ using System.Text.Json.Serialization;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-var firebaseServiceAccountKeyJsonPath = Path.Combine(AppContext.BaseDirectory, "firebaseServiceAccountKey.json");
+var firebaseServiceAccountKeyJsonPath = Environment.GetEnvironmentVariable("HISTORY_FIREBASE_CREDENTIAL_PATH") ?? Path.Combine(AppContext.BaseDirectory, "firebaseServiceAccountKey.json");
 FirebaseApp.Create(new AppOptions()
 {
     Credential = CredentialFactory.FromFile<ServiceAccountCredential>(firebaseServiceAccountKeyJsonPath).ToGoogleCredential()
