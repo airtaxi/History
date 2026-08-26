@@ -25,6 +25,10 @@ var api = builder.AddProject<Projects.History_ApiService>("ApiService")
     .WithEnvironment("KakaoStoryPolling__WorkerSecret", kakaoStoryWorkerSecret)
     .WithEnvironment("KakaoStoryPolling__PollIntervalSeconds", kakaoStoryPollIntervalSeconds)
     .WithEnvironment("KakaoStoryPolling__BatchSize", kakaoStoryBatchSize)
+    .WithEnvironment("HISTORY_JWT_KEY", RequiredEnv("HISTORY_JWT_KEY"))
+    .WithEnvironment("HISTORY_GOOGLE_CLIENT_SECRET", RequiredEnv("HISTORY_GOOGLE_CLIENT_SECRET"))
+    .WithEnvironment("HISTORY_APPLE_PRIVATE_KEY_PATH", Env("HISTORY_APPLE_PRIVATE_KEY_PATH", Path.Combine(AppContext.BaseDirectory, "AuthKey_DGK52ABR8V.p8")))
+    .WithEnvironment("HISTORY_FIREBASE_CREDENTIAL_PATH", Env("HISTORY_FIREBASE_CREDENTIAL_PATH", Path.Combine(AppContext.BaseDirectory, "firebaseServiceAccountKey.json")))
     .WaitFor(mongodb);
 
 var vuePort = Env("HISTORY_VUE_PORT", "5173");
