@@ -1,4 +1,5 @@
-﻿using History.ApiService.DataTypes;
+﻿using DotNet.RateLimiter.ActionFilters;
+using History.ApiService.DataTypes;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
@@ -540,6 +541,7 @@ public class PostController(IPostService postService, IFriendshipService friends
 
     [HttpPost("fill-external-url-content")]
     [Authorize]
+    [RateLimit(Limit = 6, PeriodInSec = 1)]
     [ProducesResponseType<ExternalUrlContent>(200)]
     [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
