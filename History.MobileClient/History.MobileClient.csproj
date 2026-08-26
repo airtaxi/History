@@ -176,8 +176,4 @@
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android' Or '$(TargetFramework)' == 'net10.0-ios'">
 		<PackageReference Include="Xamarin.MediaGallery" Version="3.0.0" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Enums\" />
-	</ItemGroup>
 </Project>
