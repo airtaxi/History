@@ -117,7 +117,6 @@
                                 VerticalOptions="Center" />
                         </Border>
                         <Image
-                            x:Name="ReadAllImage"
                             Grid.Column="2"
                             HeightRequest="28"
                             HorizontalOptions="End"
