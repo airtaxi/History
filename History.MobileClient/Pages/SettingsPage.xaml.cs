@@ -120,7 +120,7 @@ public partial class SettingsPage : ContentPage
 
     // Easter egg unlock: tapping the version row 10 times (within 1 second gaps) enables
     // the kakao story features app-wide.
-    private void OnVersionGridTapped(object sender, TappedEventArgs e)
+    private async void OnVersionGridTapped(object sender, TappedEventArgs e)
     {
         var now = DateTime.Now;
         if (_lastVersionTapTime == null || (now - _lastVersionTapTime.Value).TotalSeconds > 1) _versionTapCount = 1;
@@ -132,6 +132,13 @@ public partial class SettingsPage : ContentPage
 
         _versionTapCount = 0;
         _lastVersionTapTime = null;
+
+        if (Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false) return;
+
+        // The kakao story features are unofficial, so the user must consent to the
+        // risk of account restrictions before the feature set is unlocked.
+        var isConfirmed = await DisplayAlertAsync("카카오스토리 연동 기능 활성화", "카카오스토리 연동 기능은 카카오스토리의 공식 기능이 아닙니다. 카카오스토리 측에서 제재할 수 있는 가능성이 있습니다. 이 기능을 활성화하시겠습니까?", "활성화", "취소");
+        if (!isConfirmed) return;
 
         Configuration.SetValue("KakaoStoryFeaturesEnabled", true);
         ApplyKakaoStoryFeaturesVisibility();
