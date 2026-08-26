@@ -5,7 +5,6 @@ using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
 
@@ -32,9 +31,11 @@ public class MediaService(IMongoDatabase database) : IMediaService
             BucketName = bucketType.ToString()
         });
 
+        var id = Guid.NewGuid().ToString("N");
         var media = new Media
         {
-            FileName = Guid.NewGuid().ToString("N"),
+            Id = id,
+            FileName = id,
             UserId = userId,
             AssociatedId = associatedId,
             MediaSize = content.Length,
@@ -44,11 +45,23 @@ public class MediaService(IMongoDatabase database) : IMediaService
             CreatedAt = DateTime.UtcNow
         };
 
-        var id = await bucket.UploadFromBytesAsync(media.FileName, content);
-        media.Id = id.ToString();
+        await bucket.UploadFromBytesAsync(media.FileName, content);
 
         await _mediaCollection.InsertOneAsync(media);
         return media;
+    }
+
+    /// <summary>
+    /// Deletes the underlying GridFS file uploaded with the given file name.
+    /// </summary>
+    /// <param name="bucket">The GridFS bucket that contains the file</param>
+    /// <param name="fileName">The file name of the media in GridFS</param>
+    private async Task DeleteGridFsFileAsync(GridFSBucket bucket, string fileName)
+    {
+        var file = await bucket.Find(Builders<GridFSFileInfo>.Filter.Eq(x => x.Filename, fileName)).FirstOrDefaultAsync();
+        if (file == null) return;
+
+        await bucket.DeleteAsync(file.Id);
     }
 
     /// <inheritdoc />
@@ -196,7 +209,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 BucketName = m.BucketType.ToString()
             });
 
-            await bucket.DeleteAsync(ObjectId.Parse(m.Id));
+            await DeleteGridFsFileAsync(bucket, m.FileName);
         }
 
         await _mediaCollection.DeleteManyAsync(m => m.AssociatedId == associatedId);
@@ -216,7 +229,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 BucketName = m.BucketType.ToString()
             });
 
-            await bucket.DeleteAsync(ObjectId.Parse(m.Id));
+            await DeleteGridFsFileAsync(bucket, m.FileName);
         }
 
         await _mediaCollection.DeleteManyAsync(m => associatedIds.Contains(m.AssociatedId));
@@ -247,7 +260,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             {
                 BucketName = m.BucketType.ToString()
             });
-            await bucket.DeleteAsync(ObjectId.Parse(m.Id));
+            await DeleteGridFsFileAsync(bucket, m.FileName);
         }
 
         await _mediaCollection.DeleteManyAsync(m => m.UserId == userId);
@@ -266,7 +279,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             BucketName = mediaResult.Value.BucketType.ToString()
         });
 
-        await bucket.DeleteAsync(ObjectId.Parse(mediaId));
+        await DeleteGridFsFileAsync(bucket, mediaResult.Value.FileName);
         await _mediaCollection.DeleteOneAsync(m => m.Id == mediaId);
 
         if (mediaResult.Value.ThumbnailMediaId != null)
@@ -282,7 +295,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
                     });
                 }
 
-                await bucket.DeleteAsync(ObjectId.Parse(thumbnailMediaResult.Value.Id));
+                await DeleteGridFsFileAsync(bucket, thumbnailMediaResult.Value.FileName);
                 await _mediaCollection.DeleteOneAsync(m => m.Id == thumbnailMediaResult.Value.Id);
             }
         }
