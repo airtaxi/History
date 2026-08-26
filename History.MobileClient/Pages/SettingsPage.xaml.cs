@@ -379,7 +379,7 @@ public partial class SettingsPage : ContentPage
 
     private async void OnKakaoStoryCredentialResetGridTapped(object sender, TappedEventArgs e)
     {
-        var savedEmail = Configuration.GetValue<string>("KakaoStoryEmail");
+        var savedEmail = await KakaoStoryCredentialStore.GetEmailAsync();
         if (string.IsNullOrEmpty(savedEmail))
         {
             await DisplayAlertAsync("안내", "저장된 카카오스토리 로그인 정보가 없습니다.", Constants.PromptOk);
@@ -389,8 +389,7 @@ public partial class SettingsPage : ContentPage
         var confirm = await DisplayAlertAsync("확인", "저장된 카카오스토리 로그인 정보를 초기화하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
         if (!confirm) return;
 
-        Configuration.SetValue("KakaoStoryEmail", null);
-        Configuration.SetValue("KakaoStoryPassword", null);
+        KakaoStoryCredentialStore.Clear();
         KakaoStoryApiHandler.ClearSdkTokens();
         await KakaoStoryUtils.DeleteTokenFromServerAsync();
         await DisplayAlertAsync("안내", "카카오스토리 로그인 정보가 초기화되었습니다.", Constants.PromptOk);

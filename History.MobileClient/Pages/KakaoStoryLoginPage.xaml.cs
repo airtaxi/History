@@ -1,8 +1,6 @@
 ﻿using CommunityToolkit.Maui.Alerts;
-using History.Commons;
 using History.MobileClient.Helpers;
 using History.Commons.KakaoStory;
-using History.Commons.Helpers;
 using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient.Pages;
@@ -104,18 +102,16 @@ public partial class KakaoStoryLoginPage : ContentPage
 
     private async Task TryAutoFillCredentialsAsync()
     {
-        var savedEmail = Configuration.GetValue<string>("KakaoStoryEmail");
-        var savedEncryptedPassword = Configuration.GetValue<string>("KakaoStoryPassword");
-        if (string.IsNullOrEmpty(savedEmail) || string.IsNullOrEmpty(savedEncryptedPassword)) return;
+        var savedEmail = await KakaoStoryCredentialStore.GetEmailAsync();
+        var savedPassword = await KakaoStoryCredentialStore.GetPasswordAsync();
+        if (string.IsNullOrEmpty(savedEmail) || string.IsNullOrEmpty(savedPassword)) return;
 
         try
         {
-            var password = AesCryptoHelper.Decrypt(savedEncryptedPassword, CommonConstants.KakaoStoryCredentialEncryptionKey);
-
             await Task.Delay(500);
 
             var escapedEmail = savedEmail.Replace("\\", "\\\\").Replace("\"", "\\\"");
-            var escapedPassword = password.Replace("\\", "\\\\").Replace("\"", "\\\"");
+            var escapedPassword = savedPassword.Replace("\\", "\\\\").Replace("\"", "\\\"");
 
             var script = $@"
                 (function tryFill(attempts) {{

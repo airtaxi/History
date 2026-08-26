@@ -9,7 +9,6 @@ using History.Commons.Api.Post;
 using History.Commons.Api.PushNotification;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
-using History.Commons.Enums;
 using History.Commons.KakaoStory;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
@@ -18,13 +17,6 @@ using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.Maui.Graphics.Platform;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
-
-<<<<<<< TODO: Unmerged change from project 'History.MobileClient (net10.0-windows10.0.26100.0)', Before:
-using History.MobileClient.KakaoStory;
-=======
-using History.MobileClient.KakaoStory;
-using History.Commons.Helpers;
->>>>>>> After
 using History.MobileClient.KakaoStory;
 using History.Commons.Helpers;
 

@@ -1,9 +1,8 @@
-﻿using History.Commons;
-using History.Commons.Api.KakaoStory;
+﻿using History.Commons.Api.KakaoStory;
 using History.Commons.DataTypes.RequestDtos;
-using History.Commons.Helpers;
 using History.Commons.KakaoStory;
 using History.Commons.Enums;
+using History.MobileClient.Helpers;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Graphics.Platform;
@@ -91,9 +90,9 @@ public partial class KakaoStoryUtils : CommonKakaoStoryUtils
     /// </summary>
     private static async Task<bool> ShowLoginModalAsync(Page hostPage)
     {
-        var savedEmail = Configuration.GetValue<string>("KakaoStoryEmail");
-        var savedEncryptedPassword = Configuration.GetValue<string>("KakaoStoryPassword");
-        if (savedEmail == null || savedEncryptedPassword == null)
+        var savedEmail = await KakaoStoryCredentialStore.GetEmailAsync();
+        var savedPassword = await KakaoStoryCredentialStore.GetPasswordAsync();
+        if (savedEmail == null || savedPassword == null)
         {
             var useAutoFill = await hostPage.DisplayAlertAsync("자동 입력", "세션이 만료되어 로그인이 필요합니다. 카카오스토리 로그인 정보를 저장하여 자동 입력하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
             if (useAutoFill)
@@ -102,12 +101,7 @@ public partial class KakaoStoryUtils : CommonKakaoStoryUtils
                 if (!string.IsNullOrWhiteSpace(email))
                 {
                     var password = await hostPage.DisplayPromptAsync("비밀번호 입력", "카카오 계정 비밀번호를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "비밀번호", -1, Keyboard.Password);
-                    if (!string.IsNullOrWhiteSpace(password))
-                    {
-                        var encryptedPassword = AesCryptoHelper.Encrypt(password, CommonConstants.KakaoStoryCredentialEncryptionKey);
-                        Configuration.SetValue("KakaoStoryEmail", email);
-                        Configuration.SetValue("KakaoStoryPassword", encryptedPassword);
-                    }
+                    if (!string.IsNullOrWhiteSpace(password)) await KakaoStoryCredentialStore.SaveAsync(email, password);
                 }
             }
         }

@@ -13,6 +13,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Api.User;
 using History.Commons.Api.Friendship;
 using History.MobileClient.Messages;
+using History.MobileClient.Helpers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Platform;
 using History.Commons;
@@ -42,6 +43,8 @@ public static class MauiProgram
 
         ApiHandler.ApplicationVersion = AppInfo.Current.VersionString;
         ApiHandler.Platform = DeviceInfo.Platform.ToString();
+
+        KakaoStoryCredentialStore.ClearLegacyCredentialsIfPresent();
 
         var builder = MauiApp.CreateBuilder()
             .UseMauiApp<App>()
