@@ -69,7 +69,7 @@ public partial class EditPostPage : ContentPage
         DateTimePicker.HorizontalOptions = LayoutOptions.Center;
         DateTimePicker.VerticalOptions = LayoutOptions.Center;
 #elif ANDROID
-        MediaCollectionView.ItemsLayout = new StaggeredItemsLayout();
+        MediaCollectionView.ItemsLayout = new StaggeredItemsLayout() { Span = 1 };
         DateTimePicker.IsVisible = true;
         DateTimePicker.Opacity = 0;
         DateTimePicker.Mode = PickerMode.Dialog;
