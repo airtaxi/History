@@ -173,6 +173,27 @@ public class UserController(IUserService userService, IFriendshipService friends
         return Ok(new OAuthLoginResponseDto(newAccessToken, newRefreshToken));
     }
 
+    [HttpPost("logout")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> Logout([FromBody] LogoutRequestDto request)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        if (string.IsNullOrEmpty(request.RefreshToken)) return BadRequest("리프레시 토큰이 필요합니다.");
+
+        // Revoke only the current refresh token so other active sessions stay valid
+        var revokeResult = await refreshTokenService.RevokeRefreshTokenForUserAsync(request.RefreshToken, userId);
+        if (revokeResult.IsFailure) return StatusCode(500, revokeResult.FullErrorMessage);
+
+        return Ok("로그아웃되었습니다.");
+    }
+
 
     /// <summary>
     /// Get user profile

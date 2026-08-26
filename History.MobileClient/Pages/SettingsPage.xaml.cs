@@ -229,6 +229,10 @@ public partial class SettingsPage : ContentPage
 
         await KakaoStoryUtils.DeleteTokenFromServerAsync();
 
+        // Revoke the current refresh token on the server so the session cannot be resumed
+        var refreshToken = Configuration.GetValue<string>("RefreshToken");
+        if (!string.IsNullOrEmpty(refreshToken)) await CommonShared.ApiHandler.TryExecuteRequestAsync(new Logout(refreshToken));
+
         CleanupSharedVariables();
 
         App.Page = new LoginPage();

@@ -72,6 +72,15 @@ public class RefreshTokenService(IMongoDatabase database) : IRefreshTokenService
     public async Task RevokeRefreshTokenAsync(string refreshToken) => await _refreshTokenCollection.DeleteOneAsync(rt => rt.Token == refreshToken);
 
     /// <inheritdoc />
+    public async Task<Result> RevokeRefreshTokenForUserAsync(string refreshToken, string userId)
+    {
+        var filter = Builders<RefreshToken>.Filter.Eq(rt => rt.Token, refreshToken) & Builders<RefreshToken>.Filter.Eq(rt => rt.UserId, userId);
+        await _refreshTokenCollection.DeleteOneAsync(filter);
+
+        return Result.Success();
+    }
+
+    /// <inheritdoc />
     public async Task<Result> ValidateRefreshTokenAsync(string refreshToken)
     {
         var existingToken = await _refreshTokenCollection.Find(rt => rt.Token == refreshToken).FirstOrDefaultAsync();

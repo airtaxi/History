@@ -27,6 +27,14 @@ public interface IRefreshTokenService
     public Task RevokeRefreshTokenAsync(string refreshToken);
 
     /// <summary>
+    /// Revokes the specified refresh token when it belongs to the given user, invalidating it for future use.
+    /// </summary>
+    /// <param name="refreshToken">The refresh token to be revoked. Cannot be null or empty.</param>
+    /// <param name="userId">The ID of the user who owns the refresh token.</param>
+    /// <returns>A task that represents the asynchronous operation, containing the result of the revocation.</returns>
+    public Task<Result> RevokeRefreshTokenForUserAsync(string refreshToken, string userId);
+
+    /// <summary>
     /// Validates the specified refresh token.
     /// </summary>
     /// <param name="refreshToken">The refresh token to validate.</param>
