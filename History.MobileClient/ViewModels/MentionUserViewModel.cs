@@ -1,6 +1,6 @@
 ﻿using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 
 namespace History.MobileClient.ViewModels;
 

@@ -1,8 +1,6 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.Messaging;
-using History.Commons;
 using History.MobileClient.Messages;
-using System.Diagnostics;
 
 namespace History.MobileClient;
 

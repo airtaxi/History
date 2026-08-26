@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
@@ -8,7 +7,7 @@ using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 using History.MobileClient.Messages;
 using History.MobileClient.Pages;
 using UraniumUI.Icons.FontAwesome;

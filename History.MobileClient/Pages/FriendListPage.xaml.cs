@@ -1,17 +1,17 @@
-﻿using CommunityToolkit.Maui.Behaviors;
-using CommunityToolkit.Maui.Core.Platform;
+﻿using CommunityToolkit.Maui.Core.Platform;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
-using Microsoft.Maui.Platform;
 using UraniumUI.Icons.FontAwesome;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
+using History.MobileClient.KakaoStory;
+using History.Commons.Helpers;
 
 namespace History.MobileClient.Pages;
 
@@ -182,12 +182,10 @@ public partial class FriendListPage : ContentPage
         var query = MainSearchBar.Text?.ToLowerInvariant()?.Trim() ?? string.Empty;
         IEnumerable<BaseFriendshipViewModel> viewModels = _viewModels;
 
-        if (!string.IsNullOrEmpty(query))
-        {
-            viewModels = viewModels.Where(x => x.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(x.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase));
-        }
+        if (!string.IsNullOrEmpty(query)) viewModels = viewModels.Where(x => x.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(x.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase)
+            || (x is HistoryFriendshipViewModel historyFriendshipViewModel && historyFriendshipViewModel.User.Handle.Contains(query, StringComparison.OrdinalIgnoreCase)));
 
-        if (_sortByTime && !_isKakaoStoryMode) viewModels = viewModels.OrderByDescending(x => (x as HistoryFriendshipViewModel)?.CreatedAt ?? DateTime.MinValue);
+		if (_sortByTime && !_isKakaoStoryMode) viewModels = viewModels.OrderByDescending(x => (x as HistoryFriendshipViewModel)?.CreatedAt ?? DateTime.MinValue);
         else viewModels = viewModels.OrderBy(x => x.Nickname);
 
         MainCollectionView.ItemsSource = viewModels;

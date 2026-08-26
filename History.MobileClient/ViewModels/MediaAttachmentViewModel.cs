@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.Contents;
 using UraniumUI.Icons.MaterialSymbols;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient.ViewModels;
 

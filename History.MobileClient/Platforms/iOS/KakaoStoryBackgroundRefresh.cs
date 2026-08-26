@@ -1,6 +1,7 @@
 ﻿using BackgroundTasks;
 using Foundation;
 using History.Commons;
+using History.Commons.KakaoStory;
 using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient;
@@ -15,7 +16,7 @@ namespace History.MobileClient;
 /// </summary>
 public static class KakaoStoryBackgroundRefresh
 {
-    private const string TaskIdentifier = "com.airtaxi.history.kakaostoryrefresh";
+    private const string TaskIdentifier = "com.airtaxi.History.Commons.KakaoStoryrefresh";
 
     private static readonly TimeSpan s_refreshInterval = TimeSpan.FromMinutes(Constants.KakaoStoryNotificationPollIntervalMilliseconds / 60000);
 

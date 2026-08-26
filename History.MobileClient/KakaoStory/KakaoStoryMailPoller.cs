@@ -1,7 +1,7 @@
-using History.Commons;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+﻿using History.MobileClient;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 
-namespace History.MobileClient.KakaoStory;
+namespace History.Commons.KakaoStory;
 
 /// <summary>
 /// Polls the Kakao Story mail list and raises local notifications for new items.

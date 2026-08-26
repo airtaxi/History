@@ -1,12 +1,11 @@
-﻿using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
+using History.Commons.KakaoStory;
 using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient.Pages;

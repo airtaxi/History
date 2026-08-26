@@ -3,8 +3,8 @@ using History.Commons;
 using History.Commons.Enums;
 using History.Commons.Api.Post;
 using History.MobileClient.Helpers;
-using History.MobileClient.KakaoStory;
 using History.MobileClient.Messages;
+using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient.Pages;
 

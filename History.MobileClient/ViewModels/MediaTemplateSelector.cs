@@ -1,6 +1,4 @@
-﻿using History.MobileClient.Enums;
-
-namespace History.MobileClient.ViewModels;
+﻿namespace History.MobileClient.ViewModels;
 
 internal class MediaTemplateSelector : DataTemplateSelector
 {

@@ -1,9 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
-using History.Commons;
 using History.MobileClient.Helpers;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 using History.MobileClient.Messages;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient.Pages;
 

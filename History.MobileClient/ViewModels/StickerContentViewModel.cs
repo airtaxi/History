@@ -2,9 +2,8 @@
 using CommunityToolkit.Mvvm.Input;
 using FFImageLoading;
 using FFImageLoading.Config;
-using History.Commons;
 using History.Commons.DataTypes.Contents;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 using History.MobileClient.Pages;
 using Configuration = FFImageLoading.Config.Configuration;
 

@@ -11,13 +11,14 @@ using History.Commons.Api.Post;
 using History.Commons.Enums;
 using History.Commons.Interfaces;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
-using History.MobileClient.KakaoStory;
+using History.Commons.Enums;
+using History.Commons.KakaoStory;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Syncfusion.Maui.Toolkit.Picker;
 using History.Commons.DataTypes.ResponseDtos;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient;
 
@@ -349,14 +350,14 @@ public partial class App : Application
                 // Post notification: the scheme contains the activity id after "activities/".
                 if (scheme.Contains("?profile_id=") && scheme.Contains("activities/"))
                 {
-                    var postId = scheme.Split(new[] { "activities/" }, StringSplitOptions.None)[1];
+                    var postId = scheme.Split(["activities/"], StringSplitOptions.None)[1];
                     var queryIndex = postId.IndexOf('?');
                     if (queryIndex >= 0) postId = postId[..queryIndex];
 
                     // Refresh friends before entering so comment mentions resolve to profile type.
                     if ((await KakaoStoryUtils.EnsureLoggedInAsync(TopPage)) == false) return;
 
-                    var post = await KakaoStory.KakaoStoryApiHandler.GetPost(postId);
+                    var post = await KakaoStoryApiHandler.GetPost(postId);
                     if (post == null) return;
 
                     WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostData>(post));

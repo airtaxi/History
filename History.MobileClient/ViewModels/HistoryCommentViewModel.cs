@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.Api.Comment;
@@ -8,11 +7,8 @@ using History.Commons.Api.Report;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
 using History.MobileClient.Pages;
-using Syncfusion.Maui.Toolkit.Picker;
 
 namespace History.MobileClient.ViewModels;
 

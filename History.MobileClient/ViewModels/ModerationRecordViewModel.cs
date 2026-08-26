@@ -1,7 +1,7 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 
 namespace History.MobileClient.ViewModels;
 

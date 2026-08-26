@@ -12,16 +12,13 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Api.User;
 using History.Commons.Api.Friendship;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Platform;
 using History.Commons;
 using Syncfusion.Maui.Toolkit.Hosting;
 using Syncfusion.Maui.Core.Hosting;
-using History.Commons.Api.Message;
 using CommunityToolkit.Maui.Core;
-using Microsoft.Extensions.DependencyInjection;
 
 #if IOS
 using Plugin.Firebase.Core.Platforms.iOS;
@@ -32,6 +29,7 @@ using Plugin.Firebase.Core.Platforms.Android;
 #if !WINDOWS
 using Plugin.Firebase.CloudMessaging;
 using Plugin.Firebase.CloudMessaging.EventArgs;
+using History.MobileClient;
 #endif
 
 namespace History.MobileClient;

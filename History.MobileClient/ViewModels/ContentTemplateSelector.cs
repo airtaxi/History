@@ -1,6 +1,4 @@
-﻿using History.Commons.DataTypes.Contents;
-
-namespace History.MobileClient.ViewModels;
+﻿namespace History.MobileClient.ViewModels;
 
 internal class ContentTemplateSelector : DataTemplateSelector
 {

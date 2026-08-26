@@ -1,27 +1,21 @@
 ﻿using History.Commons;
 using History.Commons.Api.KakaoStory;
-using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.RequestDtos;
-using History.MobileClient.Enums;
-using History.MobileClient.Helpers;
+using History.Commons.Helpers;
+using History.Commons.KakaoStory;
+using History.Commons.Enums;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Graphics.Platform;
-using Newtonsoft.Json;
-using System.Text;
 using UraniumUI.Icons.FontAwesome;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient.KakaoStory;
 
-public static class KakaoStoryUtils
+public partial class KakaoStoryUtils : CommonKakaoStoryUtils
 {
-    // Guide shown when entering the Kakao Story-only write mode and when blocking a
-    // post without any user mention. Kakao Story-only writing exists solely to mention
-    // Kakao Story users that History posts cannot reference.
-    public const string KakaoOnlyWriteGuideMessage = 
-        "카카오스토리에만 게시글을 작성하는 기능은 히스토리 게시글 작성으로는 불가능한 카카오스토리 사용자를 언급하기 위한 기능으로, 게시글에 사용자 언급이 존재하지 않으면 게시글 작성이 차단됩니다. 히스토리 활성화를 위한 조치로써 해당 용도가 아닌 게시글 작성은 히스토리탭에서 게시글을 작성하신 뒤 \"카카오스토리에도 게시글 작성\" 옵션을 글 작성 메뉴 우측 하단의 펼침 메뉴에서 활성화하고 작성해주세요";
+    private static bool s_isRelogging;
 
     // Kakao Story emotions map to the History reaction visuals (glyph + color).
     // Emotion strings: like(좋아요), good(멋져요), pleasure(기뻐요), sad(슬퍼요), cheerup(힘내요).
@@ -36,43 +30,6 @@ public static class KakaoStoryUtils
             "cheerup" => (Solid.Bolt, Color.FromRgb(0xA0, 0x61, 0xB1)),
             _ => (Solid.Heart, Color.FromRgb(0xEB, 0x55, 0x27))
         };
-    }
-
-    private static bool s_isRelogging;
-
-    /// <summary>
-    /// Uploads the current Kakao Story KAuth id token to the server so the
-    /// server-side polling service can deliver Kakao Story notifications via FCM.
-    /// The notification filter flags mirror the settings page. Skipped when the
-    /// master notification toggle is off (the server session is deleted instead).
-    /// Failures are swallowed: polling is a best-effort convenience feature.
-    /// </summary>
-    public static async Task UploadTokenToServerAsync()
-    {
-        try
-        {
-            if ((Configuration.GetValue<bool?>("KakaoStoryNotificationEnabled") ?? true) == false) return;
-            var idToken = await KakaoStoryApiHandler.EnsureKAuthTokenAsync();
-            if (idToken == null) return;
-
-            var requestDto = new UpdateKakaoStoryTokenRequestDto
-            {
-                IdToken = idToken,
-                IsFavoriteFriendNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryFavoriteFriendNotificationEnabled") ?? true,
-                IsEmotionNotificationEnabled = Configuration.GetValue<bool?>("KakaoStoryEmotionNotificationEnabled") ?? true
-            };
-            await Shared.ApiHandler.TryExecuteRequestAsync(new UpdateKakaoStoryToken(requestDto));
-        }
-        catch { }
-    }
-
-    /// <summary>
-    /// Removes the user's Kakao Story session from the server polling service.
-    /// </summary>
-    public static async Task DeleteTokenFromServerAsync()
-    {
-        try { await Shared.ApiHandler.TryExecuteRequestAsync(new DeleteKakaoStoryToken()); }
-        catch { }
     }
 
     /// <summary>
@@ -129,22 +86,6 @@ public static class KakaoStoryUtils
     }
 
     /// <summary>
-    /// Reloads the friends list and the current user id. Used when the caches are
-    /// empty (cold start) so mention surfaces and post action sheets stay accurate.
-    /// Failures leave the caches untouched: the next caller retries the refresh.
-    /// </summary>
-    private static async Task RefreshSessionCachesAsync()
-    {
-        try
-        {
-            Shared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
-            await SaveCurrentUserAsync();
-        }
-        catch { }
-        _ = KakaoStoryApiHandler.EnsureEmoticonCredentialAsync(); // Warm up so first emoticons render immediately.
-    }
-
-    /// <summary>
     /// Presents the auto-fill prompt (when no credential is saved) and the login modal.
     /// The login page refreshes friends and uploads the poll token on success.
     /// </summary>
@@ -163,7 +104,7 @@ public static class KakaoStoryUtils
                     var password = await hostPage.DisplayPromptAsync("비밀번호 입력", "카카오 계정 비밀번호를 입력해주세요.", Constants.PromptOk, Constants.PromptCancel, "비밀번호", -1, Keyboard.Password);
                     if (!string.IsNullOrWhiteSpace(password))
                     {
-                        var encryptedPassword = AesCryptoHelper.Encrypt(password, Constants.KakaoStoryCredentialEncryptionKey);
+                        var encryptedPassword = AesCryptoHelper.Encrypt(password, CommonConstants.KakaoStoryCredentialEncryptionKey);
                         Configuration.SetValue("KakaoStoryEmail", email);
                         Configuration.SetValue("KakaoStoryPassword", encryptedPassword);
                     }
@@ -212,21 +153,6 @@ public static class KakaoStoryUtils
 
         return contents;
     }
-
-    /// <summary>
-    /// Feed verbs that are not a user's post and have no single-post surface to render:
-    /// - "suggest"    -> Kakao Story's own recommendation card (오늘의 추천 친구).
-    /// - "aggregated" -> timehop-style bundles carrying several posts in object.objects.
-    /// Add to this set as new ones turn up.
-    ///
-    /// This is deliberately a blocklist rather than an allowlist of renderable verbs.
-    /// Kakao Story's verb vocabulary is undocumented, and a verb other than "post" can
-    /// still be a real post (@object is "the shared post, for a share activity"), so an
-    /// allowlist would fail closed and silently drop content with nothing on screen to
-    /// say so. A blocklist fails open: an unknown card is visible and is one line to fix.
-    /// </summary>
-    private static readonly HashSet<string> NonPostVerbs = ["suggest", "aggregated"];
-
     /// <summary>
     /// Creates the post view model for a Kakao Story feed item, unwrapping bundled feeds
     /// (share/UP activities) into the shared post/repost surfaces (WPF pattern):
@@ -236,7 +162,7 @@ public static class KakaoStoryUtils
     /// - bundled_feed.type == "scrap" -> render only the most recent activity
     ///                                    (bundled_feed.activity) as a normal link-embedded post.
     /// Returns null when the post author is banned (relation.ban == "A") so callers skip it.
-    /// Also returns null for the verbs in <see cref="NonPostVerbs"/>, which are not a
+    /// Also returns null for the verbs in <see cref="CommonKakaoStoryUtils.NonPostVerbs"/>, which are not a
     /// user's post at all, and for a bundled_feed whose type has no rule here.
     /// </summary>
     public static BasePostViewModel CreatePostViewModel(PostData postData)
@@ -284,266 +210,6 @@ public static class KakaoStoryUtils
     }
 
     /// <summary>
-    /// Loads the logged-in Kakao Story user's id into Shared.KakaoUserId so post
-    /// action sheets can distinguish own posts (e.g. hide vs. delete).
-    /// </summary>
-    private static async Task SaveCurrentUserAsync()
-    {
-        try
-        {
-            var profile = await KakaoStoryApiHandler.GetProfileData();
-            Shared.KakaoUserId = profile?.id;
-        }
-        catch { Shared.KakaoUserId = null; }
-    }
-
-    private static readonly DateTime epoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-    public static long ToUnixTime(DateTime date)
-    {
-        return Convert.ToInt64((date - epoch).TotalSeconds);
-    }
-
-    public static string GetStringFromQuoteData(List<QuoteData> datas, bool preserveQuote)
-    {
-        StringBuilder sb = new();
-        foreach (var data in datas)
-        {
-            if (preserveQuote)
-            {
-                if (data.type.Equals("profile"))
-                {
-                    sb.Append("{!{" + JsonConvert.SerializeObject(data, Formatting.None, new JsonSerializerSettings
-                    {
-                        NullValueHandling = NullValueHandling.Ignore
-                    }) + "}!}");
-                }
-                else if (data.type.Equals("emoticon"))
-                {
-                    sb.Append("{!{" + JsonConvert.SerializeObject(data, Formatting.None, new JsonSerializerSettings
-                    {
-                        NullValueHandling = NullValueHandling.Ignore
-                    }) + "}!}");
-                }
-                else
-                    sb.Append(data.text);
-            }
-            else
-                sb.Append(data.text);
-        }
-        return sb.ToString();
-    }
-
-    /// <summary>
-    /// Spaghetti code, should be refactored.
-    /// </summary>
-    /// <param name="text"></param>
-    /// <param name="escapeHashtag"></param>
-    /// <returns></returns>
-    public static List<QuoteData> GetQuoteDataFromString(string text, bool escapeHashtag = false)
-    {
-        text = text.Replace("\r\n", "\n");
-        text = text.Replace("\r", "\n");
-        string[] fragmentBases = text.Split(new string[] { "{!{" }, StringSplitOptions.None);
-        var returnData = new List<QuoteData>();
-        int count = 0;
-        foreach (string fragmentBase in fragmentBases)
-        {
-            if (count % 2 == 0)
-            {
-                string str = fragmentBase.Contains("}!}") ? fragmentBase.Split(new string[] { "}!}" }, StringSplitOptions.None)[1] : fragmentBase;
-                if (str.Contains('#') && !escapeHashtag)
-                {
-                    string[] rawStr = str.Split(new string[] { "#" }, StringSplitOptions.None);
-                    if (rawStr[0].Length > 0)
-                    {
-                        returnData.Add(new QuoteData()
-                        {
-                            type = "text",
-                            text = rawStr[0]
-                        });
-                    }
-                    for (int i = 1; i < rawStr.Length; i++)
-                    {
-                        string strNow = rawStr[i];
-                        int splitCounter = Math.Min(strNow.IndexOf(" "), strNow.IndexOf("\n"));
-                        if (splitCounter >= 0)
-                        {
-							string hashTag = strNow[..splitCounter];
-                            string otherStr = strNow[splitCounter..];
-                            if (hashTag.Length > 0)
-                            {
-                                returnData.Add(new QuoteData()
-                                {
-                                    type = "hashtag",
-                                    hashtag_type = "",
-                                    hashtag_type_id = "",
-                                    text = "#" + hashTag
-                                });
-                            }
-                            else
-                            {
-                                returnData.Add(new QuoteData()
-                                {
-                                    type = "text",
-                                    text = "#"
-                                });
-                            }
-                            if (otherStr.Length > 0)
-                            {
-                                returnData.Add(new QuoteData()
-                                {
-                                    type = "text",
-                                    text = otherStr
-                                });
-                            }
-                        }
-                        else
-                        {
-                            returnData.Add(new QuoteData()
-                            {
-                                type = "hashtag",
-                                hashtag_type = "",
-                                hashtag_type_id = "",
-                                text = "#" + strNow
-                            });
-                        }
-                    }
-                }
-                else
-                {
-                    var quoteData = new QuoteData()
-                    {
-                        type = "text",
-                        text = str
-                    };
-                    returnData.Add(quoteData);
-                }
-                count++;
-            }
-            else
-            {
-                string[] strs = fragmentBase.Split(new string[] { "}!}" }, StringSplitOptions.None);
-                string jsonStr = strs[0];
-                var quoteData = JsonConvert.DeserializeObject<QuoteData>(jsonStr);
-                count++;
-                returnData.Add(quoteData);
-                if (strs.Length == 2)
-                {
-                    var quoteData2 = new QuoteData()
-                    {
-                        type = "text",
-                        text = strs[1]
-                    };
-                    returnData.Add(quoteData2);
-                    count++;
-                }
-            }
-        }
-        return returnData;
-    }
-
-    /// <summary>
-    /// Converts the editor contents (text/hashtag/profile/sticker) into Kakao Story
-    /// QuoteData decorators. Profile mentions keep the bare display name (no "@")
-    /// and the friend's id, matching the Kakao Story API format. Sticker contents
-    /// are skipped here; they are uploaded as images separately.
-    /// </summary>
-    public static List<QuoteData> GetQuoteDataFromContents(List<BaseContent> contents)
-    {
-        if (contents == null) return [];
-
-        var quoteDatas = new List<QuoteData>();
-        foreach (var content in contents)
-        {
-            if (content is TextContent textContent)
-            {
-                if (!string.IsNullOrEmpty(textContent.Text)) quoteDatas.Add(new QuoteData { type = "text", text = textContent.Text });
-            }
-            else if (content is HyperlinkContent hyperlinkContent)
-            {
-                if (!string.IsNullOrEmpty(hyperlinkContent.Url)) quoteDatas.Add(new QuoteData { type = "text", text = hyperlinkContent.Url });
-            }
-            else if (content is HashtagContent hashtagContent)
-            {
-                quoteDatas.Add(new QuoteData
-                {
-                    type = "hashtag",
-                    hashtag_type = "",
-                    hashtag_type_id = "",
-                    text = "#" + hashtagContent.Tag
-                });
-            }
-            else if (content is ProfileContent profileContent)
-            {
-                // Resolve by the exact user id first; a nickname-only match is unreliable.
-                var friend = Shared.KakaoFriends?.FirstOrDefault(profile => profile.id == profileContent.UserId) ?? Shared.KakaoFriends?.FirstOrDefault(profile => profile.display_name == profileContent.Nickname);
-                if (friend != null)
-                {
-                    quoteDatas.Add(new QuoteData
-                    {
-                        type = "profile",
-                        id = friend.id,
-                        text = friend.display_name ?? profileContent.Nickname
-                    });
-                }
-                else
-                {
-                    quoteDatas.Add(new QuoteData { type = "text", text = "@" + profileContent.Nickname });
-                }
-            }
-        }
-        return quoteDatas;
-    }
-
-    /// <summary>
-    /// Converts Kakao Story QuoteData decorators (text/hashtag/profile/emoticon/image)
-    /// into BaseContent so shared rendering/edit surfaces (e.g. PostImageRendererHelper)
-    /// can consume Kakao Story posts. The emoticon is preserved as a "(이모티콘)"
-    /// placeholder text token so editing keeps it instead of dropping it entirely;
-    /// when preserveEmoticon is true it becomes a StickerContent carrying the
-    /// Referer-signed emoticon URL (image rendering only), falling back to the
-    /// placeholder text when the credential is not available.
-    /// </summary>
-    public static List<BaseContent> ConvertToBaseContents(List<QuoteData> quoteDatas, bool preserveEmoticon = false)
-    {
-        var contents = new List<BaseContent>();
-        var mediaContents = new List<BaseContent>();
-        foreach (var data in quoteDatas)
-        {
-            switch (data.type)
-            {
-                case "text":
-                    contents.Add(new TextContent { Text = data.text });
-                    break;
-                case "hashtag":
-                    contents.Add(new HashtagContent { Tag = data.text.TrimStart('#') });
-                    break;
-                case "profile":
-                    contents.Add(new ProfileContent { UserId = data.id, Nickname = data.text });
-                    break;
-                case "image":
-                    // Appended after all text fragments to mirror the UI layout
-                    // (FormattedText first, media carousel last).
-                    var mediaUrl = data.media?.url ?? data.media?.thumbnail_url;
-                    if (mediaUrl != null) mediaContents.Add(new MediaContent { MediaId = mediaUrl, MimeType = "image/jpeg" });
-                    else mediaContents.Add(new TextContent { Text = "(이미지)" });
-                    break;
-                case "emoticon":
-                    if (preserveEmoticon)
-                    {
-                        var emoticonUrl = KakaoStoryApiHandler.GetEmoticonUrlSync(data.item_id, data.resource_id.ToString());
-                        if (emoticonUrl != null) contents.Add(new StickerContent { StickerMediaId = emoticonUrl, IsAnimated = false });
-                        else contents.Add(new TextContent { Text = "(이모티콘)" });
-                    }
-                    else contents.Add(new TextContent { Text = "(이모티콘)" });
-                    break;
-            }
-        }
-        contents.AddRange(mediaContents);
-        return contents;
-    }
-
-    /// <summary>
     /// Converts the picked image to PNG when Kakao Story does not accept the format.
     /// WebP is converted (Kakao Story does not support it); GIF is rejected because
     /// only static images are allowed. Returns null when the image cannot be used.
@@ -577,27 +243,5 @@ public static class KakaoStoryUtils
             await App.Page.DisplayAlertAsync("오류", "이미지를 변환할 수 없습니다. 애니메이션이 포함된 webp 이미지일 수 있습니다.", Constants.PromptOk);
             return null;
         }
-    }
-
-    public static string GetTimeString(DateTime created_at, DateTime? modified_at = null)
-    {
-        int offset = DateTimeOffset.Now.Offset.Hours;
-        string dateText = created_at.AddHours(offset).ToString();
-        var diffTime = DateTime.Now.Subtract(created_at.AddHours(offset));
-        if (diffTime.TotalSeconds < 60)
-        {
-            dateText = "방금 전";
-        }
-        else if (diffTime.TotalMinutes < 60)
-        {
-            dateText = ((int)diffTime.TotalMinutes).ToString() + "분 전";
-        }
-        else if (diffTime.TotalHours < 24)
-        {
-            dateText = ((int)diffTime.TotalHours).ToString() + "시간 전";
-        }
-
-        if (modified_at != null) dateText += " (수정됨)";
-        return dateText;
     }
 }

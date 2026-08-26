@@ -1,6 +1,5 @@
 ﻿using System.Runtime.Versioning;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Android;
 using Android.App;
 using Android.App.Job;
@@ -10,7 +9,6 @@ using Android.OS;
 using Android.Util;
 using Android.Views;
 using Android.Widget;
-using AndroidX.Activity.Result;
 using AndroidX.Activity.Result.Contract;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
@@ -23,12 +21,9 @@ using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.DataTypes;
-using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
-using History.MobileClient.KakaoStory;
 using History.MobileClient.Messages;
 using History.MobileClient.Pages;
-using History.MobileClient.ViewModels;
 using Plugin.Firebase.CloudMessaging;
 
 namespace History.MobileClient;

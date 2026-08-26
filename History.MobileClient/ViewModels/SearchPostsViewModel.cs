@@ -1,8 +1,8 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 using History.MobileClient.Messages;
 using System.Collections.ObjectModel;
 using Application = Microsoft.Maui.Controls.Application;

@@ -2,9 +2,8 @@
 using History.Commons;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;

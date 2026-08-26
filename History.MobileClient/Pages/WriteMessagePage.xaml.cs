@@ -1,10 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Message;
 using History.Commons.DataTypes.Contents;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 
 
 #if IOS

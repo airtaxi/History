@@ -1,6 +1,4 @@
-using History.Commons.DataTypes.Contents;
-using History.Commons.DataTypes.ResponseDtos;
-using History.Commons.Enums;
+﻿using History.Commons.DataTypes.Contents;
 
 namespace History.MobileClient.ViewModels;
 

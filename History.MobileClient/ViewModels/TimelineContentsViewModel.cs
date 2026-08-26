@@ -1,6 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using History.Commons.DataTypes.Contents;
-using History.MobileClient.Enums;
 
 namespace History.MobileClient.ViewModels;
 

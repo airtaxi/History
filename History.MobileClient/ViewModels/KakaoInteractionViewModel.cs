@@ -1,9 +1,8 @@
-﻿using History.Commons;
-using History.MobileClient.Enums;
-using History.MobileClient.KakaoStory;
-using History.MobileClient.Pages;
+﻿using History.MobileClient.Pages;
 using UraniumUI.Icons.MaterialSymbols;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
+using History.MobileClient.KakaoStory;
+using History.Commons.Enums;
 
 namespace History.MobileClient.ViewModels;
 

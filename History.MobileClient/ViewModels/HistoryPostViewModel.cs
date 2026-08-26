@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
@@ -9,15 +8,11 @@ using History.Commons.Api.Moderation;
 using History.Commons.Api.Post;
 using History.Commons.Api.Report;
 using History.Commons.Api.User;
-using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
 using History.MobileClient.Pages;
-using System.Collections.ObjectModel;
 using UraniumUI.Icons.FontAwesome;
 
 namespace History.MobileClient.ViewModels;
@@ -449,7 +444,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
 
     public override async Task HandleReactionTapAsync()
     {
-        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Reaction).Select(x => new HistoryFriendshipViewModel(((HistoryInteractionViewModel)x).User, (HistoryInteractionViewModel)x)), Enums.InteractionType.Reaction);
+        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Reaction).Select(x => new HistoryFriendshipViewModel(((HistoryInteractionViewModel)x).User, (HistoryInteractionViewModel)x)), InteractionType.Reaction);
 #if IOS
         await App.PushAsync(page);
 #else
@@ -459,7 +454,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
 
     public override async Task HandleSharedTapAsync()
     {
-        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Share).Select(x => new HistoryFriendshipViewModel(((HistoryInteractionViewModel)x).User, (HistoryInteractionViewModel)x)), Enums.InteractionType.Share);
+        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Share).Select(x => new HistoryFriendshipViewModel(((HistoryInteractionViewModel)x).User, (HistoryInteractionViewModel)x)), InteractionType.Share);
 #if IOS
         await App.PushAsync(page);
 #else
@@ -469,7 +464,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
 
     public override async Task HandleRepostTapAsync()
     {
-        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Repost).Select(x => new HistoryFriendshipViewModel(((HistoryInteractionViewModel)x).User, (HistoryInteractionViewModel)x)), Enums.InteractionType.Repost);
+        var page = new InteractionsPage(Interactions.Where(x => x.Type == InteractionType.Repost).Select(x => new HistoryFriendshipViewModel(((HistoryInteractionViewModel)x).User, (HistoryInteractionViewModel)x)), InteractionType.Repost);
 #if IOS
         await App.PushAsync(page);
 #else

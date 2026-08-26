@@ -2,10 +2,9 @@
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using SuggestingBox.Maui;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using CommunityToolkit.Mvvm.Messaging;
-using History.MobileClient.KakaoStory;
+using History.Commons.Helpers;
 
 namespace History.MobileClient.ContentViews.EditPost;
 

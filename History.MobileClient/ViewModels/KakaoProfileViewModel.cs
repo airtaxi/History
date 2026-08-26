@@ -1,13 +1,16 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using History.Commons;
 using History.Commons.Api.User;
 using History.MobileClient.Helpers;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 using History.MobileClient.Pages;
+using History.MobileClient.KakaoStory;
+
+
 #if !WINDOWS
 using NativeMedia;
 #endif
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 
 namespace History.MobileClient.ViewModels;
 
@@ -263,9 +266,9 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
                 await App.Page.DisplayAlertAsync("닉네임 변경 실패", "닉네임은 공백으로 설정할 수 없습니다", Constants.PromptOk);
                 return;
             }
-            else if (prompt.Length > CommonsConstants.MaxNicknameLength)
+            else if (prompt.Length > CommonConstants.MaxNicknameLength)
             {
-                await App.Page.DisplayAlertAsync("닉네임 변경 실패", $"닉네임은 {CommonsConstants.MaxNicknameLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("닉네임 변경 실패", $"닉네임은 {CommonConstants.MaxNicknameLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
                 return;
             }
 
@@ -285,9 +288,9 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
 
         if (prompt != null && prompt != Description)
         {
-            if (prompt.Length > CommonsConstants.MaxProfileDescriptionLength)
+            if (prompt.Length > CommonConstants.MaxProfileDescriptionLength)
             {
-                await App.Page.DisplayAlertAsync("한줄 소개 변경 실패", $"한줄 소개는 {CommonsConstants.MaxProfileDescriptionLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("한줄 소개 변경 실패", $"한줄 소개는 {CommonConstants.MaxProfileDescriptionLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
                 return;
             }
 

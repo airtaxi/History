@@ -2,7 +2,6 @@
 using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.MobileClient.Helpers;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.Pages
 {

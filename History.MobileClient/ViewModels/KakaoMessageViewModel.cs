@@ -1,10 +1,11 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using History.Commons.KakaoStory;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Messages;
 using History.MobileClient.Pages;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 
 namespace History.MobileClient.ViewModels;
 

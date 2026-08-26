@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.Contents;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.TimeLineData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.TimeLineData;
 
 namespace History.MobileClient.ViewModels;
 

@@ -2,6 +2,7 @@
 
 ## 중요: CSharpStyleGuard 실행 금지
 - 이 레포에서는 CSharpStyleGuard(`--fix`/`--check`)를 실행하지 마세요. 가드가 삼항 연산자(CSG0001) 등을 무조건 한 줄로 합쳐버려서 320자를 초과하는 가독성 없는 줄이 만들어지는 문제가 있습니다. 수동 포맷팅만 사용하세요.
+- 단, `History.WindowsClient/` 경로에서는 Guard 프로젝트(`--fix`)를 **반드시 실행**해야 합니다.
 
 ## 중요 코드 스타일
 - C# 관련 작업(.cs/.xaml/.csproj 등 생성·수정·검토·리팩토링)을 시작하기 전에 **반드시** `/csharp-code-style` 스킬을 로드하세요.

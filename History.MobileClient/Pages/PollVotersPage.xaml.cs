@@ -1,7 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using History.Commons.Api.Post;
-using History.Commons.DataTypes.ResponseDtos;
+﻿using History.Commons.Api.Post;
 using History.MobileClient.ViewModels;
 
 #if IOS

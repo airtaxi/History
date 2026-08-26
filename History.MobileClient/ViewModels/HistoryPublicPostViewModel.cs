@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.Moderation;
@@ -6,9 +6,8 @@ using History.Commons.Api.Post;
 using History.Commons.Api.Report;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 
 namespace History.MobileClient.ViewModels;
 

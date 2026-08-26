@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Maui.Core.Platform;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.MobileClient.Components.Timeline;
 using History.MobileClient.Helpers;
 using History.MobileClient.Messages;

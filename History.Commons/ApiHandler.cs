@@ -10,7 +10,7 @@ namespace History.Commons;
 public class ApiHandler(string accessToken = null, string refreshToken = null)
 {
     public static ApiHandler Public { get; } = new();
-    private static readonly RestClient Client = new(CommonsConstants.ApiBaseUrl);
+    private static readonly RestClient Client = new(CommonConstants.ApiBaseUrl);
 
     public static string ApplicationVersion { get; set; } = "unknown";
     public static string Platform { get; set; } = "unknown";

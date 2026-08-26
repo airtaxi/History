@@ -6,7 +6,7 @@ using Android.Content;
 using Android.Content.PM;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
-using KakaoMail = History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.MailData.Mail;
+using KakaoMail = History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.MailData.Mail;
 
 namespace History.MobileClient;
 

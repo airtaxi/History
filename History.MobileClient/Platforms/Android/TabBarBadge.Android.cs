@@ -1,8 +1,7 @@
-using Android.Views;
+﻿using Android.Views;
 using Android.Widget;
 using AndroidX.AppCompat.Widget;
 using Google.Android.Material.BottomNavigation;
-using Microsoft.Maui.Controls;
 using Microsoft.Maui.Platform;
 
 namespace History.MobileClient.ShellTabBarBadge;

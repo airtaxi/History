@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "History.WindowsClient (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "History.WindowsClient (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

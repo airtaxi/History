@@ -5,15 +5,16 @@ using History.Commons;
 using History.Commons.Api.Comment;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 using History.MobileClient.Messages;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.ViewModels;
 using System.Net;
 using System.Text;
 using UraniumUI.Icons.MaterialSymbols;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+
 #if IOS
 using NativeMedia;
 #endif

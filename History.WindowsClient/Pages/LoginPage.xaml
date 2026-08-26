@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<pages:BasePage
+    x:Class="History.WindowsClient.Pages.LoginPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:History.WindowsClient"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:pages="using:History.WindowsClient.Pages"
+    mc:Ignorable="d">
+
+    <Grid Background="#FFF112">
+        <Image
+            Width="256"
+            Height="256"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Source="ms-appx:///Assets/App/Icon/TransparentBackground.png"
+            Stretch="Uniform" />
+
+        <StackPanel
+            Margin="20"
+            Padding="20"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            Spacing="12"
+            Visibility="{x:Bind ViewModel.LoginPanelVisibility, Mode=OneWay}">
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="18"
+                Foreground="Black"
+                Text="SNS 계정으로 계속하기" />
+            <StackPanel
+                HorizontalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button
+                    Width="52"
+                    Height="52"
+                    Padding="0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind ViewModel.LoginGoogleCommand}">
+                    <Image Source="ms-appx:///Assets/App/Login/Google.png" Stretch="Uniform" />
+                </Button>
+                <Button
+                    Width="52"
+                    Height="52"
+                    Padding="0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind ViewModel.LoginAppleCommand}">
+                    <Image Source="ms-appx:///Assets/App/Login/Apple.png" Stretch="Uniform" />
+                </Button>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</pages:BasePage>

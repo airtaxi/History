@@ -1,4 +1,5 @@
-﻿using History.Commons.DataTypes.Contents;
+﻿using History.Commons;
+using History.Commons.DataTypes.Contents;
 using SuggestingBox.Maui;
 
 namespace History.MobileClient.Helpers;
@@ -6,10 +7,6 @@ namespace History.MobileClient.Helpers;
 public static class MentionHelper
 {
     private const double StickerImageWidthRequest = 80;
-
-    private static readonly HttpClient s_httpClient = new();
-    private static readonly SemaphoreSlim s_stickerImageDataCacheSemaphore = new(1, 1);
-    private static readonly Dictionary<string, byte[]> s_stickerImageDataCache = [];
 
     private static readonly SuggestionFormat s_mentionFormat = new()
     {
@@ -138,7 +135,7 @@ public static class MentionHelper
     {
         if (stickerContent == null) return null;
 
-        var imageData = await GetStickerImageDataAsync(stickerContent.StickerMediaId);
+        var imageData = await CommonUtils.GetStickerImageDataAsync(stickerContent.StickerMediaId);
         if (imageData.Length == 0) return null;
 
         return SuggestingBoxTokenInfo.CreateImage(startIndex, imageData, alternativeText: "스티커", widthRequest: StickerImageWidthRequest, item: stickerContent, tag: stickerContent.StickerContentId);
@@ -146,34 +143,4 @@ public static class MentionHelper
 
     public static SuggestingBoxTokenInfo CreateStickerFallbackToken(int startIndex, StickerContent stickerContent) =>
         new(startIndex, " * ", "스티커 * ", s_stickerFallbackFormat, stickerContent);
-
-    public static async Task<byte[]> GetStickerImageDataAsync(string stickerMediaId)
-    {
-        if (string.IsNullOrEmpty(stickerMediaId)) return [];
-
-        await s_stickerImageDataCacheSemaphore.WaitAsync();
-        try
-        {
-            if (s_stickerImageDataCache.TryGetValue(stickerMediaId, out var cachedImageData)) return cachedImageData;
-        }
-        finally { s_stickerImageDataCacheSemaphore.Release(); }
-
-        try
-        {
-            var mediaUri = Utils.GenerateMediaUri(stickerMediaId);
-            if (mediaUri == null) return [];
-
-            var imageData = await s_httpClient.GetByteArrayAsync(mediaUri);
-
-            await s_stickerImageDataCacheSemaphore.WaitAsync();
-            try { s_stickerImageDataCache[stickerMediaId] = imageData; }
-            finally { s_stickerImageDataCacheSemaphore.Release(); }
-
-            return imageData;
-        }
-        catch
-        {
-            return [];
-        }
-    }
 }

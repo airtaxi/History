@@ -1,9 +1,8 @@
 ﻿using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 
 namespace History.MobileClient.ViewModels;
 

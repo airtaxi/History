@@ -1,6 +1,7 @@
-using Android.App;
+﻿using Android.App;
 using Android.App.Job;
 using Android.Util;
+using History.Commons.KakaoStory;
 using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient;
@@ -11,7 +12,7 @@ namespace History.MobileClient;
 /// JobScheduler minimum). Notification polling is owned by the server (FCM
 /// push); the poller never opens the login modal from here.
 /// </summary>
-[Service(Name = "com.airtaxi.history.KakaoStoryNotificationRefreshService", Permission = "android.permission.BIND_JOB_SERVICE")]
+[Service(Name = "com.airtaxi.History.Commons.KakaoStoryNotificationRefreshService", Permission = "android.permission.BIND_JOB_SERVICE")]
 public class KakaoStoryNotificationRefreshService : JobService
 {
     private const string TAG = "History";

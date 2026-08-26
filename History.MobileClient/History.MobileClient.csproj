@@ -22,6 +22,7 @@
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 		<Nullable>disable</Nullable>
 		<LangVersion>preview</LangVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
 		<!-- Display name -->
 		<ApplicationTitle>히스토리</ApplicationTitle>
@@ -172,5 +173,9 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android' Or '$(TargetFramework)' == 'net10.0-ios'">
 		<PackageReference Include="Xamarin.MediaGallery" Version="3.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Enums\" />
 	</ItemGroup>
 </Project>

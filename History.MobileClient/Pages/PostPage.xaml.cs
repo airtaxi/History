@@ -3,22 +3,19 @@ using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.Api.Comment;
-using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 using History.MobileClient.ViewModels;
-using Microsoft.Maui.Controls.Platform.Compatibility;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
 using UraniumUI.Icons.MaterialSymbols;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using History.MobileClient.KakaoStory;
 #if IOS
 using NativeMedia;
 #endif

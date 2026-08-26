@@ -1,6 +1,5 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Moderation;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;

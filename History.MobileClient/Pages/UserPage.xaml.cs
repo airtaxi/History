@@ -5,17 +5,17 @@ using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 using History.MobileClient.Helpers;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 using History.MobileClient.ViewModels;
-using Microsoft.Maui.Platform;
 using System.Collections.ObjectModel;
 using History.Commons;
 using UraniumUI.Icons.MaterialSymbols;
 using History.Commons.Api.Message;
 using History.MobileClient.ThirdParty.StaggeredLayout;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient.Pages;
 
@@ -580,7 +580,7 @@ public partial class UserPage : ContentPage
 
     private async void OnMemoImageTapped(object sender, TappedEventArgs e)
     {
-        var memo = await DisplayPromptAsync("메모 작성", "사용자 메모를 작성해주세요. 공란으로 설정 시 메모가 삭제됩니다.", Constants.PromptOk, Constants.PromptCancel, "최대 10자까지 입력 가능. 공란 시 삭제", CommonsConstants.MaxMemoLength, keyboard: Keyboard.Text);
+        var memo = await DisplayPromptAsync("메모 작성", "사용자 메모를 작성해주세요. 공란으로 설정 시 메모가 삭제됩니다.", Constants.PromptOk, Constants.PromptCancel, "최대 10자까지 입력 가능. 공란 시 삭제", CommonConstants.MaxMemoLength, keyboard: Keyboard.Text);
         if (memo == null) return;
 
         var response = await App.ExecuteRequestAsync(new UpdateMemo(UserId, memo.Trim()));

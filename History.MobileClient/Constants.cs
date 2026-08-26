@@ -17,6 +17,4 @@ public static class Constants
     public const string PromptNo = "아니요";
 
     public const string DiscordInviteUrl = "https://discord.com/invite/g9jk3GR3vD";
-
-    public const string KakaoStoryCredentialEncryptionKey = "980b33e558d100edbead56668e91f3df";
 }

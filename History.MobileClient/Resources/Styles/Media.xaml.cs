@@ -6,7 +6,6 @@ using CommunityToolkit.Mvvm.Messaging;
 using FFImageLoading.Maui;
 using FFImageLoading.Maui.Platform;
 using History.MobileClient.Behaviors;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.ViewModels;
 

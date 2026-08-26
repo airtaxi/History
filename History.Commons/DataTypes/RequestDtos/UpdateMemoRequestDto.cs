@@ -10,6 +10,6 @@ namespace History.Commons.DataTypes.RequestDtos;
 public class UpdateMemoRequestDto
 {
     [Required]
-    [MaxLength(CommonsConstants.MaxMemoLength)]
+    [MaxLength(CommonConstants.MaxMemoLength)]
     public string Memo { get; set; }
 }

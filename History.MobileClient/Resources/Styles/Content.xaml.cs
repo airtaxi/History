@@ -1,15 +1,10 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
-using CommunityToolkit.Mvvm.Messaging;
+using History.Commons.Enums;
 using History.Commons.DataTypes.Contents;
-using History.MobileClient.DataTypes;
-using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Controls.Shapes;
-using Microsoft.Maui.Layouts;
-using System.Diagnostics;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace History.MobileClient.Resources.Styles;
 
@@ -72,7 +67,7 @@ public partial class Content : ResourceDictionary
         if (bindingContext is BaseCommentViewModel commentViewModel) await commentViewModel.HandleTapAsync();
 #endif
         if (bindingContext is HistoryPublicPostViewModel publicPostViewModel) await publicPostViewModel.HandleProfileTapAsync();
-        else if (bindingContext is BasePostViewModel postViewModel && (postViewModel.PostType != Enums.PostType.Unwrapped || postViewModel.IsParentPost)) await postViewModel.HandleTapAsync();
+        else if (bindingContext is BasePostViewModel postViewModel && (postViewModel.PostType != PostType.Unwrapped || postViewModel.IsParentPost)) await postViewModel.HandleTapAsync();
     }
 
     private void OnTextTypeContentsLabelSizeChanged(object sender, EventArgs e)

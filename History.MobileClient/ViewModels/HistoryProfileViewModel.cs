@@ -2,17 +2,17 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
-using FFImageLoading.Maui;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
-using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.Helpers;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 using History.MobileClient.Messages;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.Pages;
+
 #if !WINDOWS
 using NativeMedia;
 #endif
@@ -173,9 +173,9 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
                 await App.Page.DisplayAlertAsync("닉네임 변경 실패", "닉네임은 공백으로 설정할 수 없습니다", Constants.PromptOk);
                 return;
             }
-            else if (prompt.Length > CommonsConstants.MaxNicknameLength)
+            else if (prompt.Length > CommonConstants.MaxNicknameLength)
             {
-                await App.Page.DisplayAlertAsync("닉네임 변경 실패", $"닉네임은 {CommonsConstants.MaxNicknameLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("닉네임 변경 실패", $"닉네임은 {CommonConstants.MaxNicknameLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
                 return;
             }
 
@@ -191,9 +191,9 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
 
         if (prompt != null && prompt != User.Description)
         {
-            if (prompt.Length > CommonsConstants.MaxProfileDescriptionLength)
+            if (prompt.Length > CommonConstants.MaxProfileDescriptionLength)
             {
-                await App.Page.DisplayAlertAsync("한줄 소개 변경 실패", $"한줄 소개는 {CommonsConstants.MaxProfileDescriptionLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("한줄 소개 변경 실패", $"한줄 소개는 {CommonConstants.MaxProfileDescriptionLength}자 이하로 설정할 수 있습니다", Constants.PromptOk);
                 return;
             }
 
@@ -339,7 +339,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
 
     private async Task HandleChangeHandleAsync()
     {
-        var handle = await App.Page.DisplayPromptAsync("핸들 변경", "새로운 핸들을 입력해주세요 (최대 20자, 특수문자 사용 불가)", "변경", Constants.PromptCancel, "새로운 핸들", CommonsConstants.MaxHandleLength, null, User.Handle);
+        var handle = await App.Page.DisplayPromptAsync("핸들 변경", "새로운 핸들을 입력해주세요 (최대 20자, 특수문자 사용 불가)", "변경", Constants.PromptCancel, "새로운 핸들", CommonConstants.MaxHandleLength, null, User.Handle);
         handle = handle?.Trim();
         if (handle != null)
         {

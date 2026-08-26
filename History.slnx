@@ -10,4 +10,8 @@
     <Deploy Solution="Debug|*" />
   </Project>
   <Project Path="History.ServiceDefaults/History.ServiceDefaults.csproj" />
+  <Project Path="History.WindowsClient/History.WindowsClient.csproj" Id="50fe4111-0fde-4c1e-9f90-4ad3c48ea15d">
+    <Platform Project="x64" />
+    <Deploy />
+  </Project>
 </Solution>

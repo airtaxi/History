@@ -3,7 +3,7 @@ using System.Text;
 using Foundation;
 using UIKit;
 using UserNotifications;
-using KakaoMail = History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.MailData.Mail;
+using KakaoMail = History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.MailData.Mail;
 
 namespace History.MobileClient;
 

@@ -10,6 +10,6 @@ public class UpdateUserHandleRequestDto
     /// <summary>
     /// The new handle for the user
     /// </summary>
-    [MaxLength(CommonsConstants.MaxHandleLength)]
+    [MaxLength(CommonConstants.MaxHandleLength)]
     public string Handle { get; set; }
 }

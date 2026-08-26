@@ -1,8 +1,9 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using History.Commons;
 using History.MobileClient.Helpers;
+using History.Commons.KakaoStory;
+using History.Commons.Helpers;
 using History.MobileClient.KakaoStory;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
 
 namespace History.MobileClient.Pages;
 
@@ -109,7 +110,7 @@ public partial class KakaoStoryLoginPage : ContentPage
 
         try
         {
-            var password = AesCryptoHelper.Decrypt(savedEncryptedPassword, Constants.KakaoStoryCredentialEncryptionKey);
+            var password = AesCryptoHelper.Decrypt(savedEncryptedPassword, CommonConstants.KakaoStoryCredentialEncryptionKey);
 
             await Task.Delay(500);
 

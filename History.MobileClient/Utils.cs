@@ -9,16 +9,26 @@ using History.Commons.Api.Post;
 using History.Commons.Api.PushNotification;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
-using History.MobileClient.Enums;
-using History.MobileClient.Helpers;
-using History.MobileClient.KakaoStory;
+using History.Commons.Enums;
+using History.Commons.KakaoStory;
 using History.MobileClient.Pages;
 using History.MobileClient.ViewModels;
 using UraniumUI.Icons.FontAwesome;
 using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.Maui.Graphics.Platform;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+
+<<<<<<< TODO: Unmerged change from project 'History.MobileClient (net10.0-windows10.0.26100.0)', Before:
+using History.MobileClient.KakaoStory;
+=======
+using History.MobileClient.KakaoStory;
+using History.Commons.Helpers;
+>>>>>>> After
+using History.MobileClient.KakaoStory;
+using History.Commons.Helpers;
+
+
 
 #if !WINDOWS
 using Plugin.Firebase.CloudMessaging;
@@ -36,12 +46,7 @@ public static partial class Utils
     private const int DiscoveryMaxTextLength = 1600;
     private const int DiscoveryMaxTextLines = 27;
 
-    public static string GenerateMediaUri(string mediaId)
-    {
-        if (mediaId == null) return null;
-
-        return $"https://api.history.cenox.io/api/media/{mediaId}";
-    }
+    public static string GenerateMediaUri(string mediaId) => CommonUtils.GenerateMediaUri(mediaId);
 
     public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, PostType postType, bool isParentPost = false, string postId = null)
     {

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
@@ -48,7 +48,7 @@
 	</array>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.airtaxi.history.kakaostoryrefresh</string>
+		<string>com.airtaxi.History.Commons.KakaoStoryrefresh</string>
 	</array>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>이 앱은 사진과 비디오를 저장하기 위해 사진 갤러리에 대한 액세스 권한이 필요합니다.</string>

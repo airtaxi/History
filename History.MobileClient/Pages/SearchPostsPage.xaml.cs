@@ -1,19 +1,14 @@
-﻿using CommunityToolkit.Maui.Behaviors;
-using CommunityToolkit.Maui.Core.Platform;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
-using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using UraniumUI.Icons.FontAwesome;
 
 namespace History.MobileClient.Pages;
 

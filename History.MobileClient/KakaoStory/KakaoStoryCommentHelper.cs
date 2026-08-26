@@ -1,8 +1,10 @@
-﻿using History.Commons.DataTypes.Contents;
+﻿using History.Commons;
+using History.Commons.DataTypes.Contents;
+using History.Commons.KakaoStory;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using Microsoft.Maui.Graphics.Platform;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 
 namespace History.MobileClient.KakaoStory;
 
@@ -12,7 +14,7 @@ namespace History.MobileClient.KakaoStory;
 // degrade to "(스티커)" text. The picker image is uploaded and placed first so the API
 // renders the first decorator as the comment image. Profile mentions are converted
 // from the editor contents (type="profile" with the friend id), not parsed from text.
-public static class KakaoStoryCommentHelper
+public partial class KakaoStoryCommentHelper : CommonKakaoStoryCommentHelper
 {
     /// <summary>
     /// Builds the Kakao Story comment payload. Returns null when the picker image
@@ -36,7 +38,7 @@ public static class KakaoStoryCommentHelper
         {
             if (stickerContent.StickerMediaId == null) continue;
 
-            var imageData = await MentionHelper.GetStickerImageDataAsync(stickerContent.StickerMediaId);
+            var imageData = await CommonUtils.GetStickerImageDataAsync(stickerContent.StickerMediaId);
             if (imageData.Length == 0) continue;
 
             // All History stickers are webp, which KakaoStory does not accept.
@@ -111,29 +113,5 @@ public static class KakaoStoryCommentHelper
         // The API expects the plain text to mirror the decorators (KSMP pattern: space-joined decorator texts).
         var plainText = string.Join(' ', decorators.Select(x => x.text));
         return (decorators, plainText);
-    }
-
-    private static string BuildKakaoMediaPath(UploadedImageProp uploadedImage) => $"{uploadedImage.access_key}/{uploadedImage.info.original.filename}?width={uploadedImage.info.original.width}&height={uploadedImage.info.original.height}&avg={uploadedImage.info.original.avg}";
-
-    private static void TrimTrailingWhitespaceTextContents(List<BaseContent> contents)
-    {
-        while (contents.Count > 0 && contents[^1] is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))
-            contents.RemoveAt(contents.Count - 1);
-    }
-
-    private static void TrimNewlinesAfterStickers(List<BaseContent> contents)
-    {
-        for (int index = 0; index < contents.Count; index++)
-        {
-            if (contents[index] is not StickerContent) continue;
-
-            // Strip the leading newlines from the text that follows the sticker
-            // (the '\n' the editor appends after a sticker token plus any user-typed ones).
-            if (index + 1 < contents.Count && contents[index + 1] is TextContent bodyContent)
-            {
-                bodyContent.Text = bodyContent.Text.TrimStart('\n');
-                if (string.IsNullOrWhiteSpace(bodyContent.Text)) contents.RemoveAt(index + 1);
-            }
-        }
     }
 }

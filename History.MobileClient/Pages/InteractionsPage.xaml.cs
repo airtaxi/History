@@ -1,10 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using System.ComponentModel;
+using History.Commons.Enums;
 
 namespace History.MobileClient.Pages;
 

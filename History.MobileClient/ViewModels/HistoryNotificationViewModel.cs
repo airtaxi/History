@@ -9,7 +9,7 @@ using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 using History.MobileClient.Pages;
 
 namespace History.MobileClient.ViewModels;

@@ -3,9 +3,8 @@ using CommunityToolkit.Mvvm.Messaging;
 using FFImageLoading;
 using FFImageLoading.Config;
 using FFImageLoading.Maui;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 
 namespace History.MobileClient.ViewModels;
 

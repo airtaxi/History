@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 using System.Collections.ObjectModel;
 
 namespace History.MobileClient.ViewModels;

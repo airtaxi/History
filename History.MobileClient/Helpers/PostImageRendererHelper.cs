@@ -5,7 +5,6 @@ using History.MobileClient.ViewModels;
 using NativeMedia;
 #endif
 using SkiaSharp;
-using System.Net.Http;
 
 namespace History.MobileClient.Helpers;
 

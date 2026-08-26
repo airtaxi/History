@@ -4,16 +4,15 @@ using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 using History.MobileClient.Helpers;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 using History.MobileClient.ThirdParty.StaggeredLayout;
 using History.MobileClient.ViewModels;
-using Microsoft.Maui.Controls.PlatformConfiguration.iOSSpecific;
-using Microsoft.Maui.Platform;
 using System.Collections.ObjectModel;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 using Application = Microsoft.Maui.Controls.Application;
+using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient.Pages;
 

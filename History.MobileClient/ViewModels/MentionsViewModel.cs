@@ -2,7 +2,6 @@
 using History.Commons.Api.Sticker;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
-using History.MobileClient.Helpers;
 
 namespace History.MobileClient.ViewModels;
 

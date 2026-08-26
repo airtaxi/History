@@ -1,6 +1,5 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using History.MobileClient.DataTypes;
 
 namespace History.MobileClient.ViewModels;
 

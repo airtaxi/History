@@ -2,14 +2,12 @@
 using History.Commons;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
-using History.Commons.Enums;
 using History.MobileClient.DataTypes;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
-using Microsoft.Maui.Platform;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient.Pages;
 

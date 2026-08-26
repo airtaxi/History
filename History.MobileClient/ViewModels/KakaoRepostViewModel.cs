@@ -1,8 +1,6 @@
-﻿using History.Commons;
-using History.MobileClient.Enums;
+﻿using History.Commons.Enums;
 using History.MobileClient.Pages;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.MobileClient.ViewModels;
 

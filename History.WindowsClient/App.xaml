@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Application
+    x:Class="History.WindowsClient.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:CommunityToolkit.WinUI.Converters"
+    xmlns:local="using:History.WindowsClient"
+    xmlns:srd="using:History.WindowsClient.Resources">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+
+                <!--  Other merged dictionaries here  -->
+                <ResourceDictionary Source="ms-appx:///DevWinUI/Themes/Generic.xaml" />
+
+                <srd:Friendship />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--  Other app resources here  -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <Color x:Key="ThemeColor">#FFFFFF</Color>
+                    <Color x:Key="ReverseThemeColor">#000000</Color>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <Color x:Key="ThemeColor">#000000</Color>
+                    <Color x:Key="ReverseThemeColor">#FFFFFF</Color>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
+            <converters:VisibilityToBoolConverter x:Key="VisibilityToBoolConverter" />
+
+            <Color x:Key="SystemAccentColor">#ED664D</Color>
+
+            <Color x:Key="SystemAccentColorLight1">#ED664D</Color>
+            <Color x:Key="SystemAccentColorLight2">#FF8452</Color>
+            <Color x:Key="SystemAccentColorLight3">#BA503C</Color>
+
+            <Color x:Key="SystemAccentColorDark1">#ED664D</Color>
+            <Color x:Key="SystemAccentColorDark2">#FF8452</Color>
+            <Color x:Key="SystemAccentColorDark3">#BA503C</Color>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,5 +1,5 @@
-using History.Commons.DataTypes.ResponseDtos;
-using History.MobileClient.Enums;
+﻿using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Enums;
 using History.MobileClient.Pages;
 using UraniumUI.Icons.FontAwesome;
 using UraniumUI.Icons.MaterialSymbols;

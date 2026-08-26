@@ -16,6 +16,6 @@ public class MediaContent : BaseContent
 
     public bool IsSpoiler { get; set; }
 
-    [MaxLength(CommonsConstants.MaxMediaDescriptionLength)]
+    [MaxLength(CommonConstants.MaxMediaDescriptionLength)]
     public string Description { get; set; }
 }

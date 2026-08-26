@@ -7,14 +7,14 @@ using History.Commons.Api.Message;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
-using History.MobileClient.DataTypes;
-using History.MobileClient.Enums;
-using History.MobileClient.KakaoStory;
+using History.Commons.Enums;
+using History.Commons.KakaoStory;
 using History.MobileClient.Messages;
 using History.MobileClient.Pages;
 using System.Collections.ObjectModel;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 using Application = Microsoft.Maui.Controls.Application;
+using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient.ViewModels;
 
@@ -373,7 +373,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
 
     public async Task MemoAsync()
     {
-        var memo = await App.TopPage.DisplayPromptAsync("메모 작성", "사용자 메모를 작성해주세요. 공란으로 설정 시 메모가 삭제됩니다.", Constants.PromptOk, Constants.PromptCancel, "최대 10자까지 입력 가능. 공란 시 삭제", CommonsConstants.MaxMemoLength, keyboard: Keyboard.Text);
+        var memo = await App.TopPage.DisplayPromptAsync("메모 작성", "사용자 메모를 작성해주세요. 공란으로 설정 시 메모가 삭제됩니다.", Constants.PromptOk, Constants.PromptCancel, "최대 10자까지 입력 가능. 공란 시 삭제", CommonConstants.MaxMemoLength, keyboard: Keyboard.Text);
         if (memo == null) return;
 
         var response = await App.ExecuteRequestAsync(new UpdateMemo(UserId, memo.Trim()));

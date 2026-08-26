@@ -4,12 +4,11 @@ using History.Commons.Api.Message;
 using History.MobileClient.DataTypes;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 using History.MobileClient.ViewModels;
-using Microsoft.Maui.Platform;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
+using History.MobileClient.KakaoStory;
 
 namespace History.MobileClient.Pages;
 

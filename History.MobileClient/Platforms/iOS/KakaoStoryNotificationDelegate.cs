@@ -1,4 +1,4 @@
-using Foundation;
+﻿using Foundation;
 using Plugin.Firebase.CloudMessaging;
 using UIKit;
 using UserNotifications;
@@ -44,7 +44,7 @@ public class KakaoStoryNotificationDelegate : UNUserNotificationCenterDelegate
         var scheme = GetScheme(response.Notification.Request.Content.UserInfo);
         if (!string.IsNullOrEmpty(scheme))
         {
-            App.HandleKakaoStoryNotificationAsync(scheme);
+            _ = App.HandleKakaoStoryNotificationAsync(scheme);
             completionHandler();
             return;
         }

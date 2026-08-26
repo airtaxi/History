@@ -21,17 +21,14 @@ using SuggestingBox.Maui;
 using System.Collections.ObjectModel;
 using UraniumUI.Icons.MaterialSymbols;
 using System.Net;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 using Microsoft.Maui.Graphics.Platform;
 using System.Text;
-using History.MobileClient.Enums;
+using History.Commons.Enums;
 using Syncfusion.Maui.Toolkit.Picker;
-using MongoDB.Bson.Serialization.Serializers;
-using Svg;
-using System.Threading.Tasks;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
-using History.MobileClient.ThirdParty.StaggeredLayout;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
+using History.MobileClient.KakaoStory;
 
 
 namespace History.MobileClient.Pages;
@@ -113,7 +110,7 @@ public partial class EditPostPage : ContentPage
             var mimeType = MimeTypes.GetMimeType(fileName);
 
             var isVideo = mimeType.StartsWith("video/");
-            var maxSize = isVideo ? CommonsConstants.MaxUploadFileSize : CommonsConstants.MaxImageUploadFileSize;
+            var maxSize = isVideo ? CommonConstants.MaxUploadFileSize : CommonConstants.MaxImageUploadFileSize;
 
             if (mediaFile.Size > maxSize)
             {
@@ -306,9 +303,9 @@ public partial class EditPostPage : ContentPage
 
     private async void OnImageInputRequested(object sender, string path)
     {
-        if (_attachmentViewModels.Count == CommonsConstants.MaxPostMediaCount)
+        if (_attachmentViewModels.Count == CommonConstants.MaxPostMediaCount)
         {
-            await Toast.Make($"미디어는 최대 {CommonsConstants.MaxPostMediaCount}개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
+            await Toast.Make($"미디어는 최대 {CommonConstants.MaxPostMediaCount}개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
             return;
         }
 
@@ -331,14 +328,14 @@ public partial class EditPostPage : ContentPage
     private async void OnInsertImageTapped(object sender, TappedEventArgs e)
     {
         MainTextContent.UnfocusEditor();
-        if (_attachmentViewModels.Count == CommonsConstants.MaxPostMediaCount)
+        if (_attachmentViewModels.Count == CommonConstants.MaxPostMediaCount)
         {
-            await Toast.Make($"미디어는 최대 {CommonsConstants.MaxPostMediaCount}개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
+            await Toast.Make($"미디어는 최대 {CommonConstants.MaxPostMediaCount}개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
             return;
         }
 
         var sizeExceed = false;
-        var maxCount = CommonsConstants.MaxPostMediaCount - _attachmentViewModels.Count;
+        var maxCount = CommonConstants.MaxPostMediaCount - _attachmentViewModels.Count;
 #if IOS
         var request = new MediaPickRequest(maxCount, MediaFileType.Image) { Title = "이미지 추가" };
 
@@ -363,7 +360,7 @@ public partial class EditPostPage : ContentPage
 
         foreach (var (file, fileName, tempPath) in loadedFiles)
         {
-            if (new FileInfo(tempPath).Length > CommonsConstants.MaxImageUploadFileSize)
+            if (new FileInfo(tempPath).Length > CommonConstants.MaxImageUploadFileSize)
             {
                 sizeExceed = true;
                 File.Delete(tempPath);
@@ -383,7 +380,7 @@ public partial class EditPostPage : ContentPage
 
         foreach (var image in images)
         {
-            if (image.Size > CommonsConstants.MaxImageUploadFileSize)
+            if (image.Size > CommonConstants.MaxImageUploadFileSize)
             {
                 sizeExceed = true;
                 if (image.FilePath != null)
@@ -413,7 +410,7 @@ public partial class EditPostPage : ContentPage
 
         foreach (var image in images)
         {
-            if (image.Size > CommonsConstants.MaxImageUploadFileSize)
+            if (image.Size > CommonConstants.MaxImageUploadFileSize)
             {
                 sizeExceed = true;
                 if (image.FilePath != null)
@@ -434,14 +431,14 @@ public partial class EditPostPage : ContentPage
     {
         MainTextContent.UnfocusEditor();
 
-        if (_attachmentViewModels.Count == CommonsConstants.MaxPostMediaCount)
+        if (_attachmentViewModels.Count == CommonConstants.MaxPostMediaCount)
         {
-            await Toast.Make($"미디어는 최대 {CommonsConstants.MaxPostMediaCount}개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
+            await Toast.Make($"미디어는 최대 {CommonConstants.MaxPostMediaCount}개까지 추가할 수 있습니다.", ToastDuration.Short, 14).Show();
             return;
         }
 
         var sizeExceed = false;
-        var maxCount = CommonsConstants.MaxPostMediaCount - _attachmentViewModels.Count;
+        var maxCount = CommonConstants.MaxPostMediaCount - _attachmentViewModels.Count;
 #if IOS
         var request = new MediaPickRequest(maxCount, MediaFileType.Video) { Title = "비디오 추가" };
 
@@ -461,7 +458,7 @@ public partial class EditPostPage : ContentPage
 
         foreach (var (file, fileName, tempPath) in loadedFiles)
         {
-            if (new FileInfo(tempPath).Length > CommonsConstants.MaxUploadFileSize)
+            if (new FileInfo(tempPath).Length > CommonConstants.MaxUploadFileSize)
             {
                 sizeExceed = true;
                 File.Delete(tempPath);
@@ -478,7 +475,7 @@ public partial class EditPostPage : ContentPage
 
         foreach (var video in videos)
         {
-            if (video.Size > CommonsConstants.MaxUploadFileSize)
+            if (video.Size > CommonConstants.MaxUploadFileSize)
             {
                 sizeExceed = true;
                 if (video.FilePath != null)
@@ -505,7 +502,7 @@ public partial class EditPostPage : ContentPage
 
         foreach (var video in videos)
         {
-            if (video.Size > CommonsConstants.MaxUploadFileSize)
+            if (video.Size > CommonConstants.MaxUploadFileSize)
             {
                 sizeExceed = true;
                 if (video.FilePath != null)
@@ -527,7 +524,7 @@ public partial class EditPostPage : ContentPage
         var element = sender as Element;
         if (element.BindingContext is not MediaAttachmentViewModel viewModel) return;
 
-        var description = await DisplayPromptAsync("설명 입력", "이 미디어에 대한 설명을 입력해주세요", Constants.PromptOk, "설명 삭제", "이 미디어에 대한 설명 입력", CommonsConstants.MaxMediaDescriptionLength, null, viewModel.Description);
+        var description = await DisplayPromptAsync("설명 입력", "이 미디어에 대한 설명을 입력해주세요", Constants.PromptOk, "설명 삭제", "이 미디어에 대한 설명 입력", CommonConstants.MaxMediaDescriptionLength, null, viewModel.Description);
         viewModel.Description = description?.Trim() ?? string.Empty;
     }
 
@@ -1557,18 +1554,18 @@ public partial class EditPostPage : ContentPage
             // KakaoStory allows at most 20 images per post. Stickers are uploaded as images,
             // so ask the user to drop them when the combined count would exceed the limit.
             var photoCount = attachmentViewModels.Count(x => !x.IsVideo);
-            if (stickerContents.Count > 0 && photoCount + stickerContents.Count > CommonsConstants.KakaoStoryMaxImageCount)
+            if (stickerContents.Count > 0 && photoCount + stickerContents.Count > CommonConstants.KakaoStoryMaxImageCount)
             {
-                var proceed = await DisplayAlertAsync("경고", $"카카오스토리의 이미지 갯수 제한은 {CommonsConstants.KakaoStoryMaxImageCount}개입니다. 스티커까지 첨부하면 총 {photoCount + stickerContents.Count}장이 되어 글을 올릴 수 없습니다. 스티커를 업로드하지 않고 사진만 올리시겠습니까?", "사진만 올리기", Constants.PromptCancel);
+                var proceed = await DisplayAlertAsync("경고", $"카카오스토리의 이미지 갯수 제한은 {CommonConstants.KakaoStoryMaxImageCount}개입니다. 스티커까지 첨부하면 총 {photoCount + stickerContents.Count}장이 되어 글을 올릴 수 없습니다. 스티커를 업로드하지 않고 사진만 올리시겠습니까?", "사진만 올리기", Constants.PromptCancel);
                 if (!proceed) return false;
                 stickerContents = [];
             }
 
             // Mirroring restricts the write to KakaoStory's photo limit, so block the
             // upload when more photos than the KakaoStory limit are attached.
-            if (photoCount > CommonsConstants.KakaoStoryMaxImageCount)
+            if (photoCount > CommonConstants.KakaoStoryMaxImageCount)
             {
-                await DisplayAlertAsync("오류", $"카카오스토리에는 사진을 최대 {CommonsConstants.KakaoStoryMaxImageCount}개까지 올릴 수 있습니다. 사진을 {CommonsConstants.KakaoStoryMaxImageCount}개 이하로 줄이거나 카카오스토리 게시를 해제해주세요.", Constants.PromptOk);
+                await DisplayAlertAsync("오류", $"카카오스토리에는 사진을 최대 {CommonConstants.KakaoStoryMaxImageCount}개까지 올릴 수 있습니다. 사진을 {CommonConstants.KakaoStoryMaxImageCount}개 이하로 줄이거나 카카오스토리 게시를 해제해주세요.", Constants.PromptOk);
                 return false;
             }
 
@@ -1577,7 +1574,7 @@ public partial class EditPostPage : ContentPage
             // When the marker would exceed the KakaoStory image limit, it is dropped.
             var hasSpoiler = attachmentViewModels.Any(x => x.IsSpoiler);
             var includeSpoilerMarker = hasSpoiler;
-            if (hasSpoiler && photoCount + stickerContents.Count + 1 > CommonsConstants.KakaoStoryMaxImageCount)
+            if (hasSpoiler && photoCount + stickerContents.Count + 1 > CommonConstants.KakaoStoryMaxImageCount)
             {
                 var proceed = await DisplayAlertAsync("경고", "스포일러 이미지가 표시되지 않습니다. 스포일러 없이 진행하시겠습니까?", "진행", Constants.PromptCancel);
                 if (!proceed) return false;
@@ -1800,7 +1797,7 @@ public partial class EditPostPage : ContentPage
         {
             if (stickerContent.StickerMediaId == null) continue;
 
-            var imageData = await MentionHelper.GetStickerImageDataAsync(stickerContent.StickerMediaId);
+            var imageData = await CommonUtils.GetStickerImageDataAsync(stickerContent.StickerMediaId);
             if (imageData.Length == 0) continue;
 
             var tempFilePath = Path.Combine(FileSystem.CacheDirectory, $"post_sticker_{Guid.NewGuid():N}.png");

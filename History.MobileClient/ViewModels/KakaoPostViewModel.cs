@@ -1,18 +1,17 @@
 ﻿using CommunityToolkit.Maui.Alerts;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
-using History.MobileClient.DataTypes;
 using History.MobileClient.Helpers;
 using History.MobileClient.Messages;
-using History.MobileClient.Enums;
-using History.MobileClient.KakaoStory;
+using History.Commons.KakaoStory;
 using History.MobileClient.Pages;
 using UraniumUI.Icons.FontAwesome;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType;
-using static History.MobileClient.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using History.MobileClient.KakaoStory;
+using History.Commons.Enums;
 
 namespace History.MobileClient.ViewModels;
 

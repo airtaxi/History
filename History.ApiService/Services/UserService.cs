@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using History.ApiService.Helpers;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
@@ -356,7 +356,7 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         memo = Utils.SanitizeText(memo);
 
         if (string.IsNullOrEmpty(memo)) return Result.Success();
-        if (memo.Length > CommonsConstants.MaxMemoLength) return (ErrorType.BadRequest, $"메모는 {CommonsConstants.MaxMemoLength}자 이하로 작성해야 합니다.");
+        if (memo.Length > CommonConstants.MaxMemoLength) return (ErrorType.BadRequest, $"메모는 {CommonConstants.MaxMemoLength}자 이하로 작성해야 합니다.");
 
         var userMemo = new UserMemo
         {

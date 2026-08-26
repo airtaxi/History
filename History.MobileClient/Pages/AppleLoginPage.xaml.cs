@@ -1,9 +1,7 @@
-﻿using System.Net;
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
 using System.Web;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.Enums;
-using Newtonsoft.Json;
 
 namespace History.MobileClient.Pages;
 
