@@ -48,6 +48,17 @@ public class KakaoStoryPollingService(ILogger<KakaoStoryPollingService> logger, 
         }
     }
 
+    /// <summary>
+    /// Removes all Kakao Story state for a user on account withdrawal: the
+    /// in-memory polling session and the persisted deduplication state, mirroring
+    /// the HandleWithdrawAsync cleanup of the other stores.
+    /// </summary>
+    public async Task HandleWithdrawAsync(string userId)
+    {
+        RemoveSession(userId);
+        await _stateCollection.DeleteManyAsync(s => s.UserId == userId);
+    }
+
     public Task StartAsync(CancellationToken cancellationToken)
     {
         var intervalSeconds = configuration.GetValue("KakaoStoryPolling:PollIntervalSeconds", 60);

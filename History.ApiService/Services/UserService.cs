@@ -469,6 +469,8 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         await notificationService.HandleWithdrawAsync(userId);
         await messageService.HandleWithdrawAsync(userId);
         await inviteCodeService.HandleWithdrawAsync(userId);
+        var kakaoStoryPollingService = serviceProvider.GetRequiredService<KakaoStoryPollingService>();
+        await kakaoStoryPollingService.HandleWithdrawAsync(userId);
         await mediaService.DeleteMediasByUserIdAsync(userId);
 
         var filter = Builders<User>.Filter.Eq(u => u.Id, userId);
