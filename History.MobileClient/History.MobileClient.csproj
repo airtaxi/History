@@ -156,6 +156,11 @@
 		<PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.6.0.1" />
 	</ItemGroup>
 
+	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-windows10.0.26100.0'">
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.100" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.100" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="AnimatedWebP.FFImageLoading.Maui" Version="1.4.4" />
 		<PackageReference Include="CommunityToolkit.Maui" Version="15.0.1" />
