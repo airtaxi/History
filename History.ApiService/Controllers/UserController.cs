@@ -22,7 +22,7 @@ namespace History.ApiService.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [RateLimit(Limit = 6, PeriodInSec = 1)]
-public class UserController(IUserService userService, IFriendshipService friendshipService, IRefreshTokenService refreshTokenService, INotificationService notificationService, IInviteCodeService inviteCodeService) : ControllerBase
+public class UserController(IUserService userService, IFriendshipService friendshipService, IRefreshTokenService refreshTokenService, INotificationService notificationService, IInviteCodeService inviteCodeService, IConfiguration configuration) : ControllerBase
 {
     /// <summary>
     /// `ter with OAuth
@@ -39,7 +39,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> Register([FromBody] OAuthRegisterRequestDto request)
     {
-        var payload = await VerifyIdTokenAsync(request);
+        var payload = await VerifyIdTokenAsync(request, GetTrustedGoogleAudiences());
         if (payload == null) return Unauthorized("ID 토큰이 유효하지 않습니다.");
 
         var existingUserResult = await userService.GetUserByIdAsync(payload.Id);
@@ -126,7 +126,7 @@ public class UserController(IUserService userService, IFriendshipService friends
     [ProducesResponseType<string>(500)]
     public async Task<IActionResult> Login([FromBody] OAuthLoginRequestDto request)
     {
-        var payload = await VerifyIdTokenAsync(request);
+        var payload = await VerifyIdTokenAsync(request, GetTrustedGoogleAudiences());
         if (payload == null) return Unauthorized("ID 토큰이 유효하지 않습니다.");
 
         var userResult = await userService.GetUserByIdAsync(payload.Id);
@@ -920,11 +920,28 @@ public class UserController(IUserService userService, IFriendshipService friends
     }
 
     /// <summary>
+    /// Resolve the trusted Google OAuth client IDs accepted as the audience of ID tokens
+    /// </summary>
+    /// <returns>The list of trusted Google client IDs</returns>
+    private IList<string> GetTrustedGoogleAudiences()
+    {
+        var configuredWebClientId = configuration["HISTORY_GOOGLE_CLIENT_ID"];
+        var defaultAudiences = new[]
+        {
+            "401981104412-7n578mga4lggbspntkgg7gtikoqq3auk.apps.googleusercontent.com", // Android / Web client
+            "401981104412-6tbj8kobldvl3if26qv069h4crcc2cp0.apps.googleusercontent.com"  // iOS client
+        };
+        return !string.IsNullOrEmpty(configuredWebClientId)
+            ? [configuredWebClientId, ..defaultAudiences.Where(clientId => clientId != configuredWebClientId)]
+            : defaultAudiences;
+    }
+
+    /// <summary>
     /// Verify the ID token from the OAuth provider
     /// </summary>
     /// <param name="request">The request containing the ID token</param>
     /// <returns>A task that represents the asynchronous operation. with the payload of the ID token</returns>
-    private static async Task<OAuthPayload> VerifyIdTokenAsync(OAuthLoginRequestDto request)
+    private static async Task<OAuthPayload> VerifyIdTokenAsync(OAuthLoginRequestDto request, IList<string> trustedGoogleAudiences)
     {
         // Verify the ID token based on the provider
         if (request.Provider == SocialService.Google)
@@ -932,7 +949,10 @@ public class UserController(IUserService userService, IFriendshipService friends
             // Verify the Google ID token
             try
             {
-                var googlePayload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken);
+                var googlePayload = await GoogleJsonWebSignature.ValidateAsync(request.IdToken, new GoogleJsonWebSignature.ValidationSettings
+                {
+                    Audience = trustedGoogleAudiences
+                });
                 return googlePayload != null ? new OAuthPayload()
                 {
                     Id = googlePayload.Subject,
