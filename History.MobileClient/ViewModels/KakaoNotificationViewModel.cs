@@ -46,11 +46,9 @@ public partial class KakaoNotificationViewModel : BaseNotificationViewModel
         }
 
         // Post notification (e.g. comment/emotion/UP): scheme contains the activity id after "activities/".
-        if (scheme.Contains("?profile_id=") && scheme.Contains("activities/"))
+        var postId = GetPostId();
+        if (postId != null)
         {
-            var postId = scheme.Split(new[] { "activities/" }, StringSplitOptions.None)[1];
-            var queryIndex = postId.IndexOf('?');
-            if (queryIndex >= 0) postId = postId[..queryIndex];
             var post = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetPost(postId));
             if (post != null)
             {
@@ -72,6 +70,19 @@ public partial class KakaoNotificationViewModel : BaseNotificationViewModel
             else await App.PushAsync(new BlazorUserPage(profileId, true));
         }
         else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 알림입니다.", Constants.PromptOk);
+    }
+
+    // Extracts the post id from a post notification scheme (e.g. "activities/{postId}?...").
+    // Returns null when the notification does not target a post.
+    public string GetPostId()
+    {
+        var scheme = Notification.scheme;
+        if (scheme == null || !scheme.Contains("?profile_id=") || !scheme.Contains("activities/")) return null;
+
+        var postId = scheme.Split(new[] { "activities/" }, StringSplitOptions.None)[1];
+        var queryIndex = postId.IndexOf('?');
+        if (queryIndex >= 0) postId = postId[..queryIndex];
+        return postId;
     }
 
     public override async Task HandleProfileTapAsync()

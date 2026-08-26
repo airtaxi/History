@@ -193,6 +193,12 @@ public partial class NotificationsPage : ContentPage
         var hasUnread = _viewModels.Any(x => x.IsUnread);
         if (!hasUnread) return;
 
+        if (_isKakaoStoryMode)
+        {
+            await ReadAllKakaoStoryNotificationsAsync();
+            return;
+        }
+
         var result = await App.ExecuteRequestAsync(new ReadAllNotifications());
         if (result.IsSuccess)
         {
@@ -202,6 +208,39 @@ public partial class NotificationsPage : ContentPage
             HapticFeedback.Default.Perform(HapticFeedbackType.Click);
             await Toast.Make("모든 알림을 읽음 처리했습니다.").Show();
         }
+    }
+
+    // Kakao Story has no read-all endpoint; fetching each post marks its notification
+    // as read server-side, so the unread post notifications are fetched in parallel.
+    private async Task ReadAllKakaoStoryNotificationsAsync()
+    {
+        var unreadViewModels = _viewModels.Where(x => x.IsUnread).ToList();
+        if (unreadViewModels.Count == 0) return;
+
+        var postIds = unreadViewModels.OfType<KakaoNotificationViewModel>().Select(x => x.GetPostId()).Where(x => x != null).ToList();
+        if (postIds.Count > 0)
+        {
+            try
+            {
+                await App.ExecuteWithLoadingAsync(async () =>
+                {
+                    await Task.WhenAll(postIds.Select(postId => KakaoStoryApiHandler.GetPost(postId)));
+                    return true;
+                });
+            }
+            catch (Exception exception)
+            {
+                await DisplayAlertAsync("오류", $"알림 읽음 처리에 실패하였습니다.\n{exception.Message}", Constants.PromptOk);
+                return;
+            }
+        }
+
+        // Mark every unread item as read locally; friend request notifications have no post to fetch.
+        foreach (var viewModel in unreadViewModels) await viewModel.MarkAsReadAsync();
+        Shared.KakaoStoryUnreadNotificationCount = 0;
+
+        HapticFeedback.Default.Perform(HapticFeedbackType.Click);
+        await Toast.Make("모든 알림을 읽음 처리했습니다.").Show();
     }
 
     private async void OnHistoryPillTapped(object sender, TappedEventArgs e) => await SwitchModeAsync(false);
@@ -221,7 +260,6 @@ public partial class NotificationsPage : ContentPage
             if (_isKakaoStoryMode == isKakaoStoryMode) return;
             _isKakaoStoryMode = isKakaoStoryMode;
             UpdatePillVisuals();
-            ReadAllImage.IsVisible = !isKakaoStoryMode;
             await RefreshAsync();
         }
         finally { _switchSemaphore.Release(); }
