@@ -66,7 +66,7 @@ public static class MentionHelper
 
     public static void AppendUser(SuggestingBox.Maui.SuggestingBox suggestingBox, string userId, string nickname, bool showKeyboard = false)
     {
-        if (userId == Shared.UserId) return;
+        if (userId == CommonShared.UserId) return;
 
         var profileContent = new ProfileContent { UserId = userId, Nickname = nickname };
         string currentText = suggestingBox.Text ?? string.Empty;

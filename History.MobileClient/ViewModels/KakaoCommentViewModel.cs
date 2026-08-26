@@ -9,6 +9,7 @@ using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 using History.MobileClient.KakaoStory;
 using History.Commons.Enums;
+using History.Commons;
 
 namespace History.MobileClient.ViewModels;
 
@@ -35,7 +36,7 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
 
     private string PostId => Comment?.activity_id ?? _parentPostViewModel.PostData.id;
 
-    public KakaoCommentViewModel(Comment comment, PostType postType, KakaoPostViewModel parentViewModel) : base(parentViewModel.PostData.actor?.id == Shared.KakaoUserId, postType, parentViewModel)
+    public KakaoCommentViewModel(Comment comment, PostType postType, KakaoPostViewModel parentViewModel) : base(parentViewModel.PostData.actor?.id == CommonShared.KakaoUserId, postType, parentViewModel)
     {
         _parentPostViewModel = parentViewModel;
         UpdateComment(comment);
@@ -63,7 +64,7 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel
             IsAdmin = false;
             ProfileMedia = writer?.profile_image_url != null ? new ImageViewModel(writer.profile_image_url) : null;
 
-            IsMyComment = writer?.id == Shared.KakaoUserId;
+            IsMyComment = writer?.id == CommonShared.KakaoUserId;
             HasLikes = comment.like_count > 0;
             LikesCount = comment.like_count;
             Liked = comment.liked;

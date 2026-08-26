@@ -129,19 +129,19 @@ public static class TabBarBadgePoller
             await s_pollSemaphore.WaitAsync();
 
             // Not logged in (or logged out): nothing to poll.
-            if (Shared.ApiHandler == ApiHandler.Public) return;
+            if (CommonShared.ApiHandler == ApiHandler.Public) return;
 
-            var notifications = await Shared.ApiHandler.ExecuteRequestAsync(new GetNotifications());
+            var notifications = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetNotifications());
             Shared.HistoryUnreadNotificationCount = notifications?.Count(x => x.IsUnread) ?? 0;
 
             // The received message list carries the unread mail count; the badge
             // shows it together with the notification count.
-            var messages = await Shared.ApiHandler.ExecuteRequestAsync(new GetReceivedMessages());
+            var messages = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetReceivedMessages());
             Shared.HistoryUnreadMailCount = messages?.Count(x => x.ReadAt == null) ?? 0;
 
             // The pending request list carries the received friend request count;
             // the friends tab badge shows it together with the Kakao Story count.
-            var pendingRequests = await Shared.ApiHandler.ExecuteRequestAsync(new GetPendingRequests());
+            var pendingRequests = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetPendingRequests());
             Shared.HistoryPendingFriendRequestCount = pendingRequests?.Count ?? 0;
 
             await PollKakaoStoryBadgesAsync();

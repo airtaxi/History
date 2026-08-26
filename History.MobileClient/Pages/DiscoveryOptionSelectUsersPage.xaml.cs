@@ -30,10 +30,10 @@ public partial class DiscoveryOptionSelectUsersPage : ContentPage
 
     private async Task RefreshAsync()
     {
-        var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
+        var friendsResult = await App.ExecuteRequestAsync(new GetFriends(CommonShared.UserId));
         if (friendsResult.IsSuccess)
         {
-            Shared.Friends = friendsResult.Value;
+            CommonShared.Friends = friendsResult.Value;
 
             _viewModels = [.. friendsResult.Value.Select(x => new SelectUserViewModel(x, _originallySelectedUserIds.Contains(x.UserId)))];
 

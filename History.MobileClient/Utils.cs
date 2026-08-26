@@ -759,16 +759,16 @@ public static partial class Utils
             var firebaseToken = await CrossFirebaseCloudMessaging.Current.GetTokenAsync();
             Console.WriteLine($"FCM token: {firebaseToken}");
 
-            if (Shared.ApiHandler == null)
+            if (CommonShared.ApiHandler == null)
             {
                 var accessToken = Configuration.GetValue<string>("AccessToken");
                 var refreshToken = Configuration.GetValue<string>("RefreshToken");
 
-                if (accessToken != null && refreshToken != null) Shared.ApiHandler = new(accessToken, refreshToken);
+                if (accessToken != null && refreshToken != null) CommonShared.ApiHandler = new(accessToken, refreshToken);
                 else return;
             }
 
-            await Shared.ApiHandler.ExecuteRequestAsync(new RegisterFirebaseToken(firebaseToken));
+            await CommonShared.ApiHandler.ExecuteRequestAsync(new RegisterFirebaseToken(firebaseToken));
         }
         catch { }
 #endif

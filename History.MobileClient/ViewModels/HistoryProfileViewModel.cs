@@ -39,7 +39,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
 
     private void UpdateSurface()
     {
-        IsMe = User.UserId == Shared.UserId;
+        IsMe = User.UserId == CommonShared.UserId;
         IsNotMe = !IsMe;
         IsFriend = User.Friendship?.Status == FriendshipStatus.Accepted;
         IsModerator = User.Rank == Rank.Moderator;

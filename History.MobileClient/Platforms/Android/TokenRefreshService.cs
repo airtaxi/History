@@ -27,7 +27,7 @@ public class TokenRefreshService : JobService
                 accessToken = result.AccessToken;
                 refreshToken = result.RefreshToken;
 
-                Shared.ApiHandler = new ApiHandler(accessToken, refreshToken);
+                CommonShared.ApiHandler = new ApiHandler(accessToken, refreshToken);
 
                 Configuration.SetValue("AccessToken", accessToken);
                 Configuration.SetValue("RefreshToken", refreshToken);

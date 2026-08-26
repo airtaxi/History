@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Maui.Alerts;
+using History.Commons;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.MobileClient.Pages;
@@ -14,7 +15,7 @@ public partial class HistoryMessageViewModel(MessageResponseDto message) : BaseM
     public List<BaseContent> Contents => message.Contents;
     public DateTime CreatedAt => message.CreatedAt;
     public DateTime? ReadAt => message.ReadAt;
-    public override bool IsUnread => Receiver.UserId == Shared.UserId && ReadAt == null;
+    public override bool IsUnread => Receiver.UserId == CommonShared.UserId && ReadAt == null;
 
     public override string MainText => Contents.OfType<TextContent>().FirstOrDefault()?.Text ?? string.Empty;
     public override string ImageUrl => Contents.OfType<MediaContent>().FirstOrDefault()?.MediaId != null ? Utils.GenerateMediaUri(Contents.OfType<MediaContent>().First().MediaId) : null;
@@ -36,14 +37,14 @@ public partial class HistoryMessageViewModel(MessageResponseDto message) : BaseM
 
     public override string TimestampText => Utils.GenerateFriendlyTimestamp(CreatedAt, null);
 
-    public override bool IsReplyButtonVisible => Sender?.UserId != Shared.UserId;
+    public override bool IsReplyButtonVisible => Sender?.UserId != CommonShared.UserId;
 
     public override async Task OpenMessageAsync() => await App.PushModalAsync(new MessagePage(this));
 
     public override async Task HandleProfileTapAsync()
     {
         // Don't open own profile
-        if (Sender.UserId == Shared.UserId)
+        if (Sender.UserId == CommonShared.UserId)
         {
             await Toast.Make("내 프로필입니다").Show();
             return;

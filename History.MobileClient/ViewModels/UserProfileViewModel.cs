@@ -94,9 +94,9 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
     // tab bar visible), mirroring UserPage's _isMyProfile flag.
     public bool IsMyProfileTab => _isMyProfile;
 
-    private bool IsMyProfilePage => _isKakaoStoryMode ? KakaoUserId == Shared.KakaoUserId : UserId == Shared.UserId;
+    private bool IsMyProfilePage => _isKakaoStoryMode ? KakaoUserId == CommonShared.KakaoUserId : UserId == CommonShared.UserId;
 
-    public UserProfileViewModel() : this(Shared.UserId, false, true)
+    public UserProfileViewModel() : this(CommonShared.UserId, false, true)
     {
         _isMyProfile = true;
 
@@ -209,8 +209,8 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
             }
             else
             {
-                var friends = await Shared.ApiHandler.ExecuteRequestAsync(new GetFriends(Shared.UserId));
-                Shared.Friends = friends;
+                var friends = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetFriends(CommonShared.UserId));
+                CommonShared.Friends = friends;
 
                 var user = await App.ExecuteRequestAsync(new GetUser(UserId));
                 // The mode can change while the profile loads (fast pill switching); discard the stale result, the pending switch reloads.
@@ -309,7 +309,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
             // The pill is only visible on my profile; the Kakao Story user id is
             // resolved from the saved session so the profile feed can be fetched.
             if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return;
-            KakaoUserId = Shared.KakaoUserId;
+            KakaoUserId = CommonShared.KakaoUserId;
             if (KakaoUserId == null)
             {
                 await App.TopPage.DisplayAlertAsync("오류", "카카오스토리 사용자 정보를 불러오지 못했습니다.", Constants.PromptOk);
@@ -398,7 +398,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
 
     public async Task SettingsAsync()
     {
-        var user = await Shared.ApiHandler.ExecuteRequestAsync(new GetMyProfile());
+        var user = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetMyProfile());
         await App.PushAsync(new SettingsPage(user));
     }
 
@@ -417,9 +417,9 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
     {
         _isInForeground = true;
 
-        if (!_isKakaoStoryMode && UserId != Shared.UserId) _ = MarkFriendNotificationsAsReadAsync();
+        if (!_isKakaoStoryMode && UserId != CommonShared.UserId) _ = MarkFriendNotificationsAsReadAsync();
 
-        if (_isFirstLoad || (UserPage.ShouldRefresh && !_isKakaoStoryMode && UserId == Shared.UserId) || (UserPage.ShouldRefreshKakaoStory && _isKakaoStoryMode && KakaoUserId == Shared.KakaoUserId))
+        if (_isFirstLoad || (UserPage.ShouldRefresh && !_isKakaoStoryMode && UserId == CommonShared.UserId) || (UserPage.ShouldRefreshKakaoStory && _isKakaoStoryMode && KakaoUserId == CommonShared.KakaoUserId))
         {
             _isFirstLoad = false;
             UserPage.ShouldRefresh = false;
@@ -432,7 +432,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
 
     private async Task MarkFriendNotificationsAsReadAsync()
     {
-        var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByFriendUserId(UserId));
+        var success = await CommonShared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByFriendUserId(UserId));
         if (success) WeakReferenceMessenger.Default.Send(new NotificationFriendUserReadMessage(UserId));
     }
 

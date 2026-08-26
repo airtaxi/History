@@ -143,12 +143,12 @@ public partial class SettingsPage : ContentPage
         Configuration.SetValue("AccessToken", null);
         Configuration.SetValue("RefreshToken", null);
 
-        Shared.ApiHandler = ApiHandler.Public;
-        Shared.UserId = default;
-        Shared.MyRank = default;
-        Shared.LastUsedPostDiscoveryOption = default;
-        Shared.Friends = default;
-        Shared.KakaoFriends = default;
+        CommonShared.ApiHandler = ApiHandler.Public;
+        CommonShared.UserId = default;
+        CommonShared.MyRank = default;
+        CommonShared.LastUsedPostDiscoveryOption = default;
+        CommonShared.Friends = default;
+        CommonShared.KakaoFriends = default;
         Shared.HistoryUnreadNotificationCount = 0;
         Shared.KakaoStoryUnreadNotificationCount = 0;
         Shared.HistoryUnreadMailCount = 0;

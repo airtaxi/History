@@ -66,7 +66,7 @@ public partial class PostPage : ContentPage
 
     private void UpdateRepostStatus(PostResponseDto post)
     {
-        var isReposted = post.SharedAndRepostedUsers.Any(x => x.User.UserId == Shared.UserId && x.IsRepost);
+        var isReposted = post.SharedAndRepostedUsers.Any(x => x.User.UserId == CommonShared.UserId && x.IsRepost);
         RepostFontImageSource.Glyph = isReposted ? MaterialSharp.Shift_lock_off : MaterialSharp.Shift_lock;
     }
 
@@ -85,7 +85,7 @@ public partial class PostPage : ContentPage
     private void OnCommentTappedMessageReceived(object recipient, CommentTappedMessage message)
     {
         var user = message.Value;
-        if (user.UserId == Shared.UserId) return;
+        if (user.UserId == CommonShared.UserId) return;
 
         MentionHelper.AppendUser(CommentTextContentView.SuggestingBoxControl, user.UserId, user.Nickname, true);
     }
@@ -432,7 +432,7 @@ public partial class PostPage : ContentPage
         if (IsKakaoStory) return;
 
         var postId = ((HistoryPostViewModel)ViewModel).Post.Id;
-        var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByPostId(postId));
+        var success = await CommonShared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByPostId(postId));
         if (success) WeakReferenceMessenger.Default.Send(new NotificationPostReadMessage(postId));
     }
 

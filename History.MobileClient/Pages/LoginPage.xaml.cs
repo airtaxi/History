@@ -28,15 +28,15 @@ public partial class LoginPage : ContentPage
 
     private static async Task<Result> AfterLogin()
     {
-        if (Shared.ApiHandler == null) return (ErrorType.Unauthorized, "API 핸들러가 초기화되지 않았습니다.");
+        if (CommonShared.ApiHandler == null) return (ErrorType.Unauthorized, "API 핸들러가 초기화되지 않았습니다.");
 
         var meResult = await App.ExecuteRequestAsync(new GetMyProfile(), [ErrorType.Unauthorized]);
         if (meResult.IsSuccess)
         {
             var me = meResult.Value;
-            Shared.UserId = me.UserId;
-            Shared.MyRank = me.Rank;
-            Shared.LastUsedPostDiscoveryOption = me.LastUsedPostDiscoveryOption;
+            CommonShared.UserId = me.UserId;
+            CommonShared.MyRank = me.Rank;
+            CommonShared.LastUsedPostDiscoveryOption = me.LastUsedPostDiscoveryOption;
 
             await RefreshFriendsAsync();
             await Utils.RefreshFirebaseToken();
@@ -103,8 +103,8 @@ public partial class LoginPage : ContentPage
 
     public static async Task RefreshFriendsAsync()
     {
-        var friendsResult = await App.ExecuteRequestAsync(new GetFriends(Shared.UserId));
-        Shared.Friends = friendsResult.Value;
+        var friendsResult = await App.ExecuteRequestAsync(new GetFriends(CommonShared.UserId));
+        CommonShared.Friends = friendsResult.Value;
     }
 
     public static async Task<Result> Login(string idToken, SocialService socialService)
@@ -118,7 +118,7 @@ public partial class LoginPage : ContentPage
             Configuration.SetValue("AccessToken", accessToken);
             Configuration.SetValue("RefreshToken", refreshToken);
 
-            Shared.ApiHandler = new(accessToken, refreshToken);
+            CommonShared.ApiHandler = new(accessToken, refreshToken);
             return await AfterLogin();
         }
         else if (result.Error == ErrorType.NotFound)
@@ -200,7 +200,7 @@ public partial class LoginPage : ContentPage
 
         if (accessToken != null && refreshToken != null)
         {
-            Shared.ApiHandler = new(accessToken, refreshToken);
+            CommonShared.ApiHandler = new(accessToken, refreshToken);
             var result = await AfterLogin();
             if (result.IsFailure) LoginVerticalStackLayout.IsVisible = true;
         }

@@ -45,7 +45,7 @@ public partial class UserPage : ContentPage
     private readonly SemaphoreSlim _switchSemaphore = new(1, 1);
     private string _nextSince;
 
-    public UserPage() : this(Shared.UserId, false, true)
+    public UserPage() : this(CommonShared.UserId, false, true)
     {
         _isMyProfile = true;
         BackImage.IsVisible = false;
@@ -107,7 +107,7 @@ public partial class UserPage : ContentPage
 #endif
     }
 
-    private bool IsMyProfilePage => _isKakaoStoryMode ? KakaoUserId == Shared.KakaoUserId : UserId == Shared.UserId;
+    private bool IsMyProfilePage => _isKakaoStoryMode ? KakaoUserId == CommonShared.KakaoUserId : UserId == CommonShared.UserId;
 
     // Easter egg gate: the pill row stays hidden until the switch is unlocked on the settings page.
     private void ApplyKakaoStoryVisibility() => PillGrid.IsVisible = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
@@ -189,8 +189,8 @@ public partial class UserPage : ContentPage
             }
             else
             {
-                var friends = await Shared.ApiHandler.ExecuteRequestAsync(new GetFriends(Shared.UserId));
-                Shared.Friends = friends;
+                var friends = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetFriends(CommonShared.UserId));
+                CommonShared.Friends = friends;
 
                 var user = await App.ExecuteRequestAsync(new GetUser(UserId));
                 // The mode can change while the profile loads (fast pill switching); discard the stale result, the pending switch reloads.
@@ -331,9 +331,9 @@ public partial class UserPage : ContentPage
         Dispatcher.Dispatch(ApplyVirtualizationSetting);
 #endif
 
-        if (!_isKakaoStoryMode && UserId != Shared.UserId) _ = MarkFriendNotificationsAsReadAsync();
+        if (!_isKakaoStoryMode && UserId != CommonShared.UserId) _ = MarkFriendNotificationsAsReadAsync();
 
-        if (_isFirstLoad || (ShouldRefresh && !_isKakaoStoryMode && UserId == Shared.UserId) || (ShouldRefreshKakaoStory && _isKakaoStoryMode && KakaoUserId == Shared.KakaoUserId))
+        if (_isFirstLoad || (ShouldRefresh && !_isKakaoStoryMode && UserId == CommonShared.UserId) || (ShouldRefreshKakaoStory && _isKakaoStoryMode && KakaoUserId == CommonShared.KakaoUserId))
         {
             ShouldRefresh = false;
             ShouldRefreshKakaoStory = false;
@@ -366,7 +366,7 @@ public partial class UserPage : ContentPage
 
     private async Task MarkFriendNotificationsAsReadAsync()
     {
-        var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByFriendUserId(UserId));
+        var success = await CommonShared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByFriendUserId(UserId));
         if (success) WeakReferenceMessenger.Default.Send(new NotificationFriendUserReadMessage(UserId));
     }
 
@@ -466,7 +466,7 @@ public partial class UserPage : ContentPage
 
     private async void OnSettingsImageTapped(object sender, TappedEventArgs e)
     {
-        var user = await Shared.ApiHandler.ExecuteRequestAsync(new GetMyProfile());
+        var user = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetMyProfile());
         await App.PushAsync(new SettingsPage(user));
     }
 
@@ -494,7 +494,7 @@ public partial class UserPage : ContentPage
             // The pill is only visible on my profile; the Kakao Story user id is
             // resolved from the saved session so the profile feed can be fetched.
             if ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false) return;
-            KakaoUserId = Shared.KakaoUserId;
+            KakaoUserId = CommonShared.KakaoUserId;
             if (KakaoUserId == null)
             {
                 await DisplayAlertAsync("오류", "카카오스토리 사용자 정보를 불러오지 못했습니다.", Constants.PromptOk);

@@ -1,4 +1,5 @@
-using CommunityToolkit.Mvvm.Messaging.Messages;
+﻿using CommunityToolkit.Mvvm.Messaging.Messages;
+using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
@@ -20,7 +21,7 @@ public record FriendshipChangedData(string UserId, FriendshipStatus? NewStatus, 
                 {
                     Id = Guid.NewGuid().ToString("N"),
                     UserId = userId,
-                    FriendId = Shared.UserId,
+                    FriendId = CommonShared.UserId,
                     Status = newStatus.Value,
                     CreatedAt = DateTime.UtcNow
                 };

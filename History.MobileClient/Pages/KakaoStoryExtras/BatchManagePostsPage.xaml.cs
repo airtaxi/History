@@ -4,6 +4,7 @@ using History.Commons.KakaoStory;
 using History.MobileClient.Messages;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 using History.MobileClient.KakaoStory;
+using History.Commons;
 
 namespace History.MobileClient.Pages;
 
@@ -64,7 +65,7 @@ public partial class BatchManagePostsPage : ContentPage
     private bool IsTargetPost(PostData postData)
     {
         // Only own posts are targeted (the iterated feed is the user's own profile).
-        if (postData.actor?.id != Shared.KakaoUserId) return false;
+        if (postData.actor?.id != CommonShared.KakaoUserId) return false;
 
         if (_activeFilter == "public" && postData.permission != "A") return false;
         else if (_activeFilter == "friends" && postData.permission != "F") return false;
@@ -82,7 +83,7 @@ public partial class BatchManagePostsPage : ContentPage
 
         if ((await KakaoStoryUtils.EnsureLoggedInAsync(this)) == false) return;
 
-        var userId = Shared.KakaoUserId;
+        var userId = CommonShared.KakaoUserId;
         if (userId == null)
         {
             await DisplayAlertAsync("오류", "카카오스토리 사용자 정보를 불러오지 못했습니다.", Constants.PromptOk);

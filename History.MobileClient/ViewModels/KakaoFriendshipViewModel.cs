@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using History.Commons;
 using History.Commons.Enums;
 using History.Commons.KakaoStory;
 using History.MobileClient.Pages;
@@ -79,7 +80,7 @@ public partial class KakaoFriendshipViewModel : BaseFriendshipViewModel
         ProfileMedia = profile.profile_image_url != null ? new ImageViewModel(profile.profile_image_url) : null;
     }
 
-    public override bool IsFriendshipImageVisible => UserId != null && UserId != Shared.KakaoUserId;
+    public override bool IsFriendshipImageVisible => UserId != null && UserId != CommonShared.KakaoUserId;
 
     public override string FriendshipGlyph => _relationship switch
     {

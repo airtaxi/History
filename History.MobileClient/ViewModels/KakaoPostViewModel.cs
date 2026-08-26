@@ -21,7 +21,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
     private int _updateVersion;
 
     public PostData PostData => _postData;
-    public bool IsMyPost => _postData.actor?.id == Shared.KakaoUserId;
+    public bool IsMyPost => _postData.actor?.id == CommonShared.KakaoUserId;
 
     protected PostData CurrentPostData
     {

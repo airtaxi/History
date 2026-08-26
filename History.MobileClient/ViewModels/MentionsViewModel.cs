@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using History.Commons;
 using History.Commons.Api.Sticker;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
@@ -80,7 +81,7 @@ public partial class MentionsViewModel : ObservableObject
             }
 
             // Load own stickers
-            var myStickersResult = await App.ExecuteRequestAsync(new GetStickersByUserId(Shared.UserId));
+            var myStickersResult = await App.ExecuteRequestAsync(new GetStickersByUserId(CommonShared.UserId));
             if (myStickersResult.IsSuccess)
             {
                 // Remove duplicates (if already in subscribed list)

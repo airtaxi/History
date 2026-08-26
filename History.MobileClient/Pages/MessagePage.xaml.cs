@@ -4,6 +4,7 @@ using History.Commons.Api.User;
 using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
+using History.Commons;
 
 namespace History.MobileClient.Pages;
 
@@ -36,7 +37,7 @@ public partial class MessagePage : ContentPage
 
     private async void MarkAsReadIfNeeded()
     {
-        if (_viewModel is HistoryMessageViewModel historyViewModel && historyViewModel.Receiver?.UserId == Shared.UserId && historyViewModel.ReadAt == null)
+        if (_viewModel is HistoryMessageViewModel historyViewModel && historyViewModel.Receiver?.UserId == CommonShared.UserId && historyViewModel.ReadAt == null)
         {
             var result = await App.ExecuteRequestAsync(new MarkMessageAsRead(historyViewModel.Id));
             if (result.IsSuccess && Shared.HistoryUnreadMailCount > 0) Shared.HistoryUnreadMailCount--;
@@ -49,7 +50,7 @@ public partial class MessagePage : ContentPage
         if (_viewModel is not HistoryMessageViewModel historyViewModel) return;
 
         var messageId = historyViewModel.Id;
-        var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByMessageId(messageId));
+        var success = await CommonShared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByMessageId(messageId));
         if (success) WeakReferenceMessenger.Default.Send(new NotificationMessageReadMessage(messageId));
     }
 

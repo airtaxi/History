@@ -33,7 +33,7 @@ public partial class InviteCodeRequestsPage : ContentPage
 
     private async Task MarkNotificationsAsReadAsync()
     {
-        var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByInviteCodeRequest());
+        var success = await CommonShared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByInviteCodeRequest());
         if (success) WeakReferenceMessenger.Default.Send(new NotificationTypeReadMessage(NotificationType.InviteCodeRequest));
     }
 

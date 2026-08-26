@@ -30,7 +30,7 @@ public partial class FriendListPage : ContentPage
 
 	public FriendListPage()
 	{
-        _userId = Shared.UserId;
+        _userId = CommonShared.UserId;
         _isMyProfile = true;
         _sortByTime = Configuration.GetValue<bool>("FriendsListSortByTime");
 
@@ -118,17 +118,17 @@ public partial class FriendListPage : ContentPage
 
             if (friendsResult.IsSuccess)
             {
-                if (_userId == Shared.UserId) Shared.Friends = friendsResult.Value;
+                if (_userId == CommonShared.UserId) CommonShared.Friends = friendsResult.Value;
 
                 _viewModels = [.. friendsResult.Value.Select(x => (BaseFriendshipViewModel)new HistoryFriendshipViewModel(x))];
                 MainSearchBar.Text = string.Empty;
                 EmptyLabel.IsVisible = !_viewModels.Any();
-                var friendCount = Shared.Friends?.Count ?? 0;
+                var friendCount = CommonShared.Friends?.Count ?? 0;
                 TitleLabel.Text = $"{friendCount}명의 친구";
                 FriendListLabel.Text = $"친구 목록 (총 {friendCount}명)";
                 ApplySort();
             }
-            else if (_userId != Shared.UserId) await App.PopAsync();
+            else if (_userId != CommonShared.UserId) await App.PopAsync();
         }
     }
 
@@ -150,26 +150,26 @@ public partial class FriendListPage : ContentPage
 
     private void OnFriendshipChangedMessageReceived(object recipient, FriendshipChangedMessage message)
     {
-        if (_userId != Shared.UserId) return; // Only the user's own friend list reacts to relationship changes.
+        if (_userId != CommonShared.UserId) return; // Only the user's own friend list reacts to relationship changes.
         if (_isKakaoStoryMode) return; // Kakao Story friends are not tracked by the History friendship message.
 
         var data = message.Value;
         var isFriend = data.NewStatus == FriendshipStatus.Accepted;
         var existingViewModel = _viewModels?.OfType<HistoryFriendshipViewModel>().FirstOrDefault(x => x.User.UserId == data.UserId);
 
-        // Keep Shared.Friends in sync regardless of the target list, since it is used across the app.
+        // Keep CommonShared.Friends in sync regardless of the target list, since it is used across the app.
         if (isFriend)
         {
-            if (Shared.Friends != null && !Shared.Friends.Any(x => x.UserId == data.UserId)) Shared.Friends.Add(data.User);
+            if (CommonShared.Friends != null && !CommonShared.Friends.Any(x => x.UserId == data.UserId)) CommonShared.Friends.Add(data.User);
         }
-        else if (Shared.Friends != null) Shared.Friends.RemoveAll(x => x.UserId == data.UserId);
+        else if (CommonShared.Friends != null) CommonShared.Friends.RemoveAll(x => x.UserId == data.UserId);
 
         if (_viewModels == null) return; // First load has not happened yet; it will fetch the latest data.
 
         if (isFriend && existingViewModel == null) _viewModels.Add(new HistoryFriendshipViewModel(data.User));
         else if (!isFriend && existingViewModel != null) _viewModels.RemoveAll(x => (x as HistoryFriendshipViewModel)?.User.UserId == data.UserId);
 
-        var friendCount = Shared.Friends?.Count ?? 0;
+        var friendCount = CommonShared.Friends?.Count ?? 0;
         TitleLabel.Text = $"{friendCount}명의 친구";
         FriendListLabel.Text = $"친구 목록 (총 {friendCount}명)";
         ApplyFilterAndSort();
@@ -239,7 +239,7 @@ public partial class FriendListPage : ContentPage
     protected override void OnNavigatedTo(NavigatedToEventArgs args)
     {
         base.OnNavigatedTo(args);
-        if (_userId != Shared.UserId) StatusBar.SetColor(Application.Current.Resources["Primary"] as Color);
+        if (_userId != CommonShared.UserId) StatusBar.SetColor(Application.Current.Resources["Primary"] as Color);
     }
 
     private void OnLoadingStateChangedMessageReceived(object recipient, LoadingStateChangedMessage message)

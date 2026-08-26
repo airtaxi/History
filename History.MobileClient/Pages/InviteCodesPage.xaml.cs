@@ -34,7 +34,7 @@ public partial class InviteCodesPage : ContentPage
 
     private async Task MarkNotificationsAsReadAsync()
     {
-        var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByInviteCodeRequestResult());
+        var success = await CommonShared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByInviteCodeRequestResult());
         if (success) WeakReferenceMessenger.Default.Send(new NotificationTypeReadMessage(NotificationType.InviteCodeRequestResult));
     }
 
@@ -92,7 +92,7 @@ public partial class InviteCodesPage : ContentPage
     private async void OnRequestInviteCodesTapped(object sender, TappedEventArgs e)
     {
         // Moderators and above can generate codes regardless of active code count
-        if (Shared.MyRank < Rank.Moderator)
+        if (CommonShared.MyRank < Rank.Moderator)
         {
             // Check active code count first; only allow requesting when zero active codes remain
             var countResult = await App.ExecuteRequestAsync(new GetActiveInviteCodeCount());
@@ -123,9 +123,9 @@ public partial class InviteCodesPage : ContentPage
         }
 
         // Moderators and above generate invite codes immediately instead of submitting a request
-        if (Shared.MyRank >= Rank.Moderator)
+        if (CommonShared.MyRank >= Rank.Moderator)
         {
-            var createResult = await App.ExecuteRequestAsync(new CreateInviteCodeByAdmin(Shared.UserId, count), [ErrorType.BadRequest, ErrorType.NotFound]);
+            var createResult = await App.ExecuteRequestAsync(new CreateInviteCodeByAdmin(CommonShared.UserId, count), [ErrorType.BadRequest, ErrorType.NotFound]);
             if (createResult.IsSuccess)
             {
                 await App.Page.DisplayAlertAsync("안내", "초대 코드가 생성되었습니다.", Constants.PromptOk);

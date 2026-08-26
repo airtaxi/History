@@ -8,6 +8,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.Messages;
 using History.Commons.Enums;
+using History.Commons;
 
 namespace History.MobileClient.ViewModels;
 
@@ -18,11 +19,11 @@ public partial class HistoryPublicPostViewModel(PostResponseDto post) : HistoryP
     {
         var options = new List<string>();
 
-        if (User.UserId == Shared.UserId) options.Add("게시글 삭제");
-        else if (Shared.MyRank >= Rank.Moderator) options.Add("게시글 삭제");
+        if (User.UserId == CommonShared.UserId) options.Add("게시글 삭제");
+        else if (CommonShared.MyRank >= Rank.Moderator) options.Add("게시글 삭제");
         else options.AddRange("게시글 신고");
 
-        var canSendFriendRequest = User.UserId != Shared.UserId && User.Friendship == null;
+        var canSendFriendRequest = User.UserId != CommonShared.UserId && User.Friendship == null;
         if (canSendFriendRequest) options.Add("친구 요청 보내기");
 
         var action = await App.Page.DisplayActionSheetAsync("홍보 게시글 옵션", Constants.PromptCancel, null, [.. options]);
@@ -59,9 +60,9 @@ public partial class HistoryPublicPostViewModel(PostResponseDto post) : HistoryP
 
     private async Task DeleteAsync()
     {
-        if (User.UserId != Shared.UserId)
+        if (User.UserId != CommonShared.UserId)
         {
-            if (Shared.MyRank < Rank.Moderator)
+            if (CommonShared.MyRank < Rank.Moderator)
             {
                 await App.Page.DisplayAlertAsync("권한 부족", "게시글을 삭제할 권한이 없습니다.", Constants.PromptOk);
                 return;

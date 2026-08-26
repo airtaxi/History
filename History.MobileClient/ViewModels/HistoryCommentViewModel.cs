@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using History.Commons;
 using History.Commons.Api.Comment;
 using History.Commons.Api.Moderation;
 using History.Commons.Api.Report;
@@ -48,10 +49,10 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel
                 ? new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName) { IsAnimated = true }
                 : new ImageViewModel(Utils.GenerateMediaUri(user.ProfileMediaId) ?? Constants.DefaultProfileImageFileName);
 
-            IsMyComment = user.UserId == Shared.UserId;
+            IsMyComment = user.UserId == CommonShared.UserId;
             HasLikes = comment.LikedUsers.Count > 0;
             LikesCount = comment.LikedUsers.Count;
-            Liked = comment.LikedUsers.Any(x => x.UserId == Shared.UserId);
+            Liked = comment.LikedUsers.Any(x => x.UserId == CommonShared.UserId);
 
             var contents = Utils.GenerateContentViewModels(comment.Contents, PostType);
             var imageViewModels = (contents.FirstOrDefault(x => x is BaseWrappedMediaContentsViewModel) as BaseWrappedMediaContentsViewModel)?.Medias.Select(x => x.ImageMedia);
@@ -79,8 +80,8 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel
         {
             Liked ? "좋아요 취소" : "좋아요",
             IsMyComment ? "댓글 수정" : null,
-            IsMyComment || IsMyPost || Shared.MyRank >= Rank.Moderator ? "댓글 삭제" : null,
-            IsMyComment || Shared.MyRank >= Rank.Moderator ? null : "댓글 신고",
+            IsMyComment || IsMyPost || CommonShared.MyRank >= Rank.Moderator ? "댓글 삭제" : null,
+            IsMyComment || CommonShared.MyRank >= Rank.Moderator ? null : "댓글 신고",
         };
         actions.RemoveAll(x => x == null);
 
@@ -132,7 +133,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel
 
     public override async Task DeleteAsync()
     {
-        if (Comment.User.UserId != Shared.UserId && Shared.MyRank >= Rank.Moderator)
+        if (Comment.User.UserId != CommonShared.UserId && CommonShared.MyRank >= Rank.Moderator)
         {
             var reportTypes = Enum.GetValues<ReportType>().Select(x => x.ToDisplayString()).ToArray();
             var action = await App.Page.DisplayActionSheetAsync("제재 카테고리 선택", Constants.PromptCancel, null, reportTypes);
@@ -145,7 +146,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel
             var deleteResult = await App.ExecuteRequestAsync(new ModerationDeleteComment(Comment.Id, reason, reportType));
             if (deleteResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<CommentResponseDto>(Comment));
         }
-        else if (IsMyPost || Comment.User.UserId == Shared.UserId)
+        else if (IsMyPost || Comment.User.UserId == CommonShared.UserId)
         {
             var result = await App.Page.DisplayAlertAsync("댓글 삭제", "정말로 댓글을 삭제하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
             if (!result) return;

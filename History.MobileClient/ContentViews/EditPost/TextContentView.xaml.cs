@@ -5,6 +5,7 @@ using SuggestingBox.Maui;
 using History.MobileClient.Messages;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Helpers;
+using History.Commons;
 
 namespace History.MobileClient.ContentViews.EditPost;
 
@@ -13,8 +14,8 @@ public partial class TextContentView : ContentView
     public MentionsViewModel MentionsViewModel => ViewModel;
     public SuggestingBox.Maui.SuggestingBox SuggestingBoxControl => MainSuggestingBox;
 
-    // When true, @-mention suggestions use the logged-in Kakao Story friends (Shared.KakaoFriends)
-    // instead of the History friends (Shared.Friends).
+    // When true, @-mention suggestions use the logged-in Kakao Story friends (CommonShared.KakaoFriends)
+    // instead of the History friends (CommonShared.Friends).
     public bool IsKakaoMentionMode { get; set; }
 
     public string Text
@@ -66,9 +67,9 @@ public partial class TextContentView : ContentView
 
     private static List<MentionUserViewModel> BuildHistoryMentionViewModels(string query)
     {
-        if (string.IsNullOrEmpty(query)) return [.. Shared.Friends.Select(friendUser => new MentionUserViewModel(friendUser))];
+        if (string.IsNullOrEmpty(query)) return [.. CommonShared.Friends.Select(friendUser => new MentionUserViewModel(friendUser))];
 
-        return [.. Shared.Friends
+        return [.. CommonShared.Friends
             .Where(friendUser => friendUser.Handle.Contains(query, StringComparison.InvariantCultureIgnoreCase)
                 || friendUser.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase)
                 || KoreanHelper.SplitToChosung(friendUser.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase))
@@ -77,9 +78,9 @@ public partial class TextContentView : ContentView
 
     private static List<MentionUserViewModel> BuildKakaoMentionViewModels(string query)
     {
-        if (string.IsNullOrEmpty(query)) return [.. Shared.KakaoFriends.Select(profile => new MentionUserViewModel(profile))];
+        if (string.IsNullOrEmpty(query)) return [.. CommonShared.KakaoFriends.Select(profile => new MentionUserViewModel(profile))];
 
-        return [.. Shared.KakaoFriends
+        return [.. CommonShared.KakaoFriends
             .Where(profile => profile.display_name != null && (profile.display_name.Contains(query, StringComparison.OrdinalIgnoreCase)
                 || KoreanHelper.SplitToChosung(profile.display_name).Contains(query, StringComparison.OrdinalIgnoreCase)))
             .Select(profile => new MentionUserViewModel(profile))];

@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.Commons.KakaoStory;
 using History.MobileClient.KakaoStory;
 using History.MobileClient.Messages;
@@ -32,7 +33,7 @@ public partial class KakaoMessageViewModel(MailData.Mail mail) : BaseMessageView
     public override string ImageUrl => null;
     public override bool HasImage => false;
     public override string TimestampText => KakaoStoryUtils.GetTimeString(mail.created_at);
-    public override bool IsReplyButtonVisible => mail.type == "receive" && mail.sender?.id != Shared.KakaoUserId;
+    public override bool IsReplyButtonVisible => mail.type == "receive" && mail.sender?.id != CommonShared.KakaoUserId;
     public override bool IsDeleteButtonVisible => true;
 
     // Kakao Story has no mail read endpoint; mark the item locally as read.
@@ -62,7 +63,7 @@ public partial class KakaoMessageViewModel(MailData.Mail mail) : BaseMessageView
     public override async Task HandleProfileTapAsync()
     {
         // Don't open own profile
-        if (mail.sender?.id == Shared.KakaoUserId)
+        if (mail.sender?.id == CommonShared.KakaoUserId)
         {
             await Toast.Make("내 프로필입니다").Show();
             return;

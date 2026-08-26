@@ -46,7 +46,7 @@ public partial class MorePage : ContentPage
         BulkPostManagementDivider.IsVisible = true;
         BulkPostManagementGrid.IsVisible = true;
 
-        var isModerator = Shared.MyRank >= Rank.Moderator;
+        var isModerator = CommonShared.MyRank >= Rank.Moderator;
         ModerationDivider.IsVisible = isModerator;
         ModerationRecordsGrid.IsVisible = isModerator;
         InviteCodeRequestDivider.IsVisible = isModerator;

@@ -79,7 +79,7 @@ public partial class AddFriendsPage : ContentPage
             if (isKakaoStoryMode != _isKakaoStoryMode) return;
 
             // Remove myself from results
-            results.RemoveAll(x => x.UserId == Shared.UserId);
+            results.RemoveAll(x => x.UserId == CommonShared.UserId);
 
             // Delete duplicated records
             results = [.. results.DistinctBy(x => x.UserId)];

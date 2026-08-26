@@ -2,6 +2,7 @@
 using History.MobileClient.Helpers;
 using History.Commons.KakaoStory;
 using History.MobileClient.KakaoStory;
+using History.Commons;
 
 namespace History.MobileClient.Pages;
 
@@ -172,7 +173,7 @@ public partial class KakaoStoryLoginPage : ContentPage
 
             KakaoStoryApiHandler.Init(null, null, null);
 
-            Shared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
+            CommonShared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
 
             _gotLoginResult = true;
             _taskCompletionSource.TrySetResult(true);

@@ -5,6 +5,7 @@ using History.MobileClient.Messages;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
 using History.MobileClient.KakaoStory;
+using History.Commons;
 
 namespace History.MobileClient.Pages;
 
@@ -125,7 +126,7 @@ public partial class BatchDeleteFriendsPage : ContentPage
             ProgressLabel.IsVisible = false;
         }
 
-        Shared.KakaoFriends = null;
+        CommonShared.KakaoFriends = null;
 
         // The page may have been popped by a non-back route (iOS swipe, shell
         // navigation); skip alerts/refresh once it is no longer on screen.

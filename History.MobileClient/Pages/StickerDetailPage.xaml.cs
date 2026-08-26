@@ -6,6 +6,7 @@ using History.MobileClient.Messages;
 using History.MobileClient.Helpers;
 using History.MobileClient.ViewModels;
 using System.Collections.ObjectModel;
+using History.Commons;
 
 namespace History.MobileClient.Pages;
 
@@ -36,11 +37,11 @@ public partial class StickerDetailPage : ContentPage
         }
 
         // Check delete permission (owner or moderator+)
-        var canDelete = sticker.Author?.UserId == Shared.UserId || Shared.MyRank >= Rank.Moderator;
+        var canDelete = sticker.Author?.UserId == CommonShared.UserId || CommonShared.MyRank >= Rank.Moderator;
         DeleteImage.IsVisible = canDelete;
 
         // Show subscribe button (not own sticker and not private)
-        var canSubscribe = sticker.Author?.UserId != Shared.UserId && !sticker.IsPrivate;
+        var canSubscribe = sticker.Author?.UserId != CommonShared.UserId && !sticker.IsPrivate;
         SubscribeButton.IsVisible = canSubscribe;
         UpdateSubscribeButtonState();
 

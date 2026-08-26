@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
@@ -51,7 +52,7 @@ public partial class BulkPostManagePage : ContentPage
             _viewModels.Clear();
             _lastViewModel = null;
 
-            var result = await App.ExecuteRequestAsync(new GetUserPosts(Shared.UserId, null, 50));
+            var result = await App.ExecuteRequestAsync(new GetUserPosts(CommonShared.UserId, null, 50));
             if (result.IsSuccess)
             {
                 var viewModels = result.Value.Select(x => new SelectablePostViewModel(x)).ToList();
@@ -79,7 +80,7 @@ public partial class BulkPostManagePage : ContentPage
             if (lastViewModel == null) return;
 
             var lastPostId = lastViewModel.RepostId ?? lastViewModel.Post.Id;
-            var result = await App.ExecuteRequestAsync(new GetUserPosts(Shared.UserId, lastPostId, 50));
+            var result = await App.ExecuteRequestAsync(new GetUserPosts(CommonShared.UserId, lastPostId, 50));
             if (result.IsSuccess)
             {
                 var viewModels = result.Value.Select(x => new SelectablePostViewModel(x)).ToList();

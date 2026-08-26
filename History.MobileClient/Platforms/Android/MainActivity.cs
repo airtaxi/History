@@ -15,6 +15,7 @@ using AndroidX.Core.Content;
 using AndroidX.Core.View;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
@@ -186,31 +187,31 @@ public class MainActivity : MauiAppCompatActivity
     {
         if (data == null) return;
         if (!data.TryGetValue("Type", out var rawType) || !Enum.TryParse<NotificationType>(rawType, out var type)) return;
-        else if (Shared.ApiHandler == null) return;
+        else if (CommonShared.ApiHandler == null) return;
 
         try
         {
             if (data.TryGetValue("PostId", out var postId))
             {
-                var post = await Shared.ApiHandler.ExecuteRequestAsync(new GetPost(postId));
+                var post = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetPost(postId));
                 if (post != null) MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post)));
             }
             else if (type == NotificationType.FriendRequest && data.TryGetValue("UserId", out var userId))
             {
-                var user = await Shared.ApiHandler.ExecuteRequestAsync(new GetUser(userId));
+                var user = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetUser(userId));
                 MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new ValueChangedMessage<UserResponseDto>(user)));
             }
 
-            var notifications = await Shared.ApiHandler.ExecuteRequestAsync(new GetNotifications());
+            var notifications = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetNotifications());
             MainThread.BeginInvokeOnMainThread(() => WeakReferenceMessenger.Default.Send(new NotificationsMessage(notifications)));
 
-            var friends = await Shared.ApiHandler.ExecuteRequestAsync(new GetFriends(Shared.UserId));
-            Shared.Friends = friends;
+            var friends = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetFriends(CommonShared.UserId));
+            CommonShared.Friends = friends;
         }
         catch { }
     }
 
-    protected override void OnActivityResult(int requestCode, Result resultCode, Intent data)
+    protected override void OnActivityResult(int requestCode, Android.App.Result resultCode, Intent data)
     {
         if (NativeMedia.Platform.CheckCanProcessResult(requestCode, resultCode, data))
             NativeMedia.Platform.OnActivityResult(requestCode, resultCode, data);

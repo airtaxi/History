@@ -190,7 +190,7 @@ public partial class App : Application
 
         try
         {
-            await ExecuteWithLoadingAsync(() => Shared.ApiHandler.ExecuteRequestAsync(request));
+            await ExecuteWithLoadingAsync(() => CommonShared.ApiHandler.ExecuteRequestAsync(request));
             return Result.Success();
         }
         catch (HttpRequestException exception)
@@ -208,7 +208,7 @@ public partial class App : Application
 
         try
         {
-            return await ExecuteWithLoadingAsync(() => Shared.ApiHandler.ExecuteRequestAsync(request));
+            return await ExecuteWithLoadingAsync(() => CommonShared.ApiHandler.ExecuteRequestAsync(request));
         }
         catch (HttpRequestException exception)
         {

@@ -49,7 +49,7 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
 
     private void UpdateSurface()
     {
-        IsMe = Profile?.id == Shared.KakaoUserId;
+        IsMe = Profile?.id == CommonShared.KakaoUserId;
         IsNotMe = !IsMe;
         IsFriend = Profile?.relationship == "F";
         IsFavorite = Profile?.is_favorite ?? false;

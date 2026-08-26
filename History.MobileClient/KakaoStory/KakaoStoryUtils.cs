@@ -9,6 +9,7 @@ using Microsoft.Maui.Graphics.Platform;
 using UraniumUI.Icons.FontAwesome;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
+using History.Commons;
 
 namespace History.MobileClient.KakaoStory;
 
@@ -71,7 +72,7 @@ public partial class KakaoStoryUtils : CommonKakaoStoryUtils
     {
         if (await KakaoStoryApiHandler.EnsureKAuthTokenAsync() != null)
         {
-            if (Shared.KakaoFriends == null || Shared.KakaoUserId == null)
+            if (CommonShared.KakaoFriends == null || CommonShared.KakaoUserId == null)
             {
                 await RefreshSessionCachesAsync();
                 return true;

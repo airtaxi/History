@@ -62,7 +62,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel
         }
     }
 
-    public override bool IsFriendshipImageVisible => User.UserId != Shared.UserId;
+    public override bool IsFriendshipImageVisible => User.UserId != CommonShared.UserId;
 
     private async Task RefreshAsync()
     {

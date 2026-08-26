@@ -231,7 +231,7 @@ public partial class EditPostPage : ContentPage
             ShareTargetPostDataTemplatePresenter.IsVisible = true;
         }
 
-        var discoveryOption = Math.Min((int)Shared.LastUsedPostDiscoveryOption, (int)_post.DiscoveryOption);
+        var discoveryOption = Math.Min((int)CommonShared.LastUsedPostDiscoveryOption, (int)_post.DiscoveryOption);
         DiscoveryOptionPicker.SelectedIndex = discoveryOption;
 
         _commentPermission = _post.CommentPermission;
@@ -246,7 +246,7 @@ public partial class EditPostPage : ContentPage
         MediaCollectionView.ItemsSource = _attachmentViewModels;
         CommentPermissionPicker.ItemsSource = Enum.GetValues<AccessPermission>().Select(x => x.ToDisplayString()).ToList();
         DiscoveryOptionPicker.ItemsSource = Enum.GetValues<DiscoveryOption>().Select(x => x.ToDisplayString()).ToList();
-        DiscoveryOptionPicker.SelectedIndex = (int)Shared.LastUsedPostDiscoveryOption;
+        DiscoveryOptionPicker.SelectedIndex = (int)CommonShared.LastUsedPostDiscoveryOption;
     }
 
     private async Task ToggleExternalMediaAsync()
@@ -560,7 +560,7 @@ public partial class EditPostPage : ContentPage
             var isOnlyMePostContinuationPromptEnabled = Configuration.GetValue<bool?>("OnlyMePostContinuationPromptEnabled") ?? true;
             if (_post == null && !_isHistoryShare && isOnlyMePostContinuationPromptEnabled && (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex == DiscoveryOption.OnlyMe)
             {
-                var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(Shared.UserId, null, 1));
+                var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(CommonShared.UserId, null, 1));
                 if (postsResult.IsSuccess && postsResult.Value is { Count: > 0 } && postsResult.Value[0].DiscoveryOption == DiscoveryOption.OnlyMe)
                 {
                     // This guide can be turned off in 프로필 -> 설정.
@@ -815,7 +815,7 @@ public partial class EditPostPage : ContentPage
                 if (!result.IsSuccess) await DisplayAlertAsync("오류", result.ErrorMessage, Constants.PromptOk);
                 else
                 {
-                    if (!_isHistoryShare && !_isKakaoShare) Shared.LastUsedPostDiscoveryOption = discoveryOption;
+                    if (!_isHistoryShare && !_isKakaoShare) CommonShared.LastUsedPostDiscoveryOption = discoveryOption;
                     if (_reservationTime == null)
                     {
                         if (RefreshSwitch.IsToggled)
@@ -1057,7 +1057,7 @@ public partial class EditPostPage : ContentPage
         if (_commentPermission.HasValue && (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers))
         {
             await DisplayAlertAsync("오류", "댓글 작성 권한을 설정한 경우, 공개 범위를 특정 친구 (비)공개로 설정할 수 없습니다.", Constants.PromptOk);
-            DiscoveryOptionPicker.SelectedIndex = (int)Shared.LastUsedPostDiscoveryOption;
+            DiscoveryOptionPicker.SelectedIndex = (int)CommonShared.LastUsedPostDiscoveryOption;
             return;
         }
 

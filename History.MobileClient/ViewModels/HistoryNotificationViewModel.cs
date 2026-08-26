@@ -11,6 +11,7 @@ using History.Commons.Enums;
 using History.MobileClient.Messages;
 using History.Commons.Enums;
 using History.MobileClient.Pages;
+using History.Commons;
 
 namespace History.MobileClient.ViewModels;
 
@@ -174,7 +175,7 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel
     {
         if (!IsUnread) return;
 
-        var success = await Shared.ApiHandler.TryExecuteRequestAsync(new ReadNotifications([Notification.Id]));
+        var success = await CommonShared.ApiHandler.TryExecuteRequestAsync(new ReadNotifications([Notification.Id]));
         if (success)
         {
             Notification.IsUnread = false;

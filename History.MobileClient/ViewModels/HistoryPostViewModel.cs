@@ -81,12 +81,12 @@ public partial class HistoryPostViewModel : BasePostViewModel
                 .Concat(post.SharedAndRepostedUsers.Where(x => x.IsRepost).Select(x => new HistoryInteractionViewModel(x, false)))
                 .OrderByDescending(x => x.CreatedAt)];
 
-            Reaction = Interactions.FirstOrDefault(r => r is HistoryInteractionViewModel historyInteraction && historyInteraction.User.UserId == Shared.UserId && r.ReactionType != null);
+            Reaction = Interactions.FirstOrDefault(r => r is HistoryInteractionViewModel historyInteraction && historyInteraction.User.UserId == CommonShared.UserId && r.ReactionType != null);
             ReactionGlyph = Reaction?.Glyph ?? Solid.Heart;
             ReactionFontFamily = Reaction != null ? "FASolid" : "FARegular";
             ReactionColor = Reaction?.Color ?? (Utils.GetGlobalAppTheme() == AppTheme.Dark ? Colors.White : Colors.Black);
 
-            Comments = [.. post.Comments.Select(c => new HistoryCommentViewModel(c, post.User.UserId == Shared.UserId, PostType, this)).OrderBy(x => x.CreatedAt)];
+            Comments = [.. post.Comments.Select(c => new HistoryCommentViewModel(c, post.User.UserId == CommonShared.UserId, PostType, this)).OrderBy(x => x.CreatedAt)];
             LatestComment = Comments.LastOrDefault();
             CommentsCount = post.CommentsCount;
             HasComments = CommentsCount > 0;
@@ -167,21 +167,21 @@ public partial class HistoryPostViewModel : BasePostViewModel
 
         if (PostType != PostType.Unwrapped)
         {
-            var isReposted = Post.SharedAndRepostedUsers.Any(x => x.IsRepost && x.User.UserId == Shared.UserId);
+            var isReposted = Post.SharedAndRepostedUsers.Any(x => x.IsRepost && x.User.UserId == CommonShared.UserId);
             options.AddRange(["게시글 공유", isReposted ? "리포스트 해제" : "리포스트"]);
         }
 
         if (Post.IsBookmarked) options.Add("관심글 삭제");
         else options.Add("관심글로 저장");
 
-        if (User.UserId != Shared.UserId)
+        if (User.UserId != CommonShared.UserId)
         {
             options.Add(IsNotificationsMuted ? "이 글 알림 받기" : "이 글 알림 안받기");
             options.Add("이 글 숨기기");
         }
 
-        if (User.UserId == Shared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제", "프로필에 고정", "게시글 홍보"]);
-        else if (Shared.MyRank >= Rank.Moderator) options.AddRange("게시글 삭제");
+        if (User.UserId == CommonShared.UserId) options.AddRange(["공개범위 설정", "게시글 수정", "게시글 삭제", "프로필에 고정", "게시글 홍보"]);
+        else if (CommonShared.MyRank >= Rank.Moderator) options.AddRange("게시글 삭제");
         else options.AddRange("게시글 신고");
 
         options.Add("게시글 URL 복사");
@@ -332,9 +332,9 @@ public partial class HistoryPostViewModel : BasePostViewModel
 
     public override async Task DeleteAsync(bool popModal)
     {
-        if (User.UserId != Shared.UserId)
+        if (User.UserId != CommonShared.UserId)
         {
-            if (Shared.MyRank < Rank.Moderator)
+            if (CommonShared.MyRank < Rank.Moderator)
             {
                 await App.Page.DisplayAlertAsync("권한 부족", "게시글을 삭제할 권한이 없습니다.", Constants.PromptOk);
                 return;
@@ -481,7 +481,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
         if (commentsResult.IsSuccess)
         {
             var comments = commentsResult.Value;
-            var commentViewModels = comments.Select(x => new HistoryCommentViewModel(x, Post.User.UserId == Shared.UserId, PostType, this));
+            var commentViewModels = comments.Select(x => new HistoryCommentViewModel(x, Post.User.UserId == CommonShared.UserId, PostType, this));
             foreach (var commentViewModel in commentViewModels) Comments.Insert(0, commentViewModel);
             HasMoreComments = Post.CommentsCount > Comments.Count;
         }
