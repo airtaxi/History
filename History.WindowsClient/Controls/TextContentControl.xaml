@@ -51,7 +51,7 @@
         <DataTemplate x:Key="HashtagTemplate" x:DataType="x:String">
             <TextBlock Padding="8,4" Text="{x:Bind}" />
         </DataTemplate>
-        <local:SuggestionTemplateSelector
+        <vm:SuggestionTemplateSelector
             x:Key="SuggestionTemplateSelector"
             HashtagTemplate="{StaticResource HashtagTemplate}"
             UserMentionTemplate="{StaticResource UserMentionTemplate}" />
