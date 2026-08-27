@@ -179,14 +179,14 @@ public partial class BlazorTimelinePage : ContentPage
     private async Task ShowKakaoStoryGuideAsync()
     {
         var doNotShowAgain = await DisplayAlertAsync("안내", "카카오스토리 기능은 프로필 → 설정에서 앱 버전을 여섯번 탭하면 사용할 수 있습니다.\n컴플라이언스 이슈로 비밀 기능으로 전환되는 관계로, 이 안내는 9월 중순까지만 표시될 예정이고 이후에는 이 메시지가 보여지지 않습니다.", Constants.PromptOk, "다시 보지 않기");
-        if (doNotShowAgain) Configuration.SetValue("KakaoStoryGuideDismissed", true);
+        if (!doNotShowAgain) Configuration.SetValue("KakaoStoryGuideDismissed", true);
     }
 
     // Disclaimer for users who already unlocked the kakao story features; shown until dismissed.
     private async Task ShowKakaoStoryEnabledGuideAsync()
     {
         var doNotShowAgain = await DisplayAlertAsync("안내", "카카오스토리 연동 기능은 카카오스토리의 공식 기능이 아닙니다. 카카오스토리 측에서 비정상적인 이용으로 간주하여 제재할 수 있는 가능성이 있습니다. 이 점 유의해서 이용해주세요.", Constants.PromptOk, "다시 보지 않기");
-        if (doNotShowAgain) Configuration.SetValue("KakaoStoryEnabledGuideDismissed", true);
+        if (!doNotShowAgain) Configuration.SetValue("KakaoStoryEnabledGuideDismissed", true);
     }
 
     protected override void OnDisappearing()
