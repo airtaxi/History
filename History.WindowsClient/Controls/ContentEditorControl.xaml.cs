@@ -103,8 +103,7 @@ public sealed partial class ContentEditorControl : UserControl
     {
         if (args.Prefix == "@")
         {
-            var userViewModel = args.SelectedItem as MentionUserViewModel;
-            if (userViewModel == null) return;
+            if (args.SelectedItem is not MentionUserViewModel userViewModel) return;
 
             args.DisplayText = userViewModel.Nickname;
             args.Format.BackgroundColor = AccentColor;
@@ -217,7 +216,7 @@ public sealed partial class ContentEditorControl : UserControl
                 // The object replacement character reserves the inline image position;
                 // the image itself is inserted after the text layout is finalized.
                 tokens.Add((new RichSuggestToken(Guid.NewGuid(), ObjectReplacementCharacter) { Item = stickerContent }, textBuilder.Length));
-                textBuilder.Append(ObjectReplacementCharacter);
+                textBuilder.Append(ObjectReplacementCharacter[0]);
             }
         }
 
@@ -286,7 +285,7 @@ public sealed partial class ContentEditorControl : UserControl
 
     // Wrap the object replacement character with ZWSP padding and track it as a hyperlink,
     // mirroring the token layout RichSuggestBox expects (ZWSP + content + ZWSP inside a link).
-    private void PadStickerRange(ITextRange range, ITextCharacterFormat format)
+    private static void PadStickerRange(ITextRange range, ITextCharacterFormat format)
     {
         var startPosition = range.StartPosition;
         var endPosition = range.EndPosition + 1;
@@ -300,7 +299,7 @@ public sealed partial class ContentEditorControl : UserControl
         range.SetRange(startPosition, endPosition + 1);
     }
 
-    private async Task InsertStickerImageAsync(ITextRange range, StickerContent stickerContent, byte[] imageData = null)
+    private static async Task InsertStickerImageAsync(ITextRange range, StickerContent stickerContent, byte[] imageData = null)
     {
         imageData ??= await CommonUtils.GetStickerImageDataAsync(stickerContent.StickerMediaId);
         if (imageData.Length == 0) return;
@@ -322,7 +321,7 @@ public sealed partial class ContentEditorControl : UserControl
         return stream;
     }
 
-    private static (int Width, int Height) GetImageSize(IRandomAccessStream imageStream)
+    private static (int Width, int Height) GetImageSize(InMemoryRandomAccessStream imageStream)
     {
         try
         {
