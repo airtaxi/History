@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using History.Commons.DataTypes.Contents;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Segments;
 
 // Converts a List<BaseContent> into renderable segments, mirroring the MAUI
 // Utils.GenerateFormattedStringFromTextTypeContents text-type decomposition

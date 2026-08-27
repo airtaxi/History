@@ -1,7 +1,7 @@
 ﻿using History.Commons;
 using History.Commons.DataTypes.Contents;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Segments;
 
 public sealed record StickerSegmentViewModel(StickerContent Sticker) : BodyContentSegmentViewModel
 {

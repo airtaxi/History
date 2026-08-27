@@ -1,5 +1,6 @@
 ﻿using History.Commons.DataTypes.Contents;
 using History.WindowsClient.ViewModels;
+using History.WindowsClient.ViewModels.Segments;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
