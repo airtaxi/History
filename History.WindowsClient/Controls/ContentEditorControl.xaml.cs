@@ -28,7 +28,7 @@ public sealed partial class ContentEditorControl : UserControl
 
     public static readonly DependencyProperty PlaceholderTextProperty = DependencyProperty.Register(nameof(PlaceholderText), typeof(string), typeof(ContentEditorControl), new PropertyMetadata(string.Empty));
 
-    private readonly TextContentViewModel _viewModel = new();
+    private readonly ContentEditorViewModel _viewModel = new();
 
     public ContentEditorControl() => InitializeComponent();
 

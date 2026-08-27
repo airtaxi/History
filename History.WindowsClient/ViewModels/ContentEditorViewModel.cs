@@ -5,7 +5,7 @@ using History.WindowsClient.ViewModels;
 
 namespace History.WindowsClient.ViewModels;
 
-public partial class TextContentViewModel : ObservableObject
+public partial class ContentEditorViewModel : ObservableObject
 {
     [ObservableProperty]
     public partial bool IsKakaoMentionMode { get; set; }
