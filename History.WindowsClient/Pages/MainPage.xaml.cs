@@ -16,6 +16,8 @@ public sealed partial class MainPage : BasePage
         ViewModel = App.Services.GetRequiredService<MainPageViewModel>();
 
         InitializeComponent();
+
+        MainFrame.Navigate(typeof(TimelinePage));
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
