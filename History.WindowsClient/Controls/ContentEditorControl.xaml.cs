@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using CommunityToolkit.WinUI;
 using CommunityToolkit.WinUI.Controls;
 using History.Commons;
@@ -18,7 +18,7 @@ using Windows.UI;
 
 namespace History.WindowsClient.Controls;
 
-public sealed partial class TextContentControl : UserControl
+public sealed partial class ContentEditorControl : UserControl
 {
     private const string ZeroWidthSpace = "\u200B";
     private const string ObjectReplacementCharacter = "\uFFFC";
@@ -26,11 +26,11 @@ public sealed partial class TextContentControl : UserControl
     private const double StickerFallbackImageWidth = 160;
     private const double StickerFallbackImageHeight = 90;
 
-    public static readonly DependencyProperty PlaceholderTextProperty = DependencyProperty.Register(nameof(PlaceholderText), typeof(string), typeof(TextContentControl), new PropertyMetadata(string.Empty));
+    public static readonly DependencyProperty PlaceholderTextProperty = DependencyProperty.Register(nameof(PlaceholderText), typeof(string), typeof(ContentEditorControl), new PropertyMetadata(string.Empty));
 
     private readonly TextContentViewModel _viewModel = new();
 
-    public TextContentControl() => InitializeComponent();
+    public ContentEditorControl() => InitializeComponent();
 
     public string PlaceholderText
     {
@@ -184,7 +184,8 @@ public sealed partial class TextContentControl : UserControl
 
     public List<string> GetHashtags() => [.. GetContents()
         .OfType<HashtagContent>()
-        .Select(hashtagContent => hashtagContent.Tag)];
+        .Select(hashtagContent => hashtagContent.Tag)
+    ];
 
     public async Task SetContentsAsync(List<BaseContent> contents)
     {
