@@ -6,6 +6,7 @@ using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Services;
 using History.WindowsClient.ViewModels;
+using History.WindowsClient.ViewModels.MainPage;
 using History.WindowsClient.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;

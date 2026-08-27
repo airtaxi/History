@@ -1,4 +1,5 @@
 ﻿using History.WindowsClient.ViewModels;
+using History.WindowsClient.ViewModels.MainPage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.MainPage;
 
 public abstract partial class BaseMainPageFriendshipSideBarItemViewModel(MainPageFriendshipSideBarViewModel parentViewModel) : ObservableObject
 {

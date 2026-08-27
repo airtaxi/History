@@ -2,7 +2,7 @@
 using History.Commons.Api.User;
 using Microsoft.UI.Xaml.Controls;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.MainPage;
 
 public partial class MainPageViewModel : BaseViewModel
 {

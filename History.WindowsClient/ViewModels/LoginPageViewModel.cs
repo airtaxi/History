@@ -203,7 +203,7 @@ public partial class LoginPageViewModel : BaseViewModel
     public static void NavigateToMainPage()
     {
         MainWindow.HideLoading();
-        MainWindow.Frame.Navigate(typeof(MainPage));
+        MainWindow.Frame.Navigate(typeof(Pages.MainPage));
     }
 
     private static void ShowRegisterPage(string idToken, SocialService provider, string userJson) => MainWindow.Frame.Navigate(typeof(RegisterPage), new RegisterPageParameters(idToken, provider, ExtractNameFromUserJson(userJson)));

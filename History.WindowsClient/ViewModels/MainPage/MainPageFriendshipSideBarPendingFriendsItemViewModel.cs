@@ -3,27 +3,26 @@ using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.DataTypes.ResponseDtos;
-using History.Commons.Enums;
 using History.Commons.Helpers;
 using History.WindowsClient.Messages;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.ObjectModel;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.MainPage;
 
-public partial class MainPageFriendshipSideBarIgnoredUsersItemViewModel : BaseMainPageFriendshipSideBarItemViewModel, IRecipient<FriendshipChangedMessage>
+public partial class MainPageFriendshipSideBarPendingFriendsItemViewModel : BaseMainPageFriendshipSideBarItemViewModel, IRecipient<FriendshipChangedMessage>
 {
     private ObservableCollection<BaseFriendshipViewModel> _items;
 
-    public MainPageFriendshipSideBarIgnoredUsersItemViewModel(MainPageFriendshipSideBarViewModel parentViewModel) : base(parentViewModel)
+    public MainPageFriendshipSideBarPendingFriendsItemViewModel(MainPageFriendshipSideBarViewModel parentViewModel) : base(parentViewModel)
     {
         if (!Parent.Parent.IsKakaoStoryMode) SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 또는 핸들 검색";
         else SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 검색";
 
         Query = string.Empty;
-        RightHeaderText = "무시한 사용자 목록";
-        EmptyText = "무시한 사용자가 없습니다";
+        RightHeaderText = "받은 친구 신청 목록";
+        EmptyText = "비어있음";
 
         WeakReferenceMessenger.Default.Register(this);
     }
@@ -35,16 +34,10 @@ public partial class MainPageFriendshipSideBarIgnoredUsersItemViewModel : BaseMa
         var data = message.Value;
         if (_items == null) return; // First load has not happened yet; it will fetch the latest data.
 
-        var existingViewModel = _items.OfType<HistoryFriendshipViewModel>().FirstOrDefault(x => x.User.UserId == data.UserId);
+        var removedViewModel = _items.OfType<HistoryFriendshipViewModel>().FirstOrDefault(x => x.User.UserId == data.UserId);
+        if (removedViewModel == null) return;
 
-        if (data.NewStatus == FriendshipStatus.Ignored)
-        {
-            if (existingViewModel != null) return;
-            _items.Add(new HistoryFriendshipViewModel(data.User, Parent.Parent) { FriendshipVisibility = Visibility.Visible });
-        }
-        else if (existingViewModel != null) _items.Remove(existingViewModel);
-
-        _items = new(_items.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname));
+        _items.Remove(removedViewModel);
         IsEmpty = _items.Count == 0;
         ApplyQuery(Query);
     }
@@ -53,17 +46,17 @@ public partial class MainPageFriendshipSideBarIgnoredUsersItemViewModel : BaseMa
     {
         if (!Parent.Parent.IsKakaoStoryMode)
         {
-            var result = await App.ExecuteRequestAsync(new GetIgnoredUsers());
+            var result = await App.ExecuteRequestAsync(new GetPendingRequests());
             if (!result.IsSuccess)
             {
-                await Parent.Parent.ShowMessageDialogAsync(new("오류", "무시한 사용자 목록을 가져오는 데에 실패하였습니다."));
+                await Parent.Parent.ShowMessageDialogAsync(new("오류", "받은 친구 신청 목록을 가져오는 데에 실패하였습니다."));
                 return;
             }
 
             _items = new(result.Value.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x, Parent.Parent) { FriendshipVisibility = Visibility.Visible}));
             Items = _items;
 
-            RightHeaderText = $"무시한 사용자 목록 (총 {result.Value.Count}명)";
+            RightHeaderText = $"받은 친구 신청 목록 (총 {result.Value.Count}명)";
             IsEmpty = _items.Count == 0;
         }
     }

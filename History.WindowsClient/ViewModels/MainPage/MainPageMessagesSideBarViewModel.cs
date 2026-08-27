@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml.Controls;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.MainPage;
 
 public partial class MainPageMessagesSideBarViewModel(MainPageViewModel parentViewModel) : BaseMainPageSideBarViewModel
 {

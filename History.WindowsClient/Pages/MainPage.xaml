@@ -8,6 +8,7 @@
     xmlns:local="using:History.WindowsClient.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:History.WindowsClient.ViewModels"
+    xmlns:vmp="using:History.WindowsClient.ViewModels.MainPage"
     mc:Ignorable="d">
 
     <Grid>
@@ -76,7 +77,7 @@
 
             <Grid Grid.Row="1" RowSpacing="8">
                 <Grid.Resources>
-                    <DataTemplate x:Key="SideBarFriendshipTemplate" x:DataType="vm:MainPageFriendshipSideBarViewModel">
+                    <DataTemplate x:Key="SideBarFriendshipTemplate" x:DataType="vmp:MainPageFriendshipSideBarViewModel">
                         <Grid RowSpacing="8">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -112,7 +113,7 @@
                                 VerticalContentAlignment="Stretch"
                                 Content="{x:Bind SideBarContent, Mode=OneWay}">
                                 <ContentControl.ContentTemplate>
-                                    <DataTemplate x:DataType="vm:BaseMainPageFriendshipSideBarItemViewModel">
+                                    <DataTemplate x:DataType="vmp:BaseMainPageFriendshipSideBarItemViewModel">
                                         <Grid RowSpacing="8">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -153,11 +154,11 @@
                         </Grid>
                     </DataTemplate>
 
-                    <DataTemplate x:Key="SideBarMessagesTemplate" x:DataType="vm:MainPageFriendshipSideBarViewModel">
+                    <DataTemplate x:Key="SideBarMessagesTemplate" x:DataType="vmp:MainPageFriendshipSideBarViewModel">
                         <Grid />
                     </DataTemplate>
 
-                    <vm:MainPageSideBarDataTemplateSelector
+                    <vmp:MainPageSideBarDataTemplateSelector
                         x:Key="MainPageSideBarDataTemplateSelector"
                         Friendship="{StaticResource SideBarFriendshipTemplate}"
                         Messages="{StaticResource SideBarMessagesTemplate}" />
