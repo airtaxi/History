@@ -23,6 +23,7 @@ using UraniumUI.Icons.MaterialSymbols;
 using System.Net;
 using History.Commons.KakaoStory;
 using Microsoft.Maui.Graphics.Platform;
+using Microsoft.Maui.Media;
 using System.Text;
 using History.Commons.Enums;
 using Syncfusion.Maui.Toolkit.Picker;
@@ -440,15 +441,14 @@ public partial class EditPostPage : ContentPage
         var sizeExceed = false;
         var maxCount = CommonConstants.MaxPostMediaCount - _attachmentViewModels.Count;
 #if IOS
-        var request = new MediaPickRequest(maxCount, MediaFileType.Video) { Title = "비디오 추가" };
-
-        var results = await MediaGallery.PickAsync(request);
-        var files = results?.Files?.ToArray();
+        var results = await MediaPicker.PickVideosAsync(new MediaPickerOptions { Title = "비디오 추가", SelectionLimit = maxCount });
+        var files = results?.ToArray();
         if (files == null || files.Length == 0) return;
 
+        // FileResult.FileName already carries the original name with extension
         var loadedFiles = await Task.WhenAll(files.Select(async file =>
         {
-            var fileName = file.GenerateFileName();
+            var fileName = Path.GetFileName(file.FileName);
             var tempPath = Path.Combine(Path.GetTempPath(), fileName);
             using var stream = await file.OpenReadAsync();
             using var fileStream = File.Create(tempPath);
@@ -466,7 +466,6 @@ public partial class EditPostPage : ContentPage
             }
 
             _attachmentViewModels.Add(new MediaAttachmentViewModel(fileName, tempPath, true));
-            file.Dispose();
         }
 #elif ANDROID
         await Toast.Make($"{maxCount}개가 넘는 미디어 파일은 무시됩니다.").Show();
