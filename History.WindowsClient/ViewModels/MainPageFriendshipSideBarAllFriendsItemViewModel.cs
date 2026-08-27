@@ -1,15 +1,18 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Enums;
 using History.Commons.Helpers;
+using History.WindowsClient.Messages;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels;
 
-public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMainPageFriendshipSideBarItemViewModel
+public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMainPageFriendshipSideBarItemViewModel, IRecipient<FriendshipChangedMessage>
 {
     private ObservableCollection<BaseFriendshipViewModel> _items;
 
@@ -20,6 +23,37 @@ public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMain
 
         Query = string.Empty;
         EmptyText = "친구 목록이 비어있습니다";
+
+        WeakReferenceMessenger.Default.Register(this);
+    }
+
+    public void Receive(FriendshipChangedMessage message)
+    {
+        if (Parent.Parent.IsKakaoStoryMode) return; // Kakao Story friends are not tracked by the History friendship message.
+
+        var data = message.Value;
+        var isFriend = data.NewStatus == FriendshipStatus.Accepted;
+        var existingViewModel = _items?.OfType<HistoryFriendshipViewModel>().FirstOrDefault(x => x.User.UserId == data.UserId);
+
+        // Keep CommonShared.Friends in sync regardless of the target list, since it is used across the app.
+        if (isFriend)
+        {
+            if (CommonShared.Friends != null && !CommonShared.Friends.Any(x => x.UserId == data.UserId))
+            {
+                CommonShared.Friends.Add(data.User);
+            }
+        }
+        else CommonShared.Friends?.RemoveAll(x => x.UserId == data.UserId);
+
+        if (_items == null) return; // First load has not happened yet; it will fetch the latest data.
+
+        if (isFriend && existingViewModel == null) _items.Add(new HistoryFriendshipViewModel(data.User, Parent.Parent) { FriendshipVisibility = Visibility.Collapsed });
+        else if (!isFriend && existingViewModel != null) _items.Remove(existingViewModel);
+
+        _items = new(_items.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname));
+        RightHeaderText = $"친구 목록 (총 {_items.Count}명)";
+        IsEmpty = _items.Count == 0;
+        ApplyQuery(Query);
     }
 
     public override async Task RefreshAsync()
@@ -33,7 +67,7 @@ public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMain
                 return;
             }
 
-            _items = new(result.Value.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x) { FriendshipVisibility = Visibility.Collapsed }));
+            _items = new(result.Value.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x, Parent.Parent) { FriendshipVisibility = Visibility.Collapsed }));
             Items = _items;
             RightHeaderText = $"친구 목록 (총 {result.Value.Count}명)";
 

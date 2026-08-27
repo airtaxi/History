@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using History.Commons.Enums;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
@@ -37,4 +38,7 @@ public abstract partial class BaseFriendshipViewModel : BaseViewModel
     public partial ImageSource ProfileThumbnailImageSource { get; protected set; }
 
     public Visibility FriendshipVisibility { get; init; } = Visibility.Visible;
+
+    [RelayCommand]
+    public abstract Task HandleFriendshipActionAsync();
 }

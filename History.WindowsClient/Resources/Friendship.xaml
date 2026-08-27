@@ -66,6 +66,7 @@
                 Padding="0"
                 Background="Transparent"
                 BorderThickness="0"
+                Command="{x:Bind HandleFriendshipActionCommand}"
                 Visibility="{x:Bind FriendshipVisibility}">
                 <FontIcon
                     FontSize="20"

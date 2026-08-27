@@ -9,8 +9,8 @@ namespace History.WindowsClient.Helpers;
 
 public static class DialogHelper
 {
-    private const string DefaultOkButtonText = "확인";
-    private const string DefaultCancelButtonText = "취소";
+    public const string DefaultOkButtonText = "확인";
+    public const string DefaultCancelButtonText = "취소";
     private const string DefaultInputTitleText = "입력";
 
     private static readonly Lazy<ApplicationThemeService> s_applicationThemeServiceLazy = new(() => App.Services.GetRequiredService<ApplicationThemeService>());

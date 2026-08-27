@@ -1,10 +1,15 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
+using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.WindowsClient.Helpers;
+using History.WindowsClient.Messages;
+using History.WindowsClient.Pages;
 using Microsoft.UI;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.UI;
@@ -15,8 +20,11 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
 {
     public UserResponseDto User { get; }
 
-    public HistoryFriendshipViewModel(UserResponseDto user)
+    private readonly BaseViewModel _baseViewModel;
+
+    public HistoryFriendshipViewModel(UserResponseDto user, BaseViewModel baseViewModel)
     {
+        _baseViewModel = baseViewModel;
         User = user;
 
         Update(user);
@@ -78,5 +86,72 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
         else if (User.Friendship.Status == FriendshipStatus.Ignored)  return "\uE8F8";
         else if (User.Friendship.Status == FriendshipStatus.Blocked)  return "\uE8F8";
         else return "\uE716";
+    }
+
+    public override async Task HandleFriendshipActionAsync()
+    {
+        Result result = null;
+        FriendshipStatus? newStatus = null;
+
+        if (User.Friendship == null)
+        {
+            var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님에게 친구 신청을 보내시겠습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
+            if (dialogResult == ContentDialogResult.Primary)
+            {
+                result = await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
+                newStatus = FriendshipStatus.Requested;
+            }
+        }
+        else if (User.Friendship.Status == FriendshipStatus.Accepted)
+        {
+            var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님과의 친구 관계를 끊으시겠습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
+            if (dialogResult == ContentDialogResult.Primary)
+            {
+                result = await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
+                newStatus = null;
+            }
+        }
+        else if (User.Friendship.Status == FriendshipStatus.Requested)
+        {
+            var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
+            if (dialogResult == ContentDialogResult.Primary)
+            {
+                result = await App.ExecuteRequestAsync(new CancelFriendRequest(User.UserId));
+                newStatus = null;
+            }
+        }
+        else if (User.Friendship.Status == FriendshipStatus.Waiting)
+        {
+            var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님의 친구 신청을 수락하시겠습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
+            if (dialogResult == ContentDialogResult.Primary)
+            {
+                result = await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
+                newStatus = FriendshipStatus.Accepted;
+            }
+        }
+        else if (User.Friendship.Status == FriendshipStatus.Blocked)
+        {
+            var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님의 차단 조치를 해제하시곘습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
+            if (dialogResult == ContentDialogResult.Primary)
+            {
+                result = await App.ExecuteRequestAsync(new UnblockUser(User.UserId));
+                newStatus = null;
+            }
+        }
+        else if (User.Friendship.Status == FriendshipStatus.Ignored)
+        {
+            var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님의 무시 조치를 해제하시곘습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
+            if (dialogResult == ContentDialogResult.Primary)
+            {
+                result = await App.ExecuteRequestAsync(new UnignoreUser(User.UserId));
+                newStatus = null;
+            }
+        }
+
+        if (result != null && result.IsSuccess)
+        {
+            await RefreshAsync();
+            WeakReferenceMessenger.Default.Send(new FriendshipChangedMessage(User.UserId, newStatus, User));
+        }
     }
 }

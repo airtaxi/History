@@ -1,16 +1,18 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Helpers;
+using History.WindowsClient.Messages;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels;
 
-public partial class MainPageFriendshipSideBarAddFriendsItemViewModel : BaseMainPageFriendshipSideBarItemViewModel
+public partial class MainPageFriendshipSideBarAddFriendsItemViewModel : BaseMainPageFriendshipSideBarItemViewModel, IRecipient<FriendshipChangedMessage>
 {
     private long _searchSequence;
 
@@ -23,6 +25,16 @@ public partial class MainPageFriendshipSideBarAddFriendsItemViewModel : BaseMain
         RightHeaderText = "검색 결과";
         EmptyText = "검색 결과가 없습니다";
         IsEmpty = true;
+
+        WeakReferenceMessenger.Default.Register(this);
+    }
+
+    public void Receive(FriendshipChangedMessage message)
+    {
+        if (Parent.Parent.IsKakaoStoryMode) return; // Kakao Story friends are not tracked by the History friendship message.
+        if (string.IsNullOrWhiteSpace(Query)) return; // No search results are shown yet.
+
+        ApplyQuery(Query);
     }
 
     // RefreshAsync is no-op for add frinnds item
@@ -59,7 +71,7 @@ public partial class MainPageFriendshipSideBarAddFriendsItemViewModel : BaseMain
             // Delete duplicated records
             results = [.. results.DistinctBy(x => x.UserId)];
 
-            viewModels = [.. results.Select(x => new HistoryFriendshipViewModel(x))];
+            viewModels = [.. results.Select(x => new HistoryFriendshipViewModel(x, Parent.Parent))];
         }
 
         if (sequence != _searchSequence) return; // A newer search was issued; discard stale results.
