@@ -1,4 +1,4 @@
-﻿using DotNet.RateLimiter;
+using DotNet.RateLimiter;
 using DotNet.RateLimiter.ActionFilters;
 using Google.Apis.Auth.OAuth2;
 using History.ApiService.Helpers;
@@ -20,18 +20,20 @@ public class AppleController(IConfiguration configuration) : ControllerBase
     private readonly string _clientId = configuration["HISTORY_APPLE_CLIENT_ID"] ?? "com.airtaxi.history.as";
     private readonly string _redirectUri = configuration["HISTORY_APPLE_REDIRECT_URI"] ?? "https://api.history.cenox.io/api/auth/apple/callback";
     private readonly string _privateKeyPath = configuration["HISTORY_APPLE_PRIVATE_KEY_PATH"] ?? Path.Combine(AppContext.BaseDirectory, "AuthKey_DGK52ABR8V.p8");
+    private readonly OAuthStateProtector _stateProtector = OAuthStateProtector.CreateFromConfiguration(configuration);
 
     public string GenerateJwtToken() => AppleIdTokenHelper.GenerateJwtToken(_keyId, _teamId, _clientId, _privateKeyPath);
 
     [HttpGet("login")]
     [ProducesResponseType<string>(200)]
     [ProducesResponseType<string>(429)]
-    public IActionResult Login([FromQuery] string redirectUrl) => Redirect($"{AuthorizationEndpoint}?response_type=code" +
-        $"&client_id={HttpUtility.UrlEncode(_clientId)}" +
-        $"&redirect_uri={HttpUtility.UrlEncode(_redirectUri)}" +
-        $"&scope={HttpUtility.UrlEncode("name email")}" +
-        $"&response_mode=form_post" +
-        $"&state={HttpUtility.UrlEncode(redirectUrl)}");
+    public IActionResult Login([FromQuery] string redirectUrl)
+    {
+        if (!_stateProtector.IsAllowedRedirectUrl(redirectUrl)) return BadRequest("Invalid redirect URL.");
+
+        var state = _stateProtector.Protect(redirectUrl);
+        return Redirect($"{AuthorizationEndpoint}?response_type=code" + $"&client_id={HttpUtility.UrlEncode(_clientId)}" + $"&redirect_uri={HttpUtility.UrlEncode(_redirectUri)}" + $"&scope={HttpUtility.UrlEncode("name email")}" + $"&response_mode=form_post" + $"&state={HttpUtility.UrlEncode(state)}");
+    }
 
     [HttpPost("callback")]
     [ProducesResponseType<string>(200)]
@@ -40,6 +42,9 @@ public class AppleController(IConfiguration configuration) : ControllerBase
     {
         if (string.IsNullOrEmpty(code))
             return RedirectToAction("Login", "Apple");
+
+        // state carries the signed redirect URL to return to after successful login
+        if (!_stateProtector.TryUnprotect(state, out var redirectUrl)) return BadRequest("Invalid or expired state.");
 
         string idToken;
         using (var client = new RestClient("https://appleid.apple.com/auth/token"))
@@ -63,11 +68,10 @@ public class AppleController(IConfiguration configuration) : ControllerBase
         JsonNode userInfo = null;
         if (!string.IsNullOrEmpty(user)) userInfo = JsonNode.Parse(user);
 
-        var redirectUrl = $"{state}?id_token={HttpUtility.UrlEncode(idToken)}";
+        var targetUrl = $"{redirectUrl}?id_token={HttpUtility.UrlEncode(idToken)}";
+        if (userInfo != null) targetUrl += $"&user={HttpUtility.UrlEncode(user)}";
 
-        if (userInfo != null) redirectUrl += $"&user={HttpUtility.UrlEncode(user)}";
-
-        return Redirect(redirectUrl);
+        return Redirect(targetUrl);
     }
 
 }
