@@ -17,20 +17,28 @@
                     <behaviors:EventTriggerBehavior EventName="Tapped">
                         <behaviors:InvokeCommandAction Command="{x:Bind HandleTapCommand}" />
                     </behaviors:EventTriggerBehavior>
+                    <behaviors:EventTriggerBehavior EventName="Unloaded">
+                        <behaviors:InvokeCommandAction Command="{x:Bind HandleUnloadCommand}" />
+                    </behaviors:EventTriggerBehavior>
                 </interactivity:Interaction.Behaviors>
 
                 <Image
+                    Width="{x:Bind Width, Mode=OneWay}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
                     ImageOpened="OnMediaItemImageOpened"
                     Source="{x:Bind ImageSource}"
                     Stretch="{x:Bind Stretch, Mode=OneTime}" />
 
                 <!--  Spoiler Overlay  -->
-                <Grid Background="#FF000000" Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <interactivity:Interaction.Behaviors>
-                        <behaviors:EventTriggerBehavior EventName="Tapped">
-                            <behaviors:InvokeCommandAction Command="{x:Bind HandleSpoilerOverlayTapCommand}" />
-                        </behaviors:EventTriggerBehavior>
-                    </interactivity:Interaction.Behaviors>
+                <Button
+                    Padding="0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Background="#FF000000"
+                    BorderThickness="0"
+                    Command="{x:Bind HandleSpoilerOverlayTapCommand}"
+                    Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -51,7 +59,7 @@
                             Foreground="#CCCCCC"
                             Text="탭하여 확인하기" />
                     </StackPanel>
-                </Grid>
+                </Button>
 
                 <!--  Description  -->
                 <Grid
@@ -78,41 +86,53 @@
                     <behaviors:EventTriggerBehavior EventName="Tapped">
                         <behaviors:InvokeCommandAction Command="{x:Bind HandleTapCommand}" />
                     </behaviors:EventTriggerBehavior>
+                    <behaviors:EventTriggerBehavior EventName="Unloaded">
+                        <behaviors:InvokeCommandAction Command="{x:Bind HandleUnloadCommand}" />
+                    </behaviors:EventTriggerBehavior>
                 </interactivity:Interaction.Behaviors>
 
                 <Image
+                    Width="{x:Bind Width, Mode=OneWay}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
                     ImageOpened="OnMediaItemImageOpened"
                     Source="{x:Bind ImageSource}"
                     Stretch="{x:Bind Stretch, Mode=OneTime}" />
 
                 <MediaPlayerElement
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
                     AreTransportControlsEnabled="True"
                     AutoPlay="True"
                     Source="{x:Bind PlaybackMediaSource, Mode=OneWay}"
                     Visibility="{x:Bind IsPlaying, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
 
                 <!--  Video Overlay  -->
-                <Grid Background="#80000000" Visibility="{x:Bind IsOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <interactivity:Interaction.Behaviors>
-                        <behaviors:EventTriggerBehavior EventName="Tapped">
-                            <behaviors:InvokeCommandAction Command="{x:Bind HandleOverlayTapCommand}" />
-                        </behaviors:EventTriggerBehavior>
-                    </interactivity:Interaction.Behaviors>
+                <Button
+                    Padding="0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Background="#80000000"
+                    BorderThickness="0"
+                    Command="{x:Bind HandleOverlayTapCommand}"
+                    Visibility="{x:Bind IsOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                     <FontIcon
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         FontSize="150"
                         Foreground="White"
                         Glyph="&#xE768;" />
-                </Grid>
+                </Button>
 
                 <!--  Spoiler Overlay  -->
-                <Grid Background="#FF000000" Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <interactivity:Interaction.Behaviors>
-                        <behaviors:EventTriggerBehavior EventName="Tapped">
-                            <behaviors:InvokeCommandAction Command="{x:Bind HandleSpoilerOverlayTapCommand}" />
-                        </behaviors:EventTriggerBehavior>
-                    </interactivity:Interaction.Behaviors>
+                <Button
+                    Padding="0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Background="#FF000000"
+                    BorderThickness="0"
+                    Command="{x:Bind HandleSpoilerOverlayTapCommand}"
+                    Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                     <StackPanel
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
@@ -133,7 +153,7 @@
                             Foreground="#CCCCCC"
                             Text="탭하여 확인하기" />
                     </StackPanel>
-                </Grid>
+                </Button>
 
                 <!--  Description  -->
                 <Grid
@@ -162,9 +182,8 @@
 
     <Grid x:Name="RootGrid" SizeChanged="OnRootGridSizeChanged">
         <FlipView
-            Width="{x:Bind ViewModel.CarouselWidth, Mode=OneWay}"
             Height="{x:Bind ViewModel.CarouselHeight, Mode=OneWay}"
-            HorizontalAlignment="{x:Bind ViewModel.CarouselHorizontalAlignment, Mode=OneWay}"
+            HorizontalAlignment="Stretch"
             Background="#808080"
             CornerRadius="6"
             ItemTemplateSelector="{StaticResource MediaTemplateSelector}"

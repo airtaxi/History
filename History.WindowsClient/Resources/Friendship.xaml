@@ -13,10 +13,18 @@
                 <ColumnDefinition Width="32" />
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0">
-                <PersonPicture
+                <Button
                     Width="32"
                     Height="32"
-                    ProfilePicture="{x:Bind ProfileThumbnailImageSource}" />
+                    Padding="0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    CornerRadius="16">
+                    <PersonPicture
+                        Width="32"
+                        Height="32"
+                        ProfilePicture="{x:Bind ProfileThumbnailImageSource}" />
+                </Button>
                 <Border
                     Width="12"
                     Height="12"

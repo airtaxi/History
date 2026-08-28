@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    x:Class="History.WindowsClient.Resources.Comment"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:History.WindowsClient.ViewModels">
+
+    <DataTemplate x:Key="CommentTemplate" x:DataType="vm:BaseCommentViewModel">
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button
+                Grid.Column="0"
+                Width="32"
+                Height="32"
+                Padding="0"
+                VerticalAlignment="Top"
+                Background="Transparent"
+                BorderThickness="0"
+                Command="{x:Bind HandleProfileTapCommand}"
+                CornerRadius="16">
+                <PersonPicture
+                    Width="32"
+                    Height="32"
+                    ProfilePicture="{x:Bind ProfileThumbnailImageSource, Mode=OneWay}" />
+            </Button>
+            <StackPanel Grid.Column="1" Spacing="2">
+                <Button
+                    Padding="0"
+                    HorizontalAlignment="Left"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind HandleTapCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock
+                            FontWeight="Bold"
+                            MaxLines="1"
+                            Text="{x:Bind Nickname, Mode=OneWay}"
+                            TextTrimming="CharacterEllipsis" />
+                        <FontIcon
+                            FontSize="14"
+                            Foreground="#f78501"
+                            Glyph="&#xF760;"
+                            Visibility="{x:Bind IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                        <FontIcon
+                            FontSize="14"
+                            Foreground="#1a5bf3"
+                            Glyph="&#xF760;"
+                            Visibility="{x:Bind IsModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                    </StackPanel>
+                </Button>
+                <ItemsControl ItemTemplateSelector="{StaticResource PostContentSelector}" ItemsSource="{x:Bind Contents, Mode=OneWay}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="8" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+                <StackPanel
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="0">
+                    <Button
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind HandleTapCommand}">
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="{x:Bind TimestampText, Mode=OneWay}" />
+                    </Button>
+                    <Button
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind HandleCommentLikeTapCommand}"
+                        Visibility="{x:Bind HasLikes, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="· 좋아요" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="{x:Bind LikesCount, Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+            <Button
+                Grid.Column="2"
+                Width="28"
+                Height="28"
+                Padding="0"
+                VerticalAlignment="Top"
+                Background="Transparent"
+                BorderThickness="0"
+                Tag="{x:Bind}">
+                <SymbolIcon Foreground="{ThemeResource TextFillColorSecondaryBrush}" Symbol="More" />
+                <Button.Flyout>
+                    <MenuFlyout Opening="OnCommentMenuFlyoutOpening" />
+                </Button.Flyout>
+            </Button>
+        </Grid>
+    </DataTemplate>
+</ResourceDictionary>

@@ -6,7 +6,8 @@
     xmlns:converters="using:CommunityToolkit.WinUI.Converters"
     xmlns:local="using:History.WindowsClient"
     xmlns:localconverters="using:History.WindowsClient.Converters"
-    xmlns:srd="using:History.WindowsClient.Resources">
+    xmlns:srd="using:History.WindowsClient.Resources"
+    xmlns:vm="using:History.WindowsClient.ViewModels">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -15,6 +16,8 @@
                 <!--  Other merged dictionaries here  -->
                 <ResourceDictionary Source="ms-appx:///DevWinUI/Themes/Generic.xaml" />
 
+                <srd:Content />
+                <srd:Comment />
                 <srd:Friendship />
                 <srd:Post />
             </ResourceDictionary.MergedDictionaries>
@@ -35,6 +38,11 @@
             <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
             <converters:VisibilityToBoolConverter x:Key="VisibilityToBoolConverter" />
             <localconverters:BoolToAccentBrushConverter x:Key="BoolToAccentBrushConverter" />
+
+            <vm:TimelineTemplateSelector
+                x:Key="TimelineTemplateSelector"
+                PostTemplate="{StaticResource PostTemplate}"
+                RepostTemplate="{StaticResource RepostTemplate}" />
 
             <Color x:Key="SystemAccentColor">#ED664D</Color>
 

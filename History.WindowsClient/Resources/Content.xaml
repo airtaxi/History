@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    x:Class="History.WindowsClient.Resources.Content"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:History.WindowsClient.Controls"
+    xmlns:vm="using:History.WindowsClient.ViewModels">
+
+    <!--  Content slot templates hosting the existing content UserControls.  -->
+    <!--  Merged before Comment/Post so both can resolve these keys safely.  -->
+    <DataTemplate x:Key="WrappedMediaContentTemplate" x:DataType="vm:WrappedMediaContentItemViewModel">
+        <controls:WrappedMediaContentControl
+            AllMediaContents="{x:Bind AllMediaContents, Mode=OneTime}"
+            IsParentPost="{x:Bind IsParentPost, Mode=OneTime}"
+            MediaContents="{x:Bind MediaContents, Mode=OneTime}"
+            PostType="{x:Bind PostType, Mode=OneTime}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="BodyContentTemplate" x:DataType="vm:BodyContentItemViewModel">
+        <controls:BodyContentControl Contents="{x:Bind TextTypeContents, Mode=OneTime}" />
+    </DataTemplate>
+
+    <!--  GIF/WebP animation is not supported by BitmapImage; only the first frame is shown.  -->
+    <DataTemplate x:Key="StickerContentTemplate" x:DataType="vm:StickerContentItemViewModel">
+        <Image
+            Width="120"
+            Height="120"
+            HorizontalAlignment="Left"
+            Source="{x:Bind ImageSource, Mode=OneTime}"
+            Stretch="Uniform" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="PollContentTemplate" x:DataType="vm:PollContentItemViewModel">
+        <controls:PollContentControl PollContent="{x:Bind PollContent, Mode=OneTime}" PostId="{x:Bind PostId, Mode=OneTime}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="ExternalUrlContentTemplate" x:DataType="vm:ExternalUrlContentItemViewModel">
+        <controls:ExternalUrlContentControl ExternalUrlContent="{x:Bind ExternalUrlContent, Mode=OneTime}" />
+    </DataTemplate>
+
+    <vm:ContentTemplateSelector
+        x:Key="PostContentSelector"
+        BodyTemplate="{StaticResource BodyContentTemplate}"
+        ExternalUrlTemplate="{StaticResource ExternalUrlContentTemplate}"
+        PollTemplate="{StaticResource PollContentTemplate}"
+        StickerTemplate="{StaticResource StickerContentTemplate}"
+        WrappedMediaTemplate="{StaticResource WrappedMediaContentTemplate}" />
+</ResourceDictionary>

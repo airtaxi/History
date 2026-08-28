@@ -1,8 +1,11 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
+using History.WindowsClient.Messages;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Media.Core;
@@ -30,6 +33,9 @@ public sealed partial class MediaContentViewModel : ObservableObject
     public int PixelHeight { get; private set; }
 
     [ObservableProperty]
+    public partial double Width { get; set; } = double.NaN;
+
+    [ObservableProperty]
     public partial bool IsOverlayVisible { get; private set; }
 
     [ObservableProperty]
@@ -40,8 +46,6 @@ public sealed partial class MediaContentViewModel : ObservableObject
 
     [ObservableProperty]
     public partial MediaSource PlaybackMediaSource { get; private set; }
-
-    internal event Action ImageSizeReported;
 
     public MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, PostType postType, bool isParentPost)
     {
@@ -66,7 +70,7 @@ public sealed partial class MediaContentViewModel : ObservableObject
 
         PixelWidth = pixelWidth;
         PixelHeight = pixelHeight;
-        ImageSizeReported?.Invoke();
+        WeakReferenceMessenger.Default.Send(new MediaImageSizeReportedMessage(this));
     }
 
     // Restores the initial overlay state when the carousel moves to another media, mirroring
@@ -99,6 +103,15 @@ public sealed partial class MediaContentViewModel : ObservableObject
 
     [RelayCommand]
     private void HandleSpoilerOverlayTap() => IsSpoilerOverlayVisible = false;
+
+    [RelayCommand]
+    private void HandleUnload()
+    {
+        IsPlaying = false;
+        var playbackMediaSource = PlaybackMediaSource;
+        PlaybackMediaSource = null;
+        playbackMediaSource?.Dispose();
+    }
 
     // Wrapped posts and inline videos display the thumbnail; unwrapped image posts display the original media.
     // GIF/WebP animation is not supported by BitmapImage; only the first frame is shown.

@@ -72,6 +72,35 @@ public static class DialogHelper
         return await dialog.ShowAsync();
     }
 
+    // Selection counterpart of the MAUI DisplayActionSheet: shows a radio-button list
+    // inside a ContentDialog and returns the selected display string, or null on cancel.
+    public static async Task<string> ShowSelectionDialogAsync(this UIElement element, string title, IReadOnlyList<string> options)
+    {
+        HideOpenContentDialogs(element);
+
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            PrimaryButtonText = DefaultOkButtonText,
+            SecondaryButtonText = DefaultCancelButtonText,
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = element.XamlRoot
+        };
+        s_applicationThemeService.RegisterThemeTarget(dialog);
+
+        var listView = new ListView { SelectionMode = ListViewSelectionMode.Single, MaxHeight = 320 };
+        foreach (var option in options) listView.Items.Add(option);
+        dialog.Content = listView;
+
+        string selectedOption = null;
+        dialog.Closing += (_, closingEventArguments) =>
+        {
+            selectedOption = closingEventArguments.Result == ContentDialogResult.Primary ? listView.SelectedItem as string : null;
+        };
+        await dialog.ShowAsync();
+        return selectedOption;
+    }
+
     private static void HideOpenContentDialogs(UIElement element)
     {
         var contentDialogs = VisualTreeHelper.GetOpenPopupsForXamlRoot(element.XamlRoot).Where(popup => popup.Child is ContentDialog).Select(popup => popup.Child as ContentDialog);

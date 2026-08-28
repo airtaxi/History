@@ -1,25 +1,28 @@
-﻿using Microsoft.UI.Xaml;
+﻿using History.WindowsClient.ViewModels;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 
-namespace History.WindowsClient.Resources
+namespace History.WindowsClient.Resources;
+
+public sealed partial class Post : ResourceDictionary
 {
-    public sealed partial class Post : ResourceDictionary
+    public Post() => InitializeComponent();
+
+    // Fills the "..." menu with the actions of the post view model bound to the button.
+    private void OnMoreMenuFlyoutOpening(object sender, object e)
     {
-        public Post()
-        {
-            this.InitializeComponent();
-        }
+        if (sender is not MenuFlyout menuFlyout) return;
+        if (menuFlyout.Target?.Tag is not BasePostViewModel postViewModel) return;
+
+        postViewModel.PopulateMoreMenuFlyout(menuFlyout);
+    }
+
+    // Fills the reaction menu with the five reactions or a cancel entry.
+    private void OnReactionMenuFlyoutOpening(object sender, object e)
+    {
+        if (sender is not MenuFlyout menuFlyout) return;
+        if (menuFlyout.Target?.Tag is not BasePostViewModel postViewModel) return;
+
+        postViewModel.PopulateReactionMenuFlyout(menuFlyout);
     }
 }

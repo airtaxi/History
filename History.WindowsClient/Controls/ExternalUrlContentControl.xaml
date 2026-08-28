@@ -34,6 +34,8 @@
 
         <Image Source="{x:Bind ViewModel.ThumbnailImageSource, Mode=OneWay}" Stretch="UniformToFill" />
 
+        <Rectangle Fill="#000000" Opacity="0.5" />
+
         <!--  Text  -->
         <StackPanel Padding="12" VerticalAlignment="Bottom">
             <TextBlock

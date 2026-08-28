@@ -1,11 +1,714 @@
-﻿<ResourceDictionary
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
     x:Class="History.WindowsClient.Resources.Post"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:History.WindowsClient.ViewModels">
 
-    <DataTemplate x:Key="PostTemplate">
-        <Grid>
-            
+    <DataTemplate x:Key="InteractionTemplate" x:DataType="vm:BaseInteractionViewModel">
+        <Button
+            Width="36"
+            Height="36"
+            Padding="0"
+            Background="Transparent"
+            BorderThickness="0"
+            Command="{x:Bind HandleTapCommand}"
+            CornerRadius="18">
+            <Grid>
+                <Button
+                    Width="36"
+                    Height="36"
+                    Padding="0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind HandleTapCommand}"
+                    CornerRadius="18">
+                    <PersonPicture
+                        Width="36"
+                        Height="36"
+                        ProfilePicture="{x:Bind ProfileImageSource, Mode=OneWay}" />
+                </Button>
+                <Border
+                    Width="16"
+                    Height="16"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Background="{x:Bind ColorBrush, Mode=OneWay}"
+                    CornerRadius="8">
+                    <Border.RenderTransform>
+                        <TranslateTransform X="2" Y="2" />
+                    </Border.RenderTransform>
+                    <FontIcon
+                        FontSize="{x:Bind IconSize, Mode=OneWay}"
+                        Foreground="White"
+                        Glyph="{x:Bind Glyph, Mode=OneWay}" />
+                </Border>
+            </Grid>
+        </Button>
+    </DataTemplate>
+
+    <DataTemplate x:Key="SharedPostTemplate" x:DataType="vm:BasePostViewModel">
+        <StackPanel Spacing="8">
+            <Rectangle
+                Height="1"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Top"
+                Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            <Grid ColumnSpacing="6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel
+                    Grid.Column="0"
+                    Orientation="Horizontal"
+                    Spacing="6">
+                    <Button
+                        Width="28"
+                        Height="28"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind HandleProfileTapCommand}"
+                        CornerRadius="14">
+                        <PersonPicture
+                            Width="28"
+                            Height="28"
+                            ProfilePicture="{x:Bind ProfileThumbnailImageSource, Mode=OneWay}" />
+                    </Button>
+                    <Button
+                        Padding="0"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind HandleProfileTapCommand}">
+                        <StackPanel
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="4">
+                            <TextBlock
+                                FontSize="14"
+                                FontWeight="Bold"
+                                MaxLines="1"
+                                Text="{x:Bind Nickname, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
+                            <FontIcon
+                                FontSize="14"
+                                Foreground="#f78501"
+                                Glyph="&#xF760;"
+                                Visibility="{x:Bind IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                            <FontIcon
+                                FontSize="14"
+                                Foreground="#1a5bf3"
+                                Glyph="&#xF760;"
+                                Visibility="{x:Bind IsModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                <StackPanel
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="4">
+                    <SymbolIcon Foreground="{ThemeResource TextFillColorSecondaryBrush}" Symbol="Share" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="Bold"
+                        Text="{x:Bind SharedUsersCount, Mode=OneWay}"
+                        Visibility="{x:Bind HasSharedUsers, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                </StackPanel>
+            </Grid>
+            <ItemsControl ItemTemplateSelector="{StaticResource PostContentSelector}" ItemsSource="{x:Bind Contents, Mode=OneWay}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="8" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="PostContentTemplate" x:DataType="vm:BasePostViewModel">
+        <StackPanel Padding="16" Spacing="8">
+            <!--  Header  -->
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Button
+                    Grid.Column="0"
+                    Width="48"
+                    Height="48"
+                    Padding="0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind HandleProfileTapCommand}"
+                    CornerRadius="24">
+                    <PersonPicture
+                        Width="48"
+                        Height="48"
+                        ProfilePicture="{x:Bind ProfileThumbnailImageSource, Mode=OneWay}" />
+                </Button>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <Button
+                        Padding="0"
+                        HorizontalAlignment="Left"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind HandleProfileTapCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock
+                                FontSize="16"
+                                FontWeight="Bold"
+                                MaxLines="1"
+                                Text="{x:Bind Nickname, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
+                            <FontIcon
+                                FontSize="14"
+                                Foreground="#f78501"
+                                Glyph="&#xF760;"
+                                Visibility="{x:Bind IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                            <FontIcon
+                                FontSize="14"
+                                Foreground="#1a5bf3"
+                                Glyph="&#xF760;"
+                                Visibility="{x:Bind IsModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="{x:Bind TimestampText, Mode=OneWay}" />
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="·" />
+                        <FontIcon
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="{x:Bind DiscoveryOptionGlyph, Mode=OneWay}" />
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="4">
+                    <Button
+                        Width="32"
+                        Height="32"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind HandleReactionCommand}"
+                        Tag="{x:Bind}">
+                        <FontIcon
+                            FontSize="20"
+                            Foreground="{x:Bind ReactionBrush, Mode=OneWay}"
+                            Glyph="{x:Bind ReactionGlyph, Mode=OneWay}" />
+                        <Button.Flyout>
+                            <MenuFlyout Opening="OnReactionMenuFlyoutOpening" />
+                        </Button.Flyout>
+                    </Button>
+                    <Button
+                        Width="32"
+                        Height="32"
+                        Padding="0"
+                        VerticalAlignment="Center"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Tag="{x:Bind}">
+                        <SymbolIcon Foreground="{ThemeResource TextFillColorSecondaryBrush}" Symbol="More" />
+                        <Button.Flyout>
+                            <MenuFlyout Opening="OnMoreMenuFlyoutOpening" />
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+            </Grid>
+            <!--  Contents  -->
+            <ItemsControl ItemTemplateSelector="{StaticResource PostContentSelector}" ItemsSource="{x:Bind Contents, Mode=OneWay}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="8" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <!--  Shared post  -->
+            <ContentPresenter
+                Content="{x:Bind ParentPost, Mode=OneWay}"
+                ContentTemplate="{StaticResource SharedPostTemplate}"
+                Visibility="{x:Bind IsShare, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+            <!--  Interaction summary  -->
+            <StackPanel
+                Orientation="Horizontal"
+                Spacing="12"
+                Visibility="{x:Bind HasInteractions, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                <Button
+                    Padding="0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind HandleReactionTapCommand}"
+                    Visibility="{x:Bind HasReactions, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="느낌" />
+                        <TextBlock
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Text="{x:Bind ReactionsCount, Mode=OneWay}" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    Padding="0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind HandleSharedTapCommand}"
+                    Visibility="{x:Bind HasSharedUsers, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="공유" />
+                        <TextBlock
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Text="{x:Bind SharedUsersCount, Mode=OneWay}" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    Padding="0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind HandleRepostTapCommand}"
+                    Visibility="{x:Bind HasRepostedUsers, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="{x:Bind RepostCountPrefix, Mode=OneWay}" />
+                        <TextBlock
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Text="{x:Bind RepostedUsersCount, Mode=OneWay}" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            <!--  Interaction strip  -->
+            <ScrollViewer
+                HorizontalScrollBarVisibility="Hidden"
+                HorizontalScrollMode="Enabled"
+                VerticalScrollBarVisibility="Disabled"
+                VerticalScrollMode="Disabled"
+                Visibility="{x:Bind HasInteractions, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                <ItemsControl ItemTemplate="{StaticResource InteractionTemplate}" ItemsSource="{x:Bind Interactions, Mode=OneWay}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="6" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </ScrollViewer>
+        </StackPanel>
+    </DataTemplate>
+
+    <!--  Full comment list area (hosted beside PostContentTemplate by the post page)  -->
+    <DataTemplate x:Key="PostCommentTemplate" x:DataType="vm:BasePostViewModel">
+        <StackPanel
+            Padding="16"
+            Spacing="16"
+            Visibility="{x:Bind HasComments, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel
+                    Grid.Column="0"
+                    Orientation="Horizontal"
+                    Spacing="4">
+                    <TextBlock FontSize="16" Text="댓글 " />
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Text="{x:Bind CommentsCount, Mode=OneWay}" />
+                </StackPanel>
+                <Button
+                    Grid.Column="1"
+                    Padding="0"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind HandleLoadMoreCommentsCommand}"
+                    Visibility="{x:Bind HasMoreComments, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                    <TextBlock
+                        FontSize="12"
+                        FontWeight="Bold"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="이전 댓글" />
+                </Button>
+            </Grid>
+            <ItemsControl ItemTemplate="{StaticResource CommentTemplate}" ItemsSource="{x:Bind Comments, Mode=OneWay}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="16" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </StackPanel>
+    </DataTemplate>
+    <!--  Empty state shown beside the comment list when the post has no comments  -->
+    <DataTemplate x:Key="PostNoCommentsTemplate" x:DataType="vm:BasePostViewModel">
+        <TextBlock
+            Margin="16"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Text="댓글이 없습니다"
+            Visibility="{x:Bind HasNoComments, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+    </DataTemplate>
+
+    <!--  Timeline card  -->
+    <DataTemplate x:Key="PostTemplate" x:DataType="vm:BasePostViewModel">
+        <Button
+            Padding="0"
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            Background="Transparent"
+            BorderThickness="0"
+            Command="{x:Bind HandleTapCommand}"
+            CornerRadius="16">
+            <Border
+                Padding="12"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="16">
+                <StackPanel Spacing="8">
+                    <!--  Header  -->
+                    <Grid ColumnSpacing="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel
+                            Grid.Column="0"
+                            Orientation="Horizontal"
+                            Spacing="6">
+                            <Button
+                                Width="36"
+                                Height="36"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Command="{x:Bind HandleProfileTapCommand}"
+                                CornerRadius="18">
+                                <PersonPicture
+                                    Width="36"
+                                    Height="36"
+                                    ProfilePicture="{x:Bind ProfileThumbnailImageSource, Mode=OneWay}" />
+                            </Button>
+                            <StackPanel VerticalAlignment="Center">
+                                <Button
+                                    Padding="0"
+                                    HorizontalAlignment="Left"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Command="{x:Bind HandleProfileTapCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock
+                                            FontSize="14"
+                                            FontWeight="Bold"
+                                            MaxLines="1"
+                                            Text="{x:Bind Nickname, Mode=OneWay}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <FontIcon
+                                            FontSize="14"
+                                            Foreground="#f78501"
+                                            Glyph="&#xF760;"
+                                            Visibility="{x:Bind IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                                        <FontIcon
+                                            FontSize="14"
+                                            Foreground="#1a5bf3"
+                                            Glyph="&#xF760;"
+                                            Visibility="{x:Bind IsModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                                    </StackPanel>
+                                </Button>
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="{x:Bind TimestampText, Mode=OneWay}" />
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="·" />
+                                    <FontIcon
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Glyph="{x:Bind DiscoveryOptionGlyph, Mode=OneWay}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                        <Button
+                            Grid.Column="2"
+                            Width="32"
+                            Height="32"
+                            Padding="0"
+                            VerticalAlignment="Center"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Tag="{x:Bind}">
+                            <SymbolIcon Foreground="{ThemeResource TextFillColorSecondaryBrush}" Symbol="More" />
+                            <Button.Flyout>
+                                <MenuFlyout Opening="OnMoreMenuFlyoutOpening" />
+                            </Button.Flyout>
+                        </Button>
+                    </Grid>
+                    <!--  Contents  -->
+                    <ItemsControl ItemTemplateSelector="{StaticResource PostContentSelector}" ItemsSource="{x:Bind Contents, Mode=OneWay}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <!--  Shared post  -->
+                    <ContentPresenter
+                        Content="{x:Bind ParentPost, Mode=OneWay}"
+                        ContentTemplate="{StaticResource SharedPostTemplate}"
+                        Visibility="{x:Bind IsShare, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                    <!--  Action row  -->
+                    <StackPanel
+                        Margin="0,4,0,0"
+                        Orientation="Horizontal"
+                        Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Button
+                                Width="28"
+                                Height="28"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Command="{x:Bind HandleReactionCommand}"
+                                Tag="{x:Bind}">
+                                <FontIcon
+                                    FontSize="18"
+                                    Foreground="{x:Bind ReactionBrush, Mode=OneWay}"
+                                    Glyph="{x:Bind ReactionGlyph, Mode=OneWay}" />
+                                <Button.Flyout>
+                                    <MenuFlyout Opening="OnReactionMenuFlyoutOpening" />
+                                </Button.Flyout>
+                            </Button>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                FontWeight="Bold"
+                                Text="{x:Bind ReactionsCount, Mode=OneWay}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon
+                                FontSize="18"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Glyph="&#xE90A;" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                FontWeight="Bold"
+                                Text="{x:Bind CommentsCount, Mode=OneWay}" />
+                        </StackPanel>
+                        <StackPanel
+                            Orientation="Horizontal"
+                            Spacing="4"
+                            Visibility="{x:Bind HasSharedUsers, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                            <FontIcon
+                                FontSize="18"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Glyph="&#xE72D;" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                FontWeight="Bold"
+                                Text="{x:Bind SharedUsersCount, Mode=OneWay}" />
+                        </StackPanel>
+                        <StackPanel
+                            Orientation="Horizontal"
+                            Spacing="4"
+                            Visibility="{x:Bind HasRepostedUsers, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                            <FontIcon
+                                FontSize="18"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Glyph="&#xE8EB;" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                FontWeight="Bold"
+                                Text="{x:Bind RepostedUsersCount, Mode=OneWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <!--  Latest comment  -->
+                    <StackPanel
+                        Margin="0,4,0,0"
+                        Spacing="12"
+                        Visibility="{x:Bind HasComments, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                        <Rectangle
+                            Height="1"
+                            HorizontalAlignment="Stretch"
+                            Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                        <ContentPresenter Content="{x:Bind LatestComment, Mode=OneWay}" ContentTemplate="{StaticResource CommentTemplate}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Button>
+    </DataTemplate>
+
+    <!--  Repost card: post card + repost attribution footer  -->
+    <DataTemplate x:Key="RepostTemplate" x:DataType="vm:BasePostViewModel">
+        <Grid Padding="6">
+            <Button
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Background="Transparent"
+                BorderThickness="0"
+                Command="{x:Bind HandleTapCommand}">
+                <Border
+                    Padding="12"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="16">
+                    <StackPanel Spacing="8">
+                        <!--  Header  -->
+                        <Grid Height="36" ColumnSpacing="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Button
+                                Grid.Column="0"
+                                Width="36"
+                                Height="36"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Command="{x:Bind HandleProfileTapCommand}"
+                                CornerRadius="18">
+                                <PersonPicture
+                                    Width="36"
+                                    Height="36"
+                                    ProfilePicture="{x:Bind ProfileThumbnailImageSource, Mode=OneWay}" />
+                            </Button>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <Button
+                                    Padding="0"
+                                    HorizontalAlignment="Left"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Command="{x:Bind HandleProfileTapCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock
+                                            FontSize="14"
+                                            FontWeight="Bold"
+                                            MaxLines="1"
+                                            Text="{x:Bind Nickname, Mode=OneWay}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <FontIcon
+                                            FontSize="14"
+                                            Foreground="#f78501"
+                                            Glyph="&#xF760;"
+                                            Visibility="{x:Bind IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                                        <FontIcon
+                                            FontSize="14"
+                                            Foreground="#1a5bf3"
+                                            Glyph="&#xF760;"
+                                            Visibility="{x:Bind IsModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                                    </StackPanel>
+                                </Button>
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="{x:Bind TimestampText, Mode=OneWay}" />
+                                    <TextBlock
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="·" />
+                                    <FontIcon
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Glyph="{x:Bind DiscoveryOptionGlyph, Mode=OneWay}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                        <!--  Contents  -->
+                        <ItemsControl ItemTemplateSelector="{StaticResource PostContentSelector}" ItemsSource="{x:Bind Contents, Mode=OneWay}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Spacing="8" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                        <!--  Repost attribution footer  -->
+                        <Grid Margin="0,4,0,0">
+                            <Rectangle
+                                Height="1"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Top"
+                                Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                            <Grid
+                                Margin="0,12,0,0"
+                                Padding="6,0,0,6"
+                                ColumnSpacing="6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="36" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border
+                                    Grid.Column="0"
+                                    Width="36"
+                                    Height="36"
+                                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                    CornerRadius="18">
+                                    <FontIcon
+                                        FontSize="20"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Glyph="&#xE8EB;" />
+                                </Border>
+                                <StackPanel
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Orientation="Horizontal"
+                                    Spacing="0">
+                                    <Button
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Command="{x:Bind HandleRepostedUserTapCommand}">
+                                        <TextBlock
+                                            FontSize="14"
+                                            FontWeight="Bold"
+                                            Text="{x:Bind RepostedUserNickname, Mode=OneWay}" />
+                                    </Button>
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        FontSize="14"
+                                        Text="{x:Bind RepostPostfix, Mode=OneWay}" />
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Button>
         </Grid>
     </DataTemplate>
 </ResourceDictionary>
