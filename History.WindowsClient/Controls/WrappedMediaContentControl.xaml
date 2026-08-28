@@ -1,0 +1,189 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="History.WindowsClient.Controls.WrappedMediaContentControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="using:Microsoft.Xaml.Interactivity"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:History.WindowsClient.ViewModels.Media"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <DataTemplate x:Key="ImageTemplate" x:DataType="vm:MediaContentViewModel">
+            <Grid Background="Transparent">
+                <interactivity:Interaction.Behaviors>
+                    <behaviors:EventTriggerBehavior EventName="Tapped">
+                        <behaviors:InvokeCommandAction Command="{x:Bind HandleTapCommand}" />
+                    </behaviors:EventTriggerBehavior>
+                </interactivity:Interaction.Behaviors>
+
+                <Image
+                    ImageOpened="OnMediaItemImageOpened"
+                    Source="{x:Bind ImageSource}"
+                    Stretch="{x:Bind Stretch, Mode=OneTime}" />
+
+                <!--  Spoiler Overlay  -->
+                <Grid Background="#FF000000" Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <interactivity:Interaction.Behaviors>
+                        <behaviors:EventTriggerBehavior EventName="Tapped">
+                            <behaviors:InvokeCommandAction Command="{x:Bind HandleSpoilerOverlayTapCommand}" />
+                        </behaviors:EventTriggerBehavior>
+                    </interactivity:Interaction.Behaviors>
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="8">
+                        <FontIcon
+                            FontSize="48"
+                            Foreground="White"
+                            Glyph="&#xED1A;" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Foreground="White"
+                            Text="가려진 미디어" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontSize="12"
+                            Foreground="#CCCCCC"
+                            Text="탭하여 확인하기" />
+                    </StackPanel>
+                </Grid>
+
+                <!--  Description  -->
+                <Grid
+                    MinHeight="40"
+                    VerticalAlignment="Top"
+                    Background="#80000000"
+                    Visibility="{x:Bind HasDescription, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="Bold"
+                        MaxLines="2"
+                        Text="{x:Bind Description, Mode=OneTime}"
+                        TextAlignment="Center"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="Wrap" />
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="VideoTemplate" x:DataType="vm:MediaContentViewModel">
+            <Grid Background="Transparent">
+                <interactivity:Interaction.Behaviors>
+                    <behaviors:EventTriggerBehavior EventName="Tapped">
+                        <behaviors:InvokeCommandAction Command="{x:Bind HandleTapCommand}" />
+                    </behaviors:EventTriggerBehavior>
+                </interactivity:Interaction.Behaviors>
+
+                <Image
+                    ImageOpened="OnMediaItemImageOpened"
+                    Source="{x:Bind ImageSource}"
+                    Stretch="{x:Bind Stretch, Mode=OneTime}" />
+
+                <MediaPlayerElement
+                    AreTransportControlsEnabled="True"
+                    AutoPlay="True"
+                    Source="{x:Bind PlaybackMediaSource, Mode=OneWay}"
+                    Visibility="{x:Bind IsPlaying, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                <!--  Video Overlay  -->
+                <Grid Background="#80000000" Visibility="{x:Bind IsOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <interactivity:Interaction.Behaviors>
+                        <behaviors:EventTriggerBehavior EventName="Tapped">
+                            <behaviors:InvokeCommandAction Command="{x:Bind HandleOverlayTapCommand}" />
+                        </behaviors:EventTriggerBehavior>
+                    </interactivity:Interaction.Behaviors>
+                    <FontIcon
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="150"
+                        Foreground="White"
+                        Glyph="&#xE768;" />
+                </Grid>
+
+                <!--  Spoiler Overlay  -->
+                <Grid Background="#FF000000" Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <interactivity:Interaction.Behaviors>
+                        <behaviors:EventTriggerBehavior EventName="Tapped">
+                            <behaviors:InvokeCommandAction Command="{x:Bind HandleSpoilerOverlayTapCommand}" />
+                        </behaviors:EventTriggerBehavior>
+                    </interactivity:Interaction.Behaviors>
+                    <StackPanel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="8">
+                        <FontIcon
+                            FontSize="48"
+                            Foreground="White"
+                            Glyph="&#xED1A;" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontSize="16"
+                            FontWeight="Bold"
+                            Foreground="White"
+                            Text="가려진 미디어" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            FontSize="12"
+                            Foreground="#CCCCCC"
+                            Text="탭하여 확인하기" />
+                    </StackPanel>
+                </Grid>
+
+                <!--  Description  -->
+                <Grid
+                    MinHeight="40"
+                    VerticalAlignment="Top"
+                    Background="#80000000"
+                    Visibility="{x:Bind HasDescription, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="Bold"
+                        MaxLines="2"
+                        Text="{x:Bind Description, Mode=OneTime}"
+                        TextAlignment="Center"
+                        TextTrimming="CharacterEllipsis"
+                        TextWrapping="Wrap" />
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <vm:MediaTemplateSelector
+            x:Key="MediaTemplateSelector"
+            ImageTemplate="{StaticResource ImageTemplate}"
+            VideoTemplate="{StaticResource VideoTemplate}" />
+    </UserControl.Resources>
+
+    <Grid x:Name="RootGrid" SizeChanged="OnRootGridSizeChanged">
+        <FlipView
+            Width="{x:Bind ViewModel.CarouselWidth, Mode=OneWay}"
+            Height="{x:Bind ViewModel.CarouselHeight, Mode=OneWay}"
+            HorizontalAlignment="{x:Bind ViewModel.CarouselHorizontalAlignment, Mode=OneWay}"
+            Background="#808080"
+            CornerRadius="6"
+            ItemTemplateSelector="{StaticResource MediaTemplateSelector}"
+            ItemsSource="{x:Bind ViewModel.Medias, Mode=OneWay}"
+            SelectedIndex="{x:Bind ViewModel.CarouselPosition, Mode=TwoWay}" />
+
+        <!--  Position Badge  -->
+        <Border
+            Margin="12"
+            Padding="6,4"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Background="#80808080"
+            CornerRadius="16"
+            Visibility="{x:Bind ViewModel.CarouselSwipeEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+            <TextBlock
+                FontWeight="Bold"
+                Foreground="White"
+                Text="{x:Bind ViewModel.CarouselPositionText, Mode=OneWay}" />
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,110 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using History.Commons;
+using History.Commons.DataTypes.Contents;
+using History.Commons.Enums;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Windows.Media.Core;
+
+namespace History.WindowsClient.ViewModels.Media;
+
+// Mirrors the MAUI BaseMediaContentViewModel + HistoryMediaContentViewModel pair for a single
+// carousel item. The inline surface is image-first (thumbnail for wrapped posts and videos),
+// tapping the video overlay starts inline playback, and tapping the media itself is a no-op
+// until the full-screen media viewer page is implemented.
+public sealed partial class MediaContentViewModel : ObservableObject
+{
+    public MediaContent MediaContent { get; }
+    public List<MediaContent> AllMediaContents { get; }
+    public PostType PostType { get; }
+    public bool IsParentPost { get; }
+    public bool IsVideo { get; }
+    public bool IsSpoiler { get; }
+    public Stretch Stretch { get; }
+    public BitmapImage ImageSource { get; }
+    public string Description { get; }
+    public bool HasDescription { get; }
+
+    public int PixelWidth { get; private set; }
+    public int PixelHeight { get; private set; }
+
+    [ObservableProperty]
+    public partial bool IsOverlayVisible { get; private set; }
+
+    [ObservableProperty]
+    public partial bool IsSpoilerOverlayVisible { get; private set; }
+
+    [ObservableProperty]
+    public partial bool IsPlaying { get; private set; }
+
+    [ObservableProperty]
+    public partial MediaSource PlaybackMediaSource { get; private set; }
+
+    internal event Action ImageSizeReported;
+
+    public MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, PostType postType, bool isParentPost)
+    {
+        MediaContent = mediaContent;
+        AllMediaContents = allMediaContents == null ? [] : [.. allMediaContents];
+        PostType = postType;
+        IsParentPost = isParentPost;
+        IsVideo = mediaContent.IsVideo;
+        IsSpoiler = mediaContent.IsSpoiler;
+        IsOverlayVisible = IsVideo;
+        IsSpoilerOverlayVisible = IsSpoiler;
+        Stretch = postType != PostType.Unwrapped ? Stretch.UniformToFill : Stretch.Uniform;
+        Description = mediaContent.Description ?? string.Empty;
+        HasDescription = Description.Length > 0;
+        ImageSource = CreateInlineImageSource(mediaContent, postType);
+    }
+
+    // Reports the decoded image's natural pixel size so the carousel can recompute its height.
+    internal void ReportImageSize(int pixelWidth, int pixelHeight)
+    {
+        if (PixelWidth == pixelWidth && PixelHeight == pixelHeight) return;
+
+        PixelWidth = pixelWidth;
+        PixelHeight = pixelHeight;
+        ImageSizeReported?.Invoke();
+    }
+
+    // Restores the initial overlay state when the carousel moves to another media, mirroring
+    // the MAUI Unloaded command: inline playback stops and spoiler overlays are hidden again.
+    internal void ResetForReuse()
+    {
+        IsPlaying = false;
+        var playbackMediaSource = PlaybackMediaSource;
+        PlaybackMediaSource = null;
+        playbackMediaSource?.Dispose();
+        IsOverlayVisible = IsVideo;
+        IsSpoilerOverlayVisible = IsSpoiler;
+    }
+
+    [RelayCommand]
+    private void HandleTap()
+    {
+        // TODO: Open the full-screen media viewer once it is implemented.
+    }
+
+    [RelayCommand]
+    private void HandleOverlayTap()
+    {
+        if (!IsVideo) return;
+
+        IsOverlayVisible = false;
+        IsPlaying = true;
+        PlaybackMediaSource = MediaSource.CreateFromUri(new Uri(CommonUtils.GenerateMediaUri(MediaContent.MediaId)));
+    }
+
+    [RelayCommand]
+    private void HandleSpoilerOverlayTap() => IsSpoilerOverlayVisible = false;
+
+    // Wrapped posts and inline videos display the thumbnail; unwrapped image posts display the original media.
+    // GIF/WebP animation is not supported by BitmapImage; only the first frame is shown.
+    private static BitmapImage CreateInlineImageSource(MediaContent mediaContent, PostType postType)
+    {
+        var imageMediaId = postType != PostType.Unwrapped || mediaContent.IsVideo ? mediaContent.ThumbnailMediaId ?? mediaContent.MediaId : mediaContent.MediaId;
+        return imageMediaId == null ? null : new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(imageMediaId)));
+    }
+}
