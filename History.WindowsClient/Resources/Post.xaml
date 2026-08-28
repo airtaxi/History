@@ -580,7 +580,8 @@
                 HorizontalContentAlignment="Stretch"
                 Background="Transparent"
                 BorderThickness="0"
-                Command="{x:Bind HandleTapCommand}">
+                Command="{x:Bind HandleTapCommand}"
+                CornerRadius="16">
                 <Border
                     Padding="12"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
