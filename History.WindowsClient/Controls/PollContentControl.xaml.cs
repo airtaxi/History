@@ -1,0 +1,32 @@
+using History.Commons.DataTypes.Contents;
+using History.WindowsClient.ViewModels;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+
+namespace History.WindowsClient.Controls;
+
+public sealed partial class PollContentControl : UserControl
+{
+    public static readonly DependencyProperty PollContentProperty = DependencyProperty.Register(nameof(PollContent), typeof(PollContent), typeof(PollContentControl), new PropertyMetadata(null, OnDataPropertyChanged));
+    public static readonly DependencyProperty PostIdProperty = DependencyProperty.Register(nameof(PostId), typeof(string), typeof(PollContentControl), new PropertyMetadata(null, OnDataPropertyChanged));
+
+    public PollContentControl() => InitializeComponent();
+
+    public PollContentViewModel ViewModel { get; } = new();
+
+    public PollContent PollContent
+    {
+        get => (PollContent)GetValue(PollContentProperty);
+        set => SetValue(PollContentProperty, value);
+    }
+
+    public string PostId
+    {
+        get => (string)GetValue(PostIdProperty);
+        set => SetValue(PostIdProperty, value);
+    }
+
+    private static void OnDataPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((PollContentControl)sender).Rebuild();
+
+    private void Rebuild() => ViewModel.Update(PollContent, PostId);
+}

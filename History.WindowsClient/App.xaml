@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:converters="using:CommunityToolkit.WinUI.Converters"
     xmlns:local="using:History.WindowsClient"
+    xmlns:localconverters="using:History.WindowsClient.Converters"
     xmlns:srd="using:History.WindowsClient.Resources">
     <Application.Resources>
         <ResourceDictionary>
@@ -33,6 +34,7 @@
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
             <converters:BoolNegationConverter x:Key="BoolNegationConverter" />
             <converters:VisibilityToBoolConverter x:Key="VisibilityToBoolConverter" />
+            <localconverters:BoolToAccentBrushConverter x:Key="BoolToAccentBrushConverter" />
 
             <Color x:Key="SystemAccentColor">#ED664D</Color>
 
