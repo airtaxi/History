@@ -1,6 +1,5 @@
 FROM nginx:alpine
 
-COPY default.conf.template /etc/nginx/templates/default.conf.template
 COPY public /usr/share/nginx/html
 COPY assets /usr/share/nginx/html/assets
 
