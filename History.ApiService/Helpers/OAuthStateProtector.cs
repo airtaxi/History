@@ -15,6 +15,8 @@ public class OAuthStateProtector(string signingSecret, string[] allowedRedirectU
     public static readonly string[] DefaultAllowedRedirectUrls =
     [
         "http://localhost/",
+        "https://historyweb.cc",
+        "https://historyweb.cc/",
         "history-app://auth/google",
         "history-app://auth/apple"
     ];
