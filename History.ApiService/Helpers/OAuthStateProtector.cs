@@ -17,6 +17,7 @@ public class OAuthStateProtector(string signingSecret, string[] allowedRedirectU
         "http://localhost/",
         "https://historyweb.cc",
         "https://historyweb.cc/",
+        "https://historyweb.cc/auth/callback",
         "history-app://auth/google",
         "history-app://auth/apple"
     ];
