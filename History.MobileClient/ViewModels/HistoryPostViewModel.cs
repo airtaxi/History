@@ -314,12 +314,14 @@ public partial class HistoryPostViewModel : BasePostViewModel
     public override async Task HandleMuteNotificationsAsync()
     {
         var isMuting = !IsNotificationsMuted;
+        var confirm = await App.Page.DisplayAlertAsync("알림 설정", isMuting ? "이 글의 알림을 끄시겠습니까?" : "이 글의 알림을 다시 받으시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+        if (!confirm) return;
+
         var result = isMuting
             ? await App.ExecuteRequestAsync(new MuteNotifications(Post.Id))
             : await App.ExecuteRequestAsync(new UnmuteNotifications(Post.Id));
         if (result.IsFailure) return;
 
-        await App.Page.DisplayAlertAsync("안내", isMuting ? "이 글의 알림을 끕니다." : "이 글의 알림을 다시 받습니다.", Constants.PromptOk);
         await RefreshAsync();
     }
 

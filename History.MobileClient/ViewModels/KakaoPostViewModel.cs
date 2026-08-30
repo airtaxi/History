@@ -413,8 +413,10 @@ public partial class KakaoPostViewModel : BasePostViewModel
         var isMuting = !IsNotificationsMuted;
         try
         {
+            var confirm = await App.Page.DisplayAlertAsync("알림 설정", isMuting ? "이 글의 알림을 끄시겠습니까?" : "이 글의 알림을 다시 받으시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+            if (!confirm) return;
+
             await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.MutePost(_postData.id, isMuting));
-            await App.Page.DisplayAlertAsync("안내", isMuting ? "이 글의 알림을 끕니다." : "이 글의 알림을 다시 받습니다.", Constants.PromptOk);
             await RefreshAsync();
         }
         catch (Exception exception)
