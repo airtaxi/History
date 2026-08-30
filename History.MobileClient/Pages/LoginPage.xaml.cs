@@ -6,6 +6,7 @@ using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
 using History.Commons.Enums;
+using History.Commons.KakaoStory;
 using History.MobileClient.Auth;
 using History.MobileClient.DataTypes;
 using History.MobileClient.KakaoStory;
@@ -41,6 +42,17 @@ public partial class LoginPage : ContentPage
 
             await RefreshFriendsAsync();
             await Utils.RefreshFirebaseToken();
+
+            // When a Kakao Story SDK session is already saved, warm up the friends
+            // and user-id caches right after login instead of waiting for the first
+            // story screen. Falls back to the login modal when refresh tokens expired.
+            if (await KakaoStoryApiHandler.EnsureKAuthTokenAsync() != null)
+            {
+                if(await KakaoStoryUtils.EnsureLoggedInAsync(App.Page))
+                {
+                    await CommonKakaoStoryUtils.UploadTokenToServerAsync();
+                }
+            }
 
 #if WINDOWS
             App.Page = new WindowsAppShell();
@@ -204,7 +216,6 @@ public partial class LoginPage : ContentPage
             CommonShared.ApiHandler = new(accessToken, refreshToken);
             var result = await AfterLogin();
             if (result.IsFailure) LoginVerticalStackLayout.IsVisible = true;
-            else await KakaoStoryUtils.UploadTokenToServerAsync();
         }
         else LoginVerticalStackLayout.IsVisible = true;
     }
