@@ -19,9 +19,7 @@ public partial class BlazorUserPage : ContentPage
     private Thickness _writePostBorderBaseMargin;
 #endif
 
-    public BlazorUserPage() : this(new UserProfileViewModel())
-    {
-    }
+    public BlazorUserPage() : this(new UserProfileViewModel()) => Shell.SetTabBarIsVisible(this, true);
 
     public BlazorUserPage(string userId) : this(new UserProfileViewModel(userId)) { }
 

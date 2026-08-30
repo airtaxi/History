@@ -11,7 +11,8 @@
     x:DataType="vm:UserProfileViewModel"
     IsEnabled="{Binding IsEnabled}"
     Loaded="OnLoaded"
-    Shell.NavBarIsVisible="False">
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
     <ContentPage.Behaviors>
         <behaviors:StatusBarBehavior StatusBarColor="{StaticResource Primary}" StatusBarTheme="Dark" />
     </ContentPage.Behaviors>
