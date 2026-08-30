@@ -245,7 +245,46 @@ public static class MediaEncodingHelper
             else if (trimmedLine.StartsWith("height=")) uint.TryParse(trimmedLine["height=".Length..], out height);
         }
 
+        // Exif-rotated photos (and rotated mp4 metadata) carry coded dimensions that
+        // differ from what viewers actually display: ffmpeg auto-applies the rotation
+        // while decoding, but its scale filter's reference dimensions come from this
+        // probe. Reporting the display-oriented dimensions here keeps every scale
+        // computation aspect-correct; without it a 90°-rotated portrait upload would
+        // be converted with swapped dimensions and render horizontally stretched.
+        if (Math.Abs(ProbeRotation(path)) % 180 == 90) (width, height) = (height, width);
+
         return (width, height);
+    }
+
+    // Reads the rotation degrees recorded in the first frame's display matrix
+    // (exif orientation for photos, display matrix for videos); 0 when absent.
+    private static int ProbeRotation(string path)
+    {
+        var probeProcess = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "ffprobe",
+                Arguments = $"-v error -select_streams v:0 -read_intervals \"%+#1\" -show_frames -of json \"{path}\"",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            }
+        };
+
+        probeProcess.Start();
+        var probeOutput = probeProcess.StandardOutput.ReadToEnd();
+        probeProcess.WaitForExit();
+
+        var matchIndex = probeOutput.IndexOf("\"rotation\":", StringComparison.Ordinal);
+        if (matchIndex < 0) return 0;
+
+        var valueStart = matchIndex + "\"rotation\":".Length;
+        var valueEnd = probeOutput.IndexOfAny([',', '}'], valueStart);
+        if (valueEnd < 0) return 0;
+
+        return int.TryParse(probeOutput[valueStart..valueEnd].Trim(), out var rotation) ? rotation : 0;
     }
 
     private static int ProbeFrameCount(string path)
