@@ -10,9 +10,10 @@ namespace History.Commons.KakaoStory;
 public partial class CommonKakaoStoryUtils
 {
     // Guide shown when entering the Kakao Story-only write mode and when blocking a
-    // post without any user mention. Kakao Story-only writing exists solely to mention
-    // Kakao Story users that History posts cannot reference.
-    public const string KakaoOnlyWriteGuideMessage = "카카오스토리에만 게시글을 작성하는 기능은 히스토리 게시글 작성으로는 불가능한 카카오스토리 사용자를 언급하기 위한 기능으로, 게시글에 사용자 언급이 존재하지 않으면 게시글 작성이 차단됩니다. 히스토리 활성화를 위한 조치로써 해당 용도가 아닌 게시글 작성은 히스토리탭에서 게시글을 작성하신 뒤 \"카카오스토리에도 게시글 작성\" 옵션을 글 작성 메뉴 우측 하단의 펼침 메뉴에서 활성화하고 작성해주세요";
+    // post without any user mention. Kakao Story-only writing mirrors the post to
+    // History after the Kakao Story upload succeeds; Kakao Story mentions are
+    // resolved to History users by nickname.
+    public const string KakaoOnlyWriteGuideMessage = "이 모드에서 작성한 게시글은 카카오스토리에 게시된 후, 동일한 내용이 히스토리에도 게시됩니다. 카카오스토리 친구를 언급한 경우 히스토리 게시글에는 닉네임이 동일한 히스토리 친구로 언급됩니다. 카카오스토리에 게시하지 않고 히스토리에만 게시하려면 히스토리탭에서 게시글을 작성해주세요";
 
     /// <summary>
     /// Uploads the current Kakao Story KAuth id token to the server so the

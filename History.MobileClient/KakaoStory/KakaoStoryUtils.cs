@@ -114,6 +114,18 @@ public partial class KakaoStoryUtils : CommonKakaoStoryUtils
     }
 
     /// <summary>
+    /// Shows the Kakao Story-only write mirroring guide once per install. The guide
+    /// explains that the post is mirrored to History after the Kakao Story upload,
+    /// and how Kakao Story mentions are resolved on the History side.
+    /// </summary>
+    public static async Task ShowKakaoOnlyWriteGuideOnceAsync(Page hostPage)
+    {
+        if (Configuration.GetValue<bool?>("KakaoOnlyWriteGuideDismissed") ?? false) return;
+        var showAgain = await hostPage.DisplayAlertAsync("안내", KakaoOnlyWriteGuideMessage, Constants.PromptOk, "다시 보지 않기");
+        if (!showAgain) Configuration.SetValue("KakaoOnlyWriteGuideDismissed", true);
+    }
+
+    /// <summary>
     /// Builds contents with Kakao Story emoticons rendered as sticker view models
     /// (Referer-signed images). Text decorators are batched into
     /// TextTypeContentsViewModel; emoticons whose signed URL cannot be resolved

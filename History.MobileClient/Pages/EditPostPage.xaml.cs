@@ -616,22 +616,21 @@ public partial class EditPostPage : ContentPage
 
             if (_isKakaoOnlyWrite)
             {
-                // Kakao Story-only writing exists solely to mention Kakao Story users;
-                // block the post when no user mention is present.
-                if (!editorContents.OfType<ProfileContent>().Any())
-                {
-                    await DisplayAlertAsync("안내", KakaoStoryUtils.KakaoOnlyWriteGuideMessage, Constants.PromptOk);
-                    return;
-                }
-
                 var text = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
                 var kakaoOnlyDiscoveryOption = (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex;
+                var mirroredContents = await BuildHistoryMirroredContentsAsync(editorContents);
                 if ((await TryWritePostToKakaoStoryAsync(editorContents, [.. _attachmentViewModels], _externalUrlContentViewModel, kakaoOnlyDiscoveryOption, stickerContents, isSoleDestination: true)) == false) return;
+
+                // Mirror the completed post to History. Mention resolution failure keeps the
+                // original display name as plain text instead of aborting the whole post.
+                await TryWritePostToHistoryAsync(mirroredContents, kakaoOnlyDiscoveryOption, _commentPermission, disallowShare);
 
                 if (RefreshSwitch.IsToggled)
                 {
                     TimelinePage.ShouldRefreshKakaoStory = true;
                     UserPage.ShouldRefreshKakaoStory = true;
+                    TimelinePage.ShouldRefresh = true;
+                    UserPage.ShouldRefresh = true;
                 }
                 await App.PopAsync();
                 return;
@@ -1201,6 +1200,9 @@ public partial class EditPostPage : ContentPage
             DisallowShareGrid.IsVisible = false;
             CommentPermissionGrid.IsVisible = false;
             WritePostToKakaoStoryGrid.IsVisible = false;
+
+            // Inform once per install that this mode mirrors the post to History.
+            _ = KakaoStoryUtils.ShowKakaoOnlyWriteGuideOnceAsync(this);
         }
 
         Dispatcher.Dispatch(async () => await LoginPage.RefreshFriendsAsync());
@@ -1540,6 +1542,87 @@ public partial class EditPostPage : ContentPage
     /// An empty description maps to an empty caption array (verified web request format).
     /// </summary>
     private static List<MediaData.CaptionData> BuildKakaoStoryMediaCaption(string description) => string.IsNullOrEmpty(description) ? [] : [new KakaoStoryApiHandler.DataType.MediaData.CaptionData { text = description }];
+
+    /// <summary>
+    /// Builds the History-mirrored contents from the editor contents of a Kakao Story-only
+    /// write. Kakao Story mentions (ProfileContent with a Kakao friend id) are resolved to
+    /// History users by nickname against CommonShared.Friends — the same nickname-based
+    /// fallback the KakaoStory mirroring uses in reverse. Unmatched mentions degrade to
+    /// plain text; stickers become an "(스티커)" text token since History stickers cannot
+    /// be mirrored directly.
+    /// </summary>
+    private async Task<List<BaseContent>> BuildHistoryMirroredContentsAsync(List<BaseContent> contents)
+    {
+        var mirroredContents = new List<BaseContent>();
+        var nicknameCache = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var content in contents)
+        {
+            if (content is ProfileContent profileContent)
+            {
+                if (!nicknameCache.TryGetValue(profileContent.Nickname, out var matchedUserId))
+                {
+                    matchedUserId = CommonShared.Friends?.FirstOrDefault(x => x.Nickname == profileContent.Nickname)?.UserId;
+                    nicknameCache[profileContent.Nickname] = matchedUserId;
+                }
+
+                if (matchedUserId != null) mirroredContents.Add(new ProfileContent { UserId = matchedUserId, Nickname = profileContent.Nickname });
+                else mirroredContents.Add(new TextContent { Text = "@" + profileContent.Nickname });
+            }
+            else if (content is StickerContent) mirroredContents.Add(new TextContent { Text = "(스티커)" });
+            else mirroredContents.Add(content);
+        }
+        return mirroredContents;
+    }
+
+    /// <summary>
+    /// Mirrors a completed Kakao Story-only write to History. Media attachment bytes are
+    /// re-read from the attachment view models so both platforms receive the same files.
+    /// Returns without an exception toast on failure: the Kakao Story post already
+    /// exists, so a History failure only informs the user that the mirror was skipped.
+    /// </summary>
+    private async Task TryWritePostToHistoryAsync(List<BaseContent> mirroredContents, DiscoveryOption discoveryOption, AccessPermission? commentPermission, bool disallowShare)
+    {
+        MainActivityIndicator.IsRunning = true;
+        IsEnabled = false;
+        try
+        {
+            var mediaAndUploadContents = new List<BaseContent>();
+            foreach (var viewModel in _attachmentViewModels)
+            {
+                if (viewModel.IsUpload)
+                {
+                    mediaAndUploadContents.Add(new UploadContent
+                    {
+                        Description = string.IsNullOrEmpty(viewModel.Description) ? null : viewModel.Description,
+                        FileName = viewModel.FileName,
+                        IsSpoiler = viewModel.IsSpoiler
+                    });
+                }
+                else
+                {
+                    var mediaContent = viewModel.ServerContent;
+                    mediaContent.Description = viewModel.Description;
+                    mediaContent.IsSpoiler = viewModel.IsSpoiler;
+                    mediaAndUploadContents.Add(mediaContent);
+                }
+            }
+
+            var files = await Task.Run(() => _attachmentViewModels.Where(viewModel => viewModel.IsUpload).ToDictionary(viewModel => viewModel.FileName, viewModel => viewModel.Data));
+
+            var contents = mirroredContents.Concat(mediaAndUploadContents).ToList();
+            if (_externalUrlContentViewModel != null) contents.Add(_externalUrlContentViewModel.ExternalUrlContent);
+
+            // The Kakao Story write above is the source of truth; a History mirror failure
+            // must not lose the post, so the error is reported but the flow ends normally.
+            var result = await App.ExecuteRequestAsync(new WritePost(contents, discoveryOption, commentPermission, disallowShare, files: files), ErrorType.BadRequest);
+            if (!result.IsSuccess) await DisplayAlertAsync("안내", $"카카오스토리에는 게시되었지만 히스토리 게시에 실패하였습니다: {result.ErrorMessage}", Constants.PromptOk);
+        }
+        finally
+        {
+            MainActivityIndicator.IsRunning = false;
+            IsEnabled = true;
+        }
+    }
 
     /// <summary>
     /// Handles the full KakaoStory upload flow: cookie restoration/relogin, profanity

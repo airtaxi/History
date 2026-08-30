@@ -271,8 +271,6 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
     {
         if (_isKakaoStoryMode)
         {
-            var proceed = await App.TopPage.DisplayAlertAsync("안내", KakaoStoryUtils.KakaoOnlyWriteGuideMessage, "작성", Constants.PromptCancel);
-            if (!proceed) return;
             await App.PushAsync(new EditPostPage(isKakaoOnlyWrite: true));
         }
         else await App.PushAsync(new EditPostPage());
