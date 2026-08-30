@@ -835,11 +835,20 @@ public partial class EditPostPage : ContentPage
                     {
                         // After-the-fact KakaoStory mirroring of a share post: the History share
                         // URL is appended after the user text, and the rendered shared post image
-                        // replaces the user's media attachments. The temporary rendered file is
+                        // replaces the user's media attachments. An external URL card is mirrored
+                        // as plain text between the user text and the share link because KakaoStory
+                        // cannot scrap while media is attached. The temporary rendered file is
                         // disposed after the upload completes (or when the user declines).
                         var shareUrl = $"https://historyweb.cc/post/{result.Value.Id}";
                         var userText = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
-                        var kakaoText = string.IsNullOrWhiteSpace(userText) ? shareUrl : $"{userText}\n{shareUrl}";
+                        var externalUrl = _externalUrlContentViewModel?.ExternalUrlContent.SourceUrl;
+                        var hasExternalUrl = !string.IsNullOrWhiteSpace(externalUrl);
+                        var hasUserText = !string.IsNullOrWhiteSpace(userText);
+                        string kakaoText;
+                        if (hasUserText && hasExternalUrl) kakaoText = $"{userText}\n\n{externalUrl}\n\n{shareUrl}";
+                        else if (hasExternalUrl) kakaoText = $"{externalUrl}\n\n{shareUrl}";
+                        else if (hasUserText) kakaoText = $"{userText}\n{shareUrl}";
+                        else kakaoText = shareUrl;
 
                         var shareMedias = new List<MediaAttachmentViewModel> { sharedPostRenderAttachment };
 
