@@ -379,10 +379,10 @@ public static class PostImageRendererHelper
         var commentList = comments?.ToList() ?? [];
         if (commentList.Count == 0) return blocks;
 
-        blocks.Add(new RenderBlock(CommentSeparatorHeight, (canvas, x, y) =>
+        blocks.Add(new RenderBlock(CommentSeparatorHeight + ContentSpacing * 2, (canvas, x, y) =>
         {
             fillPaint.Color = ProgressTrackColor;
-            canvas.DrawRect(x, y, contentWidth, CommentSeparatorHeight, fillPaint);
+            canvas.DrawRect(x, y + ContentSpacing, contentWidth, CommentSeparatorHeight, fillPaint);
         }));
 
         foreach (var comment in commentList)
