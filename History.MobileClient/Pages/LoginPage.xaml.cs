@@ -8,6 +8,7 @@ using History.Commons.Api.User;
 using History.Commons.Enums;
 using History.MobileClient.Auth;
 using History.MobileClient.DataTypes;
+using History.MobileClient.KakaoStory;
 using History.MobileClient.Messages;
 using Result = History.Commons.Result;
 
@@ -203,6 +204,7 @@ public partial class LoginPage : ContentPage
             CommonShared.ApiHandler = new(accessToken, refreshToken);
             var result = await AfterLogin();
             if (result.IsFailure) LoginVerticalStackLayout.IsVisible = true;
+            else await KakaoStoryUtils.UploadTokenToServerAsync();
         }
         else LoginVerticalStackLayout.IsVisible = true;
     }
