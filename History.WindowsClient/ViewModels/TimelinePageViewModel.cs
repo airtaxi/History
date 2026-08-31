@@ -73,7 +73,7 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
             var lastViewModel = Items.OfType<HistoryPostViewModel>().LastOrDefault();
             if (lastViewModel == null) return;
 
-            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(lastViewModel.Post.Id, PageSize));
+            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(lastViewModel.RepostId ?? lastViewModel.Post.Id, PageSize));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
