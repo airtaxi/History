@@ -5,6 +5,7 @@ using History.Commons.Enums;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
+using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels;
 
@@ -85,7 +86,7 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
 
     // Comment surface shared with the comment templates.
     [ObservableProperty]
-    public partial List<BaseCommentViewModel> Comments { get; protected set; }
+    public partial ObservableCollection<BaseCommentViewModel> Comments { get; protected set; }
     [ObservableProperty]
     public partial BaseCommentViewModel LatestComment { get; protected set; }
     [ObservableProperty]

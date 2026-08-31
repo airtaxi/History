@@ -6,45 +6,47 @@
     xmlns:vm="using:History.WindowsClient.ViewModels">
 
     <DataTemplate x:Key="InteractionTemplate" x:DataType="vm:BaseInteractionViewModel">
-        <Button
-            Width="36"
-            Height="36"
-            Padding="0"
-            Background="Transparent"
-            BorderThickness="0"
-            Command="{x:Bind HandleTapCommand}"
-            CornerRadius="18">
-            <Grid>
-                <Button
-                    Width="36"
-                    Height="36"
-                    Padding="0"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Command="{x:Bind HandleTapCommand}"
-                    CornerRadius="18">
-                    <PersonPicture
+        <Grid>
+            <Button
+                Width="36"
+                Height="36"
+                Padding="0"
+                Background="Transparent"
+                BorderThickness="0"
+                Command="{x:Bind HandleTapCommand}"
+                CornerRadius="18">
+                <Grid>
+                    <Button
                         Width="36"
                         Height="36"
-                        ProfilePicture="{x:Bind ProfileImageSource, Mode=OneWay}" />
-                </Button>
-                <Border
-                    Width="16"
-                    Height="16"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Bottom"
-                    Background="{x:Bind ColorBrush, Mode=OneWay}"
-                    CornerRadius="8">
-                    <Border.RenderTransform>
-                        <TranslateTransform X="2" Y="2" />
-                    </Border.RenderTransform>
-                    <FontIcon
-                        FontSize="{x:Bind IconSize, Mode=OneWay}"
-                        Foreground="White"
-                        Glyph="{x:Bind Glyph, Mode=OneWay}" />
-                </Border>
-            </Grid>
-        </Button>
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind HandleTapCommand}"
+                        CornerRadius="18">
+                        <PersonPicture
+                            Width="36"
+                            Height="36"
+                            ProfilePicture="{x:Bind ProfileImageSource, Mode=OneWay}" />
+                    </Button>
+                </Grid>
+            </Button>
+            <Border
+                Width="16"
+                Height="16"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Background="{x:Bind ColorBrush, Mode=OneWay}"
+                CornerRadius="8">
+                <Border.RenderTransform>
+                    <TranslateTransform X="2" Y="2" />
+                </Border.RenderTransform>
+                <FontIcon
+                    FontSize="{x:Bind IconSize, Mode=OneWay}"
+                    Foreground="White"
+                    Glyph="{x:Bind Glyph, Mode=OneWay}" />
+            </Border>
+        </Grid>
     </DataTemplate>
 
     <DataTemplate x:Key="SharedPostTemplate" x:DataType="vm:BasePostViewModel">
@@ -183,15 +185,18 @@
                         <TextBlock
                             VerticalAlignment="Center"
                             FontSize="12"
+                            FontWeight="Bold"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             Text="{x:Bind TimestampText, Mode=OneWay}" />
                         <TextBlock
                             VerticalAlignment="Center"
                             FontSize="12"
+                            FontWeight="Bold"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             Text="·" />
                         <FontIcon
                             FontSize="12"
+                            FontWeight="Bold"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             Glyph="{x:Bind DiscoveryOptionGlyph, Mode=OneWay}" />
                     </StackPanel>

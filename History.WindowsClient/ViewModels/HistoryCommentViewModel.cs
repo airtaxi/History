@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
@@ -168,7 +168,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
     {
         // The comment editor listens for comment taps in the unwrapped post view (not implemented yet).
         if (PostType == PostType.Unwrapped) await Task.CompletedTask;
-        else await ParentViewModel.HandleTapCommand.ExecuteAsync(null);
+        else await ParentViewModel.HandleTapAsync();
     }
 
     // TODO: Navigate to the user profile page once it is implemented.
