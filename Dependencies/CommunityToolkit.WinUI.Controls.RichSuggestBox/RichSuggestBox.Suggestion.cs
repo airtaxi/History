@@ -7,6 +7,7 @@ using Microsoft.UI.Text;
 #else
 using Windows.UI.Text;
 #endif
+using Windows.Foundation;
 using Windows.Foundation.Metadata;
 using CommunityToolkit.WinUI.Deferred;
 using Microsoft.UI.Xaml;
@@ -156,7 +157,12 @@ public partial class RichSuggestBox2
         }
 
         this._suggestionPopup.IsOpen = show;
-        if (!show)
+        if (show)
+        {
+            // Decide the open direction right when the popup opens, while the offsets are still reset
+            UpdatePopupOffset();
+        }
+        else
         {
             this._suggestionChoice = 0;
             this._suggestionPopup.VerticalOffset = 0;
@@ -196,6 +202,23 @@ public partial class RichSuggestBox2
             return;
         }
 
+        // The direction is decided only while the popup is open; deciding from a closed popup
+        // would measure a 0x0 container and lock a stale direction.
+        if (!this._suggestionPopup.IsOpen)
+        {
+            return;
+        }
+
+        // The container may still be 0x0 right after the popup opens; measure it to learn the popup size.
+        var containerWidth = this._suggestionsContainer.ActualWidth;
+        var containerHeight = this._suggestionsContainer.ActualHeight;
+        if (containerWidth == 0 || containerHeight == 0)
+        {
+            this._suggestionsContainer.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            containerWidth = Math.Max(containerWidth, this._suggestionsContainer.DesiredSize.Width);
+            containerHeight = Math.Max(containerHeight, this._suggestionsContainer.DesiredSize.Height);
+        }
+
         this._richEditBox.TextDocument.Selection.GetRect(PointOptions.None, out var selectionRect, out _);
         Thickness padding = this._richEditBox.Padding;
         selectionRect.X -= HorizontalOffset;
@@ -212,14 +235,13 @@ public partial class RichSuggestBox2
             if (this._suggestionPopup.HorizontalOffset == 0 && editBoxWidth > 0)
             {
                 var normalizedX = selectionRect.X / editBoxWidth;
-                this._suggestionPopup.HorizontalOffset =
-                    (this._richEditBox.ActualWidth - this._suggestionsContainer.ActualWidth) * normalizedX;
+                this._suggestionPopup.HorizontalOffset = (this._richEditBox.ActualWidth - containerWidth) * normalizedX;
             }
         }
 
         // Update vertical offset
         double downOffset = this._richEditBox.ActualHeight;
-        double upOffset = -this._suggestionsContainer.ActualHeight;
+        double upOffset = -containerHeight;
         if (this.PopupPlacement == SuggestionPopupPlacementMode.Floating)
         {
             downOffset = selectionRect.Bottom + padding.Top + padding.Bottom;
@@ -228,10 +250,20 @@ public partial class RichSuggestBox2
 
         if (this._suggestionPopup.VerticalOffset == 0)
         {
-            if (IsElementOnScreen(this._suggestionsContainer, offsetY: downOffset) &&
+#if WINAPPSDK
+            // The popup child renders in its own popup island, so build its window-space rect from
+            // the edit box origin (main island coordinates) instead of the popup child itself.
+            var editBoxOrigin = this._richEditBox.TransformToVisual(null!).TransformPoint(new Point(0, 0));
+            var downRect = new Rect(editBoxOrigin.X, editBoxOrigin.Y + downOffset, containerWidth, containerHeight);
+            var upRect = new Rect(editBoxOrigin.X, editBoxOrigin.Y + upOffset, containerWidth, containerHeight);
+            var openDown = IsRectOnScreen(this.XamlRoot, downRect) && (IsRectInsideWindow(this.XamlRoot, downRect) || !IsRectInsideWindow(this.XamlRoot, upRect) || !IsRectOnScreen(this.XamlRoot, upRect));
+#else
+            var openDown = IsElementOnScreen(this._suggestionsContainer, offsetY: downOffset) &&
                 (IsElementInsideWindow(this._suggestionsContainer, offsetY: downOffset) ||
                  !IsElementInsideWindow(this._suggestionsContainer, offsetY: upOffset) ||
-                 !IsElementOnScreen(this._suggestionsContainer, offsetY: upOffset)))
+                 !IsElementOnScreen(this._suggestionsContainer, offsetY: upOffset));
+#endif
+            if (openDown)
             {
                 this._suggestionPopup.VerticalOffset = downOffset;
                 this._popupOpenDown = true;

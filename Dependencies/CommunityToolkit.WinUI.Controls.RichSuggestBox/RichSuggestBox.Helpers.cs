@@ -3,12 +3,15 @@
 // See the LICENSE file in the project root for more information.
 
 #if WINAPPSDK
+using Microsoft.UI.Content;
 using Microsoft.UI.Text;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 
 #else
 using Windows.UI.Text;
 #endif
+using Windows.Foundation;
 using Windows.Graphics.Display;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
@@ -20,6 +23,7 @@ namespace CommunityToolkit.WinUI.Controls;
 /// </summary>
 public partial class RichSuggestBox2
 {
+#if !WINAPPSDK
     private static bool IsElementOnScreen(FrameworkElement element, double offsetX = 0, double offsetY = 0)
     {
         // DisplayInformation only works in UWP. No alternative to get DisplayInformation.ScreenHeightInRawPixels
@@ -28,7 +32,6 @@ public partial class RichSuggestBox2
         // https://github.com/microsoft/WindowsAppSDK/issues/114
         // https://github.com/microsoft/microsoft-ui-xaml/issues/4228
         // TODO: Remove when DisplayInformation.ScreenHeightInRawPixels alternative is available
-#if !WINAPPSDK
         if (CoreWindow.GetForCurrentThread() == null)
         {
             return true;
@@ -55,15 +58,30 @@ public partial class RichSuggestBox2
 
         // Check if top/bottom are within confines of screen
         return elementBounds.Top * scaleFactor >= 0 && elementBounds.Bottom * scaleFactor <= displayHeight;
-#else
-return true;
-#endif
     }
+#else
+    private static bool IsRectOnScreen(XamlRoot xamlRoot, Rect rect)
+    {
+        var contentIslandEnvironment = xamlRoot?.ContentIslandEnvironment;
+        if (xamlRoot == null || contentIslandEnvironment == null) return true;
 
+        // Measure against the physical work area (screen minus taskbar) hosting the window.
+        var appWindowId = contentIslandEnvironment.AppWindowId;
+        var displayArea = DisplayArea.GetFromWindowId(appWindowId, DisplayAreaFallback.Nearest);
+
+        // WorkArea bounds are in physical pixels; map the window-space rect to screen coordinates.
+        var scale = xamlRoot.RasterizationScale;
+        var converter = ContentCoordinateConverter.CreateForWindowId(appWindowId);
+        var screenTop = converter.ConvertLocalToScreen(new Point(0, 0)).Y + (int)Math.Round(rect.Y * scale);
+        var screenBottom = screenTop + (int)Math.Round(rect.Height * scale);
+
+        return screenTop >= displayArea.WorkArea.Y && screenBottom <= displayArea.WorkArea.Y + displayArea.WorkArea.Height;
+    }
+#endif
+
+#if !WINAPPSDK
     private static bool IsElementInsideWindow(FrameworkElement element, double offsetX = 0, double offsetY = 0)
     {
-        // THIS IS NOT SUPPORTED IN WINUI3
-#if !WINAPPSDK
         // Get bounds of element from root of tree
         var elementBounds = element.CoordinatesFrom(null!).ToRect(element.ActualWidth, element.ActualHeight);
 
@@ -81,10 +99,16 @@ return true;
 
         // See if we are still fully visible within the Window
         return elementBounds.Height >= element.ActualHeight;
-#else
-return true;
-#endif
     }
+#else
+    private static bool IsRectInsideWindow(XamlRoot xamlRoot, Rect rect)
+    {
+        if (xamlRoot == null) return true;
+
+        // XamlRoot.Size is expressed in effective pixels, matching the rect's coordinate space.
+        return rect.Top >= 0 && rect.Bottom <= xamlRoot.Size.Height;
+    }
+#endif
 
     private static string EnforcePrefixesRequirements(string value)
     {
