@@ -15,6 +15,7 @@ namespace History.WindowsClient.ViewModels.Media;
 public sealed partial class WrappedMediaContentsViewModel : ObservableObject, IRecipient<MediaImageSizeReportedMessage>
 {
     private const double MaxCarouselHeight = 400;
+    private const double UnwrappedMaxCarouselHeight = 640;
     private static double s_cachedViewportWidth = double.NaN;
     private static Dictionary<string, double> s_cachedAspectRatio = [];
 
@@ -108,7 +109,7 @@ public void Update(List<MediaContent> mediaContents, List<MediaContent> allMedia
         if (double.IsNaN(aspectRatio)) aspectRatio = (double)currentItem.PixelHeight / currentItem.PixelWidth;
         s_cachedAspectRatio[currentItem.MediaContent.MediaId] = aspectRatio;
 
-        var height = Math.Min(_viewportWidth * aspectRatio, PostType == PostType.Unwrapped ? double.MaxValue : MaxCarouselHeight);
+        var height = Math.Min(_viewportWidth * aspectRatio, PostType == PostType.Unwrapped ? UnwrappedMaxCarouselHeight : MaxCarouselHeight);
 
         CarouselHeight = height;
     }
