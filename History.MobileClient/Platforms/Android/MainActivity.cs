@@ -60,6 +60,9 @@ public class MainActivity : MauiAppCompatActivity
         // spinning up a second MAUI window.
         if (_instance != null)
         {
+            try { base.OnCreate(savedInstanceState); }
+            catch (InvalidOperationException) { }
+
             _instance.HandleIntent(Intent);
             MoveExistingTaskToFront();
             Finish();
