@@ -11,7 +11,7 @@
     mc:Ignorable="d">
 
     <Grid>
-        <ScrollViewer Padding="8">
+        <ScrollViewer Padding="8" VerticalScrollBarVisibility="Hidden">
             <ItemsRepeater
                 x:Name="MainItemsRepeater"
                 ElementPrepared="OnMainItemsRepeaterElementPrepared"
