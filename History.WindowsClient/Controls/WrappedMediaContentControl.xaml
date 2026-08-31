@@ -99,13 +99,18 @@
                     Source="{x:Bind ImageSource}"
                     Stretch="{x:Bind Stretch, Mode=OneTime}" />
 
+                <!--
+                    Only instantiated while inline playback is active (x:Load): recycled carousels
+                    that are not playing never realize (or release) a media player element.
+                -->
                 <MediaPlayerElement
+                    x:Name="InlineMediaPlayerElement"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
+                    x:Load="{x:Bind IsPlaying, Mode=OneWay}"
                     AreTransportControlsEnabled="True"
                     AutoPlay="True"
-                    Source="{x:Bind PlaybackMediaSource, Mode=OneWay}"
-                    Visibility="{x:Bind IsPlaying, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    Source="{x:Bind PlaybackMediaSource, Mode=OneWay}" />
 
                 <!--  Video Overlay  -->
                 <Button

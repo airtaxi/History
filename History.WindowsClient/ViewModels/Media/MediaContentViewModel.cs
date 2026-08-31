@@ -7,6 +7,7 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Services;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Media.Core;
@@ -136,6 +137,15 @@ public sealed partial class MediaContentViewModel : ObservableObject
         // TODO: Open the full-screen media viewer once it is implemented.
     }
 
+    // The inline media player element is x:Load-ed on IsPlaying, so stopping playback destroys
+    // it. Destroying a live MediaPlayerElement synchronously from an Unloaded handler blocks the
+    // XAML tick inside media-engine shutdown, which pumps messages and trips the renderer's
+    // reentrancy guard (FailFast 0xC000027B, "Reentrancy was detected in this XAML
+    // application"). Deferring the teardown to a low-priority dispatcher tick moves it outside
+    // the in-flight render/unload pass, mirroring the official guidance to move this code to an
+    // asynchronous event handler.
+    // Order matters: pause first, then detach the source (stops decoding), and only later
+    // dispose the MediaSource once the element is gone, as recommended MediaPlayer hygiene.
     [RelayCommand]
     private void HandleOverlayTap()
     {
@@ -152,10 +162,13 @@ public sealed partial class MediaContentViewModel : ObservableObject
     [RelayCommand]
     private void HandleUnload()
     {
-        IsPlaying = false;
         var playbackMediaSource = PlaybackMediaSource;
+
+        // Detach the source first so the element (if still realized) stops pulling from it.
         PlaybackMediaSource = null;
-        playbackMediaSource?.Dispose();
+        IsPlaying = false;
+
+        if (playbackMediaSource != null) DispatcherQueue.GetForCurrentThread().TryEnqueue(DispatcherQueuePriority.Low, () => playbackMediaSource.Dispose()); // Low priority: run after the in-flight render/unload pass has fully unwound.
     }
 
     // Wrapped posts and inline videos display the thumbnail; unwrapped image posts display the original media.
