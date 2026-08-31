@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
@@ -110,7 +110,6 @@ public sealed partial class WrappedMediaContentsViewModel : ObservableObject, IR
 
         var height = Math.Min(_viewportWidth * aspectRatio, PostType == PostType.Unwrapped ? double.MaxValue : MaxCarouselHeight);
 
-        Debug.WriteLine($"Height: {height}");
         CarouselHeight = height;
     }
 
