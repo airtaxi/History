@@ -1,11 +1,13 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
+using Windows.Storage.Streams;
 
 namespace History.WindowsClient.Services;
 
@@ -21,6 +23,9 @@ public static class MediaCacheService
     private const long MaxCacheSizeBytes = 1024L * 1024 * 1024; // 1 GB
     private const int MaxConcurrentPrefetchDownloads = 4;
     private const int MaxRateLimitRetries = 10;
+    private const int MaxFileSyncRetries = 3;
+    private const int UnableToRemoveReplacedHResult = unchecked((int)0x80070497); // ERROR_UNABLE_TO_REMOVE_REPLACED (win32 1175)
+    private const int SharingViolationHResult = unchecked((int)0x80070020); // ERROR_SHARING_VIOLATION (win32 32)
     private static readonly TimeSpan s_rateLimitRetryMinDelay = TimeSpan.FromMilliseconds(300);
     private static readonly TimeSpan s_rateLimitRetryMaxDelay = TimeSpan.FromMilliseconds(1000);
 
@@ -207,8 +212,11 @@ public static class MediaCacheService
             }
 
             var cacheFolder = await GetCacheFolderAsync();
-            var tempFile = await cacheFolder.CreateFileAsync($"{mediaId}.tmp", CreationCollisionOption.ReplaceExisting);
-            await FileIO.WriteBytesAsync(tempFile, imageBytes);
+            // A unique temp name avoids colliding with a stale '{mediaId}.tmp' that a previous
+            // run or a leftover app instance still holds open; the swap to the final name goes
+            // through RenameFileWithRetryAsync below.
+            var tempFile = await cacheFolder.CreateFileAsync($"{mediaId}.{Guid.NewGuid():N}.tmp", CreationCollisionOption.ReplaceExisting);
+            await WriteBytesDirectAsync(tempFile, imageBytes);
 
             var (pixelWidth, pixelHeight) = await GetImagePixelSizeAsync(tempFile);
             if (pixelWidth == 0 || pixelHeight == 0)
@@ -218,7 +226,7 @@ public static class MediaCacheService
                 return;
             }
 
-            await tempFile.RenameAsync($"{mediaId}.bin", NameCollisionOption.ReplaceExisting);
+            await RenameFileWithRetryAsync(tempFile, $"{mediaId}.bin");
 
             await s_indexSemaphore.WaitAsync();
             try
@@ -248,22 +256,44 @@ public static class MediaCacheService
         s_cacheIndex = [];
         s_totalCacheSizeBytes = 0;
 
-        try
+        for (var attempt = 1; ; attempt++)
         {
-            var cacheFolder = await GetCacheFolderAsync();
-            var indexFile = await cacheFolder.TryGetItemAsync(CacheIndexFileName) as StorageFile;
-            if (indexFile != null)
+            try
             {
-                var indexJson = await FileIO.ReadTextAsync(indexFile);
-                var loadedIndex = JsonSerializer.Deserialize<Dictionary<string, MediaCacheEntry>>(indexJson);
-                if (loadedIndex != null)
+                var cacheFolder = await GetCacheFolderAsync();
+                var indexFile = await cacheFolder.TryGetItemAsync(CacheIndexFileName) as StorageFile;
+                if (indexFile != null)
                 {
-                    s_cacheIndex = loadedIndex;
-                    foreach (var entry in s_cacheIndex.Values) s_totalCacheSizeBytes += entry.FileSizeBytes;
+                    var indexJson = await FileIO.ReadTextAsync(indexFile);
+                    var loadedIndex = JsonSerializer.Deserialize<Dictionary<string, MediaCacheEntry>>(indexJson);
+                    if (loadedIndex != null)
+                    {
+                        s_cacheIndex = loadedIndex;
+                        foreach (var entry in s_cacheIndex.Values) s_totalCacheSizeBytes += entry.FileSizeBytes;
+                    }
                 }
+
+                break;
+            }
+            catch (COMException exception)
+            {
+                // A transient read failure must not be treated as an empty cache index: the next
+                // save would rewrite index.json empty and orphan every cached file. Retry the
+                // load briefly before giving up.
+                if (exception.HResult is not (SharingViolationHResult or UnableToRemoveReplacedHResult) || attempt >= MaxFileSyncRetries)
+                {
+                    Debug.WriteLine($"[MediaCacheService] Failed to load the cache index: {exception.Message}");
+                    break;
+                }
+
+                await Task.Delay(50 * attempt);
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine($"[MediaCacheService] Failed to load the cache index: {exception.Message}");
+                break;
             }
         }
-        catch (Exception exception) { Debug.WriteLine($"[MediaCacheService] Failed to load the cache index: {exception.Message}"); }
 
         s_isIndexLoaded = true;
     }
@@ -273,8 +303,64 @@ public static class MediaCacheService
         if (!s_isIndexLoaded) return;
 
         var cacheFolder = await GetCacheFolderAsync();
-        var indexFile = await cacheFolder.CreateFileAsync(CacheIndexFileName, CreationCollisionOption.ReplaceExisting);
-        await FileIO.WriteTextAsync(indexFile, JsonSerializer.Serialize(s_cacheIndex));
+        var tempFile = await cacheFolder.CreateFileAsync($"{CacheIndexFileName}.{Guid.NewGuid():N}.tmp", CreationCollisionOption.ReplaceExisting);
+        await WriteBytesDirectAsync(tempFile, JsonSerializer.SerializeToUtf8Bytes(s_cacheIndex));
+        await RenameFileWithRetryAsync(tempFile, CacheIndexFileName);
+    }
+
+    // Writes bytes through a plain random-access stream instead of FileIO.WriteTextAsync/
+    // WriteBytesAsync. The FileIO helpers commit their write transactionally by replacing the
+    // target file, which intermittently fails with COMException 0x80070497
+    // (ERROR_UNABLE_TO_REMOVE_REPLACED, win32 1175) when an antivirus filter briefly holds the
+    // freshly created file for scanning. A direct stream write bypasses the replace entirely;
+    // only a transient sharing violation on the initial open still needs a retry.
+    private static async Task WriteBytesDirectAsync(StorageFile file, byte[] bytes)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                using var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
+                stream.Size = 0;
+                using var dataWriter = new DataWriter(stream);
+                dataWriter.WriteBytes(bytes);
+                await dataWriter.StoreAsync();
+                await stream.FlushAsync();
+                return;
+            }
+            catch (COMException exception)
+            {
+                if (exception.HResult is not SharingViolationHResult || attempt >= MaxFileSyncRetries) throw;
+                await Task.Delay(50 * attempt);
+            }
+        }
+    }
+
+    // Renames the fully written temp file over the final name with short back-off retries.
+    // ReplaceExisting renames fail transiently with COMException 0x80070497
+    // (ERROR_UNABLE_TO_REMOVE_REPLACED, win32 1175) or 0x80070020 (ERROR_SHARING_VIOLATION)
+    // when another handle (a leftover or second app instance sharing the cache folder,
+    // antivirus scanning, the bitmap decoder) still holds the target file open.
+    private static async Task RenameFileWithRetryAsync(StorageFile tempFile, string targetFileName)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await tempFile.RenameAsync(targetFileName, NameCollisionOption.ReplaceExisting);
+                return;
+            }
+            catch (COMException exception)
+            {
+                if (exception.HResult is not (UnableToRemoveReplacedHResult or SharingViolationHResult) || attempt >= MaxFileSyncRetries)
+                {
+                    try { await tempFile.DeleteAsync(StorageDeleteOption.PermanentDelete); } catch { }
+                    throw;
+                }
+
+                await Task.Delay(50 * attempt);
+            }
+        }
     }
 
     // Deletes the oldest entries (and their files) until the total size fits within
@@ -306,16 +392,31 @@ public static class MediaCacheService
 
     private static async Task<(int PixelWidth, int PixelHeight)> GetImagePixelSizeAsync(StorageFile imageFile)
     {
-        try
+        for (var attempt = 1; ; attempt++)
         {
-            using var fileStream = await imageFile.OpenReadAsync();
-            var bitmapDecoder = await BitmapDecoder.CreateAsync(fileStream);
-            return ((int)bitmapDecoder.PixelWidth, (int)bitmapDecoder.PixelHeight);
-        }
-        catch (Exception exception)
-        {
-            Debug.WriteLine($"[MediaCacheService] Failed to decode '{imageFile.Name}': {exception.Message}");
-            return (0, 0);
+            try
+            {
+                using var fileStream = await imageFile.OpenReadAsync();
+                var bitmapDecoder = await BitmapDecoder.CreateAsync(fileStream);
+                return ((int)bitmapDecoder.PixelWidth, (int)bitmapDecoder.PixelHeight);
+            }
+            catch (COMException exception)
+            {
+                // Transient sharing violations during antivirus scans must not mark a valid
+                // image as non-image (the caller deletes the file on that result).
+                if (exception.HResult is not SharingViolationHResult || attempt >= MaxFileSyncRetries)
+                {
+                    Debug.WriteLine($"[MediaCacheService] Failed to decode '{imageFile.Name}': {exception.Message}");
+                    return (0, 0);
+                }
+
+                await Task.Delay(50 * attempt);
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine($"[MediaCacheService] Failed to decode '{imageFile.Name}': {exception.Message}");
+                return (0, 0);
+            }
         }
     }
 
