@@ -5,6 +5,9 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Folder Name="/Dependencies/">
+    <Project Path="Dependencies/CommunityToolkit.WinUI.Controls.RichSuggestBox/CommunityToolkit.WinUI.Controls.RichSuggestBox.csproj" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
   </Folder>
@@ -13,8 +16,7 @@
   <Project Path="History.AppHost/History.AppHost.csproj" />
   <Project Path="History.Commons/History.Commons.csproj" />
   <Project Path="History.MobileClient/History.MobileClient.csproj">
-    <Deploy Solution="Debug|*" />
-    <Deploy Solution="Release|*" />
+    <Deploy />
   </Project>
   <Project Path="History.ServiceDefaults/History.ServiceDefaults.csproj" />
   <Project Path="History.WindowsClient/History.WindowsClient.csproj" Id="50fe4111-0fde-4c1e-9f90-4ad3c48ea15d">

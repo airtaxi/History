@@ -61,13 +61,13 @@ public sealed partial class ContentEditorControl : UserControl
     // temporary file path containing the pasted image data.
     public event EventHandler<string> ImageInputRequested;
 
-    private void OnMainRichSuggestBoxSuggestionRequested(RichSuggestBox sender, SuggestionRequestedEventArgs args)
+    private void OnMainRichSuggestBoxSuggestionRequested(RichSuggestBox2 sender, SuggestionRequestedEventArgs args)
     {
         if (args.Prefix == "@") sender.ItemsSource = _viewModel.GetUserSuggestions(args.QueryText);
         else if (args.Prefix == "#") sender.ItemsSource = _viewModel.GetHashtagSuggestions(args.QueryText);
     }
 
-    private async void OnMainRichSuggestBoxPaste(RichSuggestBox sender, TextControlPasteEventArgs args)
+    private async void OnMainRichSuggestBoxPaste(RichSuggestBox2 sender, TextControlPasteEventArgs args)
     {
         var clipboard = Clipboard.GetContent();
         if (!clipboard.Contains(StandardDataFormats.Bitmap)) return;
@@ -99,7 +99,7 @@ public sealed partial class ContentEditorControl : UserControl
             _ => ".jpg"
         };
 
-    private void OnMainRichSuggestBoxSuggestionChosen(RichSuggestBox sender, SuggestionChosenEventArgs args)
+    private void OnMainRichSuggestBoxSuggestionChosen(RichSuggestBox2 sender, SuggestionChosenEventArgs args)
     {
         if (args.Prefix == "@")
         {

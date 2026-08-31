@@ -57,7 +57,7 @@
             UserMentionTemplate="{StaticResource UserMentionTemplate}" />
     </UserControl.Resources>
 
-    <controls:RichSuggestBox
+    <controls:RichSuggestBox2
         x:Name="MainRichSuggestBox"
         HorizontalAlignment="Stretch"
         ItemTemplateSelector="{StaticResource SuggestionTemplateSelector}"
