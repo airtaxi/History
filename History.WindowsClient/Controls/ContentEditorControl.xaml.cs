@@ -55,7 +55,7 @@ public sealed partial class ContentEditorControl : UserControl
 
     private RichEditTextDocument Document => MainRichSuggestBox.TextDocument;
 
-    private static Color AccentColor => ((SolidColorBrush)Application.Current.Resources["SystemAccentColor"]).Color;
+    private static Color AccentColor => (Color)Application.Current.Resources["SystemAccentColor"];
 
     // Raised when the user pastes an image into the editor. The handler receives a
     // temporary file path containing the pasted image data.
