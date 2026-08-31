@@ -40,7 +40,7 @@ public sealed partial class WrappedMediaContentsViewModel : ObservableObject, IR
     [ObservableProperty]
     public partial double CarouselHeight { get; private set; }
 
-    public void Update(List<MediaContent> mediaContents, List<MediaContent> allMediaContents, PostType postType, bool isParentPost)
+public void Update(List<MediaContent> mediaContents, List<MediaContent> allMediaContents, PostType postType, bool isParentPost)
     {
         PostType = postType;
         var medias = new List<MediaContentViewModel>();
@@ -59,7 +59,7 @@ public sealed partial class WrappedMediaContentsViewModel : ObservableObject, IR
         if (Medias.Count == 0) return;
 
         var currentItem = Medias[Math.Clamp(CarouselPosition, 0, Medias.Count - 1)];
-        if (!double.IsNaN(s_cachedViewportWidth) && s_cachedAspectRatio.ContainsKey(currentItem.MediaContent.MediaId))
+        if (!double.IsNaN(s_cachedViewportWidth) && (currentItem.HasPixelSize || s_cachedAspectRatio.ContainsKey(currentItem.MediaContent.MediaId)))
         {
             _viewportWidth = s_cachedViewportWidth;
             RecalculateCarouselHeight();

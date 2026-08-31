@@ -5,6 +5,7 @@ using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.WindowsClient.Messages;
+using History.WindowsClient.Services;
 using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels;
@@ -50,7 +51,12 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
             var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(null, PageSize));
             if (postsResult.IsSuccess)
             {
-                var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
+                var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null)).ToList();
+
+                // Download this page's carousel images before creating the post view models so
+                // every carousel sees a cache hit and its height is final on the first measure.
+                await App.ExecuteWithLoadingAsync(() => MediaCacheService.PrefetchTimelineMediaAsync(posts));
+
                 var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User, this) : new HistoryPostViewModel(x, PostType.Timeline, this)));
                 foreach (var viewModel in viewModels) Items.Add(viewModel);
             }
@@ -76,7 +82,12 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
             var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(lastViewModel.RepostId ?? lastViewModel.Post.Id, PageSize));
             if (postsResult.IsSuccess)
             {
-                var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null));
+                var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null)).ToList();
+
+                // Same guarantee as RefreshAsync but without the loading overlay: the user is
+                // mid-scroll and freezing the frame behind a blocking indicator feels broken.
+                await MediaCacheService.PrefetchTimelineMediaAsync(posts);
+
                 var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User, this) : new HistoryPostViewModel(x, PostType.Timeline, this)));
                 foreach (var viewModel in viewModels) Items.Add(viewModel);
 
