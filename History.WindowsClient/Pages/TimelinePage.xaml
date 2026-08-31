@@ -12,7 +12,11 @@
 
     <Grid>
         <ScrollViewer>
-            <ItemsRepeater ItemTemplate="{StaticResource TimelineTemplateSelector}" ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+            <ItemsRepeater
+                x:Name="MainItemsRepeater"
+                ElementPrepared="OnMainItemsRepeaterElementPrepared"
+                ItemTemplate="{StaticResource TimelineTemplateSelector}"
+                ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
                 <ItemsRepeater.Layout>
                     <controls:StaggeredLayout
                         ColumnSpacing="6"

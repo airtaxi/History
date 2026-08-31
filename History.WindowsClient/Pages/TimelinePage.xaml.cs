@@ -16,6 +16,16 @@ public sealed partial class TimelinePage : BasePage
         InitializeComponent();
     }
 
+    // Infinite scroll: fetch the next page once the last post's element gets realized.
+    // Works even when the whole feed fits the viewport and no scrollbar exists,
+    // mirroring the mobile CollectionView OnChildAdded-based pagination.
+    private async void OnMainItemsRepeaterElementPrepared(ItemsRepeater sender, ItemsRepeaterElementPreparedEventArgs e)
+    {
+        if (e.Index != ViewModel.Items.Count - 1) return;
+
+        await ViewModel.LoadMoreAsync();
+    }
+
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
