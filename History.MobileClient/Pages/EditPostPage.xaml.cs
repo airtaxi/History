@@ -1575,7 +1575,7 @@ public partial class EditPostPage : ContentPage
                 if (mediaContent.IsVideo && !includeVideos) continue;
                 if (!mediaContent.IsVideo && mediaAttachments.Count(x => !x.IsVideo) >= maxRemainingPhotos) continue;
 
-                var mediaId = mediaContent.IsVideo ? mediaContent.MediaId : mediaContent.ThumbnailMediaId ?? mediaContent.MediaId;
+                var mediaId = mediaContent.MediaId;
                 var mediaUrl = Utils.GenerateMediaUri(mediaId);
                 byte[] mediaBytes;
                 try { mediaBytes = await new HttpClient().GetByteArrayAsync(mediaUrl); }
