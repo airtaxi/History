@@ -1,4 +1,4 @@
-﻿#if ANDROID
+#if ANDROID
 using History.MobileClient.ThirdParty.StaggeredLayout;
 #elif IOS
 using NativeMedia;
@@ -780,10 +780,12 @@ public partial class EditPostPage : ContentPage
                     }
                 }
 
-                // When mirroring a share post, only the rendered shared-post image is
-                // attached on KakaoStory. Warn beforehand that the user's own media
-                // attachments and stickers are not mirrored; declining skips the mirror.
+                // When mirroring a share post, the rendered shared-post image (with only its
+                // first media) is attached on KakaoStory along with the remaining media files.
+                // Warn beforehand that the user's own media attachments and stickers are not
+                // mirrored; declining skips the mirror.
                 MediaAttachmentViewModel sharedPostRenderAttachment = null;
+                List<MediaAttachmentViewModel> sharedPostMediaAttachments = null;
                 if (shouldWritePostToKakaoStory && _isHistoryShare)
                 {
                     var excludedKakaoItems = new List<string>();
@@ -792,18 +794,25 @@ public partial class EditPostPage : ContentPage
 
                     if (excludedKakaoItems.Count > 0)
                     {
-                        var proceed = await DisplayAlertAsync("안내", $"카카오스토리에는 {string.Join(", ", excludedKakaoItems)}이 게시되지 않으며, 공유 게시글의 렌더 이미지만 카카오스토리에 첨부됩니다. 계속하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+                        var proceed = await DisplayAlertAsync("안내", $"카카오스토리에는 {string.Join(", ", excludedKakaoItems)}이 게시되지 않으며, 공유 게시글의 렌더 이미지와 공유 게시글의 미디어만 카카오스토리에 첨부됩니다. 계속하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
                         if (!proceed) shouldWritePostToKakaoStory = false;
                     }
 
                     if (shouldWritePostToKakaoStory)
                     {
-                        // Render before the History write so a failure aborts the whole
-                        // upload and never produces a partially mirrored share post.
-                        sharedPostRenderAttachment = await BuildSharedPostRenderAttachmentAsync(_post, _shareTargetPostViewModel);
+                        // Download and prepare the media attachments before the History write so a
+                        // failure aborts the whole upload and never produces a partially mirrored
+                        // share post. The render image is also built here for the same reason.
+                        (sharedPostRenderAttachment, sharedPostMediaAttachments) = await BuildSharedPostKakaoAttachmentsAsync(_post, _shareTargetPostViewModel);
                         if (sharedPostRenderAttachment == null)
                         {
                             await DisplayAlertAsync("오류", "공유 게시글의 렌더 이미지를 생성하지 못해 카카오스토리 게시글 작성을 중단합니다.", Constants.PromptOk);
+                            return;
+                        }
+                        if (sharedPostMediaAttachments == null)
+                        {
+                            sharedPostRenderAttachment.Dispose();
+                            await DisplayAlertAsync("오류", "공유 게시글의 미디어를 가져오지 못해 카카오스토리 게시글 작성을 중단합니다.", Constants.PromptOk);
                             return;
                         }
                     }
@@ -833,10 +842,11 @@ public partial class EditPostPage : ContentPage
                     else if (shouldWritePostToKakaoStory && _isHistoryShare && sharedPostRenderAttachment != null)
                     {
                         // After-the-fact KakaoStory mirroring of a share post: the History share
-                        // URL is appended after the user text, and the rendered shared post image
-                        // replaces the user's media attachments. An external URL card is mirrored
-                        // as plain text between the user text and the share link because KakaoStory
-                        // cannot scrap while media is attached. The temporary rendered file is
+                        // URL is appended after the user text, the rendered shared post image
+                        // (containing only the first media of the shared post) and the remaining
+                        // media files replace the user's media attachments. An external URL card is
+                        // mirrored as plain text between the user text and the share link because
+                        // KakaoStory cannot scrap while media is attached. The temporary files are
                         // disposed after the upload completes (or when the user declines).
                         var shareUrl = $"https://historyweb.cc/post/{result.Value.Id}";
                         var userText = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
@@ -849,12 +859,23 @@ public partial class EditPostPage : ContentPage
                         else if (hasUserText) kakaoText = $"{userText}\n{shareUrl}";
                         else kakaoText = shareUrl;
 
-                        var shareMedias = new List<MediaAttachmentViewModel> { sharedPostRenderAttachment };
-
                         // KakaoStory cannot post a URL scrap and media at the same time;
-                        // only the rendered shared post image is attached.
+                        // only the rendered shared post image and its media are attached.
+                        var shareMedias = new List<MediaAttachmentViewModel> { sharedPostRenderAttachment };
+                        if (sharedPostMediaAttachments != null) shareMedias.AddRange(sharedPostMediaAttachments);
+
                         try { await TryWritePostToKakaoStoryAsync([new TextContent { Text = kakaoText }], shareMedias, null, discoveryOption, []); }
-                        finally { sharedPostRenderAttachment.Dispose(); }
+                        finally
+                        {
+                            sharedPostRenderAttachment.Dispose();
+                            if (sharedPostMediaAttachments != null)
+                            {
+                                foreach (var attachment in sharedPostMediaAttachments)
+                                {
+                                    attachment.Dispose();
+                                }
+                            }
+                        }
                     }
 
                     await App.PopAsync();
@@ -1505,19 +1526,75 @@ public partial class EditPostPage : ContentPage
 
     /// <summary>
     /// Renders the shared (parent) post into a PNG attachment for KakaoStory mirroring.
-    /// The profile header is included to reproduce the share card (header values are
-    /// derived from the shared post view model). Returns null when the rendering fails;
-    /// the caller then aborts the whole upload.
+    /// Only the first media of the shared post is included in the render because
+    /// KakaoStory compresses tall images aggressively; the remaining media are returned
+    /// separately so the caller can attach them as regular files. Videos are only
+    /// attached when the user accepts the slow download/upload warning, and photos
+    /// exceeding the KakaoStory image limit (render image included) are dropped after
+    /// a confirmation prompt.
+    /// Returns a null render attachment when the rendering is declined or fails, or
+    /// null media attachments when a media download fails; the caller then aborts
+    /// the whole upload.
     /// </summary>
-    private static async Task<MediaAttachmentViewModel> BuildSharedPostRenderAttachmentAsync(PostResponseDto post, BasePostViewModel viewModel)
+    private async Task<(MediaAttachmentViewModel RenderAttachment, List<MediaAttachmentViewModel> MediaAttachments)> BuildSharedPostKakaoAttachmentsAsync(PostResponseDto post, BasePostViewModel viewModel)
     {
-        var bytes = await PostImageRendererHelper.RenderAsync(post.Contents, viewModel);
-        if (bytes == null) return null;
+        var mediaContents = post.Contents.OfType<MediaContent>().ToList();
+        var renderBytes = await PostImageRendererHelper.RenderAsync(post.Contents, viewModel, excludeMediaExceptFirst: true);
+        if (renderBytes == null) return (null, null);
 
         var randomFileName = Path.GetRandomFileName().Replace(".", string.Empty) + ".png";
         var tempPath = Path.Combine(Path.GetTempPath(), randomFileName);
-        await File.WriteAllBytesAsync(tempPath, bytes);
-        return new MediaAttachmentViewModel(randomFileName, tempPath);
+        await File.WriteAllBytesAsync(tempPath, renderBytes);
+        var renderAttachment = new MediaAttachmentViewModel(randomFileName, tempPath);
+
+        // Every attachment counts as one KakaoStory image slot, so only the media after
+        // the first rendered media are downloaded here, capped at the limit minus the
+        // render image. The first media is already inside the render image.
+        var remainingMediaContents = mediaContents.Skip(1).ToList();
+        var mediaAttachments = new List<MediaAttachmentViewModel>();
+        var includeVideos = true;
+        if (remainingMediaContents.Count > 0)
+        {
+            var remainingPhotoCount = remainingMediaContents.Count(x => !x.IsVideo);
+            var maxRemainingPhotos = CommonConstants.KakaoStoryMaxImageCount - 1;
+            if (remainingPhotoCount > maxRemainingPhotos)
+            {
+                var proceed = await DisplayAlertAsync("경고", $"공유 게시글의 사진이 카카오스토리의 이미지 제한({CommonConstants.KakaoStoryMaxImageCount}개)을 초과합니다. 렌더 이미지를 포함해 처음 {CommonConstants.KakaoStoryMaxImageCount}개만 첨부되며 나머지 사진은 제외됩니다. 계속하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+                if (!proceed)
+                {
+                    renderAttachment.Dispose();
+                    return (null, []);
+                }
+            }
+
+            var hasVideo = remainingMediaContents.Any(x => x.IsVideo);
+            if (hasVideo) includeVideos = await DisplayAlertAsync("안내", "공유 게시글에 영상이 포함되어 있습니다. 영상은 다운로드와 카카오스토리 업로드에 시간이 오래 걸릴 수 있습니다. 영상도 함께 첨부하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+
+            foreach (var mediaContent in remainingMediaContents)
+            {
+                if (mediaContent.IsVideo && !includeVideos) continue;
+                if (!mediaContent.IsVideo && mediaAttachments.Count(x => !x.IsVideo) >= maxRemainingPhotos) continue;
+
+                var mediaId = mediaContent.IsVideo ? mediaContent.MediaId : mediaContent.ThumbnailMediaId ?? mediaContent.MediaId;
+                var mediaUrl = Utils.GenerateMediaUri(mediaId);
+                byte[] mediaBytes;
+                try { mediaBytes = await new HttpClient().GetByteArrayAsync(mediaUrl); }
+                catch
+                {
+                    renderAttachment.Dispose();
+                    foreach (var attachment in mediaAttachments) attachment.Dispose();
+                    return (null, null);
+                }
+
+                var extension = mediaContent.IsVideo ? ".mp4" : mediaContent.MimeType?.Contains("png", StringComparison.OrdinalIgnoreCase) == true ? ".png" : ".jpg";
+                var mediaFileName = Path.GetRandomFileName().Replace(".", string.Empty) + extension;
+                var mediaTempPath = Path.Combine(Path.GetTempPath(), mediaFileName);
+                await File.WriteAllBytesAsync(mediaTempPath, mediaBytes);
+                mediaAttachments.Add(new MediaAttachmentViewModel(mediaFileName, mediaTempPath, mediaContent.IsVideo));
+            }
+        }
+
+        return (renderAttachment, mediaAttachments);
     }
 
     /// <summary>

@@ -79,8 +79,10 @@ public static class PostImageRendererHelper
     /// timestamp is always absolute (relative timestamps are meaningless in exported images).
     /// Optional comments are drawn below the contents under a thin separator, with the
     /// same absolute timestamp rule; contents are built from the comment view model surface.
+    /// When excludeMediaExceptFirst is set, only the first MediaContent is rendered and
+    /// every later MediaContent is skipped so it can be attached as a regular file instead.
     /// </summary>
-    public static async Task<byte[]> RenderAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null, IEnumerable<BaseCommentViewModel> comments = null) => await Task.Run(async () =>
+    public static async Task<byte[]> RenderAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null, IEnumerable<BaseCommentViewModel> comments = null, bool excludeMediaExceptFirst = false) => await Task.Run(async () =>
     {
         var contentList = contents?.ToList() ?? [];
         var hasHeader = post != null;
@@ -103,13 +105,13 @@ public static class PostImageRendererHelper
         var lineHeight = (metrics.Descent - metrics.Ascent) * 1.2f;
 
         var contentWidth = CanvasWidth - Padding * 2;
-        var blocks = await BuildBlocksAsync(contentList, contentWidth, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight);
+        var blocks = await BuildBlocksAsync(contentList, contentWidth, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight, excludeMediaExceptFirst);
         if (hasHeader)
         {
             var headerBlock = await BuildHeaderBlockAsync(post.ProfileMedia?.Uri, post.Nickname, BuildFullTimestampText(post.CreatedAt, post.ModifiedAt), bodyFont, titleFont, textPaint, secondaryPaint);
             if (headerBlock != null) blocks.Insert(0, headerBlock);
         }
-        if (comments != null) blocks.AddRange(await BuildCommentBlocksAsync(comments, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight));
+        if (comments != null) blocks.AddRange(await BuildCommentBlocksAsync(comments, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight, excludeMediaExceptFirst));
         if (blocks.Count == 0) return null;
 
         var totalHeight = (int)Math.Ceiling(Padding * 2 + blocks.Sum(x => x.Height) + ContentSpacing * Math.Max(0, blocks.Count - 1));
@@ -181,10 +183,11 @@ public static class PostImageRendererHelper
         }
     }
 
-    private static async Task<List<RenderBlock>> BuildBlocksAsync(List<BaseContent> contents, float contentWidth, float maxMediaWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight)
+    private static async Task<List<RenderBlock>> BuildBlocksAsync(List<BaseContent> contents, float contentWidth, float maxMediaWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight, bool excludeMediaExceptFirst = false)
     {
         var blocks = new List<RenderBlock>();
         var textRuns = new List<TextRun>();
+        var firstMediaRendered = false;
 
         void FlushText()
         {
@@ -227,10 +230,14 @@ public static class PostImageRendererHelper
                     var block = await BuildStickerBlockAsync(stickerContent, whitePaint);
                     if (block != null) blocks.Add(block);
                 }
-                else if (content is MediaContent mediaContent)
+                else if (content is MediaContent mediaContent && (!excludeMediaExceptFirst || !firstMediaRendered))
                 {
                     var block = await BuildMediaBlockAsync(mediaContent, contentWidth, maxMediaWidth, boldFont, whitePaint, fillPaint, lineHeight);
-                    if (block != null) blocks.Add(block);
+                    if (block != null)
+                    {
+                        firstMediaRendered = true;
+                        blocks.Add(block);
+                    }
                 }
                 else if (content is PollContent pollContent)
                 {
@@ -317,13 +324,13 @@ public static class PostImageRendererHelper
     // avatar on the left and a text column on the right (bold nickname, contents via
     // the shared block builders, absolute timestamp). Media inside a comment is capped
     // at the comment UI width (200dp x 3) because the comment carousel limits it.
-    private static async Task<RenderBlock> BuildCommentBlockAsync(BaseCommentViewModel comment, float contentWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight)
+    private static async Task<RenderBlock> BuildCommentBlockAsync(BaseCommentViewModel comment, float contentWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight, bool excludeMediaExceptFirst = false)
     {
         var image = await DownloadProfileImageOrDefaultAsync(comment.ProfileMedia?.Uri);
         var hasProfile = image != null;
 
         var columnWidth = contentWidth - CommentProfileSize - CommentColumnSpacing;
-        var innerBlocks = await BuildBlocksAsync(comment.GetRenderRawContents() ?? [], columnWidth, CommentMediaMaxWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight);
+        var innerBlocks = await BuildBlocksAsync(comment.GetRenderRawContents() ?? [], columnWidth, CommentMediaMaxWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight, excludeMediaExceptFirst);
         var innerHeight = innerBlocks.Count > 0 ? innerBlocks.Sum(block => block.Height) + ContentSpacing * (innerBlocks.Count - 1) : 0;
 
         var nameLineHeight = boldFont.Metrics.Descent - boldFont.Metrics.Ascent;
@@ -373,7 +380,7 @@ public static class PostImageRendererHelper
     // Assembles all comment blocks into a single list, inserting a thin light-gray
     // separator before the section so the comment area is visually distinct from the
     // post contents. Returns an empty list when there are no comments.
-    private static async Task<List<RenderBlock>> BuildCommentBlocksAsync(IEnumerable<BaseCommentViewModel> comments, float contentWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight)
+    private static async Task<List<RenderBlock>> BuildCommentBlocksAsync(IEnumerable<BaseCommentViewModel> comments, float contentWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight, bool excludeMediaExceptFirst = false)
     {
         var blocks = new List<RenderBlock>();
         var commentList = comments?.ToList() ?? [];
@@ -387,7 +394,7 @@ public static class PostImageRendererHelper
 
         foreach (var comment in commentList)
         {
-            var block = await BuildCommentBlockAsync(comment, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight);
+            var block = await BuildCommentBlockAsync(comment, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight, excludeMediaExceptFirst);
             if (block != null) blocks.Add(block);
         }
         return blocks;
