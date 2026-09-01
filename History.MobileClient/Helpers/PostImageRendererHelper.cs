@@ -102,16 +102,16 @@ public static class PostImageRendererHelper
         using var fillPaint = new SKPaint { IsAntialias = true };
 
         var metrics = bodyFont.Metrics;
-        var lineHeight = (metrics.Descent - metrics.Ascent) * 1.2f;
+        var style = new RenderStyle(bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, (metrics.Descent - metrics.Ascent) * 1.2f);
 
         var contentWidth = CanvasWidth - Padding * 2;
-        var blocks = await BuildBlocksAsync(contentList, contentWidth, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight, excludeMediaExceptFirst);
+        var blocks = await BuildBlocksAsync(contentList, contentWidth, contentWidth, style, excludeMediaExceptFirst);
         if (hasHeader)
         {
-            var headerBlock = await BuildHeaderBlockAsync(post.ProfileMedia?.Uri, post.Nickname, BuildFullTimestampText(post.CreatedAt, post.ModifiedAt), bodyFont, titleFont, textPaint, secondaryPaint);
+            var headerBlock = await BuildHeaderBlockAsync(post.ProfileMedia?.Uri, post.Nickname, BuildFullTimestampText(post.CreatedAt, post.ModifiedAt), style);
             if (headerBlock != null) blocks.Insert(0, headerBlock);
         }
-        if (comments != null) blocks.AddRange(await BuildCommentBlocksAsync(comments, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight, excludeMediaExceptFirst));
+        if (comments != null) blocks.AddRange(await BuildCommentBlocksAsync(comments, contentWidth, style, excludeMediaExceptFirst));
         if (blocks.Count == 0) return null;
 
         var totalHeight = (int)Math.Ceiling(Padding * 2 + blocks.Sum(x => x.Height) + ContentSpacing * Math.Max(0, blocks.Count - 1));
@@ -183,7 +183,7 @@ public static class PostImageRendererHelper
         }
     }
 
-    private static async Task<List<RenderBlock>> BuildBlocksAsync(List<BaseContent> contents, float contentWidth, float maxMediaWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight, bool excludeMediaExceptFirst = false)
+    private static async Task<List<RenderBlock>> BuildBlocksAsync(List<BaseContent> contents, float contentWidth, float maxMediaWidth, RenderStyle style, bool excludeMediaExceptFirst = false)
     {
         var blocks = new List<RenderBlock>();
         var textRuns = new List<TextRun>();
@@ -196,10 +196,10 @@ public static class PostImageRendererHelper
             var lines = WrapRuns(textRuns, contentWidth);
             if (lines.Count > 0)
             {
-                var height = lines.Count * lineHeight;
+                var height = lines.Count * style.LineHeight;
                 blocks.Add(new RenderBlock(height, (canvas, x, y) =>
                 {
-                    var baseline = y - bodyFont.Metrics.Ascent;
+                    var baseline = y - style.BodyFont.Metrics.Ascent;
                     foreach (var line in lines)
                     {
                         var cursor = x;
@@ -208,7 +208,7 @@ public static class PostImageRendererHelper
                             canvas.DrawText(run.Text, cursor, baseline, SKTextAlign.Left, run.Font, run.Paint);
                             cursor += run.Font.MeasureText(run.Text);
                         }
-                        baseline += lineHeight;
+                        baseline += style.LineHeight;
                     }
                 }));
             }
@@ -217,22 +217,22 @@ public static class PostImageRendererHelper
 
         foreach (var content in contents)
         {
-            if (content is TextContent textContent) AddRuns(textRuns, textContent.Text ?? string.Empty, bodyFont, textPaint);
-            else if (content is ProfileContent profileContent) AddRuns(textRuns, profileContent.Nickname ?? string.Empty, boldFont, primaryPaint);
-            else if (content is HashtagContent hashtagContent) AddRuns(textRuns, $"#{hashtagContent.Tag}", boldFont, primaryPaint);
-            else if (content is HyperlinkContent hyperlinkContent) AddRuns(textRuns, hyperlinkContent.Url ?? string.Empty, bodyFont, primaryPaint);
+            if (content is TextContent textContent) AddRuns(textRuns, textContent.Text ?? string.Empty, style.BodyFont, style.TextPaint);
+            else if (content is ProfileContent profileContent) AddRuns(textRuns, profileContent.Nickname ?? string.Empty, style.BoldFont, style.PrimaryPaint);
+            else if (content is HashtagContent hashtagContent) AddRuns(textRuns, $"#{hashtagContent.Tag}", style.BoldFont, style.PrimaryPaint);
+            else if (content is HyperlinkContent hyperlinkContent) AddRuns(textRuns, hyperlinkContent.Url ?? string.Empty, style.BodyFont, style.PrimaryPaint);
             else
             {
                 FlushText();
 
                 if (content is StickerContent stickerContent)
                 {
-                    var block = await BuildStickerBlockAsync(stickerContent, whitePaint);
+                    var block = await BuildStickerBlockAsync(stickerContent, style);
                     if (block != null) blocks.Add(block);
                 }
                 else if (content is MediaContent mediaContent && (!excludeMediaExceptFirst || !firstMediaRendered))
                 {
-                    var block = await BuildMediaBlockAsync(mediaContent, contentWidth, maxMediaWidth, boldFont, whitePaint, fillPaint, lineHeight);
+                    var block = await BuildMediaBlockAsync(mediaContent, contentWidth, maxMediaWidth, style);
                     if (block != null)
                     {
                         firstMediaRendered = true;
@@ -241,11 +241,11 @@ public static class PostImageRendererHelper
                 }
                 else if (content is PollContent pollContent)
                 {
-                    blocks.Add(BuildPollBlock(pollContent, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, fillPaint, lineHeight));
+                    blocks.Add(BuildPollBlock(pollContent, contentWidth, style));
                 }
                 else if (content is ExternalUrlContent externalUrlContent)
                 {
-                    var block = await BuildExternalBlockAsync(externalUrlContent, contentWidth, bodyFont, titleFont, smallFont, lightTextPaint, whitePaint, fillPaint);
+                    var block = await BuildExternalBlockAsync(externalUrlContent, contentWidth, style);
                     if (block != null) blocks.Add(block);
                 }
             }
@@ -255,7 +255,7 @@ public static class PostImageRendererHelper
         return blocks;
     }
 
-    private static async Task<RenderBlock> BuildHeaderBlockAsync(string profileImageUrl, string nickname, string timestampText, SKFont bodyFont, SKFont nameFont, SKPaint textPaint, SKPaint secondaryPaint)
+    private static async Task<RenderBlock> BuildHeaderBlockAsync(string profileImageUrl, string nickname, string timestampText, RenderStyle style)
     {
         var hasProfile = profileImageUrl != null;
         var image = hasProfile ? await DownloadProfileImageOrDefaultAsync(profileImageUrl) : null;
@@ -266,15 +266,15 @@ public static class PostImageRendererHelper
         if (!hasProfile && !hasName && !hasTimestamp) return null;
 
         var maxTextWidth = CanvasWidth - Padding * 2 - HeaderProfileSize - HeaderColumnSpacing;
-        var nameText = hasName ? TruncateText(nickname, nameFont, maxTextWidth) : null;
-        var timeText = hasTimestamp ? TruncateText(timestampText, bodyFont, maxTextWidth) : null;
+        var nameText = hasName ? TruncateText(nickname, style.TitleFont, maxTextWidth) : null;
+        var timeText = hasTimestamp ? TruncateText(timestampText, style.BodyFont, maxTextWidth) : null;
 
         // PostContentTemplate: the name(16dp bold) + timestamp(14dp) stack is
         // vertically centered inside the 48dp header cell (VerticalOptions=Center).
         // Center the stack by its exact line-height sum (no extra gap — the font
         // line height provides the natural spacing between the two rows).
-        var nameLineHeight = nameFont.Metrics.Descent - nameFont.Metrics.Ascent;
-        var timeLineHeight = bodyFont.Metrics.Descent - bodyFont.Metrics.Ascent;
+        var nameLineHeight = style.TitleFont.Metrics.Descent - style.TitleFont.Metrics.Ascent;
+        var timeLineHeight = style.BodyFont.Metrics.Descent - style.BodyFont.Metrics.Ascent;
         var stackHeight = nameLineHeight + timeLineHeight;
 
         return new RenderBlock(HeaderProfileSize, (canvas, x, y) =>
@@ -303,17 +303,17 @@ public static class PostImageRendererHelper
                 if (hasName && hasTimestamp)
                 {
                     var stackTop = middleY - stackHeight / 2;
-                    var nameBaseline = stackTop - nameFont.Metrics.Ascent;
-                    canvas.DrawText(nameText, textLeft, nameBaseline, SKTextAlign.Left, nameFont, textPaint);
-                    canvas.DrawText(timeText, textLeft, nameBaseline + nameLineHeight, SKTextAlign.Left, bodyFont, secondaryPaint);
+                    var nameBaseline = stackTop - style.TitleFont.Metrics.Ascent;
+                    canvas.DrawText(nameText, textLeft, nameBaseline, SKTextAlign.Left, style.TitleFont, style.TextPaint);
+                    canvas.DrawText(timeText, textLeft, nameBaseline + nameLineHeight, SKTextAlign.Left, style.BodyFont, style.SecondaryPaint);
                 }
                 else if (hasName)
                 {
-                    canvas.DrawText(nameText, textLeft, middleY - nameFont.Metrics.Ascent, SKTextAlign.Left, nameFont, textPaint);
+                    canvas.DrawText(nameText, textLeft, middleY - style.TitleFont.Metrics.Ascent, SKTextAlign.Left, style.TitleFont, style.TextPaint);
                 }
                 else if (hasTimestamp)
                 {
-                    canvas.DrawText(timeText, textLeft, middleY - bodyFont.Metrics.Ascent, SKTextAlign.Left, bodyFont, secondaryPaint);
+                    canvas.DrawText(timeText, textLeft, middleY - style.BodyFont.Metrics.Ascent, SKTextAlign.Left, style.BodyFont, style.SecondaryPaint);
                 }
             }
             finally { image?.Dispose(); }
@@ -324,17 +324,17 @@ public static class PostImageRendererHelper
     // avatar on the left and a text column on the right (bold nickname, contents via
     // the shared block builders, absolute timestamp). Media inside a comment is capped
     // at the comment UI width (200dp x 3) because the comment carousel limits it.
-    private static async Task<RenderBlock> BuildCommentBlockAsync(BaseCommentViewModel comment, float contentWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight, bool excludeMediaExceptFirst = false)
+    private static async Task<RenderBlock> BuildCommentBlockAsync(BaseCommentViewModel comment, float contentWidth, RenderStyle style, bool excludeMediaExceptFirst = false)
     {
         var image = await DownloadProfileImageOrDefaultAsync(comment.ProfileMedia?.Uri);
         var hasProfile = image != null;
 
         var columnWidth = contentWidth - CommentProfileSize - CommentColumnSpacing;
-        var innerBlocks = await BuildBlocksAsync(comment.GetRenderRawContents() ?? [], columnWidth, CommentMediaMaxWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight, excludeMediaExceptFirst);
+        var innerBlocks = await BuildBlocksAsync(comment.GetRenderRawContents() ?? [], columnWidth, CommentMediaMaxWidth, style, excludeMediaExceptFirst);
         var innerHeight = innerBlocks.Count > 0 ? innerBlocks.Sum(block => block.Height) + ContentSpacing * (innerBlocks.Count - 1) : 0;
 
-        var nameLineHeight = boldFont.Metrics.Descent - boldFont.Metrics.Ascent;
-        var timestampLineHeight = smallFont.Metrics.Descent - smallFont.Metrics.Ascent;
+        var nameLineHeight = style.BoldFont.Metrics.Descent - style.BoldFont.Metrics.Ascent;
+        var timestampLineHeight = style.SmallFont.Metrics.Descent - style.SmallFont.Metrics.Ascent;
         var columnHeight = nameLineHeight + CommentRowSpacing + innerHeight + CommentRowSpacing + timestampLineHeight;
         var height = Math.Max(CommentProfileSize, columnHeight);
 
@@ -360,8 +360,8 @@ public static class PostImageRendererHelper
                 }
 
                 var textLeft = x + CommentProfileSize + CommentColumnSpacing;
-                var nickname = TruncateText(comment.Nickname, boldFont, columnWidth);
-                if (nickname != null) canvas.DrawText(nickname, textLeft, y - boldFont.Metrics.Ascent, SKTextAlign.Left, boldFont, textPaint);
+                var nickname = TruncateText(comment.Nickname, style.BoldFont, columnWidth);
+                if (nickname != null) canvas.DrawText(nickname, textLeft, y - style.BoldFont.Metrics.Ascent, SKTextAlign.Left, style.BoldFont, style.TextPaint);
 
                 var cursorY = y + nameLineHeight + CommentRowSpacing;
                 for (var index = 0; index < innerBlocks.Count; index++)
@@ -371,7 +371,7 @@ public static class PostImageRendererHelper
                     if (index < innerBlocks.Count - 1) cursorY += ContentSpacing;
                 }
 
-                canvas.DrawText(BuildFullTimestampText(comment.CreatedAt, comment.ModifiedAt), textLeft, cursorY + CommentRowSpacing - smallFont.Metrics.Ascent, SKTextAlign.Left, smallFont, secondaryPaint);
+                canvas.DrawText(BuildFullTimestampText(comment.CreatedAt, comment.ModifiedAt), textLeft, cursorY + CommentRowSpacing - style.SmallFont.Metrics.Ascent, SKTextAlign.Left, style.SmallFont, style.SecondaryPaint);
             }
             finally { image?.Dispose(); }
         });
@@ -380,7 +380,7 @@ public static class PostImageRendererHelper
     // Assembles all comment blocks into a single list, inserting a thin light-gray
     // separator before the section so the comment area is visually distinct from the
     // post contents. Returns an empty list when there are no comments.
-    private static async Task<List<RenderBlock>> BuildCommentBlocksAsync(IEnumerable<BaseCommentViewModel> comments, float contentWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint, float lineHeight, bool excludeMediaExceptFirst = false)
+    private static async Task<List<RenderBlock>> BuildCommentBlocksAsync(IEnumerable<BaseCommentViewModel> comments, float contentWidth, RenderStyle style, bool excludeMediaExceptFirst = false)
     {
         var blocks = new List<RenderBlock>();
         var commentList = comments?.ToList() ?? [];
@@ -388,13 +388,13 @@ public static class PostImageRendererHelper
 
         blocks.Add(new RenderBlock(CommentSeparatorHeight + ContentSpacing * 2, (canvas, x, y) =>
         {
-            fillPaint.Color = ProgressTrackColor;
-            canvas.DrawRect(x, y + ContentSpacing, contentWidth, CommentSeparatorHeight, fillPaint);
+            style.FillPaint.Color = ProgressTrackColor;
+            canvas.DrawRect(x, y + ContentSpacing, contentWidth, CommentSeparatorHeight, style.FillPaint);
         }));
 
         foreach (var comment in commentList)
         {
-            var block = await BuildCommentBlockAsync(comment, contentWidth, bodyFont, boldFont, titleFont, smallFont, textPaint, primaryPaint, secondaryPaint, lightTextPaint, whitePaint, fillPaint, lineHeight, excludeMediaExceptFirst);
+            var block = await BuildCommentBlockAsync(comment, contentWidth, style, excludeMediaExceptFirst);
             if (block != null) blocks.Add(block);
         }
         return blocks;
@@ -419,7 +419,7 @@ public static class PostImageRendererHelper
         catch { return null; }
     }
 
-    private static async Task<RenderBlock> BuildStickerBlockAsync(StickerContent stickerContent, SKPaint whitePaint)
+    private static async Task<RenderBlock> BuildStickerBlockAsync(StickerContent stickerContent, RenderStyle style)
     {
         var mediaId = stickerContent.StickerMediaId;
         var isKakaoEmoticon = mediaId != null && mediaId.StartsWith(KakaoEmoticonUriHelper.EmoticonUrlPrefix, StringComparison.Ordinal);
@@ -435,13 +435,13 @@ public static class PostImageRendererHelper
                 var drawWidth = image.Width * scale;
                 var drawHeight = image.Height * scale;
                 var dest = new SKRect(x, y + (StickerSize - drawHeight) / 2, x + drawWidth, y + (StickerSize + drawHeight) / 2);
-                canvas.DrawImage(image, dest, new SKSamplingOptions(SKFilterMode.Linear), whitePaint);
+                canvas.DrawImage(image, dest, new SKSamplingOptions(SKFilterMode.Linear), style.WhitePaint);
             }
             finally { image.Dispose(); }
         });
     }
 
-    private static async Task<RenderBlock> BuildMediaBlockAsync(MediaContent mediaContent, float contentWidth, float maxMediaWidth, SKFont boldFont, SKPaint whitePaint, SKPaint fillPaint, float lineHeight)
+    private static async Task<RenderBlock> BuildMediaBlockAsync(MediaContent mediaContent, float contentWidth, float maxMediaWidth, RenderStyle style)
     {
         var isVideo = mediaContent.IsVideo;
         var mediaId = isVideo ? mediaContent.ThumbnailMediaId ?? mediaContent.MediaId : mediaContent.MediaId;
@@ -468,19 +468,19 @@ public static class PostImageRendererHelper
 
                 if (image != null)
                 {
-                    canvas.DrawImage(image, mediaRect, new SKSamplingOptions(SKFilterMode.Linear), whitePaint);
+                    canvas.DrawImage(image, mediaRect, new SKSamplingOptions(SKFilterMode.Linear), style.WhitePaint);
                 }
                 else
                 {
-                    fillPaint.Color = ProgressTrackColor;
-                    canvas.DrawRect(mediaRect, fillPaint);
+                    style.FillPaint.Color = ProgressTrackColor;
+                    canvas.DrawRect(mediaRect, style.FillPaint);
                 }
 
                 if (isVideo)
                 {
-                    fillPaint.Color = OverlayColor;
+                    style.FillPaint.Color = OverlayColor;
                     var center = new SKPoint(mediaRect.MidX, mediaRect.MidY);
-                    canvas.DrawCircle(center, PlayCircleRadius, fillPaint);
+                    canvas.DrawCircle(center, PlayCircleRadius, style.FillPaint);
 
                     var tri = PlayCircleRadius * 0.5f;
                     var triangle = new SKPathBuilder();
@@ -488,19 +488,19 @@ public static class PostImageRendererHelper
                     triangle.LineTo(center.X - tri * 0.6f, center.Y + tri);
                     triangle.LineTo(center.X + tri, center.Y);
                     triangle.Close();
-                    fillPaint.Color = SKColors.White;
-                    canvas.DrawPath(triangle.Detach(), fillPaint);
+                    style.FillPaint.Color = SKColors.White;
+                    canvas.DrawPath(triangle.Detach(), style.FillPaint);
                 }
                 // Description overlay (top, mirrors MediaContentTemplate: 40dp bar at VerticalOptions=Start)
                 if (hasDescription)
                 {
                     var barRect = new SKRect(x, y, x + drawWidth, y + DescriptionBarHeight);
-                    fillPaint.Color = OverlayColor;
-                    canvas.DrawRect(barRect, fillPaint);
+                    style.FillPaint.Color = OverlayColor;
+                    canvas.DrawRect(barRect, style.FillPaint);
 
-                    var lines = WrapRuns([new TextRun(mediaContent.Description, boldFont, whitePaint)], drawWidth);
-                    var fontHeight = boldFont.Metrics.Descent - boldFont.Metrics.Ascent;
-                    var baseline = barRect.MidY - (lines.Count - 1) * lineHeight / 2 - fontHeight / 2 - boldFont.Metrics.Ascent;
+                    var lines = WrapRuns([new TextRun(mediaContent.Description, style.BoldFont, style.WhitePaint)], drawWidth);
+                    var fontHeight = style.BoldFont.Metrics.Descent - style.BoldFont.Metrics.Ascent;
+                    var baseline = barRect.MidY - (lines.Count - 1) * style.LineHeight / 2 - fontHeight / 2 - style.BoldFont.Metrics.Ascent;
                     foreach (var line in lines.Take(2))
                     {
                         var lineWidth = line.Runs.Sum(run => run.Font.MeasureText(run.Text));
@@ -510,7 +510,7 @@ public static class PostImageRendererHelper
                             canvas.DrawText(run.Text, cursor, baseline, SKTextAlign.Left, run.Font, run.Paint);
                             cursor += run.Font.MeasureText(run.Text);
                         }
-                        baseline += lineHeight;
+                        baseline += style.LineHeight;
                     }
                 }
                 canvas.Restore();
@@ -519,11 +519,11 @@ public static class PostImageRendererHelper
         });
     }
 
-    private static RenderBlock BuildPollBlock(PollContent pollContent, float contentWidth, SKFont bodyFont, SKFont boldFont, SKFont titleFont, SKFont smallFont, SKPaint textPaint, SKPaint primaryPaint, SKPaint secondaryPaint, SKPaint fillPaint, float lineHeight)
+    private static RenderBlock BuildPollBlock(PollContent pollContent, float contentWidth, RenderStyle style)
     {
         var innerWidth = contentWidth - CardPadding * 2;
-        var questionLines = WrapRuns([new TextRun(pollContent.Question ?? string.Empty, titleFont, textPaint)], innerWidth);
-        var questionHeight = questionLines.Count * lineHeight;
+        var questionLines = WrapRuns([new TextRun(pollContent.Question ?? string.Empty, style.TitleFont, style.TextPaint)], innerWidth);
+        var questionHeight = questionLines.Count * style.LineHeight;
 
         var showResults = pollContent.TotalVotes > 0;
         var options = new List<(List<TextLine> Lines, float Percentage, string PercentageText)>();
@@ -533,9 +533,9 @@ public static class PostImageRendererHelper
             var percentage = showResults ? (double)option.VoteCount / pollContent.TotalVotes : 0;
             var percentageText = showResults ? $"{percentage:P0}" : null;
 
-            var measuredWidth = innerWidth - OptionPaddingX * 2 - (percentageText != null ? boldFont.MeasureText(percentageText) : 0);
-            var optionLines = WrapRuns([new TextRun(option.Text ?? string.Empty, bodyFont, textPaint)], measuredWidth);
-            var optionHeight = optionLines.Count * lineHeight + OptionPaddingY * 2 + (showResults ? ProgressBarHeight : 0);
+            var measuredWidth = innerWidth - OptionPaddingX * 2 - (percentageText != null ? style.BoldFont.MeasureText(percentageText) : 0);
+            var optionLines = WrapRuns([new TextRun(option.Text ?? string.Empty, style.BodyFont, style.TextPaint)], measuredWidth);
+            var optionHeight = optionLines.Count * style.LineHeight + OptionPaddingY * 2 + (showResults ? ProgressBarHeight : 0);
 
             options.Add((optionLines, (float)percentage, percentageText));
             optionsHeight += optionHeight;
@@ -544,18 +544,18 @@ public static class PostImageRendererHelper
 
         var footerText = $"{pollContent.TotalVoters}명 참여";
         var expiresText = GetExpiresAtText(pollContent);
-        var height = CardPadding * 2 + questionHeight + optionsHeight + 12 + smallFont.Size;
+        var height = CardPadding * 2 + questionHeight + optionsHeight + 12 + style.SmallFont.Size;
 
         return new RenderBlock(height, (canvas, x, y) =>
         {
             var cardRect = new SKRect(x, y, x + contentWidth, y + height);
-            fillPaint.Color = CardColor;
-            canvas.DrawRoundRect(cardRect, CardCornerRadius, CardCornerRadius, fillPaint);
+            style.FillPaint.Color = CardColor;
+            canvas.DrawRoundRect(cardRect, CardCornerRadius, CardCornerRadius, style.FillPaint);
 
             var cursorY = y + CardPadding;
 
             // Question
-            var questionBaseline = cursorY - titleFont.Metrics.Ascent;
+            var questionBaseline = cursorY - style.TitleFont.Metrics.Ascent;
             foreach (var line in questionLines)
             {
                 var lineX = x + CardPadding;
@@ -564,36 +564,36 @@ public static class PostImageRendererHelper
                     canvas.DrawText(run.Text, lineX, questionBaseline, SKTextAlign.Left, run.Font, run.Paint);
                     lineX += run.Font.MeasureText(run.Text);
                 }
-                questionBaseline += lineHeight;
+                questionBaseline += style.LineHeight;
             }
             cursorY += questionHeight + 12;
 
             // Options
             foreach (var (optionLines, percentage, percentageText) in options)
             {
-                var optionTextHeight = optionLines.Count * lineHeight;
+                var optionTextHeight = optionLines.Count * style.LineHeight;
                 var optionRect = new SKRect(x + CardPadding, cursorY, x + contentWidth - CardPadding, cursorY + optionTextHeight + OptionPaddingY * 2 + (showResults ? ProgressBarHeight : 0));
-                fillPaint.Color = SKColors.White;
-                canvas.DrawRoundRect(optionRect, OptionCornerRadius, OptionCornerRadius, fillPaint);
+                style.FillPaint.Color = SKColors.White;
+                canvas.DrawRoundRect(optionRect, OptionCornerRadius, OptionCornerRadius, style.FillPaint);
 
                 var innerY = optionRect.Top + OptionPaddingY;
                 if (showResults)
                 {
                     var trackRect = new SKRect(optionRect.Left + OptionPaddingX, innerY, optionRect.Right - OptionPaddingX, innerY + ProgressBarHeight);
-                    fillPaint.Color = ProgressTrackColor;
-                    canvas.DrawRoundRect(trackRect, ProgressBarHeight / 2, ProgressBarHeight / 2, fillPaint);
+                    style.FillPaint.Color = ProgressTrackColor;
+                    canvas.DrawRoundRect(trackRect, ProgressBarHeight / 2, ProgressBarHeight / 2, style.FillPaint);
 
                     if (percentage > 0)
                     {
                         var fillRect = new SKRect(trackRect.Left, trackRect.Top, trackRect.Left + trackRect.Width * percentage, trackRect.Bottom);
-                        fillPaint.Color = PrimaryColor;
-                        canvas.DrawRoundRect(fillRect, ProgressBarHeight / 2, ProgressBarHeight / 2, fillPaint);
+                        style.FillPaint.Color = PrimaryColor;
+                        canvas.DrawRoundRect(fillRect, ProgressBarHeight / 2, ProgressBarHeight / 2, style.FillPaint);
                     }
 
                     innerY += ProgressBarHeight;
                 }
 
-                var textBaseline = innerY - bodyFont.Metrics.Ascent;
+                var textBaseline = innerY - style.BodyFont.Metrics.Ascent;
                 foreach (var line in optionLines)
                 {
                     var lineX = optionRect.Left + OptionPaddingX;
@@ -602,27 +602,27 @@ public static class PostImageRendererHelper
                         canvas.DrawText(run.Text, lineX, textBaseline, SKTextAlign.Left, run.Font, run.Paint);
                         lineX += run.Font.MeasureText(run.Text);
                     }
-                    textBaseline += lineHeight;
+                    textBaseline += style.LineHeight;
                 }
 
                 if (percentageText != null)
                 {
-                    var pWidth = boldFont.MeasureText(percentageText);
-                    canvas.DrawText(percentageText, optionRect.Right - OptionPaddingX - pWidth, optionRect.Top + OptionPaddingY + (showResults ? ProgressBarHeight : 0) - boldFont.Metrics.Ascent, SKTextAlign.Left, boldFont, primaryPaint);
+                    var percentageWidth = style.BoldFont.MeasureText(percentageText);
+                    canvas.DrawText(percentageText, optionRect.Right - OptionPaddingX - percentageWidth, optionRect.Top + OptionPaddingY + (showResults ? ProgressBarHeight : 0) - style.BoldFont.Metrics.Ascent, SKTextAlign.Left, style.BoldFont, style.PrimaryPaint);
                 }
 
                 cursorY += optionRect.Height + OptionSpacing;
             }
 
             // Footer
-            var footerBaseline = cursorY - OptionSpacing + smallFont.Metrics.Ascent;
-            canvas.DrawText(footerText, x + CardPadding, footerBaseline, SKTextAlign.Left, smallFont, secondaryPaint);
-            var expiresWidth = smallFont.MeasureText(expiresText);
-            canvas.DrawText(expiresText, x + contentWidth - CardPadding - expiresWidth, footerBaseline, SKTextAlign.Left, smallFont, secondaryPaint);
+            var footerBaseline = cursorY - OptionSpacing + style.SmallFont.Metrics.Ascent;
+            canvas.DrawText(footerText, x + CardPadding, footerBaseline, SKTextAlign.Left, style.SmallFont, style.SecondaryPaint);
+            var expiresWidth = style.SmallFont.MeasureText(expiresText);
+            canvas.DrawText(expiresText, x + contentWidth - CardPadding - expiresWidth, footerBaseline, SKTextAlign.Left, style.SmallFont, style.SecondaryPaint);
         });
     }
 
-    private static async Task<RenderBlock> BuildExternalBlockAsync(ExternalUrlContent externalUrlContent, float contentWidth, SKFont bodyFont, SKFont titleFont, SKFont smallFont, SKPaint lightTextPaint, SKPaint whitePaint, SKPaint fillPaint)
+    private static async Task<RenderBlock> BuildExternalBlockAsync(ExternalUrlContent externalUrlContent, float contentWidth, RenderStyle style)
     {
         var image = externalUrlContent.ThumbnailImageUrl != null ? await DownloadImageAsync(externalUrlContent.ThumbnailImageUrl) : null;
         var height = ExternalUrlHeight;
@@ -641,16 +641,16 @@ public static class PostImageRendererHelper
                     var drawWidth = image.Width * scale;
                     var drawHeight = image.Height * scale;
                     var dest = new SKRect(rect.MidX - drawWidth / 2, rect.MidY - drawHeight / 2, rect.MidX + drawWidth / 2, rect.MidY + drawHeight / 2);
-                    canvas.DrawImage(image, dest, new SKSamplingOptions(SKFilterMode.Linear), whitePaint);
+                    canvas.DrawImage(image, dest, new SKSamplingOptions(SKFilterMode.Linear), style.WhitePaint);
                 }
                 else
                 {
-                    fillPaint.Color = ProgressTrackColor;
-                    canvas.DrawRect(rect, fillPaint);
+                    style.FillPaint.Color = ProgressTrackColor;
+                    canvas.DrawRect(rect, style.FillPaint);
                 }
 
-                fillPaint.Color = ExternalOverlayColor;
-                canvas.DrawRect(rect, fillPaint);
+                style.FillPaint.Color = ExternalOverlayColor;
+                canvas.DrawRect(rect, style.FillPaint);
                 canvas.Restore();
 
                 // Bottom text stack (description → title → domain), matching the template order
@@ -658,22 +658,22 @@ public static class PostImageRendererHelper
                 var textRight = rect.Right - 24;
                 var baseline = rect.Bottom - 36;
 
-                var description = TruncateText(externalUrlContent.Description, bodyFont, textRight - textLeft);
+                var description = TruncateText(externalUrlContent.Description, style.BodyFont, textRight - textLeft);
                 if (description != null)
                 {
-                    canvas.DrawText(description, textLeft, baseline, SKTextAlign.Left, bodyFont, lightTextPaint);
-                    baseline -= (bodyFont.Metrics.Descent - bodyFont.Metrics.Ascent) + 6;
+                    canvas.DrawText(description, textLeft, baseline, SKTextAlign.Left, style.BodyFont, style.LightTextPaint);
+                    baseline -= (style.BodyFont.Metrics.Descent - style.BodyFont.Metrics.Ascent) + 6;
                 }
 
-                var title = TruncateText(externalUrlContent.Title, titleFont, textRight - textLeft);
+                var title = TruncateText(externalUrlContent.Title, style.TitleFont, textRight - textLeft);
                 if (title != null)
                 {
-                    canvas.DrawText(title, textLeft, baseline, SKTextAlign.Left, titleFont, whitePaint);
-                    baseline -= (titleFont.Metrics.Descent - titleFont.Metrics.Ascent) + 6;
+                    canvas.DrawText(title, textLeft, baseline, SKTextAlign.Left, style.TitleFont, style.WhitePaint);
+                    baseline -= (style.TitleFont.Metrics.Descent - style.TitleFont.Metrics.Ascent) + 6;
                 }
 
-                var domain = TruncateText(externalUrlContent.Domain, smallFont, textRight - textLeft);
-                if (domain != null) canvas.DrawText(domain, textLeft, baseline, SKTextAlign.Left, smallFont, lightTextPaint);
+                var domain = TruncateText(externalUrlContent.Domain, style.SmallFont, textRight - textLeft);
+                if (domain != null) canvas.DrawText(domain, textLeft, baseline, SKTextAlign.Left, style.SmallFont, style.LightTextPaint);
             }
             finally { image?.Dispose(); }
         });
@@ -829,6 +829,10 @@ public static class PostImageRendererHelper
         }
         catch { return null; }
     }
+
+    // Aggregates the fonts, paints, and line height shared across the block builders
+    // so signatures don't have to thread every SkiaSharp object individually.
+    private sealed record RenderStyle(SKFont BodyFont, SKFont BoldFont, SKFont TitleFont, SKFont SmallFont, SKPaint TextPaint, SKPaint PrimaryPaint, SKPaint SecondaryPaint, SKPaint LightTextPaint, SKPaint WhitePaint, SKPaint FillPaint, float LineHeight);
 
     private sealed class RenderBlock(float height, Action<SKCanvas, float, float> draw)
     {
