@@ -1586,7 +1586,10 @@ public partial class EditPostPage : ContentPage
                     return (null, null);
                 }
 
-                var extension = mediaContent.IsVideo ? ".mp4" : mediaContent.MimeType?.Contains("png", StringComparison.OrdinalIgnoreCase) == true ? ".png" : ".jpg";
+                // The server stores every image as webp, so the extension must reflect the
+                // actual content: the KakaoStory upload path converts webp files to PNG and
+                // would otherwise upload the raw webp bytes as a .jpg and fail.
+                var extension = mediaContent.IsVideo ? ".mp4" : mediaContent.MimeType?.Contains("png", StringComparison.OrdinalIgnoreCase) == true ? ".png" : mediaContent.MimeType?.Contains("webp", StringComparison.OrdinalIgnoreCase) == true ? ".webp" : ".jpg";
                 var mediaFileName = Path.GetRandomFileName().Replace(".", string.Empty) + extension;
                 var mediaTempPath = Path.Combine(Path.GetTempPath(), mediaFileName);
                 await File.WriteAllBytesAsync(mediaTempPath, mediaBytes);
