@@ -17,6 +17,8 @@ public sealed partial class BodyContentControl : UserControl
 
     public static readonly DependencyProperty ContentsProperty = DependencyProperty.Register(nameof(Contents), typeof(List<BaseContent>), typeof(BodyContentControl), new PropertyMetadata(null, OnContentsPropertyChanged));
 
+    public static readonly DependencyProperty IsTextSelectionEnabledProperty = DependencyProperty.Register(nameof(IsTextSelectionEnabled), typeof(bool), typeof(BodyContentControl), new PropertyMetadata(false, OnIsTextSelectionEnabledPropertyChanged));
+
     private readonly BodyContentViewModel _viewModel = new();
 
     public BodyContentControl() => InitializeComponent();
@@ -26,6 +28,14 @@ public sealed partial class BodyContentControl : UserControl
         get => (List<BaseContent>)GetValue(ContentsProperty);
         set => SetValue(ContentsProperty, value);
     }
+
+    public bool IsTextSelectionEnabled
+    {
+        get => (bool)GetValue(IsTextSelectionEnabledProperty);
+        set => SetValue(IsTextSelectionEnabledProperty, value);
+    }
+
+    private static void OnIsTextSelectionEnabledPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((BodyContentControl)sender).MainRichTextBlock.IsTextSelectionEnabled = (bool)e.NewValue;
 
     private static Color AccentColor => (Color)Application.Current.Resources["SystemAccentColor"];
 

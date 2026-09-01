@@ -9,6 +9,6 @@
 
     <RichTextBlock
         x:Name="MainRichTextBlock"
-        IsTextSelectionEnabled="True"
+        IsTextSelectionEnabled="{x:Bind IsTextSelectionEnabled, Mode=OneWay}"
         TextWrapping="Wrap" />
 </UserControl>

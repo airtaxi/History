@@ -14,4 +14,7 @@ public sealed partial class BodyContentItemViewModel(List<BaseContent> textTypeC
     // Text truncation limits mirrored from the MAUI client's Utils constants.
     public int MaxTextLength => PostType == PostType.Timeline ? (HasMedias ? 80 : 400) : 1600;
     public int MaxTextLines => PostType == PostType.Timeline ? (HasMedias ? 8 : 12) : 27;
+
+    // Text selection is only enabled for Unwrapped posts.
+    public bool IsTextSelectionEnabled => PostType == PostType.Unwrapped;
 }
