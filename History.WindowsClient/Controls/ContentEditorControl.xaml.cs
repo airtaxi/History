@@ -7,14 +7,18 @@ using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI;
+using Microsoft.UI.Input;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
+using Windows.System;
 using Windows.UI;
+using Windows.UI.Core;
 
 namespace History.WindowsClient.Controls;
 
@@ -81,6 +85,19 @@ public sealed partial class ContentEditorControl : UserControl
     // Raised when the user pastes an image into the editor. The handler receives a
     // temporary file path containing the pasted image data.
     public event EventHandler<string> ImageInputRequested;
+
+    // Raised when the user presses Ctrl+Enter in the editor. The handler can submit
+    // the current editor contents (e.g. send a comment).
+    public event EventHandler SubmitRequested;
+
+    private void OnMainRichSuggestBoxPreviewKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != VirtualKey.Enter) return;
+        if (!InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down)) return;
+
+        e.Handled = true;
+        SubmitRequested?.Invoke(this, EventArgs.Empty);
+    }
 
     private void OnMainRichSuggestBoxSuggestionRequested(RichSuggestBox2 sender, SuggestionRequestedEventArgs args)
     {
