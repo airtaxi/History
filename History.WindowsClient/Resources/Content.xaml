@@ -9,11 +9,7 @@
     <!--  Content slot templates hosting the existing content UserControls.  -->
     <!--  Merged before Comment/Post so both can resolve these keys safely.  -->
     <DataTemplate x:Key="WrappedMediaContentTemplate" x:DataType="vm:WrappedMediaContentItemViewModel">
-        <controls:WrappedMediaContentControl
-            AllMediaContents="{x:Bind AllMediaContents, Mode=OneTime}"
-            IsParentPost="{x:Bind IsParentPost, Mode=OneTime}"
-            MediaContents="{x:Bind MediaContents, Mode=OneTime}"
-            PostType="{x:Bind PostType, Mode=OneTime}" />
+        <controls:WrappedMediaContentControl CarouselViewModel="{x:Bind CarouselViewModel, Mode=OneTime}" />
     </DataTemplate>
 
     <DataTemplate x:Key="BodyContentTemplate" x:DataType="vm:BodyContentItemViewModel">

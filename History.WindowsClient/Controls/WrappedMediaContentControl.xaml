@@ -187,13 +187,13 @@
 
     <Grid x:Name="RootGrid" SizeChanged="OnRootGridSizeChanged">
         <FlipView
-            Height="{x:Bind ViewModel.CarouselHeight, Mode=OneWay}"
+            Height="{x:Bind CarouselViewModel.CarouselHeight, Mode=OneWay}"
             HorizontalAlignment="Stretch"
             Background="#808080"
             CornerRadius="6"
             ItemTemplateSelector="{StaticResource MediaTemplateSelector}"
-            ItemsSource="{x:Bind ViewModel.Medias, Mode=OneWay}"
-            SelectedIndex="{x:Bind ViewModel.CarouselPosition, Mode=TwoWay}" />
+            ItemsSource="{x:Bind CarouselViewModel.Medias, Mode=OneWay}"
+            SelectedIndex="{x:Bind CarouselViewModel.CarouselPosition, Mode=TwoWay}" />
 
         <!--  Position Badge  -->
         <Border
@@ -203,11 +203,11 @@
             VerticalAlignment="Bottom"
             Background="#80808080"
             CornerRadius="16"
-            Visibility="{x:Bind ViewModel.CarouselSwipeEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+            Visibility="{x:Bind CarouselViewModel.CarouselSwipeEnabled, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
             <TextBlock
                 FontWeight="Bold"
                 Foreground="White"
-                Text="{x:Bind ViewModel.CarouselPositionText, Mode=OneWay}" />
+                Text="{x:Bind CarouselViewModel.CarouselPositionText, Mode=OneWay}" />
         </Border>
     </Grid>
 </UserControl>
