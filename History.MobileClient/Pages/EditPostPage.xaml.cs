@@ -1729,8 +1729,16 @@ public partial class EditPostPage : ContentPage
 
                 if (attachmentViewModels.Count > 0 && externalUrlContentViewModel != null)
                 {
-                    var proceed = await DisplayAlertAsync("경고", "카카오스토리 업로드 시, 외부 URL이 포함된 사진 및 동영상은 히스토리에서는 지원되지만, 카카오스토리에서는 지원되지 않습니다. 따라서 외부 URL은 카카오스토리에 게시되지 않습니다. 계속 진행하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
-                    if (!proceed) return false;
+                    // KakaoStory cannot scrap while media is attached. Like the share post
+                    // mirroring, the external URL is silently appended as plain text at the
+                    // end of the body instead of being dropped or prompting.
+                    var externalUrl = externalUrlContentViewModel.ExternalUrlContent.SourceUrl;
+                    if (!string.IsNullOrWhiteSpace(externalUrl))
+                    {
+                        var lastTextContent = contents.OfType<TextContent>().LastOrDefault();
+                        if (lastTextContent != null && !string.IsNullOrWhiteSpace(lastTextContent.Text)) lastTextContent.Text += $"\n\n{externalUrl}";
+                        else contents.Add(new TextContent { Text = externalUrl });
+                    }
                 }
                 var quoteDatas = KakaoStoryUtils.GetQuoteDataFromContents(contents);
 
