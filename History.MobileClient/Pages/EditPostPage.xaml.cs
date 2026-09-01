@@ -844,20 +844,25 @@ public partial class EditPostPage : ContentPage
                         // After-the-fact KakaoStory mirroring of a share post: the History share
                         // URL is appended after the user text, the rendered shared post image
                         // (containing only the first media of the shared post) and the remaining
-                        // media files replace the user's media attachments. An external URL card is
-                        // mirrored as plain text between the user text and the share link because
-                        // KakaoStory cannot scrap while media is attached. The temporary files are
+                        // media files replace the user's media attachments. External URL cards
+                        // (the user's own and the shared post's) are mirrored as plain text between
+                        // the user text and the share link because KakaoStory cannot scrap while
+                        // media is attached. The temporary files are
                         // disposed after the upload completes (or when the user declines).
                         var shareUrl = $"https://historyweb.cc/post/{result.Value.Id}";
                         var userText = MainTextContent.GetTextWithImageTokenReplacement("(스티커)").Trim();
                         var externalUrl = _externalUrlContentViewModel?.ExternalUrlContent.SourceUrl;
-                        var hasExternalUrl = !string.IsNullOrWhiteSpace(externalUrl);
-                        var hasUserText = !string.IsNullOrWhiteSpace(userText);
-                        string kakaoText;
-                        if (hasUserText && hasExternalUrl) kakaoText = $"{userText}\n\n{externalUrl}\n\n{shareUrl}";
-                        else if (hasExternalUrl) kakaoText = $"{externalUrl}\n\n{shareUrl}";
-                        else if (hasUserText) kakaoText = $"{userText}\n{shareUrl}";
-                        else kakaoText = shareUrl;
+                        var sharedPostExternalUrl = _post.Contents.OfType<ExternalUrlContent>().FirstOrDefault()?.SourceUrl;
+
+                        // The shared post's external URL card is already visible inside the
+                        // rendered shared post image; appending the URL as plain text keeps it
+                        // tappable on KakaoStory.
+                        var textParts = new List<string>();
+                        if (!string.IsNullOrWhiteSpace(userText)) textParts.Add(userText);
+                        if (!string.IsNullOrWhiteSpace(externalUrl)) textParts.Add(externalUrl);
+                        if (!string.IsNullOrWhiteSpace(sharedPostExternalUrl)) textParts.Add(sharedPostExternalUrl);
+                        textParts.Add(shareUrl);
+                        var kakaoText = string.Join("\n\n", textParts);
 
                         // KakaoStory cannot post a URL scrap and media at the same time;
                         // only the rendered shared post image and its media are attached.
