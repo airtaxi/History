@@ -36,7 +36,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
     private readonly SemaphoreSlim _switchSemaphore = new(1, 1);
 
-    public string UserId { get; }
+    public string UserId { get; private set; }
     public string KakaoUserId { get; private set; }
 
     public ObservableCollection<BasePostViewModel> Items { get; } = [];
@@ -94,11 +94,16 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
     // tab bar visible), mirroring UserPage's _isMyProfile flag.
     public bool IsMyProfileTab => _isMyProfile;
 
-    private bool IsMyProfilePage => _isKakaoStoryMode ? KakaoUserId == CommonShared.KakaoUserId : UserId == CommonShared.UserId;
+    private bool IsMyProfilePage => _isMyProfile || (_isKakaoStoryMode ? KakaoUserId == CommonShared.KakaoUserId : UserId == CommonShared.UserId);
 
     public UserProfileViewModel() : this(CommonShared.UserId, CommonShared.LastUsedKakaoStoryMode, true)
     {
         _isMyProfile = true;
+
+        // The saved Kakao Story mode is remembered from the pill row; the tab's own
+        // Kakao Story user id is resolved lazily from the saved session on first load
+        // (EnsureKakaoUserIdAsync), since the History user id is not a Kakao Story id.
+        if (_isKakaoStoryMode) KakaoUserId = null;
 
         UpdateHeaderSurface();
 
@@ -113,6 +118,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
         else UserId = userId;
 
         _isKakaoStoryMode = isKakaoStoryMode;
+        IsKakaoStoryMode = isKakaoStoryMode;
         _showPillGrid = showPillGrid;
         IsKakaoStoryFeaturesEnabled = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
 
@@ -131,8 +137,8 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
     {
         IsBackVisible = !_isMyProfile;
         // The AppShell tab (History my profile) already distinguishes modes with the pill grid,
-        // so the prefix is only applied to pushed pages in Kakao Story mode.
-        TitleText = _isKakaoStoryMode ? "카카오스토리 프로필" : (_isMyProfile ? "내 프로필" : "프로필");
+        // so the Kakao Story prefix is only applied to pushed pages.
+        TitleText = _isMyProfile ? "내 프로필" : (_isKakaoStoryMode ? "카카오스토리 프로필" : "프로필");
         IsBanVisible = !IsMyProfilePage;
         IsMemoVisible = !_isKakaoStoryMode && !IsMyProfilePage;
         IsMessageVisible = !IsMyProfilePage;
@@ -141,10 +147,10 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
 
         if (_isKakaoStoryMode)
         {
-            // Kakao Story profile: only back/layout/ban/friends remain; History-only header actions are hidden.
+            // Kakao Story profile: messaging and memo are History-only header actions; the
+            // AppShell tab keeps its own chrome (settings/write post) regardless of mode.
             IsMessageVisible = false;
             IsMemoVisible = false;
-            IsSettingsVisible = false;
         }
     }
 
@@ -184,7 +190,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
             var isKakaoStoryMode = _isKakaoStoryMode;
             if (isKakaoStoryMode)
             {
-                if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return;
+                if ((await EnsureKakaoUserIdAsync()) == false) return;
 
                 var profileObject = await App.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetProfileFeed(KakaoUserId, null));
                 // The mode can change while the feed loads (fast pill switching); discard the stale result, the pending switch reloads.
@@ -300,22 +306,28 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
         finally { _fetchSemaphore.Release(); }
     }
 
+    // Resolves the Kakao Story user id for the my-profile tab when the saved pill mode
+    // is Kakao Story; the History user id must never be used as a Kakao Story id.
+    // The id is resolved lazily from the saved session so the profile feed can be fetched.
+    private async Task<bool> EnsureKakaoUserIdAsync()
+    {
+        if (KakaoUserId != null) return true;
+
+        if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return false;
+
+        KakaoUserId = CommonShared.KakaoUserId;
+        if (KakaoUserId != null) return true;
+
+        await App.TopPage.DisplayAlertAsync("오류", "카카오스토리 사용자 정보를 불러오지 못했습니다.", Constants.PromptOk);
+        return false;
+    }
+
     public async Task SwitchModeAsync(bool isKakaoStoryMode)
     {
         if (_isKakaoStoryMode == isKakaoStoryMode) return;
 
-        if (isKakaoStoryMode && KakaoUserId == null)
-        {
-            // The pill is only visible on my profile; the Kakao Story user id is
-            // resolved from the saved session so the profile feed can be fetched.
-            if ((await KakaoStoryUtils.EnsureLoggedInAsync(App.TopPage)) == false) return;
-            KakaoUserId = CommonShared.KakaoUserId;
-            if (KakaoUserId == null)
-            {
-                await App.TopPage.DisplayAlertAsync("오류", "카카오스토리 사용자 정보를 불러오지 못했습니다.", Constants.PromptOk);
-                return;
-            }
-        }
+        if (isKakaoStoryMode && (await EnsureKakaoUserIdAsync()) == false) return;
+        else if (!isKakaoStoryMode && UserId == null) UserId = CommonShared.UserId;
 
         await _switchSemaphore.WaitAsync();
         try

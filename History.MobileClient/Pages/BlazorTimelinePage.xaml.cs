@@ -34,6 +34,7 @@ public partial class BlazorTimelinePage : ContentPage
         });
 
         _viewModel.ModeChanged += OnModeChanged;
+        SearchImage.IsVisible = !_viewModel.IsKakaoStoryMode;
 
         WeakReferenceMessenger.Default.Register<BlazorWebViewHibernationMessage>(this, OnBlazorWebViewHibernationMessageReceived);
 
