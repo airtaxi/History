@@ -37,6 +37,7 @@ public partial class FriendListPage : ContentPage
         InitializeComponent();
 
         PillGrid.IsVisible = true;
+        _isKakaoStoryMode = CommonShared.LastUsedKakaoStoryMode;
         UpdatePillVisuals();
         ApplyKakaoStoryFeaturesVisibility();
 
@@ -284,6 +285,7 @@ public partial class FriendListPage : ContentPage
             // Another tap may have applied this mode already while we waited.
             if (_isKakaoStoryMode == isKakaoStoryMode) return;
             _isKakaoStoryMode = isKakaoStoryMode;
+            CommonShared.LastUsedKakaoStoryMode = isKakaoStoryMode;
             UpdatePillVisuals();
             await RefreshAsync();
         }

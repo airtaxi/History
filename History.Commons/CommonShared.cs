@@ -13,4 +13,16 @@ public partial class CommonShared
     public static List<FriendData.Profile> KakaoFriends { get; set; }
     public static DiscoveryOption LastUsedPostDiscoveryOption { get; set; }
     public static string KakaoUserId { get; set; }
+
+    // Last selected History/Kakao Story pill mode, persisted across app restarts.
+    public static bool LastUsedKakaoStoryMode
+    {
+        get => _lastUsedKakaoStoryMode ??= Configuration.GetValue<bool?>("LastUsedKakaoStoryMode") ?? false;
+        set
+        {
+            _lastUsedKakaoStoryMode = value;
+            Configuration.SetValue("LastUsedKakaoStoryMode", value);
+        }
+    }
+    private static bool? _lastUsedKakaoStoryMode;
 }

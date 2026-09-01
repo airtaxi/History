@@ -22,6 +22,7 @@ public partial class AddFriendsPage : ContentPage
 		InitializeComponent();
 
         PillGrid.IsVisible = true;
+        _isKakaoStoryMode = CommonShared.LastUsedKakaoStoryMode;
         UpdatePillVisuals();
         ApplyKakaoStoryFeaturesVisibility();
 
@@ -179,6 +180,7 @@ public partial class AddFriendsPage : ContentPage
             // Another tap may have applied this mode already while we waited.
             if (_isKakaoStoryMode == isKakaoStoryMode) return;
             _isKakaoStoryMode = isKakaoStoryMode;
+            CommonShared.LastUsedKakaoStoryMode = isKakaoStoryMode;
             UpdatePillVisuals();
             MainSearchBar.Placeholder = _isKakaoStoryMode ? "카카오스토리 ID 검색" : "친구의 닉네임 또는 핸들 검색";
             MainSearchBar.Text = string.Empty;

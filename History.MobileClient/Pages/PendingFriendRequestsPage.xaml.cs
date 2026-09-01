@@ -22,6 +22,7 @@ public partial class PendingFriendRequestsPage : ContentPage
 		InitializeComponent();
 
         PillGrid.IsVisible = true;
+        _isKakaoStoryMode = CommonShared.LastUsedKakaoStoryMode;
         UpdatePillVisuals();
         UpdatePillBadges();
         ApplyKakaoStoryFeaturesVisibility();
@@ -162,6 +163,7 @@ public partial class PendingFriendRequestsPage : ContentPage
             // Another tap may have applied this mode already while we waited.
             if (_isKakaoStoryMode == isKakaoStoryMode) return;
             _isKakaoStoryMode = isKakaoStoryMode;
+            CommonShared.LastUsedKakaoStoryMode = isKakaoStoryMode;
             UpdatePillVisuals();
             await RefreshAsync();
         }

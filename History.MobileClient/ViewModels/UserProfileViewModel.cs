@@ -96,7 +96,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
 
     private bool IsMyProfilePage => _isKakaoStoryMode ? KakaoUserId == CommonShared.KakaoUserId : UserId == CommonShared.UserId;
 
-    public UserProfileViewModel() : this(CommonShared.UserId, false, true)
+    public UserProfileViewModel() : this(CommonShared.UserId, CommonShared.LastUsedKakaoStoryMode, true)
     {
         _isMyProfile = true;
 
@@ -324,6 +324,7 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
             if (_isKakaoStoryMode == isKakaoStoryMode) return;
             _isKakaoStoryMode = isKakaoStoryMode;
             IsKakaoStoryMode = isKakaoStoryMode;
+            CommonShared.LastUsedKakaoStoryMode = isKakaoStoryMode;
 
             UserPage.ShouldRefresh = false;
             UserPage.ShouldRefreshKakaoStory = false;

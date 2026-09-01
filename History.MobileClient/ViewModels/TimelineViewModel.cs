@@ -53,6 +53,7 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
 
     public TimelineViewModel()
     {
+        _isKakaoStoryMode = CommonShared.LastUsedKakaoStoryMode;
         IsKakaoStoryFeaturesEnabled = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
 
         WeakReferenceMessenger.Default.Register<ValueDeletedMessage<PostResponseDto>>(this, OnHistoryPostDeletedMessageReceived);
@@ -221,6 +222,7 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
             // Another tap may have applied this mode already while we waited.
             if (_isKakaoStoryMode == isKakaoStoryMode) return;
             _isKakaoStoryMode = isKakaoStoryMode;
+            CommonShared.LastUsedKakaoStoryMode = isKakaoStoryMode;
 
             ModeChanged?.Invoke(isKakaoStoryMode);
 
