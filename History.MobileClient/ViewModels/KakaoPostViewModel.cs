@@ -286,6 +286,7 @@ public partial class KakaoPostViewModel : BasePostViewModel
 
         options.Add("게시글 URL 복사");
         options.Add("게시글 이미지로 저장");
+        options.Add("게시글만 이미지로 저장");
 
         var action = await App.Page.DisplayActionSheetAsync("카카오스토리 게시물 옵션", Constants.PromptCancel, null, [.. options]);
         if (action == null || action == Constants.PromptCancel) return;
@@ -316,6 +317,13 @@ public partial class KakaoPostViewModel : BasePostViewModel
 
             var includeComments = await ConfirmIncludeCommentsAsync();
             await App.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), this, includeComments ? Comments : null));
+        }
+        else if (action == "게시글만 이미지로 저장")
+        {
+            var confirm = await App.Page.DisplayAlertAsync("게시글만 이미지로 저장", "이 게시글을 댓글 없이 이미지로 저장하시겠습니까?", Constants.PromptOk, Constants.PromptCancel);
+            if (!confirm) return;
+
+            await App.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), this, null));
         }
     }
 
