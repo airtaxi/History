@@ -27,6 +27,7 @@ public sealed partial class ContentEditorControl : UserControl
     private const double StickerFallbackImageHeight = 90;
 
     public static readonly DependencyProperty PlaceholderTextProperty = DependencyProperty.Register(nameof(PlaceholderText), typeof(string), typeof(ContentEditorControl), new PropertyMetadata(string.Empty));
+    public static readonly DependencyProperty AllowHashtagProperty = DependencyProperty.Register(nameof(AllowHashtag), typeof(bool), typeof(ContentEditorControl), new PropertyMetadata(true, OnAllowHashtagChanged));
 
     private ContentEditorViewModel _viewModel;
 
@@ -42,6 +43,21 @@ public sealed partial class ContentEditorControl : UserControl
         get => (string)GetValue(PlaceholderTextProperty);
         set => SetValue(PlaceholderTextProperty, value);
     }
+
+    // When false, the '#' prefix is removed so hashtag suggestions are not offered (e.g. comments).
+    public bool AllowHashtag
+    {
+        get => (bool)GetValue(AllowHashtagProperty);
+        set => SetValue(AllowHashtagProperty, value);
+    }
+
+    private static void OnAllowHashtagChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
+    {
+        if (dependencyObject is not ContentEditorControl control) return;
+        control.UpdatePrefixes();
+    }
+
+    private void UpdatePrefixes() => MainRichSuggestBox.Prefixes = AllowHashtag ? "@#" : "@";
 
     // When true, @-mention suggestions use the logged-in Kakao Story friends (CommonShared.KakaoFriends)
     // instead of the History friends (CommonShared.Friends).

@@ -26,7 +26,6 @@
         ItemTemplateSelector="{StaticResource SuggestionTemplateSelector}"
         Paste="OnMainRichSuggestBoxPaste"
         PlaceholderText="{x:Bind PlaceholderText, Mode=OneWay}"
-        Prefixes="@#"
         SuggestionChosen="OnMainRichSuggestBoxSuggestionChosen"
         SuggestionRequested="OnMainRichSuggestBoxSuggestionRequested" />
 </UserControl>
