@@ -28,9 +28,14 @@ public sealed partial class ContentEditorControl : UserControl
 
     public static readonly DependencyProperty PlaceholderTextProperty = DependencyProperty.Register(nameof(PlaceholderText), typeof(string), typeof(ContentEditorControl), new PropertyMetadata(string.Empty));
 
-    private readonly ContentEditorViewModel _viewModel = new();
+    private ContentEditorViewModel _viewModel;
 
     public ContentEditorControl() => InitializeComponent();
+
+    public void Initialize(BaseViewModel baseViewModel)
+    {
+        _viewModel = new(baseViewModel);
+    }
 
     public string PlaceholderText
     {
@@ -42,8 +47,8 @@ public sealed partial class ContentEditorControl : UserControl
     // instead of the History friends (CommonShared.Friends).
     public bool IsKakaoMentionMode
     {
-        get => _viewModel.IsKakaoMentionMode;
-        set => _viewModel.IsKakaoMentionMode = value;
+        get => _viewModel?.IsKakaoMentionMode ?? false;
+        set => _viewModel?.IsKakaoMentionMode = value;
     }
 
     // Plain document text with token ZWSP padding and inline image objects removed.
@@ -63,8 +68,8 @@ public sealed partial class ContentEditorControl : UserControl
 
     private void OnMainRichSuggestBoxSuggestionRequested(RichSuggestBox2 sender, SuggestionRequestedEventArgs args)
     {
-        if (args.Prefix == "@") sender.ItemsSource = _viewModel.GetUserSuggestions(args.QueryText);
-        else if (args.Prefix == "#") sender.ItemsSource = _viewModel.GetHashtagSuggestions(args.QueryText);
+        if (args.Prefix == "@") sender.ItemsSource = _viewModel?.GetUserSuggestions(args.QueryText);
+        else if (args.Prefix == "#") sender.ItemsSource = _viewModel?.GetHashtagSuggestions(args.QueryText);
     }
 
     private async void OnMainRichSuggestBoxPaste(RichSuggestBox2 sender, TextControlPasteEventArgs args)
@@ -103,7 +108,7 @@ public sealed partial class ContentEditorControl : UserControl
     {
         if (args.Prefix == "@")
         {
-            if (args.SelectedItem is not MentionUserViewModel userViewModel) return;
+            if (args.SelectedItem is not BaseFriendshipViewModel userViewModel) return;
 
             args.DisplayText = userViewModel.Nickname;
             args.Format.BackgroundColor = AccentColor;

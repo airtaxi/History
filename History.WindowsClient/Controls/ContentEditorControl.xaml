@@ -11,50 +11,13 @@
     mc:Ignorable="d">
 
     <UserControl.Resources>
-        <DataTemplate x:Key="UserMentionTemplate" x:DataType="vm:MentionUserViewModel">
-            <Grid Padding="8" ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="32" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <PersonPicture
-                    Grid.Column="0"
-                    Width="32"
-                    Height="32"
-                    ProfilePicture="{x:Bind ProfileThumbnailImageSource}" />
-                <StackPanel
-                    Grid.Column="1"
-                    VerticalAlignment="Center"
-                    Orientation="Horizontal"
-                    Spacing="4">
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        FontWeight="Bold"
-                        MaxLines="1"
-                        Text="{x:Bind Nickname, Mode=OneWay}"
-                        TextTrimming="CharacterEllipsis" />
-                    <FontIcon
-                        VerticalAlignment="Center"
-                        FontSize="14"
-                        Foreground="#1a5bf3"
-                        Glyph="&#xF760;"
-                        Visibility="{x:Bind IsModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
-                    <FontIcon
-                        VerticalAlignment="Center"
-                        FontSize="14"
-                        Foreground="#f78501"
-                        Glyph="&#xF760;"
-                        Visibility="{x:Bind IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
         <DataTemplate x:Key="HashtagTemplate" x:DataType="x:String">
             <TextBlock Padding="8,4" Text="{x:Bind}" />
         </DataTemplate>
         <vm:SuggestionTemplateSelector
             x:Key="SuggestionTemplateSelector"
-            HashtagTemplate="{StaticResource HashtagTemplate}"
-            UserMentionTemplate="{StaticResource UserMentionTemplate}" />
+            FriendshipTemplate="{StaticResource FriendshipTemplate}"
+            HashtagTemplate="{StaticResource HashtagTemplate}" />
     </UserControl.Resources>
 
     <controls:RichSuggestBox2

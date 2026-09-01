@@ -5,14 +5,14 @@ namespace History.WindowsClient.ViewModels;
 
 public partial class SuggestionTemplateSelector : DataTemplateSelector
 {
-    public DataTemplate UserMentionTemplate { get; set; }
+    public DataTemplate FriendshipTemplate { get; set; }
 
     public DataTemplate HashtagTemplate { get; set; }
 
     protected override DataTemplate SelectTemplateCore(object item) =>
         item switch
         {
-            MentionUserViewModel => UserMentionTemplate,
+            BaseFriendshipViewModel => FriendshipTemplate,
             string => HashtagTemplate,
             _ => null,
         };
