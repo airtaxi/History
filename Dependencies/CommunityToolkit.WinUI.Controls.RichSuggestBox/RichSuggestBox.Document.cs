@@ -144,9 +144,23 @@ public partial class RichSuggestBox2
 
     private bool TryCommitSuggestionIntoDocument(ITextRange range, string displayText, Guid id, ITextCharacterFormat format, bool addTrailingSpace)
     {
+        // When the display text equals the query text (e.g. a single-character nickname),
+        // SetText below is skipped, so a live IME composition would survive into the
+        // PadRange/link mutations and corrupt the token range. Ending the composition
+        // first mirrors the user pressing an arrow key while composing.
+        var compositionWasActive = _textCompositionActive;
+        if (compositionWasActive)
+        {
+            if (TextDocument != null)
+            {
+                TextDocument.Selection.SetRange(range.EndPosition, range.EndPosition);
+            }
+        }
+
         // We don't want to set text when the display text doesn't change since it may lead to unexpected caret move.
+        // However, an active IME composition must be terminated by SetText even when the text is identical.
         range.GetText(TextGetOptions.NoHidden, out var existingText);
-        if (existingText != displayText)
+        if (existingText != displayText || compositionWasActive)
         {
             range.SetText(TextSetOptions.Unhide, displayText);
         }
