@@ -33,14 +33,11 @@ public sealed partial class ContentEditorControl : UserControl
     public static readonly DependencyProperty PlaceholderTextProperty = DependencyProperty.Register(nameof(PlaceholderText), typeof(string), typeof(ContentEditorControl), new PropertyMetadata(string.Empty));
     public static readonly DependencyProperty AllowHashtagProperty = DependencyProperty.Register(nameof(AllowHashtag), typeof(bool), typeof(ContentEditorControl), new PropertyMetadata(true, OnAllowHashtagChanged));
 
-    private ContentEditorViewModel _viewModel;
+private ContentEditorViewModel _viewModel;
 
     public ContentEditorControl() => InitializeComponent();
 
-    public void Initialize(BaseViewModel baseViewModel)
-    {
-        _viewModel = new(baseViewModel);
-    }
+    public void Initialize(BaseViewModel baseViewModel) => _viewModel = new(baseViewModel);
 
     public string PlaceholderText
     {
@@ -176,24 +173,25 @@ public sealed partial class ContentEditorControl : UserControl
         document.Selection.SetRange(0, 0);
     }
 
-    public List<BaseContent> GetContents()
+public List<BaseContent> GetContents()
     {
         var result = new List<BaseContent>();
-        var fullText = GetPlainText();
+        var document = Document;
+        document.GetText(TextGetOptions.None, out var rawText);
         var tokens = MainRichSuggestBox.Tokens
             .Where(token => token.RangeStart.HasValue && token.RangeEnd.HasValue)
             .OrderBy(token => token.RangeStart.Value)
             .ToList();
 
-        var plainTextStartIndex = 0;
+        var previousEndIndex = 0;
         foreach (var token in tokens)
         {
-            var tokenStartIndex = Math.Clamp(token.RangeStart.Value, plainTextStartIndex, fullText.Length);
-            var tokenEndIndex = Math.Clamp(token.RangeEnd.Value, plainTextStartIndex, fullText.Length);
+            var tokenStartIndex = Math.Clamp(token.RangeStart.Value, previousEndIndex, rawText.Length);
+            var tokenEndIndex = Math.Clamp(token.RangeEnd.Value, previousEndIndex, rawText.Length);
 
-            if (tokenStartIndex > plainTextStartIndex)
+            if (tokenStartIndex > previousEndIndex)
             {
-                var plainText = fullText[plainTextStartIndex..tokenStartIndex];
+                var plainText = CleanPlainText(rawText[previousEndIndex..tokenStartIndex]);
                 if (!string.IsNullOrEmpty(plainText)) result.Add(new TextContent { Text = plainText });
             }
 
@@ -207,19 +205,23 @@ public sealed partial class ContentEditorControl : UserControl
                 else if (displayText.Length > 0) result.Add(new TextContent { Text = displayText });
             }
 
-            plainTextStartIndex = tokenEndIndex;
+previousEndIndex = tokenEndIndex;
         }
 
-        if (plainTextStartIndex < fullText.Length)
+        if (previousEndIndex < rawText.Length)
         {
-            var remainingText = fullText[plainTextStartIndex..];
+            var remainingText = CleanPlainText(rawText[previousEndIndex..]);
             if (!string.IsNullOrEmpty(remainingText)) result.Add(new TextContent { Text = remainingText });
         }
 
         return result;
     }
 
-    public List<string> GetHashtags() => [.. GetContents()
+    // Strips token artifacts (ZWSP padding and inline image placeholders) from raw document text.
+    private static string CleanPlainText(string rawText) => rawText.Replace(ZeroWidthSpace, string.Empty).Replace(ObjectReplacementCharacter, string.Empty);
+
+    public List<string> GetHashtags() =>
+    [.. GetContents()
         .OfType<HashtagContent>()
         .Select(hashtagContent => hashtagContent.Tag)
     ];
@@ -272,24 +274,30 @@ public sealed partial class ContentEditorControl : UserControl
         formatHashtag.ForegroundColor = AccentColor;
         formatHashtag.Bold = FormatEffect.On;
 
-        foreach (var (token, startIndex) in tokens)
+foreach (var (token, startIndex) in tokens)
         {
             var tokenRange = document.GetRange(startIndex, startIndex + token.DisplayText.Length);
             if (token.Item is StickerContent stickerContent)
             {
-                PadStickerRange(tokenRange, formatMention);
                 await InsertStickerImageAsync(tokenRange, stickerContent);
+                PadStickerRange(tokenRange, formatMention);
             }
-            else tokenRange.CharacterFormat.SetClone(token.DisplayText[0] == '#' ? formatHashtag : formatMention);
+            else
+            {
+                // Padding mirrors the control's PadRange so token validation matches the link range text.
+                var format = token.DisplayText[0] == '#' ? formatHashtag : formatMention;
+                tokenRange.CharacterFormat.SetClone(format);
+                PadStickerRange(tokenRange, format);
+            }
 
             tokenRange.Link = $"\"{token.Id}\"";
+            MainRichSuggestBox.RegisterTokenRange(token, tokenRange);
         }
 
-        MainRichSuggestBox.AddTokens(tokens.Select(tuple => tuple.Token));
         document.Selection.SetRange(text.Length, text.Length);
     }
 
-    public async Task<bool> InsertStickerAsync(StickerContent stickerContent)
+public async Task<bool> InsertStickerAsync(StickerContent stickerContent)
     {
         if (stickerContent == null || Document == null) return false;
 
@@ -310,19 +318,21 @@ public sealed partial class ContentEditorControl : UserControl
             insertPosition = documentText.Length + 1;
         }
 
-        var token = new RichSuggestToken(Guid.NewGuid(), ObjectReplacementCharacter) { Item = stickerContent };
+var token = new RichSuggestToken(Guid.NewGuid(), ObjectReplacementCharacter) { Item = stickerContent, SkipValidation = true };
         var range = document.GetRange(insertPosition, insertPosition);
+        // InsertImage replaces the range content, so the range must not be collapsed;
+        // the ZWSP padding reserves a non-empty slot that the image replaces.
         PadStickerRange(range, null);
         await InsertStickerImageAsync(range, stickerContent, imageData);
-        range.Link = $"\"{token.Id}\"";
-        MainRichSuggestBox.AddTokens([token]);
+        var imageRange = document.GetRange(insertPosition, insertPosition + 1);
+        MainRichSuggestBox.RegisterTokenRange(token, imageRange);
 
-        document.Selection.SetRange(range.EndPosition, range.EndPosition);
+        document.Selection.SetRange(imageRange.EndPosition, imageRange.EndPosition);
         return true;
     }
 
-    // Wrap the object replacement character with ZWSP padding and track it as a hyperlink,
-    // mirroring the token layout RichSuggestBox expects (ZWSP + content + ZWSP inside a link).
+// Pads the range with ZWSPs: gives InsertImage a non-empty slot to replace,
+    // and mirrors the control's PadRange token layout (ZWSP + content + ZWSP inside a link).
     private static void PadStickerRange(ITextRange range, ITextCharacterFormat format)
     {
         var startPosition = range.StartPosition;

@@ -102,7 +102,7 @@ public partial class RichSuggestBox2
     {
         foreach (var (_, token) in _tokens)
         {
-            token.Active = false;
+            if (!token.SkipValidation) token.Active = false;
         }
         if (TextDocument != null)
         {

@@ -35,6 +35,11 @@ public partial class RichSuggestToken : INotifyPropertyChanged
     public object? Item { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the token is exempt from link validation.
+    /// </summary>
+    public bool SkipValidation { get; set; }
+
+    /// <summary>
     /// Gets the start position of the text range.
     /// </summary>
     public int? RangeStart { get; private set; }

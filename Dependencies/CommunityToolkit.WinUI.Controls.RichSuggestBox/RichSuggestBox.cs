@@ -124,6 +124,23 @@ public partial class RichSuggestBox2 : ItemsControl
     }
 
     /// <summary>
+    /// Registers a token with an explicitly provided document range, bypassing link-text validation.
+    /// </summary>
+    /// <param name="token">The token to register.</param>
+    /// <param name="range">The document range the token covers.</param>
+    public void RegisterTokenRange(RichSuggestToken token, ITextRange range)
+    {
+        lock (_tokensLock)
+        {
+            _tokens.TryAdd($"\"{token.Id}\"", token);
+            token.UpdateTextRange(range);
+            token.Active = true;
+        }
+
+        UpdateVisibleTokenList();
+    }
+
+    /// <summary>
     /// Populate the <see cref="RichSuggestBox"/> with an existing Rich Text Format (RTF) document and a collection of tokens.
     /// </summary>
     /// <param name="rtf">The Rich Text Format (RTF) text to be imported.</param>
