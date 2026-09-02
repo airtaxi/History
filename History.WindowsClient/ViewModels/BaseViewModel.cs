@@ -15,6 +15,7 @@ public abstract partial class BaseViewModel : ObservableObject
     public event EventHandler<MessageDialogRequestedEventArgs> MessageDialogRequested;
     public event EventHandler<InputDialogRequestedEventArgs> InputDialogRequested;
     public event EventHandler<ContentDialogRequestedEventArgs> ContentDialogRequested;
+    public event EventHandler<SelectionDialogRequestedEventArgs> SelectionDialogRequested;
     public event EventHandler<PickerRequestedEventArgs<FileOpenPickerParameters, PickFileResult>> FilePickRequested;
     public event EventHandler<PickerRequestedEventArgs<FileOpenPickerParameters, IReadOnlyList<PickFileResult>>> FilesPickRequested;
     public event EventHandler<PickerRequestedEventArgs<FileSavePickerParameters, PickFileResult>> SaveFileRequested;
@@ -47,6 +48,16 @@ public abstract partial class BaseViewModel : ObservableObject
     {
         var args = new ContentDialogRequestedEventArgs(dialog);
         ContentDialogRequested?.Invoke(this, args);
+        if (args.ResultTask == null) return null;
+
+        return await args.ResultTask;
+    }
+
+    // Selection dialog requests fulfilled by the host page (mirrors ShowInputDialogAsync).
+    public async Task<string> ShowSelectionDialogAsync(string title, IReadOnlyList<string> options)
+    {
+        var args = new SelectionDialogRequestedEventArgs(title, options);
+        SelectionDialogRequested?.Invoke(this, args);
         if (args.ResultTask == null) return null;
 
         return await args.ResultTask;

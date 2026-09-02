@@ -143,11 +143,11 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
         if (Comment.User.UserId != CommonShared.UserId && CommonShared.MyRank >= Rank.Moderator)
         {
             var reportTypes = Enum.GetValues<ReportType>().Select(x => x.ToDisplayString()).ToArray();
-            var action = await MainWindow.Frame.ShowSelectionDialogAsync("제재 카테고리 선택", reportTypes);
+            var action = await ShowSelectionDialogAsync("제재 카테고리 선택", reportTypes);
             if (action == null) return;
             var reportType = ReportTypeExtensions.FromDisplayString(action);
 
-            var reason = await MainWindow.Frame.ShowInputDialogAsync(new InputDialogParameters("댓글 삭제", "댓글을 삭제하는 이유를 입력해주세요."));
+            var reason = await ShowInputDialogAsync(new InputDialogParameters("댓글 삭제", "댓글을 삭제하는 이유를 입력해주세요."));
             if (string.IsNullOrWhiteSpace(reason)) return;
 
             var deleteResult = await ParentViewModel.DialogBaseViewModel.ExecuteRequestAsync(new ModerationDeleteComment(Comment.Id, reason, reportType));
