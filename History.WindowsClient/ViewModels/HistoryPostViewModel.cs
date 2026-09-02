@@ -394,7 +394,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         var result = await RefreshAsync();
         if (result.IsFailure) return;
 
-        MainWindow.Frame.Navigate(typeof(PostPage), Post);
+        BaseViewModel.RequestNavigation(typeof(PostPage), Post);
     }
 
     // TODO: Navigate to the user profile page once it is implemented.

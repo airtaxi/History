@@ -33,6 +33,7 @@ public partial class BaseControl : UserControl
         ViewModel.LoadingStateRequested += OnLoadingStateRequested;
         ViewModel.ShowLoadingRequested += OnShowLoadingRequested;
         ViewModel.HideLoadingRequested += OnHideLoadingRequested;
+        ViewModel.NavigationRequested += OnNavigationRequested;
     }
 
     private void UnsubscribeViewModelEvents()
@@ -48,6 +49,7 @@ public partial class BaseControl : UserControl
         ViewModel.LoadingStateRequested -= OnLoadingStateRequested;
         ViewModel.ShowLoadingRequested -= OnShowLoadingRequested;
         ViewModel.HideLoadingRequested -= OnHideLoadingRequested;
+        ViewModel.NavigationRequested -= OnNavigationRequested;
     }
 
     private void OnMessageDialogRequested(object sender, MessageDialogRequestedEventArgs args)
@@ -109,4 +111,8 @@ public partial class BaseControl : UserControl
     private void OnShowLoadingRequested(object sender, ShowLoadingRequestedEventArgs args) => ShowLoadingMessage.Send(args);
 
     private void OnHideLoadingRequested(object sender, HideLoadingRequestedEventArgs args) => HideLoadingMessage.Send();
+
+    // Forwards the view model's navigation requests to the owning window through the
+    // weak-reference messenger (the window matches the control's XamlRoot).
+    private void OnNavigationRequested(object sender, NavigationRequestedEventArgs args) => NavigationRequestedMessage.Send(XamlRoot, args.PageType, args.Parameter);
 }

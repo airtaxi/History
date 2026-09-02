@@ -10,7 +10,8 @@ namespace History.WindowsClient.Views;
 public abstract class BaseWindow : Window,
     IRecipient<LoadingStateRequestedMessage>,
     IRecipient<ShowLoadingMessage>,
-    IRecipient<HideLoadingMessage>
+    IRecipient<HideLoadingMessage>,
+    IRecipient<NavigationRequestedMessage>
 {
     protected readonly ApplicationThemeService _applicationThemeService = App.Services.GetRequiredService<ApplicationThemeService>();
 
@@ -26,6 +27,7 @@ public abstract class BaseWindow : Window,
         WeakReferenceMessenger.Default.Register((IRecipient<LoadingStateRequestedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<ShowLoadingMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<HideLoadingMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<NavigationRequestedMessage>)this);
     }
 
     // Runs loading requests that originated from this window's pages/controls: the
@@ -40,6 +42,17 @@ public abstract class BaseWindow : Window,
     public void Receive(ShowLoadingMessage message) => ShowLoading(message.LoadingMessage);
 
     public void Receive(HideLoadingMessage message) => HideLoading();
+
+    // Runs navigation requests that originated from this window's pages/controls: the
+    // XamlRoot reference comparison routes messages from other windows away.
+    public void Receive(NavigationRequestedMessage message)
+    {
+        if (Content.XamlRoot != message.XamlRoot) return;
+
+        Navigate(message.PageType, message.Parameter);
+    }
+
+    protected abstract void Navigate(Type pageType, object parameter);
 
     private async Task RunLoadingAsync(LoadingStateRequestedMessage message)
     {

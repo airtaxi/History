@@ -30,6 +30,8 @@ public sealed partial class MainWindow : BaseWindow
 
     public static void SetForegroundWindow() => s_instance.SetForegroundWindow();
 
+    protected override void Navigate(Type pageType, object parameter) => AppFrame.Navigate(pageType, parameter);
+
     protected override void ShowLoading(string message = null)
     {
         if (DispatcherQueue.HasThreadAccess) SetLoadingState(Visibility.Visible, message);
