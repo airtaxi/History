@@ -425,3 +425,4 @@ Windows 환경에서 iOS 빌드 오류는 무시해도 괜찮습니다.
 `net10.0-android` 빌드에서 `XALNS7015` 오류(Writing mixed-mode assemblies is not supported)가 발생해도 빌드 성공이므로 무시해도 됩니다.
 
 빌드 검증 시에는 반드시 `net10.0-android` 대상 프레임워크로 검증하십시오.
+History.WindowsClient 빌드 검증은 `dotnet build E:/Repos/History/History.WindowsClient/History.WindowsClient.csproj -p:Platform=ARM64` 명령으로 수행하십시오.
