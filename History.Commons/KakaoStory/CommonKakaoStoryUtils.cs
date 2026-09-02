@@ -30,6 +30,15 @@ public partial class CommonKakaoStoryUtils
             var idToken = await KakaoStoryApiHandler.EnsureKAuthTokenAsync();
             if (idToken == null) return;
 
+            // A background-restarted process (Android JobService / iOS
+            // BGAppRefreshTask) starts with the unauthenticated ApiHandler.Public,
+            // which is only replaced at login and by the 24-hour token job. Restore
+            // the authenticated handler from the stored tokens before the upload so
+            // the request can be authorized; ApiHandler refreshes the JWT on 401.
+            var accessToken = Configuration.GetValue<string>("AccessToken");
+            var refreshToken = Configuration.GetValue<string>("RefreshToken");
+            if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken)) CommonShared.ApiHandler = new ApiHandler(accessToken, refreshToken);
+
             var requestDto = new UpdateKakaoStoryTokenRequestDto
             {
                 IdToken = idToken,

@@ -12,7 +12,7 @@ namespace History.MobileClient;
 /// JobScheduler minimum). Notification polling is owned by the server (FCM
 /// push); the poller never opens the login modal from here.
 /// </summary>
-[Service(Name = "com.airtaxi.History.Commons.KakaoStoryNotificationRefreshService", Permission = "android.permission.BIND_JOB_SERVICE")]
+[Service(Name = "com.airtaxi.history.KakaoStoryNotificationRefreshService", Permission = "android.permission.BIND_JOB_SERVICE")]
 public class KakaoStoryNotificationRefreshService : JobService
 {
     private const string TAG = "History";
@@ -26,7 +26,7 @@ public class KakaoStoryNotificationRefreshService : JobService
             try
             {
                 await KakaoStoryMailPoller.PollOnceAsync();
-                await KakaoStoryUtils.UploadTokenToServerAsync();
+                await CommonKakaoStoryUtils.UploadTokenToServerAsync();
             }
             catch (Exception exception) { Log.Error(TAG, $"Kakao Story notification poll failed: {exception.Message}"); }
             finally { JobFinished(jobParameters, false); }
