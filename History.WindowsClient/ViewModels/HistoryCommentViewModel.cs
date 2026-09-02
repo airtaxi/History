@@ -109,7 +109,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
 
     private async Task HandleReportAsync(ReportType reportType)
     {
-        var result = await App.ExecuteRequestAsync(new CreateReportRecord(new()
+        var result = await ParentViewModel.DialogBaseViewModel.ExecuteRequestAsync(new CreateReportRecord(new()
         {
             Type = reportType,
             Target = ReportTarget.Comment,
@@ -134,7 +134,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
 
     public override async Task HandleLikeAsync()
     {
-        var commentResult = await App.ExecuteRequestAsync(new HandleCommentLike(Comment.Id));
+        var commentResult = await ParentViewModel.DialogBaseViewModel.ExecuteRequestAsync(new HandleCommentLike(Comment.Id));
         if (commentResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<CommentResponseDto>(commentResult.Value));
     }
 
@@ -150,7 +150,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
             var reason = await MainWindow.Frame.ShowInputDialogAsync(new InputDialogParameters("댓글 삭제", "댓글을 삭제하는 이유를 입력해주세요."));
             if (string.IsNullOrWhiteSpace(reason)) return;
 
-            var deleteResult = await App.ExecuteRequestAsync(new ModerationDeleteComment(Comment.Id, reason, reportType));
+            var deleteResult = await ParentViewModel.DialogBaseViewModel.ExecuteRequestAsync(new ModerationDeleteComment(Comment.Id, reason, reportType));
             if (deleteResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<CommentResponseDto>(Comment));
         }
         else if (IsMyPost || Comment.User.UserId == CommonShared.UserId)
@@ -158,7 +158,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
             var confirm = await ParentViewModel.DialogBaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("댓글 삭제", "정말로 댓글을 삭제하시겠습니까?", "삭제", "취소"));
             if (confirm != ContentDialogResult.Primary) return;
 
-            var deleteResult = await App.ExecuteRequestAsync(new DeleteComment(Comment.Id));
+            var deleteResult = await ParentViewModel.DialogBaseViewModel.ExecuteRequestAsync(new DeleteComment(Comment.Id));
             if (deleteResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<CommentResponseDto>(Comment));
         }
         else await ParentViewModel.DialogBaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("권한 부족", "댓글을 삭제할 권한이 없습니다."));

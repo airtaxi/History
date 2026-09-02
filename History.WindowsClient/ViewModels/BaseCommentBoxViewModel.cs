@@ -38,7 +38,7 @@ public abstract partial class BaseCommentBoxViewModel(BaseViewModel baseViewMode
     [RelayCommand]
     public virtual async Task HandleStickerTapAsync()
     {
-        var dialog = new StickerPickerDialog(new StickerPickerViewModel());
+        var dialog = new StickerPickerDialog(new StickerPickerViewModel(BaseViewModel));
         await BaseViewModel.ShowContentDialogAsync(dialog);
         if (dialog.SelectedStickerContent != null) StickerSelected?.Invoke(this, dialog.SelectedStickerContent);
     }

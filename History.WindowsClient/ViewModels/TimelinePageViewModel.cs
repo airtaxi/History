@@ -24,10 +24,7 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
 
     public bool IsEmpty => Items.Count == 0;
 
-    public TimelinePageViewModel()
-    {
-        WeakReferenceMessenger.Default.Register(this);
-    }
+    public TimelinePageViewModel() => WeakReferenceMessenger.Default.Register(this);
 
     public void Receive(ValueDeletedMessage<PostResponseDto> message)
     {
@@ -48,14 +45,14 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
             Items.Clear();
             _areThereNoMorePostsToLoad = false;
 
-            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(null, PageSize));
+            var postsResult = await ExecuteRequestAsync(new GetTimelinePosts(null, PageSize));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null)).ToList();
 
                 // Download this page's carousel images before creating the post view models so
                 // every carousel sees a cache hit and its height is final on the first measure.
-                await App.ExecuteWithLoadingAsync(() => MediaCacheService.PrefetchTimelineMediaAsync(posts));
+                await ExecuteWithLoadingAsync(() => MediaCacheService.PrefetchTimelineMediaAsync(posts));
 
                 var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User, this) : new HistoryPostViewModel(x, PostType.Timeline, this)));
                 foreach (var viewModel in viewModels) Items.Add(viewModel);
@@ -79,7 +76,7 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
             var lastViewModel = Items.OfType<HistoryPostViewModel>().LastOrDefault();
             if (lastViewModel == null) return;
 
-            var postsResult = await App.ExecuteRequestAsync(new GetTimelinePosts(lastViewModel.RepostId ?? lastViewModel.Post.Id, PageSize));
+            var postsResult = await ExecuteRequestAsync(new GetTimelinePosts(lastViewModel.RepostId ?? lastViewModel.Post.Id, PageSize));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null)).ToList();

@@ -41,7 +41,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
 
     public async Task RefreshAsync()
     {
-        var result = await App.ExecuteRequestAsync(new GetUser(User.UserId));
+        var result = await _baseViewModel.ExecuteRequestAsync(new GetUser(User.UserId));
         if (!result.IsSuccess)
         {
             await ShowMessageDialogAsync(new("오류", "친구 정보 갱신에 실패하였습니다."));
@@ -98,7 +98,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
             var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님에게 친구 신청을 보내시겠습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
             if (dialogResult == ContentDialogResult.Primary)
             {
-                result = await App.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
+                result = await _baseViewModel.ExecuteRequestAsync(new SendFriendRequest(User.UserId));
                 newStatus = FriendshipStatus.Requested;
             }
         }
@@ -107,7 +107,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
             var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님과의 친구 관계를 끊으시겠습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
             if (dialogResult == ContentDialogResult.Primary)
             {
-                result = await App.ExecuteRequestAsync(new RemoveFriend(User.UserId));
+                result = await _baseViewModel.ExecuteRequestAsync(new RemoveFriend(User.UserId));
                 newStatus = null;
             }
         }
@@ -116,7 +116,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
             var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님에게 보낸 친구 신청을 취소하시겠습니까? 상대방에게 이미 보낸 친구 신청 알림은 취소되지 않습니다.", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
             if (dialogResult == ContentDialogResult.Primary)
             {
-                result = await App.ExecuteRequestAsync(new CancelFriendRequest(User.UserId));
+                result = await _baseViewModel.ExecuteRequestAsync(new CancelFriendRequest(User.UserId));
                 newStatus = null;
             }
         }
@@ -125,7 +125,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
             var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님의 친구 신청을 수락하시겠습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
             if (dialogResult == ContentDialogResult.Primary)
             {
-                result = await App.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
+                result = await _baseViewModel.ExecuteRequestAsync(new AcceptFriendRequest(User.UserId));
                 newStatus = FriendshipStatus.Accepted;
             }
         }
@@ -134,7 +134,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
             var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님의 차단 조치를 해제하시곘습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
             if (dialogResult == ContentDialogResult.Primary)
             {
-                result = await App.ExecuteRequestAsync(new UnblockUser(User.UserId));
+                result = await _baseViewModel.ExecuteRequestAsync(new UnblockUser(User.UserId));
                 newStatus = null;
             }
         }
@@ -143,7 +143,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
             var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님의 무시 조치를 해제하시곘습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
             if (dialogResult == ContentDialogResult.Primary)
             {
-                result = await App.ExecuteRequestAsync(new UnignoreUser(User.UserId));
+                result = await _baseViewModel.ExecuteRequestAsync(new UnignoreUser(User.UserId));
                 newStatus = null;
             }
         }

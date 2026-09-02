@@ -55,11 +55,11 @@ public partial class MainPageFriendshipSideBarAddFriendsItemViewModel : BaseMain
             var results = new List<UserResponseDto>();
 
             // Add handle results
-            var handleResult = await App.ExecuteRequestAsync(new GetUserByHandle(query), [ErrorType.NotFound, ErrorType.Forbidden]);
+            var handleResult = await BaseViewModel.ExecuteRequestAsync(new GetUserByHandle(query), [ErrorType.NotFound, ErrorType.Forbidden]);
             if (handleResult.IsSuccess) results.Add(handleResult);
 
             // Add nickname results
-            var nicknameResults = await App.ExecuteRequestAsync(new FindUsersByNickname(query));
+            var nicknameResults = await BaseViewModel.ExecuteRequestAsync(new FindUsersByNickname(query));
             if (nicknameResults.IsSuccess) results.AddRange(nicknameResults.Value);
 
             // The mode can change while the search runs (fast pill switching); discard the stale result, the pending switch reloads.

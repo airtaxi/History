@@ -27,7 +27,7 @@ public partial class HistoryCommentBoxViewModel(HistoryPostViewModel postViewMod
             return;
         }
 
-        var result = await App.ExecuteRequestAsync(new CreateComment(_postViewModel.Post.Id, contents, files), ErrorType.BadRequest, ErrorType.Forbidden);
+        var result = await BaseViewModel.ExecuteRequestAsync(new CreateComment(_postViewModel.Post.Id, contents, files), ErrorType.BadRequest, ErrorType.Forbidden);
         if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Forbidden)
         {
             await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("오류", result.ErrorMessage));

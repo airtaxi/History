@@ -8,6 +8,7 @@
     xmlns:local="using:History.WindowsClient.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:History.WindowsClient.ViewModels"
+    Loaded="OnLoaded"
     mc:Ignorable="d">
 
     <Grid>

@@ -37,11 +37,7 @@ public partial class LoginPageViewModel : BaseViewModel
 
         var accessToken = settingsService.Settings.AccessToken;
         var refreshToken = settingsService.Settings.RefreshToken;
-        if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken))
-        {
-            LoginPanelVisibility = Visibility.Collapsed;
-            _ = AutoLoginAsync();
-        }
+        if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken)) LoginPanelVisibility = Visibility.Collapsed;
         else LoginPanelVisibility = Visibility.Visible;
     }
 
@@ -74,23 +70,26 @@ public partial class LoginPageViewModel : BaseViewModel
     {
         if (_pendingOAuthTaskCompletionSource != null) return;
 
-        MainWindow.ShowLoading("브라우저 로그인 대기중...");
-        var taskCompletionSource = new TaskCompletionSource<OAuthLoginMessage>();
-        _pendingOAuthTaskCompletionSource = taskCompletionSource;
+        OAuthLoginMessage message = null;
+        await ExecuteWithLoadingAsync(async () =>
+        {
+            var taskCompletionSource = new TaskCompletionSource<OAuthLoginMessage>();
+            _pendingOAuthTaskCompletionSource = taskCompletionSource;
 
-        Process.Start(new ProcessStartInfo() { FileName = BuildLoginUrl(provider), UseShellExecute = true });
+            Process.Start(new ProcessStartInfo() { FileName = BuildLoginUrl(provider), UseShellExecute = true });
 
-        var completedTask = await Task.WhenAny(taskCompletionSource.Task, Task.Delay(OAuthTimeout));
-        var message = completedTask == taskCompletionSource.Task ? await taskCompletionSource.Task : null;
+            var completedTask = await Task.WhenAny(taskCompletionSource.Task, Task.Delay(OAuthTimeout));
+            message = completedTask == taskCompletionSource.Task ? await taskCompletionSource.Task : null;
 
-        _pendingOAuthTaskCompletionSource = null;
+            _pendingOAuthTaskCompletionSource = null;
+        }, "브라우저 로그인 대기중...");
+
         if (message != null)
         {
             await LoginWithIdTokenAsync(message.IdToken, message.Provider, message.UserJson);
             return;
         }
 
-        MainWindow.HideLoading();
         LoginPanelVisibility = Visibility.Visible;
 
         var timeoutDialogParameters = new MessageDialogParameters("오류", "브라우저 로그인이 완료되지 않았습니다. 다시 시도해주세요.");
@@ -113,7 +112,9 @@ public partial class LoginPageViewModel : BaseViewModel
         _ = LoginWithIdTokenAsync(message.IdToken, message.Provider, message.UserJson);
     }
 
-    private async Task AutoLoginAsync()
+    // Called by LoginPage.OnNavigatedTo after the base page subscribed the dialog
+    // and loading events, so every request is fulfilled by the page/window.
+    public async Task TryAutoLoginAsync()
     {
         var accessToken = _settingsService.Settings.AccessToken;
         var refreshToken = _settingsService.Settings.RefreshToken;
@@ -128,8 +129,8 @@ public partial class LoginPageViewModel : BaseViewModel
         var profileResult = await GetMyProfileAsync(ErrorType.Unauthorized);
         if (profileResult.IsSuccess)
         {
-            await LoadMyProfileAsync();
-            NavigateToMainPage();
+            await LoadMyProfileAsync(this);
+            NavigateToMainPage(this);
             return;
         }
 
@@ -146,8 +147,8 @@ public partial class LoginPageViewModel : BaseViewModel
         var loginResult = await LoginRequestAsync(idToken, provider);
         if (loginResult.IsSuccess)
         {
-            await LoadMyProfileAsync();
-            NavigateToMainPage();
+            await LoadMyProfileAsync(this);
+            NavigateToMainPage(this);
             return;
         }
 
@@ -174,7 +175,7 @@ public partial class LoginPageViewModel : BaseViewModel
     private async Task<Result<OAuthLoginResponseDto>> LoginRequestAsync(string idToken, SocialService provider)
     {
         // Loading state and generic error handling are managed by the request wrapper.
-        var loginResult = await App.ExecuteRequestAsync(new Login(idToken, provider), [ErrorType.NotFound, ErrorType.Forbidden]);
+        var loginResult = await ExecuteRequestAsync(new Login(idToken, provider), [ErrorType.NotFound, ErrorType.Forbidden]);
         if (loginResult.IsFailure) return loginResult;
 
         CommonShared.ApiHandler = new(loginResult.Value.AccessToken, loginResult.Value.RefreshToken);
@@ -184,25 +185,25 @@ public partial class LoginPageViewModel : BaseViewModel
         return loginResult;
     }
 
-    private static async Task<Result<UserResponseDto>> GetMyProfileAsync(params ErrorType[] hiddenErrorTypes) => await App.ExecuteRequestAsync(new GetMyProfile(), hiddenErrorTypes);
+    private async Task<Result<UserResponseDto>> GetMyProfileAsync(params ErrorType[] hiddenErrorTypes) => await ExecuteRequestAsync(new GetMyProfile(), hiddenErrorTypes);
 
-    public static async Task LoadMyProfileAsync()
+    public static async Task LoadMyProfileAsync(BaseViewModel baseViewModel)
     {
-        var profileResult = await GetMyProfileAsync();
+        var profileResult = await baseViewModel.ExecuteRequestAsync(new GetMyProfile());
         if (profileResult.IsSuccess)
         {
             CommonShared.UserId = profileResult.Value.UserId;
             CommonShared.MyRank = profileResult.Value.Rank;
             CommonShared.LastUsedPostDiscoveryOption = profileResult.Value.LastUsedPostDiscoveryOption;
 
-            var friendsResult = await App.ExecuteRequestAsync(new GetFriends(profileResult.Value.UserId));
+            var friendsResult = await baseViewModel.ExecuteRequestAsync(new GetFriends(profileResult.Value.UserId));
             if (friendsResult.IsSuccess) CommonShared.Friends = friendsResult.Value;
         }
     }
 
-    public static void NavigateToMainPage()
+    public static void NavigateToMainPage(BaseViewModel baseViewModel)
     {
-        MainWindow.HideLoading();
+        baseViewModel.HideLoading();
         MainWindow.Frame.Navigate(typeof(Pages.MainPage));
     }
 

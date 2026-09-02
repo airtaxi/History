@@ -11,7 +11,7 @@ namespace History.WindowsClient.ViewModels;
 // Mirrors the MAUI PollContentViewModel for the poll card surface. The MAUI version receives
 // data through the constructor; here the control owns a single instance and pushes data in
 // through the Update method instead.
-public sealed partial class PollContentViewModel : ObservableObject
+public sealed partial class PollContentViewModel : BaseViewModel
 {
     private string _postId;
 
@@ -81,7 +81,7 @@ public sealed partial class PollContentViewModel : ObservableObject
         }
         else selectedIndices = [optionIndex];
 
-        var result = await App.ExecuteRequestAsync(new VotePoll(_postId, PollId, selectedIndices));
+        var result = await ExecuteRequestAsync(new VotePoll(_postId, PollId, selectedIndices));
         if (result.IsSuccess)
         {
             // Update poll content from the response and notify the post update.

@@ -9,6 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:History.WindowsClient.ViewModels"
     xmlns:vmp="using:History.WindowsClient.ViewModels.MainPage"
+    Loaded="OnLoaded"
     NavigationCacheMode="Required"
     mc:Ignorable="d">
 
@@ -101,7 +102,7 @@
                                     <SelectorBarItem
                                         Tag="IgnoredUsers"
                                         Text="무시한 친구"
-                                        Visibility="{x:Bind Parent.IsKakaoStoryMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=True, Mode=OneWay}" />
+                                        Visibility="{x:Bind MainPageViewModel.IsKakaoStoryMode, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=True, Mode=OneWay}" />
                                     <SelectorBarItem Tag="BlockedUsers" Text="차단한 친구" />
                                 </dev:SelectorBarSegmented>
                             </ScrollViewer>

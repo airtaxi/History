@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Enums;
-using History.Commons.Interfaces;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Services;
@@ -12,7 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 using System.Diagnostics;
-using System.Net;
 using System.Text;
 using System.Web;
 using Windows.ApplicationModel;
@@ -25,8 +23,6 @@ namespace History.WindowsClient;
 public partial class App : Application
 {
     private const string OAuthProtocolScheme = "history-app";
-
-    private static readonly SemaphoreSlim ActionRequestSemaphore = new(1, 1);
 
     public static IServiceProvider Services { get; private set; }
 
@@ -96,85 +92,11 @@ public partial class App : Application
         WeakReferenceMessenger.Default.Send(new OAuthLoginMessage(idToken, provider.Value, queryParameters["user"]));
     }
 
-    public static async Task<Result> ExecuteRequestAsync(IBaseRequest request, params ErrorType[] hiddenErrorTypes)
-    {
-        hiddenErrorTypes ??= [];
-
-        try
-        {
-            await ExecuteWithLoadingAsync(() => CommonShared.ApiHandler.ExecuteRequestAsync(request));
-            return Result.Success();
-        }
-        catch (HttpRequestException exception)
-        {
-            var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
-
-            if (!hiddenErrorTypes.Contains(errorType)) await ShowErrorDialogAsync($"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}");
-            return (errorType, exception.Message);
-        }
-    }
-
-    public static async Task<Result<T>> ExecuteRequestAsync<T>(IBaseRequest<T> request, params ErrorType[] hiddenErrorTypes)
-    {
-        hiddenErrorTypes ??= [];
-
-        try { return await ExecuteWithLoadingAsync(() => CommonShared.ApiHandler.ExecuteRequestAsync(request)); }
-        catch (HttpRequestException exception)
-        {
-            var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
-
-            if (!hiddenErrorTypes.Contains(errorType)) await ShowErrorDialogAsync($"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}");
-            return (errorType, exception.Message);
-        }
-    }
-
-    public static async Task ExecuteWithLoadingAsync(Func<Task> action)
-    {
-        try
-        {
-            await ActionRequestSemaphore.WaitAsync();
-            MainWindow.ShowLoading();
-
-            await action();
-        }
-        finally
-        {
-            MainWindow.HideLoading();
-            ActionRequestSemaphore.Release();
-        }
-    }
-
-    public static async Task<T> ExecuteWithLoadingAsync<T>(Func<Task<T>> action)
-    {
-        try
-        {
-            await ActionRequestSemaphore.WaitAsync();
-            MainWindow.ShowLoading();
-
-            return await action();
-        }
-        finally
-        {
-            MainWindow.HideLoading();
-            ActionRequestSemaphore.Release();
-        }
-    }
-
     public static async Task ShowErrorDialogAsync(string message)
     {
         if (MainWindow.Frame.DispatcherQueue.HasThreadAccess) await MainWindow.Frame.ShowMessageDialogAsync(new("오류", message));
         else MainWindow.Frame.DispatcherQueue.TryEnqueue(async () => await MainWindow.Frame.ShowMessageDialogAsync(new("오류", message)));
     }
-
-    private static ErrorType StatusCodeToErrorType(HttpStatusCode statusCode) => statusCode switch
-    {
-        HttpStatusCode.NotFound => ErrorType.NotFound,
-        HttpStatusCode.Forbidden => ErrorType.Forbidden,
-        HttpStatusCode.Conflict => ErrorType.Conflict,
-        HttpStatusCode.BadRequest => ErrorType.BadRequest,
-        HttpStatusCode.Unauthorized => ErrorType.Unauthorized,
-        _ => ErrorType.ProgramError,
-    };
 
     private static string GetApplicationVersion()
     {

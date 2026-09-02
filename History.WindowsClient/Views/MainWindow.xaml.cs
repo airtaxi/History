@@ -10,7 +10,10 @@ using WinUIEx;
 
 namespace History.WindowsClient.Views;
 
-public sealed partial class MainWindow : Window
+public sealed partial class MainWindow : Window,
+    IRecipient<LoadingStateRequestedMessage>,
+    IRecipient<ShowLoadingMessage>,
+    IRecipient<HideLoadingMessage>
 {
     private static MainWindow s_instance;
 
@@ -34,18 +37,22 @@ public sealed partial class MainWindow : Window
 
         AppWindow.SetIcon("Assets/Icon.ico");
 
+        WeakReferenceMessenger.Default.Register((IRecipient<LoadingStateRequestedMessage>) this);
+        WeakReferenceMessenger.Default.Register((IRecipient<ShowLoadingMessage>) this);
+        WeakReferenceMessenger.Default.Register((IRecipient<HideLoadingMessage>) this);
+
         AppFrame.Navigate(typeof(LoginPage));
     }
 
     public static void SetForegroundWindow() => s_instance.SetForegroundWindow();
 
-    public static void ShowLoading(string message = null)
+    private static void ShowLoading(string message = null)
     {
         if (s_instance.DispatcherQueue.HasThreadAccess) SetLoadingState(Visibility.Visible, message);
         else s_instance.DispatcherQueue.TryEnqueue(() => SetLoadingState(Visibility.Visible, message));
     }
 
-    public static void HideLoading()
+    private static void HideLoading()
     {
         if (s_instance.DispatcherQueue.HasThreadAccess) SetLoadingState(Visibility.Collapsed, null);
         else s_instance.DispatcherQueue.TryEnqueue(() => SetLoadingState(Visibility.Collapsed, null));
@@ -91,4 +98,29 @@ public sealed partial class MainWindow : Window
     }
 
     private void OnApplicationThemeServiceThemeChanged(ElementTheme theme) => _applicationThemeService.ApplyThemeToWindow(this);
+
+    // Runs loading requests that originated from this window's pages/controls: the
+    // XamlRoot reference comparison routes messages from other windows away.
+    public void Receive(LoadingStateRequestedMessage message)
+    {
+        if (Content.XamlRoot != message.XamlRoot) return;
+
+        _ = RunLoadingAsync(message);
+    }
+
+    public void Receive(ShowLoadingMessage message) => ShowLoading(message.LoadingMessage);
+
+    public void Receive(HideLoadingMessage message) => HideLoading();
+
+    private async Task RunLoadingAsync(LoadingStateRequestedMessage message)
+    {
+        try
+        {
+            ShowLoading(message.LoadingMessage);
+            await message.Action();
+            message.Complete();
+        }
+        catch (Exception exception) { message.Fail(exception); }
+        finally { HideLoading(); }
+    }
 }

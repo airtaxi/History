@@ -1,7 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using History.Commons;
+using History.Commons.Enums;
+using History.Commons.Interfaces;
 using History.WindowsClient.Models;
+using History.WindowsClient.Services;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.Storage.Pickers;
+using System.Net;
 
 namespace History.WindowsClient.ViewModels;
 
@@ -14,6 +19,9 @@ public abstract partial class BaseViewModel : ObservableObject
     public event EventHandler<PickerRequestedEventArgs<FileOpenPickerParameters, IReadOnlyList<PickFileResult>>> FilesPickRequested;
     public event EventHandler<PickerRequestedEventArgs<FileSavePickerParameters, PickFileResult>> SaveFileRequested;
     public event EventHandler<PickerRequestedEventArgs<FolderPickerParameters, PickFolderResult>> FolderPickRequested;
+    public event EventHandler<LoadingStateRequestedEventArgs> LoadingStateRequested;
+    public event EventHandler<ShowLoadingRequestedEventArgs> ShowLoadingRequested;
+    public event EventHandler<HideLoadingRequestedEventArgs> HideLoadingRequested;
 
     public async Task<ContentDialogResult?> ShowMessageDialogAsync(MessageDialogParameters parameters)
     {
@@ -80,4 +88,85 @@ public abstract partial class BaseViewModel : ObservableObject
 
         return await args.ResultTask;
     }
+
+    // Loading requests are fulfilled by the host page or control, which forwards the
+    // action to the owning window through the weak-reference messenger. Without a
+    // subscriber (detached view model), the action still runs without the overlay.
+    public async Task ExecuteWithLoadingAsync(Func<Task> action, string loadingMessage = null)
+    {
+        var args = new LoadingStateRequestedEventArgs(loadingMessage, action);
+        LoadingStateRequested?.Invoke(this, args);
+        if (args.ResultTask == null) await action();
+        else await args.ResultTask;
+    }
+
+    public async Task<T> ExecuteWithLoadingAsync<T>(Func<Task<T>> action, string loadingMessage = null)
+    {
+        var result = default(T);
+
+        // The protocol action is Func<Task>, so wrap the typed action in a closure that
+        // captures the result for the return value (the window never sees the T value).
+        var args = new LoadingStateRequestedEventArgs(loadingMessage, async () => result = await action());
+        LoadingStateRequested?.Invoke(this, args);
+        if (args.ResultTask == null) await args.Action();
+        else await args.ResultTask;
+
+        return result;
+    }
+
+    // Requests the owning window to show the loading overlay with the optional message.
+    public void ShowLoading(string loadingMessage = null)
+    {
+        var args = new ShowLoadingRequestedEventArgs(loadingMessage);
+        ShowLoadingRequested?.Invoke(this, args);
+    }
+
+    // Requests the owning window to hide the loading overlay.
+    public void HideLoading()
+    {
+        var args = new HideLoadingRequestedEventArgs();
+        HideLoadingRequested?.Invoke(this, args);
+    }
+
+    public async Task<Result> ExecuteRequestAsync(IBaseRequest request, params ErrorType[] hiddenErrorTypes)
+    {
+        hiddenErrorTypes ??= [];
+
+        try
+        {
+            await ExecuteWithLoadingAsync(() => CommonShared.ApiHandler.ExecuteRequestAsync(request));
+            return Result.Success();
+        }
+        catch (HttpRequestException exception)
+        {
+            var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
+
+            if (!hiddenErrorTypes.Contains(errorType)) await App.ShowErrorDialogAsync($"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}");
+            return (errorType, exception.Message);
+        }
+    }
+
+    public async Task<Result<T>> ExecuteRequestAsync<T>(IBaseRequest<T> request, params ErrorType[] hiddenErrorTypes)
+    {
+        hiddenErrorTypes ??= [];
+
+        try { return await ExecuteWithLoadingAsync(() => CommonShared.ApiHandler.ExecuteRequestAsync(request)); }
+        catch (HttpRequestException exception)
+        {
+            var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
+
+            if (!hiddenErrorTypes.Contains(errorType)) await App.ShowErrorDialogAsync($"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}");
+            return (errorType, exception.Message);
+        }
+    }
+
+    private static ErrorType StatusCodeToErrorType(HttpStatusCode statusCode) => statusCode switch
+    {
+        HttpStatusCode.NotFound => ErrorType.NotFound,
+        HttpStatusCode.Forbidden => ErrorType.Forbidden,
+        HttpStatusCode.Conflict => ErrorType.Conflict,
+        HttpStatusCode.BadRequest => ErrorType.BadRequest,
+        HttpStatusCode.Unauthorized => ErrorType.Unauthorized,
+        _ => ErrorType.ProgramError,
+    };
 }

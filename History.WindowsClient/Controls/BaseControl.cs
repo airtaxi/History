@@ -2,20 +2,26 @@
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Windows.Storage.Pickers;
 
-namespace History.WindowsClient.Pages;
+namespace History.WindowsClient.Controls;
 
-public partial class BasePage : Page
+public partial class BaseControl : UserControl
 {
-    protected virtual BaseViewModel ViewModel { get; }
+    public virtual BaseViewModel ViewModel { get; }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    // XAML-declared lifecycle hooks mirroring BasePage.OnNavigatedTo/OnNavigatedFrom:
+    // derived XAML roots declare Loaded="OnControlLoaded" Unloaded="OnControlUnloaded".
+    // The wiring persists for the control's lifetime, so Loaded/Unloaded fire on every
+    // attach/detach, including recycled instances under virtualization.
+    protected virtual void OnControlLoaded(object sender, RoutedEventArgs e) => SubscribeViewModelEvents();
+
+    protected virtual void OnControlUnloaded(object sender, RoutedEventArgs e) => UnsubscribeViewModelEvents();
+
+    private void SubscribeViewModelEvents()
     {
-        base.OnNavigatedTo(e);
-
         ViewModel.MessageDialogRequested += OnMessageDialogRequested;
         ViewModel.InputDialogRequested += OnInputDialogRequested;
         ViewModel.ContentDialogRequested += OnContentDialogRequested;
@@ -28,10 +34,8 @@ public partial class BasePage : Page
         ViewModel.HideLoadingRequested += OnHideLoadingRequested;
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    private void UnsubscribeViewModelEvents()
     {
-        base.OnNavigatedFrom(e);
-
         ViewModel.MessageDialogRequested -= OnMessageDialogRequested;
         ViewModel.InputDialogRequested -= OnInputDialogRequested;
         ViewModel.ContentDialogRequested -= OnContentDialogRequested;
@@ -50,21 +54,21 @@ public partial class BasePage : Page
         args.ResultTask = result;
     }
 
-    // Fulfills the view model's input dialog requests with the page-bound dialog.
+    // Fulfills the view model's input dialog requests with the control-bound dialog.
     private void OnInputDialogRequested(object sender, InputDialogRequestedEventArgs args)
     {
         var result = this.ShowInputDialogAsync(args.Parameters);
         args.ResultTask = result;
     }
 
-    // Fulfills the view model's prebuilt dialog requests with the page-bound dialog.
+    // Fulfills the view model's prebuilt dialog requests with the control-bound dialog.
     private void OnContentDialogRequested(object sender, ContentDialogRequestedEventArgs args)
     {
         var result = this.ShowContentDialogAsync(args.Dialog);
         args.ResultTask = result;
     }
 
-    // Fulfills the view model's picker requests with the page-bound pickers.
+    // Fulfills the view model's picker requests with the control-bound pickers.
     private void OnFilePickRequested(object sender, PickerRequestedEventArgs<FileOpenPickerParameters, PickFileResult> args)
     {
         var result = this.PickFileAsync(args.Parameters);
@@ -90,7 +94,7 @@ public partial class BasePage : Page
     }
 
     // Forwards the view model's loading requests to the owning window through the
-    // weak-reference messenger (the window matches the page's XamlRoot).
+    // weak-reference messenger (the window matches the control's XamlRoot).
     private void OnLoadingStateRequested(object sender, LoadingStateRequestedEventArgs args) => LoadingStateRequestedMessage.Send(XamlRoot, args);
 
     private void OnShowLoadingRequested(object sender, ShowLoadingRequestedEventArgs args) => ShowLoadingMessage.Send(args);

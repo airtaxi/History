@@ -261,7 +261,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             return;
         }
 
-        var result = await App.ExecuteRequestAsync(new ChangeDiscoveryOption(Post.Id, newDiscoveryOption, null));
+        var result = await BaseViewModel.ExecuteRequestAsync(new ChangeDiscoveryOption(Post.Id, newDiscoveryOption, null));
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
     }
 
@@ -273,7 +273,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         var pin = await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "프로필에 이 게시글을 고정하시겠습니까? 기존에 고정된 게시글은 해제됩니다. 또한, 고정된 게시글을 다시 고정하는 경우, 고정이 해제됩니다.", "고정", "취소"));
         if (pin != ContentDialogResult.Primary) return;
 
-        var result = await App.ExecuteRequestAsync(new UpdatePinnedPost(Post.Id));
+        var result = await BaseViewModel.ExecuteRequestAsync(new UpdatePinnedPost(Post.Id));
         if (result.IsSuccess)
         {
             await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 고정(해제) 요청이 성공적으로 전송되었습니다."));
@@ -286,13 +286,13 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         var shouldWritePublicPost = await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글을 홍보하면 '발견' 탭에서 모든 사용자에게 노출됩니다. 단, 홍보는 24시간에 한 번만 가능합니다.", "홍보", "취소"));
         if (shouldWritePublicPost != ContentDialogResult.Primary) return;
 
-        var success = await App.ExecuteRequestAsync(new WritePublicPost(Post.Id));
+        var success = await BaseViewModel.ExecuteRequestAsync(new WritePublicPost(Post.Id));
         if (success.IsSuccess) await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 홍보가 성공적으로 전송되었습니다. 발견탭에서 확인할 수 있습니다."));
     }
 
     private async Task HandleReportAsync(ReportType reportType)
     {
-        var result = await App.ExecuteRequestAsync(new CreateReportRecord(new()
+        var result = await BaseViewModel.ExecuteRequestAsync(new CreateReportRecord(new()
         {
             Type = reportType,
             Target = ReportTarget.Post,
@@ -317,7 +317,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     {
         if (bookmark)
         {
-            var result = await App.ExecuteRequestAsync(new BookmarkPost(Post.Id));
+            var result = await BaseViewModel.ExecuteRequestAsync(new BookmarkPost(Post.Id));
             if (result.IsSuccess)
             {
                 await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "관심글로 저장되었습니다."));
@@ -326,7 +326,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         }
         else
         {
-            var result = await App.ExecuteRequestAsync(new UnbookmarkPost(Post.Id));
+            var result = await BaseViewModel.ExecuteRequestAsync(new UnbookmarkPost(Post.Id));
             if (result.IsSuccess)
             {
                 WeakReferenceMessenger.Default.Send(new PostUnbookmarkedMessage(Post.Id));
@@ -341,19 +341,19 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         var confirm = await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("이 글 숨기기", "이 글을 숨기면 타임라인에서 더 이상 보이지 않습니다. 이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?", "숨기기", "취소"));
         if (confirm != ContentDialogResult.Primary) return;
 
-        var result = await App.ExecuteRequestAsync(new IgnorePost(Post.Id));
+        var result = await BaseViewModel.ExecuteRequestAsync(new IgnorePost(Post.Id));
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostResponseDto>(Post));
     }
 
     private async Task HandleReactionTypedAsync(ReactionType reactionType)
     {
-        await App.ExecuteRequestAsync(new HandlePostReaction(Post.Id, reactionType));
+        await BaseViewModel.ExecuteRequestAsync(new HandlePostReaction(Post.Id, reactionType));
         await RefreshAsync();
     }
 
     public override async Task<Result> RefreshAsync()
     {
-        var result = await App.ExecuteRequestAsync(new GetPost(Post.Id));
+        var result = await BaseViewModel.ExecuteRequestAsync(new GetPost(Post.Id));
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
         return result;
     }
@@ -376,7 +376,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             var reason = await MainWindow.Frame.ShowInputDialogAsync(new InputDialogParameters("게시글 삭제", "게시글을 삭제하는 이유를 입력해주세요."));
             if (string.IsNullOrWhiteSpace(reason)) return;
 
-            var deleteResult = await App.ExecuteRequestAsync(new ModerationDeletePost(Post.Id, reason, reportType));
+            var deleteResult = await BaseViewModel.ExecuteRequestAsync(new ModerationDeletePost(Post.Id, reason, reportType));
             if (deleteResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostResponseDto>(Post));
         }
         else
@@ -384,7 +384,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             var confirm = await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("게시글 삭제", "정말로 게시글을 삭제하시겠습니까?", "삭제", "취소"));
             if (confirm != ContentDialogResult.Primary) return;
 
-            var deleteResult = await App.ExecuteRequestAsync(new DeletePost(Post.Id));
+            var deleteResult = await BaseViewModel.ExecuteRequestAsync(new DeletePost(Post.Id));
             if (deleteResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<PostResponseDto>(Post));
         }
     }
@@ -425,7 +425,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             return;
         }
 
-        var result = await App.ExecuteRequestAsync(new HandleRepost(Post.Id));
+        var result = await BaseViewModel.ExecuteRequestAsync(new HandleRepost(Post.Id));
         if (result.IsFailure) return;
 
         var post = result.Value;
@@ -438,7 +438,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         var confirm = await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("알림 설정", isMuting ? "이 글의 알림을 끄시겠습니까?" : "이 글의 알림을 다시 받으시겠습니까?", "설정", "취소"));
         if (confirm != ContentDialogResult.Primary) return;
 
-        var result = isMuting ? await App.ExecuteRequestAsync(new MuteNotifications(Post.Id)) : await App.ExecuteRequestAsync(new UnmuteNotifications(Post.Id));
+        var result = isMuting ? await BaseViewModel.ExecuteRequestAsync(new MuteNotifications(Post.Id)) : await BaseViewModel.ExecuteRequestAsync(new UnmuteNotifications(Post.Id));
         if (result.IsFailure) return;
 
         await RefreshAsync();
@@ -461,7 +461,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         var oldestViewModel = Comments.OfType<HistoryCommentViewModel>().FirstOrDefault();
         if (oldestViewModel == null) return;
 
-        var commentsResult = await App.ExecuteRequestAsync(new GetCommentsByPostId(Post.Id, oldestViewModel.Comment.Id, 20));
+        var commentsResult = await BaseViewModel.ExecuteRequestAsync(new GetCommentsByPostId(Post.Id, oldestViewModel.Comment.Id, 20));
         if (commentsResult.IsSuccess)
         {
             var comments = commentsResult.Value;

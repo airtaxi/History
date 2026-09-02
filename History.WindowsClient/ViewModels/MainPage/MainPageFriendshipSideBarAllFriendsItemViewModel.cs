@@ -60,7 +60,7 @@ public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMain
     {
         if (!BaseViewModel.IsKakaoStoryMode)
         {
-            var result = await App.ExecuteRequestAsync(new GetFriends(CommonShared.UserId));
+            var result = await BaseViewModel.ExecuteRequestAsync(new GetFriends(CommonShared.UserId));
             if (!result.IsSuccess)
             {
                 await BaseViewModel.ShowMessageDialogAsync(new("오류", "친구 목록을 가져오는 데에 실패하였습니다."));

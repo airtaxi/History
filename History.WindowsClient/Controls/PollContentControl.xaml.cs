@@ -5,14 +5,14 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace History.WindowsClient.Controls;
 
-public sealed partial class PollContentControl : UserControl
+public sealed partial class PollContentControl : BaseControl
 {
     public static readonly DependencyProperty PollContentProperty = DependencyProperty.Register(nameof(PollContent), typeof(PollContent), typeof(PollContentControl), new PropertyMetadata(null, OnDataPropertyChanged));
     public static readonly DependencyProperty PostIdProperty = DependencyProperty.Register(nameof(PostId), typeof(string), typeof(PollContentControl), new PropertyMetadata(null, OnDataPropertyChanged));
 
     public PollContentControl() => InitializeComponent();
 
-    public PollContentViewModel ViewModel { get; } = new();
+    public override PollContentViewModel ViewModel { get; } = new();
 
     public PollContent PollContent
     {

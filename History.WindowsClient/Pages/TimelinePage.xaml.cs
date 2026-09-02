@@ -1,5 +1,6 @@
 ﻿using History.WindowsClient.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 
@@ -26,9 +27,11 @@ public sealed partial class TimelinePage : BasePage
         await ViewModel.LoadMoreAsync();
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    private bool _isFirstLoad;
+    private async void OnLoaded(object sender, RoutedEventArgs e)
     {
-        base.OnNavigatedTo(e);
+        if (_isFirstLoad) return;
+        _isFirstLoad = true;
 
         await ViewModel.RefreshAsync();
     }

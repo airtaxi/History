@@ -23,14 +23,14 @@ public partial class MainPageViewModel : BaseViewModel
     {
         if (!IsKakaoStoryMode)
         {
-            var myProfileResult = await App.ExecuteRequestAsync(new GetMyProfile());
+            var myProfileResult = await ExecuteRequestAsync(new GetMyProfile());
             if (!myProfileResult.IsSuccess)
             {
                 await ShowMessageDialogAsync(new("오류", "프로필 정보 갱신에 실패하였습니다."));
                 return;
             }
 
-            MyProfileViewModel = new HistoryProfileViewModel(myProfileResult.Value);
+            MyProfileViewModel = new HistoryProfileViewModel(myProfileResult.Value, this);
         }
     }
 

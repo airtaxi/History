@@ -7,6 +7,7 @@
     xmlns:local="using:History.WindowsClient"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:History.WindowsClient.Pages"
+    Loaded="OnLoaded"
     mc:Ignorable="d">
 
     <Grid Background="#FFF112">

@@ -25,7 +25,7 @@ public sealed partial class PostPage : BasePage
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-if (e.Parameter is PostResponseDto historyData) ViewModel.Initialize(historyData);
+        if (e.Parameter is PostResponseDto historyData) ViewModel.Initialize(historyData);
         if (ViewModel.CommentBox != null)
         {
             ViewModel.CommentBox.CommentSent -= OnCommentBoxCommentSent;
@@ -44,7 +44,7 @@ if (e.Parameter is PostResponseDto historyData) ViewModel.Initialize(historyData
     {
         base.OnNavigatedFrom(e);
 
-if (ViewModel.CommentBox != null)
+        if (ViewModel.CommentBox != null)
         {
             ViewModel.CommentBox.CommentSent -= OnCommentBoxCommentSent;
             ViewModel.CommentBox.StickerSelected -= OnCommentBoxStickerSelected;
@@ -65,7 +65,7 @@ if (ViewModel.CommentBox != null)
     // Collects the editor contents and hands them to the platform comment box.
     private async void OnSendCommentButtonClicked(object sender, RoutedEventArgs e) => await ViewModel.CommentBox.SendCommentAsync(CommentEditor.GetContents());
 
-// The comment box sent a comment successfully: reset the composer and anchor the comment
+    // The comment box sent a comment successfully: reset the composer and anchor the comment
     // column at the newest comment.
     private void OnCommentBoxCommentSent(object sender, EventArgs e)
     {
@@ -85,7 +85,7 @@ if (ViewModel.CommentBox != null)
             return;
         }
 
-        _ = App.ExecuteRequestAsync(new RecordStickerUsage(stickerContent.StickerId, stickerContent.StickerContentId));
+        _ = ViewModel.ExecuteRequestAsync(new RecordStickerUsage(stickerContent.StickerId, stickerContent.StickerContentId));
         CommentEditor.FocusEditor();
     }
 

@@ -1,4 +1,4 @@
-# History 프로젝트 Copilot 지침
+﻿# History 프로젝트 Copilot 지침
 
 ## 중요: CSharpStyleGuard 실행 금지
 - 이 레포에서는 CSharpStyleGuard(`--fix`/`--check`)를 실행하지 마세요. 가드가 삼항 연산자(CSG0001) 등을 무조건 한 줄로 합쳐버려서 320자를 초과하는 가독성 없는 줄이 만들어지는 문제가 있습니다. 수동 포맷팅만 사용하세요.
@@ -419,6 +419,19 @@ History.MobileClient는 .NET MAUI를 사용한 크로스 플랫폼 모바일 애
 해당하는 프로젝트의 파일 구조를 먼저 읽은 뒤 진행하십시오.
 모든 응답은 한국어로 제공하십시오.
 
+
+## History.WindowsClient (Windows 클라이언트)
+
+### 초기 로드 패턴 및 XamlRoot 규칙
+
+- 페이지의 **초기 데이터 로드는 OnNavigatedTo가 아닌 OnLoaded에서** 수행합니다 (`_isFirstLoad` 가드로 1회만 실행, `Pages/MainPage.xaml.cs`·`Pages/TimelinePage.xaml.cs` 패턴).
+- **OnNavigatedTo 시점에는 페이지의 XamlRoot가 null**이라서, 이 시점에 시작된 뷰모델 호출이 XamlRoot 의존 동작(로딩 오버레이, 다이얼로그, 피커)을 건드리면 비헤이비얼 오류가 발생할 수 있습니다.
+- 따라서 **OnNavigatedTo에서 호출되는 뷰모델 메서드는 `BaseViewModel`(`ViewModels/BaseViewModel.cs`)의 XamlRoot 의존 메서드를 호출하면 안 됩니다.** 해당 메서드:
+  - 로딩: `ExecuteRequestAsync`/`ExecuteWithLoadingAsync`/`ShowLoading`/`HideLoading`
+  - 다이얼로그: `ShowMessageDialogAsync`/`ShowInputDialogAsync`/`ShowContentDialogAsync`
+  - 피커: `PickFileAsync`/`PickFilesAsync`/`SaveFileAsync`/`PickFolderAsync`
+- 로딩/다이얼로그가 필요한 초기 작업은 반드시 OnLoaded 이후로 미루고, OnNavigatedTo에서는 `base.OnNavigatedTo`로 이벤트 구독 및 파라미터 세팅 같은 XamlRoot 비의존 로직만 수행합니다.
+- 로딩 요청 흐름: `BaseViewModel` 이벤트(`LoadingStateRequested`/`ShowLoadingRequested`/`HideLoadingRequested`) → `BasePage`/`BaseControl`이 WRM 메시지 전송 → `MainWindow`가 수신해 오버레이 표시/해제.
 
 ## 기타
 Windows 환경에서 iOS 빌드 오류는 무시해도 괜찮습니다.

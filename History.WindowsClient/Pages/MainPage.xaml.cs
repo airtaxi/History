@@ -21,9 +21,11 @@ public sealed partial class MainPage : BasePage
         MainFrame.Navigate(typeof(TimelinePage));
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    private bool _isFirstLoad;
+    private async void OnLoaded(object sender, RoutedEventArgs e)
     {
-        base.OnNavigatedTo(e);
+        if (_isFirstLoad) return;
+        _isFirstLoad = true;
 
         await ViewModel.RefreshAsync();
     }

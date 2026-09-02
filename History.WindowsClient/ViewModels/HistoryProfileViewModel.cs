@@ -11,10 +11,12 @@ namespace History.WindowsClient.ViewModels;
 public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<ValueChangedMessage<UserResponseDto>>
 {
     private readonly string _userId;
+    private readonly BaseViewModel _baseViewModel;
 
-    public HistoryProfileViewModel(UserResponseDto user)
+    public HistoryProfileViewModel(UserResponseDto user, BaseViewModel baseViewModel)
     {
         _userId = user.UserId;
+        _baseViewModel = baseViewModel;
 
         Update(user);
 
@@ -30,10 +32,10 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
 
     public async Task RefreshAsync()
     {
-        var result = await App.ExecuteRequestAsync(new GetUser(_userId));
+        var result = await _baseViewModel.ExecuteRequestAsync(new GetUser(_userId));
         if (!result.IsSuccess)
         {
-            await ShowMessageDialogAsync(new("오류", "프로필 정보 갱신에 실패하였습니다."));
+            await _baseViewModel.ShowMessageDialogAsync(new("오류", "프로필 정보 갱신에 실패하였습니다."));
             return;
         }
 

@@ -11,9 +11,11 @@ namespace History.WindowsClient.ViewModels;
 // Sticker selection dialog surface: loads the user's sticker tabs (subscribed + own,
 // deduplicated) plus the recent-usage tab, and the asset grid of the active tab
 // (mirrors the MAUI MentionsViewModel sticker flow).
-public partial class StickerPickerViewModel : ObservableObject
+public partial class StickerPickerViewModel(BaseViewModel baseViewModel) : ObservableObject
 {
     private const int RecentAssetLimit = 50;
+
+    private readonly BaseViewModel _baseViewModel = baseViewModel;
 
     public event EventHandler<StickerContent> AssetSelected;
 
@@ -45,10 +47,10 @@ public partial class StickerPickerViewModel : ObservableObject
         {
             var stickers = new List<StickerResponseDto>();
 
-            var subscribedResult = await App.ExecuteRequestAsync(new GetSubscribedStickers());
+            var subscribedResult = await _baseViewModel.ExecuteRequestAsync(new GetSubscribedStickers());
             if (subscribedResult.IsSuccess) stickers.AddRange(subscribedResult.Value);
 
-            var myStickersResult = await App.ExecuteRequestAsync(new GetStickersByUserId(CommonShared.UserId));
+            var myStickersResult = await _baseViewModel.ExecuteRequestAsync(new GetStickersByUserId(CommonShared.UserId));
             if (myStickersResult.IsSuccess)
             {
                 foreach (var sticker in myStickersResult.Value)
@@ -102,7 +104,7 @@ public partial class StickerPickerViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var assetsResult = await App.ExecuteRequestAsync(request);
+            var assetsResult = await _baseViewModel.ExecuteRequestAsync(request);
             AssetViewModels = assetsResult.IsSuccess ? CreateAssetViewModels(assetsResult.Value) : [];
             IsEmpty = AssetViewModels.Count == 0;
         }

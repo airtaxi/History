@@ -60,7 +60,7 @@ public partial class RegisterPageViewModel(ApplicationSettingsService settingsSe
     private async Task RegisterAsync()
     {
         var inviteCode = InviteCode?.Trim();
-        var result = await App.ExecuteRequestAsync(new Register(_idToken, _socialService, _name, inviteCode), [ErrorType.BadRequest, ErrorType.NotFound, ErrorType.Conflict]);
+        var result = await ExecuteRequestAsync(new Register(_idToken, _socialService, _name, inviteCode), [ErrorType.BadRequest, ErrorType.NotFound, ErrorType.Conflict]);
 
         if (result.IsSuccess)
         {
@@ -70,8 +70,8 @@ public partial class RegisterPageViewModel(ApplicationSettingsService settingsSe
             settingsService.Settings.AccessToken = result.Value.AccessToken;
             settingsService.Settings.RefreshToken = result.Value.RefreshToken;
 
-            await LoginPageViewModel.LoadMyProfileAsync();
-            LoginPageViewModel.NavigateToMainPage();
+            await LoginPageViewModel.LoadMyProfileAsync(this);
+            LoginPageViewModel.NavigateToMainPage(this);
         }
         else if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.NotFound || result.Error == ErrorType.Conflict) await ShowMessageDialogAsync(new("오류", result.ErrorMessage));
     }
