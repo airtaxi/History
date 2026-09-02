@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace History.WindowsClient.ViewModels.MainPage;
 
-public partial class MainPageMessagesSideBarViewModel(MainPageViewModel hostViewModel) : BaseMainPageSideBarViewModel
+public partial class MainPageMessagesSideBarViewModel(MainPageViewModel baseViewModel) : BaseMainPageSideBarViewModel
 {
-    public MainPageViewModel HostViewModel { get; } = hostViewModel;
+    public MainPageViewModel BaseViewModel { get; } = baseViewModel;
 }

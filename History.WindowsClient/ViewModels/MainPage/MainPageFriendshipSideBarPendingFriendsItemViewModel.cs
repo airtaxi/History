@@ -15,9 +15,9 @@ public partial class MainPageFriendshipSideBarPendingFriendsItemViewModel : Base
 {
     private ObservableCollection<BaseFriendshipViewModel> _items;
 
-    public MainPageFriendshipSideBarPendingFriendsItemViewModel(MainPageViewModel hostViewModel) : base(hostViewModel)
+    public MainPageFriendshipSideBarPendingFriendsItemViewModel(MainPageViewModel baseViewModel) : base(baseViewModel)
     {
-        if (!HostViewModel.IsKakaoStoryMode) SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 또는 핸들 검색";
+        if (!BaseViewModel.IsKakaoStoryMode) SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 또는 핸들 검색";
         else SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 검색";
 
         Query = string.Empty;
@@ -29,7 +29,7 @@ public partial class MainPageFriendshipSideBarPendingFriendsItemViewModel : Base
 
     public void Receive(FriendshipChangedMessage message)
     {
-        if (HostViewModel.IsKakaoStoryMode) return; // Kakao Story friends are not tracked by the History friendship message.
+        if (BaseViewModel.IsKakaoStoryMode) return; // Kakao Story friends are not tracked by the History friendship message.
 
         var data = message.Value;
         if (_items == null) return; // First load has not happened yet; it will fetch the latest data.
@@ -44,16 +44,16 @@ public partial class MainPageFriendshipSideBarPendingFriendsItemViewModel : Base
 
     public override async Task RefreshAsync()
     {
-        if (!HostViewModel.IsKakaoStoryMode)
+        if (!BaseViewModel.IsKakaoStoryMode)
         {
             var result = await App.ExecuteRequestAsync(new GetPendingRequests());
             if (!result.IsSuccess)
             {
-                await HostViewModel.ShowMessageDialogAsync(new("오류", "받은 친구 신청 목록을 가져오는 데에 실패하였습니다."));
+                await BaseViewModel.ShowMessageDialogAsync(new("오류", "받은 친구 신청 목록을 가져오는 데에 실패하였습니다."));
                 return;
             }
 
-            _items = new(result.Value.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x, HostViewModel) { FriendshipVisibility = Visibility.Visible}));
+            _items = new(result.Value.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x, BaseViewModel) { FriendshipVisibility = Visibility.Visible}));
             Items = _items;
 
             RightHeaderText = $"받은 친구 신청 목록 (총 {result.Value.Count}명)";

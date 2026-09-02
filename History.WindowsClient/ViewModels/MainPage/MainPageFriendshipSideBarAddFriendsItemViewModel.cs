@@ -16,9 +16,9 @@ public partial class MainPageFriendshipSideBarAddFriendsItemViewModel : BaseMain
 {
     private long _searchSequence;
 
-    public MainPageFriendshipSideBarAddFriendsItemViewModel(MainPageViewModel hostViewModel) : base(hostViewModel)
+    public MainPageFriendshipSideBarAddFriendsItemViewModel(MainPageViewModel baseViewModel) : base(baseViewModel)
     {
-        if (!HostViewModel.IsKakaoStoryMode) SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 또는 핸들 검색";
+        if (!BaseViewModel.IsKakaoStoryMode) SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 또는 핸들 검색";
         else SearchAutoSuggestBoxPlaceholderText = "카카오스토리 ID 검색";
 
         Query = string.Empty;
@@ -31,7 +31,7 @@ public partial class MainPageFriendshipSideBarAddFriendsItemViewModel : BaseMain
 
     public void Receive(FriendshipChangedMessage message)
     {
-        if (HostViewModel.IsKakaoStoryMode) return; // Kakao Story friends are not tracked by the History friendship message.
+        if (BaseViewModel.IsKakaoStoryMode) return; // Kakao Story friends are not tracked by the History friendship message.
         if (string.IsNullOrWhiteSpace(Query)) return; // No search results are shown yet.
 
         ApplyQuery(Query);
@@ -47,10 +47,10 @@ public partial class MainPageFriendshipSideBarAddFriendsItemViewModel : BaseMain
     private async void ApplyQuery(string query)
     {
         var sequence = ++_searchSequence;
-        var isKakaoStoryMode = HostViewModel.IsKakaoStoryMode;
+        var isKakaoStoryMode = BaseViewModel.IsKakaoStoryMode;
         var viewModels = new List<BaseFriendshipViewModel>();
 
-        if (!HostViewModel.IsKakaoStoryMode)
+        if (!BaseViewModel.IsKakaoStoryMode)
         {
             var results = new List<UserResponseDto>();
 
@@ -63,7 +63,7 @@ public partial class MainPageFriendshipSideBarAddFriendsItemViewModel : BaseMain
             if (nicknameResults.IsSuccess) results.AddRange(nicknameResults.Value);
 
             // The mode can change while the search runs (fast pill switching); discard the stale result, the pending switch reloads.
-            if (isKakaoStoryMode != HostViewModel.IsKakaoStoryMode) return;
+            if (isKakaoStoryMode != BaseViewModel.IsKakaoStoryMode) return;
 
             // Remove myself from results
             results.RemoveAll(x => x.UserId == CommonShared.UserId);
@@ -71,7 +71,7 @@ public partial class MainPageFriendshipSideBarAddFriendsItemViewModel : BaseMain
             // Delete duplicated records
             results = [.. results.DistinctBy(x => x.UserId)];
 
-            viewModels = [.. results.Select(x => new HistoryFriendshipViewModel(x, HostViewModel))];
+            viewModels = [.. results.Select(x => new HistoryFriendshipViewModel(x, BaseViewModel))];
         }
 
         if (sequence != _searchSequence) return; // A newer search was issued; discard stale results.

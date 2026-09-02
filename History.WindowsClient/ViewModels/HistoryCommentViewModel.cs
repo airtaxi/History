@@ -18,7 +18,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 namespace History.WindowsClient.ViewModels;
 
 // Mirrors the MAUI HistoryCommentViewModel. Dialog prompts are requested on the
-// parent post's host view model; the "..." menu is populated by
+// parent post's base view model; the "..." menu is populated by
 // PopulateMoreMenuFlyout with the MAUI action labels as item Tag values.
 public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<ValueChangedMessage<CommentResponseDto>>
 {
@@ -105,7 +105,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
     }
 
     // TODO: Open the comment editor once it is implemented.
-    private async Task HandleEditCommentAsync() => await ParentViewModel.DialogHostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "아직 지원하지 않는 기능입니다."));
+    private async Task HandleEditCommentAsync() => await ParentViewModel.DialogBaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "아직 지원하지 않는 기능입니다."));
 
     private async Task HandleReportAsync(ReportType reportType)
     {
@@ -116,7 +116,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
             AssociatedId = Comment.Id
         }));
 
-        if (result.IsSuccess) await ParentViewModel.DialogHostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "댓글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다."));
+        if (result.IsSuccess) await ParentViewModel.DialogBaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "댓글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다."));
     }
 
     public override async Task HandleCommentLikeTapAsync()
@@ -124,7 +124,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
         var users = Comment.LikedUsers;
         if (users.Count == 0)
         {
-            await ParentViewModel.DialogHostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("오류", "이 댓글에 좋아요를 누른 사용자가 없습니다."));
+            await ParentViewModel.DialogBaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("오류", "이 댓글에 좋아요를 누른 사용자가 없습니다."));
             return;
         }
 
@@ -155,13 +155,13 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
         }
         else if (IsMyPost || Comment.User.UserId == CommonShared.UserId)
         {
-            var confirm = await ParentViewModel.DialogHostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("댓글 삭제", "정말로 댓글을 삭제하시겠습니까?", "삭제", "취소"));
+            var confirm = await ParentViewModel.DialogBaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("댓글 삭제", "정말로 댓글을 삭제하시겠습니까?", "삭제", "취소"));
             if (confirm != ContentDialogResult.Primary) return;
 
             var deleteResult = await App.ExecuteRequestAsync(new DeleteComment(Comment.Id));
             if (deleteResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueDeletedMessage<CommentResponseDto>(Comment));
         }
-        else await ParentViewModel.DialogHostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("권한 부족", "댓글을 삭제할 권한이 없습니다."));
+        else await ParentViewModel.DialogBaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("권한 부족", "댓글을 삭제할 권한이 없습니다."));
     }
 
     public override async Task HandleTapAsync()

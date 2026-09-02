@@ -13,10 +13,10 @@ namespace History.WindowsClient.ViewModels;
 // Holds the attachment surface and command contracts; derived types implement the actual sending.
 // The CommentSent event follows the BaseViewModel.MessageDialogRequested pattern: the view model
 // requests UI work and the host page fulfills it (clear editor, focus, scroll to newest).
-public abstract partial class BaseCommentBoxViewModel(BaseViewModel dialogHostViewModel) : ObservableObject
+public abstract partial class BaseCommentBoxViewModel(BaseViewModel baseViewModel) : ObservableObject
 {
-    // Host view model used for dialog requests, mirroring the post view model host pattern.
-    protected readonly BaseViewModel HostViewModel = dialogHostViewModel;
+    // Base view model used for dialog requests, mirroring the post view model pattern.
+    protected readonly BaseViewModel BaseViewModel = baseViewModel;
 
     // Attachment surface shared with the composer bar.
     [ObservableProperty]
@@ -39,16 +39,16 @@ public abstract partial class BaseCommentBoxViewModel(BaseViewModel dialogHostVi
     public virtual async Task HandleStickerTapAsync()
     {
         var dialog = new StickerPickerDialog(new StickerPickerViewModel());
-        await HostViewModel.ShowContentDialogAsync(dialog);
+        await BaseViewModel.ShowContentDialogAsync(dialog);
         if (dialog.SelectedStickerContent != null) StickerSelected?.Invoke(this, dialog.SelectedStickerContent);
     }
 
-    // Opens the image picker through the host view model and applies the single selection
+    // Opens the image picker through the base view model and applies the single selection
     // as the comment attachment.
     [RelayCommand]
     public virtual async Task HandleMediaTapAsync()
     {
-        var result = await HostViewModel.PickFileAsync(new FileOpenPickerParameters(s_commentImageFileTypeFilters, PickerLocationId.PicturesLibrary, "이미지 추가"));
+        var result = await BaseViewModel.PickFileAsync(new FileOpenPickerParameters(s_commentImageFileTypeFilters, PickerLocationId.PicturesLibrary, "이미지 추가"));
         if (result == null) return;
 
         var fileName = Path.GetFileName(result.Path);

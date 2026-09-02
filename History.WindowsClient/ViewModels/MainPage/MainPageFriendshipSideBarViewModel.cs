@@ -3,9 +3,9 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace History.WindowsClient.ViewModels.MainPage;
 
-public partial class MainPageFriendshipSideBarViewModel(MainPageViewModel hostViewModel) : BaseMainPageSideBarViewModel
+public partial class MainPageFriendshipSideBarViewModel(MainPageViewModel baseViewModel) : BaseMainPageSideBarViewModel
 {
-    public MainPageViewModel HostViewModel { get; } = hostViewModel;
+    public MainPageViewModel BaseViewModel { get; } = baseViewModel;
 
     [ObservableProperty]
     public partial BaseMainPageFriendshipSideBarItemViewModel SideBarContent { get; private set; }
@@ -20,37 +20,37 @@ public partial class MainPageFriendshipSideBarViewModel(MainPageViewModel hostVi
 
         if (tag == "AllFriends")
         {
-            var viewModel = new MainPageFriendshipSideBarAllFriendsItemViewModel(HostViewModel);
+            var viewModel = new MainPageFriendshipSideBarAllFriendsItemViewModel(BaseViewModel);
             SideBarContent = viewModel;
             await viewModel.RefreshAsync();
         }
         else if (tag == "AddFriends")
         {
-            var viewModel = new MainPageFriendshipSideBarAddFriendsItemViewModel(HostViewModel);
+            var viewModel = new MainPageFriendshipSideBarAddFriendsItemViewModel(BaseViewModel);
             SideBarContent = viewModel;
             await viewModel.RefreshAsync();
         }
         else if (tag == "PendingFriends")
         {
-            var viewModel = new MainPageFriendshipSideBarPendingFriendsItemViewModel(HostViewModel);
+            var viewModel = new MainPageFriendshipSideBarPendingFriendsItemViewModel(BaseViewModel);
             SideBarContent = viewModel;
             await viewModel.RefreshAsync();
         }
         else if (tag == "WaitingFriends")
         {
-            var viewModel = new MainPageFriendshipSideBarWaitingFriendsItemViewModel(HostViewModel);
+            var viewModel = new MainPageFriendshipSideBarWaitingFriendsItemViewModel(BaseViewModel);
             SideBarContent = viewModel;
             await viewModel.RefreshAsync();
         }
         else if (tag == "IgnoredUsers")
         {
-            var viewModel = new MainPageFriendshipSideBarIgnoredUsersItemViewModel(HostViewModel);
+            var viewModel = new MainPageFriendshipSideBarIgnoredUsersItemViewModel(BaseViewModel);
             SideBarContent = viewModel;
             await viewModel.RefreshAsync();
         }
         else if (tag == "BlockedUsers")
         {
-            var viewModel = new MainPageFriendshipSideBarBlockedUsersItemViewModel(HostViewModel);
+            var viewModel = new MainPageFriendshipSideBarBlockedUsersItemViewModel(BaseViewModel);
             SideBarContent = viewModel;
             await viewModel.RefreshAsync();
         }

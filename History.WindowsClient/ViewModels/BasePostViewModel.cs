@@ -14,7 +14,7 @@ namespace History.WindowsClient.ViewModels;
 // Derived types fill the surface and override behavior; commands are declared here only.
 // Menu flyouts are populated by the view models (PopulateMoreMenuFlyout/
 // PopulateReactionMenuFlyout) so the platform templates remain static.
-public abstract partial class BasePostViewModel(PostType postType, bool isParentPost, BaseViewModel hostViewModel) : BaseViewModel
+public abstract partial class BasePostViewModel(PostType postType, bool isParentPost, BaseViewModel baseViewModel) : BaseViewModel
 {
     // User-dependent properties.
     [ObservableProperty]
@@ -110,12 +110,12 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
     public PostType PostType { get; } = postType;
     public bool IsParentPost { get; } = isParentPost;
 
-    // Host view model used for dialog requests so the post view model works on
+    // Base view model used for dialog requests so the post view model works on
     // any page (including a future separate timeline window).
-    protected readonly BaseViewModel HostViewModel = hostViewModel;
+    protected readonly BaseViewModel BaseViewModel = baseViewModel;
 
-    // Public accessor for child view models (comments) to reach the dialog host.
-    public BaseViewModel DialogHostViewModel => HostViewModel;
+    // Public accessor for child view models (comments) to reach the dialog base view model.
+    public BaseViewModel DialogBaseViewModel => BaseViewModel;
 
     // Fills the "..." menu flyout with the actions available for the current user.
     public virtual void PopulateMoreMenuFlyout(MenuFlyout menuFlyout) => throw new NotSupportedException("[BasePostViewModel] PopulateMoreMenuFlyout must be overridden");

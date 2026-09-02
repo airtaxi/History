@@ -10,7 +10,7 @@ public partial class HistoryRepostViewModel : HistoryPostViewModel
 {
     private readonly UserResponseDto _repostedUser;
 
-    public HistoryRepostViewModel(string postId, PostResponseDto parentPost, UserResponseDto repostedUser, BaseViewModel hostViewModel) : base(parentPost, PostType.Timeline, hostViewModel)
+    public HistoryRepostViewModel(string postId, PostResponseDto parentPost, UserResponseDto repostedUser, BaseViewModel baseViewModel) : base(parentPost, PostType.Timeline, baseViewModel)
     {
         _repostedUser = repostedUser;
         RepostId = postId;

@@ -22,7 +22,7 @@ using Windows.ApplicationModel.DataTransfer;
 
 namespace History.WindowsClient.ViewModels;
 
-// Mirrors the MAUI HistoryPostViewModel. Dialog prompts are requested on the host
+// Mirrors the MAUI HistoryPostViewModel. Dialog prompts are requested on the base
 // view model; the "..." and reaction menus are populated by PopulateMoreMenuFlyout
 // and PopulateReactionMenuFlyout with the MAUI action labels as item Tag values.
 public partial class HistoryPostViewModel : BasePostViewModel,
@@ -37,7 +37,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     [ObservableProperty]
     public partial UserResponseDto User { get; private set; }
 
-    public HistoryPostViewModel(PostResponseDto post, PostType postType, BaseViewModel hostViewModel, bool isParentPost = false) : base(postType, isParentPost, hostViewModel)
+    public HistoryPostViewModel(PostResponseDto post, PostType postType, BaseViewModel baseViewModel, bool isParentPost = false) : base(postType, isParentPost, baseViewModel)
     {
         RepostCountPrefix = "리포스트 ";
 
@@ -101,7 +101,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             // Post-dependent simple
             DiscoveryOptionGlyph = PostHelper.GetDiscoveryOptionGlyph(post.DiscoveryOption);
             Contents = PostHelper.GenerateContentViewModels(post.Contents, PostType, IsParentPost, post.Id);
-            ParentPost = post.ParentPost != null ? new HistoryPostViewModel(post.ParentPost, PostType, HostViewModel, true) : null;
+            ParentPost = post.ParentPost != null ? new HistoryPostViewModel(post.ParentPost, PostType, BaseViewModel, true) : null;
             var isRepost = post.IsRepost;
             IsRepost = isRepost;
             IsShare = post.ParentPost != null && !isRepost;
@@ -257,7 +257,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     {
         if (newDiscoveryOption == Post.DiscoveryOption)
         {
-            await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "이미 선택된 공개범위입니다."));
+            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "이미 선택된 공개범위입니다."));
             return;
         }
 
@@ -266,28 +266,28 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     }
 
     // TODO: Open the post editor once it is implemented.
-    private async Task HandleEditPostAsync() => await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "아직 지원하지 않는 기능입니다."));
+    private async Task HandleEditPostAsync() => await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "아직 지원하지 않는 기능입니다."));
 
     private async Task HandlePinPostAsync()
     {
-        var pin = await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "프로필에 이 게시글을 고정하시겠습니까? 기존에 고정된 게시글은 해제됩니다. 또한, 고정된 게시글을 다시 고정하는 경우, 고정이 해제됩니다.", "고정", "취소"));
+        var pin = await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "프로필에 이 게시글을 고정하시겠습니까? 기존에 고정된 게시글은 해제됩니다. 또한, 고정된 게시글을 다시 고정하는 경우, 고정이 해제됩니다.", "고정", "취소"));
         if (pin != ContentDialogResult.Primary) return;
 
         var result = await App.ExecuteRequestAsync(new UpdatePinnedPost(Post.Id));
         if (result.IsSuccess)
         {
-            await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 고정(해제) 요청이 성공적으로 전송되었습니다."));
+            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 고정(해제) 요청이 성공적으로 전송되었습니다."));
             WeakReferenceMessenger.Default.Send(new PostPinnedMessage());
         }
     }
 
     private async Task HandlePromotePostAsync()
     {
-        var shouldWritePublicPost = await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글을 홍보하면 '발견' 탭에서 모든 사용자에게 노출됩니다. 단, 홍보는 24시간에 한 번만 가능합니다.", "홍보", "취소"));
+        var shouldWritePublicPost = await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글을 홍보하면 '발견' 탭에서 모든 사용자에게 노출됩니다. 단, 홍보는 24시간에 한 번만 가능합니다.", "홍보", "취소"));
         if (shouldWritePublicPost != ContentDialogResult.Primary) return;
 
         var success = await App.ExecuteRequestAsync(new WritePublicPost(Post.Id));
-        if (success.IsSuccess) await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 홍보가 성공적으로 전송되었습니다. 발견탭에서 확인할 수 있습니다."));
+        if (success.IsSuccess) await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 홍보가 성공적으로 전송되었습니다. 발견탭에서 확인할 수 있습니다."));
     }
 
     private async Task HandleReportAsync(ReportType reportType)
@@ -299,7 +299,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             AssociatedId = Post.Id
         }));
 
-        if (result.IsSuccess) await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다."));
+        if (result.IsSuccess) await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다."));
     }
 
     private async Task HandleCopyUrlAsync()
@@ -311,7 +311,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     }
 
     // TODO: Render the post to an image once the renderer is implemented.
-    private async Task HandleSaveImageAsync() => await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "아직 지원하지 않는 기능입니다."));
+    private async Task HandleSaveImageAsync() => await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "아직 지원하지 않는 기능입니다."));
 
     private async Task HandleBookmarkAsync(bool bookmark)
     {
@@ -320,7 +320,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             var result = await App.ExecuteRequestAsync(new BookmarkPost(Post.Id));
             if (result.IsSuccess)
             {
-                await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "관심글로 저장되었습니다."));
+                await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "관심글로 저장되었습니다."));
                 await RefreshAsync();
             }
         }
@@ -330,7 +330,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             if (result.IsSuccess)
             {
                 WeakReferenceMessenger.Default.Send(new PostUnbookmarkedMessage(Post.Id));
-                await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "관심글에서 삭제되었습니다."));
+                await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "관심글에서 삭제되었습니다."));
                 await RefreshAsync();
             }
         }
@@ -338,7 +338,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
 
     private async Task HandleHidePostAsync()
     {
-        var confirm = await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("이 글 숨기기", "이 글을 숨기면 타임라인에서 더 이상 보이지 않습니다. 이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?", "숨기기", "취소"));
+        var confirm = await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("이 글 숨기기", "이 글을 숨기면 타임라인에서 더 이상 보이지 않습니다. 이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?", "숨기기", "취소"));
         if (confirm != ContentDialogResult.Primary) return;
 
         var result = await App.ExecuteRequestAsync(new IgnorePost(Post.Id));
@@ -364,7 +364,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         {
             if (CommonShared.MyRank < Rank.Moderator)
             {
-                await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("권한 부족", "게시글을 삭제할 권한이 없습니다."));
+                await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("권한 부족", "게시글을 삭제할 권한이 없습니다."));
                 return;
             }
 
@@ -381,7 +381,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         }
         else
         {
-            var confirm = await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("게시글 삭제", "정말로 게시글을 삭제하시겠습니까?", "삭제", "취소"));
+            var confirm = await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("게시글 삭제", "정말로 게시글을 삭제하시겠습니까?", "삭제", "취소"));
             if (confirm != ContentDialogResult.Primary) return;
 
             var deleteResult = await App.ExecuteRequestAsync(new DeletePost(Post.Id));
@@ -404,12 +404,12 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     {
         if (Post.DiscoveryOption == DiscoveryOption.SelectedUsers || Post.DiscoveryOption == DiscoveryOption.UnselectedUsers)
         {
-            await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 공유할 수 없습니다."));
+            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 공유할 수 없습니다."));
             return;
         }
         else if (Post.DisallowShare)
         {
-            await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "이 게시글은 작성자가 공유를 허용하지 않은 관계로 공유할 수 없습니다."));
+            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "이 게시글은 작성자가 공유를 허용하지 않은 관계로 공유할 수 없습니다."));
             return;
         }
 
@@ -421,7 +421,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     {
         if (Post.DiscoveryOption == DiscoveryOption.SelectedUsers || Post.DiscoveryOption == DiscoveryOption.UnselectedUsers)
         {
-            await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 리포스트할 수 없습니다."));
+            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 리포스트할 수 없습니다."));
             return;
         }
 
@@ -435,7 +435,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     public override async Task HandleMuteNotificationsAsync()
     {
         var isMuting = !IsNotificationsMuted;
-        var confirm = await HostViewModel.ShowMessageDialogAsync(new MessageDialogParameters("알림 설정", isMuting ? "이 글의 알림을 끄시겠습니까?" : "이 글의 알림을 다시 받으시겠습니까?", "설정", "취소"));
+        var confirm = await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("알림 설정", isMuting ? "이 글의 알림을 끄시겠습니까?" : "이 글의 알림을 다시 받으시겠습니까?", "설정", "취소"));
         if (confirm != ContentDialogResult.Primary) return;
 
         var result = isMuting ? await App.ExecuteRequestAsync(new MuteNotifications(Post.Id)) : await App.ExecuteRequestAsync(new UnmuteNotifications(Post.Id));

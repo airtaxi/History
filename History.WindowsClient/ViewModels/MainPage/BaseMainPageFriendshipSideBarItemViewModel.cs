@@ -7,9 +7,9 @@ using System.Text;
 
 namespace History.WindowsClient.ViewModels.MainPage;
 
-public abstract partial class BaseMainPageFriendshipSideBarItemViewModel(MainPageViewModel hostViewModel) : ObservableObject
+public abstract partial class BaseMainPageFriendshipSideBarItemViewModel(MainPageViewModel baseViewModel) : ObservableObject
 {
-    public MainPageViewModel HostViewModel { get; } = hostViewModel;
+    public MainPageViewModel BaseViewModel { get; } = baseViewModel;
 
     [ObservableProperty]
     public partial string SearchAutoSuggestBoxPlaceholderText { get; set; }
