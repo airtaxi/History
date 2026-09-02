@@ -29,12 +29,15 @@ public static class DialogHelper
         };
         s_applicationThemeService.RegisterThemeTarget(dialog);
 
+        var contentPanel = new StackPanel { Spacing = 12 };
+        if (!string.IsNullOrEmpty(parameters.Description)) contentPanel.Children.Add(new TextBlock { Text = parameters.Description, TextWrapping = TextWrapping.Wrap });
         var textBox = new TextBox();
         if (parameters.NumberOnly) textBox.BeforeTextChanging += (textBoxSender, textBoxBeforeTextChangingEventArguments) => textBoxBeforeTextChangingEventArguments.Cancel = textBoxBeforeTextChangingEventArguments.NewText.Any(character => !char.IsDigit(character));
         textBox.HorizontalAlignment = HorizontalAlignment.Stretch;
         textBox.PlaceholderText = parameters.PlaceholderText;
         if (!string.IsNullOrEmpty(parameters.DefaultText)) textBox.Text = parameters.DefaultText;
-        dialog.Content = textBox;
+        contentPanel.Children.Add(textBox);
+        dialog.Content = contentPanel;
 
         if (parameters.ShowCancel) dialog.SecondaryButtonText = DefaultCancelButtonText;
 
