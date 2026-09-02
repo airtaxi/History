@@ -16,9 +16,9 @@ public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMain
 {
     private ObservableCollection<BaseFriendshipViewModel> _items;
 
-    public MainPageFriendshipSideBarAllFriendsItemViewModel(MainPageFriendshipSideBarViewModel parentViewModel) : base(parentViewModel)
+    public MainPageFriendshipSideBarAllFriendsItemViewModel(MainPageViewModel hostViewModel) : base(hostViewModel)
     {
-        if (!Parent.Parent.IsKakaoStoryMode) SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 또는 핸들 검색";
+        if (!HostViewModel.IsKakaoStoryMode) SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 또는 핸들 검색";
         RightHeaderText = "친구 목록";
 
         Query = string.Empty;
@@ -29,7 +29,7 @@ public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMain
 
     public void Receive(FriendshipChangedMessage message)
     {
-        if (Parent.Parent.IsKakaoStoryMode) return; // Kakao Story friends are not tracked by the History friendship message.
+        if (HostViewModel.IsKakaoStoryMode) return; // Kakao Story friends are not tracked by the History friendship message.
 
         var data = message.Value;
         var isFriend = data.NewStatus == FriendshipStatus.Accepted;
@@ -47,7 +47,7 @@ public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMain
 
         if (_items == null) return; // First load has not happened yet; it will fetch the latest data.
 
-        if (isFriend && existingViewModel == null) _items.Add(new HistoryFriendshipViewModel(data.User, Parent.Parent) { FriendshipVisibility = Visibility.Collapsed });
+        if (isFriend && existingViewModel == null) _items.Add(new HistoryFriendshipViewModel(data.User, HostViewModel) { FriendshipVisibility = Visibility.Collapsed });
         else if (!isFriend && existingViewModel != null) _items.Remove(existingViewModel);
 
         _items = new(_items.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname));
@@ -58,16 +58,16 @@ public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMain
 
     public override async Task RefreshAsync()
     {
-        if (!Parent.Parent.IsKakaoStoryMode)
+        if (!HostViewModel.IsKakaoStoryMode)
         {
             var result = await App.ExecuteRequestAsync(new GetFriends(CommonShared.UserId));
             if (!result.IsSuccess)
             {
-                await Parent.Parent.ShowMessageDialogAsync(new("오류", "친구 목록을 가져오는 데에 실패하였습니다."));
+                await HostViewModel.ShowMessageDialogAsync(new("오류", "친구 목록을 가져오는 데에 실패하였습니다."));
                 return;
             }
 
-            _items = new(result.Value.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x, Parent.Parent) { FriendshipVisibility = Visibility.Collapsed }));
+            _items = new(result.Value.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x, HostViewModel) { FriendshipVisibility = Visibility.Collapsed }));
             Items = _items;
             RightHeaderText = $"친구 목록 (총 {result.Value.Count}명)";
 
