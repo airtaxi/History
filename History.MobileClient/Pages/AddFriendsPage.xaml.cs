@@ -115,7 +115,7 @@ public partial class AddFriendsPage : ContentPage
         await App.PushAsync(new BlazorUserPage(viewModel.User.UserId));
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
         _isInForeground = true;
@@ -125,6 +125,8 @@ public partial class AddFriendsPage : ContentPage
         MainCollectionView.Footer = new Grid { HeightRequest = tabBarHeight };
 
 #endif
+        if (CommonShared.LastUsedKakaoStoryMode != _isKakaoStoryMode) await SwitchModeAsync(CommonShared.LastUsedKakaoStoryMode);
+
 #if !IOS
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
         if (safeAreaTopHeight != 0)

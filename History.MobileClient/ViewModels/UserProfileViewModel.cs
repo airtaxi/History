@@ -430,6 +430,12 @@ public partial class UserProfileViewModel : ObservableObject, IBlazorFeedViewMod
 
         if (!_isKakaoStoryMode && UserId != CommonShared.UserId) _ = MarkFriendNotificationsAsReadAsync();
 
+        if (_isMyProfile && CommonShared.LastUsedKakaoStoryMode != _isKakaoStoryMode)
+        {
+            await SwitchModeAsync(CommonShared.LastUsedKakaoStoryMode);
+            if (CommonShared.LastUsedKakaoStoryMode == _isKakaoStoryMode) _isFirstLoad = false; // The switch already refreshed the feed.
+        }
+
         if (_isFirstLoad || (UserPage.ShouldRefresh && !_isKakaoStoryMode && UserId == CommonShared.UserId) || (UserPage.ShouldRefreshKakaoStory && _isKakaoStoryMode && KakaoUserId == CommonShared.KakaoUserId))
         {
             _isFirstLoad = false;

@@ -110,6 +110,12 @@ public partial class WaitingFriendRequestsPage : ContentPage
         MainCollectionView.Footer = new Grid { HeightRequest = tabBarHeight };
 
 #endif
+        if (CommonShared.LastUsedKakaoStoryMode != _isKakaoStoryMode)
+        {
+            await SwitchModeAsync(CommonShared.LastUsedKakaoStoryMode);
+            if (CommonShared.LastUsedKakaoStoryMode == _isKakaoStoryMode) _isInitialized = true; // The switch already refreshed the list.
+        }
+
         if (!_isInitialized)
         {
             _isInitialized = true;

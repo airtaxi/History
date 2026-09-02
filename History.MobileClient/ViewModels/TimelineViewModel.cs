@@ -201,6 +201,12 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
     {
         _isInForeground = true;
 
+        if (CommonShared.LastUsedKakaoStoryMode != _isKakaoStoryMode)
+        {
+            await SwitchModeAsync(CommonShared.LastUsedKakaoStoryMode);
+            if (CommonShared.LastUsedKakaoStoryMode == _isKakaoStoryMode) _isFirstLoad = false; // The switch already refreshed the feed.
+        }
+
         if (_isFirstLoad || (TimelinePage.ShouldRefresh && !_isKakaoStoryMode) || (TimelinePage.ShouldRefreshKakaoStory && _isKakaoStoryMode))
         {
             _isFirstLoad = false;

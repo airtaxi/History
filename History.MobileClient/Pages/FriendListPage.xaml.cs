@@ -211,6 +211,12 @@ public partial class FriendListPage : ContentPage
         MainCollectionView.Footer = new Grid { HeightRequest = tabBarHeight };
 
 #endif
+        if (_isMyProfile && CommonShared.LastUsedKakaoStoryMode != _isKakaoStoryMode)
+        {
+            await SwitchModeAsync(CommonShared.LastUsedKakaoStoryMode);
+            if (CommonShared.LastUsedKakaoStoryMode == _isKakaoStoryMode) _isFirstLoad = true; // The switch already refreshed the list.
+        }
+
         if (!_isFirstLoad)
         {
             _isFirstLoad = true;

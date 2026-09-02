@@ -151,7 +151,17 @@ public partial class MessagesPage : ContentPage
         MainCollectionView.Footer = new Grid { HeightRequest = tabBarHeight };
 
 #endif
-        Dispatcher.Dispatch(async () => await RefreshAsync());
+        // Deferred so the iOS safe-area padding below is applied before any network work starts.
+        Dispatcher.Dispatch(async () =>
+        {
+            if (CommonShared.LastUsedKakaoStoryMode != _isKakaoStoryMode)
+            {
+                await SwitchModeAsync(CommonShared.LastUsedKakaoStoryMode);
+                if (CommonShared.LastUsedKakaoStoryMode == _isKakaoStoryMode) return; // The switch already refreshed the list.
+            }
+
+            await RefreshAsync();
+        });
 
 #if !IOS
         var safeAreaTopHeight = LayoutHelper.GetSafeAreaTopHeight();
