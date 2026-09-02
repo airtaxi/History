@@ -12,8 +12,17 @@
   - Loading: `ExecuteRequestAsync`/`ExecuteWithLoadingAsync`/`ShowLoading`/`HideLoading`
   - Dialogs: `ShowMessageDialogAsync`/`ShowInputDialogAsync`/`ShowContentDialogAsync`
   - Pickers: `PickFileAsync`/`PickFilesAsync`/`SaveFileAsync`/`PickFolderAsync`
+  - Navigation: `RequestNavigation`
 - Defer initial work that needs loading/dialogs until after OnLoaded; in OnNavigatedTo, run only XamlRoot-independent logic via `base.OnNavigatedTo` (event subscription, parameter setup, etc.).
 - Loading request flow: `BaseViewModel` events (`LoadingStateRequested`/`ShowLoadingRequested`/`HideLoadingRequested`) → `BasePage`/`BaseControl` sends WRM messages → `MainWindow` receives them and shows/hides the overlay.
+
+## Standard Navigation
+
+- View models request navigation via `BaseViewModel.RequestNavigation(pageType, parameter)` (`ViewModels/BaseViewModel.cs`) — never reference `MainWindow.Frame` directly.
+- Request flow: `BaseViewModel.NavigationRequested` event → `BasePage`/`BaseControl` forwards `NavigationRequestedMessage.Send(XamlRoot, ...)` → `BaseWindow` matches the XamlRoot and calls its abstract `Navigate` → each window navigates its own root frame (e.g., `MainWindow` → `AppFrame.Navigate`).
+- `RequestNavigation` is XamlRoot-dependent, so it must not be called from `OnNavigatedTo` (see the XamlRoot rules above).
+- Never navigate `this.Frame` from a page: frames are nested (`MainPage.MainFrame` hosts `TimelinePage`), so only the window knows its root frame. Any window that subclasses `BaseWindow` and overrides `Navigate` can open pages such as `PostPage`.
+- Post tap navigation example: `HistoryPostViewModel.HandleTapAsync` calls `BaseViewModel.RequestNavigation(typeof(PostPage), Post)`.
 
 ## Build Notes
 
