@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentDialog
+    x:Class="History.WindowsClient.Dialogs.StickerPickerDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:History.WindowsClient.ViewModels"
+    Title="스티커 선택"
+    CloseButtonText="취소"
+    DefaultButton="Close"
+    Style="{ThemeResource DefaultContentDialogStyle}"
+    mc:Ignorable="d">
+
+    <Grid Width="320" RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Sticker tab bar: recent-usage tab plus one tab per available sticker  -->
+        <ScrollViewer
+            Grid.Row="0"
+            HorizontalScrollBarVisibility="Hidden"
+            HorizontalScrollMode="Auto"
+            VerticalScrollBarVisibility="Disabled"
+            VerticalScrollMode="Disabled">
+            <ItemsControl ItemsSource="{x:Bind ViewModel.StickerTabs, Mode=OneWay}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" Spacing="4" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:StickerPickerTabViewModel">
+                        <Button
+                            Width="44"
+                            Height="44"
+                            Padding="0"
+                            Background="{x:Bind IsSelected, Converter={StaticResource BoolToAccentBrushConverter}, Mode=OneWay}"
+                            BorderThickness="0"
+                            Click="OnStickerTabClicked"
+                            Tag="{x:Bind}">
+                            <Grid>
+                                <FontIcon
+                                    FontSize="22"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Glyph="&#xE81C;"
+                                    Visibility="{x:Bind IsRecent, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneTime}" />
+                                <Image
+                                    Width="32"
+                                    Height="32"
+                                    Source="{x:Bind IconSource, Mode=OneTime}"
+                                    Stretch="Uniform" />
+                            </Grid>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!--  Current sticker name  -->
+        <TextBlock
+            Grid.Row="1"
+            Margin="2,0"
+            FontSize="13"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Text="{x:Bind ViewModel.CurrentStickerName, Mode=OneWay}" />
+
+        <!--  Loading indicator  -->
+        <ProgressRing
+            Grid.Row="2"
+            Width="40"
+            Height="40"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
+
+        <!--  Sticker asset grid  -->
+        <GridView
+            Grid.Row="2"
+            MaxHeight="300"
+            Padding="0"
+            IsItemClickEnabled="True"
+            ItemClick="OnAssetItemClicked"
+            ItemsSource="{x:Bind ViewModel.AssetViewModels, Mode=OneWay}"
+            SelectionMode="None"
+            Visibility="{x:Bind ViewModel.IsNotLoading, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+            <GridView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsWrapGrid
+                        ItemHeight="80"
+                        ItemWidth="80"
+                        MaximumRowsOrColumns="4"
+                        Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </GridView.ItemsPanel>
+            <GridView.ItemTemplate>
+                <DataTemplate x:DataType="vm:StickerPickerAssetViewModel">
+                    <Grid Padding="4">
+                        <Image Source="{x:Bind ImageSource, Mode=OneTime}" Stretch="Uniform" />
+                    </Grid>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
+
+        <!--  Empty state  -->
+        <TextBlock
+            Grid.Row="2"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Text="표시할 스티커가 없습니다"
+            Visibility="{x:Bind ViewModel.IsEmpty, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+    </Grid>
+</ContentDialog>

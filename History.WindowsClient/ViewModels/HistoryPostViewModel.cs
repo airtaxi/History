@@ -12,6 +12,7 @@ using History.Commons.Enums;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
+using History.WindowsClient.Pages;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -393,8 +394,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         var result = await RefreshAsync();
         if (result.IsFailure) return;
 
-        // TODO: Navigate to the post page once it is implemented.
-        await Task.CompletedTask;
+        MainWindow.Frame.Navigate(typeof(PostPage), Post);
     }
 
     // TODO: Navigate to the user profile page once it is implemented.

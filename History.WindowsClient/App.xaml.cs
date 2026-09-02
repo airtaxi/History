@@ -202,6 +202,7 @@ public partial class App : Application
         serviceCollection.AddTransient(sp => new RegisterPageViewModel(sp.GetRequiredService<ApplicationSettingsService>()));
         serviceCollection.AddTransient(sp => new MainPageViewModel());
         serviceCollection.AddTransient(sp => new TimelinePageViewModel());
+        serviceCollection.AddTransient(sp => new HistoryPostPageViewModel());
     }
     private static void OnApplicationUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs unhandledExceptionEventArguments)
     {
