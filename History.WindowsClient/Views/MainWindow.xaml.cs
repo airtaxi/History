@@ -10,18 +10,13 @@ using WinUIEx;
 
 namespace History.WindowsClient.Views;
 
-public sealed partial class MainWindow : Window,
-    IRecipient<LoadingStateRequestedMessage>,
-    IRecipient<ShowLoadingMessage>,
-    IRecipient<HideLoadingMessage>
+public sealed partial class MainWindow : BaseWindow
 {
     private static MainWindow s_instance;
 
-    private readonly ApplicationThemeService _applicationThemeService = App.Services.GetRequiredService<ApplicationThemeService>();
-
     public static Frame Frame => s_instance.AppFrame;
 
-    public MainWindow()
+    public MainWindow() : base()
     {
         s_instance = this;
 
@@ -30,50 +25,39 @@ public sealed partial class MainWindow : Window,
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
 
-        _applicationThemeService.ApplyThemeToWindow(this);
-        _applicationThemeService.ThemeChanged += OnApplicationThemeServiceThemeChanged;
-
-        this.CenterOnScreen();
-
-        AppWindow.SetIcon("Assets/Icon.ico");
-
-        WeakReferenceMessenger.Default.Register((IRecipient<LoadingStateRequestedMessage>) this);
-        WeakReferenceMessenger.Default.Register((IRecipient<ShowLoadingMessage>) this);
-        WeakReferenceMessenger.Default.Register((IRecipient<HideLoadingMessage>) this);
-
         AppFrame.Navigate(typeof(LoginPage));
     }
 
     public static void SetForegroundWindow() => s_instance.SetForegroundWindow();
 
-    private static void ShowLoading(string message = null)
+    protected override void ShowLoading(string message = null)
     {
-        if (s_instance.DispatcherQueue.HasThreadAccess) SetLoadingState(Visibility.Visible, message);
-        else s_instance.DispatcherQueue.TryEnqueue(() => SetLoadingState(Visibility.Visible, message));
+        if (DispatcherQueue.HasThreadAccess) SetLoadingState(Visibility.Visible, message);
+        else DispatcherQueue.TryEnqueue(() => SetLoadingState(Visibility.Visible, message));
     }
 
-    private static void HideLoading()
+    protected override void HideLoading()
     {
-        if (s_instance.DispatcherQueue.HasThreadAccess) SetLoadingState(Visibility.Collapsed, null);
-        else s_instance.DispatcherQueue.TryEnqueue(() => SetLoadingState(Visibility.Collapsed, null));
+        if (DispatcherQueue.HasThreadAccess) SetLoadingState(Visibility.Collapsed, null);
+        else DispatcherQueue.TryEnqueue(() => SetLoadingState(Visibility.Collapsed, null));
     }
 
-    private static void SetLoadingState(Visibility visibility, string message)
+    private void SetLoadingState(Visibility visibility, string message)
     {
-        s_instance.LoadingGrid.Visibility = visibility;
+        LoadingGrid.Visibility = visibility;
         if (!string.IsNullOrEmpty(message) || visibility == Visibility.Visible)
         {
-            s_instance.AppTitleBar.IsEnabled = false;
-            s_instance.AppFrame.IsEnabled = false;
-            s_instance.LoadingTextBlock.Text = message;
-            s_instance.LoadingTextBlock.Visibility = Visibility.Visible;
+            AppTitleBar.IsEnabled = false;
+            AppFrame.IsEnabled = false;
+            LoadingTextBlock.Text = message;
+            LoadingTextBlock.Visibility = Visibility.Visible;
         }
         else
         {
-            s_instance.AppTitleBar.IsEnabled = true;
-            s_instance.AppFrame.IsEnabled = true;
-            s_instance.LoadingTextBlock.Visibility = Visibility.Collapsed;
-            s_instance.LoadingTextBlock.Text = "";
+            AppTitleBar.IsEnabled = true;
+            AppFrame.IsEnabled = true;
+            LoadingTextBlock.Visibility = Visibility.Collapsed;
+            LoadingTextBlock.Text = "";
         }
     }
 
@@ -95,32 +79,5 @@ public sealed partial class MainWindow : Window,
         {
             AppFrame.GoBack();
         }
-    }
-
-    private void OnApplicationThemeServiceThemeChanged(ElementTheme theme) => _applicationThemeService.ApplyThemeToWindow(this);
-
-    // Runs loading requests that originated from this window's pages/controls: the
-    // XamlRoot reference comparison routes messages from other windows away.
-    public void Receive(LoadingStateRequestedMessage message)
-    {
-        if (Content.XamlRoot != message.XamlRoot) return;
-
-        _ = RunLoadingAsync(message);
-    }
-
-    public void Receive(ShowLoadingMessage message) => ShowLoading(message.LoadingMessage);
-
-    public void Receive(HideLoadingMessage message) => HideLoading();
-
-    private async Task RunLoadingAsync(LoadingStateRequestedMessage message)
-    {
-        try
-        {
-            ShowLoading(message.LoadingMessage);
-            await message.Action();
-            message.Complete();
-        }
-        catch (Exception exception) { message.Fail(exception); }
-        finally { HideLoading(); }
     }
 }
