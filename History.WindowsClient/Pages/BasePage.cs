@@ -16,6 +16,7 @@ public partial class BasePage : Page
         base.OnNavigatedTo(e);
 
         ViewModel.MessageDialogRequested += OnMessageDialogRequested;
+        ViewModel.ContentDialogRequested += OnContentDialogRequested;
         ViewModel.FilePickRequested += OnFilePickRequested;
         ViewModel.FilesPickRequested += OnFilesPickRequested;
         ViewModel.SaveFileRequested += OnSaveFileRequested;
@@ -27,6 +28,7 @@ public partial class BasePage : Page
         base.OnNavigatedFrom(e);
 
         ViewModel.MessageDialogRequested -= OnMessageDialogRequested;
+        ViewModel.ContentDialogRequested -= OnContentDialogRequested;
         ViewModel.FilePickRequested -= OnFilePickRequested;
         ViewModel.FilesPickRequested -= OnFilesPickRequested;
         ViewModel.SaveFileRequested -= OnSaveFileRequested;
@@ -36,6 +38,13 @@ public partial class BasePage : Page
     private void OnMessageDialogRequested(object sender, MessageDialogRequestedEventArgs args)
     {
         var result = this.ShowMessageDialogAsync(args.Parameters);
+        args.ResultTask = result;
+    }
+
+    // Fulfills the view model's prebuilt dialog requests with the page-bound dialog.
+    private void OnContentDialogRequested(object sender, ContentDialogRequestedEventArgs args)
+    {
+        var result = this.ShowContentDialogAsync(args.Dialog);
         args.ResultTask = result;
     }
 

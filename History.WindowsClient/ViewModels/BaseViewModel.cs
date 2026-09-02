@@ -8,6 +8,7 @@ namespace History.WindowsClient.ViewModels;
 public abstract partial class BaseViewModel : ObservableObject
 {
     public event EventHandler<MessageDialogRequestedEventArgs> MessageDialogRequested;
+    public event EventHandler<ContentDialogRequestedEventArgs> ContentDialogRequested;
     public event EventHandler<PickerRequestedEventArgs<FileOpenPickerParameters, PickFileResult>> FilePickRequested;
     public event EventHandler<PickerRequestedEventArgs<FileOpenPickerParameters, IReadOnlyList<PickFileResult>>> FilesPickRequested;
     public event EventHandler<PickerRequestedEventArgs<FileSavePickerParameters, PickFileResult>> SaveFileRequested;
@@ -17,6 +18,16 @@ public abstract partial class BaseViewModel : ObservableObject
     {
         var args = new MessageDialogRequestedEventArgs(parameters);
         MessageDialogRequested?.Invoke(this, args);
+        if (args.ResultTask == null) return null;
+
+        return await args.ResultTask;
+    }
+
+    // Prebuilt ContentDialog requests fulfilled by the host page (mirrors ShowMessageDialogAsync).
+    public async Task<ContentDialogResult?> ShowContentDialogAsync(ContentDialog dialog)
+    {
+        var args = new ContentDialogRequestedEventArgs(dialog);
+        ContentDialogRequested?.Invoke(this, args);
         if (args.ResultTask == null) return null;
 
         return await args.ResultTask;

@@ -47,6 +47,18 @@ public static class DialogHelper
         return await taskCompletionSource.Task;
     }
 
+    // Shows a caller-built ContentDialog: assigns the XamlRoot, applies the app theme,
+    // hides any open dialogs, and awaits the user's dismissal.
+    public static async Task<ContentDialogResult> ShowContentDialogAsync(this UIElement element, ContentDialog dialog)
+    {
+        HideOpenContentDialogs(element);
+
+        dialog.XamlRoot = element.XamlRoot;
+        s_applicationThemeService.RegisterThemeTarget(dialog);
+
+        return await dialog.ShowAsync();
+    }
+
     public static ContentDialog GenerateMessageDialog(this UIElement element, MessageDialogParameters parameters)
     {
         HideOpenContentDialogs(element);
