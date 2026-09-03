@@ -10,9 +10,9 @@
     xmlns:views="using:History.WindowsClient.Views"
     Title="History.WindowsClient"
     mc:Ignorable="d">
-    <BaseWindow.SystemBackdrop>
+    <Window.SystemBackdrop>
         <MicaBackdrop />
-    </BaseWindow.SystemBackdrop>
+    </Window.SystemBackdrop>
 
     <Grid>
         <Grid.RowDefinitions>
