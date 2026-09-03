@@ -20,7 +20,7 @@
         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
         CornerRadius="12">
 
-        <StackPanel Spacing="8">
+        <StackPanel Spacing="12">
             <!--  Question  -->
             <TextBlock
                 FontSize="16"
@@ -42,7 +42,7 @@
                                 </behaviors:EventTriggerBehavior>
                             </interactivity:Interaction.Behaviors>
 
-                            <Grid RowSpacing="6">
+                            <Grid RowSpacing="8">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
@@ -84,6 +84,7 @@
                                         Grid.Column="1"
                                         VerticalAlignment="Center"
                                         Text="{x:Bind Text, Mode=OneWay}"
+                                        TextLineBounds="TrimToCapHeight"
                                         TextWrapping="Wrap" />
 
                                     <!--  Vote Count / Percentage  -->
@@ -115,7 +116,8 @@
                     VerticalAlignment="Center"
                     FontSize="{StaticResource CaptionTextBlockFontSize}"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="{x:Bind ViewModel.TotalVotesText, Mode=OneWay}" />
+                    Text="{x:Bind ViewModel.TotalVotesText, Mode=OneWay}"
+                    TextLineBounds="TrimToCapHeight" />
 
                 <!--  View Results Button  -->
                 <Button
@@ -136,7 +138,8 @@
                     VerticalAlignment="Center"
                     FontSize="{StaticResource CaptionTextBlockFontSize}"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="{x:Bind ViewModel.ExpiresAtText, Mode=OneWay}" />
+                    Text="{x:Bind ViewModel.ExpiresAtText, Mode=OneWay}"
+                    TextLineBounds="TrimToCapHeight" />
             </Grid>
         </StackPanel>
     </Border>
