@@ -50,7 +50,10 @@
     </DataTemplate>
 
     <DataTemplate x:Key="SharedPostTemplate" x:DataType="vm:BasePostViewModel">
-        <StackPanel Spacing="8">
+        <StackPanel
+            PointerPressed="OnSharedPostPointerPressed"
+            Spacing="8"
+            Tapped="OnSharedPostTapped">
             <Rectangle
                 Height="1"
                 HorizontalAlignment="Stretch"

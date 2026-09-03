@@ -36,7 +36,7 @@ public static partial class PostHelper
         {
             if (textTypeContents.Count > 0)
             {
-                contentViewModels.Add(new BodyContentItemViewModel([.. textTypeContents], postType, allMediaContents.Count > 0 || contents?.OfType<ExternalUrlContent>().Any() == true));
+                contentViewModels.Add(new BodyContentItemViewModel([.. textTypeContents], postType, allMediaContents.Count > 0 || contents?.OfType<ExternalUrlContent>().Any() == true, isParentPost));
                 textTypeContents = [];
             }
         }
