@@ -6,8 +6,8 @@
     xmlns:behaviors="using:Microsoft.Xaml.Interactivity"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
-    PointerPressed="OnPointPressed"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    PointerPressed="OnPointerPressed"
     mc:Ignorable="d">
 
     <Grid Height="250">

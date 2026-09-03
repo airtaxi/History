@@ -41,5 +41,5 @@ public sealed partial class ExternalUrlContentControl : UserControl
     private void OnCopyMenuItemClicked(object sender, RoutedEventArgs e) => ViewModel.CopyLinkCommand.Execute(null);
 
     // Prevent event bubbling to the parent control when the user clicks on the content, so that it doesn't trigger any unintended actions.
-    private void OnPointPressed(object sender, PointerRoutedEventArgs e) => e.Handled = true;
+    private void OnPointerPressed(object sender, PointerRoutedEventArgs e) => e.Handled = true;
 }
