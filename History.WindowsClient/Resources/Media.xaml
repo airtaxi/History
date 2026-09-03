@@ -96,11 +96,11 @@
             <MediaPlayerElement
                 x:Name="InlineMediaPlayerElement"
                 HorizontalAlignment="Stretch"
-                Loaded="OnVideoMediaPlayerElementLoaded"
                 VerticalAlignment="Stretch"
                 x:Load="{x:Bind IsPlaying, Mode=OneWay}"
                 AreTransportControlsEnabled="True"
                 AutoPlay="True"
+                Loaded="OnVideoMediaPlayerElementLoaded"
                 Source="{x:Bind PlaybackMediaSource, Mode=OneWay}" />
 
             <!--  Video Overlay  -->
@@ -172,7 +172,7 @@
 
     <!--  Full-screen image item: original media, Uniform stretch, no inline tap action  -->
     <DataTemplate x:Key="FullScreenImageTemplate" x:DataType="media:MediaContentViewModel">
-        <Grid Background="Black">
+        <Grid>
             <interactivity:Interaction.Behaviors>
                 <behaviors:EventTriggerBehavior EventName="Unloaded">
                     <behaviors:InvokeCommandAction Command="{x:Bind HandleUnloadCommand}" />
@@ -250,7 +250,7 @@
 
     <!--  Full-screen video item: fit-to-viewport thumbnail + play overlay, playback on demand (no zoom)  -->
     <DataTemplate x:Key="FullScreenVideoTemplate" x:DataType="media:MediaContentViewModel">
-        <Grid Background="Black">
+        <Grid>
             <interactivity:Interaction.Behaviors>
                 <behaviors:EventTriggerBehavior EventName="Unloaded">
                     <behaviors:InvokeCommandAction Command="{x:Bind HandleUnloadCommand}" />
