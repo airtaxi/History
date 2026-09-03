@@ -34,6 +34,14 @@ public sealed partial class MainWindow : BaseWindow
 
     protected override void Navigate(Type pageType, object parameter) => AppFrame.Navigate(pageType, parameter);
 
+    protected override bool TryNavigateBack()
+    {
+        if (!AppFrame.CanGoBack) return false;
+
+        AppFrame.GoBack();
+        return true;
+    }
+
     protected override void ShowLoading(string message = null)
     {
         if (DispatcherQueue.HasThreadAccess) SetLoadingState(Visibility.Visible, message);

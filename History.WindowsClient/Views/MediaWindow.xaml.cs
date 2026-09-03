@@ -40,6 +40,9 @@ public sealed partial class MediaWindow : BaseWindow
     // no-op for this window
     protected override void Navigate(Type pageType, object parameter) { }
 
+    // no-op for this window
+    protected override bool TryNavigateBack() => false;
+
     protected override void ShowLoading(string message = null)
     {
         if (DispatcherQueue.HasThreadAccess) SetLoadingState(Visibility.Visible, message);

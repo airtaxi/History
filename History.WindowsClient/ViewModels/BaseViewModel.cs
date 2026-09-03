@@ -24,6 +24,7 @@ public abstract partial class BaseViewModel : ObservableObject
     public event EventHandler<ShowLoadingRequestedEventArgs> ShowLoadingRequested;
     public event EventHandler<HideLoadingRequestedEventArgs> HideLoadingRequested;
     public event EventHandler<NavigationRequestedEventArgs> NavigationRequested;
+    public event EventHandler<TryNavigateBackRequestedEventArgs> TryNavigateBackRequested;
 
     public async Task<ContentDialogResult?> ShowMessageDialogAsync(MessageDialogParameters parameters)
     {
@@ -146,6 +147,17 @@ public abstract partial class BaseViewModel : ObservableObject
     {
         var args = new NavigationRequestedEventArgs(pageType, parameter);
         NavigationRequested?.Invoke(this, args);
+    }
+
+    // Requests the owning window to navigate its root frame back; returns whether the back
+    // navigation actually happened (fulfilled by the host page or control).
+    public async Task<bool> TryNavigateBackAsync()
+    {
+        var args = new TryNavigateBackRequestedEventArgs();
+        TryNavigateBackRequested?.Invoke(this, args);
+        if (args.ResultTask == null) return false;
+
+        return await args.ResultTask;
     }
 
     public async Task<Result> ExecuteRequestAsync(IBaseRequest request, params ErrorType[] hiddenErrorTypes)

@@ -11,7 +11,8 @@ public abstract class BaseWindow : WindowEx,
     IRecipient<LoadingStateRequestedMessage>,
     IRecipient<ShowLoadingMessage>,
     IRecipient<HideLoadingMessage>,
-    IRecipient<NavigationRequestedMessage>
+    IRecipient<NavigationRequestedMessage>,
+    IRecipient<TryNavigateBackRequestedMessage>
 {
     protected readonly ApplicationThemeService _applicationThemeService = App.Services.GetRequiredService<ApplicationThemeService>();
 
@@ -26,6 +27,7 @@ public abstract class BaseWindow : WindowEx,
         WeakReferenceMessenger.Default.Register((IRecipient<ShowLoadingMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<HideLoadingMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<NavigationRequestedMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<TryNavigateBackRequestedMessage>)this);
     }
 
     // Runs loading requests that originated from this window's pages/controls: the
@@ -50,15 +52,27 @@ public abstract class BaseWindow : WindowEx,
         Navigate(message.PageType, message.Parameter);
     }
 
+    // Runs back navigation requests that originated from this window's pages/controls: the
+    // XamlRoot reference comparison routes messages from other windows away.
+    public void Receive(TryNavigateBackRequestedMessage message)
+    {
+        if (Content.XamlRoot != message.XamlRoot) return;
+
+        message.Complete(TryNavigateBack());
+    }
+
     protected void UnregisterMessengerRecipients()
     {
         WeakReferenceMessenger.Default.Unregister<LoadingStateRequestedMessage>(this);
         WeakReferenceMessenger.Default.Unregister<ShowLoadingMessage>(this);
         WeakReferenceMessenger.Default.Unregister<HideLoadingMessage>(this);
         WeakReferenceMessenger.Default.Unregister<NavigationRequestedMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<TryNavigateBackRequestedMessage>(this);
     }
 
     protected abstract void Navigate(Type pageType, object parameter);
+
+    protected abstract bool TryNavigateBack();
 
     private async Task RunLoadingAsync(LoadingStateRequestedMessage message)
     {
