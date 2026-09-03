@@ -83,7 +83,7 @@
                 <Border
                     Padding="10,4"
                     VerticalAlignment="Center"
-                    Background="{ThemeResource CardBackgroundFillColorDefault}"
+                    Background="#80808080"
                     CornerRadius="14"
                     Visibility="{x:Bind ViewModel.PositionBadgeVisiability, Mode=OneWay}">
                     <TextBlock
