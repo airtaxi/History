@@ -2,6 +2,7 @@
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.TimeLineData;
 
 namespace History.WindowsClient.Controls;
@@ -38,4 +39,7 @@ public sealed partial class ExternalUrlContentControl : UserControl
     private void OnOpenMenuItemClicked(object sender, RoutedEventArgs e) => ViewModel.OpenLinkCommand.Execute(null);
 
     private void OnCopyMenuItemClicked(object sender, RoutedEventArgs e) => ViewModel.CopyLinkCommand.Execute(null);
+
+    // Prevent event bubbling to the parent control when the user clicks on the content, so that it doesn't trigger any unintended actions.
+    private void OnPointPressed(object sender, PointerRoutedEventArgs e) => e.Handled = true;
 }
