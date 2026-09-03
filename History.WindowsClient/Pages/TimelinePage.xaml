@@ -12,21 +12,23 @@
     mc:Ignorable="d">
 
     <Grid>
-        <ScrollViewer Padding="8" VerticalScrollBarVisibility="Hidden">
-            <ItemsRepeater
-                x:Name="MainItemsRepeater"
-                ElementPrepared="OnMainItemsRepeaterElementPrepared"
-                ItemTemplate="{StaticResource TimelineTemplateSelector}"
-                ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
-                <ItemsRepeater.Layout>
-                    <controls:StaggeredLayout
-                        ColumnSpacing="6"
-                        DesiredColumnWidth="400"
-                        ItemsStretch="Fill"
-                        RowSpacing="6" />
-                </ItemsRepeater.Layout>
-            </ItemsRepeater>
-        </ScrollViewer>
+        <RefreshContainer RefreshRequested="OnRefreshRequested">
+            <ScrollViewer Padding="8" VerticalScrollBarVisibility="Hidden">
+                <ItemsRepeater
+                    x:Name="MainItemsRepeater"
+                    ElementPrepared="OnMainItemsRepeaterElementPrepared"
+                    ItemTemplate="{StaticResource TimelineTemplateSelector}"
+                    ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <controls:StaggeredLayout
+                            ColumnSpacing="6"
+                            DesiredColumnWidth="400"
+                            ItemsStretch="Fill"
+                            RowSpacing="6" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </ScrollViewer>
+        </RefreshContainer>
 
         <TextBlock
             HorizontalAlignment="Center"

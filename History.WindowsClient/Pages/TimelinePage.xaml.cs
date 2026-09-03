@@ -35,4 +35,6 @@ public sealed partial class TimelinePage : BasePage
 
         await ViewModel.RefreshAsync();
     }
+
+    private async void OnRefreshRequested(RefreshContainer sender, RefreshRequestedEventArgs args) => await ViewModel.RefreshAsync();
 }
