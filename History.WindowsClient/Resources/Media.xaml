@@ -178,11 +178,24 @@
                 </behaviors:EventTriggerBehavior>
             </interactivity:Interaction.Behaviors>
 
-            <Image
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Source="{x:Bind ImageSource, Mode=OneWay}"
-                Stretch="{x:Bind Stretch, Mode=OneTime}" />
+            <ScrollViewer
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center"
+                HorizontalScrollBarVisibility="Auto"
+                MaxZoomFactor="10"
+                MinZoomFactor="0.1"
+                SizeChanged="OnFullScreenScrollViewerSizeChanged"
+                VerticalScrollBarVisibility="Auto"
+                ZoomMode="Enabled">
+                <Image
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    ImageOpened="OnFullScreenMediaImageOpened"
+                    PointerWheelChanged="OnFullScreenMediaPointerWheelChanged"
+                    Source="{x:Bind ImageSource, Mode=OneWay}"
+                    Stretch="{x:Bind Stretch, Mode=OneTime}"
+                    Tapped="OnFullScreenMediaTapped" />
+            </ScrollViewer>
 
             <!--  Spoiler Overlay  -->
             <Button
@@ -234,7 +247,7 @@
         </Grid>
     </DataTemplate>
 
-    <!--  Full-screen video item: thumbnail + play overlay, playback on demand  -->
+    <!--  Full-screen video item: fit-to-viewport thumbnail + play overlay, playback on demand (no zoom)  -->
     <DataTemplate x:Key="FullScreenVideoTemplate" x:DataType="media:MediaContentViewModel">
         <Grid Background="Black">
             <interactivity:Interaction.Behaviors>
@@ -243,25 +256,27 @@
                 </behaviors:EventTriggerBehavior>
             </interactivity:Interaction.Behaviors>
 
-            <Image
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Source="{x:Bind ImageSource, Mode=OneWay}"
-                Stretch="{x:Bind Stretch, Mode=OneTime}" />
+            <Grid>
+                <Image
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Source="{x:Bind ImageSource, Mode=OneWay}"
+                    Stretch="{x:Bind Stretch, Mode=OneTime}" />
 
-            <!--
-                Only instantiated while playback is active (x:Load): the viewer never
-                auto-plays videos, so recycled items that are not playing never realize
-                (or release) a media player element.
-            -->
-            <MediaPlayerElement
-                x:Name="FullScreenMediaPlayerElement"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch"
-                x:Load="{x:Bind IsPlaying, Mode=OneWay}"
-                AreTransportControlsEnabled="True"
-                AutoPlay="True"
-                Source="{x:Bind PlaybackMediaSource, Mode=OneWay}" />
+                <!--
+                    Only instantiated while playback is active (x:Load): the viewer never
+                    auto-plays videos, so recycled items that are not playing never realize
+                    (or release) a media player element.
+                -->
+                <MediaPlayerElement
+                    x:Name="FullScreenMediaPlayerElement"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    x:Load="{x:Bind IsPlaying, Mode=OneWay}"
+                    AreTransportControlsEnabled="True"
+                    AutoPlay="True"
+                    Source="{x:Bind PlaybackMediaSource, Mode=OneWay}" />
+            </Grid>
 
             <!--  Video Overlay  -->
             <Button

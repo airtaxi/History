@@ -1,9 +1,14 @@
-﻿using History.WindowsClient.Helpers;
+﻿using System;
+using System.Collections.Generic;
+using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.Windows.Storage.Pickers;
 using WinUIEx;
 
@@ -106,5 +111,82 @@ public sealed partial class MediaWindow : BaseWindow
         {
             media.ResetForReuse();
         }
+    }
+
+    private const double ZoomStep = 0.25;
+    private const double MinZoomFactor = 0.1;
+    private const double MaxZoomFactor = 10.0;
+
+    private void OnZoomOutClicked(object sender, RoutedEventArgs e) => ZoomBy(-ZoomStep);
+
+    private void OnZoomInClicked(object sender, RoutedEventArgs e) => ZoomBy(ZoomStep);
+
+    private void OnZoomResetClicked(object sender, RoutedEventArgs e) => ResetZoomToFit(false);
+
+    // Flipping to another media resets its zoom to the 100% fit level without animation; if the
+    // new item's container is not realized yet, the template's SizeChanged/ImageOpened handlers
+    // fit it.
+    private void OnMediaFlipViewSelectionChanged(object sender, SelectionChangedEventArgs e) => ResetZoomToFit(true);
+
+    // Re-applies the contain-fit zoom (100%), matching the open-state fit from Media.xaml.cs.
+    private void ResetZoomToFit(bool disableAnimation)
+    {
+        if (GetCurrentItemScrollViewer() is not ScrollViewer scrollViewer) return;
+        if (FindDescendantImage(scrollViewer) is not Image { Source: BitmapImage bitmap }) return;
+
+        double zoomFactor = Math.Min(scrollViewer.ActualWidth / bitmap.PixelWidth, scrollViewer.ActualHeight / bitmap.PixelHeight);
+        if (double.IsNaN(zoomFactor) || double.IsInfinity(zoomFactor) || zoomFactor <= 0) return;
+
+        scrollViewer.ChangeView(null, null, (float)zoomFactor, disableAnimation);
+    }
+
+    private static Image FindDescendantImage(DependencyObject root)
+    {
+        int childCount = VisualTreeHelper.GetChildrenCount(root);
+        for (int i = 0; i < childCount; i++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(root, i);
+            if (child is Image image) return image;
+            if (FindDescendantImage(child) is Image found) return found;
+        }
+        return null;
+    }
+
+    private void ZoomBy(double delta)
+    {
+        if (GetCurrentItemScrollViewer() is not ScrollViewer scrollViewer) return;
+
+        double targetZoom = Math.Clamp(scrollViewer.ZoomFactor + delta, MinZoomFactor, MaxZoomFactor);
+        if (Math.Abs(targetZoom - scrollViewer.ZoomFactor) < 0.01) return;
+
+        // Keep the current viewport center fixed while zooming.
+        double centerX = scrollViewer.HorizontalOffset + scrollViewer.ViewportWidth / 2;
+        double centerY = scrollViewer.VerticalOffset + scrollViewer.ViewportHeight / 2;
+        double factor = targetZoom / scrollViewer.ZoomFactor;
+        double targetHorizontalOffset = centerX * factor - scrollViewer.ViewportWidth / 2;
+        double targetVerticalOffset = centerY * factor - scrollViewer.ViewportHeight / 2;
+
+        scrollViewer.ChangeView(targetHorizontalOffset, targetVerticalOffset, (float)targetZoom, false);
+    }
+
+    // The zoomable ScrollViewer lives inside the current FlipView item's template, so it is
+    // located by walking the realized container's visual tree.
+    private ScrollViewer GetCurrentItemScrollViewer()
+    {
+        if (MediaFlipView.ContainerFromItem(MediaFlipView.SelectedItem) is not FrameworkElement container) return null;
+
+        Queue<DependencyObject> pending = new();
+        pending.Enqueue(container);
+
+        while (pending.Count > 0)
+        {
+            DependencyObject current = pending.Dequeue();
+            if (current is ScrollViewer scrollViewer) return scrollViewer;
+
+            int childCount = VisualTreeHelper.GetChildrenCount(current);
+            for (int i = 0; i < childCount; i++) pending.Enqueue(VisualTreeHelper.GetChild(current, i));
+        }
+
+        return null;
     }
 }

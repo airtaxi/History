@@ -63,22 +63,75 @@
                 Background="Black"
                 ItemTemplateSelector="{StaticResource FullScreenMediaTemplateSelector}"
                 ItemsSource="{x:Bind ViewModel.Medias, Mode=OneWay}"
-                SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}" />
+                SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"
+                SelectionChanged="OnMediaFlipViewSelectionChanged" />
 
-            <!--  Position Badge  -->
-            <Border
+            <!--  Zoom Controls and Position Badge  -->
+            <StackPanel
                 Margin="12"
-                Padding="10,4"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
-                Background="#80808080"
-                CornerRadius="14"
-                Visibility="{x:Bind ViewModel.PositionBadgeVisiability, Mode=OneWay}">
-                <TextBlock
-                    FontWeight="Bold"
-                    Foreground="White"
-                    Text="{x:Bind ViewModel.PositionText, Mode=OneWay}" />
-            </Border>
+                Orientation="Horizontal"
+                Spacing="8">
+                <Border
+                    Padding="10,4"
+                    VerticalAlignment="Center"
+                    Background="#80808080"
+                    CornerRadius="14"
+                    Visibility="{x:Bind ViewModel.PositionBadgeVisiability, Mode=OneWay}">
+                    <TextBlock
+                        FontWeight="Bold"
+                        Foreground="White"
+                        Text="{x:Bind ViewModel.PositionText, Mode=OneWay}" />
+                </Border>
+                <StackPanel
+                    Orientation="Horizontal"
+                    Spacing="8"
+                    Visibility="{x:Bind ViewModel.IsZoomVisible, Mode=OneWay}">
+                    <Button
+                        Width="36"
+                        Height="36"
+                        Padding="0"
+                        Background="#80808080"
+                        BorderThickness="0"
+                        Click="OnZoomOutClicked"
+                        CornerRadius="4"
+                        ToolTipService.ToolTip="축소">
+                        <FontIcon
+                            FontSize="14"
+                            Foreground="White"
+                            Glyph="&#xE71F;" />
+                    </Button>
+                    <Button
+                        Width="36"
+                        Height="36"
+                        Padding="0"
+                        Background="#80808080"
+                        BorderThickness="0"
+                        Click="OnZoomResetClicked"
+                        CornerRadius="4"
+                        ToolTipService.ToolTip="100%">
+                        <FontIcon
+                            FontSize="14"
+                            Foreground="White"
+                            Glyph="&#xE71E;" />
+                    </Button>
+                    <Button
+                        Width="36"
+                        Height="36"
+                        Padding="0"
+                        Background="#80808080"
+                        BorderThickness="0"
+                        Click="OnZoomInClicked"
+                        CornerRadius="4"
+                        ToolTipService.ToolTip="확대">
+                        <FontIcon
+                            FontSize="14"
+                            Foreground="White"
+                            Glyph="&#xE8A3;" />
+                    </Button>
+                </StackPanel>
+            </StackPanel>
 
             <Grid x:Name="LoadingGrid" Visibility="Collapsed">
                 <Rectangle Fill="Black" Opacity="0.5" />

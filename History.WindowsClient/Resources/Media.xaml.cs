@@ -14,6 +14,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.System;
 
 namespace History.WindowsClient.Resources;
 
@@ -55,5 +56,83 @@ public sealed partial class Media : ResourceDictionary
             current = VisualTreeHelper.GetParent(current);
         }
         return false;
+    }
+
+    // Shift+wheel pans horizontally instead of scrolling vertically. The raw wheel delta is
+    // applied with an inverted sign so wheel-up moves the view left, matching the native wheel
+    // direction convention; ChangeView clamps the offset to the scrollable range.
+    // The handler is attached to the template content rather than the ScrollViewer itself:
+    // the ScrollViewer's internal wheel handling marks PointerWheelChanged handled before
+    // XAML handlers on it would run, so the content source sees the event first.
+    private void OnFullScreenMediaPointerWheelChanged(object sender, PointerRoutedEventArgs e)
+    {
+        if (!e.KeyModifiers.HasFlag(VirtualKeyModifiers.Shift)) return;
+        if (sender is not FrameworkElement element) return;
+        if (FindAncestorScrollViewer(element) is not ScrollViewer scrollViewer) return;
+
+        var wheelDelta = e.GetCurrentPoint(scrollViewer).Properties.MouseWheelDelta;
+        scrollViewer.ChangeView(scrollViewer.HorizontalOffset - wheelDelta, null, null);
+        e.Handled = true;
+    }
+
+    // Tapping the media returns the zoom to the 100% fit level, like the reset button. Taps
+    // that originate inside a button (e.g. the video transport controls) keep their own behavior.
+    private void OnFullScreenMediaTapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (e.OriginalSource is not DependencyObject originalSource) return;
+        if (IsInsideInteractiveElement(originalSource, (FrameworkElement)sender)) return;
+        if (sender is not FrameworkElement element) return;
+        if (FindAncestorScrollViewer(element) is ScrollViewer scrollViewer) FitImageToViewport(scrollViewer);
+    }
+
+    // The media keeps its natural size and the ScrollViewer zoom factor is set to the
+    // contain-fit value, so the viewer opens at a 100% fit with the media centered (the
+    // Image's own alignment centers content smaller than the viewport). Re-runs when the
+    // image finishes decoding and when the viewport resizes.
+    private void OnFullScreenScrollViewerSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (sender is ScrollViewer scrollViewer)
+        {
+            FitImageToViewport(scrollViewer);
+        }
+    }
+
+    private void OnFullScreenMediaImageOpened(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element) return;
+        if (FindAncestorScrollViewer(element) is ScrollViewer scrollViewer) FitImageToViewport(scrollViewer);
+    }
+
+    private static void FitImageToViewport(ScrollViewer scrollViewer)
+    {
+        if (FindDescendantImage(scrollViewer) is not Image { Source: BitmapImage bitmap }) return;
+
+        double zoomFactor = Math.Min(scrollViewer.ActualWidth / bitmap.PixelWidth, scrollViewer.ActualHeight / bitmap.PixelHeight);
+        if (double.IsNaN(zoomFactor) || double.IsInfinity(zoomFactor) || zoomFactor <= 0) return;
+
+        scrollViewer.ChangeView(null, null, (float)zoomFactor, true);
+    }
+
+    private static ScrollViewer FindAncestorScrollViewer(DependencyObject source)
+    {
+        DependencyObject current = source;
+        while (current != null)
+        {
+            if (current is ScrollViewer scrollViewer) return scrollViewer;
+            current = VisualTreeHelper.GetParent(current);
+        }
+        return null;
+    }
+
+    private static Image FindDescendantImage(DependencyObject root)
+    {
+        int childCount = VisualTreeHelper.GetChildrenCount(root);
+        for (int i = 0; i < childCount; i++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(root, i);
+            if (child is Image image) return image;
+            if (FindDescendantImage(child) is Image found) return found;
+        }
+        return null;
     }
 }

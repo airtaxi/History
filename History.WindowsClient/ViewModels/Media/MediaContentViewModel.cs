@@ -16,11 +16,11 @@ using Windows.Media.Core;
 
 namespace History.WindowsClient.ViewModels.Media;
 
-// Mirrors the MAUI BaseMediaContentViewModel + HistoryMediaContentViewModel pair for a single
-// carousel item. The inline surface is image-first (thumbnail for wrapped posts and videos),
-// tapping the video overlay starts inline playback, and tapping the media itself opens the
-// full-screen MediaWindow. Full-screen instances (IsFullScreen) are built by the
-// MediaWindowViewModel with the original media, Uniform stretch, and no cache warm-up.
+// Carousel item view model for a single media content. The inline surface is image-first
+// (thumbnail for wrapped posts and videos), tapping the video overlay starts inline playback,
+// and tapping the media itself opens the full-screen MediaWindow. Full-screen instances
+// (IsFullScreen) are built by the MediaWindowViewModel with the original image (or the video
+// thumbnail), Uniform stretch, and no cache warm-up.
 public sealed partial class MediaContentViewModel : ObservableObject
 {
     public MediaContent MediaContent { get; }
@@ -122,11 +122,13 @@ public sealed partial class MediaContentViewModel : ObservableObject
 
     // The inline image is served from the thumbnail for wrapped posts and videos, and from the
     // original media for unwrapped image posts (see CreateInlineImageSource). Full-screen
-    // instances always use the original media.
-    private static string GetInlineImageMediaId(MediaContent mediaContent, PostType postType, bool isFullScreen) => isFullScreen ? mediaContent.MediaId : postType != PostType.Unwrapped || mediaContent.IsVideo ? mediaContent.ThumbnailMediaId ?? mediaContent.MediaId : mediaContent.MediaId;
+    // images use the original media; full-screen videos use the thumbnail, because the
+    // original of a video is a video file that BitmapImage cannot decode.
+    private static string GetInlineImageMediaId(MediaContent mediaContent, PostType postType, bool isFullScreen)
+        => isFullScreen ? mediaContent.IsVideo ? mediaContent.ThumbnailMediaId ?? mediaContent.MediaId : mediaContent.MediaId : postType != PostType.Unwrapped || mediaContent.IsVideo ? mediaContent.ThumbnailMediaId ?? mediaContent.MediaId : mediaContent.MediaId;
 
-    // Restores the initial overlay state when the carousel moves to another media, mirroring
-    // the MAUI Unloaded command: inline playback stops and spoiler overlays are hidden again.
+    // Restores the initial overlay state when the carousel moves to another media: inline
+    // playback stops and spoiler overlays are hidden again.
     internal void ResetForReuse()
     {
         IsPlaying = false;
@@ -186,7 +188,9 @@ public sealed partial class MediaContentViewModel : ObservableObject
         if (playbackMediaSource != null) DispatcherQueue.GetForCurrentThread().TryEnqueue(DispatcherQueuePriority.Low, () => playbackMediaSource.Dispose()); // Low priority: run after the in-flight render/unload pass has fully unwound.
     }
 
-    // Wrapped posts and inline videos display the thumbnail; unwrapped image posts display the original media.
+    // Wrapped posts and inline videos display the thumbnail; unwrapped image posts display the
+    // original media; full-screen videos display the thumbnail, and full-screen images display
+    // the original media.
     // GIF/WebP animation is not supported by BitmapImage; only the first frame is shown.
     private BitmapImage CreateInlineImageSource(MediaContent mediaContent, PostType postType)
     {
