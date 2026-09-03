@@ -7,6 +7,8 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Services;
+using History.WindowsClient.ViewModels;
+using History.WindowsClient.Views;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -16,8 +18,9 @@ namespace History.WindowsClient.ViewModels.Media;
 
 // Mirrors the MAUI BaseMediaContentViewModel + HistoryMediaContentViewModel pair for a single
 // carousel item. The inline surface is image-first (thumbnail for wrapped posts and videos),
-// tapping the video overlay starts inline playback, and tapping the media itself is a no-op
-// until the full-screen media viewer page is implemented.
+// tapping the video overlay starts inline playback, and tapping the media itself opens the
+// full-screen MediaWindow. Full-screen instances (IsFullScreen) are built by the
+// MediaWindowViewModel with the original media, Uniform stretch, and no cache warm-up.
 public sealed partial class MediaContentViewModel : ObservableObject
 {
     public MediaContent MediaContent { get; }
@@ -26,6 +29,7 @@ public sealed partial class MediaContentViewModel : ObservableObject
     public bool IsParentPost { get; }
     public bool IsVideo { get; }
     public bool IsSpoiler { get; }
+    public bool IsFullScreen { get; }
     public Stretch Stretch { get; }
     public string Description { get; }
     public bool HasDescription { get; }
@@ -56,7 +60,7 @@ public sealed partial class MediaContentViewModel : ObservableObject
     [ObservableProperty]
     public partial MediaSource PlaybackMediaSource { get; private set; }
 
-    public MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, PostType postType, bool isParentPost)
+    public MediaContentViewModel(MediaContent mediaContent, IEnumerable<MediaContent> allMediaContents, PostType postType, bool isParentPost, bool isFullScreen = false)
     {
         MediaContent = mediaContent;
         AllMediaContents = allMediaContents == null ? [] : [.. allMediaContents];
@@ -64,19 +68,20 @@ public sealed partial class MediaContentViewModel : ObservableObject
         IsParentPost = isParentPost;
         IsVideo = mediaContent.IsVideo;
         IsSpoiler = mediaContent.IsSpoiler;
+        IsFullScreen = isFullScreen;
         IsOverlayVisible = IsVideo;
         IsSpoilerOverlayVisible = IsSpoiler;
-        Stretch = postType != PostType.Unwrapped ? Stretch.UniformToFill : Stretch.Uniform;
+        Stretch = isFullScreen || postType == PostType.Unwrapped ? Stretch.Uniform : Stretch.UniformToFill;
         Description = mediaContent.Description ?? string.Empty;
         HasDescription = Description.Length > 0;
-        InlineImageMediaId = GetInlineImageMediaId(mediaContent, postType);
+        InlineImageMediaId = GetInlineImageMediaId(mediaContent, postType, isFullScreen);
 
         // Cache hit: load from the disk cache with its pre-recorded pixel dimensions, so the
         // carousel gets its final height on the first measure pass. Cache miss: fall back to
         // the network URI now (the ImageOpened event reports the size later) and let the
         // background download cache the bitmap for the next realization.
         ImageSource = CreateInlineImageSource(mediaContent, postType);
-        _ = InitializeFromCacheAsync();
+        if (!isFullScreen) _ = InitializeFromCacheAsync();
     }
 
     // Warm path: swap the network-backed image source for the cached file and publish the
@@ -116,8 +121,9 @@ public sealed partial class MediaContentViewModel : ObservableObject
     }
 
     // The inline image is served from the thumbnail for wrapped posts and videos, and from the
-    // original media for unwrapped image posts (see CreateInlineImageSource).
-    private static string GetInlineImageMediaId(MediaContent mediaContent, PostType postType) => postType != PostType.Unwrapped || mediaContent.IsVideo ? mediaContent.ThumbnailMediaId ?? mediaContent.MediaId : mediaContent.MediaId;
+    // original media for unwrapped image posts (see CreateInlineImageSource). Full-screen
+    // instances always use the original media.
+    private static string GetInlineImageMediaId(MediaContent mediaContent, PostType postType, bool isFullScreen) => isFullScreen ? mediaContent.MediaId : postType != PostType.Unwrapped || mediaContent.IsVideo ? mediaContent.ThumbnailMediaId ?? mediaContent.MediaId : mediaContent.MediaId;
 
     // Restores the initial overlay state when the carousel moves to another media, mirroring
     // the MAUI Unloaded command: inline playback stops and spoiler overlays are hidden again.
@@ -134,7 +140,10 @@ public sealed partial class MediaContentViewModel : ObservableObject
     [RelayCommand]
     private void HandleTap()
     {
-        // TODO: Open the full-screen media viewer once it is implemented.
+        if (IsFullScreen) return;
+
+        var index = AllMediaContents.FindIndex(x => x.MediaId == MediaContent.MediaId);
+        new MediaWindow(new MediaWindowViewModel(AllMediaContents, PostType, IsParentPost, index)).Activate();
     }
 
     // The inline media player element is x:Load-ed on IsPlaying, so stopping playback destroys
@@ -150,7 +159,13 @@ public sealed partial class MediaContentViewModel : ObservableObject
     private void HandleOverlayTap()
     {
         if (!IsVideo) return;
+        StartPlayback();
+    }
 
+    // Starts playback of the original video, shared by the inline play overlay and the
+    // full-screen viewer (the viewer never auto-plays videos).
+    internal void StartPlayback()
+    {
         IsOverlayVisible = false;
         IsPlaying = true;
         PlaybackMediaSource = MediaSource.CreateFromUri(new Uri(CommonUtils.GenerateMediaUri(MediaContent.MediaId)));
@@ -175,7 +190,7 @@ public sealed partial class MediaContentViewModel : ObservableObject
     // GIF/WebP animation is not supported by BitmapImage; only the first frame is shown.
     private BitmapImage CreateInlineImageSource(MediaContent mediaContent, PostType postType)
     {
-        var inlineImageMediaId = GetInlineImageMediaId(mediaContent, postType);
-        return InlineImageMediaId == null ? null : new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(inlineImageMediaId)));
+        var inlineImageMediaId = GetInlineImageMediaId(mediaContent, postType, IsFullScreen);
+        return inlineImageMediaId == null ? null : new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(inlineImageMediaId)));
     }
 }

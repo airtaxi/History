@@ -25,6 +25,8 @@ public sealed partial class MainWindow : BaseWindow
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
 
+        this.CenterOnScreen();
+
         AppFrame.Navigate(typeof(LoginPage));
     }
 

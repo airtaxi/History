@@ -1,0 +1,342 @@
+﻿<ResourceDictionary
+    x:Class="History.WindowsClient.Resources.Media"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="using:Microsoft.Xaml.Interactivity"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:media="using:History.WindowsClient.ViewModels.Media"
+    xmlns:vm="using:History.WindowsClient.ViewModels.Media">
+
+    <DataTemplate x:Key="ImageTemplate" x:DataType="vm:MediaContentViewModel">
+        <Grid Background="Transparent" Tapped="OnInlineMediaTapped">
+            <interactivity:Interaction.Behaviors>
+                <behaviors:EventTriggerBehavior EventName="Unloaded">
+                    <behaviors:InvokeCommandAction Command="{x:Bind HandleUnloadCommand}" />
+                </behaviors:EventTriggerBehavior>
+            </interactivity:Interaction.Behaviors>
+
+            <Image
+                Width="{x:Bind Width, Mode=OneWay}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                ImageOpened="OnMediaItemImageOpened"
+                Source="{x:Bind ImageSource}"
+                Stretch="{x:Bind Stretch, Mode=OneTime}" />
+
+            <!--  Spoiler Overlay  -->
+            <Button
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="#FF000000"
+                BorderThickness="0"
+                Command="{x:Bind HandleSpoilerOverlayTapCommand}"
+                Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="8">
+                    <FontIcon
+                        FontSize="48"
+                        Foreground="White"
+                        Glyph="&#xED1A;" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Foreground="White"
+                        Text="가려진 미디어" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="#CCCCCC"
+                        Text="탭하여 확인하기" />
+                </StackPanel>
+            </Button>
+
+            <!--  Description  -->
+            <Grid
+                MinHeight="40"
+                VerticalAlignment="Top"
+                Background="#80000000"
+                Visibility="{x:Bind HasDescription, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    FontWeight="Bold"
+                    MaxLines="2"
+                    Text="{x:Bind Description, Mode=OneTime}"
+                    TextAlignment="Center"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="Wrap" />
+            </Grid>
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="VideoTemplate" x:DataType="vm:MediaContentViewModel">
+        <Grid Background="Transparent" Tapped="OnInlineMediaTapped">
+            <interactivity:Interaction.Behaviors>
+                <behaviors:EventTriggerBehavior EventName="Unloaded">
+                    <behaviors:InvokeCommandAction Command="{x:Bind HandleUnloadCommand}" />
+                </behaviors:EventTriggerBehavior>
+            </interactivity:Interaction.Behaviors>
+
+            <Image
+                Width="{x:Bind Width, Mode=OneWay}"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                ImageOpened="OnMediaItemImageOpened"
+                Source="{x:Bind ImageSource}"
+                Stretch="{x:Bind Stretch, Mode=OneTime}" />
+
+            <!--
+                Only instantiated while inline playback is active (x:Load): recycled carousels
+                that are not playing never realize (or release) a media player element.
+            -->
+            <MediaPlayerElement
+                x:Name="InlineMediaPlayerElement"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                x:Load="{x:Bind IsPlaying, Mode=OneWay}"
+                AreTransportControlsEnabled="True"
+                AutoPlay="True"
+                Source="{x:Bind PlaybackMediaSource, Mode=OneWay}" />
+
+            <!--  Video Overlay  -->
+            <Button
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="#80000000"
+                BorderThickness="0"
+                Command="{x:Bind HandleOverlayTapCommand}"
+                Visibility="{x:Bind IsOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <FontIcon
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="150"
+                    Foreground="White"
+                    Glyph="&#xE768;" />
+            </Button>
+
+            <!--  Spoiler Overlay  -->
+            <Button
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="#FF000000"
+                BorderThickness="0"
+                Command="{x:Bind HandleSpoilerOverlayTapCommand}"
+                Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="8">
+                    <FontIcon
+                        FontSize="48"
+                        Foreground="White"
+                        Glyph="&#xED1A;" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Foreground="White"
+                        Text="가려진 미디어" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="#CCCCCC"
+                        Text="탭하여 확인하기" />
+                </StackPanel>
+            </Button>
+
+            <!--  Description  -->
+            <Grid
+                MinHeight="40"
+                VerticalAlignment="Top"
+                Background="#80000000"
+                Visibility="{x:Bind HasDescription, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    FontWeight="Bold"
+                    MaxLines="2"
+                    Text="{x:Bind Description, Mode=OneTime}"
+                    TextAlignment="Center"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="Wrap" />
+            </Grid>
+        </Grid>
+    </DataTemplate>
+
+    <!--  Full-screen image item: original media, Uniform stretch, no inline tap action  -->
+    <DataTemplate x:Key="FullScreenImageTemplate" x:DataType="media:MediaContentViewModel">
+        <Grid Background="Black">
+            <interactivity:Interaction.Behaviors>
+                <behaviors:EventTriggerBehavior EventName="Unloaded">
+                    <behaviors:InvokeCommandAction Command="{x:Bind HandleUnloadCommand}" />
+                </behaviors:EventTriggerBehavior>
+            </interactivity:Interaction.Behaviors>
+
+            <Image
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Source="{x:Bind ImageSource, Mode=OneWay}"
+                Stretch="{x:Bind Stretch, Mode=OneTime}" />
+
+            <!--  Spoiler Overlay  -->
+            <Button
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="#FF000000"
+                BorderThickness="0"
+                Command="{x:Bind HandleSpoilerOverlayTapCommand}"
+                Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="8">
+                    <FontIcon
+                        FontSize="48"
+                        Foreground="White"
+                        Glyph="&#xED1A;" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Foreground="White"
+                        Text="가려진 미디어" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="#CCCCCC"
+                        Text="탭하여 확인하기" />
+                </StackPanel>
+            </Button>
+
+            <!--  Description  -->
+            <Grid
+                MinHeight="40"
+                VerticalAlignment="Top"
+                Background="#80000000"
+                Visibility="{x:Bind HasDescription, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    FontWeight="Bold"
+                    MaxLines="2"
+                    Text="{x:Bind Description, Mode=OneTime}"
+                    TextAlignment="Center"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="Wrap" />
+            </Grid>
+        </Grid>
+    </DataTemplate>
+
+    <!--  Full-screen video item: thumbnail + play overlay, playback on demand  -->
+    <DataTemplate x:Key="FullScreenVideoTemplate" x:DataType="media:MediaContentViewModel">
+        <Grid Background="Black">
+            <interactivity:Interaction.Behaviors>
+                <behaviors:EventTriggerBehavior EventName="Unloaded">
+                    <behaviors:InvokeCommandAction Command="{x:Bind HandleUnloadCommand}" />
+                </behaviors:EventTriggerBehavior>
+            </interactivity:Interaction.Behaviors>
+
+            <Image
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Source="{x:Bind ImageSource, Mode=OneWay}"
+                Stretch="{x:Bind Stretch, Mode=OneTime}" />
+
+            <!--
+                Only instantiated while playback is active (x:Load): the viewer never
+                auto-plays videos, so recycled items that are not playing never realize
+                (or release) a media player element.
+            -->
+            <MediaPlayerElement
+                x:Name="FullScreenMediaPlayerElement"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                x:Load="{x:Bind IsPlaying, Mode=OneWay}"
+                AreTransportControlsEnabled="True"
+                AutoPlay="True"
+                Source="{x:Bind PlaybackMediaSource, Mode=OneWay}" />
+
+            <!--  Video Overlay  -->
+            <Button
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="#80000000"
+                BorderThickness="0"
+                Command="{x:Bind HandleOverlayTapCommand}"
+                Visibility="{x:Bind IsOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <FontIcon
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="96"
+                    Foreground="White"
+                    Glyph="&#xE768;" />
+            </Button>
+
+            <!--  Spoiler Overlay  -->
+            <Button
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Background="#FF000000"
+                BorderThickness="0"
+                Command="{x:Bind HandleSpoilerOverlayTapCommand}"
+                Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="8">
+                    <FontIcon
+                        FontSize="48"
+                        Foreground="White"
+                        Glyph="&#xED1A;" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="16"
+                        FontWeight="Bold"
+                        Foreground="White"
+                        Text="가려진 미디어" />
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        FontSize="12"
+                        Foreground="#CCCCCC"
+                        Text="탭하여 확인하기" />
+                </StackPanel>
+            </Button>
+
+            <!--  Description  -->
+            <Grid
+                MinHeight="40"
+                VerticalAlignment="Top"
+                Background="#80000000"
+                Visibility="{x:Bind HasDescription, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    FontWeight="Bold"
+                    MaxLines="2"
+                    Text="{x:Bind Description, Mode=OneTime}"
+                    TextAlignment="Center"
+                    TextTrimming="CharacterEllipsis"
+                    TextWrapping="Wrap" />
+            </Grid>
+        </Grid>
+    </DataTemplate>
+
+    <vm:MediaTemplateSelector
+        x:Key="MediaTemplateSelector"
+        ImageTemplate="{StaticResource ImageTemplate}"
+        VideoTemplate="{StaticResource VideoTemplate}" />
+
+    <media:MediaTemplateSelector
+        x:Key="FullScreenMediaTemplateSelector"
+        ImageTemplate="{StaticResource FullScreenImageTemplate}"
+        VideoTemplate="{StaticResource FullScreenVideoTemplate}" />
+</ResourceDictionary>

@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<views:BaseWindow
+    x:Class="History.WindowsClient.Views.MediaWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="using:History.WindowsClient.Views"
+    Title="미디어"
+    Width="1100"
+    Height="750"
+    Closed="OnWindowClosed"
+    mc:Ignorable="d">
+
+    <Grid Background="Black" KeyboardAcceleratorPlacementMode="Hidden">
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Key="Escape" Invoked="OnEscapeKeyInvoked" />
+        </Grid.KeyboardAccelerators>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TitleBar
+            x:Name="AppTitleBar"
+            Title="미디어"
+            IsPaneToggleButtonVisible="False">
+            <TitleBar.IconSource>
+                <ImageIconSource ImageSource="ms-appx:///Assets/Icon.ico" />
+            </TitleBar.IconSource>
+            <TitleBar.RightHeader>
+                <StackPanel
+                    Margin="0,0,4,0"
+                    Orientation="Horizontal"
+                    Spacing="4">
+                    <Button
+                        Height="32"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind ViewModel.DownloadAllCommand}"
+                        ToolTipService.ToolTip="전체 다운로드">
+                        <FontIcon FontSize="16" Glyph="&#xE8B6;" />
+                    </Button>
+                    <Button
+                        Height="32"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind ViewModel.DownloadCommand}"
+                        ToolTipService.ToolTip="다운로드">
+                        <FontIcon FontSize="16" Glyph="&#xE74E;" />
+                    </Button>
+                </StackPanel>
+            </TitleBar.RightHeader>
+        </TitleBar>
+
+        <Grid Grid.Row="1">
+            <FlipView
+                x:Name="MediaFlipView"
+                Background="Black"
+                ItemTemplateSelector="{StaticResource FullScreenMediaTemplateSelector}"
+                ItemsSource="{x:Bind ViewModel.Medias, Mode=OneWay}"
+                SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}" />
+
+            <!--  Position Badge  -->
+            <Border
+                Margin="12"
+                Padding="10,4"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Background="#80808080"
+                CornerRadius="14"
+                Visibility="{x:Bind ViewModel.PositionBadgeVisiability, Mode=OneWay}">
+                <TextBlock
+                    FontWeight="Bold"
+                    Foreground="White"
+                    Text="{x:Bind ViewModel.PositionText, Mode=OneWay}" />
+            </Border>
+
+            <Grid x:Name="LoadingGrid" Visibility="Collapsed">
+                <Rectangle Fill="Black" Opacity="0.5" />
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="8">
+                    <ProgressRing
+                        Width="48"
+                        Height="48"
+                        IsActive="True" />
+                    <TextBlock
+                        x:Name="LoadingTextBlock"
+                        HorizontalAlignment="Center"
+                        FontWeight="Bold"
+                        HorizontalTextAlignment="Center" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+</views:BaseWindow>

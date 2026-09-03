@@ -20,6 +20,7 @@
                 <srd:Comment />
                 <srd:Friendship />
                 <srd:Post />
+                <srd:Media />
             </ResourceDictionary.MergedDictionaries>
 
             <!--  Other app resources here  -->

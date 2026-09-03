@@ -20,8 +20,6 @@ public abstract class BaseWindow : WindowEx,
         _applicationThemeService.ApplyThemeToWindow(this);
         _applicationThemeService.ThemeChanged += OnApplicationThemeServiceThemeChanged;
 
-        this.CenterOnScreen();
-
         AppWindow.SetIcon("Assets/Icon.ico");
 
         WeakReferenceMessenger.Default.Register((IRecipient<LoadingStateRequestedMessage>)this);
@@ -50,6 +48,14 @@ public abstract class BaseWindow : WindowEx,
         if (Content.XamlRoot != message.XamlRoot) return;
 
         Navigate(message.PageType, message.Parameter);
+    }
+
+    protected void UnregisterMessengerRecipients()
+    {
+        WeakReferenceMessenger.Default.Unregister<LoadingStateRequestedMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<ShowLoadingMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<HideLoadingMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<NavigationRequestedMessage>(this);
     }
 
     protected abstract void Navigate(Type pageType, object parameter);
