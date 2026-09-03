@@ -78,6 +78,7 @@ public static class DialogHelper
         s_applicationThemeService.RegisterThemeTarget(dialog);
 
         if (!string.IsNullOrEmpty(parameters.SecondaryButtonText)) dialog.SecondaryButtonText = parameters.SecondaryButtonText;
+        if (!string.IsNullOrEmpty(parameters.CancelButtonText)) dialog.CloseButtonText = parameters.CancelButtonText;
         return dialog;
     }
 
