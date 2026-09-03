@@ -15,7 +15,7 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid Background="Black" KeyboardAcceleratorPlacementMode="Hidden">
+    <Grid KeyboardAcceleratorPlacementMode="Hidden">
         <Grid.KeyboardAccelerators>
             <KeyboardAccelerator Key="Escape" Invoked="OnEscapeKeyInvoked" />
         </Grid.KeyboardAccelerators>
@@ -25,39 +25,44 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TitleBar
-            x:Name="AppTitleBar"
-            Title="미디어"
-            IsPaneToggleButtonVisible="False">
-            <TitleBar.IconSource>
-                <ImageIconSource ImageSource="ms-appx:///Assets/Icon.ico" />
-            </TitleBar.IconSource>
-            <TitleBar.RightHeader>
-                <StackPanel
-                    Margin="0,0,4,0"
-                    Orientation="Horizontal"
-                    Spacing="4">
-                    <Button
-                        Height="32"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Command="{x:Bind ViewModel.DownloadAllCommand}"
-                        ToolTipService.ToolTip="전체 다운로드">
-                        <FontIcon FontSize="16" Glyph="&#xE8B6;" />
-                    </Button>
-                    <Button
-                        Height="32"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Command="{x:Bind ViewModel.DownloadCommand}"
-                        ToolTipService.ToolTip="다운로드">
-                        <FontIcon FontSize="16" Glyph="&#xE74E;" />
-                    </Button>
-                </StackPanel>
-            </TitleBar.RightHeader>
-        </TitleBar>
+        <Grid Grid.Row="0">
+            <TitleBar
+                x:Name="AppTitleBar"
+                Title="미디어"
+                IsPaneToggleButtonVisible="False">
+                <TitleBar.IconSource>
+                    <ImageIconSource ImageSource="ms-appx:///Assets/Icon.ico" />
+                </TitleBar.IconSource>
+            </TitleBar>
+            <StackPanel
+                Margin="0,0,138,0"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="4">
+                <Button
+                    Padding="16,0"
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind ViewModel.DownloadAllCommand}"
+                    CornerRadius="0"
+                    ToolTipService.ToolTip="전체 다운로드">
+                    <FontIcon FontSize="16" Glyph="&#xE8B6;" />
+                </Button>
+                <Button
+                    Padding="16,0"
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind ViewModel.DownloadCommand}"
+                    CornerRadius="0"
+                    ToolTipService.ToolTip="다운로드">
+                    <FontIcon FontSize="16" Glyph="&#xE74E;" />
+                </Button>
+            </StackPanel>
+        </Grid>
 
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" Background="Black">
             <FlipView
                 x:Name="MediaFlipView"
                 Background="Black"
