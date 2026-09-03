@@ -11,6 +11,9 @@
     Height="750"
     Closed="OnWindowClosed"
     mc:Ignorable="d">
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
 
     <Grid Background="Black" KeyboardAcceleratorPlacementMode="Hidden">
         <Grid.KeyboardAccelerators>
