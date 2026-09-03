@@ -5,6 +5,8 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
+using History.WindowsClient.Dialogs;
+using Microsoft.UI.Xaml.Controls;
 
 namespace History.WindowsClient.ViewModels;
 
@@ -97,8 +99,21 @@ public sealed partial class PollContentViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private void ViewResults()
+    private async Task ViewResultsAsync()
     {
-        // TODO: 결과보기 페이지(PollResultsPage)가 구현되면 해당 페이지로 이동
+        var dialog = new PollResultsDialog(this);
+        await ShowContentDialogAsync(dialog);
+    }
+
+    // Shows the voters dialog for the given option. The dialog's primary "목록 보기" button
+    // returns to the results dialog; DialogHelper hides the previous dialog automatically.
+    // The re-show is intentionally not awaited: awaiting it would keep the option's voters
+    // command running until the re-shown results dialog closes, leaving its button disabled.
+    [RelayCommand]
+    public async Task ShowVotersAsync(int optionIndex)
+    {
+        var dialog = new PollVotersDialog(new PollVotersViewModel(this, _postId, PollId, optionIndex, PollContent.Options[optionIndex].Text));
+        var result = await ShowContentDialogAsync(dialog);
+        if (result == ContentDialogResult.Primary) _ = ViewResultsAsync();
     }
 }

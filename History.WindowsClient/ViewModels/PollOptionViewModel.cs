@@ -17,6 +17,8 @@ public sealed partial class PollOptionViewModel(PollOption option, int index, bo
     public int VoteCount => Option.VoteCount;
     public double Percentage => parent.TotalVotes > 0 ? (double)VoteCount / parent.TotalVotes : 0;
     public string PercentageText => $"{Percentage:P0}";
+    public string VoteCountText => $"{VoteCount}표";
+    public bool HasVoters => VoteCount > 0;
     public bool ShowResults => parent.HasVoted || parent.IsExpired;
 
     [RelayCommand]
@@ -25,4 +27,8 @@ public sealed partial class PollOptionViewModel(PollOption option, int index, bo
         if (parent.IsExpired) return;
         await parent.VoteAsync(Index);
     }
+
+    // Opens the voters dialog for this option (hosted by the parent view model).
+    [RelayCommand]
+    private async Task ViewVotersAsync() => await parent.ShowVotersAsync(Index);
 }

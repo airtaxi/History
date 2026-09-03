@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentDialog
+    x:Class="History.WindowsClient.Dialogs.PollResultsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:History.WindowsClient.ViewModels"
+    Title="투표 결과"
+    CloseButtonText="닫기"
+    DefaultButton="Close"
+    Style="{ThemeResource DefaultContentDialogStyle}"
+    mc:Ignorable="d">
+
+    <Grid Width="360" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--  Question  -->
+        <TextBlock
+            Grid.Row="0"
+            FontSize="16"
+            FontWeight="Bold"
+            Text="{x:Bind ViewModel.Question, Mode=OneWay}"
+            TextWrapping="Wrap" />
+
+        <!--  Total Voters  -->
+        <TextBlock
+            Grid.Row="1"
+            FontSize="{StaticResource CaptionTextBlockFontSize}"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Text="{x:Bind ViewModel.TotalVotesText, Mode=OneWay}" />
+
+        <!--  Options  -->
+        <ScrollViewer Grid.Row="2" MaxHeight="320">
+            <ItemsControl ItemsSource="{x:Bind ViewModel.Options, Mode=OneWay}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="8" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PollOptionViewModel">
+                        <Border
+                            Padding="12,10"
+                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                            CornerRadius="8">
+
+                            <Grid RowSpacing="8">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <!--  Option Header  -->
+                                <Grid Grid.Row="0" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        Text="{x:Bind Text, Mode=OneWay}"
+                                        TextWrapping="Wrap" />
+
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        FontWeight="Bold"
+                                        Foreground="{ThemeResource SystemAccentColor}"
+                                        Text="{x:Bind PercentageText, Mode=OneWay}" />
+                                </Grid>
+
+                                <!--  Progress Bar  -->
+                                <ProgressBar
+                                    Grid.Row="1"
+                                    Height="6"
+                                    Maximum="1"
+                                    Value="{x:Bind Percentage, Mode=OneWay}" />
+
+                                <!--  Vote Count / View Voters  -->
+                                <Grid Grid.Row="2" ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        VerticalAlignment="Center"
+                                        FontSize="{StaticResource CaptionTextBlockFontSize}"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="{x:Bind VoteCountText, Mode=OneWay}" />
+
+                                    <Button
+                                        Grid.Column="1"
+                                        Padding="8,2"
+                                        VerticalAlignment="Center"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Command="{x:Bind ViewVotersCommand}"
+                                        Content="투표자 보기"
+                                        FontSize="{StaticResource CaptionTextBlockFontSize}"
+                                        Foreground="{ThemeResource SystemAccentColor}"
+                                        Visibility="{x:Bind HasVoters, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!--  Expiry  -->
+        <TextBlock
+            Grid.Row="3"
+            HorizontalAlignment="Right"
+            FontSize="{StaticResource CaptionTextBlockFontSize}"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Text="{x:Bind ViewModel.ExpiresAtText, Mode=OneWay}" />
+    </Grid>
+</ContentDialog>
