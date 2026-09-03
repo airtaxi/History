@@ -1,7 +1,8 @@
-using History.Commons.DataTypes.Contents;
+﻿using History.Commons.DataTypes.Contents;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 
 namespace History.WindowsClient.Controls;
 
@@ -29,4 +30,7 @@ public sealed partial class PollContentControl : BaseControl
     private static void OnDataPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((PollContentControl)sender).Rebuild();
 
     private void Rebuild() => ViewModel.Update(PollContent, PostId);
+
+    // Prevent event bubbling to the parent control when the user clicks on the content, so that it doesn't trigger any unintended actions.
+    private void OnPointPressed(object sender, PointerRoutedEventArgs e) => e.Handled = true;
 }

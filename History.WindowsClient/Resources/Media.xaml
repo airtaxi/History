@@ -96,6 +96,7 @@
             <MediaPlayerElement
                 x:Name="InlineMediaPlayerElement"
                 HorizontalAlignment="Stretch"
+                Loaded="OnVideoMediaPlayerElementLoaded"
                 VerticalAlignment="Stretch"
                 x:Load="{x:Bind IsPlaying, Mode=OneWay}"
                 AreTransportControlsEnabled="True"

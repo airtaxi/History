@@ -10,6 +10,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:History.WindowsClient.ViewModels"
     Loaded="OnControlLoaded"
+    PointerPressed="OnPointerPressed"
     Unloaded="OnControlUnloaded"
     mc:Ignorable="d">
 

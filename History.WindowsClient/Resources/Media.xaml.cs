@@ -135,4 +135,12 @@ public sealed partial class Media : ResourceDictionary
         }
         return null;
     }
+
+    private void OnVideoMediaPlayerElementLoaded(object sender, RoutedEventArgs e)
+    {
+        var mediaPlayerElement = sender as MediaPlayerElement;
+        if (mediaPlayerElement == null) return;
+
+        mediaPlayerElement.MediaPlayer.IsMuted = true;
+    }
 }
