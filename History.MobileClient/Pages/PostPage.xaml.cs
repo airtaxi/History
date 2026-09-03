@@ -244,7 +244,7 @@ public partial class PostPage : ContentPage
             var payload = await KakaoStoryCommentHelper.BuildCommentPayloadAsync(contents, stickerContents, _commentMediaAttachmentViewModel);
             if (payload == null)
             {
-                await DisplayAlertAsync("오류", "첨부한 webp 이미지를 png로 변환하는 데 실패하여 댓글을 작성할 수 없습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
+                await DisplayAlertAsync("오류", "첨부한 이미지(webp, heic, heif, avif)를 png로 변환하는 데 실패하여 댓글을 작성할 수 없습니다. 일반적으로 애니메이션이 포함된 webp 이미지이거나 기기에서 지원되지 않는 형식입니다.", Constants.PromptOk);
                 return;
             }
             var (decorators, text) = payload.Value;

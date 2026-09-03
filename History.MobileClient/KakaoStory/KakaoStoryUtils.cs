@@ -251,4 +251,14 @@ public partial class KakaoStoryUtils : CommonKakaoStoryUtils
             return null;
         }
     }
+
+    /// <summary>
+    /// Returns whether the image file must be converted to PNG before a KakaoStory upload
+    /// because KakaoStory does not accept the format (webp, heic, heif, avif).
+    /// </summary>
+    public static bool IsKakaoStoryUnsupportedImageFormat(string fileName) =>
+        fileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) ||
+        fileName.EndsWith(".heic", StringComparison.OrdinalIgnoreCase) ||
+        fileName.EndsWith(".heif", StringComparison.OrdinalIgnoreCase) ||
+        fileName.EndsWith(".avif", StringComparison.OrdinalIgnoreCase);
 }

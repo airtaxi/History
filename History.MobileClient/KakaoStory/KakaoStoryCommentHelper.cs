@@ -10,7 +10,7 @@ namespace History.MobileClient.KakaoStory;
 
 // Shared Kakao Story comment payload builder used by both comment creation (PostPage)
 // and comment editing (EditCommentPage). Stickers are uploaded as images when possible
-// (webp is converted to PNG since Kakao Story does not accept webp); otherwise they
+// (webp/heic/heif/avif are converted to PNG since Kakao Story does not accept them); otherwise they
 // degrade to "(스티커)" text. The picker image is uploaded and placed first so the API
 // renders the first decorator as the comment image. Profile mentions are converted
 // from the editor contents (type="profile" with the friend id), not parsed from text.
@@ -18,7 +18,7 @@ public partial class KakaoStoryCommentHelper : CommonKakaoStoryCommentHelper
 {
     /// <summary>
     /// Builds the Kakao Story comment payload. Returns null when the picker image
-    /// (webp) cannot be converted to PNG, so the caller can abort the comment.
+    /// (webp/heic/heif/avif) cannot be converted to PNG, so the caller can abort the comment.
     /// </summary>
     public static async Task<(List<QuoteData> Decorators, string Text)?> BuildCommentPayloadAsync(List<BaseContent> contents, List<StickerContent> stickerContents, MediaAttachmentViewModel attachmentViewModel)
     {
@@ -76,11 +76,11 @@ public partial class KakaoStoryCommentHelper : CommonKakaoStoryCommentHelper
         if (attachmentViewModel != null && attachmentViewModel.FilePath != null)
         {
             string filePath = attachmentViewModel.FilePath;
-            var isWebp = attachmentViewModel.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase);
-            if (isWebp)
+            var needsConversion = KakaoStoryUtils.IsKakaoStoryUnsupportedImageFormat(attachmentViewModel.FileName);
+            if (needsConversion)
             {
-                // KakaoStory does not accept webp; convert to PNG before uploading,
-                // same as the sticker flow above.
+                // KakaoStory does not accept webp/heic/heif/avif; convert to PNG before
+                // uploading, same as the sticker flow above.
                 var fileName = Path.GetFileNameWithoutExtension(filePath) + ".png";
                 filePath = Path.GetTempPath() + "c_" + fileName;
                 using var stream = File.OpenRead(attachmentViewModel.FilePath);

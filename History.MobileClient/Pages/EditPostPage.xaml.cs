@@ -1852,24 +1852,20 @@ public partial class EditPostPage : ContentPage
                         if (!attachment.IsVideo)
                         {
                             string filePath = attachment.FilePath;
-                            var isWebp = attachment.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase);
-                            if (isWebp)
+                            var needsConversion = KakaoStoryUtils.IsKakaoStoryUnsupportedImageFormat(attachment.FileName);
+                            if (needsConversion)
                             {
                                 var fileName = Path.GetFileNameWithoutExtension(filePath) + ".png";
                                 filePath = Path.GetTempPath() + "c_" + fileName;
                                 using var stream = File.OpenRead(attachment.FilePath);
                                 using var image = PlatformImage.FromStream(stream);
-                                var saveStream = File.Create(filePath);
+                                using var saveStream = File.Create(filePath);
                                 if (image == null)
                                 {
                                     conversionFailedCount++;
                                     continue;
                                 }
-                                else
-                                {
-                                    await image.SaveAsync(saveStream, ImageFormat.Png);
-                                    saveStream.Dispose();
-                                }
+                                await image.SaveAsync(saveStream, ImageFormat.Png);
                             }
 
                             try
@@ -1953,7 +1949,7 @@ public partial class EditPostPage : ContentPage
                     TimelinePage.ShouldRefreshKakaoStory = true;
                     UserPage.ShouldRefreshKakaoStory = true;
                 }
-                if (conversionFailedCount > 0) await DisplayAlertAsync("오류", $"카키오스토리 업로드 도중 일부 webp 이미지를 png로 변환하는 데 실패하여 {conversionFailedCount}개의 이미지가 제외되었습니다. 일반적으로 이러한 이미지는 애니메이션이 포함된 webp 이미지입니다.", Constants.PromptOk);
+                if (conversionFailedCount > 0) await DisplayAlertAsync("오류", $"카카오스토리 업로드 도중 일부 이미지(webp, heic, heif, avif)를 png로 변환하는 데 실패하여 {conversionFailedCount}개의 이미지가 제외되었습니다. 일반적으로 애니메이션이 포함된 webp 이미지이거나 기기에서 지원되지 않는 형식입니다.", Constants.PromptOk);
             }
             catch (WebException exception)
             {
@@ -2073,19 +2069,15 @@ public partial class EditPostPage : ContentPage
             if (!attachment.IsVideo)
             {
                 string filePath = attachment.FilePath;
-                var isWebp = attachment.FileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase);
-                if (isWebp)
+                var needsConversion = KakaoStoryUtils.IsKakaoStoryUnsupportedImageFormat(attachment.FileName);
+                if (needsConversion)
                 {
                     var fileName = Path.GetFileNameWithoutExtension(filePath) + ".png";
                     filePath = Path.GetTempPath() + "c_" + fileName;
                     using var stream = File.OpenRead(attachment.FilePath);
                     using var image = PlatformImage.FromStream(stream);
-                    var saveStream = File.Create(filePath);
-                    if (image != null)
-                    {
-                        await image.SaveAsync(saveStream, ImageFormat.Png);
-                        saveStream.Dispose();
-                    }
+                    using var saveStream = File.Create(filePath);
+                    if (image != null) await image.SaveAsync(saveStream, ImageFormat.Png);
                 }
 
                 try
