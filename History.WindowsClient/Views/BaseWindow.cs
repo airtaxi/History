@@ -7,7 +7,7 @@ using WinUIEx;
 
 namespace History.WindowsClient.Views;
 
-public abstract class BaseWindow : Window,
+public abstract class BaseWindow : WindowEx,
     IRecipient<LoadingStateRequestedMessage>,
     IRecipient<ShowLoadingMessage>,
     IRecipient<HideLoadingMessage>,
