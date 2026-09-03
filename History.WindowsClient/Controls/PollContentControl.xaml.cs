@@ -32,5 +32,5 @@ public sealed partial class PollContentControl : BaseControl
     private void Rebuild() => ViewModel.Update(PollContent, PostId);
 
     // Prevent event bubbling to the parent control when the user clicks on the content, so that it doesn't trigger any unintended actions.
-    private void OnPointPressed(object sender, PointerRoutedEventArgs e) => e.Handled = true;
+    private void OnPointerPressed(object sender, PointerRoutedEventArgs e) => e.Handled = true;
 }
