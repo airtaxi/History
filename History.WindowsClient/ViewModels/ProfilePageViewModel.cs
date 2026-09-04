@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
@@ -41,7 +41,7 @@ public partial class ProfilePageViewModel : BaseViewModel,
     // OnNavigatedTo); the actual loading runs from OnLoaded.
     public void Initialize(string userId) => _userId = userId;
 
-    public string? UserId => _userId;
+    public string UserId => _userId;
 
     public ProfilePageViewModel()
     {
