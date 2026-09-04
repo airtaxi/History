@@ -38,6 +38,11 @@ public class SuggestionChosenEventArgs : DeferredEventArgs
     public object? SelectedItem { get; internal set; }
 
     /// <summary>
+    /// Gets or sets the item associated with this token. When set, it overrides <see cref="SelectedItem"/> as the committed token's item.
+    /// </summary>
+    public object? Item { get; set; }
+
+    /// <summary>
     /// Gets token ID.
     /// </summary>
     public Guid Id { get; internal set; }

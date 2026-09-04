@@ -125,7 +125,8 @@ public partial class RichSuggestBox2
         {
             if (TryCommitSuggestionIntoDocument(range, displayText, id, eventArgs.Format ?? format, true))
             {
-                var token = new RichSuggestToken(id, displayText) { Active = true, Item = selectedItem };
+                // The handler can override the token item to embed a richer payload than the raw suggestion item.
+                var token = new RichSuggestToken(id, displayText) { Active = true, Item = eventArgs.Item ?? selectedItem };
                 token.UpdateTextRange(range);
                 _tokens.Add(range.Link, token);
             }
