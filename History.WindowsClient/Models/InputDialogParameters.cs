@@ -1,6 +1,6 @@
 namespace History.WindowsClient.Models;
 
-public sealed class InputDialogParameters(string title, string description = "", string placeholderText = "", bool showCancel = false, bool numberOnly = false, string defaultText = "")
+public sealed class InputDialogParameters(string title, string description = "", string placeholderText = "", bool showCancel = false, bool numberOnly = false, string defaultText = "", int maxLength = 0)
 {
     public string Title { get; } = title;
     public string Description { get; } = description;
@@ -8,4 +8,5 @@ public sealed class InputDialogParameters(string title, string description = "",
     public bool ShowCancel { get; } = showCancel;
     public bool NumberOnly { get; } = numberOnly;
     public string DefaultText { get; } = defaultText;
+    public int MaxLength { get; } = maxLength;
 }

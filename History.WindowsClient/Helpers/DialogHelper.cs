@@ -33,6 +33,7 @@ public static class DialogHelper
         if (!string.IsNullOrEmpty(parameters.Description)) contentPanel.Children.Add(new TextBlock { Text = parameters.Description, TextWrapping = TextWrapping.Wrap });
         var textBox = new TextBox();
         if (parameters.NumberOnly) textBox.BeforeTextChanging += (textBoxSender, textBoxBeforeTextChangingEventArguments) => textBoxBeforeTextChangingEventArguments.Cancel = textBoxBeforeTextChangingEventArguments.NewText.Any(character => !char.IsDigit(character));
+        if (parameters.MaxLength > 0) textBox.MaxLength = parameters.MaxLength;
         textBox.HorizontalAlignment = HorizontalAlignment.Stretch;
         textBox.PlaceholderText = parameters.PlaceholderText;
         if (!string.IsNullOrEmpty(parameters.DefaultText)) textBox.Text = parameters.DefaultText;
