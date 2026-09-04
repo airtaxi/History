@@ -11,6 +11,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:History.WindowsClient.ViewModels"
     Loaded="OnLoaded"
+    NavigationCacheMode="Required"
     mc:Ignorable="d">
 
     <Grid>
