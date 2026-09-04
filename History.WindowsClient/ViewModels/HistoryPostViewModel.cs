@@ -9,10 +9,12 @@ using History.Commons.Api.Report;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.WindowsClient.Dialogs;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
+using History.WindowsClient.ViewModels.DiscoveryOptions;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -265,6 +267,19 @@ public partial class HistoryPostViewModel : BasePostViewModel,
 
     private async Task HandleChangeDiscoveryOptionAsync(DiscoveryOption newDiscoveryOption)
     {
+        if (newDiscoveryOption == DiscoveryOption.SelectedUsers || newDiscoveryOption == DiscoveryOption.UnselectedUsers)
+        {
+            var initialUserIds = Post.DiscoveryOption == newDiscoveryOption ? (Post.DiscoveryOptionSelectedUserIds ?? []) : [];
+            var viewModel = new HistoryDiscoveryOptionSelectUsersViewModel(initialUserIds, BaseViewModel);
+            var dialog = new DiscoveryOptionSelectUsersDialog(viewModel);
+            var dialogResult = await BaseViewModel.ShowContentDialogAsync(dialog);
+            if (dialogResult != ContentDialogResult.Primary || viewModel.SelectedUserIds.Count == 0) return;
+
+            var changeResult = await BaseViewModel.ExecuteRequestAsync(new ChangeDiscoveryOption(Post.Id, newDiscoveryOption, viewModel.SelectedUserIds));
+            if (changeResult.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(changeResult.Value));
+            return;
+        }
+
         if (newDiscoveryOption == Post.DiscoveryOption)
         {
             await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "이미 선택된 공개범위입니다."));
