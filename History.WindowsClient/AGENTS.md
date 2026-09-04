@@ -4,6 +4,12 @@
 
 - Before starting any WinUI-related work (.cs/.xaml/.csproj etc. — create, modify, review, refactor), you **must** load the `/csharp-winui-projects` skill.
 
+## Comment Policy — Forbidden Patterns
+
+- Comments **must not** state porting or mirroring origins: no "Mirrors the MAUI XViewModel", "ported from the MAUI client", "mirroring the mobile client", "same ... as the MAUI client", or "mirrors the MAUI ... flow" (including XAML comments). References to `History.MobileClient`/MAUI as the origin of an implementation are forbidden in all comments.
+- Write behavior-focused comments only: describe what the code does and why it exists in this project, never where it came from.
+- When touching existing code that still carries such comments, remove the origin claim and keep only the behavioral description.
+
 ## Initial Load Pattern and XamlRoot Rules
 
 - Pages perform **initial data loading in OnLoaded, not OnNavigatedTo** (run once with the `_isFirstLoad` guard — see the `Pages/MainPage.xaml.cs` and `Pages/TimelinePage.xaml.cs` pattern).
