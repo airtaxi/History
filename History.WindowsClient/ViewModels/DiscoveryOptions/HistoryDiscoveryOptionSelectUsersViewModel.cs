@@ -19,7 +19,7 @@ public partial class HistoryDiscoveryOptionSelectUsersViewModel(IReadOnlyList<st
             var result = await BaseViewModel.ExecuteRequestAsync(new GetFriends(CommonShared.UserId));
             if (result.IsSuccess)
             {
-                var viewModels = result.Value.OrderBy(user => user.Nickname)
+                var viewModels = result.Value.OrderByDescending(user => user.IsFavorite).ThenBy(user => user.Nickname)
                     .Select(user => new HistorySelectUserViewModel(user, _initialSelectedUserIds.Contains(user.UserId)))
                     .ToList();
 
