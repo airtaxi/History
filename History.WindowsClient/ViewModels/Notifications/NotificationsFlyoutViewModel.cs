@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
@@ -79,7 +79,7 @@ public partial class NotificationsFlyoutViewModel : BaseViewModel
     [RelayCommand]
     public async Task ReadAllAsync()
     {
-        var success = await CommonShared.ApiHandler.TryExecuteRequestAsync(new ReadAllNotifications());
-        if (success) WeakReferenceMessenger.Default.Send(new NotificationsReadAllMessage());
+        var result = await ExecuteRequestAsync(new ReadAllNotifications());
+        if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new NotificationsReadAllMessage());
     }
 }
