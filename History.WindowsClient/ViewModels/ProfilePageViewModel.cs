@@ -62,6 +62,11 @@ public partial class ProfilePageViewModel : BaseViewModel,
             Items.Clear();
             _areThereNoMorePostsToLoad = false;
 
+            // Refresh the shared friend cache first: the friendship/favorite surfaces
+            // elsewhere read from it.
+            var friendsResult = await ExecuteRequestAsync(new GetFriends(CommonShared.UserId));
+            if (friendsResult.IsSuccess) CommonShared.Friends = friendsResult.Value;
+
             var userResult = await ExecuteRequestAsync(new GetUser(_userId));
             if (userResult.IsFailure)
             {
