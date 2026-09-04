@@ -33,7 +33,7 @@ public sealed partial class ContentEditorControl : UserControl
     public static readonly DependencyProperty PlaceholderTextProperty = DependencyProperty.Register(nameof(PlaceholderText), typeof(string), typeof(ContentEditorControl), new PropertyMetadata(string.Empty));
     public static readonly DependencyProperty AllowHashtagProperty = DependencyProperty.Register(nameof(AllowHashtag), typeof(bool), typeof(ContentEditorControl), new PropertyMetadata(true, OnAllowHashtagChanged));
 
-private ContentEditorViewModel _viewModel;
+    private ContentEditorViewModel _viewModel;
 
     public ContentEditorControl() => InitializeComponent();
 
@@ -173,7 +173,7 @@ private ContentEditorViewModel _viewModel;
         document.Selection.SetRange(0, 0);
     }
 
-public List<BaseContent> GetContents()
+    public List<BaseContent> GetContents()
     {
         var result = new List<BaseContent>();
         var document = Document;
@@ -205,7 +205,7 @@ public List<BaseContent> GetContents()
                 else if (displayText.Length > 0) result.Add(new TextContent { Text = displayText });
             }
 
-previousEndIndex = tokenEndIndex;
+            previousEndIndex = tokenEndIndex;
         }
 
         if (previousEndIndex < rawText.Length)
@@ -297,7 +297,7 @@ previousEndIndex = tokenEndIndex;
         document.Selection.SetRange(text.Length, text.Length);
     }
 
-public async Task<bool> InsertStickerAsync(StickerContent stickerContent)
+    public async Task<bool> InsertStickerAsync(StickerContent stickerContent)
     {
         if (stickerContent == null || Document == null) return false;
 
@@ -318,7 +318,7 @@ public async Task<bool> InsertStickerAsync(StickerContent stickerContent)
             insertPosition = documentText.Length + 1;
         }
 
-var token = new RichSuggestToken(Guid.NewGuid(), ObjectReplacementCharacter) { Item = stickerContent, SkipValidation = true };
+        var token = new RichSuggestToken(Guid.NewGuid(), ObjectReplacementCharacter) { Item = stickerContent, SkipValidation = true };
         var range = document.GetRange(insertPosition, insertPosition);
         // InsertImage replaces the range content, so the range must not be collapsed;
         // the ZWSP padding reserves a non-empty slot that the image replaces.
@@ -331,7 +331,7 @@ var token = new RichSuggestToken(Guid.NewGuid(), ObjectReplacementCharacter) { I
         return true;
     }
 
-// Pads the range with ZWSPs: gives InsertImage a non-empty slot to replace,
+    // Pads the range with ZWSPs: gives InsertImage a non-empty slot to replace,
     // and mirrors the control's PadRange token layout (ZWSP + content + ZWSP inside a link).
     private static void PadStickerRange(ITextRange range, ITextCharacterFormat format)
     {
