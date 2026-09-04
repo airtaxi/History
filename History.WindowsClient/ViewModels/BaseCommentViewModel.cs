@@ -30,6 +30,8 @@ public abstract partial class BaseCommentViewModel : BaseViewModel
     [ObservableProperty]
     public partial bool Liked { get; protected set; }
     [ObservableProperty]
+    public partial List<BaseFriendshipViewModel> LikedUsers { get; protected set; } = [];
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsReplyVisible))]
     public partial bool IsMyComment { get; protected set; }
 

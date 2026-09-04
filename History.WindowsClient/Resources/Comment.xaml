@@ -77,7 +77,6 @@
                         Padding="0"
                         Background="Transparent"
                         BorderThickness="0"
-                        Command="{x:Bind HandleCommentLikeTapCommand}"
                         Visibility="{x:Bind HasLikes, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="4">
                             <TextBlock
@@ -89,6 +88,43 @@
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 Text="{x:Bind LikesCount, Mode=OneWay}" />
                         </StackPanel>
+                        <Button.Flyout>
+                            <Flyout Placement="BottomEdgeAlignedLeft">
+                                <Flyout.FlyoutPresenterStyle>
+                                    <Style BasedOn="{StaticResource DefaultFlyoutPresenterStyle}" TargetType="FlyoutPresenter">
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="MinWidth" Value="260" />
+                                        <Setter Property="MaxWidth" Value="320" />
+                                    </Style>
+                                </Flyout.FlyoutPresenterStyle>
+                                <Grid MinWidth="260" MaxWidth="320">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <Border
+                                        Grid.Row="0"
+                                        Padding="12,10,12,8"
+                                        BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
+                                        BorderThickness="0,0,0,1">
+                                        <TextBlock
+                                            FontSize="14"
+                                            FontWeight="Bold"
+                                            Text="좋아요" />
+                                    </Border>
+                                    <ScrollViewer
+                                        Grid.Row="1"
+                                        MaxHeight="260"
+                                        VerticalScrollBarVisibility="Auto">
+                                        <ItemsRepeater ItemTemplate="{StaticResource FriendshipTemplate}" ItemsSource="{x:Bind LikedUsers, Mode=OneWay}">
+                                            <ItemsRepeater.Layout>
+                                                <StackLayout Orientation="Vertical" />
+                                            </ItemsRepeater.Layout>
+                                        </ItemsRepeater>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Flyout>
+                        </Button.Flyout>
                     </Button>
                     <Button
                         Padding="0"

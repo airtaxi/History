@@ -13,6 +13,7 @@ using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using History.WindowsClient.Views;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 
@@ -55,6 +56,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
             HasLikes = comment.LikedUsers.Count > 0;
             LikesCount = comment.LikedUsers.Count;
             Liked = comment.LikedUsers.Any(x => x.UserId == CommonShared.UserId);
+            LikedUsers = comment.LikedUsers != null ? [.. comment.LikedUsers.Select(x => new HistoryFriendshipViewModel(x, ParentViewModel.BaseViewModel) { FriendshipVisibility = x.UserId == CommonShared.UserId ? Visibility.Collapsed : Visibility.Visible })] : [];
 
             Contents = PostHelper.GenerateContentViewModels(comment.Contents, PostType, ParentViewModel.BaseViewModel);
 
@@ -106,17 +108,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
         if (result.IsSuccess) await ParentViewModel.BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "댓글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다."));
     }
 
-    public override async Task HandleCommentLikeTapAsync()
-    {
-        var users = Comment.LikedUsers;
-        if (users.Count == 0)
-        {
-            await ParentViewModel.BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("오류", "이 댓글에 좋아요를 누른 사용자가 없습니다."));
-            return;
-        }
-
-        // TODO: Navigate to the interactions page once it is implemented.
-    }
+    public override async Task HandleCommentLikeTapAsync() => await Task.CompletedTask;
 
     public override async Task HandleLikeAsync()
     {
