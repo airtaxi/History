@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
+using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Services;
 using History.WindowsClient.ViewModels;
@@ -145,7 +146,7 @@ public sealed partial class MediaContentViewModel : ObservableObject
         if (IsFullScreen) return;
 
         var index = AllMediaContents.FindIndex(x => x.MediaId == MediaContent.MediaId);
-        new MediaWindow(new MediaWindowViewModel(AllMediaContents, PostType, IsParentPost, index)).Activate();
+        new MediaWindow(new MediaWindowViewModel(AllMediaContents, PostType, IsParentPost, index)).ActivateModal(MainWindow.Instance);
     }
 
     // The inline media player element is x:Load-ed on IsPlaying, so stopping playback destroys

@@ -94,8 +94,9 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
         }
     }
 
-    // Opens the comment edit window; the window closes itself after a successful edit.
-    private void HandleEditComment() => new EditCommentWindow(new EditCommentWindowViewModel(Comment));
+    // Opens the comment edit window as a modal of the main window; the window closes itself
+    // after a successful edit.
+    private void HandleEditComment() => new EditCommentWindow(new EditCommentWindowViewModel(Comment)).MakeModal(MainWindow.Instance);
 
     private async Task HandleReportAsync(ReportType reportType)
     {

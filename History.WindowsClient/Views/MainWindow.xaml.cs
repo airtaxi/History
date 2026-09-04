@@ -14,6 +14,8 @@ public sealed partial class MainWindow : BaseWindow
 {
     private static MainWindow s_instance;
 
+    public static MainWindow Instance => s_instance;
+
     public static Frame Frame => s_instance.AppFrame;
 
     public MainWindow() : base()
