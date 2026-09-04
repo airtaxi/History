@@ -60,7 +60,7 @@
                                     Height="40"
                                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                     CornerRadius="20">
-                                    <Image Source="{x:Bind ProfileImageSource, Mode=OneWay}" Stretch="UniformToFill" />
+                                    <Image Source="{x:Bind ProfileImageSource}" Stretch="UniformToFill" />
                                 </Border>
 
                                 <!--  Nickname  -->
@@ -68,7 +68,7 @@
                                     Grid.Column="1"
                                     VerticalAlignment="Center"
                                     FontWeight="Bold"
-                                    Text="{x:Bind Nickname, Mode=OneWay}"
+                                    Text="{x:Bind Nickname}"
                                     TextTrimming="CharacterEllipsis" />
 
                                 <!--  Voted At  -->
@@ -77,7 +77,7 @@
                                     VerticalAlignment="Center"
                                     FontSize="{StaticResource CaptionTextBlockFontSize}"
                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                    Text="{x:Bind VotedAtText, Mode=OneWay}" />
+                                    Text="{x:Bind VotedAtText}" />
                             </Grid>
                         </Border>
                     </DataTemplate>
