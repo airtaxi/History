@@ -24,6 +24,10 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClic
 
     protected override ProfilePageViewModel ViewModel => _viewModel!;
 
+    // The user id of the profile being shown, used by the window to skip
+    // redundant navigation to the same user's profile.
+    public string UserId => ViewModel.UserId;
+
     public ProfilePage()
     {
         _viewModel = App.Services.GetRequiredService<ProfilePageViewModel>();

@@ -35,7 +35,14 @@ public sealed partial class MainWindow : BaseWindow
 
     public static void SetForegroundWindow() => s_instance.SetForegroundWindow();
 
-    protected override void Navigate(Type pageType, object parameter) => AppFrame.Navigate(pageType, parameter);
+    protected override void Navigate(Type pageType, object parameter)
+    {
+        // Ignore the request when the same user's profile is already showing in the frame: navigating
+        // again is a meaningless action that would only consume more memory.
+        if (pageType == typeof(ProfilePage) && AppFrame.Content is ProfilePage currentProfilePage && parameter is string userId && currentProfilePage.UserId == userId) return;
+
+        AppFrame.Navigate(pageType, parameter);
+    }
 
     protected override bool TryNavigateBack()
     {
