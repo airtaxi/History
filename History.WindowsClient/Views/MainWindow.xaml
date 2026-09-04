@@ -3,6 +3,7 @@
     x:Class="History.WindowsClient.Views.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:History.WindowsClient.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dev="using:DevWinUI"
     xmlns:local="using:History.WindowsClient"
@@ -31,14 +32,35 @@
                 <ImageIconSource ImageSource="ms-appx:///Assets/Icon.ico" />
             </TitleBar.IconSource>
             <TitleBar.RightHeader>
-                <Button
-                    x:Name="RefreshButton"
+                <StackPanel
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Click="OnRefreshButtonClicked"
-                    Visibility="Collapsed">
-                    <FontIcon FontSize="16" Glyph="&#xE72C;" />
-                </Button>
+                    Orientation="Horizontal"
+                    Spacing="4">
+                    <Button
+                        x:Name="NotificationsButton"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Visibility="Collapsed">
+                        <FontIcon FontSize="16" Glyph="&#xEA8F;" />
+                        <Button.Flyout>
+                            <Flyout
+                                x:Name="NotificationsFlyout"
+                                Opening="OnNotificationsFlyoutOpening"
+                                Placement="BottomEdgeAlignedRight">
+                                <controls:NotificationsFlyoutControl />
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                    <Button
+                        x:Name="RefreshButton"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Click="OnRefreshButtonClicked"
+                        Visibility="Collapsed">
+                        <FontIcon FontSize="16" Glyph="&#xE72C;" />
+                    </Button>
+                </StackPanel>
             </TitleBar.RightHeader>
             <TitleBar.Content>
                 <AutoSuggestBox

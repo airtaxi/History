@@ -6,6 +6,7 @@ using History.WindowsClient.Messages;
 using History.WindowsClient.Services;
 using History.WindowsClient.ViewModels;
 using History.WindowsClient.ViewModels.MainPage;
+using History.WindowsClient.ViewModels.Notifications;
 using History.WindowsClient.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
@@ -127,6 +128,7 @@ public partial class App : Application
         serviceCollection.AddTransient(sp => new HistoryPostPageViewModel());
         serviceCollection.AddTransient(sp => new ProfilePageViewModel());
         serviceCollection.AddTransient(sp => new SearchResultPageViewModel());
+        serviceCollection.AddTransient(sp => new NotificationsFlyoutViewModel());
     }
     private static void OnApplicationUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs unhandledExceptionEventArguments)
     {

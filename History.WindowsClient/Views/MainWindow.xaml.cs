@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using History.WindowsClient.Controls;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Pages;
 using History.WindowsClient.Services;
@@ -84,7 +85,9 @@ public sealed partial class MainWindow : BaseWindow
         if (e.SourcePageType == typeof(MainPage) || e.SourcePageType == typeof(LoginPage)) frame.BackStack.Clear();
         AppTitleBar.IsBackButtonVisible = frame.CanGoBack;
         MainSearchBox.Visibility = e.SourcePageType == typeof(MainPage) ? Visibility.Visible : Visibility.Collapsed;
-        RefreshButton.Visibility = e.SourcePageType == typeof(LoginPage) || e.SourcePageType == typeof(RegisterPage) || e.SourcePageType == typeof(BrowserPage) ? Visibility.Collapsed : Visibility.Visible;
+        var isToolbarVisible = e.SourcePageType == typeof(LoginPage) || e.SourcePageType == typeof(RegisterPage) || e.SourcePageType == typeof(BrowserPage) ? Visibility.Collapsed : Visibility.Visible;
+        RefreshButton.Visibility = isToolbarVisible;
+        NotificationsButton.Visibility = isToolbarVisible;
     }
 
     private void OnAppTitleBarPaneToggleRequested(Microsoft.UI.Xaml.Controls.TitleBar sender, object args) => WeakReferenceMessenger.Default.Send(new ToggleNavigationPaneMessage());
@@ -100,4 +103,7 @@ public sealed partial class MainWindow : BaseWindow
     private void OnMainSearchBoxQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args) => WeakReferenceMessenger.Default.Send(new MainWindowAutoSuggestBoxQuerySubmittedMessage(args.QueryText));
 
     private void OnRefreshButtonClicked(object sender, RoutedEventArgs e) => WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
+
+    // Refreshing on open keeps the flyout list current without polling.
+    private void OnNotificationsFlyoutOpening(object sender, object e) => _ = ((NotificationsFlyoutControl)NotificationsFlyout.Content).ViewModel.RefreshAsync();
 }
