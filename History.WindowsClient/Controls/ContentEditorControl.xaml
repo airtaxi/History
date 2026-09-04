@@ -23,6 +23,7 @@
     <controls:RichSuggestBox2
         x:Name="MainRichSuggestBox"
         HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch"
         ItemTemplateSelector="{StaticResource SuggestionTemplateSelector}"
         Paste="OnMainRichSuggestBoxPaste"
         PlaceholderText="{x:Bind PlaceholderText, Mode=OneWay}"

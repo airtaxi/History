@@ -274,7 +274,7 @@ previousEndIndex = tokenEndIndex;
         formatHashtag.ForegroundColor = AccentColor;
         formatHashtag.Bold = FormatEffect.On;
 
-foreach (var (token, startIndex) in tokens)
+        foreach (var (token, startIndex) in tokens)
         {
             var tokenRange = document.GetRange(startIndex, startIndex + token.DisplayText.Length);
             if (token.Item is StickerContent stickerContent)
