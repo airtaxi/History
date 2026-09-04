@@ -30,6 +30,13 @@
 - Never navigate `this.Frame` from a page: frames are nested (`MainPage.MainFrame` hosts `TimelinePage`), so only the window knows its root frame. Any window that subclasses `BaseWindow` and overrides `Navigate` can open pages such as `PostPage`.
 - Post tap navigation example: `HistoryPostViewModel.HandleTapAsync` calls `BaseViewModel.RequestNavigation(typeof(PostPage), Post)`.
 
+## Win32 API Interop
+
+- Use CsWin32 (`Microsoft.Windows.CsWin32`) for all Win32 API calls whenever possible. Do not hand-write `[DllImport]`/`[LibraryImport]` declarations for Win32 APIs.
+- To call a new Win32 API, add its name to `NativeMethods.txt` (one per line) and call the generated members on `Windows.Win32.PInvoke`.
+- Some APIs must be requested by their exact metadata name (e.g. `SetWindowLongPtrW`, not `SetWindowLongPtr`); if a name is not found, check the CsWin32 diagnostics and request the exact entry-point name.
+- The project builds only for x64/ARM64 (x86 support was dropped), so 64-bit-only metadata entries such as `SetWindowLongPtrW` generate without issues.
+
 ## Build Notes
 
 - Verify WindowsClient builds with: `dotnet build E:/Repos/History/History.WindowsClient/History.WindowsClient.csproj -p:Platform=ARM64`

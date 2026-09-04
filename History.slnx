@@ -3,7 +3,6 @@
     <Platform Name="Any CPU" />
     <Platform Name="ARM64" />
     <Platform Name="x64" />
-    <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Dependencies/">
     <Project Path="Dependencies/CommunityToolkit.WinUI.Controls.RichSuggestBox/CommunityToolkit.WinUI.Controls.RichSuggestBox.csproj" />
@@ -22,7 +21,6 @@
   <Project Path="History.WindowsClient/History.WindowsClient.csproj" Id="50fe4111-0fde-4c1e-9f90-4ad3c48ea15d">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="*|x86" Project="x86" />
     <Platform Solution="Debug|Any CPU" Project="ARM64" />
     <Platform Solution="Release|Any CPU" Project="x64" />
     <Deploy />

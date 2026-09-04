@@ -1,0 +1,7 @@
+CreateEvent
+SetEvent
+CoWaitForMultipleObjects
+SetWindowLongPtrW
+EnableWindow
+SetForegroundWindow
+INFINITE
