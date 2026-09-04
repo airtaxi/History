@@ -22,7 +22,11 @@ public abstract partial class BaseCommentBoxViewModel(BaseViewModel baseViewMode
     [ObservableProperty]
     public partial BitmapImage AttachmentImageSource { get; protected set; }
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(AttachmentVisibility))]
     public partial bool HasAttachment { get; protected set; }
+
+    // Bool attachment-visibility surface for XAML bindings that convert through BoolToVisibilityConverter.
+    public bool AttachmentVisibility => HasAttachment;
 
     protected byte[] AttachmentData { get; private set; }
     protected string AttachmentFileName { get; private set; }

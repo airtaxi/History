@@ -95,10 +95,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
     }
 
     // Opens the comment edit window; the window closes itself after a successful edit.
-    private void HandleEditComment() => new EditCommentWindow(new EditCommentWindowViewModel(Comment)).Activate();
-
-    // TODO: Open the comment editor once it is implemented.
-    private async Task HandleEditCommentAsync() => await ParentViewModel.DialogBaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "아직 지원하지 않는 기능입니다."));
+    private void HandleEditComment() => new EditCommentWindow(new EditCommentWindowViewModel(Comment));
 
     private async Task HandleReportAsync(ReportType reportType)
     {

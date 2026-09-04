@@ -72,7 +72,7 @@
                     BorderThickness="0"
                     Command="{x:Bind ViewModel.CommentBox.ClearAttachmentCommand, Mode=OneWay}"
                     CornerRadius="8"
-                    Visibility="{x:Bind ViewModel.CommentBox.HasAttachment, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                    Visibility="{x:Bind ViewModel.CommentBox.AttachmentVisibility, Mode=OneWay}">
                     <Grid>
                         <Image
                             Width="100"
