@@ -7,6 +7,25 @@
     xmlns:media="using:History.WindowsClient.ViewModels.Media"
     xmlns:vm="using:History.WindowsClient.ViewModels.Media">
 
+    <!--
+        Spoiler overlay button: the default Button template swaps in a translucent
+        fill for PointerOver, which would let the underlying media show through on
+        hover. This template keeps the background opaque in every state.
+    -->
+    <Style x:Key="SpoilerOverlayButtonStyle" TargetType="Button">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid Background="{TemplateBinding Background}">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <DataTemplate x:Key="ImageTemplate" x:DataType="vm:MediaContentViewModel">
         <Grid Background="Transparent" Tapped="OnInlineMediaTapped">
             <interactivity:Interaction.Behaviors>
@@ -31,6 +50,7 @@
                 Background="#FF000000"
                 BorderThickness="0"
                 Command="{x:Bind HandleSpoilerOverlayTapCommand}"
+                Style="{StaticResource SpoilerOverlayButtonStyle}"
                 Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                 <StackPanel
                     HorizontalAlignment="Center"
@@ -128,6 +148,7 @@
                 Background="#FF000000"
                 BorderThickness="0"
                 Command="{x:Bind HandleSpoilerOverlayTapCommand}"
+                Style="{StaticResource SpoilerOverlayButtonStyle}"
                 Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                 <StackPanel
                     HorizontalAlignment="Center"
@@ -206,6 +227,7 @@
                 Background="#FF000000"
                 BorderThickness="0"
                 Command="{x:Bind HandleSpoilerOverlayTapCommand}"
+                Style="{StaticResource SpoilerOverlayButtonStyle}"
                 Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                 <StackPanel
                     HorizontalAlignment="Center"
@@ -304,6 +326,7 @@
                 Background="#FF000000"
                 BorderThickness="0"
                 Command="{x:Bind HandleSpoilerOverlayTapCommand}"
+                Style="{StaticResource SpoilerOverlayButtonStyle}"
                 Visibility="{x:Bind IsSpoilerOverlayVisible, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                 <StackPanel
                     HorizontalAlignment="Center"
