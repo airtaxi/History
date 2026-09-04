@@ -25,10 +25,6 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
     [ObservableProperty]
     public partial CommentResponseDto Comment { get; private set; }
 
-    // Comment-dependent properties — set in UpdateComment.
-    [ObservableProperty]
-    public partial bool IsMyComment { get; private set; }
-
     public HistoryCommentViewModel(CommentResponseDto comment, bool isMyPost, PostType postType, BasePostViewModel parentViewModel) : base(isMyPost, postType, parentViewModel)
     {
         UpdateComment(comment);
@@ -159,6 +155,15 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
         // The comment editor listens for comment taps in the unwrapped post view (not implemented yet).
         if (PostType == PostType.Unwrapped) return;
         else await ParentViewModel.HandleTapAsync();
+    }
+
+    // Requests the post page to insert a mention of the comment author into the comment editor.
+    public override void HandleReply()
+    {
+        if (PostType == PostType.Unwrapped && !IsMyComment)
+        {
+            WeakReferenceMessenger.Default.Send(new CommentReplyRequestedMessage(new ProfileContent { UserId = Comment.User.UserId, Nickname = Comment.User.Nickname }));
+        }
     }
 
     public override void HandleProfileTap() => ParentViewModel.BaseViewModel.RequestNavigation(typeof(ProfilePage), Comment.User.UserId);

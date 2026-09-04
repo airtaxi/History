@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Sticker;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
@@ -12,7 +12,7 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace History.WindowsClient.Pages;
 
-public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClickedMessage>
+public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClickedMessage>, IRecipient<CommentReplyRequestedMessage>
 {
     protected override HistoryPostPageViewModel ViewModel { get; }
 
@@ -24,7 +24,8 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
 
         CommentEditor.Initialize(ViewModel);
 
-        WeakReferenceMessenger.Default.Register(this);
+        WeakReferenceMessenger.Default.Register((IRecipient<RefreshButtonClickedMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<CommentReplyRequestedMessage>)this);
     }
 
     public void Receive(RefreshButtonClickedMessage message)
@@ -33,6 +34,15 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
         {
             _ = ViewModel.Post.RefreshAsync();
         }
+    }
+
+    // A comment reply was requested: append the comment author mention to the editor and focus it.
+    public void Receive(CommentReplyRequestedMessage message)
+    {
+        if (!_isInForeground) return;
+
+        CommentEditor.AppendMention(message.Value);
+        CommentEditor.FocusEditor();
     }
 
     private bool _isInForeground;
@@ -49,6 +59,8 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
         }
 
         base.OnNavigatedTo(e);
+
+        _isInForeground = true;
 
         // Keep the comment column anchored at the newest comment after layout settles.
         ScrollCommentsToEnd();

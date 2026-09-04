@@ -301,6 +301,50 @@ public sealed partial class ContentEditorControl : UserControl
         document.Selection.SetRange(text.Length, text.Length);
     }
 
+    // Appends a mention of the given user to the end of the editor with the standard mention
+    // formatting, leaving a trailing space so the following typed text does not merge into the token.
+    public void AppendMention(ProfileContent profileContent)
+    {
+        var document = Document;
+        if (profileContent == null || document == null) return;
+
+        document.GetText(TextGetOptions.NoHidden, out var documentText);
+        var insertPosition = documentText.Length;
+        if (documentText.Length > 0 && !char.IsWhiteSpace(documentText[^1]))
+        {
+            var spaceRange = document.GetRange(insertPosition, insertPosition);
+            spaceRange.SetText(TextSetOptions.Unhide, " ");
+            insertPosition++;
+        }
+
+        var tokenText = "@" + profileContent.Nickname;
+        var insertRange = document.GetRange(insertPosition, insertPosition);
+        insertRange.SetText(TextSetOptions.Unhide, tokenText);
+
+        var token = new RichSuggestToken(Guid.NewGuid(), tokenText) { Item = profileContent };
+        var tokenRange = document.GetRange(insertPosition, insertPosition + tokenText.Length);
+
+        var rangePrototype = document.GetRange(0, 0);
+        var formatMention = rangePrototype.CharacterFormat.GetClone();
+        formatMention.BackgroundColor = AccentColor;
+        formatMention.ForegroundColor = Colors.White;
+        formatMention.Bold = FormatEffect.On;
+
+        tokenRange.CharacterFormat.SetClone(formatMention);
+        PadStickerRange(tokenRange, formatMention);
+        tokenRange.Link = $"\"{token.Id}\"";
+
+        MainRichSuggestBox.RegisterTokenRange(token, tokenRange);
+
+        // Mirror the suggestion commit flow: the trailing space sits outside the link and the
+        // caret is parked past it so the following typed text does not merge into the token.
+        var trailingRange = tokenRange.GetClone();
+        trailingRange.Collapse(false);
+        trailingRange.SetText(TextSetOptions.Unhide, " ");
+        trailingRange.Collapse(false);
+        document.Selection.SetRange(trailingRange.EndPosition, trailingRange.EndPosition);
+    }
+
     public async Task<bool> InsertStickerAsync(StickerContent stickerContent)
     {
         if (stickerContent == null || Document == null) return false;

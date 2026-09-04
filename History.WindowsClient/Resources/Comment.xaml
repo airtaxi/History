@@ -83,12 +83,23 @@
                             <TextBlock
                                 FontSize="12"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                Text="· 좋아요" />
+                                Text=" · 좋아요" />
                             <TextBlock
                                 FontSize="12"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 Text="{x:Bind LikesCount, Mode=OneWay}" />
                         </StackPanel>
+                    </Button>
+                    <Button
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind HandleReplyCommand}"
+                        Visibility="{x:Bind IsReplyVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text=" · 답장" />
                     </Button>
                 </StackPanel>
             </StackPanel>

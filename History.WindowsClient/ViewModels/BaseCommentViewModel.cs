@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
@@ -29,6 +29,9 @@ public abstract partial class BaseCommentViewModel : BaseViewModel
     public partial int LikesCount { get; protected set; }
     [ObservableProperty]
     public partial bool Liked { get; protected set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsReplyVisible))]
+    public partial bool IsMyComment { get; protected set; }
 
     [ObservableProperty]
     public partial List<IContentViewModel> Contents { get; protected set; }
@@ -39,6 +42,9 @@ public abstract partial class BaseCommentViewModel : BaseViewModel
     public partial DateTime? ModifiedAt { get; protected set; }
     [ObservableProperty]
     public partial string TimestampText { get; protected set; }
+
+    // The reply affordance is shown only on the post page (unwrapped view) and only for other users' comments.
+    public bool IsReplyVisible => PostType == PostType.Unwrapped && !IsMyComment;
 
     public bool IsLongPressed { get; set; }
 
@@ -67,6 +73,9 @@ public abstract partial class BaseCommentViewModel : BaseViewModel
 
     [RelayCommand]
     public virtual void HandleProfileTap() => throw new NotSupportedException("[BaseCommentViewModel] HandleProfileTap must be overridden");
+
+    [RelayCommand]
+    public virtual void HandleReply() => throw new NotSupportedException("[BaseCommentViewModel] HandleReplyAsync must be overridden");
 
     public virtual async Task HandleLikeAsync() => throw new NotSupportedException("[BaseCommentViewModel] HandleLikeAsync must be overridden");
 
