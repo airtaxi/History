@@ -11,6 +11,7 @@ using History.Commons.Enums;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
+using History.WindowsClient.Pages;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -171,6 +172,9 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
         else await ParentViewModel.HandleTapAsync();
     }
 
-    // TODO: Navigate to the user profile page once it is implemented.
-    public override async Task HandleProfileTapAsync() => await Task.CompletedTask;
+    public override Task HandleProfileTapAsync()
+    {
+        ParentViewModel.DialogBaseViewModel.RequestNavigation(typeof(ProfilePage), Comment.User.UserId);
+        return Task.CompletedTask;
+    }
 }

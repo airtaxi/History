@@ -1,5 +1,6 @@
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.WindowsClient.Pages;
 
 namespace History.WindowsClient.ViewModels;
 
@@ -21,11 +22,11 @@ public partial class HistoryRepostViewModel : HistoryPostViewModel
         IsShare = false;
     }
 
-    public override async Task HandleRepostedUserTap()
+    public override Task HandleRepostedUserTap()
     {
-        if (_repostedUser == null) return;
+        if (_repostedUser == null) return Task.CompletedTask;
 
-        // TODO: Navigate to the user profile page once it is implemented.
-        await Task.CompletedTask;
+        BaseViewModel.RequestNavigation(typeof(ProfilePage), _repostedUser.UserId);
+        return Task.CompletedTask;
     }
 }

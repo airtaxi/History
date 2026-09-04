@@ -397,8 +397,11 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         BaseViewModel.RequestNavigation(typeof(PostPage), Post);
     }
 
-    // TODO: Navigate to the user profile page once it is implemented.
-    public override async Task HandleProfileTapAsync() => await Task.CompletedTask;
+    public override Task HandleProfileTapAsync()
+    {
+        BaseViewModel.RequestNavigation(typeof(ProfilePage), User.UserId);
+        return Task.CompletedTask;
+    }
 
     public override async Task HandleShareAsync()
     {
