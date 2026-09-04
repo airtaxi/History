@@ -73,6 +73,9 @@ public partial class ProfilePageViewModel : BaseViewModel,
             if (userResult.IsFailure)
             {
                 OnPropertyChanged(nameof(IsEmpty));
+
+                // The profile cannot be shown for an unknown/blocked user, so leave the page.
+                await TryNavigateBackAsync();
                 return;
             }
             Profile = new HistoryProfileViewModel(userResult.Value, this);
