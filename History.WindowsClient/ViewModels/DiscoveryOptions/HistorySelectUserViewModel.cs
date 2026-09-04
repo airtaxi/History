@@ -18,6 +18,7 @@ public partial class HistorySelectUserViewModel : BaseSelectUserViewModel
         Nickname = user.Nickname;
         IsModerator = user.Rank == Rank.Moderator;
         IsAdmin = user.Rank == Rank.Admin;
+        IsFavorite = user.IsFavorite;
         ProfileThumbnailImageSource = user.ProfileThumbnailMediaId != null ? new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(user.ProfileThumbnailMediaId))) : null;
         IsSelected = isSelected;
     }

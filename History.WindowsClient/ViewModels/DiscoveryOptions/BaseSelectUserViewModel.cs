@@ -19,6 +19,9 @@ public abstract partial class BaseSelectUserViewModel : ObservableObject
     public partial bool IsAdmin { get; protected set; }
 
     [ObservableProperty]
+    public partial bool IsFavorite { get; protected set; }
+
+    [ObservableProperty]
     public partial ImageSource ProfileThumbnailImageSource { get; protected set; }
 
     public bool IsSelected

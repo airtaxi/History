@@ -236,14 +236,34 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
-                            <Border
+                            <Grid
                                 Grid.Column="0"
                                 Width="36"
-                                Height="36"
-                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                CornerRadius="18">
-                                <Image Source="{x:Bind ProfileThumbnailImageSource, Mode=OneWay}" Stretch="UniformToFill" />
-                            </Border>
+                                Height="36">
+                                <Border
+                                    Width="36"
+                                    Height="36"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="18">
+                                    <Image Source="{x:Bind ProfileThumbnailImageSource, Mode=OneWay}" Stretch="UniformToFill" />
+                                </Border>
+                                <Border
+                                    Width="12"
+                                    Height="12"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Bottom"
+                                    Background="{ThemeResource ControlSolidFillColorDefaultBrush}"
+                                    CornerRadius="6"
+                                    Visibility="{x:Bind IsFavorite, Converter={StaticResource BoolToVisibilityConverter}}">
+                                    <Border.RenderTransform>
+                                        <TranslateTransform X="2" Y="2" />
+                                    </Border.RenderTransform>
+                                    <FontIcon
+                                        FontSize="10"
+                                        Foreground="{StaticResource SystemAccentColor}"
+                                        Glyph="&#xE735;" />
+                                </Border>
+                            </Grid>
 
                             <StackPanel
                                 Grid.Column="1"
