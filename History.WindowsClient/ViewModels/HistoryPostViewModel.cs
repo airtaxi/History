@@ -188,17 +188,17 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         if (PostType != PostType.Unwrapped)
         {
             var isReposted = Post.SharedAndRepostedUsers.Any(x => x.IsRepost && x.User.UserId == CommonShared.UserId);
-            menuFlyout.Items.Add(CreateActionItem("게시글 공유", "\uE72D", HandleShareAsync));
-            menuFlyout.Items.Add(CreateActionItem(isReposted ? "리포스트 해제" : "리포스트", "\uE8EB", HandleRepostAsync));
+            menuFlyout.Items.Add(Utils.CreateActionItem("게시글 공유", "\uE72D", HandleShareAsync));
+            menuFlyout.Items.Add(Utils.CreateActionItem(isReposted ? "리포스트 해제" : "리포스트", "\uE8EB", HandleRepostAsync));
         }
 
-        if (Post.IsBookmarked) menuFlyout.Items.Add(CreateActionItem("관심글 삭제", "\uE8A4", () => HandleBookmarkAsync(false)));
-        else menuFlyout.Items.Add(CreateActionItem("관심글로 저장", "\uE8A4", () => HandleBookmarkAsync(true)));
+        if (Post.IsBookmarked) menuFlyout.Items.Add(Utils.CreateActionItem("관심글 삭제", "\uE8A4", () => HandleBookmarkAsync(false)));
+        else menuFlyout.Items.Add(Utils.CreateActionItem("관심글로 저장", "\uE8A4", () => HandleBookmarkAsync(true)));
 
         if (User.UserId != CommonShared.UserId)
         {
-            menuFlyout.Items.Add(CreateActionItem(IsNotificationsMuted ? "이 글 알림 받기" : "이 글 알림 안받기", IsNotificationsMuted ? "\uEA8F" : "\uE7ED", HandleMuteNotificationsAsync));
-            menuFlyout.Items.Add(CreateActionItem("이 글 숨기기", "\uE7B3", HandleHidePostAsync));
+            menuFlyout.Items.Add(Utils.CreateActionItem(IsNotificationsMuted ? "이 글 알림 받기" : "이 글 알림 안받기", IsNotificationsMuted ? "\uEA8F" : "\uE7ED", HandleMuteNotificationsAsync));
+            menuFlyout.Items.Add(Utils.CreateActionItem("이 글 숨기기", "\uE7B3", HandleHidePostAsync));
         }
 
         if (User.UserId == CommonShared.UserId)
@@ -207,18 +207,18 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             foreach (var discoveryOption in Enum.GetValues<DiscoveryOption>())
             {
                 var option = discoveryOption;
-                discoverySubItem.Items.Add(CreateActionItem(option.ToDisplayString(), PostHelper.GetDiscoveryOptionGlyph(option), () => HandleChangeDiscoveryOptionAsync(option)));
+                discoverySubItem.Items.Add(Utils.CreateActionItem(option.ToDisplayString(), PostHelper.GetDiscoveryOptionGlyph(option), () => HandleChangeDiscoveryOptionAsync(option)));
             }
             menuFlyout.Items.Add(discoverySubItem);
 
-            menuFlyout.Items.Add(CreateActionItem("게시글 수정", "\uE70F", HandleEditPostAsync));
-            menuFlyout.Items.Add(CreateActionItem("게시글 삭제", "\uE74D", DeleteAsync));
-            menuFlyout.Items.Add(CreateActionItem("프로필에 고정", "\uE718", HandlePinPostAsync));
-            menuFlyout.Items.Add(CreateActionItem("게시글 홍보", "\uE789", HandlePromotePostAsync));
+            menuFlyout.Items.Add(Utils.CreateActionItem("게시글 수정", "\uE70F", HandleEditPostAsync));
+            menuFlyout.Items.Add(Utils.CreateActionItem("게시글 삭제", "\uE74D", DeleteAsync));
+            menuFlyout.Items.Add(Utils.CreateActionItem("프로필에 고정", "\uE718", HandlePinPostAsync));
+            menuFlyout.Items.Add(Utils.CreateActionItem("게시글 홍보", "\uE789", HandlePromotePostAsync));
         }
         else if (CommonShared.MyRank >= Rank.Moderator)
         {
-            menuFlyout.Items.Add(CreateActionItem("게시글 삭제", "\uE74D", DeleteAsync));
+            menuFlyout.Items.Add(Utils.CreateActionItem("게시글 삭제", "\uE74D", DeleteAsync));
         }
         else
         {
@@ -226,13 +226,13 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             foreach (var reportType in Enum.GetValues<ReportType>())
             {
                 var reportTypeValue = reportType;
-                reportSubItem.Items.Add(CreateActionItem(reportType.ToDisplayString(), "\uE7C1", () => HandleReportAsync(reportTypeValue)));
+                reportSubItem.Items.Add(Utils.CreateActionItem(reportType.ToDisplayString(), "\uE7C1", () => HandleReportAsync(reportTypeValue)));
             }
             menuFlyout.Items.Add(reportSubItem);
         }
 
-        menuFlyout.Items.Add(CreateActionItem("게시글 URL 복사", "\uE71B", HandleCopyUrl));
-        menuFlyout.Items.Add(CreateActionItem("게시글 이미지로 저장", "\uEE71", HandleSaveImageAsync));
+        menuFlyout.Items.Add(Utils.CreateActionItem("게시글 URL 복사", "\uE71B", HandleCopyUrl));
+        menuFlyout.Items.Add(Utils.CreateActionItem("게시글 이미지로 저장", "\uEE71", HandleSaveImageAsync));
     }
 
     public override void PopulateReactionMenuFlyout(MenuFlyout menuFlyout)
@@ -243,7 +243,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         if (Reaction is HistoryInteractionViewModel historyReaction)
         {
             var reactionTypeValue = historyReaction.ReactionType.Value;
-            menuFlyout.Items.Add(CreateActionItem("느낌 취소", "\uEA92", () => HandleReactionTypedAsync(reactionTypeValue)));
+            menuFlyout.Items.Add(Utils.CreateActionItem("느낌 취소", "\uEA92", () => HandleReactionTypedAsync(reactionTypeValue)));
             return;
         }
 
@@ -259,7 +259,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
                 ReactionType.Support => ("\uE945", Windows.UI.Color.FromArgb(0xFF, 0xA0, 0x61, 0xB1)),
                 _ => throw new ArgumentOutOfRangeException(nameof(reactionType), reactionType, null),
             };
-            menuFlyout.Items.Add(CreateActionItem(reactionType.ToDisplayString(), glyph, () => HandleReactionTypedAsync(reactionTypeValue), color));
+            menuFlyout.Items.Add(Utils.CreateActionItem(reactionType.ToDisplayString(), glyph, () => HandleReactionTypedAsync(reactionTypeValue), color));
         }
     }
 

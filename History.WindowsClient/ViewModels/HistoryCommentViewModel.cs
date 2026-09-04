@@ -77,10 +77,10 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
         menuFlyout.Items.Clear();
 
         var likeGlyph = Liked ? "\uEA92" : "\uEB52";
-        menuFlyout.Items.Add(CreateActionItem(Liked ? "좋아요 취소" : "좋아요", likeGlyph, HandleLikeAsync));
+        menuFlyout.Items.Add(Utils.CreateActionItem(Liked ? "좋아요 취소" : "좋아요", likeGlyph, HandleLikeAsync));
 
-        if (IsMyComment) menuFlyout.Items.Add(CreateActionItem("댓글 수정", "\uE70F", HandleEditCommentAsync));
-        if (IsMyComment || IsMyPost || CommonShared.MyRank >= Rank.Moderator) menuFlyout.Items.Add(CreateActionItem("댓글 삭제", "\uE74D", DeleteAsync));
+        if (IsMyComment) menuFlyout.Items.Add(Utils.CreateActionItem("댓글 수정", "\uE70F", HandleEditComment));
+        if (IsMyComment || IsMyPost || CommonShared.MyRank >= Rank.Moderator) menuFlyout.Items.Add(Utils.CreateActionItem("댓글 삭제", "\uE74D", DeleteAsync));
 
         if (!IsMyComment && CommonShared.MyRank < Rank.Moderator)
         {
@@ -88,21 +88,14 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
             foreach (var reportType in Enum.GetValues<ReportType>())
             {
                 var reportTypeValue = reportType;
-                reportSubItem.Items.Add(CreateActionItem(reportType.ToDisplayString(), "\uE7C1", () => HandleReportAsync(reportTypeValue)));
+                reportSubItem.Items.Add(Utils.CreateActionItem(reportType.ToDisplayString(), "\uE7C1", () => HandleReportAsync(reportTypeValue)));
             }
             menuFlyout.Items.Add(reportSubItem);
         }
     }
 
-    // Adds a clickable item that runs the given async action when tapped.
-    private static MenuFlyoutItem CreateActionItem(string text, string glyph, Func<Task> action, Windows.UI.Color? iconColor = null)
-    {
-        var item = new MenuFlyoutItem { Text = text, Tag = action };
-        if (iconColor != null) item.Icon = new FontIcon { Glyph = glyph, Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(iconColor.Value) };
-        else item.Icon = new FontIcon { Glyph = glyph };
-        item.Click += async (sender, _) => await ((Func<Task>)((MenuFlyoutItem)sender).Tag)();
-        return item;
-    }
+    // Opens the comment edit window; the window closes itself after a successful edit.
+    private void HandleEditComment() => new EditCommentWindow(new EditCommentWindowViewModel(Comment)).Activate();
 
     // TODO: Open the comment editor once it is implemented.
     private async Task HandleEditCommentAsync() => await ParentViewModel.DialogBaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "아직 지원하지 않는 기능입니다."));
