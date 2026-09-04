@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.Commons.Api.Sticker;
+using History.Commons.Api.User;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.WindowsClient.Messages;
@@ -62,6 +64,8 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
 
         _isInForeground = true;
 
+        _ = MarkPostNotificationsAsReadAsync();
+
         // Keep the comment column anchored at the newest comment after layout settles.
         ScrollCommentsToEnd();
     }
@@ -77,6 +81,17 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
             ViewModel.CommentBox.CommentSent -= OnCommentBoxCommentSent;
             ViewModel.CommentBox.StickerSelected -= OnCommentBoxStickerSelected;
         }
+    }
+
+    // Marks notifications that point to this post as read and broadcasts the result so
+    // unread badges and notification list entries update.
+    private async Task MarkPostNotificationsAsReadAsync()
+    {
+        if (ViewModel.Post is not HistoryPostViewModel historyPostViewModel) return;
+
+        var postId = historyPostViewModel.Post.Id;
+        var success = await CommonShared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByPostId(postId));
+        if (success) WeakReferenceMessenger.Default.Send(new NotificationPostReadMessage(postId));
     }
 
     // Pasted images become the comment attachment.
