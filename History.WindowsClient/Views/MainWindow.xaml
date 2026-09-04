@@ -30,6 +30,15 @@
             <TitleBar.IconSource>
                 <ImageIconSource ImageSource="ms-appx:///Assets/Icon.ico" />
             </TitleBar.IconSource>
+            <TitleBar.Content>
+                <AutoSuggestBox
+                    x:Name="MainSearchBox"
+                    Width="400"
+                    PlaceholderText="게시글 또는 댓글 검색 (공란 시 타임라인으로)"
+                    QueryIcon="Find"
+                    QuerySubmitted="OnMainSearchBoxQuerySubmitted"
+                    Visibility="Collapsed" />
+            </TitleBar.Content>
         </TitleBar>
 
         <Frame

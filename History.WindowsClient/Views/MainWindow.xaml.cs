@@ -81,6 +81,7 @@ public sealed partial class MainWindow : BaseWindow
 
         if (e.SourcePageType == typeof(MainPage) || e.SourcePageType == typeof(LoginPage)) frame.BackStack.Clear();
         AppTitleBar.IsBackButtonVisible = frame.CanGoBack;
+        MainSearchBox.Visibility = e.SourcePageType == typeof(MainPage) ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnAppTitleBarPaneToggleRequested(Microsoft.UI.Xaml.Controls.TitleBar sender, object args) => WeakReferenceMessenger.Default.Send(new ToggleNavigationPaneMessage());
@@ -92,4 +93,6 @@ public sealed partial class MainWindow : BaseWindow
             AppFrame.GoBack();
         }
     }
+
+    private void OnMainSearchBoxQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args) => WeakReferenceMessenger.Default.Send(new MainWindowAutoSuggestBoxQuerySubmittedMessage(args.QueryText));
 }

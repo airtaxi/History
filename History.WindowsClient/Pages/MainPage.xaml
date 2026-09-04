@@ -23,7 +23,8 @@
             x:Name="MainFrame"
             Grid.Column="0"
             Background="{ThemeResource CardBackgroundFillColorDefault}"
-            CornerRadius="0,16,0,0" />
+            CornerRadius="0,16,0,0"
+            IsNavigationStackEnabled="False" />
 
         <Grid
             Grid.Column="1"

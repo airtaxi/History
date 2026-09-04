@@ -126,6 +126,7 @@ public partial class App : Application
         serviceCollection.AddTransient(sp => new TimelinePageViewModel());
         serviceCollection.AddTransient(sp => new HistoryPostPageViewModel());
         serviceCollection.AddTransient(sp => new ProfilePageViewModel());
+        serviceCollection.AddTransient(sp => new SearchResultPageViewModel());
     }
     private static void OnApplicationUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs unhandledExceptionEventArguments)
     {
