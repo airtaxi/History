@@ -144,26 +144,21 @@ public partial class RichSuggestBox2
 
     private bool TryCommitSuggestionIntoDocument(ITextRange range, string displayText, Guid id, ITextCharacterFormat format, bool addTrailingSpace)
     {
-        // When the display text equals the query text (e.g. a single-character nickname),
-        // SetText below is skipped, so a live IME composition would survive into the
-        // PadRange/link mutations and corrupt the token range. Ending the composition
-        // first mirrors the user pressing an arrow key while composing.
-        var compositionWasActive = _textCompositionActive;
-        if (compositionWasActive)
+        // The XAML composition events can desync from the live TSF composition: the
+        // flag can read false while the IME is still composing (observed with the
+        // Korean IME). Always move the caret past the range end first — the same
+        // gesture as pressing an arrow key — so a surviving composition is committed
+        // before the link mutations below.
+        if (TextDocument != null)
         {
-            if (TextDocument != null)
-            {
-                TextDocument.Selection.SetRange(range.EndPosition, range.EndPosition);
-            }
+            TextDocument.Selection.SetRange(range.EndPosition, range.EndPosition);
         }
 
-        // We don't want to set text when the display text doesn't change since it may lead to unexpected caret move.
-        // However, an active IME composition must be terminated by SetText even when the text is identical.
-        range.GetText(TextGetOptions.NoHidden, out var existingText);
-        if (existingText != displayText || compositionWasActive)
-        {
-            range.SetText(TextSetOptions.Unhide, displayText);
-        }
+        // Always rewrite the range text: SetText is what terminates a composition the
+        // selection move could not, even when the text is identical. Skipping it lets
+        // a live composition survive into the PadRange/link mutations and corrupt the
+        // token's link.
+        range.SetText(TextSetOptions.Unhide, displayText);
 
         var formatBefore = range.CharacterFormat.GetClone();
         range.CharacterFormat.SetClone(format);
