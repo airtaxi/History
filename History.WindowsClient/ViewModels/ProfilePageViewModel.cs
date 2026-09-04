@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
+using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
@@ -124,5 +126,15 @@ public partial class ProfilePageViewModel : BaseViewModel,
             OnPropertyChanged(nameof(IsEmpty));
         }
         finally { _fetchSemaphore.Release(); }
+    }
+
+    // Viewing a friend's profile clears that friend's notifications and broadcasts the
+    // read state so notification surfaces can drop their badges.
+    public async Task MarkFriendNotificationsAsReadAsync()
+    {
+        if (_userId == CommonShared.UserId) return;
+
+        var success = await CommonShared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByFriendUserId(_userId));
+        if (success) WeakReferenceMessenger.Default.Send(new NotificationFriendUserReadMessage(_userId));
     }
 }

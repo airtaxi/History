@@ -39,6 +39,9 @@ public sealed partial class ProfilePage : BasePage
         if (_isFirstLoad) return;
         _isFirstLoad = true;
 
+        // Fire-and-forget like the friend-notification read clearing; the feed refresh
+        // does not wait for it.
+        _ = ViewModel.MarkFriendNotificationsAsReadAsync();
         await ViewModel.RefreshAsync();
     }
 
