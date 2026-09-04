@@ -112,10 +112,7 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
 
     // Base view model used for dialog requests so the post view model works on
     // any page (including a future separate timeline window).
-    protected readonly BaseViewModel BaseViewModel = baseViewModel;
-
-    // Public accessor for child view models (comments) to reach the dialog base view model.
-    public BaseViewModel DialogBaseViewModel => BaseViewModel;
+    public BaseViewModel BaseViewModel { get; } = baseViewModel;
 
     // Fills the "..." menu flyout with the actions available for the current user.
     public virtual void PopulateMoreMenuFlyout(MenuFlyout menuFlyout) => throw new NotSupportedException("[BasePostViewModel] PopulateMoreMenuFlyout must be overridden");
