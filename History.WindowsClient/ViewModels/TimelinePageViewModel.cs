@@ -42,7 +42,6 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
         {
             await _fetchSemaphore.WaitAsync();
 
-            Items.Clear();
             _areThereNoMorePostsToLoad = false;
 
             var postsResult = await ExecuteRequestAsync(new GetTimelinePosts(null, PageSize));
@@ -55,8 +54,12 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
                 await ExecuteWithLoadingAsync(() => MediaCacheService.PrefetchTimelineMediaAsync(posts));
 
                 var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User, this) : new HistoryPostViewModel(x, PostType.Timeline, this)));
-                foreach (var viewModel in viewModels) Items.Add(viewModel);
+
+                // Swap the whole collection once so the repeater sees a single reset
+                // instead of one incremental change per post.
+                Items = new ObservableCollection<BasePostViewModel>(viewModels);
             }
+            else Items = [];
 
             OnPropertyChanged(nameof(IsEmpty));
         }
@@ -85,8 +88,10 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
                 // mid-scroll and freezing the frame behind a blocking indicator feels broken.
                 await MediaCacheService.PrefetchTimelineMediaAsync(posts);
 
-                var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User, this) : new HistoryPostViewModel(x, PostType.Timeline, this)));
-                foreach (var viewModel in viewModels) Items.Add(viewModel);
+                var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User, this) : new HistoryPostViewModel(x, PostType.Timeline, this))).ToList();
+
+                // One reset per fetched page instead of one incremental change per post.
+                if (viewModels.Count > 0) Items = new ObservableCollection<BasePostViewModel>([.. Items, .. viewModels]);
 
                 if (postsResult.Value.Count == 0) _areThereNoMorePostsToLoad = true;
             }
