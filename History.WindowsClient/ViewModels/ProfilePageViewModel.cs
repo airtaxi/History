@@ -33,9 +33,15 @@ public partial class ProfilePageViewModel : BaseViewModel,
 
     public bool IsEmpty => Items.Count == 0;
 
+    // Vertical scroll offset captured continuously so revisiting the same user
+    // can restore the reading position.
+    public double ScrollHeight { get; set; }
+
     // Stores the navigation parameter only (XamlRoot-independent, called from
     // OnNavigatedTo); the actual loading runs from OnLoaded.
     public void Initialize(string userId) => _userId = userId;
+
+    public string? UserId => _userId;
 
     public ProfilePageViewModel()
     {

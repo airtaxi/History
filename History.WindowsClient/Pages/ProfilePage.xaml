@@ -15,7 +15,11 @@
 
     <Grid>
         <RefreshContainer RefreshRequested="OnRefreshRequested">
-            <ScrollViewer Padding="8" VerticalScrollBarVisibility="Hidden">
+            <ScrollViewer
+                x:Name="MainScrollViewer"
+                Padding="8"
+                VerticalScrollBarVisibility="Hidden"
+                ViewChanged="OnMainScrollViewerViewChanged">
                 <StackPanel Spacing="6">
                     <ContentControl
                         Height="360"
