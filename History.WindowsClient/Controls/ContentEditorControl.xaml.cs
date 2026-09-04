@@ -255,7 +255,9 @@ public sealed partial class ContentEditorControl : UserControl
             {
                 // The object replacement character reserves the inline image position;
                 // the image itself is inserted after the text layout is finalized.
-                tokens.Add((new RichSuggestToken(Guid.NewGuid(), ObjectReplacementCharacter) { Item = stickerContent }, textBuilder.Length));
+                // SkipValidation matches the live sticker insertion path, which registers
+                // the token without a link because set_Link fails on image ranges.
+                tokens.Add((new RichSuggestToken(Guid.NewGuid(), ObjectReplacementCharacter) { Item = stickerContent, SkipValidation = true }, textBuilder.Length));
                 textBuilder.Append(ObjectReplacementCharacter[0]);
             }
         }
@@ -288,9 +290,9 @@ public sealed partial class ContentEditorControl : UserControl
                 var format = token.DisplayText[0] == '#' ? formatHashtag : formatMention;
                 tokenRange.CharacterFormat.SetClone(format);
                 PadStickerRange(tokenRange, format);
+                tokenRange.Link = $"\"{token.Id}\"";
             }
 
-            tokenRange.Link = $"\"{token.Id}\"";
             MainRichSuggestBox.RegisterTokenRange(token, tokenRange);
         }
 
