@@ -14,201 +14,201 @@
     mc:Ignorable="d">
 
     <Grid>
-        <RefreshContainer RefreshRequested="OnRefreshRequested">
-            <ScrollViewer
-                x:Name="MainScrollViewer"
-                Padding="8"
-                VerticalScrollBarVisibility="Hidden"
-                ViewChanged="OnMainScrollViewerViewChanged">
-                <StackPanel Spacing="6">
-                    <ContentControl
-                        Height="360"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        HorizontalContentAlignment="Stretch"
-                        VerticalContentAlignment="Stretch"
-                        Content="{x:Bind ViewModel.Profile, Mode=OneWay}">
-                        <ContentControl.ContentTemplate>
-                            <DataTemplate x:DataType="vm:BaseProfileViewModel">
-                                <Border
-                                    BorderBrush="{ThemeResource SystemAccentColor}"
-                                    BorderThickness="4"
-                                    CornerRadius="16">
-                                    <Grid>
+        <ScrollView
+            x:Name="MainScrollView"
+            Padding="8"
+            IgnoredInputKinds="MouseWheel"
+            PointerWheelChanged="OnMainScrollViewPointerWheelChanged"
+            VerticalScrollBarVisibility="Hidden"
+            ViewChanged="OnMainScrollViewViewChanged">
+            <StackPanel Spacing="6">
+                <ContentControl
+                    Height="360"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    Content="{x:Bind ViewModel.Profile, Mode=OneWay}">
+                    <ContentControl.ContentTemplate>
+                        <DataTemplate x:DataType="vm:BaseProfileViewModel">
+                            <Border
+                                BorderBrush="{ThemeResource SystemAccentColor}"
+                                BorderThickness="4"
+                                CornerRadius="16">
+                                <Grid>
 
-                                        <!--  Background media with dark overlay for text readability  -->
-                                        <Border
-                                            Grid.Row="0"
-                                            Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                            CornerRadius="12">
-                                            <Grid>
-                                                <Image Source="{x:Bind BackgroundImageSource, Mode=OneWay}" Stretch="UniformToFill" />
-                                                <Border Background="Black" Opacity="0.6" />
-                                            </Grid>
-                                        </Border>
+                                    <!--  Background media with dark overlay for text readability  -->
+                                    <Border
+                                        Grid.Row="0"
+                                        Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                        CornerRadius="12">
+                                        <Grid>
+                                            <Image Source="{x:Bind BackgroundImageSource, Mode=OneWay}" Stretch="UniformToFill" />
+                                            <Border Background="Black" Opacity="0.6" />
+                                        </Grid>
+                                    </Border>
 
-                                        <!--  Identity row, overlapping the background media  -->
+                                    <!--  Identity row, overlapping the background media  -->
+                                    <Grid
+                                        Grid.Row="1"
+                                        Padding="12"
+                                        VerticalAlignment="Top"
+                                        ColumnSpacing="12"
+                                        CornerRadius="16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
                                         <Grid
-                                            Grid.Row="1"
-                                            Padding="12"
-                                            VerticalAlignment="Top"
-                                            ColumnSpacing="12"
-                                            CornerRadius="16">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-
-                                            <Grid
-                                                Grid.Column="0"
+                                            Grid.Column="0"
+                                            Width="96"
+                                            Height="96">
+                                            <Button
                                                 Width="96"
-                                                Height="96">
-                                                <Button
+                                                Height="96"
+                                                Padding="0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Command="{x:Bind HandleProfileTapCommand}"
+                                                CornerRadius="48">
+                                                <PersonPicture
                                                     Width="96"
                                                     Height="96"
-                                                    Padding="0"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Background="Transparent"
-                                                    BorderThickness="0"
-                                                    Command="{x:Bind HandleProfileTapCommand}"
-                                                    CornerRadius="48">
-                                                    <PersonPicture
-                                                        Width="96"
-                                                        Height="96"
-                                                        ProfilePicture="{x:Bind ProfileImageSource, Mode=OneWay}" />
-                                                </Button>
-                                                <Border
-                                                    Width="32"
-                                                    Height="32"
-                                                    Padding="0"
-                                                    HorizontalAlignment="Right"
-                                                    VerticalAlignment="Bottom"
-                                                    Background="#8F8F8F"
-                                                    BorderBrush="{ThemeResource LayerOnMicaBaseAltFillColorTertiaryBrush}"
-                                                    BorderThickness="1"
-                                                    CornerRadius="16"
-                                                    Visibility="{x:Bind IsFriend, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                                                    <interactivity:Interaction.Behaviors>
-                                                        <behaviors:EventTriggerBehavior EventName="Tapped">
-                                                            <behaviors:InvokeCommandAction Command="{x:Bind HandleFavoriteCommand}" />
-                                                        </behaviors:EventTriggerBehavior>
-                                                    </interactivity:Interaction.Behaviors>
-                                                    <FontIcon
-                                                        FontSize="16"
-                                                        Foreground="{x:Bind FavoriteBrush, Mode=OneWay}"
-                                                        Glyph="&#xE735;" />
-                                                </Border>
-                                            </Grid>
-
-                                            <StackPanel
-                                                Grid.Column="1"
-                                                VerticalAlignment="Center"
-                                                Spacing="6">
-                                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock
-                                                        FontSize="20"
-                                                        FontWeight="Bold"
-                                                        Foreground="White"
-                                                        MaxLines="1"
-                                                        Text="{x:Bind Nickname, Mode=OneWay}"
-                                                        TextLineBounds="TrimToCapHeight"
-                                                        TextTrimming="CharacterEllipsis" />
-                                                    <FontIcon
-                                                        VerticalAlignment="Center"
-                                                        FontSize="14"
-                                                        Foreground="#f78501"
-                                                        Glyph="&#xF760;"
-                                                        Visibility="{x:Bind IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
-                                                    <FontIcon
-                                                        VerticalAlignment="Center"
-                                                        FontSize="14"
-                                                        Foreground="#1a5bf3"
-                                                        Glyph="&#xF760;"
-                                                        Visibility="{x:Bind IsModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
-                                                </StackPanel>
-                                                <TextBlock
-                                                    FontSize="14"
-                                                    Foreground="White"
-                                                    MaxLines="2"
-                                                    Text="{x:Bind Description, Mode=OneWay}"
-                                                    TextLineBounds="TrimToCapHeight"
-                                                    TextWrapping="Wrap" />
-                                                <TextBlock
-                                                    FontSize="12"
-                                                    Foreground="White"
-                                                    Text="{x:Bind FriendshipDescription, Mode=OneWay}"
-                                                    TextLineBounds="TrimToCapHeight" />
-                                            </StackPanel>
-
-                                            <!--  Header action row (memo / copy profile link)  -->
-                                            <StackPanel
-                                                Grid.Column="2"
-                                                VerticalAlignment="Top"
-                                                Orientation="Horizontal"
-                                                Spacing="4">
-                                                <Button
-                                                    Width="36"
-                                                    Height="36"
-                                                    Padding="0"
-                                                    Command="{x:Bind HandleMemoCommand}"
-                                                    ToolTipService.ToolTip="메모 작성"
-                                                    Visibility="{x:Bind IsNotMe, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                                                    <FontIcon FontSize="16" Glyph="&#xE70F;" />
-                                                </Button>
-                                                <Button
-                                                    Width="36"
-                                                    Height="36"
-                                                    Padding="0"
-                                                    Command="{x:Bind HandleCopyProfileLinkCommand}"
-                                                    ToolTipService.ToolTip="프로필 링크 복사">
-                                                    <FontIcon FontSize="16" Glyph="{x:Bind CopyProfileLinkGlyph, Mode=OneWay}" />
-                                                </Button>
-                                            </StackPanel>
+                                                    ProfilePicture="{x:Bind ProfileImageSource, Mode=OneWay}" />
+                                            </Button>
+                                            <Border
+                                                Width="32"
+                                                Height="32"
+                                                Padding="0"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Bottom"
+                                                Background="#8F8F8F"
+                                                BorderBrush="{ThemeResource LayerOnMicaBaseAltFillColorTertiaryBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="16"
+                                                Visibility="{x:Bind IsFriend, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                                                <interactivity:Interaction.Behaviors>
+                                                    <behaviors:EventTriggerBehavior EventName="Tapped">
+                                                        <behaviors:InvokeCommandAction Command="{x:Bind HandleFavoriteCommand}" />
+                                                    </behaviors:EventTriggerBehavior>
+                                                </interactivity:Interaction.Behaviors>
+                                                <FontIcon
+                                                    FontSize="16"
+                                                    Foreground="{x:Bind FavoriteBrush, Mode=OneWay}"
+                                                    Glyph="&#xE735;" />
+                                            </Border>
                                         </Grid>
 
-                                        <!--  Action row  -->
                                         <StackPanel
-                                            Padding="12"
-                                            HorizontalAlignment="Right"
-                                            VerticalAlignment="Bottom"
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Spacing="6">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock
+                                                    FontSize="20"
+                                                    FontWeight="Bold"
+                                                    Foreground="White"
+                                                    MaxLines="1"
+                                                    Text="{x:Bind Nickname, Mode=OneWay}"
+                                                    TextLineBounds="TrimToCapHeight"
+                                                    TextTrimming="CharacterEllipsis" />
+                                                <FontIcon
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    Foreground="#f78501"
+                                                    Glyph="&#xF760;"
+                                                    Visibility="{x:Bind IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                                                <FontIcon
+                                                    VerticalAlignment="Center"
+                                                    FontSize="14"
+                                                    Foreground="#1a5bf3"
+                                                    Glyph="&#xF760;"
+                                                    Visibility="{x:Bind IsModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                                            </StackPanel>
+                                            <TextBlock
+                                                FontSize="14"
+                                                Foreground="White"
+                                                MaxLines="2"
+                                                Text="{x:Bind Description, Mode=OneWay}"
+                                                TextLineBounds="TrimToCapHeight"
+                                                TextWrapping="Wrap" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="White"
+                                                Text="{x:Bind FriendshipDescription, Mode=OneWay}"
+                                                TextLineBounds="TrimToCapHeight" />
+                                        </StackPanel>
+
+                                        <!--  Header action row (memo / copy profile link)  -->
+                                        <StackPanel
+                                            Grid.Column="2"
+                                            VerticalAlignment="Top"
                                             Orientation="Horizontal"
-                                            Spacing="8"
-                                            Visibility="{x:Bind IsNotMe, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                                            Spacing="4">
                                             <Button
-                                                Command="{x:Bind HandleFriendshipActionCommand}"
-                                                Content="{x:Bind FriendButtonText, Mode=OneWay}"
-                                                Style="{StaticResource AccentButtonStyle}" />
-                                            <Button Command="{x:Bind HandleBanCommand}">
-                                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                                    <FontIcon FontSize="16" Glyph="&#xE8F8;" />
-                                                    <TextBlock VerticalAlignment="Center" Text="차단 / 무시" />
-                                                </StackPanel>
+                                                Width="36"
+                                                Height="36"
+                                                Padding="0"
+                                                Command="{x:Bind HandleMemoCommand}"
+                                                ToolTipService.ToolTip="메모 작성"
+                                                Visibility="{x:Bind IsNotMe, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                                                <FontIcon FontSize="16" Glyph="&#xE70F;" />
+                                            </Button>
+                                            <Button
+                                                Width="36"
+                                                Height="36"
+                                                Padding="0"
+                                                Command="{x:Bind HandleCopyProfileLinkCommand}"
+                                                ToolTipService.ToolTip="프로필 링크 복사">
+                                                <FontIcon FontSize="16" Glyph="{x:Bind CopyProfileLinkGlyph, Mode=OneWay}" />
                                             </Button>
                                         </StackPanel>
                                     </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ContentControl.ContentTemplate>
-                    </ContentControl>
 
-                    <ItemsRepeater
-                        x:Name="MainItemsRepeater"
-                        ElementPrepared="OnMainItemsRepeaterElementPrepared"
-                        ItemTemplate="{StaticResource TimelineTemplateSelector}"
-                        ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
-                        <ItemsRepeater.Layout>
-                            <controls:StaggeredLayout
-                                ColumnSpacing="6"
-                                DesiredColumnWidth="400"
-                                ItemsStretch="Fill"
-                                RowSpacing="6" />
-                        </ItemsRepeater.Layout>
-                    </ItemsRepeater>
-                </StackPanel>
-            </ScrollViewer>
-        </RefreshContainer>
+                                    <!--  Action row  -->
+                                    <StackPanel
+                                        Padding="12"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Bottom"
+                                        Orientation="Horizontal"
+                                        Spacing="8"
+                                        Visibility="{x:Bind IsNotMe, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                                        <Button
+                                            Command="{x:Bind HandleFriendshipActionCommand}"
+                                            Content="{x:Bind FriendButtonText, Mode=OneWay}"
+                                            Style="{StaticResource AccentButtonStyle}" />
+                                        <Button Command="{x:Bind HandleBanCommand}">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon FontSize="16" Glyph="&#xE8F8;" />
+                                                <TextBlock VerticalAlignment="Center" Text="차단 / 무시" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ContentControl.ContentTemplate>
+                </ContentControl>
+
+                <ItemsRepeater
+                    x:Name="MainItemsRepeater"
+                    ElementPrepared="OnMainItemsRepeaterElementPrepared"
+                    ItemTemplate="{StaticResource TimelineTemplateSelector}"
+                    ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <controls:StaggeredLayout
+                            ColumnSpacing="6"
+                            DesiredColumnWidth="400"
+                            ItemsStretch="Fill"
+                            RowSpacing="6" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </StackPanel>
+        </ScrollView>
 
         <TextBlock
             HorizontalAlignment="Center"
@@ -217,5 +217,21 @@
             Style="{StaticResource SubtitleTextBlockStyle}"
             Text="게시글이 없습니다"
             Visibility="{x:Bind ViewModel.IsEmpty, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+
+        <Button
+            x:Name="ScrollToTopButton"
+            Width="44"
+            Height="44"
+            Margin="0,0,16,16"
+            Padding="0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Background="{ThemeResource ControlOnImageFillColorDefaultBrush}"
+            Click="OnScrollToTopButtonClicked"
+            CornerRadius="22"
+            ToolTipService.ToolTip="맨 위로"
+            Visibility="Collapsed">
+            <FontIcon FontSize="18" Glyph="&#xE70E;" />
+        </Button>
     </Grid>
 </local:BasePage>

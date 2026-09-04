@@ -12,23 +12,27 @@
     mc:Ignorable="d">
 
     <Grid>
-        <RefreshContainer RefreshRequested="OnRefreshRequested">
-            <ScrollViewer Padding="8" VerticalScrollBarVisibility="Hidden">
-                <ItemsRepeater
-                    x:Name="MainItemsRepeater"
-                    ElementPrepared="OnMainItemsRepeaterElementPrepared"
-                    ItemTemplate="{StaticResource TimelineTemplateSelector}"
-                    ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
-                    <ItemsRepeater.Layout>
-                        <controls:StaggeredLayout
-                            ColumnSpacing="6"
-                            DesiredColumnWidth="400"
-                            ItemsStretch="Fill"
-                            RowSpacing="6" />
-                    </ItemsRepeater.Layout>
-                </ItemsRepeater>
-            </ScrollViewer>
-        </RefreshContainer>
+        <ScrollView
+            x:Name="MainScrollView"
+            Padding="8"
+            IgnoredInputKinds="MouseWheel"
+            PointerWheelChanged="OnMainScrollViewPointerWheelChanged"
+            VerticalScrollBarVisibility="Hidden"
+            ViewChanged="OnMainScrollViewViewChanged">
+            <ItemsRepeater
+                x:Name="MainItemsRepeater"
+                ElementPrepared="OnMainItemsRepeaterElementPrepared"
+                ItemTemplate="{StaticResource TimelineTemplateSelector}"
+                ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+                <ItemsRepeater.Layout>
+                    <controls:StaggeredLayout
+                        ColumnSpacing="6"
+                        DesiredColumnWidth="400"
+                        ItemsStretch="Fill"
+                        RowSpacing="6" />
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </ScrollView>
 
         <TextBlock
             HorizontalAlignment="Center"
@@ -37,5 +41,21 @@
             Style="{StaticResource SubtitleTextBlockStyle}"
             Text="게시글이 없습니다"
             Visibility="{x:Bind ViewModel.IsEmpty, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+
+        <Button
+            x:Name="ScrollToTopButton"
+            Width="44"
+            Height="44"
+            Margin="0,0,16,16"
+            Padding="0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            Background="{ThemeResource ControlOnImageFillColorDefaultBrush}"
+            Click="OnScrollToTopButtonClicked"
+            CornerRadius="22"
+            ToolTipService.ToolTip="맨 위로"
+            Visibility="Collapsed">
+            <FontIcon FontSize="18" Glyph="&#xE70E;" />
+        </Button>
     </Grid>
 </local:BasePage>
