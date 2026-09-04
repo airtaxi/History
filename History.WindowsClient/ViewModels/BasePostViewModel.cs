@@ -127,7 +127,7 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
     public virtual async Task HandleTapAsync() => throw new NotSupportedException("[BasePostViewModel] HandleTapAsync must be overridden");
 
     [RelayCommand]
-    public virtual async Task HandleProfileTapAsync() => throw new NotSupportedException("[BasePostViewModel] HandleProfileTapAsync must be overridden");
+    public virtual void HandleProfileTap() => throw new NotSupportedException("[BasePostViewModel] HandleProfileTap must be overridden");
 
     [RelayCommand]
     public virtual async Task HandleReactionAsync() => throw new NotSupportedException("[BasePostViewModel] HandleReactionAsync must be overridden");
@@ -142,16 +142,16 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
     public virtual async Task HandleMuteNotificationsAsync() => throw new NotSupportedException("[BasePostViewModel] HandleMuteNotificationsAsync must be overridden");
 
     [RelayCommand]
-    public virtual async Task HandleReactionTapAsync() => throw new NotSupportedException("[BasePostViewModel] HandleReactionTapAsync must be overridden");
+    public virtual void HandleReactionTap() => throw new NotSupportedException("[BasePostViewModel] HandleReactionTap must be overridden");
 
     [RelayCommand]
-    public virtual async Task HandleSharedTapAsync() => throw new NotSupportedException("[BasePostViewModel] HandleSharedTapAsync must be overridden");
+    public virtual void HandleSharedTap() => throw new NotSupportedException("[BasePostViewModel] HandleSharedTap must be overridden");
 
     [RelayCommand]
-    public virtual async Task HandleRepostTapAsync() => throw new NotSupportedException("[BasePostViewModel] HandleRepostTapAsync must be overridden");
+    public virtual void HandleRepostTap() => throw new NotSupportedException("[BasePostViewModel] HandleRepostTap must be overridden");
 
     [RelayCommand]
-    public virtual async Task HandleRepostedUserTap() => throw new NotSupportedException("[BasePostViewModel] HandleRepostedUserTap must be overridden");
+    public virtual void HandleRepostedUserTap() => throw new NotSupportedException("[BasePostViewModel] HandleRepostedUserTap must be overridden");
 
     [RelayCommand]
     public virtual async Task HandleLoadMoreComments() => throw new NotSupportedException("[BasePostViewModel] HandleLoadMoreComments must be overridden");

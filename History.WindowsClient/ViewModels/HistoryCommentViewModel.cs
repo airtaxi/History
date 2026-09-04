@@ -129,7 +129,6 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
         }
 
         // TODO: Navigate to the interactions page once it is implemented.
-        await Task.CompletedTask;
     }
 
     public override async Task HandleLikeAsync()
@@ -167,13 +166,9 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
     public override async Task HandleTapAsync()
     {
         // The comment editor listens for comment taps in the unwrapped post view (not implemented yet).
-        if (PostType == PostType.Unwrapped) await Task.CompletedTask;
+        if (PostType == PostType.Unwrapped) return;
         else await ParentViewModel.HandleTapAsync();
     }
 
-    public override Task HandleProfileTapAsync()
-    {
-        ParentViewModel.DialogBaseViewModel.RequestNavigation(typeof(ProfilePage), Comment.User.UserId);
-        return Task.CompletedTask;
-    }
+    public override void HandleProfileTap() => ParentViewModel.DialogBaseViewModel.RequestNavigation(typeof(ProfilePage), Comment.User.UserId);
 }

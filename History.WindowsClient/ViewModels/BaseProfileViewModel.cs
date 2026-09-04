@@ -77,10 +77,10 @@ public abstract partial class BaseProfileViewModel : BaseViewModel
     public virtual async Task HandleBanAsync() => throw new NotSupportedException("[BaseProfileViewModel] HandleBanAsync must be overridden");
 
     [RelayCommand]
-    public virtual async Task HandleProfileTapAsync() => throw new NotSupportedException("[BaseProfileViewModel] HandleProfileTapAsync must be overridden");
+    public virtual void HandleProfileTap() => throw new NotSupportedException("[BaseProfileViewModel] HandleProfileTap must be overridden");
 
     [RelayCommand]
-    public virtual async Task HandleBackgroundTapAsync() => throw new NotSupportedException("[BaseProfileViewModel] HandleBackgroundTapAsync must be overridden");
+    public virtual void HandleBackgroundTap() => throw new NotSupportedException("[BaseProfileViewModel] HandleBackgroundTap must be overridden");
 
     [RelayCommand]
     public virtual async Task HandleMemoAsync() => throw new NotSupportedException("[BaseProfileViewModel] HandleMemoAsync must be overridden");

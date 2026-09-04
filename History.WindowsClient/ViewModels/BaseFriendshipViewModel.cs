@@ -43,5 +43,5 @@ public abstract partial class BaseFriendshipViewModel : BaseViewModel
     public abstract Task HandleFriendshipActionAsync();
 
     [RelayCommand]
-    public virtual async Task HandleProfileTapAsync() => throw new NotSupportedException("[BaseFriendshipViewModel] HandleProfileTapAsync must be overridden");
+    public virtual void HandleProfileTap() => throw new NotSupportedException("[BaseFriendshipViewModel] HandleProfileTap must be overridden");
 }

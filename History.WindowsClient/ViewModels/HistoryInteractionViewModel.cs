@@ -60,5 +60,5 @@ public partial class HistoryInteractionViewModel : BaseInteractionViewModel
     private static BitmapImage CreateProfileImageSource(UserResponseDto user) => user.ProfileMediaId == null ? null : new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(user.ProfileMediaId)));
 
     // TODO: Navigate to the user profile page once it is implemented.
-    public override async Task HandleTapAsync() => await Task.CompletedTask;
+    public override void HandleTap() { }
 }

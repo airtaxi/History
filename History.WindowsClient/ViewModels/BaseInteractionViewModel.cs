@@ -20,5 +20,5 @@ public abstract partial class BaseInteractionViewModel : BaseViewModel
     public Brush ColorBrush { get; init; }
 
     [RelayCommand]
-    public virtual async Task HandleTapAsync() => throw new NotSupportedException("[BaseInteractionViewModel] HandleTapAsync must be overridden");
+    public virtual void HandleTap() => throw new NotSupportedException("[BaseInteractionViewModel] HandleTap must be overridden");
 }

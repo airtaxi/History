@@ -165,9 +165,19 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     private static MenuFlyoutItem CreateActionItem(string text, string glyph, Func<Task> action, Windows.UI.Color? iconColor = null)
     {
         var item = new MenuFlyoutItem { Text = text, Tag = action };
-        if (iconColor != null) item.Icon = new FontIcon { Glyph = glyph, Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(iconColor.Value) };
+        if (iconColor != null) item.Icon = new FontIcon { Glyph = glyph, Foreground = new SolidColorBrush(iconColor.Value) };
         else item.Icon = new FontIcon { Glyph = glyph };
         item.Click += async (sender, _) => await ((Func<Task>)((MenuFlyoutItem)sender).Tag)();
+        return item;
+    }
+
+    // Adds a clickable item that runs the given synchronous action when tapped.
+    private static MenuFlyoutItem CreateActionItem(string text, string glyph, Action action, Windows.UI.Color? iconColor = null)
+    {
+        var item = new MenuFlyoutItem { Text = text, Tag = action };
+        if (iconColor != null) item.Icon = new FontIcon { Glyph = glyph, Foreground = new SolidColorBrush(iconColor.Value) };
+        else item.Icon = new FontIcon { Glyph = glyph };
+        item.Click += (sender, _) => ((Action)((MenuFlyoutItem)sender).Tag)();
         return item;
     }
 
@@ -221,7 +231,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             menuFlyout.Items.Add(reportSubItem);
         }
 
-        menuFlyout.Items.Add(CreateActionItem("게시글 URL 복사", "\uE71B", HandleCopyUrlAsync));
+        menuFlyout.Items.Add(CreateActionItem("게시글 URL 복사", "\uE71B", HandleCopyUrl));
         menuFlyout.Items.Add(CreateActionItem("게시글 이미지로 저장", "\uEE71", HandleSaveImageAsync));
     }
 
@@ -302,12 +312,11 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         if (result.IsSuccess) await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다."));
     }
 
-    private async Task HandleCopyUrlAsync()
+    private void HandleCopyUrl()
     {
         var dataPackage = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
         dataPackage.SetText($"https://historyweb.cc/post/{Post.Id}");
         Clipboard.SetContent(dataPackage);
-        await Task.CompletedTask;
     }
 
     // TODO: Render the post to an image once the renderer is implemented.
@@ -397,11 +406,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         BaseViewModel.RequestNavigation(typeof(PostPage), Post);
     }
 
-    public override Task HandleProfileTapAsync()
-    {
-        BaseViewModel.RequestNavigation(typeof(ProfilePage), User.UserId);
-        return Task.CompletedTask;
-    }
+    public override void HandleProfileTap() => BaseViewModel.RequestNavigation(typeof(ProfilePage), User.UserId);
 
     public override async Task HandleShareAsync()
     {
@@ -417,7 +422,6 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         }
 
         // TODO: Open the share editor once it is implemented.
-        await Task.CompletedTask;
     }
 
     public override async Task HandleRepostAsync()
@@ -448,16 +452,16 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     }
 
     // TODO: Navigate to the interactions page once it is implemented.
-    public override async Task HandleReactionTapAsync() => await Task.CompletedTask;
+    public override void HandleReactionTap() { }
 
     // TODO: Navigate to the interactions page once it is implemented.
-    public override async Task HandleSharedTapAsync() => await Task.CompletedTask;
+    public override void HandleSharedTap() { }
 
     // TODO: Navigate to the interactions page once it is implemented.
-    public override async Task HandleRepostTapAsync() => await Task.CompletedTask;
+    public override void HandleRepostTap() { }
 
     // TODO: Navigate to the user profile page once it is implemented.
-    public override async Task HandleRepostedUserTap() => await Task.CompletedTask;
+    public override void HandleRepostedUserTap() { }
 
     public override async Task HandleLoadMoreComments()
     {

@@ -21,11 +21,10 @@ public partial class HistoryRepostViewModel : HistoryPostViewModel
         IsShare = false;
     }
 
-    public override Task HandleRepostedUserTap()
+    public override void HandleRepostedUserTap()
     {
-        if (_repostedUser == null) return Task.CompletedTask;
+        if (_repostedUser == null) return;
 
         BaseViewModel.RequestNavigation(typeof(ProfilePage), _repostedUser.UserId);
-        return Task.CompletedTask;
     }
 }

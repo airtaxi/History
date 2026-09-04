@@ -66,7 +66,7 @@ public abstract partial class BaseCommentViewModel : BaseViewModel
     public virtual async Task HandleTapAsync() => throw new NotSupportedException("[BaseCommentViewModel] HandleTapAsync must be overridden");
 
     [RelayCommand]
-    public virtual async Task HandleProfileTapAsync() => throw new NotSupportedException("[BaseCommentViewModel] HandleProfileTapAsync must be overridden");
+    public virtual void HandleProfileTap() => throw new NotSupportedException("[BaseCommentViewModel] HandleProfileTap must be overridden");
 
     public virtual async Task HandleLikeAsync() => throw new NotSupportedException("[BaseCommentViewModel] HandleLikeAsync must be overridden");
 

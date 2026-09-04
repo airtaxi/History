@@ -172,10 +172,10 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
     }
 
     // TODO: Open the profile image in the full-screen media viewer once it is implemented.
-    public override async Task HandleProfileTapAsync() => await Task.CompletedTask;
+    public override void HandleProfileTap() { }
 
     // TODO: Open the background image in the full-screen media viewer once it is implemented.
-    public override async Task HandleBackgroundTapAsync() => await Task.CompletedTask;
+    public override void HandleBackgroundTap() { }
 
     private void Update(UserResponseDto user)
     {
