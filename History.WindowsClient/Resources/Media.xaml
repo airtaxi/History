@@ -21,7 +21,7 @@
                 VerticalAlignment="Center"
                 ImageOpened="OnMediaItemImageOpened"
                 Source="{x:Bind ImageSource}"
-                Stretch="{x:Bind Stretch, Mode=OneTime}" />
+                Stretch="{x:Bind Stretch}" />
 
             <!--  Spoiler Overlay  -->
             <Button
@@ -65,7 +65,7 @@
                     FontSize="14"
                     FontWeight="Bold"
                     MaxLines="2"
-                    Text="{x:Bind Description, Mode=OneTime}"
+                    Text="{x:Bind Description}"
                     TextAlignment="Center"
                     TextTrimming="CharacterEllipsis"
                     TextWrapping="Wrap" />
@@ -87,7 +87,7 @@
                 VerticalAlignment="Center"
                 ImageOpened="OnMediaItemImageOpened"
                 Source="{x:Bind ImageSource}"
-                Stretch="{x:Bind Stretch, Mode=OneTime}" />
+                Stretch="{x:Bind Stretch}" />
 
             <!--
                 Only instantiated while inline playback is active (x:Load): recycled carousels
@@ -162,7 +162,7 @@
                     FontSize="14"
                     FontWeight="Bold"
                     MaxLines="2"
-                    Text="{x:Bind Description, Mode=OneTime}"
+                    Text="{x:Bind Description}"
                     TextAlignment="Center"
                     TextTrimming="CharacterEllipsis"
                     TextWrapping="Wrap" />
@@ -194,7 +194,7 @@
                     ImageOpened="OnFullScreenMediaImageOpened"
                     PointerWheelChanged="OnFullScreenMediaPointerWheelChanged"
                     Source="{x:Bind ImageSource, Mode=OneWay}"
-                    Stretch="{x:Bind Stretch, Mode=OneTime}"
+                    Stretch="{x:Bind Stretch}"
                     Tapped="OnFullScreenMediaTapped" />
             </ScrollViewer>
 
@@ -240,7 +240,7 @@
                     FontSize="14"
                     FontWeight="Bold"
                     MaxLines="2"
-                    Text="{x:Bind Description, Mode=OneTime}"
+                    Text="{x:Bind Description}"
                     TextAlignment="Center"
                     TextTrimming="CharacterEllipsis"
                     TextWrapping="Wrap" />
@@ -262,7 +262,7 @@
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     Source="{x:Bind ImageSource, Mode=OneWay}"
-                    Stretch="{x:Bind Stretch, Mode=OneTime}" />
+                    Stretch="{x:Bind Stretch}" />
 
                 <!--
                     Only instantiated while playback is active (x:Load): the viewer never
@@ -338,7 +338,7 @@
                     FontSize="14"
                     FontWeight="Bold"
                     MaxLines="2"
-                    Text="{x:Bind Description, Mode=OneTime}"
+                    Text="{x:Bind Description}"
                     TextAlignment="Center"
                     TextTrimming="CharacterEllipsis"
                     TextWrapping="Wrap" />

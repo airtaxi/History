@@ -9,14 +9,14 @@
     <!--  Content slot templates hosting the existing content UserControls.  -->
     <!--  Merged before Comment/Post so both can resolve these keys safely.  -->
     <DataTemplate x:Key="WrappedMediaContentTemplate" x:DataType="vm:WrappedMediaContentItemViewModel">
-        <controls:WrappedMediaContentControl CarouselViewModel="{x:Bind CarouselViewModel, Mode=OneTime}" />
+        <controls:WrappedMediaContentControl CarouselViewModel="{x:Bind CarouselViewModel}" />
     </DataTemplate>
 
     <DataTemplate x:Key="BodyContentTemplate" x:DataType="vm:BodyContentItemViewModel">
         <controls:BodyContentControl
-            BaseViewModel="{x:Bind BaseViewModel, Mode=OneTime}"
-            Contents="{x:Bind TextTypeContents, Mode=OneTime}"
-            IsTextSelectionEnabled="{x:Bind IsTextSelectionEnabled, Mode=OneTime}" />
+            BaseViewModel="{x:Bind BaseViewModel}"
+            Contents="{x:Bind TextTypeContents}"
+            IsTextSelectionEnabled="{x:Bind IsTextSelectionEnabled}" />
     </DataTemplate>
 
     <!--  GIF/WebP animation is not supported by BitmapImage; only the first frame is shown.  -->
@@ -25,16 +25,16 @@
             Width="120"
             Height="120"
             HorizontalAlignment="Left"
-            Source="{x:Bind ImageSource, Mode=OneTime}"
+            Source="{x:Bind ImageSource}"
             Stretch="Uniform" />
     </DataTemplate>
 
     <DataTemplate x:Key="PollContentTemplate" x:DataType="vm:PollContentItemViewModel">
-        <controls:PollContentControl PollContent="{x:Bind PollContent, Mode=OneTime}" PostId="{x:Bind PostId, Mode=OneTime}" />
+        <controls:PollContentControl PollContent="{x:Bind PollContent}" PostId="{x:Bind PostId}" />
     </DataTemplate>
 
     <DataTemplate x:Key="ExternalUrlContentTemplate" x:DataType="vm:ExternalUrlContentItemViewModel">
-        <controls:ExternalUrlContentControl ExternalUrlContent="{x:Bind ExternalUrlContent, Mode=OneTime}" />
+        <controls:ExternalUrlContentControl ExternalUrlContent="{x:Bind ExternalUrlContent}" />
     </DataTemplate>
 
     <vm:ContentTemplateSelector

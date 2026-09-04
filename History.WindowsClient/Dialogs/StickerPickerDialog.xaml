@@ -47,11 +47,11 @@
                                     FontSize="22"
                                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                     Glyph="&#xE81C;"
-                                    Visibility="{x:Bind IsRecent, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneTime}" />
+                                    Visibility="{x:Bind IsRecent, Converter={StaticResource BoolToVisibilityConverter}}" />
                                 <Image
                                     Width="32"
                                     Height="32"
-                                    Source="{x:Bind IconSource, Mode=OneTime}"
+                                    Source="{x:Bind IconSource}"
                                     Stretch="Uniform" />
                             </Grid>
                         </Button>
@@ -99,7 +99,7 @@
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="vm:StickerPickerAssetViewModel">
                     <Grid Padding="4">
-                        <Image Source="{x:Bind ImageSource, Mode=OneTime}" Stretch="Uniform" />
+                        <Image Source="{x:Bind ImageSource}" Stretch="Uniform" />
                     </Grid>
                 </DataTemplate>
             </GridView.ItemTemplate>
