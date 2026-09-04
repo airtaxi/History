@@ -88,6 +88,12 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
         else return "\uE716";
     }
 
+    public override Task HandleProfileTapAsync()
+    {
+        _baseViewModel.RequestNavigation(typeof(ProfilePage), User.UserId);
+        return Task.CompletedTask;
+    }
+
     public override async Task HandleFriendshipActionAsync()
     {
         Result result = null;

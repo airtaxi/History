@@ -49,7 +49,16 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <PersonPicture Grid.Row="0" ProfilePicture="{x:Bind ProfileImageSource, Mode=OneWay}" />
+                            <Button
+                                Grid.Row="0"
+                                Padding="0"
+                                HorizontalAlignment="Center"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Command="{x:Bind HandleProfileTapCommand}"
+                                CornerRadius="50">
+                                <PersonPicture ProfilePicture="{x:Bind ProfileImageSource, Mode=OneWay}" />
+                            </Button>
                             <StackPanel
                                 Grid.Row="1"
                                 HorizontalAlignment="Center"

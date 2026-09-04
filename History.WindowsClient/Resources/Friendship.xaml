@@ -19,6 +19,7 @@
                     Padding="0"
                     Background="Transparent"
                     BorderThickness="0"
+                    Command="{x:Bind HandleProfileTapCommand}"
                     CornerRadius="16">
                     <PersonPicture
                         Width="32"
