@@ -33,7 +33,7 @@
                     HorizontalAlignment="Left"
                     Background="Transparent"
                     BorderThickness="0"
-                    Command="{x:Bind HandleTapCommand}">
+                    Command="{x:Bind HandleProfileTapCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <TextBlock
                             FontWeight="Bold"
