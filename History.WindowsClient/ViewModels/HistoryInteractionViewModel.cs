@@ -1,6 +1,7 @@
 ﻿using History.Commons;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.WindowsClient.Pages;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.UI;
@@ -12,10 +13,13 @@ namespace History.WindowsClient.ViewModels;
 // and the reaction colors are fixed palette values.
 public partial class HistoryInteractionViewModel : BaseInteractionViewModel
 {
+    private readonly BaseViewModel _baseViewModel;
+
     public UserResponseDto User { get; }
 
-    public HistoryInteractionViewModel(PostReactionDto reaction)
+    public HistoryInteractionViewModel(PostReactionDto reaction, BaseViewModel baseViewModel)
     {
+        _baseViewModel = baseViewModel;
         Type = InteractionType.Reaction;
         CreatedAt = reaction.CreatedAt;
         User = reaction.User;
@@ -44,8 +48,9 @@ public partial class HistoryInteractionViewModel : BaseInteractionViewModel
         if (reaction.Type == ReactionEnum.Like) IconSize = 9;
     }
 
-    public HistoryInteractionViewModel(SharedAndRepostedUserDto sharedUser, bool isShare)
+    public HistoryInteractionViewModel(SharedAndRepostedUserDto sharedUser, bool isShare, BaseViewModel baseViewModel)
     {
+        _baseViewModel = baseViewModel;
         Type = sharedUser.IsRepost ? InteractionType.Repost : InteractionType.Share;
         CreatedAt = sharedUser.SharedAt;
         User = sharedUser.User;
@@ -59,6 +64,9 @@ public partial class HistoryInteractionViewModel : BaseInteractionViewModel
 
     private static BitmapImage CreateProfileImageSource(UserResponseDto user) => user.ProfileMediaId == null ? null : new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(user.ProfileMediaId)));
 
-    // TODO: Navigate to the user profile page once it is implemented.
-    public override void HandleTap() { }
+    public override void HandleTap()
+    {
+        if (User == null) return;
+        _baseViewModel.RequestNavigation(typeof(ProfilePage), User.UserId);
+    }
 }

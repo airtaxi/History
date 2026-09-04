@@ -1,4 +1,5 @@
 ﻿using History.Commons.DataTypes.Contents;
+using History.WindowsClient.Pages;
 using History.WindowsClient.ViewModels;
 using History.WindowsClient.ViewModels.Segments;
 using Microsoft.UI.Text;
@@ -11,7 +12,7 @@ using Windows.UI;
 
 namespace History.WindowsClient.Controls;
 
-public sealed partial class BodyContentControl : UserControl
+public sealed partial class BodyContentControl : BaseControl
 {
     private const double StickerImageWidth = 80;
 
@@ -19,9 +20,13 @@ public sealed partial class BodyContentControl : UserControl
 
     public static readonly DependencyProperty IsTextSelectionEnabledProperty = DependencyProperty.Register(nameof(IsTextSelectionEnabled), typeof(bool), typeof(BodyContentControl), new PropertyMetadata(false, OnIsTextSelectionEnabledPropertyChanged));
 
+    public static readonly DependencyProperty BaseViewModelProperty = DependencyProperty.Register(nameof(BaseViewModel), typeof(BaseViewModel), typeof(BodyContentControl), new PropertyMetadata(null, OnBaseViewModelPropertyChanged));
+
     private readonly BodyContentViewModel _viewModel = new();
 
     public BodyContentControl() => InitializeComponent();
+
+    public override BodyContentViewModel ViewModel => _viewModel;
 
     public List<BaseContent> Contents
     {
@@ -35,7 +40,15 @@ public sealed partial class BodyContentControl : UserControl
         set => SetValue(IsTextSelectionEnabledProperty, value);
     }
 
+    public BaseViewModel BaseViewModel
+    {
+        get => (BaseViewModel)GetValue(BaseViewModelProperty);
+        set => SetValue(BaseViewModelProperty, value);
+    }
+
     private static void OnIsTextSelectionEnabledPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((BodyContentControl)sender).MainRichTextBlock.IsTextSelectionEnabled = (bool)e.NewValue;
+
+    private static void OnBaseViewModelPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((BodyContentControl)sender).Rebuild();
 
     private static Color AccentColor => (Color)Application.Current.Resources["SystemAccentColor"];
 
@@ -44,7 +57,7 @@ public sealed partial class BodyContentControl : UserControl
     private void Rebuild()
     {
         MainRichTextBlock.Blocks.Clear();
-        _viewModel.Update(Contents);
+        _viewModel.Update(Contents, BaseViewModel);
         if (_viewModel.Segments.Count == 0) return;
 
         var paragraph = new Paragraph();
@@ -85,10 +98,7 @@ public sealed partial class BodyContentControl : UserControl
     private static void AppendProfileInline(InlineCollection inlines, ProfileSegmentViewModel segment)
     {
         var hyperlink = CreateHyperlink(text: segment.Nickname, isBold: true);
-        hyperlink.Click += (_, _) =>
-        {
-            // TODO: Navigate to the user profile page once it is implemented.
-        };
+        hyperlink.Click += (_, _) => segment.BaseViewModel?.RequestNavigation(typeof(ProfilePage), segment.UserId);
         inlines.Add(hyperlink);
     }
 

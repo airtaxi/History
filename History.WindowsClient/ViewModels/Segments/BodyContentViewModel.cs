@@ -4,14 +4,15 @@ using History.Commons.DataTypes.Contents;
 namespace History.WindowsClient.ViewModels.Segments;
 
 // Converts a List<BaseContent> into renderable segments, decomposing the text
-// content into text/profile/hashtag/hyperlink segments.
+// content into text/profile/hashtag/hyperlink segments. The navigation host is
+// threaded into profile segments so nickname taps can request profile navigation.
 // MediaContent, ExternalUrlContent, PollContent and UploadContent are not body
 // contents and are skipped; they are rendered by separate surfaces.
-public partial class BodyContentViewModel
+public partial class BodyContentViewModel : BaseViewModel
 {
     public List<BodyContentSegmentViewModel> Segments { get; private set; } = [];
 
-    public void Update(List<BaseContent> contents)
+    public void Update(List<BaseContent> contents, BaseViewModel baseViewModel)
     {
         var segments = new List<BodyContentSegmentViewModel>();
         if (contents != null)
@@ -19,7 +20,7 @@ public partial class BodyContentViewModel
             foreach (var content in contents)
             {
                 if (content is TextContent textContent) AppendTextSegments(segments, textContent.Text);
-                else if (content is ProfileContent profileContent) segments.Add(new ProfileSegmentViewModel(profileContent.UserId, profileContent.Nickname));
+                else if (content is ProfileContent profileContent) segments.Add(new ProfileSegmentViewModel(profileContent.UserId, profileContent.Nickname, baseViewModel));
                 else if (content is HashtagContent hashtagContent) segments.Add(new HashtagSegmentViewModel(hashtagContent.Tag));
                 else if (content is HyperlinkContent hyperlinkContent) segments.Add(new HyperlinkSegmentViewModel(hyperlinkContent.Url));
                 else if (content is StickerContent stickerContent) segments.Add(new StickerSegmentViewModel(stickerContent));

@@ -100,7 +100,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
 
             // Post-dependent simple
             DiscoveryOptionGlyph = PostHelper.GetDiscoveryOptionGlyph(post.DiscoveryOption);
-            Contents = PostHelper.GenerateContentViewModels(post.Contents, PostType, IsParentPost, post.Id);
+            Contents = PostHelper.GenerateContentViewModels(post.Contents, PostType, BaseViewModel, IsParentPost, post.Id);
             ParentPost = post.ParentPost != null ? new HistoryPostViewModel(post.ParentPost, PostType, BaseViewModel, true) : null;
             var isRepost = post.IsRepost;
             IsRepost = isRepost;
@@ -114,9 +114,9 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             HasReactions = post.PostReactions.Count > 0;
             ReactionsCount = post.PostReactions.Count;
             HasInteractions = post.PostReactions.Count > 0 || post.SharedAndRepostedUsers.Count > 0;
-            Interactions = [.. post.PostReactions.Select(x => new HistoryInteractionViewModel(x))
-                .Concat(post.SharedAndRepostedUsers.Where(x => !x.IsRepost).Select(x => new HistoryInteractionViewModel(x, true)))
-                .Concat(post.SharedAndRepostedUsers.Where(x => x.IsRepost).Select(x => new HistoryInteractionViewModel(x, false)))
+            Interactions = [.. post.PostReactions.Select(x => new HistoryInteractionViewModel(x, BaseViewModel))
+                .Concat(post.SharedAndRepostedUsers.Where(x => !x.IsRepost).Select(x => new HistoryInteractionViewModel(x, true, BaseViewModel)))
+                .Concat(post.SharedAndRepostedUsers.Where(x => x.IsRepost).Select(x => new HistoryInteractionViewModel(x, false, BaseViewModel)))
                 .OrderByDescending(x => x.CreatedAt)];
 
             Reaction = Interactions.FirstOrDefault(r => r is HistoryInteractionViewModel historyInteraction && historyInteraction.User.UserId == CommonShared.UserId && r.ReactionType != null);

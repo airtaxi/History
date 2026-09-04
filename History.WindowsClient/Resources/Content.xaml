@@ -13,7 +13,10 @@
     </DataTemplate>
 
     <DataTemplate x:Key="BodyContentTemplate" x:DataType="vm:BodyContentItemViewModel">
-        <controls:BodyContentControl Contents="{x:Bind TextTypeContents, Mode=OneTime}" IsTextSelectionEnabled="{x:Bind IsTextSelectionEnabled, Mode=OneTime}" />
+        <controls:BodyContentControl
+            BaseViewModel="{x:Bind BaseViewModel, Mode=OneTime}"
+            Contents="{x:Bind TextTypeContents, Mode=OneTime}"
+            IsTextSelectionEnabled="{x:Bind IsTextSelectionEnabled, Mode=OneTime}" />
     </DataTemplate>
 
     <!--  GIF/WebP animation is not supported by BitmapImage; only the first frame is shown.  -->

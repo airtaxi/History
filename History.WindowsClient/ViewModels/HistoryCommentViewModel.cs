@@ -60,7 +60,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
             LikesCount = comment.LikedUsers.Count;
             Liked = comment.LikedUsers.Any(x => x.UserId == CommonShared.UserId);
 
-            Contents = PostHelper.GenerateContentViewModels(comment.Contents, PostType);
+            Contents = PostHelper.GenerateContentViewModels(comment.Contents, PostType, ParentViewModel.BaseViewModel);
 
             CreatedAt = comment.CreatedAt;
             ModifiedAt = comment.ModifiedAt;

@@ -16,7 +16,7 @@ public static partial class PostHelper
     // Fills content items with the batching rules below:
     // consecutive media contents are batched, consecutive text-type contents are
     // batched, and stickers/external URLs/polls flush both batches.
-    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, PostType postType, bool isParentPost = false, string postId = null)
+    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, PostType postType, BaseViewModel baseViewModel, bool isParentPost = false, string postId = null)
     {
         var contentViewModels = new List<IContentViewModel>();
 
@@ -36,7 +36,7 @@ public static partial class PostHelper
         {
             if (textTypeContents.Count > 0)
             {
-                contentViewModels.Add(new BodyContentItemViewModel([.. textTypeContents], postType, allMediaContents.Count > 0 || contents?.OfType<ExternalUrlContent>().Any() == true, isParentPost));
+                contentViewModels.Add(new BodyContentItemViewModel([.. textTypeContents], postType, baseViewModel, allMediaContents.Count > 0 || contents?.OfType<ExternalUrlContent>().Any() == true, isParentPost));
                 textTypeContents = [];
             }
         }

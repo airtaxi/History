@@ -1,3 +1,4 @@
 ﻿namespace History.WindowsClient.ViewModels.Segments;
 
-public sealed record ProfileSegmentViewModel(string UserId, string Nickname) : BodyContentSegmentViewModel;
+// Carries the navigation host used by the profile span tap.
+public sealed record ProfileSegmentViewModel(string UserId, string Nickname, BaseViewModel BaseViewModel) : BodyContentSegmentViewModel;
