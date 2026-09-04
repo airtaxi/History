@@ -1,6 +1,8 @@
-﻿using History.Commons.Api.Sticker;
+using CommunityToolkit.Mvvm.Messaging;
+using History.Commons.Api.Sticker;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
+using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,7 +12,7 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace History.WindowsClient.Pages;
 
-public sealed partial class PostPage : BasePage
+public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClickedMessage>
 {
     protected override HistoryPostPageViewModel ViewModel { get; }
 
@@ -21,7 +23,19 @@ public sealed partial class PostPage : BasePage
         InitializeComponent();
 
         CommentEditor.Initialize(ViewModel);
+
+        WeakReferenceMessenger.Default.Register(this);
     }
+
+    public void Receive(RefreshButtonClickedMessage message)
+    {
+        if (_isInForeground && ViewModel.Post != null)
+        {
+            _ = ViewModel.Post.RefreshAsync();
+        }
+    }
+
+    private bool _isInForeground;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -43,6 +57,8 @@ public sealed partial class PostPage : BasePage
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+
+        _isInForeground = false;
 
         if (ViewModel.CommentBox != null)
         {

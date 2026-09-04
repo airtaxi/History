@@ -30,6 +30,16 @@
             <TitleBar.IconSource>
                 <ImageIconSource ImageSource="ms-appx:///Assets/Icon.ico" />
             </TitleBar.IconSource>
+            <TitleBar.RightHeader>
+                <Button
+                    x:Name="RefreshButton"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Click="OnRefreshButtonClicked"
+                    Visibility="Collapsed">
+                    <FontIcon FontSize="16" Glyph="&#xE72C;" />
+                </Button>
+            </TitleBar.RightHeader>
             <TitleBar.Content>
                 <AutoSuggestBox
                     x:Name="MainSearchBox"
