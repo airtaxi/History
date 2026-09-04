@@ -8,9 +8,8 @@ using ReactionEnum = History.Commons.Enums.ReactionType;
 
 namespace History.WindowsClient.ViewModels;
 
-// Mirrors the MAUI HistoryInteractionViewModel. FontAwesome/Material glyphs are
-// replaced with the Segoe Fluent glyphs provided by the project owner, and the
-// reaction colors are kept identical to the MAUI client.
+// Reaction glyphs use the Segoe Fluent glyphs provided by the project owner,
+// and the reaction colors are fixed palette values.
 public partial class HistoryInteractionViewModel : BaseInteractionViewModel
 {
     public UserResponseDto User { get; }

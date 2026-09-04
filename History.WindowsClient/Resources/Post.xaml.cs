@@ -34,8 +34,8 @@ public sealed partial class Post : ResourceDictionary
     // chained navigation to the wrapper post).
     private void OnSharedPostPointerPressed(object sender, PointerRoutedEventArgs e) => e.Handled = true;
 
-    // Mirrors the MAUI SharedPostTemplate: tapping the shared post's original opens the original
-    // post itself instead of chaining to the wrapper post's tap.
+    // Tapping the shared post's original opens the original post itself instead
+    // of chaining to the wrapper post's tap.
     private async void OnSharedPostTapped(object sender, TappedRoutedEventArgs e)
     {
         if (e.OriginalSource is not DependencyObject originalSource) return;

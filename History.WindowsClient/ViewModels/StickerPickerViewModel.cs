@@ -9,8 +9,7 @@ using System.Collections.ObjectModel;
 namespace History.WindowsClient.ViewModels;
 
 // Sticker selection dialog surface: loads the user's sticker tabs (subscribed + own,
-// deduplicated) plus the recent-usage tab, and the asset grid of the active tab
-// (mirrors the MAUI MentionsViewModel sticker flow).
+// deduplicated) plus the recent-usage tab, and the asset grid of the active tab.
 public partial class StickerPickerViewModel(BaseViewModel baseViewModel) : ObservableObject
 {
     private const int RecentAssetLimit = 50;

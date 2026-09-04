@@ -11,9 +11,8 @@ using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels;
 
-// Profile page view model mirroring the MAUI UserProfileViewModel's History branch:
-// profile loading, the user's post feed with infinite-scroll pagination, and
-// post deletion/pin sync.
+// Profile page view model: profile loading, the user's post feed with
+// infinite-scroll pagination, and post deletion/pin sync.
 public partial class ProfilePageViewModel : BaseViewModel,
     IRecipient<ValueDeletedMessage<PostResponseDto>>,
     IRecipient<PostPinnedMessage>

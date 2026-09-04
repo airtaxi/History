@@ -7,9 +7,8 @@ using Windows.ApplicationModel.DataTransfer;
 
 namespace History.WindowsClient.ViewModels;
 
-// Mirrors the MAUI ExternalUriContentViewModel for the external URL preview card.
-// The MAUI version exposes overload constructors; here the control owns a single
-// instance and pushes data in through Update overloads instead.
+// External URL preview card surface. The control owns a single instance and
+// pushes data in through the Update overloads.
 public sealed partial class ExternalUrlContentViewModel : ObservableObject
 {
     [ObservableProperty]

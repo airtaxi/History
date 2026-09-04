@@ -12,7 +12,7 @@ public sealed partial class BodyContentItemViewModel(List<BaseContent> textTypeC
     public bool HasMedias { get; } = hasMedias;
     public bool IsParentPost { get; } = isParentPost;
 
-    // Text truncation limits mirrored from the MAUI client's Utils constants.
+    // Text truncation limits per post type and media presence.
     public int MaxTextLength => PostType == PostType.Timeline ? (HasMedias ? 80 : 400) : 1600;
     public int MaxTextLines => PostType == PostType.Timeline ? (HasMedias ? 8 : 12) : 27;
 

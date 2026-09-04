@@ -4,9 +4,8 @@ using History.WindowsClient.Pages;
 
 namespace History.WindowsClient.ViewModels;
 
-// Mirrors the MAUI HistoryRepostViewModel: a thin wrapper that renders the parent
-// post with repost attribution. The template surface (RepostTemplate) reads the
-// Repost* properties from BasePostViewModel.
+// A thin wrapper that renders the parent post with repost attribution.
+// The template surface (RepostTemplate) reads the Repost* properties from BasePostViewModel.
 public partial class HistoryRepostViewModel : HistoryPostViewModel
 {
     private readonly UserResponseDto _repostedUser;

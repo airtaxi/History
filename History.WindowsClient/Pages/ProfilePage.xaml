@@ -32,7 +32,7 @@
                                     CornerRadius="16">
                                     <Grid>
 
-                                        <!--  Background media with dark overlay for text readability, mirroring the mobile client  -->
+                                        <!--  Background media with dark overlay for text readability  -->
                                         <Border
                                             Grid.Row="0"
                                             Background="{ThemeResource SubtleFillColorSecondaryBrush}"

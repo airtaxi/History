@@ -8,10 +8,9 @@ using System.Diagnostics;
 
 namespace History.WindowsClient.ViewModels.Media;
 
-// Carousel state view model for wrapped media contents, mirroring the MAUI
-// BaseWrappedMediaContentsViewModel. The MAUI version computes the carousel height inside
-// property getters; here the control pushes the viewport width and the media items report
-// their decoded pixel sizes, then the height is recalculated explicitly.
+// Carousel state view model for wrapped media contents. The control pushes the
+// viewport width and the media items report their decoded pixel sizes, then the
+// height is recalculated explicitly.
 public sealed partial class WrappedMediaContentsViewModel : ObservableObject, IRecipient<MediaImageSizeReportedMessage>
 {
     private const double MaxCarouselHeight = 400;

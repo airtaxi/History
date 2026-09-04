@@ -10,9 +10,8 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace History.WindowsClient.ViewModels;
 
-// Mirrors the MAUI PollContentViewModel for the poll card surface. The MAUI version receives
-// data through the constructor; here the control owns a single instance and pushes data in
-// through the Update method instead.
+// Poll card surface. The control owns a single instance and pushes data in
+// through the Update method.
 public sealed partial class PollContentViewModel : BaseViewModel
 {
     private string _postId;

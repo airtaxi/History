@@ -10,8 +10,8 @@ using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels;
 
-// Timeline feed view model mirroring the MAUI TimelineViewModel's History branch:
-// first-page loading, infinite scroll pagination and post deletion sync.
+// Timeline feed view model: first-page loading, infinite scroll pagination
+// and post deletion sync.
 public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDeletedMessage<PostResponseDto>>
 {
     private const int PageSize = 30;

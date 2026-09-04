@@ -8,12 +8,12 @@ using History.WindowsClient.ViewModels;
 
 namespace History.WindowsClient.Helpers;
 
-// Content/timestamp helpers ported from the MAUI client's Utils for the post templates.
+// Content/timestamp helpers for the post templates.
 public static partial class PostHelper
 {
     public static string GenerateMediaUri(string mediaId) => CommonUtils.GenerateMediaUri(mediaId);
 
-    // Fills content items with the same ordering rules as the MAUI client:
+    // Fills content items with the batching rules below:
     // consecutive media contents are batched, consecutive text-type contents are
     // batched, and stickers/external URLs/polls flush both batches.
     public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, PostType postType, bool isParentPost = false, string postId = null)
@@ -153,7 +153,7 @@ public static partial class PostHelper
         return imageUrl;
     }
 
-    // Segoe Fluent glyph mapping provided by the project owner (MAUI uses FontAwesome equivalents).
+    // Segoe Fluent glyph mapping provided by the project owner.
     public static string GetDiscoveryOptionGlyph(DiscoveryOption option) => option switch
     {
         DiscoveryOption.OnlyMe => "\uE72E",
@@ -165,7 +165,6 @@ public static partial class PostHelper
         _ => "\uE9CE",
     };
 
-    // Same pattern as the MAUI client's Utils.UrlRegex.
     [GeneratedRegex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled)]
     public static partial Regex UrlRegex();
 }

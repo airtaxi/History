@@ -25,8 +25,7 @@ public sealed partial class ProfilePage : BasePage
     }
 
     // Infinite scroll: fetch the next page once the last post's element gets realized.
-    // Works even when the whole feed fits the viewport and no scrollbar exists,
-    // mirroring the mobile CollectionView OnChildAdded-based pagination.
+    // Works even when the whole feed fits the viewport and no scrollbar exists.
     private async void OnMainItemsRepeaterElementPrepared(ItemsRepeater sender, ItemsRepeaterElementPreparedEventArgs e)
     {
         if (e.Index != ViewModel.Items.Count - 1) return;

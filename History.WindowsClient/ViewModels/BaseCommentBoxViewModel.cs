@@ -70,7 +70,7 @@ public abstract partial class BaseCommentBoxViewModel(BaseViewModel baseViewMode
         HasAttachment = false;
     }
 
-    // Applies an image pasted into the editor as the current attachment (mirrors the MAUI clipboard paste flow).
+    // Applies an image pasted into the editor as the current attachment.
     public async Task ApplyAttachmentAsync(string fileName, byte[] imageData)
     {
         ClearAttachment();
@@ -95,7 +95,7 @@ public abstract partial class BaseCommentBoxViewModel(BaseViewModel baseViewMode
         HasAttachment = true;
     }
 
-    // Drops empty text contents so whitespace-only drafts count as empty (mirrors the MAUI comment availability check).
+    // Drops empty text contents so whitespace-only drafts count as empty.
     protected static void RemoveEmptyTextContents(List<BaseContent> contents) => contents.RemoveAll(x => x is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text));
 
     protected void RaiseCommentSent() => CommentSent?.Invoke(this, EventArgs.Empty);

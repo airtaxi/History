@@ -16,9 +16,9 @@ using Windows.ApplicationModel.DataTransfer;
 
 namespace History.WindowsClient.ViewModels;
 
-// Mirrors the MAUI HistoryProfileViewModel: owns the user DTO, fills the shared
-// BaseProfileViewModel surface, and implements the friendship/favorite/ban actions
-// with the WindowsClient dialog conventions (see HistoryFriendshipViewModel).
+// Owns the user DTO, fills the shared BaseProfileViewModel surface, and
+// implements the friendship/favorite/ban/memo/copy actions with the
+// WindowsClient dialog conventions (see HistoryFriendshipViewModel).
 public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<ValueChangedMessage<UserResponseDto>>
 {
     [ObservableProperty]
@@ -57,8 +57,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
         WeakReferenceMessenger.Default.Send(new ValueChangedMessage<UserResponseDto>(result.Value));
     }
 
-    // Friendship action flow ported from HistoryFriendshipViewModel with the
-    // MAUI HistoryProfileViewModel dialog texts.
+    // Friendship action flow handled with the HistoryFriendshipViewModel dialog conventions.
     public override async Task HandleFriendshipActionAsync()
     {
         Result result = null;

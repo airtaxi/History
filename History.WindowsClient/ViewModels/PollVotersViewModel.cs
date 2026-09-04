@@ -4,8 +4,7 @@ using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels;
 
-// Voters dialog surface: loads the voters of a single poll option through GetPollVoters
-// (mirrors the MAUI PollVotersPage flow).
+// Voters dialog surface: loads the voters of a single poll option through GetPollVoters.
 public sealed partial class PollVotersViewModel(BaseViewModel baseViewModel, string postId, string pollId, int optionIndex, string optionText) : ObservableObject
 {
     [ObservableProperty]

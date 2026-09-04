@@ -22,9 +22,9 @@ using Windows.ApplicationModel.DataTransfer;
 
 namespace History.WindowsClient.ViewModels;
 
-// Mirrors the MAUI HistoryPostViewModel. Dialog prompts are requested on the base
-// view model; the "..." and reaction menus are populated by PopulateMoreMenuFlyout
-// and PopulateReactionMenuFlyout with the MAUI action labels as item Tag values.
+// Dialog prompts are requested on the base view model; the "..." and reaction
+// menus are populated by PopulateMoreMenuFlyout and PopulateReactionMenuFlyout
+// with the action labels as item Tag values.
 public partial class HistoryPostViewModel : BasePostViewModel,
     IRecipient<ValueChangedMessage<PostResponseDto>>,
     IRecipient<ValueChangedMessage<UserResponseDto>>,

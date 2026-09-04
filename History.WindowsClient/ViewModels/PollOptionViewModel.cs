@@ -4,7 +4,7 @@ using History.Commons.DataTypes.Contents;
 
 namespace History.WindowsClient.ViewModels;
 
-// Mirrors the MAUI PollOptionViewModel for a single poll option row.
+// A single poll option row in the poll card.
 public sealed partial class PollOptionViewModel(PollOption option, int index, bool isSelected, PollContentViewModel parent) : ObservableObject
 {
     public PollOption Option { get; } = option;

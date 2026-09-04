@@ -10,11 +10,10 @@ using Microsoft.Windows.Storage.Pickers;
 
 namespace History.WindowsClient.ViewModels;
 
-// Full-screen media viewer state for MediaWindow, mirroring the MAUI
-// FullScreenMediaContentViewModel and the FullScreenMediaViewerPage download flows.
-// Owns the full-screen media items (original resolution, Uniform stretch) and drives
-// the single/all download flows through the BaseViewModel dialog and picker events,
-// which the window code-behind fulfills.
+// Full-screen media viewer state for MediaWindow. Owns the full-screen media
+// items (original resolution, Uniform stretch) and drives the single/all download
+// flows through the BaseViewModel dialog and picker events, which the window
+// code-behind fulfills.
 public sealed partial class MediaWindowViewModel : BaseViewModel
 {
     private const string DownloadAllText = "전체 다운로드";

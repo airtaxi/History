@@ -89,8 +89,8 @@ public static class DialogHelper
         return await dialog.ShowAsync();
     }
 
-    // Selection counterpart of the MAUI DisplayActionSheet: shows a radio-button list
-    // inside a ContentDialog and returns the selected display string, or null on cancel.
+    // Shows a radio-button list inside a ContentDialog and returns the selected
+    // display string, or null on cancel.
     public static async Task<string> ShowSelectionDialogAsync(this UIElement element, string title, IReadOnlyList<string> options)
     {
         HideOpenContentDialogs(element);

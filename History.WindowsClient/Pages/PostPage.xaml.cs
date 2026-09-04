@@ -51,7 +51,7 @@ public sealed partial class PostPage : BasePage
         }
     }
 
-    // Pasted images become the comment attachment (mirrors the MAUI clipboard paste flow).
+    // Pasted images become the comment attachment.
     private async void OnCommentEditorImageInputRequested(object sender, string path)
     {
         var fileName = Path.GetFileName(path);
@@ -74,8 +74,7 @@ public sealed partial class PostPage : BasePage
         ScrollCommentsToEnd();
     }
 
-    // The sticker picker returned a sticker: insert it into the comment editor and record the
-    // usage (mirrors the MAUI sticker attach flow).
+    // The sticker picker returned a sticker: insert it into the comment editor and record its usage.
     private async void OnCommentBoxStickerSelected(object sender, StickerContent stickerContent)
     {
         var inserted = await CommentEditor.InsertStickerAsync(stickerContent);

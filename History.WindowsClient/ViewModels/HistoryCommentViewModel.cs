@@ -18,9 +18,8 @@ using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace History.WindowsClient.ViewModels;
 
-// Mirrors the MAUI HistoryCommentViewModel. Dialog prompts are requested on the
-// parent post's base view model; the "..." menu is populated by
-// PopulateMoreMenuFlyout with the MAUI action labels as item Tag values.
+// Dialog prompts are requested on the parent post's base view model; the "..."
+// menu is populated by PopulateMoreMenuFlyout with the action labels as item Tag values.
 public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<ValueChangedMessage<CommentResponseDto>>
 {
     [ObservableProperty]

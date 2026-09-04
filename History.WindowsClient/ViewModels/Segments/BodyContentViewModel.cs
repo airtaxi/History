@@ -3,9 +3,8 @@ using History.Commons.DataTypes.Contents;
 
 namespace History.WindowsClient.ViewModels.Segments;
 
-// Converts a List<BaseContent> into renderable segments, mirroring the MAUI
-// Utils.GenerateFormattedStringFromTextTypeContents text-type decomposition
-// (TextContent/ProfileContent/HashtagContent/HyperlinkContent).
+// Converts a List<BaseContent> into renderable segments, decomposing the text
+// content into text/profile/hashtag/hyperlink segments.
 // MediaContent, ExternalUrlContent, PollContent and UploadContent are not body
 // contents and are skipped; they are rendered by separate surfaces.
 public partial class BodyContentViewModel
@@ -45,7 +44,6 @@ public partial class BodyContentViewModel
         if (lastIndex < text.Length) segments.Add(new TextSegmentViewModel(text[lastIndex..]));
     }
 
-    // Same pattern as the MAUI client's Utils.UrlRegex.
     [GeneratedRegex(@"(https?:\/\/[^\s]+)", RegexOptions.Compiled)]
     private static partial Regex UrlRegex();
 }
