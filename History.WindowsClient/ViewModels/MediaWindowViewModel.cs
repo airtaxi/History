@@ -38,10 +38,12 @@ public sealed partial class MediaWindowViewModel : BaseViewModel
 
     // Zoom controls only apply to images; videos display fit-to-viewport without zoom.
     public bool IsZoomVisible => Medias.Count > 0 && !Medias[Math.Clamp(SelectedIndex, 0, Medias.Count - 1)].IsVideo;
+    public Visibility ZoomControlsVisibility => IsZoomVisible ? Visibility.Visible : Visibility.Collapsed;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PositionText))]
     [NotifyPropertyChangedFor(nameof(IsZoomVisible))]
+    [NotifyPropertyChangedFor(nameof(ZoomControlsVisibility))]
     public partial int SelectedIndex { get; set; }
 
     // Stops the previously selected media (video playback, spoiler overlays) when the

@@ -94,7 +94,7 @@
                 <StackPanel
                     Orientation="Horizontal"
                     Spacing="8"
-                    Visibility="{x:Bind ViewModel.IsZoomVisible, Mode=OneWay}">
+                    Visibility="{x:Bind ViewModel.ZoomControlsVisibility, Mode=OneWay}">
                     <Button
                         Width="36"
                         Height="36"
