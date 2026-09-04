@@ -77,7 +77,7 @@ public abstract partial class BaseProfileViewModel : BaseViewModel
     public virtual async Task HandleBanAsync() => throw new NotSupportedException("[BaseProfileViewModel] HandleBanAsync must be overridden");
 
     [RelayCommand]
-    public virtual void HandleProfileTap() => throw new NotSupportedException("[BaseProfileViewModel] HandleProfileTap must be overridden");
+    public virtual void HandleProfileTap(string parameter) => throw new NotSupportedException("[BaseProfileViewModel] HandleProfileTap must be overridden");
 
     [RelayCommand]
     public virtual void HandleBackgroundTap() => throw new NotSupportedException("[BaseProfileViewModel] HandleBackgroundTap must be overridden");

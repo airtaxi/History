@@ -8,6 +8,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
+using History.WindowsClient.Pages;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -171,8 +172,14 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
         await _baseViewModel.TryNavigateBackAsync();
     }
 
-    // TODO: Open the profile image in the full-screen media viewer once it is implemented.
-    public override void HandleProfileTap() { }
+    public override void HandleProfileTap(string parameter)
+    {
+        if (parameter == "Navigate") _baseViewModel.RequestNavigation(typeof(ProfilePage), User.UserId);
+        else
+        {
+            // TODO: Open the profile image in the full-screen media viewer once it is implemented.
+        }
+    }
 
     // TODO: Open the background image in the full-screen media viewer once it is implemented.
     public override void HandleBackgroundTap() { }
