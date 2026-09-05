@@ -1,5 +1,5 @@
-﻿using FirebaseAdmin.Messaging;
 using History.ApiService.Services.Interfaces;
+using History.ApiService.Services.PushNotification;
 using History.Commons;
 using History.Commons.DataTypes;
 using History.Commons.DataTypes.Contents;
@@ -9,9 +9,10 @@ using Notification = History.Commons.DataTypes.Notification;
 
 namespace History.ApiService.Services;
 
-public class NotificationService(IMongoDatabase database, IServiceProvider serviceProvider) : INotificationService
+public class NotificationService(IMongoDatabase database, IServiceProvider serviceProvider, IEnumerable<IPushNotificationProvider> pushNotificationProviders) : INotificationService
 {
     private readonly IMongoCollection<FirebaseToken> _firebaseTokenCollection = database.GetCollection<FirebaseToken>("FirebaseTokens");
+    private readonly IMongoCollection<WnsChannel> _wnsChannelCollection = database.GetCollection<WnsChannel>("WnsChannels");
     private readonly IMongoCollection<Notification> _notificationCollection = database.GetCollection<Notification>("Notifications");
     private readonly IMongoCollection<NotificationRead> _notificationReadCollection = database.GetCollection<NotificationRead>("NotificationReads");
     private readonly IMongoCollection<IgnoredPost> _ignoredPostCollection = database.GetCollection<IgnoredPost>("IgnoredPosts");
@@ -81,14 +82,6 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         return Result.Success();
     }
 
-    public async Task<Result> DeleteFirebaseTokensAsync(IEnumerable<string> firebaseTokens)
-    {
-        var filter = Builders<FirebaseToken>.Filter.In(f => f.Token, firebaseTokens);
-        var result = await _firebaseTokenCollection.DeleteManyAsync(filter);
-
-        return Result.Success();
-    }
-
     public async Task<Result> DeleteNotificationsAsync(string filterKey, string filterValue, NotificationType? type = null)
     {
         var filter = Builders<Notification>.Filter.Eq(filterKey, filterValue);
@@ -107,21 +100,51 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
         return Result.Success();
     }
 
-    public async Task<Result<List<string>>> GetFirebaseTokensFromUserIdAsync(string userId)
+    public async Task<Result> RegisterWnsChannelAsync(string userId, string channelUri)
     {
-        var filter = Builders<FirebaseToken>.Filter.Eq(f => f.UserId, userId);
-        var tokens = await _firebaseTokenCollection.Find(filter).ToListAsync();
-        return tokens.Select(x => x.Token).ToList();
+        if (!Uri.TryCreate(channelUri, UriKind.Absolute, out var channelUriValue) || channelUriValue.Scheme != Uri.UriSchemeHttps || !channelUriValue.Host.EndsWith("notify.windows.com", StringComparison.OrdinalIgnoreCase)) return (ErrorType.BadRequest, "유효하지 않은 WNS 채널 URI입니다.");
+
+        var existingChannel = await _wnsChannelCollection.Find(channel => channel.ChannelUri == channelUri).FirstOrDefaultAsync();
+        if (existingChannel != null)
+        {
+            var update = Builders<WnsChannel>.Update
+                .Set(channel => channel.CreatedAt, DateTime.UtcNow)
+                .Set(channel => channel.UserId, userId);
+            await _wnsChannelCollection.UpdateOneAsync(channel => channel.Id == existingChannel.Id, update);
+
+            return Result.Success();
+        }
+
+        var newChannel = new WnsChannel
+        {
+            UserId = userId,
+            ChannelUri = channelUri,
+            CreatedAt = DateTime.UtcNow,
+        };
+
+        while (true)
+        {
+            newChannel.Id = Guid.NewGuid().ToString("N");
+            existingChannel = await _wnsChannelCollection.Find(channel => channel.Id == newChannel.Id).FirstOrDefaultAsync();
+            if (existingChannel == null) break;
+        }
+
+        await _wnsChannelCollection.InsertOneAsync(newChannel);
+
+        return Result.Success();
     }
 
-    public async Task<Result<List<string>>> GetFirebaseTokensFromUserIdsAsync(IEnumerable<string> userIds)
+    public async Task<Result> DeleteWnsChannelsAsync(IEnumerable<string> channelUris)
     {
-        var filter = Builders<FirebaseToken>.Filter.In(f => f.UserId, userIds);
-        var tokens = await _firebaseTokenCollection.Find(filter).ToListAsync();
-        return tokens.Select(x => x.Token).ToList();
+        var channelUriList = channelUris.ToList();
+        if (channelUriList.Count == 0) return Result.Success();
+
+        var filter = Builders<WnsChannel>.Filter.In(channel => channel.ChannelUri, channelUriList);
+        await _wnsChannelCollection.DeleteManyAsync(filter);
+
+        return Result.Success();
     }
 
-    private const string AndroidChannelId = "com.airtaxi.history.push";
     public async Task<Result> SendNotificationsAsync(NotificationType type, string associatedId)
     {
         var notificationResult = await GenerateNotificationAsync(type, associatedId);
@@ -196,96 +219,41 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
             // Insert new
             await _notificationCollection.InsertOneAsync(notification);
 
-            if (!notification.PushNotificationDisabled && pushNotificationRecipients.Any()) await SendFirebaseNotificationAsync(pushNotificationRecipients, title, body, imageUrl, data);
+            if (!notification.PushNotificationDisabled && pushNotificationRecipients.Any()) await SendPushNotificationsAsync(pushNotificationRecipients, title, body, imageUrl, data);
         }
 
         return Result.Success();
     }
 
-    public async Task<Result> SendFirebaseNotificationAsync(IEnumerable<string> recipientUserIds, string title, string body, string imageUrl, Dictionary<string, string> data)
+    public async Task<Result> SendPushNotificationsAsync(IEnumerable<string> recipientUserIds, string title, string body, string imageUrl, Dictionary<string, string> data)
     {
-        if (!Uri.IsWellFormedUriString(imageUrl, UriKind.Absolute)) imageUrl = null;
+        data = ApplyCollapseKey(data ?? []);
 
-        var tokensResult = await GetFirebaseTokensFromUserIdsAsync(recipientUserIds);
-        var tokens = tokensResult.Value;
-
-        if (tokens.Count == 0) return Result.Success();
-
-        string collapseKey = null;
-        data.TryGetValue("Type", out var rawType);
-        if (rawType != null && Enum.TryParse<NotificationType>(rawType, out var type))
-        {
-            if(data.TryGetValue("PostId", out var postId))
-            {
-                if (type == NotificationType.Comment) collapseKey = "comment_" + postId;
-                else if (type == NotificationType.CommentMention) collapseKey = "comment_mention_" + postId;
-                else if (type == NotificationType.CommentLike && data.TryGetValue("CommentId", out var commentId)) collapseKey = "comment_like_" + commentId;
-                else if (type == NotificationType.Share) collapseKey = "share_" + postId;
-                else if (type == NotificationType.Repost) collapseKey = "repost_" + postId;
-                else if (type == NotificationType.PostReaction) collapseKey = "post_reaction_" + postId;
-            }
-            if (collapseKey != null) data["notification_id"] = collapseKey; // Use collapse key for Android and iOS to group notifications
-        }
-
-        var message = new MulticastMessage
-        {
-            Tokens = tokensResult.Value,
-            Notification = new()
-            {
-                Title = title,
-                Body = body,
-                ImageUrl = imageUrl,
-            },
-            Data = data,
-            Android = new AndroidConfig
-            {
-                Priority = Priority.High,
-                Notification = new AndroidNotification
-                {
-                    ChannelId = AndroidChannelId,
-                    ImageUrl = imageUrl,
-                    NotificationCount = 1,
-                    EventTimestamp = DateTime.UtcNow
-                },
-            }
-        };
-
-        if (collapseKey != null)
-        {
-            message.Android.Notification.Tag = collapseKey;
-            if (message.Apns != null)
-            {
-                message.Apns = new ApnsConfig
-                {
-                    Headers = new Dictionary<string, string>
-                    {
-                        { "apns-collapse-id", collapseKey }
-                    }
-                };
-            }
-        }
-
-        var response = await FirebaseMessaging.DefaultInstance.SendEachForMulticastAsync(message);
-
-        var expiredTokens = new List<string>();
-        for (int i = 0; i < response.Responses.Count; i++)
-        {
-            var result = response.Responses[i];
-            if (result.Exception != null)
-            {
-                var errorCode = result.Exception.MessagingErrorCode;
-
-                if (errorCode == MessagingErrorCode.Unregistered || errorCode == MessagingErrorCode.InvalidArgument)
-                {
-                    var expiredToken = tokens[i];
-                    expiredTokens.Add(expiredToken);
-                }
-            }
-        }
-
-        if (expiredTokens.Count > 0) await DeleteFirebaseTokensAsync(expiredTokens);
+        var sendTasks = pushNotificationProviders.Select(provider => provider.SendAsync(recipientUserIds, title, body, imageUrl, data));
+        await Task.WhenAll(sendTasks);
 
         return Result.Success();
+    }
+
+    private static Dictionary<string, string> ApplyCollapseKey(Dictionary<string, string> data)
+    {
+        var result = new Dictionary<string, string>(data);
+
+        string collapseKey = null;
+        if (result.TryGetValue("Type", out var rawType) && Enum.TryParse<NotificationType>(rawType, out var type) && result.TryGetValue("PostId", out var postId))
+        {
+            if (type == NotificationType.Comment) collapseKey = "comment_" + postId;
+            else if (type == NotificationType.CommentMention) collapseKey = "comment_mention_" + postId;
+            else if (type == NotificationType.CommentLike && result.TryGetValue("CommentId", out var commentId)) collapseKey = "comment_like_" + commentId;
+            else if (type == NotificationType.Share) collapseKey = "share_" + postId;
+            else if (type == NotificationType.Repost) collapseKey = "repost_" + postId;
+            else if (type == NotificationType.PostReaction) collapseKey = "post_reaction_" + postId;
+
+            // Collapse key groups notifications per post on Android and iOS
+            if (collapseKey != null) result["notification_id"] = collapseKey;
+        }
+
+        return result;
     }
 
     private async Task<Result<List<Notification>>> GenerateNotificationAsync(NotificationType type, string associatedId)
@@ -824,6 +792,9 @@ public class NotificationService(IMongoDatabase database, IServiceProvider servi
     {
         var filter = Builders<FirebaseToken>.Filter.Eq(f => f.UserId, userId);
         await _firebaseTokenCollection.DeleteManyAsync(filter);
+
+        var wnsChannelFilter = Builders<WnsChannel>.Filter.Eq(channel => channel.UserId, userId);
+        await _wnsChannelCollection.DeleteManyAsync(wnsChannelFilter);
 
         var userFilter = Builders<Notification>.Filter.Eq(n => n.UserId, userId);
         await _notificationCollection.DeleteManyAsync(userFilter);

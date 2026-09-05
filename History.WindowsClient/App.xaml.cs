@@ -55,19 +55,27 @@ public partial class App : Application
         // Cold start via "history-app://" protocol activation: the login view model
         // subscribes to messages during MainWindow construction above, so handle
         // the activation arguments after the window is up.
-        TryHandleOAuthActivation(AppInstance.GetCurrent().GetActivatedEventArgs());
+        TryHandleProtocolActivation(AppInstance.GetCurrent().GetActivatedEventArgs());
     }
 
     // Redirected activation from a second instance (see Program.Main).
-    private static void OnAppInstanceActivated(object sender, AppActivationArguments arguments) => TryHandleOAuthActivation(arguments);
+    private static void OnAppInstanceActivated(object sender, AppActivationArguments arguments) => TryHandleProtocolActivation(arguments);
 
-    private static void TryHandleOAuthActivation(AppActivationArguments arguments)
+    private static void TryHandleProtocolActivation(AppActivationArguments arguments)
     {
         if (arguments.Kind != ExtendedActivationKind.Protocol) return;
         if (arguments.Data is not IProtocolActivatedEventArgs protocolActivatedEventArguments) return;
 
         var uri = protocolActivatedEventArguments.Uri;
         if (!uri.Scheme.Equals(OAuthProtocolScheme, StringComparison.OrdinalIgnoreCase)) return;
+
+        // Toast deep links ("history-app://toast?Type=...&PostId=...") navigate to the
+        // notification target; "history-app://auth/..." completes the OAuth login flow.
+        if (uri.Host.Equals("toast", StringComparison.OrdinalIgnoreCase))
+        {
+            _ = ToastNotificationActivationHandler.HandleAsync(uri.Query);
+            return;
+        }
 
         // The server redirects to "{state}?id_token=...", and the state is the
         // redirect URL: "history-app://auth/google" or "history-app://auth/apple".
@@ -120,6 +128,7 @@ public partial class App : Application
         serviceCollection.AddSingleton(sp => sp.GetRequiredService<ApplicationSettingsService>().Settings);
         serviceCollection.AddSingleton(sp => new ApplicationThemeService(sp.GetRequiredService<ApplicationSettingsService>()));
         serviceCollection.AddSingleton(sp => new ApplicationNotificationService());
+        serviceCollection.AddSingleton<PushNotificationService>();
         serviceCollection.AddSingleton(sp => new StoreUpdateService(sp.GetRequiredService<ApplicationSettingsService>(), sp.GetRequiredService<ApplicationNotificationService>()));
         serviceCollection.AddTransient(sp => new LoginPageViewModel(sp.GetRequiredService<ApplicationSettingsService>()));
         serviceCollection.AddTransient(sp => new RegisterPageViewModel(sp.GetRequiredService<ApplicationSettingsService>()));

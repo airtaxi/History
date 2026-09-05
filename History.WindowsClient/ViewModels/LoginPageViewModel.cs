@@ -11,6 +11,7 @@ using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using History.WindowsClient.Services;
 using History.WindowsClient.Views;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using System.Diagnostics;
 using System.Text.Json.Nodes;
@@ -204,7 +205,15 @@ public partial class LoginPageViewModel : BaseViewModel
     public static void NavigateToMainPage(BaseViewModel baseViewModel)
     {
         baseViewModel.HideLoading();
+
+        // One-shot post-login work: register this device's WNS channel.
+        _ = App.Services.GetRequiredService<PushNotificationService>().InitializeAsync();
+
         MainWindow.Frame.Navigate(typeof(Pages.MainPage));
+
+        // Replay any toast deep link that arrived before login after the main page is up,
+        // so the target page stacks on top of it instead of being covered by it.
+        ToastNotificationActivationHandler.HandlePending();
     }
 
     private static void ShowRegisterPage(string idToken, SocialService provider, string userJson) => MainWindow.Frame.Navigate(typeof(RegisterPage), new RegisterPageParameters(idToken, provider, ExtractNameFromUserJson(userJson)));

@@ -861,6 +861,45 @@ public class UserController(IUserService userService, IFriendshipService friends
         return Ok();
     }
 
+    [HttpPut("wns-channels")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(400)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(404)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> RegisterWnsChannel([FromQuery] string channelUri)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        var userResult = await userService.GetUserByIdAsync(userId);
+        if (userResult.Error == ErrorType.NotFound) return NotFound("사용자를 찾을 수 없습니다.");
+        else if (userResult.IsFailure) return StatusCode(500, userResult.FullErrorMessage);
+
+        var result = await notificationService.RegisterWnsChannelAsync(userId, channelUri);
+        if (result.IsSuccess) return Ok();
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
+        else return StatusCode(500, result.FullErrorMessage);
+    }
+
+    [HttpDelete("wns-channels")]
+    [Authorize]
+    [ProducesResponseType<string>(200)]
+    [ProducesResponseType<string>(401)]
+    [ProducesResponseType<string>(429)]
+    [ProducesResponseType<string>(500)]
+    public async Task<IActionResult> DeleteWnsChannel([FromQuery] string channelUri)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized("로그인이 필요한 서비스입니다.");
+
+        await notificationService.DeleteWnsChannelsAsync([channelUri]);
+
+        return Ok();
+    }
+
     [HttpPost("withdraw")]
     [Authorize]
     [ProducesResponseType<string>(200)]

@@ -30,6 +30,8 @@ var api = builder.AddProject<Projects.History_ApiService>("ApiService")
     .WithEnvironment("HISTORY_GOOGLE_CLIENT_SECRET", RequiredEnv("HISTORY_GOOGLE_CLIENT_SECRET"))
     .WithEnvironment("HISTORY_APPLE_PRIVATE_KEY_PATH", Env("HISTORY_APPLE_PRIVATE_KEY_PATH", Path.Combine(AppContext.BaseDirectory, "AuthKey_DGK52ABR8V.p8")))
     .WithEnvironment("HISTORY_FIREBASE_CREDENTIAL_PATH", Env("HISTORY_FIREBASE_CREDENTIAL_PATH", Path.Combine(AppContext.BaseDirectory, "firebaseServiceAccountKey.json")))
+    .WithEnvironment("Wns__ClientId", Env("HISTORY_WNS_CLIENT_ID", ""))
+    .WithEnvironment("Wns__ClientSecret", Env("HISTORY_WNS_CLIENT_SECRET", ""))
     .WaitFor(mongodb);
 
 var vuePort = Env("HISTORY_VUE_PORT", "5173");

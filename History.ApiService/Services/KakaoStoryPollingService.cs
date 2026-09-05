@@ -190,7 +190,7 @@ public class KakaoStoryPollingService(ILogger<KakaoStoryPollingService> logger, 
         };
         if (notification.Scheme != null) data["Scheme"] = notification.Scheme;
 
-        await notificationService.SendFirebaseNotificationAsync([userId], title, body, notification.ThumbnailUrl, data);
+        await notificationService.SendPushNotificationsAsync([userId], title, body, notification.ThumbnailUrl, data);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
