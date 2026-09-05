@@ -32,6 +32,8 @@ var api = builder.AddProject<Projects.History_ApiService>("ApiService")
     .WithEnvironment("HISTORY_FIREBASE_CREDENTIAL_PATH", Env("HISTORY_FIREBASE_CREDENTIAL_PATH", Path.Combine(AppContext.BaseDirectory, "firebaseServiceAccountKey.json")))
     .WithEnvironment("Wns__ClientId", Env("HISTORY_WNS_CLIENT_ID", ""))
     .WithEnvironment("Wns__ClientSecret", Env("HISTORY_WNS_CLIENT_SECRET", ""))
+    .WithEnvironment("Wns__TokenEndpoint", Env("HISTORY_WNS_TOKEN_ENDPOINT", "https://login.microsoftonline.com/common/oauth2/v2.0/token"))
+    .WithEnvironment("Wns__Scope", Env("HISTORY_WNS_SCOPE", "https://wns.windows.com/.default"))
     .WaitFor(mongodb);
 
 var vuePort = Env("HISTORY_VUE_PORT", "5173");
