@@ -1,7 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
-using History.MobileClient.Components.Timeline;
+﻿using History.MobileClient.Components.Timeline;
 using History.MobileClient.Helpers;
-using History.MobileClient.Messages;
 using History.MobileClient.ViewModels;
 using Microsoft.AspNetCore.Components.WebView.Maui;
 
@@ -15,8 +13,6 @@ public partial class BlazorSearchPostsPage : ContentPage
     {
         InitializeComponent();
         BindingContext = _viewModel;
-
-        WeakReferenceMessenger.Default.Register<BlazorWebViewHibernationMessage>(this, OnBlazorWebViewHibernationMessageReceived);
 
         MainBlazorWebView.RootComponents.Add(new RootComponent
         {
@@ -39,35 +35,7 @@ public partial class BlazorSearchPostsPage : ContentPage
 #endif
     }
 
-    private void OnBlazorWebViewHibernationMessageReceived(object recipient, BlazorWebViewHibernationMessage message)
-    {
-#if ANDROID
-        Android.Util.Log.Info("BlazorHibernation", $"[{DateTime.Now:HH:mm:ss.fff}] hibernation={message.Value}, platform view is webview: {MainBlazorWebView.Handler?.PlatformView is Android.Webkit.WebView}");
-
-        // WebView.OnPause halts rendering (animations, video) and pauseTimers
-        // halts JS timers/WebSockets, so a backgrounded Blazor tab cannot keep
-        // burning CPU while the realtime foreground service keeps the process
-        // alive. Hiding the view (GONE) additionally removes it from layout and
-        // draw passes; it is restored to VISIBLE on resume.
-        if (MainBlazorWebView.Handler?.PlatformView is Android.Webkit.WebView webView)
-        {
-            if (message.Value)
-            {
-                webView.OnPause();
-                webView.PauseTimers();
-                webView.Visibility = Android.Views.ViewStates.Gone;
-            }
-            else
-            {
-                webView.Visibility = Android.Views.ViewStates.Visible;
-                webView.ResumeTimers();
-                webView.OnResume();
-            }
-        }
-#endif
-    }
-
-#if ANDROID
+    #if ANDROID
     private void OnMainBlazorWebViewHandlerChanged(object sender, EventArgs e)
     {
         if (MainBlazorWebView.Handler?.PlatformView is not Android.Webkit.WebView webView) return;

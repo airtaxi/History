@@ -1,8 +1,6 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
-using History.Commons;
+﻿using History.Commons;
 using History.MobileClient.Components.Timeline;
 using History.MobileClient.Helpers;
-using History.MobileClient.Messages;
 using History.MobileClient.ViewModels;
 using Microsoft.AspNetCore.Components.WebView;
 using Microsoft.AspNetCore.Components.WebView.Maui;
@@ -36,8 +34,6 @@ public partial class BlazorTimelinePage : ContentPage
         _viewModel.ModeChanged += OnModeChanged;
         SearchImage.IsVisible = !_viewModel.IsKakaoStoryMode;
 
-        WeakReferenceMessenger.Default.Register<BlazorWebViewHibernationMessage>(this, OnBlazorWebViewHibernationMessageReceived);
-
 #if ANDROID
         // Suppress the webview long-click haptic (timelineInterop.attachLongPress
         // handles copy) and install the kakao emoticon interceptor.
@@ -60,34 +56,6 @@ public partial class BlazorTimelinePage : ContentPage
     }
 
     private void OnModeChanged(bool isKakaoStoryMode) => SearchImage.IsVisible = !isKakaoStoryMode;
-
-    private void OnBlazorWebViewHibernationMessageReceived(object recipient, BlazorWebViewHibernationMessage message)
-    {
-#if ANDROID
-        Android.Util.Log.Info("BlazorHibernation", $"[{DateTime.Now:HH:mm:ss.fff}] hibernation={message.Value}, platform view is webview: {TimelineBlazorWebView.Handler?.PlatformView is Android.Webkit.WebView}");
-
-        // WebView.OnPause halts rendering (animations, video) and pauseTimers
-        // halts JS timers/WebSockets, so a backgrounded Blazor tab cannot keep
-        // burning CPU while the realtime foreground service keeps the process
-        // alive. Hiding the view (GONE) additionally removes it from layout and
-        // draw passes; it is restored to VISIBLE on resume.
-        if (TimelineBlazorWebView.Handler?.PlatformView is Android.Webkit.WebView webView)
-        {
-            if (message.Value)
-            {
-                webView.OnPause();
-                webView.PauseTimers();
-                webView.Visibility = Android.Views.ViewStates.Gone;
-            }
-            else
-            {
-                webView.Visibility = Android.Views.ViewStates.Visible;
-                webView.ResumeTimers();
-                webView.OnResume();
-            }
-        }
-#endif
-    }
 
 #if ANDROID
     private void OnTimelineBlazorWebViewHandlerChanged(object sender, EventArgs e)

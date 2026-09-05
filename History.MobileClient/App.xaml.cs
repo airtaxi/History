@@ -277,14 +277,12 @@ public partial class App : Application
     private void OnWindowResumed(object sender, EventArgs e)
     {
         IsForeground = true;
-        WeakReferenceMessenger.Default.Send(new BlazorWebViewHibernationMessage(false));
         TabBarBadgePoller.StartForegroundPolling();
     }
 
     private void OnWindowStopped(object sender, EventArgs e)
     {
         IsForeground = false;
-        WeakReferenceMessenger.Default.Send(new BlazorWebViewHibernationMessage(true));
 
         // The 15-minute Android JobService / the iOS background refresh task
         // takes over while the app is in the background.
