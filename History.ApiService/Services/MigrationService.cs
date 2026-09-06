@@ -33,6 +33,7 @@ public class MigrationService(IMongoDatabase database, ILogger<MigrationService>
         await ApplyMigrationAsync(2, "IssueInviteCodesToExistingUsers", IssueInviteCodesToExistingUsersAsync);
         await ApplyMigrationAsync(3, "IssueInviteCodesToUsersWithNoCodes", IssueInviteCodesToUsersWithNoCodesAsync);
         await ApplyMigrationAsync(4, "BackfillCommentSearchIndex", BackfillCommentSearchIndexAsync);
+        await ApplyMigrationAsync(5, "NormalizeExternalUrlThumbnails", NormalizeExternalUrlThumbnailsAsync);
     }
 
     private async Task ApplyMigrationAsync(int version, string name, Func<Task> migration)
@@ -228,5 +229,92 @@ public class MigrationService(IMongoDatabase database, ILogger<MigrationService>
         }
 
         logger.LogInformation("[MIGRATION] Backfilled search index for {Count} comments.", migratedCount);
+    }
+
+    /// <summary>
+    /// v5: Normalize legacy ExternalUrlContent thumbnail URLs to absolute http(s) URLs.
+    /// Protocol-relative (//host/path) and path-relative (/favicon.ico) thumbnails crash
+    /// BitmapImage on the Windows client, so each is resolved against its SourceUrl.
+    /// </summary>
+    private async Task NormalizeExternalUrlThumbnailsAsync()
+    {
+        await NormalizeExternalUrlThumbnailsAsync(_postCollection, "Posts");
+        await NormalizeExternalUrlThumbnailsAsync(_publicPostCollection, "PublicPosts");
+        await NormalizeExternalUrlThumbnailsAsync(_commentCollection, "Comments");
+    }
+
+    private async Task NormalizeExternalUrlThumbnailsAsync(IMongoCollection<Post> collection, string collectionName)
+    {
+        var posts = await collection.Find(FilterDefinition<Post>.Empty).ToListAsync();
+        logger.LogInformation("[MIGRATION] Found {Count} posts to check in {Collection}.", posts.Count, collectionName);
+
+        var migratedCount = 0;
+        foreach (var post in posts)
+        {
+            if (NormalizeExternalUrlThumbnails(post.Contents) == 0) continue;
+
+            var updateFilter = Builders<Post>.Filter.Eq(x => x.Id, post.Id);
+            var update = Builders<Post>.Update.Set(x => x.Contents, post.Contents);
+            await collection.UpdateOneAsync(updateFilter, update);
+            migratedCount++;
+        }
+
+        logger.LogInformation("[MIGRATION] Normalized external URL thumbnails in {Count} {Collection}.", migratedCount, collectionName);
+    }
+
+    private async Task NormalizeExternalUrlThumbnailsAsync(IMongoCollection<Comment> collection, string collectionName)
+    {
+        var comments = await collection.Find(FilterDefinition<Comment>.Empty).ToListAsync();
+        logger.LogInformation("[MIGRATION] Found {Count} comments to check in {Collection}.", comments.Count, collectionName);
+
+        var migratedCount = 0;
+        foreach (var comment in comments)
+        {
+            if (NormalizeExternalUrlThumbnails(comment.Contents) == 0) continue;
+
+            var updateFilter = Builders<Comment>.Filter.Eq(x => x.Id, comment.Id);
+            var update = Builders<Comment>.Update.Set(x => x.Contents, comment.Contents);
+            await collection.UpdateOneAsync(updateFilter, update);
+            migratedCount++;
+        }
+
+        logger.LogInformation("[MIGRATION] Normalized external URL thumbnails in {Count} {Collection}.", migratedCount, collectionName);
+    }
+
+    private static int NormalizeExternalUrlThumbnails(List<BaseContent> contents)
+    {
+        var changedCount = 0;
+        foreach (var externalUrlContent in contents.OfType<ExternalUrlContent>())
+        {
+            var normalizedUrl = ResolveThumbnailUrl(externalUrlContent.ThumbnailImageUrl, externalUrlContent.SourceUrl);
+            if (externalUrlContent.ThumbnailImageUrl == normalizedUrl) continue;
+            externalUrlContent.ThumbnailImageUrl = normalizedUrl;
+            changedCount++;
+        }
+        return changedCount;
+    }
+
+    private static string ResolveThumbnailUrl(string thumbnailImageUrl, string sourceUrl)
+    {
+        if (string.IsNullOrEmpty(thumbnailImageUrl)) return thumbnailImageUrl;
+
+        // Protocol-relative URLs (//host/path) adopt the page's scheme. Checked before the
+        // absolute parse because they would otherwise be parsed as file:// URIs.
+        if (thumbnailImageUrl.StartsWith("//"))
+        {
+            if (Uri.TryCreate(sourceUrl, UriKind.Absolute, out var sourceSchemeUri) && sourceSchemeUri.Scheme is "http" or "https") return sourceSchemeUri.Scheme + ":" + thumbnailImageUrl;
+            return "https:" + thumbnailImageUrl;
+        }
+
+        if (Uri.TryCreate(thumbnailImageUrl, UriKind.Absolute, out var absoluteUri)) return absoluteUri.Scheme is "http" or "https" ? thumbnailImageUrl : "";
+        if (!Uri.TryCreate(sourceUrl, UriKind.Absolute, out var sourceUri)) return "";
+        if (sourceUri.Scheme is not ("http" or "https")) return "";
+
+        try
+        {
+            var resolvedUri = new Uri(sourceUri, thumbnailImageUrl);
+            return resolvedUri.Scheme is "http" or "https" ? resolvedUri.AbsoluteUri : "";
+        }
+        catch { return ""; }
     }
 }
