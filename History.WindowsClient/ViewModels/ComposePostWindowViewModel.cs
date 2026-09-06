@@ -12,8 +12,8 @@ using Microsoft.Windows.Storage.Pickers;
 
 namespace History.WindowsClient.ViewModels;
 
-// Compose post window state. This is a UI shell: poll, kakao cross-post, reservation, and
-// submit are stubs to be filled in later; media attachment and the option pickers are real.
+// Compose post window state. This is a UI shell: poll, kakao cross-post, and submit are
+// stubs to be filled in later; media attachment, the option pickers, and reservation are real.
 public sealed partial class ComposePostWindowViewModel : BaseViewModel
 {
     // Image-only extensions for the media picker, shared with the comment attachment flow.
@@ -37,10 +37,26 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     [NotifyPropertyChangedFor(nameof(SelectedCommentPermissionGlyph))]
     public partial ComposePostCommentPermissionItemViewModel SelectedCommentPermissionItem { get; set; }
 
+    // Reservation state: the flyout toggle arms scheduling, and the date/time pickers are
+    // only editable while it is on. Both values must be present for the reservation to
+    // count; turning the toggle off clears them.
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsReservationScheduled))]
     [NotifyPropertyChangedFor(nameof(ReservationButtonContent))]
-    public partial DateTime? ReservationTime { get; set; }
+    [NotifyPropertyChangedFor(nameof(ReservationToolTip))]
+    [NotifyPropertyChangedFor(nameof(ReservationDateTime))]
+    public partial bool IsReservationEnabled { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ReservationButtonContent))]
+    [NotifyPropertyChangedFor(nameof(ReservationToolTip))]
+    [NotifyPropertyChangedFor(nameof(ReservationDateTime))]
+    public partial DateTimeOffset? ReservationDate { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ReservationButtonContent))]
+    [NotifyPropertyChangedFor(nameof(ReservationToolTip))]
+    [NotifyPropertyChangedFor(nameof(ReservationDateTime))]
+    public partial TimeSpan? ReservationTime { get; set; }
 
     // Kakao cross-post toggle. The login flow is not wired up yet; the toggle itself only
     // reflects the current stub state until the kakao game posting is implemented.
@@ -69,9 +85,22 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
     public string SelectedCommentPermissionGlyph => SelectedCommentPermissionItem?.Glyph ?? CommentPermissionItems[CommentPermissionNotSetSelectedIndex].Glyph;
 
-    public bool IsReservationScheduled => ReservationTime.HasValue;
+    public DateTime? ReservationDateTime => IsReservationEnabled && ReservationDate is { } date && ReservationTime is { } time ? date.LocalDateTime.Date + time : null;
 
-    public string ReservationButtonContent => ReservationTime.HasValue ? "예약됨" : "게시 예약";
+    public string ReservationButtonContent => ReservationDateTime is not null ? "예약됨" : "게시 예약";
+
+    public string ReservationToolTip => ReservationDateTime is { } time ? $"게시 예약: {time:yyyy-MM-dd HH:mm}" : "게시 예약";
+
+    // Turning the reservation off clears any partially picked date/time so an old
+    // selection cannot silently come back when it is re-enabled.
+    partial void OnIsReservationEnabledChanged(bool value)
+    {
+        if (!value)
+        {
+            ReservationDate = null;
+            ReservationTime = null;
+        }
+    }
 
     public event EventHandler<StickerContent> StickerSelected;
 
@@ -224,10 +253,6 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     [RelayCommand]
     private void HandlePollTap() { }
 
-    // TODO: post reservation (date/time picking) is not implemented yet.
-    [RelayCommand]
-    private void HandleReservationTap() { }
-
     // TODO: kakao login and cross-post routing is decided here when the game posting is
     // implemented; until then the toggle press shows the login-needed hint.
     [RelayCommand]
@@ -239,7 +264,9 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
     // TODO: collect the editor contents (text, media, ExternalUrlContent) and send the
     // WritePost request with the selected discovery option, comment permission, share
-    // setting, and reservation time.
+    // setting, and reservation time. When the reservation toggle is on but only one of
+    // the date/time pickers holds a value, show an error dialog and abort the post; the
+    // picked time must also be in the future.
     [RelayCommand]
     private async Task HandleSubmitAsync() => await ShowMessageDialogAsync(new MessageDialogParameters("게시글 작성", "게시글 작성 기능은 아직 준비 중입니다."));
 }

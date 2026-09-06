@@ -240,8 +240,8 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
 
-                    <!--  Post reservation (stub)  -->
-                    <Button Command="{x:Bind ViewModel.HandleReservationTapCommand}" ToolTipService.ToolTip="게시 예약">
+                    <!--  Post reservation: the toggle arms the date/time pickers; both must hold a value  -->
+                    <Button ToolTipService.ToolTip="{x:Bind ViewModel.ReservationToolTip, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon
                                 VerticalAlignment="Center"
@@ -251,7 +251,30 @@
                         </StackPanel>
                         <Button.Flyout>
                             <Flyout>
-                                <TextBlock Text="게시 예약 기능은 아직 준비 중입니다." TextWrapping="Wrap" />
+                                <StackPanel Spacing="8">
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            Text="게시 예약" />
+                                        <ToggleSwitch
+                                            Grid.Column="1"
+                                            MinWidth="0"
+                                            IsOn="{x:Bind ViewModel.IsReservationEnabled, Mode=TwoWay}" />
+                                    </Grid>
+                                    <DatePicker
+                                        HorizontalAlignment="Stretch"
+                                        IsEnabled="{x:Bind ViewModel.IsReservationEnabled, Mode=OneWay}"
+                                        SelectedDate="{x:Bind ViewModel.ReservationDate, Mode=TwoWay}" />
+                                    <TimePicker
+                                        HorizontalAlignment="Stretch"
+                                        IsEnabled="{x:Bind ViewModel.IsReservationEnabled, Mode=OneWay}"
+                                        SelectedTime="{x:Bind ViewModel.ReservationTime, Mode=TwoWay}" />
+                                </StackPanel>
                             </Flyout>
                         </Button.Flyout>
                     </Button>

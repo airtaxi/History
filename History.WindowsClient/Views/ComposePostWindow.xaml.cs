@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Dialogs;
 using History.WindowsClient.Helpers;
