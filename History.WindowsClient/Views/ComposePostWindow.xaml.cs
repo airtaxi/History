@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Dialogs;
 using History.WindowsClient.Helpers;
@@ -69,8 +70,9 @@ public sealed partial class ComposePostWindow : BaseWindow
         _viewModel.ContentDialogRequested += OnContentDialogRequested;
         _viewModel.FilePickRequested += OnFilePickRequested;
         _viewModel.LoadingStateRequested += OnLoadingStateRequested;
+        _viewModel.FilesPickRequested += OnFilesPickRequested;
         _viewModel.StickerSelected += OnViewModelStickerSelected;
-        _viewModel.MediaFileSelected += OnViewModelMediaFileSelected;
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
     // Fits the window to the content: measures the root grid's DesiredSize and resizes the
@@ -137,9 +139,23 @@ public sealed partial class ComposePostWindow : BaseWindow
         PostEditor.FocusEditor();
     }
 
-    // A media file was picked: show the path in a message until the attachment preview
-    // surface and upload flow are implemented.
-    private async void OnViewModelMediaFileSelected(object sender, string path) => await _viewModel.ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", $"선택한 파일: {path}\n\n미디어 첨부 기능은 아직 준비 중입니다."));
+    private void OnFilesPickRequested(object sender, PickerRequestedEventArgs<FileOpenPickerParameters, IReadOnlyList<PickFileResult>> args)
+    {
+        var result = Content.PickFilesAsync(args.Parameters);
+        args.ResultTask = result;
+    }
+
+    // An image was pasted into the editor: add it to the attachment list.
+    private async void OnPostEditorImageInputRequested(object sender, string path) => await _viewModel.AddImageAttachmentAsync(path);
+
+    // Fits the window to the content whenever the attachment strip appears or disappears.
+    private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ComposePostWindowViewModel.MediaAttachmentsVisibility))
+        {
+            DispatcherQueue.TryEnqueue(UpdateWindowSize);
+        }
+    }
 
     private void OnWindowLoaded(object sender, RoutedEventArgs e)
     {

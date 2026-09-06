@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using History.Commons;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using History.WindowsClient.Dialogs;
@@ -10,8 +11,8 @@ using Microsoft.Windows.Storage.Pickers;
 
 namespace History.WindowsClient.ViewModels;
 
-// Compose post window state. This is a UI shell: every writing-related action (media
-// attachment, poll, kakao cross-post, reservation, submit) is a stub to be filled in later.
+// Compose post window state. This is a UI shell: poll, kakao cross-post, reservation, and
+// submit are stubs to be filled in later; media attachment and the option pickers are real.
 public sealed partial class ComposePostWindowViewModel : BaseViewModel
 {
     // Image-only extensions for the media picker, shared with the comment attachment flow.
@@ -72,7 +73,10 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     public string ReservationButtonContent => ReservationTime.HasValue ? "예약됨" : "게시 예약";
 
     public event EventHandler<StickerContent> StickerSelected;
-    public event EventHandler<string> MediaFileSelected;
+
+    public ObservableCollection<MediaAttachmentViewModel> MediaAttachments { get; } = [];
+
+    public bool MediaAttachmentsVisibility => MediaAttachments.Count > 0;
 
     public ComposePostWindowViewModel()
     {
@@ -108,16 +112,76 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         if (dialog.SelectedStickerContent != null) StickerSelected?.Invoke(this, dialog.SelectedStickerContent);
     }
 
-    // Picks a single image attachment. Applying the attachment to the post contents is a
-    // TODO: the pick itself is real so the dialog flow can be exercised from the shell.
+    // Picks one or more images and adds them to the attachment list. Files that exceed the
+    // upload size limit are skipped; the remaining slots are filled in picker order.
     [RelayCommand]
     private async Task HandleMediaTapAsync()
     {
-        var result = await PickFileAsync(new FileOpenPickerParameters(s_imageFileTypeFilters, PickerLocationId.PicturesLibrary, "이미지 추가"));
-        if (result == null) return;
+        var remainingCount = CommonConstants.MaxPostMediaCount - MediaAttachments.Count;
+        if (remainingCount <= 0)
+        {
+            await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", $"미디어는 최대 {CommonConstants.MaxPostMediaCount}개까지 추가할 수 있습니다."));
+            return;
+        }
 
-        // TODO: apply the selected image to the post attachments and render the preview surface.
-        MediaFileSelected?.Invoke(this, result.Path);
+        var results = await PickFilesAsync(new FileOpenPickerParameters(s_imageFileTypeFilters, PickerLocationId.PicturesLibrary, "이미지 추가"));
+        if (results == null || results.Count == 0) return;
+
+        if (results.Count > remainingCount) await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", $"{remainingCount}개가 넘는 미디어 파일은 무시됩니다."));
+
+        var sizeExceededCount = 0;
+        foreach (var result in results.Take(remainingCount))
+        {
+            if (await TryAddImageAttachmentAsync(result.Path)) continue;
+            sizeExceededCount++;
+        }
+
+        if (sizeExceededCount > 0) await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", "용량을 초과하는 미디어는 자동으로 제외되었습니다."));
+    }
+
+    // Adds an image pasted into the editor as an attachment, sharing the size checks and
+    // temp-file handling of the picker flow.
+    public async Task AddImageAttachmentAsync(string sourcePath)
+    {
+        if (MediaAttachments.Count >= CommonConstants.MaxPostMediaCount)
+        {
+            await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", $"미디어는 최대 {CommonConstants.MaxPostMediaCount}개까지 추가할 수 있습니다."));
+            return;
+        }
+
+        await TryAddImageAttachmentAsync(sourcePath);
+    }
+
+    // Removes the attachment from the list and deletes its temp file.
+    public void RemoveAttachment(MediaAttachmentViewModel attachment)
+    {
+        if (!MediaAttachments.Remove(attachment)) return;
+        attachment.Dispose();
+        OnPropertyChanged(nameof(MediaAttachmentsVisibility));
+    }
+
+    // Copies the picked image into a uniquely named temp file and appends the attachment.
+    // Returns false when the file exceeds the upload size limit.
+    private async Task<bool> TryAddImageAttachmentAsync(string sourcePath)
+    {
+        if (new FileInfo(sourcePath).Length > CommonConstants.MaxImageUploadFileSize) return false;
+
+        var randomFileName = GenerateRandomFileName(sourcePath);
+        var tempPath = Path.Combine(Path.GetTempPath(), randomFileName);
+        await Task.Run(() => File.Copy(sourcePath, tempPath, true));
+
+        var imageData = await File.ReadAllBytesAsync(tempPath);
+        MediaAttachments.Add(await MediaAttachmentViewModel.CreateAsync(this, randomFileName, tempPath, imageData));
+        OnPropertyChanged(nameof(MediaAttachmentsVisibility));
+        return true;
+    }
+
+    private string GenerateRandomFileName(string sourcePath)
+    {
+        var extension = Path.GetExtension(sourcePath);
+        string randomFileName;
+        do randomFileName = Path.GetRandomFileName().Replace(".", string.Empty) + extension; while (MediaAttachments.Any(x => x.FileName.Equals(randomFileName, StringComparison.OrdinalIgnoreCase)));
+        return randomFileName;
     }
 
     // Asks for a URL to attach. Embedding the hyperlink into the editor contents is a TODO.

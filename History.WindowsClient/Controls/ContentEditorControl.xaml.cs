@@ -102,7 +102,7 @@ public sealed partial class ContentEditorControl : UserControl
         else if (args.Prefix == "#") sender.ItemsSource = _viewModel?.GetHashtagSuggestions(args.QueryText);
     }
 
-    private async void OnMainRichSuggestBoxPaste(RichSuggestBox2 sender, TextControlPasteEventArgs args)
+    private void OnMainRichSuggestBoxPaste(RichSuggestBox2 sender, TextControlPasteEventArgs args)
     {
         var clipboard = Clipboard.GetContent();
         if (!clipboard.Contains(StandardDataFormats.Bitmap)) return;
@@ -110,18 +110,21 @@ public sealed partial class ContentEditorControl : UserControl
         // Block the image from being inserted into the document as binary data.
         args.Handled = true;
 
-        var streamReference = await clipboard.GetBitmapAsync();
-        using var stream = await streamReference.OpenReadAsync();
-        var imageData = new byte[stream.Size];
-        using var reader = new DataReader(stream);
-        await reader.LoadAsync((uint)stream.Size);
-        reader.ReadBytes(imageData);
+        DispatcherQueue.TryEnqueue(async () =>
+        {
+            var streamReference = await clipboard.GetBitmapAsync();
+            using var stream = await streamReference.OpenReadAsync();
+            var imageData = new byte[stream.Size];
+            using var reader = new DataReader(stream);
+            await reader.LoadAsync((uint)stream.Size);
+            reader.ReadBytes(imageData);
 
-        var contentType = ImageContentTypeDetector.Detect(imageData);
-        var tempPath = Path.Combine(Path.GetTempPath(), $"paste_{DateTime.Now:yyyyMMddHHmmssfff}{GetImageFileExtension(contentType)}");
-        await File.WriteAllBytesAsync(tempPath, imageData);
+            var contentType = ImageContentTypeDetector.Detect(imageData);
+            var tempPath = Path.Combine(Path.GetTempPath(), $"paste_{DateTime.Now:yyyyMMddHHmmssfff}{GetImageFileExtension(contentType)}");
+            await File.WriteAllBytesAsync(tempPath, imageData);
 
-        ImageInputRequested?.Invoke(this, tempPath);
+            ImageInputRequested?.Invoke(this, tempPath);
+        });
     }
 
     private static string GetImageFileExtension(string contentType) =>
