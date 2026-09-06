@@ -29,6 +29,7 @@ public partial class ProfilePageViewModel : BaseViewModel,
     public partial BaseProfileViewModel Profile { get; private set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
     public partial ObservableCollection<BasePostViewModel> Items { get; private set; } = [];
 
     public bool IsEmpty => Items.Count == 0;
@@ -102,8 +103,6 @@ public partial class ProfilePageViewModel : BaseViewModel,
                 Items = new ObservableCollection<BasePostViewModel>(viewModels);
             }
             else Items = [];
-
-            OnPropertyChanged(nameof(IsEmpty));
         }
         finally { _fetchSemaphore.Release(); }
     }
@@ -137,8 +136,6 @@ public partial class ProfilePageViewModel : BaseViewModel,
 
                 if (postsResult.Value.Count == 0) _areThereNoMorePostsToLoad = true;
             }
-
-            OnPropertyChanged(nameof(IsEmpty));
         }
         finally { _fetchSemaphore.Release(); }
     }

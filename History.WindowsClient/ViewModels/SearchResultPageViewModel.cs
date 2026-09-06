@@ -19,6 +19,7 @@ public partial class SearchResultPageViewModel : BaseViewModel, IRecipient<Value
     private string _query;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
     public partial ObservableCollection<BasePostViewModel> Items { get; private set; } = [];
 
     public bool IsEmpty => Items.Count == 0;
@@ -65,8 +66,6 @@ public partial class SearchResultPageViewModel : BaseViewModel, IRecipient<Value
                 Items = new ObservableCollection<BasePostViewModel>(viewModels);
             }
             else Items = [];
-
-            OnPropertyChanged(nameof(IsEmpty));
         }
         finally { _fetchSemaphore.Release(); }
     }
@@ -101,8 +100,6 @@ public partial class SearchResultPageViewModel : BaseViewModel, IRecipient<Value
 
                 if (postsResult.Value.Count == 0) _areThereNoMorePostsToLoad = true;
             }
-
-            OnPropertyChanged(nameof(IsEmpty));
         }
         finally { _fetchSemaphore.Release(); }
     }
