@@ -37,6 +37,14 @@ public partial class App : Application
 
         InitializeComponent();
 
+#if DEBUG
+        // Layout cycle tracing: prints the oscillating element chain (ClassName/Name/SetValue/
+        // DesiredSize) to the native debugger when a layout cycle is about to crash. Keep it in
+        // DEBUG builds only; release builds should never pay for the tracing overhead.
+        //DebugSettings.LayoutCycleTracingLevel = LayoutCycleTracingLevel.High;
+        //DebugSettings.LayoutCycleDebugBreakLevel = LayoutCycleDebugBreakLevel.None;
+#endif
+
         ApiHandler.Platform = "Windows";
         ApiHandler.ApplicationVersion = GetApplicationVersion();
 
