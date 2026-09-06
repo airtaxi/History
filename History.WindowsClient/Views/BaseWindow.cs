@@ -14,6 +14,12 @@ public abstract class BaseWindow : WindowEx,
     IRecipient<NavigationRequestedMessage>,
     IRecipient<TryNavigateBackRequestedMessage>
 {
+    // Serializes this window's loading overlay sequences: concurrent loading requests from
+    // different pages (for example MainPage and TimelinePage refreshing on startup) would
+    // otherwise show and hide the overlay in an interleaved order, toggling the overlay
+    // Visibility from inside the layout passes that are still settling during the initial load.
+    private readonly SemaphoreSlim _loadingSemaphore = new(1, 1);
+
     protected readonly ApplicationThemeService _applicationThemeService = App.Services.GetRequiredService<ApplicationThemeService>();
 
     public BaseWindow()
@@ -76,6 +82,7 @@ public abstract class BaseWindow : WindowEx,
 
     private async Task RunLoadingAsync(LoadingStateRequestedMessage message)
     {
+        await _loadingSemaphore.WaitAsync();
         try
         {
             ShowLoading(message.LoadingMessage);
@@ -83,7 +90,11 @@ public abstract class BaseWindow : WindowEx,
             message.Complete();
         }
         catch (Exception exception) { message.Fail(exception); }
-        finally { HideLoading(); }
+        finally
+        {
+            HideLoading();
+            _loadingSemaphore.Release();
+        }
     }
 
     protected abstract void ShowLoading(string message = null);
