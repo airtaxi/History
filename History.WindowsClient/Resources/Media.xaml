@@ -101,27 +101,32 @@
                 </behaviors:EventTriggerBehavior>
             </interactivity:Interaction.Behaviors>
 
-            <Image
-                Width="{x:Bind Width, Mode=OneWay}"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                ImageOpened="OnMediaItemImageOpened"
-                Source="{x:Bind ImageSource}"
-                Stretch="{x:Bind Stretch}" />
+            <Grid
+                Background="Transparent"
+                PointerEntered="OnFullScreenVideoPointerEntered"
+                PointerExited="OnFullScreenVideoPointerExited">
+                <Image
+                    Width="{x:Bind Width, Mode=OneWay}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    ImageOpened="OnMediaItemImageOpened"
+                    Source="{x:Bind ImageSource}"
+                    Stretch="{x:Bind Stretch}" />
 
-            <!--
-                Only instantiated while inline playback is active (x:Load): recycled carousels
-                that are not playing never realize (or release) a media player element.
-            -->
-            <MediaPlayerElement
-                x:Name="InlineMediaPlayerElement"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch"
-                x:Load="{x:Bind IsPlaying, Mode=OneWay}"
-                AreTransportControlsEnabled="True"
-                AutoPlay="True"
-                Loaded="OnVideoMediaPlayerElementLoaded"
-                Source="{x:Bind PlaybackMediaSource, Mode=OneWay}" />
+                <!--
+                    Only instantiated while inline playback is active (x:Load): recycled carousels
+                    that are not playing never realize (or release) a media player element.
+                -->
+                <MediaPlayerElement
+                    x:Name="InlineMediaPlayerElement"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    x:Load="{x:Bind IsPlaying, Mode=OneWay}"
+                    AreTransportControlsEnabled="True"
+                    AutoPlay="True"
+                    Loaded="OnVideoMediaPlayerElementLoaded"
+                    Source="{x:Bind PlaybackMediaSource, Mode=OneWay}" />
+            </Grid>
 
             <!--  Video Overlay  -->
             <Button
@@ -279,7 +284,18 @@
                 </behaviors:EventTriggerBehavior>
             </interactivity:Interaction.Behaviors>
 
-            <Grid>
+            <!--
+                The built-in transport controls hide on a fixed 3-second timer, which keeps
+                the overlay over the video long after the pointer leaves. The video area
+                disables that timer and shows/hides the controls from its pointer events,
+                so the overlay is visible only while the pointer is over the video. The
+                transparent background keeps the area hit-testable even while the player
+                element is collapsed or not yet realized.
+            -->
+            <Grid
+                Background="Transparent"
+                PointerEntered="OnFullScreenVideoPointerEntered"
+                PointerExited="OnFullScreenVideoPointerExited">
                 <Image
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
@@ -298,6 +314,7 @@
                     x:Load="{x:Bind IsPlaying, Mode=OneWay}"
                     AreTransportControlsEnabled="True"
                     AutoPlay="True"
+                    Loaded="OnFullScreenVideoMediaPlayerElementLoaded"
                     Source="{x:Bind PlaybackMediaSource, Mode=OneWay}" />
             </Grid>
 

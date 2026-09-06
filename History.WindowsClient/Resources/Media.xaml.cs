@@ -1,4 +1,5 @@
-﻿using History.WindowsClient.ViewModels.Media;
+﻿using CommunityToolkit.WinUI;
+using History.WindowsClient.ViewModels.Media;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -12,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Xml.Linq;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.System;
@@ -138,9 +140,48 @@ public sealed partial class Media : ResourceDictionary
 
     private void OnVideoMediaPlayerElementLoaded(object sender, RoutedEventArgs e)
     {
-        var mediaPlayerElement = sender as MediaPlayerElement;
-        if (mediaPlayerElement == null) return;
+        if (sender is not MediaPlayerElement { TransportControls: MediaTransportControls transportControls }) return;
 
-        mediaPlayerElement.MediaPlayer.IsMuted = true;
+        var mediaPlayeElement = sender as MediaPlayerElement;
+        mediaPlayeElement.MediaPlayer.IsLoopingEnabled = true;
+        mediaPlayeElement.MediaPlayer.IsMuted = true;
+
+        transportControls.IsCompact = true;
+        transportControls.ShowAndHideAutomatically = false;
+        transportControls.Visibility = Visibility.Collapsed;
+    }
+
+    // The built-in transport controls auto-hide on a fixed 3-second timer, which keeps the
+    // overlay over the video long after the pointer leaves. The full-screen player disables
+    // that timer and drives the controls from the pointer events on the video area instead,
+    // so the overlay appears only while the pointer is over the video.
+    private void OnFullScreenVideoMediaPlayerElementLoaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MediaPlayerElement { TransportControls: MediaTransportControls transportControls }) return;
+
+        var mediaPlayeElement = sender as MediaPlayerElement;
+        mediaPlayeElement.MediaPlayer.IsLoopingEnabled = true;
+
+        transportControls.IsCompact = true;
+        transportControls.ShowAndHideAutomatically = false;
+        transportControls.Visibility = Visibility.Collapsed;
+    }
+
+    private void OnFullScreenVideoPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        var mediaTransportControl = (sender as FrameworkElement)?.FindDescendant<MediaPlayerElement>();
+        var transportControls = mediaTransportControl?.TransportControls;
+        if (transportControls == null) return;
+
+        if (transportControls.Visibility == Visibility.Collapsed) transportControls.Visibility = Visibility.Visible;
+    }
+
+    private void OnFullScreenVideoPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        var mediaTransportControl = (sender as FrameworkElement)?.FindDescendant<MediaPlayerElement>();
+        var transportControls = mediaTransportControl?.TransportControls;
+        if (transportControls == null) return;
+
+        if (transportControls.Visibility == Visibility.Visible) transportControls.Visibility = Visibility.Collapsed;
     }
 }
