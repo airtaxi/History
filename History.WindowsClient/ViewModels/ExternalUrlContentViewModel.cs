@@ -21,7 +21,24 @@ public sealed partial class ExternalUrlContentViewModel : ObservableObject
     public string Title => ExternalUrlContent?.Title;
     public string Description => ExternalUrlContent?.Description;
     public string Domain => ExternalUrlContent?.Domain;
-    public BitmapImage ThumbnailImageSource => string.IsNullOrEmpty(ExternalUrlContent?.ThumbnailImageUrl) ? null : new BitmapImage(new Uri(ExternalUrlContent.ThumbnailImageUrl));
+    public BitmapImage ThumbnailImageSource
+    {
+        get
+        {
+            var thumbnailImageUrl = ExternalUrlContent?.ThumbnailImageUrl;
+            if (string.IsNullOrEmpty(thumbnailImageUrl)) return null;
+
+            // Protocol-relative URLs (//host/path) are rejected by BitmapImage's URI factory,
+            // so adopt the https scheme before parsing.
+            if (thumbnailImageUrl.StartsWith("//")) thumbnailImageUrl = "https:" + thumbnailImageUrl;
+
+            if (!Uri.TryCreate(thumbnailImageUrl, UriKind.Absolute, out var thumbnailUri)) return null;
+            if (thumbnailUri.Scheme is not ("http" or "https")) return null;
+
+            try { return new BitmapImage(thumbnailUri); }
+            catch { return null; }
+        }
+    }
 
     public void Update(ExternalUrlContent externalUrlContent) => ExternalUrlContent = externalUrlContent;
 
