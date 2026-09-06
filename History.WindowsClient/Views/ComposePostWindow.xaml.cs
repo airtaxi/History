@@ -148,10 +148,11 @@ public sealed partial class ComposePostWindow : BaseWindow
     // An image was pasted into the editor: add it to the attachment list.
     private async void OnPostEditorImageInputRequested(object sender, string path) => await _viewModel.AddImageAttachmentAsync(path);
 
-    // Fits the window to the content whenever the attachment strip appears or disappears.
+    // Fits the window to the content whenever the attachment strip or the URL preview
+    // appears or disappears.
     private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ComposePostWindowViewModel.MediaAttachmentsVisibility))
+        if (e.PropertyName is nameof(ComposePostWindowViewModel.MediaAttachmentsVisibility) or nameof(ComposePostWindowViewModel.ExternalUrlContentVisibility))
         {
             DispatcherQueue.TryEnqueue(UpdateWindowSize);
         }

@@ -143,7 +143,20 @@ public static class ExternalUrlHelper
 
             content.Description = HtmlDecode(GetMetaTagContent(doc, "og:description") ?? GetMetaTagContent(doc, "description") ?? content.SourceUrl);
 
-            content.ThumbnailImageUrl = HtmlDecode(GetMetaTagContent(doc, "og:image") ?? GetMetaTagContent(doc, "og:image:url") ?? GetMetaTagContent(doc, "og:image:secure_url") ?? GetMetaTagContent(doc, "twitter:image") ?? GetMetaTagContent(doc, "twitter:image:src") ?? GetLinkHref(doc, "image_src") ?? GetLinkHref(doc, "apple-touch-icon") ?? GetLinkHref(doc, "icon") ?? GetFirstImageUrl(doc, content.SourceUrl) ?? "");
+            // Scraped image candidates are often protocol-relative (//host/path) or
+            // path-relative (/favicon.ico). Resolve each against the page's final URI so
+            // the thumbnail is always an absolute http(s) URL for the clients.
+            Uri.TryCreate(content.SourceUrl, UriKind.Absolute, out var pageUri);
+            content.ThumbnailImageUrl = ResolveAbsoluteImageUrl(HtmlDecode(GetMetaTagContent(doc, "og:image")), pageUri)
+                ?? ResolveAbsoluteImageUrl(HtmlDecode(GetMetaTagContent(doc, "og:image:url")), pageUri)
+                ?? ResolveAbsoluteImageUrl(HtmlDecode(GetMetaTagContent(doc, "og:image:secure_url")), pageUri)
+                ?? ResolveAbsoluteImageUrl(HtmlDecode(GetMetaTagContent(doc, "twitter:image")), pageUri)
+                ?? ResolveAbsoluteImageUrl(HtmlDecode(GetMetaTagContent(doc, "twitter:image:src")), pageUri)
+                ?? ResolveAbsoluteImageUrl(HtmlDecode(GetLinkHref(doc, "image_src")), pageUri)
+                ?? ResolveAbsoluteImageUrl(HtmlDecode(GetLinkHref(doc, "apple-touch-icon")), pageUri)
+                ?? ResolveAbsoluteImageUrl(HtmlDecode(GetLinkHref(doc, "icon")), pageUri)
+                ?? ResolveAbsoluteImageUrl(GetFirstImageUrl(doc, content.SourceUrl), pageUri)
+                ?? "";
 
             return true;
         }
@@ -199,6 +212,38 @@ public static class ExternalUrlHelper
             }
         }
         return null;
+    }
+
+    // Resolves a scraped image URL into an absolute http(s) URL using the page URI as the
+    // base. Returns null when the candidate is empty or cannot be resolved to http(s) so
+    // the next candidate in the chain is tried.
+    private static string ResolveAbsoluteImageUrl(string imageUrl, Uri baseUri)
+    {
+        if (string.IsNullOrEmpty(imageUrl)) return null;
+
+        // Protocol-relative URLs (//host/path) adopt the page's scheme. Checked before the
+        // absolute parse because they would otherwise be parsed as file:// URIs.
+        if (imageUrl.StartsWith("//") && baseUri != null)
+        {
+            try
+            {
+                var protocolRelativeUri = new Uri(baseUri, imageUrl);
+                return protocolRelativeUri.Scheme is "http" or "https" ? protocolRelativeUri.AbsoluteUri : null;
+            }
+            catch { return null; }
+        }
+
+        if (Uri.TryCreate(imageUrl, UriKind.Absolute, out var absoluteUri))
+            return absoluteUri.Scheme is "http" or "https" ? absoluteUri.AbsoluteUri : null;
+
+        if (baseUri == null) return null;
+
+        try
+        {
+            var resolvedUri = new Uri(baseUri, imageUrl);
+            return resolvedUri.Scheme is "http" or "https" ? resolvedUri.AbsoluteUri : null;
+        }
+        catch { return null; }
     }
 
     private static string HtmlDecode(string value) => string.IsNullOrEmpty(value) ? value : WebUtility.HtmlDecode(value);

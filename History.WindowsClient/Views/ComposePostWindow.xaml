@@ -171,6 +171,56 @@
                     </ListView.ItemTemplate>
                 </ListView>
 
+                <!--  External URL preview: filled card with a close button (the visibility updates automatically)  -->
+                <Border
+                    Height="136"
+                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Visibility="{x:Bind ViewModel.ExternalUrlContentVisibility, Mode=OneWay}">
+                    <Grid>
+                        <Rectangle Fill="#808080" Opacity="0.4" />
+                        <Image Source="{x:Bind ViewModel.ExternalUrlPreview.ThumbnailImageSource, Mode=OneWay}" Stretch="UniformToFill" />
+                        <Rectangle Fill="#000000" Opacity="0.5" />
+                        <StackPanel Padding="12" VerticalAlignment="Bottom">
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="#CCCCCC"
+                                Text="{x:Bind ViewModel.ExternalUrlPreview.Domain, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                FontSize="16"
+                                Foreground="White"
+                                Text="{x:Bind ViewModel.ExternalUrlPreview.Title, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Margin="0,2,0,0"
+                                FontSize="14"
+                                Foreground="#CCCCCC"
+                                Text="{x:Bind ViewModel.ExternalUrlPreview.Description, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <Button
+                            Width="28"
+                            Height="28"
+                            Margin="6"
+                            Padding="0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Background="#66000000"
+                            BorderThickness="0"
+                            Command="{x:Bind ViewModel.RemoveExternalUrlContentCommand}"
+                            CornerRadius="14"
+                            ToolTipService.ToolTip="링크 첨부 삭제">
+                            <FontIcon
+                                FontSize="12"
+                                Foreground="White"
+                                Glyph="&#xE8BB;" />
+                        </Button>
+                    </Grid>
+                </Border>
+
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <!--  Discovery range: WinUI-style ComboBox showing glyph + text  -->
                     <ComboBox

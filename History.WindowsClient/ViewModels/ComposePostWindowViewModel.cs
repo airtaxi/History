@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons;
+using History.Commons.Api.Post;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using History.WindowsClient.Dialogs;
@@ -77,6 +78,18 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     public ObservableCollection<MediaAttachmentViewModel> MediaAttachments { get; } = [];
 
     public bool MediaAttachmentsVisibility => MediaAttachments.Count > 0;
+
+    // Attached external URL card state. The preview surface is kept in sync through the
+    // changed handler so the window only ever binds one view model for the card.
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ExternalUrlContentVisibility))]
+    public partial ExternalUrlContent ExternalUrlContent { get; set; }
+
+    public ExternalUrlContentViewModel ExternalUrlPreview { get; } = new();
+
+    public bool ExternalUrlContentVisibility => ExternalUrlContent != null;
+
+    partial void OnExternalUrlContentChanged(ExternalUrlContent value) => ExternalUrlPreview.Update(value);
 
     public ComposePostWindowViewModel()
     {
@@ -184,15 +197,27 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         return randomFileName;
     }
 
-    // Asks for a URL to attach. Embedding the hyperlink into the editor contents is a TODO.
+    // Asks for a URL to attach and fills its preview card through the server. A second
+    // attach replaces the existing card; removal happens through the preview's close button.
     [RelayCommand]
     private async Task HandleUrlTapAsync()
     {
         var url = await ShowInputDialogAsync(new InputDialogParameters("URL 입력", "게시글에 첨부할 URL을 입력해주세요.", "첨부하고자 하는 URL을 입력하세요", showCancel: true));
         if (string.IsNullOrWhiteSpace(url)) return;
 
-        // TODO: create the HyperlinkContent/external-url preview from the entered URL.
+        var fillResult = await ExecuteRequestAsync(new FillExternalUrlContent(new ExternalUrlContent { SourceUrl = url }), ErrorType.BadRequest);
+        if (fillResult.IsFailure)
+        {
+            if (fillResult.Error == ErrorType.BadRequest) await ShowMessageDialogAsync(new MessageDialogParameters("오류", fillResult.ErrorMessage));
+            return;
+        }
+
+        ExternalUrlContent = fillResult.Value;
     }
+
+    // Removes the attached external URL card from the composer.
+    [RelayCommand]
+    private void RemoveExternalUrlContent() => ExternalUrlContent = null;
 
     // TODO: poll composing is not implemented yet; the poll button stays a no-op until the
     // poll editor surface is designed.
@@ -212,8 +237,9 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         await ShowMessageDialogAsync(new MessageDialogParameters("카카오 게시", "카카오 게시 연동은 아직 준비 중입니다."));
     }
 
-    // TODO: collect the editor contents and send the WritePost request with the selected
-    // discovery option, comment permission, share setting, and reservation time.
+    // TODO: collect the editor contents (text, media, ExternalUrlContent) and send the
+    // WritePost request with the selected discovery option, comment permission, share
+    // setting, and reservation time.
     [RelayCommand]
     private async Task HandleSubmitAsync() => await ShowMessageDialogAsync(new MessageDialogParameters("게시글 작성", "게시글 작성 기능은 아직 준비 중입니다."));
 }
