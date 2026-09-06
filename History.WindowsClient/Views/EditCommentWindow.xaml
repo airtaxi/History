@@ -9,7 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="using:History.WindowsClient.Views"
     Title="댓글 수정"
-    Width="520"
+    Width="{x:Bind WindowWidth}"
     Closed="OnWindowClosed"
     IsMaximizable="False"
     IsResizable="False"

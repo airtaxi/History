@@ -10,7 +10,7 @@
     xmlns:views="using:History.WindowsClient.Views"
     xmlns:vm="using:History.WindowsClient.ViewModels"
     Title="게시글 작성"
-    Width="520"
+    Width="{x:Bind WindowWidth}"
     Closed="OnWindowClosed"
     IsMaximizable="False"
     IsResizable="False"

@@ -19,6 +19,8 @@ namespace History.WindowsClient.Views;
 // view model's dialog/picker/loading events are fulfilled directly on this window's content.
 public sealed partial class EditCommentWindow : BaseWindow
 {
+    private int WindowWidth { get; } = 520;
+
     private readonly EditCommentWindowViewModel _viewModel;
 
     public EditCommentWindowViewModel ViewModel => _viewModel;
@@ -93,7 +95,7 @@ public sealed partial class EditCommentWindow : BaseWindow
         RootGrid.Measure(new Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
 
         var dpiScale = RootGrid.XamlRoot.RasterizationScale;
-        var desiredWidth = Width;
+        var desiredWidth = WindowWidth;
 
         // Re-measure at the final width so wrap-sensitive content reports its actual height.
         RootGrid.Measure(new Windows.Foundation.Size(desiredWidth, double.PositiveInfinity));

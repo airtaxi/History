@@ -24,6 +24,8 @@ public sealed partial class ComposePostWindow : BaseWindow
 
     public static ComposePostWindow Instance => s_instance;
 
+    private int WindowWidth { get; } = 520;
+
     private readonly ComposePostWindowViewModel _viewModel;
     public ComposePostWindowViewModel ViewModel => _viewModel;
 
@@ -90,7 +92,7 @@ public sealed partial class ComposePostWindow : BaseWindow
         RootGrid.Measure(new Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
 
         var dpiScale = RootGrid.XamlRoot.RasterizationScale;
-        var desiredWidth = Width;
+        var desiredWidth = WindowWidth;
 
         // Re-measure at the final width so wrap-sensitive content reports its actual height.
         RootGrid.Measure(new Windows.Foundation.Size(desiredWidth, double.PositiveInfinity));
