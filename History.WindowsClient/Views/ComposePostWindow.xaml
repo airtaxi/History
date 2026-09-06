@@ -444,9 +444,10 @@
                 </StackPanel>
 
                 <Button
+                    x:Name="SubmitButton"
                     Height="40"
                     HorizontalAlignment="Stretch"
-                    Command="{x:Bind ViewModel.HandleSubmitCommand, Mode=OneWay}"
+                    Click="OnSubmitButtonClicked"
                     Content="게시하기"
                     Style="{StaticResource AccentButtonStyle}" />
             </StackPanel>

@@ -1,18 +1,25 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons;
+using History.Commons.DataTypes.Contents;
+using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage.Streams;
 
 namespace History.WindowsClient.ViewModels;
 
-// Local image attachment for the post composer: owns the temp file that will be uploaded,
-// the preview thumbnail, the optional description, and the spoiler flag. Dialog requests
+// Local media attachment for the post composer: owns the temp file that will be uploaded,
+// the preview thumbnail, the optional description, and the spoiler flag. Videos show a
+// thumbnail frame (or the video placeholder image) while the upload payload stays in the
+// temp file. Media already stored on the server (post editing) is kept as a server media
+// attachment without a local file and is sent back unchanged on submit. Dialog requests
 // (description edit) and the removal from the list are fulfilled by the owning composer.
 public sealed partial class MediaAttachmentViewModel : ObservableObject, IDisposable
 {
     private readonly ComposePostWindowViewModel _parent;
+
+    private readonly MediaContent _serverContent;
 
     private byte[] _data;
 
@@ -20,13 +27,19 @@ public sealed partial class MediaAttachmentViewModel : ObservableObject, IDispos
     public string FilePath { get; }
     public BitmapImage ThumbnailImageSource { get; }
 
+    // The original server media kept during editing; null for local uploads.
+    public MediaContent ServerContent => _serverContent;
+
+    public bool IsServerMedia => _serverContent != null;
+
     // Upload payload: read lazily from the temp file so large images are not buffered in
-    // memory for the whole editing session.
+    // memory for the whole editing session. Server media has no local file to upload.
     public byte[] Data
     {
         get
         {
-            if (_data == null && File.Exists(FilePath)) _data = File.ReadAllBytes(FilePath);
+            if (IsServerMedia || _data != null) return _data;
+            if (File.Exists(FilePath)) _data = File.ReadAllBytes(FilePath);
             return _data;
         }
     }
@@ -39,6 +52,23 @@ public sealed partial class MediaAttachmentViewModel : ObservableObject, IDispos
     [NotifyPropertyChangedFor(nameof(SpoilerGlyph))]
     [NotifyPropertyChangedFor(nameof(SpoilerToolTip))]
     public partial bool IsSpoiler { get; set; }
+
+    // Keeps the kept server media in sync so it is submitted with the edited values.
+    partial void OnDescriptionChanged(string value)
+    {
+        if (_serverContent != null)
+        {
+            _serverContent.Description = string.IsNullOrWhiteSpace(value) ? null : value;
+        }
+    }
+
+    partial void OnIsSpoilerChanged(bool value)
+    {
+        if (_serverContent != null)
+        {
+            _serverContent.IsSpoiler = value;
+        }
+    }
 
     public string DisplayDescription => string.IsNullOrWhiteSpace(Description) ? "설명 추가" : Description;
 
@@ -54,10 +84,36 @@ public sealed partial class MediaAttachmentViewModel : ObservableObject, IDispos
         ThumbnailImageSource = thumbnailImageSource;
     }
 
+    private MediaAttachmentViewModel(ComposePostWindowViewModel parent, MediaContent serverContent, BitmapImage thumbnailImageSource)
+    {
+        _parent = parent;
+        _serverContent = serverContent;
+        ThumbnailImageSource = thumbnailImageSource;
+        Description = serverContent.Description ?? string.Empty;
+        IsSpoiler = serverContent.IsSpoiler;
+    }
+
+    // Builds the attachment for a media item already stored on the server: the thumbnail
+    // comes from its server thumbnail and there is no local file, so the content is sent
+    // back unchanged on submit.
+    public static MediaAttachmentViewModel CreateFromServer(ComposePostWindowViewModel parent, MediaContent serverContent)
+    {
+        var thumbnailImageSource = new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(serverContent.ThumbnailMediaId)));
+        return new MediaAttachmentViewModel(parent, serverContent, thumbnailImageSource);
+    }
+
     // Builds the attachment and its preview thumbnail from the picked image bytes.
     public static async Task<MediaAttachmentViewModel> CreateAsync(ComposePostWindowViewModel parent, string fileName, string filePath, byte[] imageData)
     {
         var thumbnailImageSource = await CreateThumbnailImageSourceAsync(imageData);
+        return new MediaAttachmentViewModel(parent, fileName, filePath, thumbnailImageSource);
+    }
+
+    // Builds the attachment for a video file: the preview shows the extracted first frame,
+    // falling back to the video placeholder image when the frame cannot be rendered.
+    public static async Task<MediaAttachmentViewModel> CreateVideoAsync(ComposePostWindowViewModel parent, string fileName, string filePath)
+    {
+        var thumbnailImageSource = await CreateVideoThumbnailImageSourceAsync(filePath);
         return new MediaAttachmentViewModel(parent, fileName, filePath, thumbnailImageSource);
     }
 
@@ -79,6 +135,17 @@ public sealed partial class MediaAttachmentViewModel : ObservableObject, IDispos
         return bitmapImage;
     }
 
+    private static async Task<BitmapImage> CreateVideoThumbnailImageSourceAsync(string filePath)
+    {
+        var thumbnailStream = await VideoThumbnailExtractor.GetThumbnailAsync(filePath);
+        if (thumbnailStream == null) return new BitmapImage(new Uri("ms-appx:///Assets/App/Video.png"));
+
+        using var stream = thumbnailStream;
+        var bitmapImage = new BitmapImage();
+        await bitmapImage.SetSourceAsync(stream);
+        return bitmapImage;
+    }
+
     // Marks the attachment as a spoiler so it is blurred/hidden until the viewer reveals it.
     [RelayCommand]
     private void ToggleSpoiler() => IsSpoiler = !IsSpoiler;
@@ -97,7 +164,7 @@ public sealed partial class MediaAttachmentViewModel : ObservableObject, IDispos
 
     public void Dispose()
     {
-        if (File.Exists(FilePath)) File.Delete(FilePath);
+        if (!IsServerMedia && File.Exists(FilePath)) File.Delete(FilePath);
         GC.SuppressFinalize(this);
     }
 }

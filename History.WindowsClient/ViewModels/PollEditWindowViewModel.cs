@@ -8,10 +8,13 @@ namespace History.WindowsClient.ViewModels;
 
 // Poll composing state for PollEditWindow. Confirm validates the definition and hands the
 // built PollContent to the opener through the Confirmed event; the dialog events are
-// fulfilled by the window code-behind.
+// fulfilled by the window code-behind. An existing poll can be prefilled for editing,
+// keeping its id so the collected votes survive.
 public sealed partial class PollEditWindowViewModel : BaseViewModel
 {
     private const int MinOptionCount = 2;
+
+    private readonly string _originalPollId;
 
     [ObservableProperty]
     public partial string Title { get; set; }
@@ -39,12 +42,25 @@ public sealed partial class PollEditWindowViewModel : BaseViewModel
 
     public event EventHandler<PollContent> Confirmed;
 
-    public PollEditWindowViewModel()
+    public PollEditWindowViewModel(PollContent poll = null)
     {
-        for (var index = 0; index < MinOptionCount; index++)
+        if (poll == null)
         {
-            AddOption();
+            for (var index = 0; index < MinOptionCount; index++) AddOption();
+            return;
         }
+
+        // Prefill from an existing poll; the id is kept so editing never orphans the
+        // already collected votes on the server.
+        _originalPollId = poll.PollId;
+        Title = poll.Question;
+        AllowMultipleSelection = poll.AllowMultipleSelection;
+        foreach (var option in poll.Options) Options.Add(new PollEditOptionItemViewModel(this) { Text = option.Text });
+        if (poll.ExpiresAt is not { } expiresAt) return;
+
+        IsExpirationEnabled = true;
+        ExpirationDate = expiresAt.ToLocalTime();
+        ExpirationTime = expiresAt.ToLocalTime().TimeOfDay;
     }
 
     partial void OnIsExpirationEnabledChanged(bool value)
@@ -112,7 +128,7 @@ public sealed partial class PollEditWindowViewModel : BaseViewModel
 
         Confirmed?.Invoke(this, new PollContent
         {
-            PollId = Guid.NewGuid().ToString("N"),
+            PollId = _originalPollId ?? Guid.NewGuid().ToString("N"),
             Question = title,
             AllowMultipleSelection = AllowMultipleSelection,
             ExpiresAt = ExpirationDateTime?.ToUniversalTime(),

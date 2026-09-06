@@ -213,7 +213,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             }
             menuFlyout.Items.Add(discoverySubItem);
 
-            menuFlyout.Items.Add(Utils.CreateActionItem("게시글 수정", "\uE70F", HandleEditPostAsync));
+            menuFlyout.Items.Add(Utils.CreateActionItem("게시글 수정", "\uE70F", HandleEditPost));
             menuFlyout.Items.Add(Utils.CreateActionItem("게시글 삭제", "\uE74D", DeleteAsync));
             menuFlyout.Items.Add(Utils.CreateActionItem("프로필에 고정", "\uE718", HandlePinPostAsync));
             menuFlyout.Items.Add(Utils.CreateActionItem("게시글 홍보", "\uE789", HandlePromotePostAsync));
@@ -290,8 +290,8 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         if (result.IsSuccess) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
     }
 
-    // TODO: Open the post editor once it is implemented.
-    private async Task HandleEditPostAsync() => await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "아직 지원하지 않는 기능입니다."));
+    // Opens the post composer in edit mode for this post.
+    private void HandleEditPost() => new ComposePostWindow(new ComposePostWindowViewModel(Post)).MakeModal(MainWindow.Instance);
 
     private async Task HandlePinPostAsync()
     {

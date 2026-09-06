@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using History.Commons.Api.Sticker;
 using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Dialogs;
 using History.WindowsClient.Helpers;
@@ -76,6 +77,7 @@ public sealed partial class ComposePostWindow : BaseWindow
         _viewModel.LoadingStateRequested += OnLoadingStateRequested;
         _viewModel.FilesPickRequested += OnFilesPickRequested;
         _viewModel.StickerSelected += OnViewModelStickerSelected;
+        _viewModel.SubmitCompleted += OnSubmitCompleted;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
@@ -140,6 +142,7 @@ public sealed partial class ComposePostWindow : BaseWindow
             return;
         }
 
+        _ = _viewModel.ExecuteRequestAsync(new RecordStickerUsage(stickerContent.StickerId, stickerContent.StickerContentId));
         PostEditor.FocusEditor();
     }
 
@@ -162,9 +165,17 @@ public sealed partial class ComposePostWindow : BaseWindow
         }
     }
 
-    private void OnWindowLoaded(object sender, RoutedEventArgs e)
+    private async void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
         PostEditor.Initialize(_viewModel);
+        if (_viewModel.IsEditMode)
+        {
+            await PostEditor.SetContentsAsync(_viewModel.Post.Contents);
+            Title = "게시글 수정";
+            AppTitleBar.Title = "게시글 수정";
+            SubmitButton.Content = "수정";
+        }
+
         PostEditor.FocusEditor();
 
         UpdateWindowSize();
@@ -177,6 +188,12 @@ public sealed partial class ComposePostWindow : BaseWindow
         args.Handled = true;
         Close();
     }
+
+    // The view model finished the write successfully: close the composer.
+    private void OnSubmitCompleted(object sender, EventArgs e) => Close();
+
+    // Collects the editor contents and hands them to the submit flow.
+    private async void OnSubmitButtonClicked(object sender, RoutedEventArgs e) => await _viewModel.SubmitAsync(PostEditor.Text, PostEditor.GetContents());
 
     private void OnWindowClosed(object sender, WindowEventArgs args) => UnregisterMessengerRecipients();
 
@@ -206,6 +223,6 @@ public sealed partial class ComposePostWindow : BaseWindow
         _viewModel.SelectedCommentPermissionItem = item;
     }
 
-    // Ctrl+Enter submits the post (mirrors the submit command flow).
-    private async void OnPostEditorSubmitRequested(object sender, EventArgs e) => await _viewModel.HandleSubmitCommand.ExecuteAsync(null);
+    // Ctrl+Enter submits the post (mirrors the submit button flow).
+    private async void OnPostEditorSubmitRequested(object sender, EventArgs e) => await _viewModel.SubmitAsync(PostEditor.Text, PostEditor.GetContents());
 }
