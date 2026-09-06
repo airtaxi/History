@@ -283,7 +283,7 @@
                     </ComboBox>
 
                     <!--  Post reservation: the toggle arms the date/time pickers; both must hold a value  -->
-                    <Button ToolTipService.ToolTip="{x:Bind ViewModel.ReservationToolTip, Mode=OneWay}">
+                    <Button x:Name="ReservationButton" ToolTipService.ToolTip="{x:Bind ViewModel.ReservationToolTip, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon
                                 VerticalAlignment="Center"

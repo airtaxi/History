@@ -174,6 +174,7 @@ public sealed partial class ComposePostWindow : BaseWindow
             Title = "게시글 수정";
             AppTitleBar.Title = "게시글 수정";
             SubmitButton.Content = "수정";
+            ReservationButton.Visibility = Visibility.Collapsed;
         }
 
         PostEditor.FocusEditor();
