@@ -6,6 +6,7 @@
     xmlns:converters="using:CommunityToolkit.WinUI.Converters"
     xmlns:local="using:History.WindowsClient"
     xmlns:localconverters="using:History.WindowsClient.Converters"
+    xmlns:segmented="using:History.WindowsClient.ThirdParty.SelectorBarSegmented"
     xmlns:srd="using:History.WindowsClient.Resources"
     xmlns:vm="using:History.WindowsClient.ViewModels">
     <Application.Resources>
@@ -15,6 +16,8 @@
 
                 <!--  Other merged dictionaries here  -->
                 <ResourceDictionary Source="ms-appx:///DevWinUI/Themes/Generic.xaml" />
+
+                <segmented:SelectorBarSegmentedDictionary />
 
                 <srd:Content />
                 <srd:Friendship />
