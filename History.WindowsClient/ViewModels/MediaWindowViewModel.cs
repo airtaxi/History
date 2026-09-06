@@ -7,6 +7,9 @@ using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels.Media;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.Storage.Pickers;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Graphics.Imaging;
+using Windows.Storage.Streams;
 
 namespace History.WindowsClient.ViewModels;
 
@@ -20,7 +23,13 @@ public sealed partial class MediaWindowViewModel : BaseViewModel
     private const string DownloadImagesOnlyText = "사진만 다운로드";
     private const string DownloadVideosOnlyText = "동영상만 다운로드";
 
+    // Segoe Fluent Icons glyphs for the copy-image button (the title bar binds
+    // the glyph so the feedback swap needs no view-side logic).
+    private const string CopyGlyph = "\uE8C8";
+    private const string CheckMarkGlyph = "\uE73E";
+
     private int _previousIndex = -1;
+    private bool _isCopyImageFeedbackActive;
 
     public MediaWindowViewModel(List<MediaContent> mediaContents, PostType postType, bool isParentPost, int initialIndex)
     {
@@ -40,10 +49,14 @@ public sealed partial class MediaWindowViewModel : BaseViewModel
     public bool IsZoomVisible => Medias.Count > 0 && !Medias[Math.Clamp(SelectedIndex, 0, Medias.Count - 1)].IsVideo;
     public Visibility ZoomControlsVisibility => IsZoomVisible ? Visibility.Visible : Visibility.Collapsed;
 
+    // The copy button only applies to images; videos cannot be placed on the clipboard as bitmaps.
+    public Visibility CopyImageVisibility => IsZoomVisible ? Visibility.Visible : Visibility.Collapsed;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PositionText))]
     [NotifyPropertyChangedFor(nameof(IsZoomVisible))]
     [NotifyPropertyChangedFor(nameof(ZoomControlsVisibility))]
+    [NotifyPropertyChangedFor(nameof(CopyImageVisibility))]
     public partial int SelectedIndex { get; set; }
 
     // Stops the previously selected media (video playback, spoiler overlays) when the
@@ -55,6 +68,11 @@ public sealed partial class MediaWindowViewModel : BaseViewModel
         if (_previousIndex >= 0 && _previousIndex < Medias.Count && _previousIndex != value) Medias[_previousIndex].ResetForReuse();
         _previousIndex = value;
     }
+
+    // Copy-feedback surface: the button swaps the copy glyph with the checkmark
+    // while the confirmation is shown, then restores it.
+    [ObservableProperty]
+    public partial string CopyImageGlyph { get; set; } = CopyGlyph;
 
     // Saves the currently selected media through the file save picker. The picker runs
     // first so a cancelled save never downloads the file.
@@ -152,6 +170,63 @@ public sealed partial class MediaWindowViewModel : BaseViewModel
 
             if (failedCount > 0) await ShowMessageDialogAsync(new MessageDialogParameters("오류", $"{targets.Count}개 중 {failedCount}개의 미디어 파일 저장에 실패하였습니다."));
         });
+    }
+
+    // Copies the currently selected image to the clipboard as a PNG bitmap. Shows the
+    // checkmark glyph on the button for two seconds after copying and ignores re-taps
+    // while the feedback is active.
+    [RelayCommand]
+    private async Task CopyImageAsync()
+    {
+        if (_isCopyImageFeedbackActive) return;
+        if (Medias.Count == 0) return;
+
+        var media = Medias[Math.Clamp(SelectedIndex, 0, Medias.Count - 1)];
+        if (media.IsVideo) return;
+
+        var pngStream = await CreateClipboardBitmapStreamAsync(media.MediaContent.MediaId);
+        if (pngStream == null) return;
+
+        var dataPackage = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
+        dataPackage.SetBitmap(RandomAccessStreamReference.CreateFromStream(pngStream));
+        Clipboard.SetContent(dataPackage);
+
+        _isCopyImageFeedbackActive = true;
+        CopyImageGlyph = CheckMarkGlyph;
+        await Task.Delay(2000);
+        CopyImageGlyph = CopyGlyph;
+        _isCopyImageFeedbackActive = false;
+    }
+
+    // Downloads the media bytes and re-encodes them as PNG, the format the clipboard
+    // bitmap path consumes reliably; returns null when the download or decode fails.
+    private static async Task<InMemoryRandomAccessStream> CreateClipboardBitmapStreamAsync(string mediaId)
+    {
+        try
+        {
+            using var httpClient = new HttpClient();
+            var imageBytes = await httpClient.GetByteArrayAsync(CommonUtils.GenerateMediaUri(mediaId));
+
+            using var inputStream = new InMemoryRandomAccessStream();
+            using var outputStream = inputStream.GetOutputStreamAt(0);
+            using var dataWriter = new DataWriter(outputStream);
+            dataWriter.WriteBytes(imageBytes);
+            await dataWriter.StoreAsync();
+            await dataWriter.FlushAsync();
+
+            inputStream.Seek(0);
+            var decoder = await BitmapDecoder.CreateAsync(inputStream);
+
+            var pngStream = new InMemoryRandomAccessStream();
+            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, pngStream);
+            var pixelData = await decoder.GetPixelDataAsync();
+            encoder.SetPixelData(decoder.BitmapPixelFormat, decoder.BitmapAlphaMode, decoder.PixelWidth, decoder.PixelHeight, decoder.DpiX, decoder.DpiY, pixelData.DetachPixelData());
+            await encoder.FlushAsync();
+
+            pngStream.Seek(0);
+            return pngStream;
+        }
+        catch { return null; }
     }
 
     private static async Task DownloadFileAsync(string requestUri, string destinationPath)

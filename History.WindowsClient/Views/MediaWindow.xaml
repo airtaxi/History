@@ -60,6 +60,17 @@
                     ToolTipService.ToolTip="다운로드">
                     <FontIcon FontSize="16" Glyph="&#xE74E;" />
                 </Button>
+                <Button
+                    Padding="16,0"
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind ViewModel.CopyImageCommand}"
+                    CornerRadius="0"
+                    ToolTipService.ToolTip="이미지 복사"
+                    Visibility="{x:Bind ViewModel.CopyImageVisibility, Mode=OneWay}">
+                    <FontIcon FontSize="16" Glyph="{x:Bind ViewModel.CopyImageGlyph, Mode=OneWay}" />
+                </Button>
             </StackPanel>
         </Grid>
 
