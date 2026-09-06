@@ -232,8 +232,8 @@ public partial class EditPostPage : ContentPage
             ShareTargetPostDataTemplatePresenter.IsVisible = true;
         }
 
-        var discoveryOption = Math.Min((int)CommonShared.LastUsedPostDiscoveryOption, (int)_post.DiscoveryOption);
-        DiscoveryOptionPicker.SelectedIndex = discoveryOption;
+        // Editing keeps the post's own discovery option.
+        DiscoveryOptionPicker.SelectedIndex = (int)_post.DiscoveryOption;
 
         _commentPermission = _post.CommentPermission;
         CommentPermissionSwitch.IsToggled = _commentPermission.HasValue;
@@ -1208,6 +1208,9 @@ public partial class EditPostPage : ContentPage
             ExpandCollapseSettingsImage.IsVisible = false;
             WritePostToKakaoStoryGrid.IsVisible = false;
         }
+
+        // History post editing has no reservation: the reservation is only offered for new posts.
+        if (_post != null && !_isHistoryShare) ReservationImage.IsVisible = false;
 
         var disallowShare = Configuration.GetValue<bool?>("DisallowShare") ?? false;
         DisallowShareSwitch.IsToggled = disallowShare;
