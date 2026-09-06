@@ -22,8 +22,8 @@ namespace History.WindowsClient.ViewModels;
 // Compose post window state. Poll composing delegates to the PollEditWindow and arrives
 // through the attached poll card; kakao cross-post is a stub to be filled in later;
 // media attachment, the option pickers, reservation, and the submit pipeline are real.
-// The same window hosts post editing: an existing post prefills the editor and submit
-// runs ModifyPost instead of WritePost.
+// The same window hosts post editing (an existing post prefills the editor and submit
+// runs ModifyPost) and post sharing (the origin post bounds the share's audience).
 public sealed partial class ComposePostWindowViewModel : BaseViewModel
 {
     // Image extensions for the media picker, shared with the comment attachment flow.
@@ -161,13 +161,32 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
     public PostResponseDto Post { get; }
 
+    public PostResponseDto ParentPost { get; }
+
     // Edit mode reuses the composer for an existing post: the audience, permission, share
     // setting, media, and attachments are prefilled from the post and submit runs ModifyPost.
     public bool IsEditMode => Post != null;
 
-    public ComposePostWindowViewModel(PostResponseDto post = null)
+    // Share mode composes a new post attached to an origin post; the origin's audience
+    // bounds the share's discovery option.
+    public bool IsShareMode => ParentPost != null;
+
+    // The original post that bounds the audience when composing or editing a share; null
+    // for ordinary posts.
+    public PostResponseDto ScopeOriginPost => IsEditMode ? Post.ParentPost : ParentPost;
+
+    public ComposePostWindowViewModel(PostResponseDto post = null, PostResponseDto parentPost = null)
     {
         Post = post;
+        ParentPost = parentPost;
+
+        if (IsShareMode)
+        {
+            var initialOption = (DiscoveryOption)Math.Min((int)CommonShared.LastUsedPostDiscoveryOption, (int)parentPost.DiscoveryOption);
+            SelectedDiscoveryOptionItem = DiscoveryOptionItems.FirstOrDefault(x => x.Option == initialOption) ?? DiscoveryOptionItems[0];
+            SelectedCommentPermissionItem = CommentPermissionItems[CommentPermissionNotSetSelectedIndex];
+            return;
+        }
 
         SelectedDiscoveryOptionItem = DiscoveryOptionItems.FirstOrDefault(x => x.Option == (post?.DiscoveryOption ?? SelectedDiscoveryOption)) ?? DiscoveryOptionItems[0];
         SelectedCommentPermissionItem = CommentPermissionItems.FirstOrDefault(x => x.Permission == post?.CommentPermission) ?? CommentPermissionItems[CommentPermissionNotSetSelectedIndex];
@@ -182,6 +201,14 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     partial void OnSelectedDiscoveryOptionItemChanged(ComposePostDiscoveryOptionItemViewModel value)
     {
         if (value == null) return;
+
+        // A share (composing or editing) cannot widen the audience beyond the origin post's scope.
+        if (ScopeOriginPost is { } originPost && value.Option > originPost.DiscoveryOption)
+        {
+            _ = ShowMessageDialogAsync(new MessageDialogParameters("오류", "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다."));
+            SelectedDiscoveryOptionItem = DiscoveryOptionItems.FirstOrDefault(x => x.Option == originPost.DiscoveryOption) ?? DiscoveryOptionItems[0];
+            return;
+        }
 
         foreach (var item in CommentPermissionItems) item.UpdateAvailability(value.Option);
 
@@ -352,7 +379,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         // private and the current selection is private too.
         // TODO: expose an OnlyMePostContinuationPromptEnabled toggle (and a settings page
         // entry for it) so the user can turn this prompt off.
-        if (!IsEditMode && SelectedDiscoveryOption == DiscoveryOption.OnlyMe && await IsMostRecentPostOnlyMeAsync())
+        if (!IsEditMode && !IsShareMode && SelectedDiscoveryOption == DiscoveryOption.OnlyMe && await IsMostRecentPostOnlyMeAsync())
         {
             var proceedResult = await ShowMessageDialogAsync(new MessageDialogParameters("안내", "마지막으로 작성한 게시글이 나만 보기로 설정되어 있습니다. 이 글도 나만 보기로 작성하시겠습니까?", "작성", cancelButtonText: "취소"));
             if (proceedResult != ContentDialogResult.Primary) return;
@@ -418,13 +445,14 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         if (ExternalUrlContent != null) contents.Add(ExternalUrlContent);
         if (PollContent != null) contents.Add(PollContent);
 
-        if (string.IsNullOrWhiteSpace(plainText) && mediaAndUploadContents.Count == 0 && ExternalUrlContent == null && PollContent == null && !editorContents.OfType<HashtagContent>().Any())
+        // Shares may carry no text of their own; the origin post renders as the content.
+        if (!IsShareMode && string.IsNullOrWhiteSpace(plainText) && mediaAndUploadContents.Count == 0 && ExternalUrlContent == null && PollContent == null && !editorContents.OfType<HashtagContent>().Any())
         {
             await ShowMessageDialogAsync(new MessageDialogParameters("오류", "빈 내용의 글은 작성할 수 없습니다"));
             return;
         }
 
-        var result = IsEditMode ? await ExecuteRequestAsync(new ModifyPost(Post.Id, contents, discoveryOption, SelectedCommentPermissionItem.Permission, IsShareRepostDisallowed, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest) : await ExecuteRequestAsync(new WritePost(contents, discoveryOption, SelectedCommentPermissionItem.Permission, IsShareRepostDisallowed, null, discoveryOptionSelectedUserIds, files, reservationTime?.ToUniversalTime()), ErrorType.BadRequest);
+        var result = IsEditMode ? await ExecuteRequestAsync(new ModifyPost(Post.Id, contents, discoveryOption, SelectedCommentPermissionItem.Permission, IsShareRepostDisallowed, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest) : await ExecuteRequestAsync(new WritePost(contents, discoveryOption, SelectedCommentPermissionItem.Permission, IsShareRepostDisallowed, ParentPost?.Id, discoveryOptionSelectedUserIds, files, reservationTime?.ToUniversalTime()), ErrorType.BadRequest);
         if (result.Error == ErrorType.BadRequest)
         {
             await ShowMessageDialogAsync(new MessageDialogParameters("오류", result.ErrorMessage));
@@ -432,7 +460,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         }
         else if (result.IsSuccess)
         {
-            CommonShared.LastUsedPostDiscoveryOption = discoveryOption;
+            if (ScopeOriginPost == null) CommonShared.LastUsedPostDiscoveryOption = discoveryOption;
             foreach (var attachment in MediaAttachments) attachment.Dispose();
             if (IsEditMode) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
             else WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());

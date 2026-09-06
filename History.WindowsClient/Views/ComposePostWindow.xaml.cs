@@ -168,7 +168,15 @@ public sealed partial class ComposePostWindow : BaseWindow
     private async void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
         PostEditor.Initialize(_viewModel);
-        if (_viewModel.IsEditMode)
+        if (_viewModel.IsShareMode)
+        {
+            Title = "게시글 공유";
+            AppTitleBar.Title = "게시글 공유";
+            SubmitButton.Content = "공유";
+            CaptionTextBlock.Text = "원하는 친구와 나누고 싶은 이야기를 적어보세요.";
+            PostEditor.PlaceholderText = "공유할 내용을 입력하세요";
+        }
+        else if (_viewModel.IsEditMode)
         {
             await PostEditor.SetContentsAsync(_viewModel.Post.Contents);
             Title = "게시글 수정";

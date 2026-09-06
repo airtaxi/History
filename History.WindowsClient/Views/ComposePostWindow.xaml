@@ -46,6 +46,7 @@
         <Grid Grid.Row="1" Padding="16,12,16,16">
             <StackPanel Spacing="12">
                 <TextBlock
+                    x:Name="CaptionTextBlock"
                     FontSize="{StaticResource CaptionTextBlockFontSize}"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                     Text="모두와 나누고 싶은 이야기를 적어보세요." />

@@ -436,7 +436,9 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             return;
         }
 
-        // TODO: Open the share editor once it is implemented.
+        // The share composer carries only the new text and attachments; the origin post
+        // renders as the shared content on the server.
+        new ComposePostWindow(new ComposePostWindowViewModel(parentPost: Post)).MakeModal(MainWindow.Instance);
     }
 
     public override async Task HandleRepostAsync()
