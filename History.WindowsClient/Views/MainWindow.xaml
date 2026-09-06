@@ -38,6 +38,14 @@
                     Orientation="Horizontal"
                     Spacing="4">
                     <Button
+                        x:Name="ComposePostButton"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Click="OnComposePostButtonClicked"
+                        Visibility="Collapsed">
+                        <FontIcon FontSize="16" Glyph="&#xE932;" />
+                    </Button>
+                    <Button
                         x:Name="NotificationsButton"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"

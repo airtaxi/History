@@ -1,0 +1,262 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<views:BaseWindow
+    x:Class="History.WindowsClient.Views.ComposePostWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:History.WindowsClient.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dev="using:DevWinUI"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="using:History.WindowsClient.Views"
+    xmlns:vm="using:History.WindowsClient.ViewModels"
+    Title="게시글 작성"
+    Width="520"
+    Closed="OnWindowClosed"
+    IsMaximizable="False"
+    IsResizable="False"
+    mc:Ignorable="d">
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid
+        x:Name="RootGrid"
+        KeyboardAcceleratorPlacementMode="Hidden"
+        Loaded="OnWindowLoaded">
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Key="Escape" Invoked="OnEscapeKeyInvoked" />
+        </Grid.KeyboardAccelerators>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <TitleBar
+                x:Name="AppTitleBar"
+                Title="게시글 작성"
+                IsPaneToggleButtonVisible="False">
+                <TitleBar.IconSource>
+                    <ImageIconSource ImageSource="ms-appx:///Assets/Icon.ico" />
+                </TitleBar.IconSource>
+            </TitleBar>
+        </Grid>
+
+        <Grid Grid.Row="1" Padding="16,12,16,16">
+            <StackPanel Spacing="12">
+                <TextBlock
+                    FontSize="{StaticResource CaptionTextBlockFontSize}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="모두와 나누고 싶은 이야기를 적어보세요." />
+
+                <controls:ContentEditorControl
+                    x:Name="PostEditor"
+                    Height="150"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    AllowHashtag="True"
+                    PlaceholderText="무슨 일이 있었나요?"
+                    SubmitRequested="OnPostEditorSubmitRequested" />
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <!--  Discovery range: WinUI-style ComboBox showing glyph + text  -->
+                    <ComboBox
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{x:Bind ViewModel.DiscoveryOptionItems, Mode=OneWay}"
+                        SelectedIndex="{x:Bind ViewModel.SelectedDiscoveryIndex, Mode=OneWay}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ComposePostDiscoveryOptionItemViewModel">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon
+                                        VerticalAlignment="Center"
+                                        FontSize="16"
+                                        Glyph="{x:Bind Glyph}" />
+                                    <TextBlock VerticalAlignment="Center" Text="{x:Bind DisplayText}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <!--  Post reservation (stub)  -->
+                    <Button Command="{x:Bind ViewModel.HandleReservationTapCommand}" ToolTipService.ToolTip="게시 예약">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                Glyph="&#xE787;" />
+                            <TextBlock VerticalAlignment="Center" Text="{x:Bind ViewModel.ReservationButtonContent, Mode=OneWay}" />
+                        </StackPanel>
+                        <Button.Flyout>
+                            <Flyout>
+                                <TextBlock Text="게시 예약 기능은 아직 준비 중입니다." TextWrapping="Wrap" />
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <!--  Media attachment  -->
+                    <Button
+                        Width="36"
+                        Height="36"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        Command="{x:Bind ViewModel.HandleMediaTapCommand, Mode=OneWay}"
+                        CornerRadius="8"
+                        ToolTipService.ToolTip="사진/영상">
+                        <FontIcon
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE91B;" />
+                    </Button>
+
+                    <!--  Sticker  -->
+                    <Button
+                        Width="36"
+                        Height="36"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        Command="{x:Bind ViewModel.HandleStickerTapCommand, Mode=OneWay}"
+                        CornerRadius="8"
+                        ToolTipService.ToolTip="스티커">
+                        <FontIcon
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE76E;" />
+                    </Button>
+
+                    <!--  URL attach  -->
+                    <Button
+                        Width="36"
+                        Height="36"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        Command="{x:Bind ViewModel.HandleUrlTapCommand, Mode=OneWay}"
+                        CornerRadius="8"
+                        ToolTipService.ToolTip="URL 첨부">
+                        <FontIcon
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE71B;" />
+                    </Button>
+
+                    <!--  Poll (stub)  -->
+                    <Button
+                        Width="36"
+                        Height="36"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        Command="{x:Bind ViewModel.HandlePollTapCommand, Mode=OneWay}"
+                        CornerRadius="8"
+                        ToolTipService.ToolTip="투표">
+                        <FontIcon
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xEA98;" />
+                    </Button>
+
+                    <!--  Kakao cross-post toggle  -->
+                    <ToggleButton
+                        Height="36"
+                        Padding="12,0"
+                        Content="카카오 게시"
+                        IsChecked="{x:Bind ViewModel.IsKakaoPostEnabled, Mode=TwoWay}"
+                        ToolTipService.ToolTip="카카오 게시" />
+
+                    <!--  More options: share/repost block and comment permission  -->
+                    <Button
+                        Width="36"
+                        Height="36"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        ToolTipService.ToolTip="추가 옵션">
+                        <FontIcon
+                            FontSize="16"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE712;" />
+                        <Button.Flyout>
+                            <Flyout Placement="BottomEdgeAlignedRight">
+                                <StackPanel Width="260" Spacing="8">
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            Text="공유 및 리포스트 금지" />
+                                        <ToggleSwitch
+                                            Grid.Column="1"
+                                            MinWidth="0"
+                                            IsOn="{x:Bind ViewModel.IsShareRepostDisallowed, Mode=TwoWay}" />
+                                    </Grid>
+
+                                    <MenuFlyoutSeparator />
+
+                                    <TextBlock FontWeight="SemiBold" Text="댓글 작성 권한" />
+                                    <SplitButton HorizontalAlignment="Stretch">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <FontIcon
+                                                VerticalAlignment="Center"
+                                                FontSize="16"
+                                                Glyph="{x:Bind ViewModel.SelectedCommentPermissionGlyph, Mode=OneWay}" />
+                                            <TextBlock VerticalAlignment="Center" Text="{x:Bind ViewModel.SelectedCommentPermissionDisplayText, Mode=OneWay}" />
+                                        </StackPanel>
+                                        <SplitButton.Flyout>
+                                            <MenuFlyout x:Name="CommentPermissionMenuFlyout" Opening="OnCommentPermissionMenuFlyoutOpening" />
+                                        </SplitButton.Flyout>
+                                    </SplitButton>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+
+                <Button
+                    Height="40"
+                    HorizontalAlignment="Stretch"
+                    Command="{x:Bind ViewModel.HandleSubmitCommand, Mode=OneWay}"
+                    Content="게시하기"
+                    Style="{StaticResource AccentButtonStyle}" />
+            </StackPanel>
+        </Grid>
+
+        <Grid
+            x:Name="LoadingGrid"
+            Grid.Row="1"
+            Visibility="Collapsed">
+
+            <Rectangle Fill="{ThemeResource ThemeColor}" Opacity="0.3" />
+
+            <dev:BlurEffectControl
+                BlurAmount="10"
+                IsBlurEnabled="True"
+                IsTintEnabled="False" />
+
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="8">
+                <dev:LoadingIndicator Foreground="{ThemeResource SystemAccentColor}" Mode="Arcs" />
+                <TextBlock
+                    x:Name="LoadingTextBlock"
+                    HorizontalAlignment="Center"
+                    FontWeight="Bold"
+                    HorizontalTextAlignment="Center" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</views:BaseWindow>
