@@ -6,7 +6,7 @@ using Windows.System;
 
 namespace History.WindowsClient.Services;
 
-public sealed class StoreUpdateService(ApplicationSettingsService settingsService, ApplicationNotificationService applicationNotificationService) : IDisposable
+public sealed partial class StoreUpdateService(ApplicationSettingsService settingsService, ApplicationNotificationService applicationNotificationService) : IDisposable
 {
     private const string StoreProductIdentifier = "9P5GS17TCDQX";
     private static readonly TimeSpan s_updateCheckInterval = TimeSpan.FromHours(8);

@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace History.WindowsClient.ViewModels.MainPage;
 
-public class MainPageSideBarDataTemplateSelector : DataTemplateSelector
+public partial class MainPageSideBarDataTemplateSelector : DataTemplateSelector
 {
     public DataTemplate Friendship { get; set; }
     public DataTemplate Messages { get; set; }

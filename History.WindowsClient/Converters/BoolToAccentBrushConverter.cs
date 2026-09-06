@@ -1,4 +1,4 @@
-using Microsoft.UI;
+﻿using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
@@ -6,7 +6,7 @@ using Microsoft.UI.Xaml.Media;
 namespace History.WindowsClient.Converters;
 
 // Fills the poll option selection indicator with the accent color when the option is selected.
-public sealed class BoolToAccentBrushConverter : IValueConverter
+public sealed partial class BoolToAccentBrushConverter : IValueConverter
 {
     private static readonly SolidColorBrush s_transparentBrush = new(Colors.Transparent);
     private static SolidColorBrush s_accentBrush;
