@@ -226,7 +226,7 @@
                     <ComboBox
                         HorizontalAlignment="Stretch"
                         ItemsSource="{x:Bind ViewModel.DiscoveryOptionItems, Mode=OneWay}"
-                        SelectedIndex="{x:Bind ViewModel.SelectedDiscoveryIndex, Mode=OneWay}">
+                        SelectedIndex="{x:Bind ViewModel.SelectedDiscoveryIndex, Mode=TwoWay}">
                         <ComboBox.ItemTemplate>
                             <DataTemplate x:DataType="vm:ComposePostDiscoveryOptionItemViewModel">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
