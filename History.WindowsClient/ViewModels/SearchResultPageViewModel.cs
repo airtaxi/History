@@ -42,6 +42,7 @@ public partial class SearchResultPageViewModel : BaseViewModel, IRecipient<Value
         if (string.IsNullOrWhiteSpace(_query)) return;
         else if (_fetchSemaphore.CurrentCount == 0) return;
 
+        Items.Clear();
         try
         {
             await _fetchSemaphore.WaitAsync();

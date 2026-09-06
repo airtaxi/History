@@ -20,6 +20,7 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
     private bool _areThereNoMorePostsToLoad;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
     public partial ObservableCollection<BasePostViewModel> Items { get; private set; } = [];
 
     public bool IsEmpty => Items.Count == 0;
@@ -38,6 +39,7 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
     {
         if (_fetchSemaphore.CurrentCount == 0) return;
 
+        Items.Clear();
         try
         {
             await _fetchSemaphore.WaitAsync();
@@ -60,8 +62,6 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
                 Items = new ObservableCollection<BasePostViewModel>(viewModels);
             }
             else Items = [];
-
-            OnPropertyChanged(nameof(IsEmpty));
         }
         finally { _fetchSemaphore.Release(); }
     }
@@ -95,8 +95,6 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
 
                 if (postsResult.Value.Count == 0) _areThereNoMorePostsToLoad = true;
             }
-
-            OnPropertyChanged(nameof(IsEmpty));
         }
         finally { _fetchSemaphore.Release(); }
     }

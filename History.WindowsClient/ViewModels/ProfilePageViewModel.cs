@@ -63,6 +63,7 @@ public partial class ProfilePageViewModel : BaseViewModel,
     {
         if (_fetchSemaphore.CurrentCount == 0) return;
 
+        Items.Clear();
         try
         {
             await _fetchSemaphore.WaitAsync();
