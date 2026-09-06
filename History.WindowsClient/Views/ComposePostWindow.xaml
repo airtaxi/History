@@ -52,7 +52,7 @@
 
                 <controls:ContentEditorControl
                     x:Name="PostEditor"
-                    Height="150"
+                    Height="250"
                     VerticalAlignment="Stretch"
                     VerticalContentAlignment="Stretch"
                     AllowHashtag="True"

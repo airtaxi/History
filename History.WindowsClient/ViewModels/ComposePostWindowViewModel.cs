@@ -8,6 +8,7 @@ using History.Commons.Enums;
 using History.WindowsClient.Dialogs;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
+using History.WindowsClient.ViewModels.DiscoveryOptions;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.Storage.Pickers;
@@ -307,9 +308,44 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
     // TODO: collect the editor contents (text, media, ExternalUrlContent) and send the
     // WritePost request with the selected discovery option, comment permission, share
-    // setting, and reservation time. When the reservation toggle is on but only one of
-    // the date/time pickers holds a value, show an error dialog and abort the post; the
-    // picked time must also be in the future.
+    // setting, reservation time, and the discoveryOptionSelectedUserIds gathered below.
+    // When the reservation toggle is on but only one of the date/time pickers holds a
+    // value, show an error dialog and abort the post; the picked time must also be in the
+    // future.
     [RelayCommand]
-    private async Task HandleSubmitAsync() => await ShowMessageDialogAsync(new MessageDialogParameters("게시글 작성", "게시글 작성 기능은 아직 준비 중입니다."));
+    private async Task HandleSubmitAsync()
+    {
+        var discoveryOption = SelectedDiscoveryOption;
+        List<string> discoveryOptionSelectedUserIds = null;
+        if (discoveryOption is DiscoveryOption.SelectedUsers or DiscoveryOption.UnselectedUsers)
+        {
+            discoveryOptionSelectedUserIds = await TrySelectDiscoveryOptionUsersAsync();
+            if (discoveryOptionSelectedUserIds == null)
+            {
+                await ShowMessageDialogAsync(new MessageDialogParameters("오류", "선택된 친구가 없습니다."));
+                RevertDiscoveryOptionToLastUsed();
+                return;
+            }
+        }
+
+        await ShowMessageDialogAsync(new MessageDialogParameters("게시글 작성", "게시글 작성 기능은 아직 준비 중입니다."));
+    }
+
+    // Opens the friend picker for SelectedUsers/UnselectedUsers scopes and returns the
+    // chosen user ids; null when the dialog was cancelled or nothing was selected.
+    private async Task<List<string>> TrySelectDiscoveryOptionUsersAsync()
+    {
+        var dialog = new DiscoveryOptionSelectUsersDialog(new HistoryDiscoveryOptionSelectUsersViewModel([], this));
+        var result = await ShowContentDialogAsync(dialog);
+        if (result != ContentDialogResult.Primary) return null;
+        return dialog.ViewModel.SelectedUserIds.Count > 0 ? dialog.ViewModel.SelectedUserIds : null;
+    }
+
+    // Restores the discovery combo to the last successfully used option when the friend
+    // picker was cancelled or nothing was selected.
+    private void RevertDiscoveryOptionToLastUsed()
+    {
+        var fallback = DiscoveryOptionItems.FirstOrDefault(x => x.Option == CommonShared.LastUsedPostDiscoveryOption) ?? DiscoveryOptionItems[0];
+        SelectedDiscoveryOptionItem = fallback;
+    }
 }

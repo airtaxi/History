@@ -20,8 +20,9 @@ public sealed partial class ComposePostCommentPermissionItemViewModel(AccessPerm
     [ObservableProperty]
     public partial bool IsEnabled { get; set; } = true;
 
-    // Recomputes the availability from the given discovery option. Selected-user options
-    // sit outside the comparable scope range, so they leave every permission available.
+    // Recomputes the availability from the given discovery option. Selected-user scopes
+    // forbid setting a comment permission at all: every non-null permission is disabled so
+    // only the not-set entry stays selectable.
     public void UpdateAvailability(DiscoveryOption discoveryOption)
     {
         if (Permission == null)
@@ -32,7 +33,7 @@ public sealed partial class ComposePostCommentPermissionItemViewModel(AccessPerm
 
         if (discoveryOption is DiscoveryOption.SelectedUsers or DiscoveryOption.UnselectedUsers)
         {
-            IsEnabled = true;
+            IsEnabled = false;
             return;
         }
 
