@@ -489,7 +489,8 @@
                         Margin="0,4,0,0"
                         Orientation="Horizontal"
                         Spacing="10">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
+                        <!--  The 28px reaction button insets the 18px glyph by ~5px per side, so spacing is reduced to keep the icon-to-count gap equal to the neighboring groups  -->
+                        <StackPanel Orientation="Horizontal" Spacing="1">
                             <Button
                                 Width="28"
                                 Height="28"
@@ -525,7 +526,7 @@
                         </StackPanel>
                         <StackPanel
                             Orientation="Horizontal"
-                            Spacing="4"
+                            Spacing="6"
                             Visibility="{x:Bind HasSharedUsers, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                             <FontIcon
                                 FontSize="18"
@@ -539,7 +540,7 @@
                         </StackPanel>
                         <StackPanel
                             Orientation="Horizontal"
-                            Spacing="4"
+                            Spacing="6"
                             Visibility="{x:Bind HasRepostedUsers, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                             <FontIcon
                                 FontSize="18"
