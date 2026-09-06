@@ -19,12 +19,16 @@ namespace History.WindowsClient.Views;
 // dialog/picker/loading events are fulfilled directly on this window's content.
 public sealed partial class ComposePostWindow : BaseWindow
 {
-    private readonly ComposePostWindowViewModel _viewModel;
+    private static ComposePostWindow s_instance;
 
+    public static ComposePostWindow Instance => s_instance;
+
+    private readonly ComposePostWindowViewModel _viewModel;
     public ComposePostWindowViewModel ViewModel => _viewModel;
 
     public ComposePostWindow(ComposePostWindowViewModel viewModel) : base()
     {
+        s_instance = this;
         _viewModel = viewModel;
 
         InitializeComponent();
@@ -152,7 +156,7 @@ public sealed partial class ComposePostWindow : BaseWindow
     // appears or disappears.
     private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(ComposePostWindowViewModel.MediaAttachmentsVisibility) or nameof(ComposePostWindowViewModel.ExternalUrlContentVisibility))
+        if (e.PropertyName is nameof(ComposePostWindowViewModel.MediaAttachmentsVisibility) or nameof(ComposePostWindowViewModel.ExternalUrlContentVisibility) or nameof(ComposePostWindowViewModel.PollContentVisibility))
         {
             DispatcherQueue.TryEnqueue(UpdateWindowSize);
         }

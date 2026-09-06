@@ -221,6 +221,48 @@
                     </Grid>
                 </Border>
 
+                <!--  Poll attachment: summary card with a close button (the visibility updates automatically)  -->
+                <Border
+                    Padding="12"
+                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Visibility="{x:Bind ViewModel.PollContentVisibility, Mode=OneWay}">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Spacing="2">
+                            <TextBlock Text="{x:Bind ViewModel.PollContent.Question, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="{x:Bind ViewModel.PollSummaryText, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <Button
+                            Grid.Column="1"
+                            Width="28"
+                            Height="28"
+                            Padding="0"
+                            VerticalAlignment="Center"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Command="{x:Bind ViewModel.RemovePollCommand, Mode=OneWay}"
+                            CornerRadius="14"
+                            ToolTipService.ToolTip="투표 삭제">
+                            <FontIcon
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Glyph="&#xE8BB;" />
+                        </Button>
+                    </Grid>
+                </Border>
+
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <!--  Discovery range: WinUI-style ComboBox showing glyph + text  -->
                     <ComboBox
@@ -326,7 +368,7 @@
                             Glyph="&#xE71B;" />
                     </Button>
 
-                    <!--  Poll (stub)  -->
+                    <!--  Poll  -->
                     <Button
                         Width="36"
                         Height="36"
@@ -334,7 +376,7 @@
                         BorderThickness="1"
                         Command="{x:Bind ViewModel.HandlePollTapCommand, Mode=OneWay}"
                         CornerRadius="8"
-                        ToolTipService.ToolTip="투표">
+                        ToolTipService.ToolTip="{x:Bind ViewModel.PollToolTip, Mode=OneWay}">
                         <FontIcon
                             FontSize="16"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"

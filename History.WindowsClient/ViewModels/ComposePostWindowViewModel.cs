@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons;
@@ -8,12 +8,15 @@ using History.Commons.Enums;
 using History.WindowsClient.Dialogs;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
+using History.WindowsClient.Views;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.Storage.Pickers;
 
 namespace History.WindowsClient.ViewModels;
 
-// Compose post window state. This is a UI shell: poll, kakao cross-post, and submit are
-// stubs to be filled in later; media attachment, the option pickers, and reservation are real.
+// Compose post window state. Poll composing delegates to the PollEditWindow and arrives
+// through the attached poll card; kakao cross-post and submit are stubs to be filled in
+// later; media attachment, the option pickers, and reservation are real.
 public sealed partial class ComposePostWindowViewModel : BaseViewModel
 {
     // Image-only extensions for the media picker, shared with the comment attachment flow.
@@ -119,6 +122,29 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     public bool ExternalUrlContentVisibility => ExternalUrlContent != null;
 
     partial void OnExternalUrlContentChanged(ExternalUrlContent value) => ExternalUrlPreview.Update(value);
+
+    // Attached poll card state. The summary surface is rebuilt from the content so the
+    // window only ever binds one poll definition.
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PollContentVisibility))]
+    [NotifyPropertyChangedFor(nameof(PollSummaryText))]
+    [NotifyPropertyChangedFor(nameof(PollToolTip))]
+    public partial PollContent PollContent { get; set; }
+
+    public bool PollContentVisibility => PollContent != null;
+
+    public string PollSummaryText
+    {
+        get
+        {
+            if (PollContent is not { } poll) return string.Empty;
+
+            var expirationText = poll.ExpiresAt is { } expiresAt ? $" · 종료: {expiresAt.ToLocalTime():yyyy-MM-dd HH:mm}" : " · 마감 없음";
+            return $"{poll.Options.Count}개 선택지 · {(poll.AllowMultipleSelection ? "복수 선택 허용" : "단일 선택")}{expirationText}";
+        }
+    }
+
+    public string PollToolTip => PollContent is not { } poll ? "투표" : $"투표: {poll.Question}";
 
     public ComposePostWindowViewModel()
     {
@@ -248,10 +274,27 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     [RelayCommand]
     private void RemoveExternalUrlContent() => ExternalUrlContent = null;
 
-    // TODO: poll composing is not implemented yet; the poll button stays a no-op until the
-    // poll editor surface is designed.
+    // Opens the poll edit window modally; a confirmed poll replaces the attached one. When
+    // a poll is already attached, the replacement is confirmed first.
     [RelayCommand]
-    private void HandlePollTap() { }
+    private async Task HandlePollTapAsync()
+    {
+        if (PollContent != null)
+        {
+            var replaceResult = await ShowMessageDialogAsync(new MessageDialogParameters("투표", "이미 추가된 투표가 있습니다. 새로 만들까요?", "새로 만들기", cancelButtonText: "취소"));
+            if (replaceResult != ContentDialogResult.Primary) return;
+        }
+
+        var pollEditWindow = new PollEditWindow(new PollEditWindowViewModel());
+        pollEditWindow.ViewModel.Confirmed += OnPollEditConfirmed;
+        pollEditWindow.ActivateModal(ComposePostWindow.Instance);
+    }
+
+    private void OnPollEditConfirmed(object sender, PollContent pollContent) => PollContent = pollContent;
+
+    // Removes the attached poll card from the composer.
+    [RelayCommand]
+    private void RemovePoll() => PollContent = null;
 
     // TODO: kakao login and cross-post routing is decided here when the game posting is
     // implemented; until then the toggle press shows the login-needed hint.
