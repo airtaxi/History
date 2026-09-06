@@ -213,8 +213,6 @@
                         Width="36"
                         Height="36"
                         Padding="0"
-                        Background="Transparent"
-                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         Command="{x:Bind ViewModel.HandleMediaTapCommand, Mode=OneWay}"
                         CornerRadius="8"
@@ -230,8 +228,6 @@
                         Width="36"
                         Height="36"
                         Padding="0"
-                        Background="Transparent"
-                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         Command="{x:Bind ViewModel.HandleStickerTapCommand, Mode=OneWay}"
                         CornerRadius="8"
@@ -239,7 +235,7 @@
                         <FontIcon
                             FontSize="16"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Glyph="&#xE76E;" />
+                            Glyph="&#xF4AA;" />
                     </Button>
 
                     <!--  URL attach  -->
@@ -247,8 +243,6 @@
                         Width="36"
                         Height="36"
                         Padding="0"
-                        Background="Transparent"
-                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         Command="{x:Bind ViewModel.HandleUrlTapCommand, Mode=OneWay}"
                         CornerRadius="8"
@@ -264,8 +258,6 @@
                         Width="36"
                         Height="36"
                         Padding="0"
-                        Background="Transparent"
-                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         Command="{x:Bind ViewModel.HandlePollTapCommand, Mode=OneWay}"
                         CornerRadius="8"
@@ -289,8 +281,6 @@
                         Width="36"
                         Height="36"
                         Padding="0"
-                        Background="Transparent"
-                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
                         ToolTipService.ToolTip="추가 옵션">

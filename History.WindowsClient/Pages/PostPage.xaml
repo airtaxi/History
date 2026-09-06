@@ -126,7 +126,7 @@
                         <FontIcon
                             FontSize="18"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Glyph="&#xE76E;" />
+                            Glyph="&#xF4AA;" />
                     </Button>
 
                     <Button
