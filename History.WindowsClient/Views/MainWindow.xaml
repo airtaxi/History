@@ -29,7 +29,7 @@
             PaneToggleRequested="OnAppTitleBarPaneToggleRequested">
             <TitleBar.LeftHeader>
                 <Button
-                    Margin="4,0,0,0"
+                    Margin="8,0,0,0"
                     BorderThickness="0"
                     Click="OnLeftHeaderButtonClicked">
                     <StackPanel Orientation="Horizontal" Spacing="8">
