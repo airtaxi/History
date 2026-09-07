@@ -8,11 +8,13 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
+using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.Windows.Storage.Pickers;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace History.WindowsClient.ViewModels;
@@ -171,6 +173,156 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
         WeakReferenceMessenger.Default.Send(new FriendshipChangedMessage(User.UserId, FriendshipStatus.Ignored, User));
         await _baseViewModel.TryNavigateBackAsync();
     }
+
+    // Opens the profile settings picker (my profile only): nickname, description,
+    // profile/background media, handle, search visibility, and mirroring.
+    public override async Task HandleProfileSettingsAsync()
+    {
+        var action = await _baseViewModel.ShowSelectionDialogAsync("프로필 설정", ["닉네임 변경", "한줄 소개 변경", "프로필 이미지 설정", "배경 이미지 설정", "핸들 변경", "프로필 공개 설정", "프로필 미러링"]);
+        if (action == null) return;
+
+        if (action == "닉네임 변경") await ChangeNicknameAsync();
+        else if (action == "한줄 소개 변경") await ChangeDescriptionAsync();
+        else if (action == "프로필 이미지 설정") await ChangeProfileMediaAsync();
+        else if (action == "배경 이미지 설정") await ChangeBackgroundMediaAsync();
+        else if (action == "핸들 변경") await ChangeHandleAsync();
+        else if (action == "프로필 공개 설정") await ChangeProfileVisibilityAsync();
+        else if (action == "프로필 미러링") await ChangeProfileMirroringAsync();
+    }
+
+    private async Task ChangeNicknameAsync()
+    {
+        var nickname = await _baseViewModel.ShowInputDialogAsync(new("닉네임 변경", "새로운 닉네임을 입력해주세요.", placeholderText: "새로운 닉네임", showCancel: true, defaultText: User.Nickname, maxLength: CommonConstants.MaxNicknameLength));
+        nickname = nickname?.Trim();
+        if (nickname == null || nickname == User.Nickname) return;
+
+        if (string.IsNullOrWhiteSpace(nickname))
+        {
+            await _baseViewModel.ShowMessageDialogAsync(new("닉네임 변경 실패", "닉네임은 공백으로 설정할 수 없습니다."));
+            return;
+        }
+        else if (nickname.Length > CommonConstants.MaxNicknameLength)
+        {
+            await _baseViewModel.ShowMessageDialogAsync(new("닉네임 변경 실패", $"닉네임은 {CommonConstants.MaxNicknameLength}자 이하로 설정할 수 있습니다."));
+            return;
+        }
+
+        var result = await _baseViewModel.ExecuteRequestAsync(new UpdateNickname(nickname));
+        if (result.IsSuccess) await RefreshAsync();
+    }
+
+    private async Task ChangeDescriptionAsync()
+    {
+        var description = await _baseViewModel.ShowInputDialogAsync(new("한줄 소개 변경", "새로운 한줄 소개를 입력해주세요. (공백 시 설정 해제)", placeholderText: "새로운 한줄 소개 (공백 시 설정 해제)", showCancel: true, defaultText: User.Description, maxLength: CommonConstants.MaxProfileDescriptionLength));
+        description = description?.Trim();
+        if (description == null || description == User.Description) return;
+
+        if (description.Length > CommonConstants.MaxProfileDescriptionLength)
+        {
+            await _baseViewModel.ShowMessageDialogAsync(new("한줄 소개 변경 실패", $"한줄 소개는 {CommonConstants.MaxProfileDescriptionLength}자 이하로 설정할 수 있습니다."));
+            return;
+        }
+
+        var result = await _baseViewModel.ExecuteRequestAsync(new UpdateDescription(description));
+        if (result.IsSuccess) await RefreshAsync();
+    }
+
+    // Image-only extensions for the profile/background media picker.
+    private static readonly string[] s_profileImageFileTypeFilters = [".png", ".apng", ".jpg", ".jpeg", ".webp", ".gif", ".tif", ".tiff"];
+
+    private async Task ChangeProfileMediaAsync()
+    {
+        var shouldUpload = true;
+        if (User.ProfileMediaId != null)
+        {
+            var action = await _baseViewModel.ShowSelectionDialogAsync("프로필 이미지", ["프로필 이미지 변경", "프로필 이미지 삭제"]);
+            if (action == null) return;
+            else if (action == "프로필 이미지 변경") shouldUpload = true;
+            else if (action == "프로필 이미지 삭제")
+            {
+                var result = await _baseViewModel.ExecuteRequestAsync(new DeleteProfileMedia());
+                if (result.IsSuccess) await RefreshAsync();
+                return;
+            }
+        }
+
+        if (shouldUpload)
+        {
+            var result = await _baseViewModel.PickFileAsync(new FileOpenPickerParameters(s_profileImageFileTypeFilters, PickerLocationId.PicturesLibrary, "프로필 이미지 선택"));
+            if (result == null) return;
+
+            // TODO: Open an image editor before uploading so the user can crop/rotate the picked image.
+            var fileName = Path.GetFileName(result.Path);
+            var bytes = await File.ReadAllBytesAsync(result.Path);
+
+            var updateResult = await _baseViewModel.ExecuteRequestAsync(new UpdateProfileMedia(fileName, bytes));
+            if (updateResult.IsSuccess) await RefreshAsync();
+        }
+    }
+
+    private async Task ChangeBackgroundMediaAsync()
+    {
+        var shouldUpload = true;
+        if (User.BackgroundMediaId != null)
+        {
+            var action = await _baseViewModel.ShowSelectionDialogAsync("배경 이미지", ["배경 이미지 변경", "배경 이미지 삭제"]);
+            if (action == null) return;
+            else if (action == "배경 이미지 변경") shouldUpload = true;
+            else if (action == "배경 이미지 삭제")
+            {
+                var result = await _baseViewModel.ExecuteRequestAsync(new DeleteBackgroundMedia());
+                if (result.IsSuccess) await RefreshAsync();
+                return;
+            }
+        }
+
+        if (shouldUpload)
+        {
+            var result = await _baseViewModel.PickFileAsync(new FileOpenPickerParameters(s_profileImageFileTypeFilters, PickerLocationId.PicturesLibrary, "배경 이미지 선택"));
+            if (result == null) return;
+
+            // TODO: Open an image editor before uploading so the user can crop/rotate the picked image.
+            var fileName = Path.GetFileName(result.Path);
+            var bytes = await File.ReadAllBytesAsync(result.Path);
+
+            var updateResult = await _baseViewModel.ExecuteRequestAsync(new UpdateBackgroundMedia(fileName, bytes));
+            if (updateResult.IsSuccess) await RefreshAsync();
+        }
+    }
+
+    private async Task ChangeHandleAsync()
+    {
+        var handle = await _baseViewModel.ShowInputDialogAsync(new("핸들 변경", "새로운 핸들을 입력해주세요. (최대 20자, 특수문자 사용 불가)", placeholderText: "새로운 핸들", showCancel: true, defaultText: User.Handle, maxLength: CommonConstants.MaxHandleLength));
+        handle = handle?.Trim();
+        if (handle == null) return;
+
+        var result = await _baseViewModel.ExecuteRequestAsync(new UpdateHandle(handle), ErrorType.BadRequest, ErrorType.Conflict);
+        if (result.IsSuccess)
+        {
+            await _baseViewModel.ShowMessageDialogAsync(new("안내", "핸들이 변경되었습니다."));
+            await RefreshAsync();
+        }
+        else if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Conflict) await _baseViewModel.ShowMessageDialogAsync(new("핸들 변경 실패", result.ErrorMessage));
+    }
+
+    private async Task ChangeProfileVisibilityAsync()
+    {
+        var action = await _baseViewModel.ShowSelectionDialogAsync("프로필 공개 설정", ["공개", "비공개"]);
+        if (action == null) return;
+
+        var allowSearch = action == "공개";
+        var result = await _baseViewModel.ExecuteRequestAsync(new UpdateAllowSearch(allowSearch));
+        if (result.IsSuccess)
+        {
+            if (allowSearch) await _baseViewModel.ShowMessageDialogAsync(new("안내", "프로필 공개 설정이 완료되었습니다. 이제부터 다른 사용자가 닉네임이나 핸들을 통해 내 프로필을 검색할 수 있습니다."));
+            else await _baseViewModel.ShowMessageDialogAsync(new("안내", "프로필 비공개 설정이 완료되었습니다. 이제부터 다른 사용자가 닉네임이나 핸들을 통해 내 프로필을 검색할 수 없습니다."));
+            await RefreshAsync();
+        }
+        else await _baseViewModel.ShowMessageDialogAsync(new("오류", result.ErrorMessage));
+    }
+
+    // TODO: Implement profile mirroring once the external story integration is available on Windows.
+    private async Task ChangeProfileMirroringAsync() => await _baseViewModel.ShowMessageDialogAsync(new("프로필 미러링", "프로필 미러링은 아직 준비 중입니다."));
 
     public override void HandleProfileTap(string parameter)
     {

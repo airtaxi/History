@@ -169,6 +169,20 @@
                                         </StackPanel>
                                     </Grid>
 
+                                    <!--  My profile action row (profile settings)  -->
+                                    <StackPanel
+                                        Padding="12"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Bottom"
+                                        Orientation="Horizontal"
+                                        Spacing="8"
+                                        Visibility="{x:Bind IsMe, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                                        <Button
+                                            Command="{x:Bind HandleProfileSettingsCommand}"
+                                            Content="프로필 설정"
+                                            Style="{StaticResource AccentButtonStyle}" />
+                                    </StackPanel>
+
                                     <!--  Action row  -->
                                     <StackPanel
                                         Padding="12"

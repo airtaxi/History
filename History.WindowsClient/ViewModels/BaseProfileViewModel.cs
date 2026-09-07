@@ -87,4 +87,7 @@ public abstract partial class BaseProfileViewModel : BaseViewModel
 
     [RelayCommand]
     public virtual async Task HandleCopyProfileLinkAsync() => throw new NotSupportedException("[BaseProfileViewModel] HandleCopyProfileLinkAsync must be overridden");
+
+    [RelayCommand]
+    public virtual async Task HandleProfileSettingsAsync() => throw new NotSupportedException("[BaseProfileViewModel] HandleProfileSettingsAsync must be overridden");
 }
