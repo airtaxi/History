@@ -55,21 +55,34 @@
                         Visibility="Collapsed">
                         <FontIcon FontSize="16" Glyph="&#xE932;" />
                     </Button>
-                    <Button
-                        x:Name="NotificationsButton"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Visibility="Collapsed">
-                        <FontIcon FontSize="16" Glyph="&#xEA8F;" />
-                        <Button.Flyout>
-                            <Flyout
-                                x:Name="NotificationsFlyout"
-                                Opening="OnNotificationsFlyoutOpening"
-                                Placement="BottomEdgeAlignedRight">
-                                <controls:NotificationsFlyoutControl />
-                            </Flyout>
-                        </Button.Flyout>
-                    </Button>
+                    <Grid>
+                        <Button
+                            x:Name="NotificationsButton"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Visibility="Collapsed">
+                            <FontIcon FontSize="16" Glyph="&#xEA8F;" />
+                            <Button.Flyout>
+                                <Flyout
+                                    x:Name="NotificationsFlyout"
+                                    Opening="OnNotificationsFlyoutOpening"
+                                    Placement="BottomEdgeAlignedRight">
+                                    <controls:NotificationsFlyoutControl />
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                        <InfoBadge
+                            x:Name="NotificationsInfoBadge"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource AttentionValueInfoBadgeStyle}"
+                            Visibility="Collapsed"
+                            Value="0">
+                            <InfoBadge.RenderTransform>
+                                <TranslateTransform X="14" Y="-10" />
+                            </InfoBadge.RenderTransform>
+                        </InfoBadge>
+                    </Grid>
                     <Button
                         x:Name="RefreshButton"
                         HorizontalAlignment="Center"

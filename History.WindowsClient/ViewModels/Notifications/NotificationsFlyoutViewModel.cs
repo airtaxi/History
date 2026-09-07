@@ -5,6 +5,8 @@ using History.Commons;
 using History.Commons.Api.User;
 using History.WindowsClient.Messages;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 
 namespace History.WindowsClient.ViewModels.Notifications;
 
@@ -24,7 +26,47 @@ public partial class NotificationsFlyoutViewModel : BaseViewModel
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     public partial bool IsLoading { get; private set; }
 
+    // Unread count among the loaded items; drives the notification button badge.
+    [ObservableProperty]
+    public partial int UnreadCount { get; private set; }
+
     public bool IsEmpty => Items.Count == 0 && !IsLoading;
+
+    // Tracks each item's read state so the unread count stays current while the flyout is open.
+    public NotificationsFlyoutViewModel() => Items.CollectionChanged += OnItemsCollectionChanged;
+
+    // Keeps the per-item subscriptions and the unread count in sync with the item list changes.
+    private void OnItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems != null)
+        {
+            foreach (NotificationViewModel item in e.OldItems)
+            {
+                item.PropertyChanged -= OnNotificationItemPropertyChanged;
+            }
+        }
+
+        if (e.NewItems != null)
+        {
+            foreach (NotificationViewModel item in e.NewItems)
+            {
+                item.PropertyChanged += OnNotificationItemPropertyChanged;
+            }
+        }
+
+        RefreshUnreadCount();
+    }
+
+    // Recomputes the count immediately when an item is marked as read by any path.
+    private void OnNotificationItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(NotificationViewModel.IsUnread))
+        {
+            RefreshUnreadCount();
+        }
+    }
+
+    private void RefreshUnreadCount() => UnreadCount = Items.Count(x => x.IsUnread);
 
     public async Task RefreshAsync()
     {

@@ -5,10 +5,13 @@ using History.WindowsClient.Messages;
 using History.WindowsClient.Pages;
 using History.WindowsClient.Services;
 using History.WindowsClient.ViewModels;
+using History.WindowsClient.ViewModels.Notifications;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using MongoDB.Driver.GridFS;
+using System.ComponentModel;
 using WinUIEx;
 
 namespace History.WindowsClient.Views;
@@ -16,6 +19,7 @@ namespace History.WindowsClient.Views;
 public sealed partial class MainWindow : BaseWindow
 {
     private static MainWindow s_instance;
+    private readonly NotificationsFlyoutViewModel _notificationsViewModel;
 
     public static MainWindow Instance => s_instance;
 
@@ -26,6 +30,11 @@ public sealed partial class MainWindow : BaseWindow
         s_instance = this;
 
         InitializeComponent();
+
+        // The flyout control is created with the window, so its view model is the single source
+        // of truth for the unread notification count shown on the notification button badge.
+        _notificationsViewModel = ((NotificationsFlyoutControl)NotificationsFlyout.Content).ViewModel;
+        _notificationsViewModel.PropertyChanged += OnNotificationsViewModelPropertyChanged;
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
@@ -94,6 +103,8 @@ public sealed partial class MainWindow : BaseWindow
         if (e.SourcePageType == typeof(MainPage) || e.SourcePageType == typeof(LoginPage)) frame.BackStack.Clear();
         AppTitleBar.IsBackButtonVisible = frame.CanGoBack;
         MainSearchBox.Visibility = e.SourcePageType == typeof(MainPage) ? Visibility.Visible : Visibility.Collapsed;
+        // Refreshes the unread badge whenever the main page appears so the count is current right after login.
+        if (e.SourcePageType == typeof(MainPage)) _ = _notificationsViewModel.RefreshAsync();
         var isToolbarVisible = e.SourcePageType == typeof(LoginPage) || e.SourcePageType == typeof(RegisterPage) || e.SourcePageType == typeof(BrowserPage) ? Visibility.Collapsed : Visibility.Visible;
         RefreshButton.Visibility = isToolbarVisible;
         NotificationsButton.Visibility = isToolbarVisible;
@@ -119,6 +130,24 @@ public sealed partial class MainWindow : BaseWindow
 
     // Refreshing on open keeps the flyout list current without polling.
     private void OnNotificationsFlyoutOpening(object sender, object e) => _ = ((NotificationsFlyoutControl)NotificationsFlyout.Content).ViewModel.RefreshAsync();
+
+    // Keeps the notification button badge in sync with the flyout's unread notification count.
+    private void OnNotificationsViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(NotificationsFlyoutViewModel.UnreadCount)) return;
+        if (DispatcherQueue.HasThreadAccess) UpdateInfoBadgeValue(NotificationsInfoBadge, _notificationsViewModel.UnreadCount);
+        else DispatcherQueue.TryEnqueue(() => UpdateInfoBadgeValue(NotificationsInfoBadge, _notificationsViewModel.UnreadCount));
+    }
+
+    private static void UpdateInfoBadgeValue(InfoBadge infoBadge, int value)
+    {
+        if (value > 0)
+        {
+            infoBadge.Value = value;
+            if (infoBadge.Visibility == Visibility.Collapsed) infoBadge.Visibility = Visibility.Visible;
+        }
+        else if (infoBadge.Visibility == Visibility.Visible) infoBadge.Visibility = Visibility.Collapsed;
+    }
 
     private void OnLeftHeaderButtonClicked(object sender, RoutedEventArgs e)
     {
