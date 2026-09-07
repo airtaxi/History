@@ -48,8 +48,12 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
 
     [ObservableProperty]
     public partial bool HasRepostedUsers { get; protected set; }
-    [ObservableProperty]
+[ObservableProperty]
     public partial int RepostedUsersCount { get; protected set; }
+
+    // Whether the current user reposted this post (drives the repost toggle button).
+    [ObservableProperty]
+    public partial bool IsReposted { get; set; }
 
     [ObservableProperty]
     public partial bool HasSharedUsers { get; protected set; }

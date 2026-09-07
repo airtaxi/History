@@ -116,6 +116,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             RepostedUsersCount = post.SharedAndRepostedUsers.Count(x => x.IsRepost);
             HasSharedUsers = post.SharedAndRepostedUsers.Any(x => !x.IsRepost);
             SharedUsersCount = post.SharedAndRepostedUsers.Count(x => !x.IsRepost);
+            IsReposted = IsRepostedByUser(post);
 
             HasReactions = post.PostReactions.Count > 0;
             ReactionsCount = post.PostReactions.Count;
@@ -198,7 +199,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
 
         if (PostType != PostType.Unwrapped)
         {
-            var isReposted = Post.SharedAndRepostedUsers.Any(x => x.IsRepost && x.User.UserId == CommonShared.UserId);
+            var isReposted = IsReposted;
             menuFlyout.Items.Add(Utils.CreateActionItem("게시글 공유", "\uE72D", HandleShareAsync));
             menuFlyout.Items.Add(Utils.CreateActionItem(isReposted ? "리포스트 해제" : "리포스트", "\uE8EB", HandleRepostAsync));
         }
@@ -506,15 +507,23 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         if (Post.DiscoveryOption == DiscoveryOption.SelectedUsers || Post.DiscoveryOption == DiscoveryOption.UnselectedUsers)
         {
             await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "공개 범위가 특정 친구 (비)공개인 게시글은 리포스트할 수 없습니다."));
+            IsReposted = IsRepostedByUser(Post);
             return;
         }
 
         var result = await BaseViewModel.ExecuteRequestAsync(new HandleRepost(Post.Id));
-        if (result.IsFailure) return;
+        if (result.IsFailure)
+        {
+            IsReposted = IsRepostedByUser(Post);
+            return;
+        }
 
-        var post = result.Value;
-        WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(post));
+        // The API toggles the repost on/off, so refresh to sync the button and the counts.
+        await RefreshAsync();
     }
+
+    // Whether the current user has reposted the given post.
+    private static bool IsRepostedByUser(PostResponseDto post) => post.SharedAndRepostedUsers.Any(x => x.IsRepost && x.User.UserId == CommonShared.UserId);
 
     public override async Task HandleMuteNotificationsAsync()
     {

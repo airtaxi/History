@@ -218,6 +218,31 @@
                         Width="32"
                         Height="32"
                         Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind HandleShareCommand}"
+                        ToolTipService.ToolTip="공유">
+                        <FontIcon
+                            FontSize="20"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Glyph="&#xE72D;" />
+                    </Button>
+                    <ToggleButton
+                        Width="32"
+                        Height="32"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind HandleRepostCommand}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        IsChecked="{x:Bind IsReposted, Mode=TwoWay}"
+                        ToolTipService.ToolTip="리포스트">
+                        <FontIcon FontSize="20" Glyph="&#xE8EB;" />
+                    </ToggleButton>
+                    <Button
+                        Width="32"
+                        Height="32"
+                        Padding="0"
                         VerticalAlignment="Center"
                         Background="Transparent"
                         BorderThickness="0"
