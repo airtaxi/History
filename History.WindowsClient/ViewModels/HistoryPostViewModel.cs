@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
@@ -34,6 +34,9 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     IRecipient<ValueDeletedMessage<CommentResponseDto>>,
     IRecipient<NotificationPostReadMessage>
 {
+    private const string SaveAsFileText = "파일로 저장";
+    private const string SaveToClipboardText = "클립보드로 저장";
+
     [ObservableProperty]
     public partial PostResponseDto Post { get; private set; }
 
@@ -346,26 +349,43 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         var confirm = await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("게시글 이미지로 저장", "이 게시글을 이미지로 저장하시겠습니까?", "확인", "취소"));
         if (confirm != ContentDialogResult.Primary) return;
 
+        var saveTarget = await ConfirmSaveTargetAsync();
+        if (saveTarget == null) return;
+
         var includeComments = await ConfirmIncludeCommentsAsync();
-        await SavePostImageAsync(this, includeComments ? Comments : null);
+        await SavePostImageAsync(this, includeComments ? Comments : null, saveTarget == SaveToClipboardText);
     }
 
     // Saves only the post contents without the profile header (profile image, nickname, timestamp).
-    private async Task HandleSaveBodyImageAsync() => await SavePostImageAsync(null, null);
-
-    private async Task SavePostImageAsync(BasePostViewModel post, IEnumerable<BaseCommentViewModel> comments)
+    private async Task HandleSaveBodyImageAsync()
     {
-        var saveResult = await BaseViewModel.SaveFileAsync(new FileSavePickerParameters(
-            new Dictionary<string, IReadOnlyList<string>> { ["PNG 이미지"] = [".png"] },
-            $"post_{DateTime.Now:yyyyMMdd_HHmmss}.png", ".png", PickerLocationId.PicturesLibrary));
-        if (saveResult == null) return;
+        var saveTarget = await ConfirmSaveTargetAsync();
+        if (saveTarget == null) return;
 
+        await SavePostImageAsync(null, null, saveTarget == SaveToClipboardText);
+    }
+
+    // Asks whether the rendered image should go to the clipboard or to a file.
+    private async Task<string> ConfirmSaveTargetAsync() => await BaseViewModel.ShowSelectionDialogAsync("저장 방식 선택", [SaveAsFileText, SaveToClipboardText]);
+
+    private async Task SavePostImageAsync(BasePostViewModel post, IEnumerable<BaseCommentViewModel> comments, bool saveToClipboard)
+    {
         var renderBytes = await BaseViewModel.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.RenderAsync(Post.Contents, post, comments));
         if (renderBytes == null)
         {
             await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("오류", "이미지로 저장할 내용이 없습니다."));
             return;
         }
+
+        if (saveToClipboard)
+        {
+            await Utils.CopyPngBytesToClipboardAsync(renderBytes);
+            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 이미지가 클립보드에 복사되었습니다."));
+            return;
+        }
+
+        var saveResult = await BaseViewModel.SaveFileAsync(new FileSavePickerParameters(new Dictionary<string, IReadOnlyList<string>> { ["PNG 이미지"] = [".png"] }, $"post_{DateTime.Now:yyyyMMdd_HHmmss}.png", ".png", PickerLocationId.PicturesLibrary));
+        if (saveResult == null) return;
 
         await File.WriteAllBytesAsync(saveResult.Path, renderBytes);
         await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 이미지가 저장되었습니다."));

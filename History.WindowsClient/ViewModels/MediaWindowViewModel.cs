@@ -7,9 +7,6 @@ using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels.Media;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.Storage.Pickers;
-using Windows.ApplicationModel.DataTransfer;
-using Windows.Graphics.Imaging;
-using Windows.Storage.Streams;
 
 namespace History.WindowsClient.ViewModels;
 
@@ -184,49 +181,14 @@ public sealed partial class MediaWindowViewModel : BaseViewModel
         var media = Medias[Math.Clamp(SelectedIndex, 0, Medias.Count - 1)];
         if (media.IsVideo) return;
 
-        var pngStream = await CreateClipboardBitmapStreamAsync(media.MediaContent.MediaId);
-        if (pngStream == null) return;
-
-        var dataPackage = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
-        dataPackage.SetBitmap(RandomAccessStreamReference.CreateFromStream(pngStream));
-        Clipboard.SetContent(dataPackage);
+        var copied = await Utils.CopyImageFromUriToClipboardAsync(CommonUtils.GenerateMediaUri(media.MediaContent.MediaId));
+        if (!copied) return;
 
         _isCopyImageFeedbackActive = true;
         CopyImageGlyph = CheckMarkGlyph;
         await Task.Delay(2000);
         CopyImageGlyph = CopyGlyph;
         _isCopyImageFeedbackActive = false;
-    }
-
-    // Downloads the media bytes and re-encodes them as PNG, the format the clipboard
-    // bitmap path consumes reliably; returns null when the download or decode fails.
-    private static async Task<InMemoryRandomAccessStream> CreateClipboardBitmapStreamAsync(string mediaId)
-    {
-        try
-        {
-            using var httpClient = new HttpClient();
-            var imageBytes = await httpClient.GetByteArrayAsync(CommonUtils.GenerateMediaUri(mediaId));
-
-            using var inputStream = new InMemoryRandomAccessStream();
-            using var outputStream = inputStream.GetOutputStreamAt(0);
-            using var dataWriter = new DataWriter(outputStream);
-            dataWriter.WriteBytes(imageBytes);
-            await dataWriter.StoreAsync();
-            await dataWriter.FlushAsync();
-
-            inputStream.Seek(0);
-            var decoder = await BitmapDecoder.CreateAsync(inputStream);
-
-            var pngStream = new InMemoryRandomAccessStream();
-            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, pngStream);
-            var pixelData = await decoder.GetPixelDataAsync();
-            encoder.SetPixelData(decoder.BitmapPixelFormat, decoder.BitmapAlphaMode, decoder.PixelWidth, decoder.PixelHeight, decoder.DpiX, decoder.DpiY, pixelData.DetachPixelData());
-            await encoder.FlushAsync();
-
-            pngStream.Seek(0);
-            return pngStream;
-        }
-        catch { return null; }
     }
 
     private static async Task DownloadFileAsync(string requestUri, string destinationPath)
