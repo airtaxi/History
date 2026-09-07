@@ -251,7 +251,7 @@
                     Padding="0"
                     Background="Transparent"
                     BorderThickness="0"
-                    Command="{x:Bind HandleReactionTapCommand}"
+                    Tag="{x:Bind}"
                     Visibility="{x:Bind HasReactions, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <TextBlock
@@ -263,12 +263,49 @@
                             FontWeight="Bold"
                             Text="{x:Bind ReactionsCount, Mode=OneWay}" />
                     </StackPanel>
+                    <Button.Flyout>
+                        <Flyout Opening="OnReactionUsersFlyoutOpening" Placement="BottomEdgeAlignedLeft">
+                            <Flyout.FlyoutPresenterStyle>
+                                <Style BasedOn="{StaticResource DefaultFlyoutPresenterStyle}" TargetType="FlyoutPresenter">
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="MinWidth" Value="260" />
+                                    <Setter Property="MaxWidth" Value="320" />
+                                </Style>
+                            </Flyout.FlyoutPresenterStyle>
+                            <Grid MinWidth="260" MaxWidth="320">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Border
+                                    Grid.Row="0"
+                                    Padding="12,10,12,8"
+                                    BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
+                                    BorderThickness="0,0,0,1">
+                                    <TextBlock
+                                        FontSize="14"
+                                        FontWeight="Bold"
+                                        Text="느낌" />
+                                </Border>
+                                <ScrollViewer
+                                    Grid.Row="1"
+                                    MaxHeight="260"
+                                    VerticalScrollBarVisibility="Auto">
+                                    <ItemsRepeater ItemTemplate="{StaticResource FriendshipTemplate}" ItemsSource="{x:Bind ReactionUsers, Mode=OneWay}">
+                                        <ItemsRepeater.Layout>
+                                            <StackLayout Orientation="Vertical" />
+                                        </ItemsRepeater.Layout>
+                                    </ItemsRepeater>
+                                </ScrollViewer>
+                            </Grid>
+                        </Flyout>
+                    </Button.Flyout>
                 </Button>
                 <Button
                     Padding="0"
                     Background="Transparent"
                     BorderThickness="0"
-                    Command="{x:Bind HandleSharedTapCommand}"
+                    Tag="{x:Bind}"
                     Visibility="{x:Bind HasSharedUsers, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <TextBlock
@@ -280,12 +317,49 @@
                             FontWeight="Bold"
                             Text="{x:Bind SharedUsersCount, Mode=OneWay}" />
                     </StackPanel>
+                    <Button.Flyout>
+                        <Flyout Opening="OnSharedUsersFlyoutOpening" Placement="BottomEdgeAlignedLeft">
+                            <Flyout.FlyoutPresenterStyle>
+                                <Style BasedOn="{StaticResource DefaultFlyoutPresenterStyle}" TargetType="FlyoutPresenter">
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="MinWidth" Value="260" />
+                                    <Setter Property="MaxWidth" Value="320" />
+                                </Style>
+                            </Flyout.FlyoutPresenterStyle>
+                            <Grid MinWidth="260" MaxWidth="320">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Border
+                                    Grid.Row="0"
+                                    Padding="12,10,12,8"
+                                    BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
+                                    BorderThickness="0,0,0,1">
+                                    <TextBlock
+                                        FontSize="14"
+                                        FontWeight="Bold"
+                                        Text="공유" />
+                                </Border>
+                                <ScrollViewer
+                                    Grid.Row="1"
+                                    MaxHeight="260"
+                                    VerticalScrollBarVisibility="Auto">
+                                    <ItemsRepeater ItemTemplate="{StaticResource FriendshipTemplate}" ItemsSource="{x:Bind SharedUsers, Mode=OneWay}">
+                                        <ItemsRepeater.Layout>
+                                            <StackLayout Orientation="Vertical" />
+                                        </ItemsRepeater.Layout>
+                                    </ItemsRepeater>
+                                </ScrollViewer>
+                            </Grid>
+                        </Flyout>
+                    </Button.Flyout>
                 </Button>
                 <Button
                     Padding="0"
                     Background="Transparent"
                     BorderThickness="0"
-                    Command="{x:Bind HandleRepostTapCommand}"
+                    Tag="{x:Bind}"
                     Visibility="{x:Bind HasRepostedUsers, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <TextBlock
@@ -297,6 +371,43 @@
                             FontWeight="Bold"
                             Text="{x:Bind RepostedUsersCount, Mode=OneWay}" />
                     </StackPanel>
+                    <Button.Flyout>
+                        <Flyout Opening="OnRepostedUsersFlyoutOpening" Placement="BottomEdgeAlignedLeft">
+                            <Flyout.FlyoutPresenterStyle>
+                                <Style BasedOn="{StaticResource DefaultFlyoutPresenterStyle}" TargetType="FlyoutPresenter">
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="MinWidth" Value="260" />
+                                    <Setter Property="MaxWidth" Value="320" />
+                                </Style>
+                            </Flyout.FlyoutPresenterStyle>
+                            <Grid MinWidth="260" MaxWidth="320">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Border
+                                    Grid.Row="0"
+                                    Padding="12,10,12,8"
+                                    BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
+                                    BorderThickness="0,0,0,1">
+                                    <TextBlock
+                                        FontSize="14"
+                                        FontWeight="Bold"
+                                        Text="리포스트" />
+                                </Border>
+                                <ScrollViewer
+                                    Grid.Row="1"
+                                    MaxHeight="260"
+                                    VerticalScrollBarVisibility="Auto">
+                                    <ItemsRepeater ItemTemplate="{StaticResource FriendshipTemplate}" ItemsSource="{x:Bind RepostedUsers, Mode=OneWay}">
+                                        <ItemsRepeater.Layout>
+                                            <StackLayout Orientation="Vertical" />
+                                        </ItemsRepeater.Layout>
+                                    </ItemsRepeater>
+                                </ScrollViewer>
+                            </Grid>
+                        </Flyout>
+                    </Button.Flyout>
                 </Button>
             </StackPanel>
             <!--  Interaction strip  -->

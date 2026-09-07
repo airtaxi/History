@@ -2,11 +2,13 @@
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.Api.Friendship;
+using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
+using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
@@ -90,6 +92,21 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
     }
 
     public override void HandleProfileTap() => _baseViewModel.RequestNavigation(typeof(ProfilePage), User.UserId);
+
+    public override async Task HandleTapAsync()
+    {
+        if (InteractionViewModel?.TargetPostId != null)
+        {
+            var postResult = await _baseViewModel.ExecuteRequestAsync(new GetPost(InteractionViewModel.TargetPostId), ErrorType.Forbidden);
+            if (postResult.IsSuccess)
+            {
+                WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(postResult.Value));
+                _baseViewModel.RequestNavigation(typeof(PostPage), postResult.Value);
+            }
+            else if (postResult.Error == ErrorType.Forbidden) await _baseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "해당 게시글을 읽을 수 있는 권한이 없습니다."));
+        }
+        else _baseViewModel.RequestNavigation(typeof(ProfilePage), User.UserId);
+    }
 
     public override async Task HandleFriendshipActionAsync()
     {

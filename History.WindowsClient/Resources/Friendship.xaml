@@ -6,106 +6,116 @@
     xmlns:vm="using:History.WindowsClient.ViewModels">
 
     <DataTemplate x:Key="FriendshipTemplate" x:DataType="vm:BaseFriendshipViewModel">
-        <Grid Padding="12,8" ColumnSpacing="12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="32" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="32" />
-            </Grid.ColumnDefinitions>
-            <Grid Grid.Column="0">
+        <Button
+            Padding="0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            VerticalContentAlignment="Stretch"
+            Background="Transparent"
+            BorderThickness="0"
+            Command="{x:Bind HandleTapCommand}">
+            <Grid Padding="12,8" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="32" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="32" />
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Button
+                        Width="32"
+                        Height="32"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Command="{x:Bind HandleProfileTapCommand}"
+                        CornerRadius="16">
+                        <PersonPicture
+                            Width="32"
+                            Height="32"
+                            ProfilePicture="{x:Bind ProfileThumbnailImageSource}" />
+                    </Button>
+                    <Border
+                        Width="12"
+                        Height="12"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Background="{ThemeResource ControlSolidFillColorDefaultBrush}"
+                        CornerRadius="6"
+                        Visibility="{x:Bind IsFavorite, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Border.RenderTransform>
+                            <TranslateTransform X="2" Y="2" />
+                        </Border.RenderTransform>
+                        <FontIcon
+                            FontSize="10"
+                            Foreground="{StaticResource SystemAccentColor}"
+                            Glyph="&#xE735;" />
+                    </Border>
+                    <Border
+                        Width="16"
+                        Height="16"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Background="{x:Bind InteractionViewModel.ColorBrush, Mode=OneWay}"
+                        CornerRadius="8"
+                        IsHitTestVisible="False"
+                        Visibility="{x:Bind IsInteractionAvailable, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                        <Border.RenderTransform>
+                            <TranslateTransform X="2" Y="2" />
+                        </Border.RenderTransform>
+                        <FontIcon
+                            FontSize="{x:Bind InteractionViewModel.IconSize, Mode=OneWay}"
+                            Foreground="White"
+                            Glyph="{x:Bind InteractionViewModel.Glyph, Mode=OneWay}" />
+                    </Border>
+                </Grid>
+                <StackPanel
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="4">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="Bold"
+                        MaxLines="1"
+                        Text="{x:Bind Nickname, Mode=OneWay}"
+                        TextTrimming="CharacterEllipsis" />
+                    <FontIcon
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        Foreground="#1a5bf3"
+                        Glyph="&#xF760;"
+                        Visibility="{x:Bind IsModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                    <FontIcon
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        Foreground="#f78501"
+                        Glyph="&#xF760;"
+                        Visibility="{x:Bind IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                </StackPanel>
                 <Button
+                    Grid.Column="2"
                     Width="32"
                     Height="32"
                     Padding="0"
                     Background="Transparent"
                     BorderThickness="0"
-                    Command="{x:Bind HandleProfileTapCommand}"
-                    CornerRadius="16">
-                    <PersonPicture
-                        Width="32"
-                        Height="32"
-                        ProfilePicture="{x:Bind ProfileThumbnailImageSource}" />
+                    Command="{x:Bind HandleFriendshipActionCommand}"
+                    Visibility="{x:Bind FriendshipVisibility}">
+                    <FontIcon
+                        FontSize="20"
+                        Foreground="{x:Bind FriendshipForeground, Mode=OneWay}"
+                        Glyph="{x:Bind FriendshipGlyph, Mode=OneWay}" />
                 </Button>
-                <Border
-                    Width="12"
-                    Height="12"
-                    HorizontalAlignment="Right"
+                <Rectangle
+                    Grid.ColumnSpan="3"
+                    Height="1"
+                    Margin="-12,-8"
+                    HorizontalAlignment="Stretch"
                     VerticalAlignment="Bottom"
-                    Background="{ThemeResource ControlSolidFillColorDefaultBrush}"
-                    CornerRadius="6"
-                    Visibility="{x:Bind IsFavorite, Converter={StaticResource BoolToVisibilityConverter}}">
-                    <Border.RenderTransform>
-                        <TranslateTransform X="2" Y="2" />
-                    </Border.RenderTransform>
-                    <FontIcon
-                        FontSize="10"
-                        Foreground="{StaticResource SystemAccentColor}"
-                        Glyph="&#xE735;" />
-                </Border>
-                <Border
-                    Width="16"
-                    Height="16"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Bottom"
-                    Background="{x:Bind InteractionViewModel.ColorBrush, Mode=OneWay}"
-                    CornerRadius="8"
-                    IsHitTestVisible="False"
-                    Visibility="{x:Bind IsInteractionAvailable, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                    <Border.RenderTransform>
-                        <TranslateTransform X="2" Y="2" />
-                    </Border.RenderTransform>
-                    <FontIcon
-                        FontSize="{x:Bind InteractionViewModel.IconSize, Mode=OneWay}"
-                        Foreground="White"
-                        Glyph="{x:Bind InteractionViewModel.Glyph, Mode=OneWay}" />
-                </Border>
+                    Fill="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
             </Grid>
-            <StackPanel
-                Grid.Column="1"
-                VerticalAlignment="Center"
-                Orientation="Horizontal"
-                Spacing="4">
-                <TextBlock
-                    VerticalAlignment="Center"
-                    FontSize="18"
-                    FontWeight="Bold"
-                    MaxLines="1"
-                    Text="{x:Bind Nickname, Mode=OneWay}"
-                    TextTrimming="CharacterEllipsis" />
-                <FontIcon
-                    VerticalAlignment="Center"
-                    FontSize="14"
-                    Foreground="#1a5bf3"
-                    Glyph="&#xF760;"
-                    Visibility="{x:Bind IsModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
-                <FontIcon
-                    VerticalAlignment="Center"
-                    FontSize="14"
-                    Foreground="#f78501"
-                    Glyph="&#xF760;"
-                    Visibility="{x:Bind IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
-            </StackPanel>
-            <Button
-                Grid.Column="2"
-                Width="32"
-                Height="32"
-                Padding="0"
-                Background="Transparent"
-                BorderThickness="0"
-                Command="{x:Bind HandleFriendshipActionCommand}"
-                Visibility="{x:Bind FriendshipVisibility}">
-                <FontIcon
-                    FontSize="20"
-                    Foreground="{x:Bind FriendshipForeground, Mode=OneWay}"
-                    Glyph="{x:Bind FriendshipGlyph, Mode=OneWay}" />
-            </Button>
-            <Rectangle
-                Grid.ColumnSpan="3"
-                Height="1"
-                Margin="-12,-8"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Bottom"
-                Fill="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
-        </Grid>
+        </Button>
     </DataTemplate>
 </ResourceDictionary>

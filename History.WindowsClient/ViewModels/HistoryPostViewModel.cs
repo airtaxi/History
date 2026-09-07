@@ -120,6 +120,9 @@ public partial class HistoryPostViewModel : BasePostViewModel,
                 .Concat(post.SharedAndRepostedUsers.Where(x => !x.IsRepost).Select(x => new HistoryInteractionViewModel(x, true, BaseViewModel)))
                 .Concat(post.SharedAndRepostedUsers.Where(x => x.IsRepost).Select(x => new HistoryInteractionViewModel(x, false, BaseViewModel)))
                 .OrderByDescending(x => x.CreatedAt)];
+            ReactionUsers = [.. post.PostReactions.OrderByDescending(x => x.CreatedAt).Select(x => new HistoryFriendshipViewModel(x.User, BaseViewModel, new HistoryInteractionViewModel(x, BaseViewModel)) { FriendshipVisibility = x.User.UserId == CommonShared.UserId ? Visibility.Collapsed : Visibility.Visible })];
+            SharedUsers = [.. post.SharedAndRepostedUsers.Where(x => !x.IsRepost).OrderByDescending(x => x.SharedAt).Select(x => new HistoryFriendshipViewModel(x.User, BaseViewModel, new HistoryInteractionViewModel(x, true, BaseViewModel)) { FriendshipVisibility = x.User.UserId == CommonShared.UserId ? Visibility.Collapsed : Visibility.Visible })];
+            RepostedUsers = [.. post.SharedAndRepostedUsers.Where(x => x.IsRepost).OrderByDescending(x => x.SharedAt).Select(x => new HistoryFriendshipViewModel(x.User, BaseViewModel, new HistoryInteractionViewModel(x, false, BaseViewModel)) { FriendshipVisibility = x.User.UserId == CommonShared.UserId ? Visibility.Collapsed : Visibility.Visible })];
 
             Reaction = Interactions.FirstOrDefault(r => r is HistoryInteractionViewModel historyInteraction && historyInteraction.User.UserId == CommonShared.UserId && r.ReactionType != null);
             ReactionGlyph = Reaction?.Glyph ?? "\uEB51";
@@ -467,15 +470,6 @@ public partial class HistoryPostViewModel : BasePostViewModel,
 
         await RefreshAsync();
     }
-
-    // TODO: Navigate to the interactions page once it is implemented.
-    public override void HandleReactionTap() { }
-
-    // TODO: Navigate to the interactions page once it is implemented.
-    public override void HandleSharedTap() { }
-
-    // TODO: Navigate to the interactions page once it is implemented.
-    public override void HandleRepostTap() { }
 
     // TODO: Navigate to the user profile page once it is implemented.
     public override void HandleRepostedUserTap() { }

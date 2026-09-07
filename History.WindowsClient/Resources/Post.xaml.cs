@@ -29,6 +29,32 @@ public sealed partial class Post : ResourceDictionary
         postViewModel.PopulateReactionMenuFlyout(menuFlyout);
     }
 
+    // Hands the user-list flyouts to the post view model, which precomputes the lists for
+    // History or loads them on demand for other post types.
+    private void OnReactionUsersFlyoutOpening(object sender, object e)
+    {
+        if (sender is not Flyout flyout) return;
+        if (flyout.Target?.Tag is not BasePostViewModel postViewModel) return;
+
+        _ = postViewModel.LoadReactionUsersAsync();
+    }
+
+    private void OnSharedUsersFlyoutOpening(object sender, object e)
+    {
+        if (sender is not Flyout flyout) return;
+        if (flyout.Target?.Tag is not BasePostViewModel postViewModel) return;
+
+        _ = postViewModel.LoadSharedUsersAsync();
+    }
+
+    private void OnRepostedUsersFlyoutOpening(object sender, object e)
+    {
+        if (sender is not Flyout flyout) return;
+        if (flyout.Target?.Tag is not BasePostViewModel postViewModel) return;
+
+        _ = postViewModel.LoadRepostedUsersAsync();
+    }
+
     // Swallows the pointer press so the timeline card's outer button cannot also raise its own
     // Click (button Click is pointer-driven, so marking Tapped handled alone would not stop the
     // chained navigation to the wrapper post).

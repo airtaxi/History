@@ -59,6 +59,12 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
     public partial int ReactionsCount { get; protected set; }
     [ObservableProperty]
     public partial List<BaseInteractionViewModel> Interactions { get; protected set; }
+    [ObservableProperty]
+    public partial List<BaseFriendshipViewModel> ReactionUsers { get; protected set; } = [];
+    [ObservableProperty]
+    public partial List<BaseFriendshipViewModel> SharedUsers { get; protected set; } = [];
+    [ObservableProperty]
+    public partial List<BaseFriendshipViewModel> RepostedUsers { get; protected set; } = [];
 
     [ObservableProperty]
     public partial BaseInteractionViewModel Reaction { get; protected set; }
@@ -117,8 +123,14 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
     // Fills the "..." menu flyout with the actions available for the current user.
     public virtual void PopulateMoreMenuFlyout(MenuFlyout menuFlyout) => throw new NotSupportedException("[BasePostViewModel] PopulateMoreMenuFlyout must be overridden");
 
-    // Fills the reaction flyout with the five reactions or a cancel entry when a reaction exists.
+// Fills the reaction flyout with the five reactions or a cancel entry when a reaction exists.
     public virtual void PopulateReactionMenuFlyout(MenuFlyout menuFlyout) => throw new NotSupportedException("[BasePostViewModel] PopulateReactionMenuFlyout must be overridden");
+
+    // User-list load hooks for the indicator flyouts: History precomputes the lists from the
+    // post DTO, while other post types can override these to load their data when the flyout opens.
+    public virtual Task LoadReactionUsersAsync() => Task.CompletedTask;
+    public virtual Task LoadSharedUsersAsync() => Task.CompletedTask;
+    public virtual Task LoadRepostedUsersAsync() => Task.CompletedTask;
 
     [RelayCommand]
     public virtual async Task HandleTapAsync() => throw new NotSupportedException("[BasePostViewModel] HandleTapAsync must be overridden");
@@ -137,15 +149,6 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
 
     [RelayCommand]
     public virtual async Task HandleMuteNotificationsAsync() => throw new NotSupportedException("[BasePostViewModel] HandleMuteNotificationsAsync must be overridden");
-
-    [RelayCommand]
-    public virtual void HandleReactionTap() => throw new NotSupportedException("[BasePostViewModel] HandleReactionTap must be overridden");
-
-    [RelayCommand]
-    public virtual void HandleSharedTap() => throw new NotSupportedException("[BasePostViewModel] HandleSharedTap must be overridden");
-
-    [RelayCommand]
-    public virtual void HandleRepostTap() => throw new NotSupportedException("[BasePostViewModel] HandleRepostTap must be overridden");
 
     [RelayCommand]
     public virtual void HandleRepostedUserTap() => throw new NotSupportedException("[BasePostViewModel] HandleRepostedUserTap must be overridden");
