@@ -167,8 +167,130 @@
                         </Grid>
                     </DataTemplate>
 
-                    <DataTemplate x:Key="SideBarMessagesTemplate" x:DataType="vmp:MainPageFriendshipSideBarViewModel">
-                        <Grid />
+                    <DataTemplate x:Key="MessageTemplate" x:DataType="vm:BaseMessageViewModel">
+                        <Button
+                            Padding="0"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Command="{x:Bind HandleTapCommand}">
+                            <Grid Padding="12,8" ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="36" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="32" />
+                                </Grid.ColumnDefinitions>
+
+                                <Rectangle
+                                    Width="3"
+                                    Margin="-12,-8,0,-8"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Stretch"
+                                    Fill="#E53935"
+                                    Visibility="{x:Bind IsUnread, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+
+                                <PersonPicture
+                                    Grid.Column="0"
+                                    Width="36"
+                                    Height="36"
+                                    VerticalAlignment="Center"
+                                    ProfilePicture="{x:Bind ProfileImageSource, Mode=OneWay}" />
+
+                                <StackPanel
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Spacing="2">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            FontSize="14"
+                                            FontWeight="Bold"
+                                            MaxLines="1"
+                                            Text="{x:Bind SenderName, Mode=OneWay}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <FontIcon
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Foreground="#1a5bf3"
+                                            Glyph="&#xF760;"
+                                            Visibility="{x:Bind IsSenderModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                                        <FontIcon
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Foreground="#f78501"
+                                            Glyph="&#xF760;"
+                                            Visibility="{x:Bind IsSenderAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                                    </StackPanel>
+
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        MaxLines="1"
+                                        Text="{x:Bind MainText, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis" />
+
+                                    <TextBlock
+                                        FontSize="11"
+                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                        MaxLines="1"
+                                        Text="{x:Bind TimestampText, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+
+                                <Button
+                                    Grid.Column="2"
+                                    Width="32"
+                                    Height="32"
+                                    Padding="0"
+                                    VerticalAlignment="Center"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Command="{x:Bind ReplyCommand}"
+                                    ToolTipService.ToolTip="답장"
+                                    Visibility="{x:Bind IsReplyButtonVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                                    <FontIcon FontSize="16" Glyph="&#xE8CA;" />
+                                </Button>
+
+                                <Rectangle
+                                    Grid.ColumnSpan="3"
+                                    Height="1"
+                                    Margin="-12,-8"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Bottom"
+                                    Fill="{ThemeResource SurfaceStrokeColorDefaultBrush}" />
+                            </Grid>
+                        </Button>
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="SideBarMessagesTemplate" x:DataType="vmp:MainPageMessagesSideBarViewModel">
+                        <Grid Loaded="{x:Bind OnLoaded}" RowSpacing="8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <ScrollViewer Grid.Row="0">
+                                <ItemsRepeater ItemTemplate="{StaticResource MessageTemplate}" ItemsSource="{x:Bind Items, Mode=OneWay}" />
+                            </ScrollViewer>
+
+                            <TextBlock
+                                Grid.Row="0"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Text="{x:Bind EmptyText, Mode=OneWay}"
+                                Visibility="{x:Bind IsEmpty, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+
+                            <Button
+                                Grid.Row="1"
+                                Height="40"
+                                HorizontalAlignment="Stretch"
+                                Command="{x:Bind WriteMessageCommand}"
+                                Content="쪽지 작성"
+                                Style="{StaticResource AccentButtonStyle}" />
+                        </Grid>
                     </DataTemplate>
 
                     <vmp:MainPageSideBarDataTemplateSelector

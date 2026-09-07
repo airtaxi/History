@@ -51,4 +51,6 @@ public abstract partial class BaseFriendshipViewModel : BaseViewModel
 
     [RelayCommand]
     public abstract Task HandleFriendshipActionAsync();
+
+    public override string ToString() => Nickname ?? string.Empty;
 }
