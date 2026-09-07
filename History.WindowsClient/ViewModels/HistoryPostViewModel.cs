@@ -20,6 +20,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.Windows.Storage.Pickers;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace History.WindowsClient.ViewModels;
@@ -166,6 +167,8 @@ public partial class HistoryPostViewModel : BasePostViewModel,
 
     private static BitmapImage CreateProfileImageSource(UserResponseDto user) => user?.ProfileThumbnailMediaId == null ? null : new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(user.ProfileThumbnailMediaId)));
 
+    public override string ProfileMediaUri => User?.ProfileMediaId != null ? CommonUtils.GenerateMediaUri(User.ProfileMediaId) : null;
+
     // Adds a clickable item that runs the given async action when tapped.
     private static MenuFlyoutItem CreateActionItem(string text, string glyph, Func<Task> action, Windows.UI.Color? iconColor = null)
     {
@@ -238,6 +241,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
 
         menuFlyout.Items.Add(Utils.CreateActionItem("게시글 URL 복사", "\uE71B", HandleCopyUrl));
         menuFlyout.Items.Add(Utils.CreateActionItem("게시글 이미지로 저장", "\uEE71", HandleSaveImageAsync));
+        menuFlyout.Items.Add(Utils.CreateActionItem("게시글 본문만 이미지로 저장", "\uE7C3", HandleSaveBodyImageAsync));
     }
 
     public override void PopulateReactionMenuFlyout(MenuFlyout menuFlyout)
@@ -337,8 +341,41 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         Clipboard.SetContent(dataPackage);
     }
 
-    // TODO: Render the post to an image once the renderer is implemented.
-    private async Task HandleSaveImageAsync() => await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "아직 지원하지 않는 기능입니다."));
+    private async Task HandleSaveImageAsync()
+    {
+        var confirm = await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("게시글 이미지로 저장", "이 게시글을 이미지로 저장하시겠습니까?", "확인", "취소"));
+        if (confirm != ContentDialogResult.Primary) return;
+
+        var includeComments = await ConfirmIncludeCommentsAsync();
+        await SavePostImageAsync(this, includeComments ? Comments : null);
+    }
+
+    // Saves only the post contents without the profile header (profile image, nickname, timestamp).
+    private async Task HandleSaveBodyImageAsync() => await SavePostImageAsync(null, null);
+
+    private async Task SavePostImageAsync(BasePostViewModel post, IEnumerable<BaseCommentViewModel> comments)
+    {
+        var saveResult = await BaseViewModel.SaveFileAsync(new FileSavePickerParameters(
+            new Dictionary<string, IReadOnlyList<string>> { ["PNG 이미지"] = [".png"] },
+            $"post_{DateTime.Now:yyyyMMdd_HHmmss}.png", ".png", PickerLocationId.PicturesLibrary));
+        if (saveResult == null) return;
+
+        var renderBytes = await BaseViewModel.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.RenderAsync(Post.Contents, post, comments));
+        if (renderBytes == null)
+        {
+            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("오류", "이미지로 저장할 내용이 없습니다."));
+            return;
+        }
+
+        await File.WriteAllBytesAsync(saveResult.Path, renderBytes);
+        await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 이미지가 저장되었습니다."));
+    }
+
+    private async Task<bool> ConfirmIncludeCommentsAsync()
+    {
+        if (Comments.Count == 0) return false;
+        return await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("게시글 이미지로 저장", $"댓글 {Comments.Count}개를 포함해서 저장하시겠습니까?", "포함", "취소")) == ContentDialogResult.Primary;
+    }
 
     private async Task HandleBookmarkAsync(bool bookmark)
     {

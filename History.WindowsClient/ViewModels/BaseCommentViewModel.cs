@@ -22,6 +22,9 @@ public abstract partial class BaseCommentViewModel : BaseViewModel
     [ObservableProperty]
     public partial ImageSource ProfileThumbnailImageSource { get; protected set; }
 
+    // Profile media URI for image export; null when the user has no profile media.
+    public virtual string ProfileMediaUri => null;
+
     // Comment-dependent properties — all set by derived types.
     [ObservableProperty]
     public partial bool HasLikes { get; protected set; }
@@ -44,6 +47,11 @@ public abstract partial class BaseCommentViewModel : BaseViewModel
     public partial DateTime? ModifiedAt { get; protected set; }
     [ObservableProperty]
     public partial string TimestampText { get; protected set; }
+
+    // Raw render contents (BaseContent) for image export; the UI-level Contents
+    // are indexable-compatible only (IContentViewModel), so each platform provides
+    // its own raw backing data.
+    public virtual List<BaseContent> GetRenderRawContents() => throw new NotSupportedException("[BaseCommentViewModel] GetRenderRawContents must be overridden");
 
     // The reply affordance is shown only on the post page (unwrapped view) and only for other users' comments.
     public bool IsReplyVisible => PostType == PostType.Unwrapped && !IsMyComment;

@@ -70,6 +70,10 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
         catch (Exception) { } // Ignore any exceptions during update, as the view might be in the foreground.
     }
 
+    public override string ProfileMediaUri => Comment?.User?.ProfileMediaId != null ? CommonUtils.GenerateMediaUri(Comment.User.ProfileMediaId) : null;
+
+    public override List<BaseContent> GetRenderRawContents() => Comment.Contents;
+
     public override void PopulateMoreMenuFlyout(MenuFlyout menuFlyout)
     {
         menuFlyout.Items.Clear();

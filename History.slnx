@@ -12,6 +12,7 @@
   </Folder>
   <Project Path="../SuggestingBox.Maui/SuggestingBox.Maui/SuggestingBox.Maui.csproj" />
   <Project Path="History.ApiService/History.ApiService.csproj" />
+  <Project Path="History.Rendering/History.Rendering.csproj" />
   <Project Path="History.AppHost/History.AppHost.csproj" />
   <Project Path="History.Commons/History.Commons.csproj" />
   <Project Path="History.MobileClient/History.MobileClient.csproj">

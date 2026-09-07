@@ -140,6 +140,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\SuggestingBox.Maui\SuggestingBox.Maui\SuggestingBox.Maui.csproj" />
 		<ProjectReference Include="..\History.Commons\History.Commons.csproj" />
+		<ProjectReference Include="..\History.Rendering\History.Rendering.csproj" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">

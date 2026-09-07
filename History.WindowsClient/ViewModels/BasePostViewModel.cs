@@ -23,8 +23,11 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
     public partial bool IsModerator { get; protected set; }
     [ObservableProperty]
     public partial bool IsAdmin { get; protected set; }
-    [ObservableProperty]
+[ObservableProperty]
     public partial ImageSource ProfileThumbnailImageSource { get; protected set; }
+
+    // Profile media URI for image export; null when the user has no profile media.
+    public virtual string ProfileMediaUri => null;
 
     // Post-dependent simple properties — all set by derived types.
     [ObservableProperty]
