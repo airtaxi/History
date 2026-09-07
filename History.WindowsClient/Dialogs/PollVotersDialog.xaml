@@ -41,45 +41,53 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:PollVoterViewModel">
-                        <Border
-                            Padding="12,10"
-                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
-                            CornerRadius="8">
+                        <Button
+                            Padding="0"
+                            HorizontalAlignment="Stretch"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="OnVoterClicked"
+                            Tag="{x:Bind}">
+                            <Border
+                                Padding="12,10"
+                                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                CornerRadius="8">
 
-                            <Grid ColumnSpacing="10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-                                <!--  Profile Image  -->
-                                <Border
-                                    Grid.Column="0"
-                                    Width="40"
-                                    Height="40"
-                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                    CornerRadius="20">
-                                    <Image Source="{x:Bind ProfileImageSource}" Stretch="UniformToFill" />
-                                </Border>
+                                    <!--  Profile Image  -->
+                                    <Border
+                                        Grid.Column="0"
+                                        Width="40"
+                                        Height="40"
+                                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        CornerRadius="20">
+                                        <Image Source="{x:Bind ProfileImageSource}" Stretch="UniformToFill" />
+                                    </Border>
 
-                                <!--  Nickname  -->
-                                <TextBlock
-                                    Grid.Column="1"
-                                    VerticalAlignment="Center"
-                                    FontWeight="Bold"
-                                    Text="{x:Bind Nickname}"
-                                    TextTrimming="CharacterEllipsis" />
+                                    <!--  Nickname  -->
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        VerticalAlignment="Center"
+                                        FontWeight="Bold"
+                                        Text="{x:Bind Nickname}"
+                                        TextTrimming="CharacterEllipsis" />
 
-                                <!--  Voted At  -->
-                                <TextBlock
-                                    Grid.Column="2"
-                                    VerticalAlignment="Center"
-                                    FontSize="{StaticResource CaptionTextBlockFontSize}"
-                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                    Text="{x:Bind VotedAtText}" />
-                            </Grid>
-                        </Border>
+                                    <!--  Voted At  -->
+                                    <TextBlock
+                                        Grid.Column="2"
+                                        VerticalAlignment="Center"
+                                        FontSize="{StaticResource CaptionTextBlockFontSize}"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="{x:Bind VotedAtText}" />
+                                </Grid>
+                            </Border>
+                        </Button>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

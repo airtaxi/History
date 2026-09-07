@@ -24,7 +24,7 @@ public sealed partial class PollVotersViewModel(BaseViewModel baseViewModel, str
         try
         {
             var result = await baseViewModel.ExecuteRequestAsync(new GetPollVoters(postId, pollId, optionIndex));
-            Voters = result.IsSuccess ? new ObservableCollection<PollVoterViewModel>(result.Value.Select(voter => new PollVoterViewModel(voter))) : [];
+            Voters = result.IsSuccess ? new ObservableCollection<PollVoterViewModel>(result.Value.Select(voter => new PollVoterViewModel(voter, baseViewModel))) : [];
             IsEmpty = Voters.Count == 0;
         }
         finally { IsLoading = false; }

@@ -471,9 +471,6 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         await RefreshAsync();
     }
 
-    // TODO: Navigate to the user profile page once it is implemented.
-    public override void HandleRepostedUserTap() { }
-
     public override async Task HandleLoadMoreComments()
     {
         var oldestViewModel = Comments.OfType<HistoryCommentViewModel>().FirstOrDefault();
