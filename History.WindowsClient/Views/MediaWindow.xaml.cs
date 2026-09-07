@@ -120,6 +120,12 @@ public sealed partial class MediaWindow : BaseWindow
     private const double MinZoomFactor = 0.1;
     private const double MaxZoomFactor = 10.0;
 
+    // Keeps the float-rounded zoomed extent strictly inside the viewport. Without this the
+    // Auto scrollbars appear at the exact-fit boundary, shrink the viewport, and lock the
+    // content into a small overflow that makes the ScrollViewer swallow the wheel (the
+    // FlipView then never flips to the next media).
+    private const double FitMargin = 2.0;
+
     private void OnZoomOutClicked(object sender, RoutedEventArgs e) => ZoomBy(-ZoomStep);
 
     private void OnZoomInClicked(object sender, RoutedEventArgs e) => ZoomBy(ZoomStep);
@@ -137,7 +143,7 @@ public sealed partial class MediaWindow : BaseWindow
         if (GetCurrentItemScrollViewer() is not ScrollViewer scrollViewer) return;
         if (FindDescendantImage(scrollViewer) is not Image { Source: BitmapImage bitmap }) return;
 
-        double zoomFactor = Math.Min(scrollViewer.ActualWidth / bitmap.PixelWidth, scrollViewer.ActualHeight / bitmap.PixelHeight);
+        double zoomFactor = Math.Min((scrollViewer.ActualWidth - FitMargin) / bitmap.PixelWidth, (scrollViewer.ActualHeight - FitMargin) / bitmap.PixelHeight);
         if (double.IsNaN(zoomFactor) || double.IsInfinity(zoomFactor) || zoomFactor <= 0) return;
 
         scrollViewer.ChangeView(null, null, (float)zoomFactor, disableAnimation);

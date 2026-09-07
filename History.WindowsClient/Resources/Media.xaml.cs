@@ -105,11 +105,17 @@ public sealed partial class Media : ResourceDictionary
         if (FindAncestorScrollViewer(element) is ScrollViewer scrollViewer) FitImageToViewport(scrollViewer);
     }
 
+    // Keeps the float-rounded zoomed extent strictly inside the viewport. Without this the
+    // Auto scrollbars appear at the exact-fit boundary, shrink the viewport, and lock the
+    // content into a small overflow that makes the ScrollViewer swallow the wheel (the
+    // FlipView then never flips to the next media).
+    private const double FitMargin = 2.0;
+
     private static void FitImageToViewport(ScrollViewer scrollViewer)
     {
         if (FindDescendantImage(scrollViewer) is not Image { Source: BitmapImage bitmap }) return;
 
-        double zoomFactor = Math.Min(scrollViewer.ActualWidth / bitmap.PixelWidth, scrollViewer.ActualHeight / bitmap.PixelHeight);
+        double zoomFactor = Math.Min((scrollViewer.ActualWidth - FitMargin) / bitmap.PixelWidth, (scrollViewer.ActualHeight - FitMargin) / bitmap.PixelHeight);
         if (double.IsNaN(zoomFactor) || double.IsInfinity(zoomFactor) || zoomFactor <= 0) return;
 
         scrollViewer.ChangeView(null, null, (float)zoomFactor, true);
