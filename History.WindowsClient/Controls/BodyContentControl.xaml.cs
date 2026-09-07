@@ -1,4 +1,5 @@
 ﻿using History.Commons.DataTypes.Contents;
+using History.Commons.Enums;
 using History.WindowsClient.Pages;
 using History.WindowsClient.ViewModels;
 using History.WindowsClient.ViewModels.Segments;
@@ -21,6 +22,10 @@ public sealed partial class BodyContentControl : BaseControl
     public static readonly DependencyProperty IsTextSelectionEnabledProperty = DependencyProperty.Register(nameof(IsTextSelectionEnabled), typeof(bool), typeof(BodyContentControl), new PropertyMetadata(false, OnIsTextSelectionEnabledPropertyChanged));
 
     public static readonly DependencyProperty BaseViewModelProperty = DependencyProperty.Register(nameof(BaseViewModel), typeof(BaseViewModel), typeof(BodyContentControl), new PropertyMetadata(null, OnBaseViewModelPropertyChanged));
+
+    public static readonly DependencyProperty PostTypeProperty = DependencyProperty.Register(nameof(PostType), typeof(PostType), typeof(BodyContentControl), new PropertyMetadata(PostType.Unwrapped, OnPostTypePropertyChanged));
+
+    public static readonly DependencyProperty HasMediasProperty = DependencyProperty.Register(nameof(HasMedias), typeof(bool), typeof(BodyContentControl), new PropertyMetadata(false, OnHasMediasPropertyChanged));
 
     private readonly BodyContentViewModel _viewModel = new();
 
@@ -46,9 +51,25 @@ public sealed partial class BodyContentControl : BaseControl
         set => SetValue(BaseViewModelProperty, value);
     }
 
+    public PostType PostType
+    {
+        get => (PostType)GetValue(PostTypeProperty);
+        set => SetValue(PostTypeProperty, value);
+    }
+
+    public bool HasMedias
+    {
+        get => (bool)GetValue(HasMediasProperty);
+        set => SetValue(HasMediasProperty, value);
+    }
+
     private static void OnIsTextSelectionEnabledPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((BodyContentControl)sender).MainRichTextBlock.IsTextSelectionEnabled = (bool)e.NewValue;
 
     private static void OnBaseViewModelPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((BodyContentControl)sender).Rebuild();
+
+    private static void OnPostTypePropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((BodyContentControl)sender).Rebuild();
+
+    private static void OnHasMediasPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((BodyContentControl)sender).Rebuild();
 
     private static Color AccentColor => (Color)Application.Current.Resources["SystemAccentColor"];
 
@@ -57,7 +78,7 @@ public sealed partial class BodyContentControl : BaseControl
     private void Rebuild()
     {
         MainRichTextBlock.Blocks.Clear();
-        _viewModel.Update(Contents, BaseViewModel);
+        _viewModel.Update(Contents, BaseViewModel, PostType, HasMedias);
         if (_viewModel.Segments.Count == 0) return;
 
         var paragraph = new Paragraph();
@@ -70,11 +91,12 @@ public sealed partial class BodyContentControl : BaseControl
         switch (segment)
         {
             case TextSegmentViewModel text: AppendTextInlines(inlines, text.Text); break;
-            case UrlSegmentViewModel url: AppendUrlInline(inlines, url.Url); break;
-            case HyperlinkSegmentViewModel hyperlink: AppendUrlInline(inlines, hyperlink.Url); break;
+            case UrlSegmentViewModel url: AppendUrlInline(inlines, url.Url, url.DisplayText); break;
+            case HyperlinkSegmentViewModel hyperlink: AppendUrlInline(inlines, hyperlink.Url, hyperlink.DisplayText); break;
             case ProfileSegmentViewModel profile: AppendProfileInline(inlines, profile); break;
             case HashtagSegmentViewModel hashtag: AppendHashtagInline(inlines, hashtag); break;
             case StickerSegmentViewModel sticker: AppendStickerInline(inlines, sticker); break;
+            case MoreSegmentViewModel: AppendMoreInline(inlines); break;
         }
     }
 
@@ -88,9 +110,20 @@ public sealed partial class BodyContentControl : BaseControl
         }
     }
 
-    private static void AppendUrlInline(InlineCollection inlines, string url)
+    // Renders the " ... 더보기" indicator at the truncation point.
+    private static void AppendMoreInline(InlineCollection inlines)
     {
-        var hyperlink = CreateHyperlink(text: url, isBold: false);
+        inlines.Add(new Run
+        {
+            Text = " ... 더보기",
+            FontWeight = FontWeights.Bold,
+            Foreground = new SolidColorBrush(Color.FromArgb(0xFF, 0x99, 0x99, 0x99))
+        });
+    }
+
+    private static void AppendUrlInline(InlineCollection inlines, string url, string displayText)
+    {
+        var hyperlink = CreateHyperlink(text: displayText, isBold: false);
         hyperlink.Click += async (_, _) => await OpenInBrowserAsync(url);
         inlines.Add(hyperlink);
     }

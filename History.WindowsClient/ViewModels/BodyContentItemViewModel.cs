@@ -13,10 +13,6 @@ public sealed partial class BodyContentItemViewModel(List<BaseContent> textTypeC
     public bool HasMedias { get; } = hasMedias;
     public bool IsParentPost { get; } = isParentPost;
 
-    // Text truncation limits per post type and media presence.
-    public int MaxTextLength => PostType == PostType.Timeline ? (HasMedias ? 80 : 400) : 1600;
-    public int MaxTextLines => PostType == PostType.Timeline ? (HasMedias ? 8 : 12) : 27;
-
     // Text selection is only enabled for Unwrapped posts, never for the shared post's original.
     public bool IsTextSelectionEnabled => PostType == PostType.Unwrapped && !IsParentPost;
 }

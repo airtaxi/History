@@ -16,7 +16,9 @@
         <controls:BodyContentControl
             BaseViewModel="{x:Bind BaseViewModel}"
             Contents="{x:Bind TextTypeContents}"
-            IsTextSelectionEnabled="{x:Bind IsTextSelectionEnabled}" />
+            HasMedias="{x:Bind HasMedias}"
+            IsTextSelectionEnabled="{x:Bind IsTextSelectionEnabled}"
+            PostType="{x:Bind PostType}" />
     </DataTemplate>
 
     <!--  GIF/WebP animation is not supported by BitmapImage; only the first frame is shown.  -->
