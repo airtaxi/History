@@ -7,6 +7,7 @@ using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Windows.Storage.Pickers;
 using Windows.Graphics;
@@ -90,7 +91,8 @@ public sealed partial class EditCommentWindow : BaseWindow
     // on load and whenever the attachment preview appears or disappears.
     private void UpdateWindowSize()
     {
-        if (RootGrid.XamlRoot == null) return;
+        if (_isWindowClosed) return;
+        else if (RootGrid.XamlRoot == null) return;
 
         RootGrid.Measure(new Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
 
@@ -153,7 +155,14 @@ public sealed partial class EditCommentWindow : BaseWindow
         Close();
     }
 
-    private void OnWindowClosed(object sender, WindowEventArgs args) => UnregisterMessengerRecipients();
+    private bool _isWindowClosed;
+    private void OnWindowClosed(object sender, WindowEventArgs args)
+    {
+        if (_isWindowClosed) return;
+        _isWindowClosed = true;
+
+        UnregisterMessengerRecipients();
+    }
 
     // Collects the editor contents and hands them to the edit comment box.
     private async void OnSaveButtonClicked(object sender, RoutedEventArgs e) => await _viewModel.CommentBox.SendCommentAsync(CommentEditor.GetContents());
