@@ -73,6 +73,6 @@ public partial class RegisterPageViewModel(ApplicationSettingsService settingsSe
             await LoginPageViewModel.LoadMyProfileAsync(this);
             LoginPageViewModel.NavigateToMainPage(this);
         }
-        else if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.NotFound || result.Error == ErrorType.Conflict) await ShowMessageDialogAsync(new("오류", result.ErrorMessage));
+        else if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.NotFound || result.Error == ErrorType.Conflict) await ShowMessageDialogAsync(new(Constants.ErrorTitle, result.ErrorMessage));
     }
 }

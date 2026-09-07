@@ -53,7 +53,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
         var result = await _baseViewModel.ExecuteRequestAsync(new GetUser(_userId));
         if (!result.IsSuccess)
         {
-            await _baseViewModel.ShowMessageDialogAsync(new("오류", "프로필 정보 갱신에 실패하였습니다."));
+            await _baseViewModel.ShowMessageDialogAsync(new(Constants.ErrorTitle, "프로필 정보 갱신에 실패하였습니다."));
             return;
         }
 
@@ -227,9 +227,6 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
         if (result.IsSuccess) await RefreshAsync();
     }
 
-    // Image-only extensions for the profile/background media picker.
-    private static readonly string[] s_profileImageFileTypeFilters = [".png", ".apng", ".jpg", ".jpeg", ".webp", ".gif", ".tif", ".tiff"];
-
     private async Task ChangeProfileMediaAsync()
     {
         var shouldUpload = true;
@@ -248,7 +245,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
 
         if (shouldUpload)
         {
-            var result = await _baseViewModel.PickFileAsync(new FileOpenPickerParameters(s_profileImageFileTypeFilters, PickerLocationId.PicturesLibrary, "프로필 이미지 선택"));
+            var result = await _baseViewModel.PickImageAsync("프로필 이미지 선택");
             if (result == null) return;
 
             // TODO: Open an image editor before uploading so the user can crop/rotate the picked image.
@@ -278,7 +275,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
 
         if (shouldUpload)
         {
-            var result = await _baseViewModel.PickFileAsync(new FileOpenPickerParameters(s_profileImageFileTypeFilters, PickerLocationId.PicturesLibrary, "배경 이미지 선택"));
+            var result = await _baseViewModel.PickImageAsync("배경 이미지 선택");
             if (result == null) return;
 
             // TODO: Open an image editor before uploading so the user can crop/rotate the picked image.
@@ -318,7 +315,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
             else await _baseViewModel.ShowMessageDialogAsync(new("안내", "프로필 비공개 설정이 완료되었습니다. 이제부터 다른 사용자가 닉네임이나 핸들을 통해 내 프로필을 검색할 수 없습니다."));
             await RefreshAsync();
         }
-        else await _baseViewModel.ShowMessageDialogAsync(new("오류", result.ErrorMessage));
+        else await _baseViewModel.ShowMessageDialogAsync(new(Constants.ErrorTitle, result.ErrorMessage));
     }
 
     // TODO: Implement profile mirroring once the external story integration is available on Windows.

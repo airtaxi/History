@@ -14,8 +14,6 @@ namespace History.WindowsClient.ViewModels.Notifications;
 // and the mark-all-as-read command. Loads quietly without the window loading overlay.
 public partial class NotificationsFlyoutViewModel : BaseViewModel
 {
-    private const int PageSize = 30;
-
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
     private bool _areThereNoMoreNotificationsToLoad;
 
@@ -80,7 +78,7 @@ public partial class NotificationsFlyoutViewModel : BaseViewModel
             Items.Clear();
             _areThereNoMoreNotificationsToLoad = false;
 
-            var notifications = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetNotifications(null, PageSize));
+            var notifications = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetNotifications(null, Constants.PageSize));
             foreach (var notification in notifications) Items.Add(new NotificationViewModel(notification, this));
         }
         catch (HttpRequestException) { }
@@ -105,7 +103,7 @@ public partial class NotificationsFlyoutViewModel : BaseViewModel
             var lastViewModel = Items.LastOrDefault();
             if (lastViewModel == null) return;
 
-            var notifications = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetNotifications(lastViewModel.Notification.Id, PageSize));
+            var notifications = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetNotifications(lastViewModel.Notification.Id, Constants.PageSize));
             foreach (var notification in notifications) Items.Add(new NotificationViewModel(notification, this));
 
             if (notifications.Count == 0) _areThereNoMoreNotificationsToLoad = true;

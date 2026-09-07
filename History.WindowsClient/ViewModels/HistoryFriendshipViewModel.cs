@@ -47,7 +47,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
         var result = await _baseViewModel.ExecuteRequestAsync(new GetUser(User.UserId));
         if (!result.IsSuccess)
         {
-            await ShowMessageDialogAsync(new("오류", "친구 정보 갱신에 실패하였습니다."));
+            await ShowMessageDialogAsync(new(Constants.ErrorTitle, "친구 정보 갱신에 실패하였습니다."));
             return;
         }
 

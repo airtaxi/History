@@ -1,28 +1,18 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons;
-using History.Commons.Api.Message;
-using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.Commons.Helpers;
-using History.WindowsClient.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Microsoft.Windows.Storage.Pickers;
 using System.Collections.ObjectModel;
-using System.IO;
-using Windows.Storage.Streams;
 
 namespace History.WindowsClient.ViewModels;
 
-public partial class WriteMessageDialogViewModel : ObservableObject
+public partial class WriteMessageDialogViewModel : BaseMessageDialogViewModel
 {
-    private static readonly string[] s_imageFileTypeFilters = [".png", ".apng", ".jpg", ".jpeg", ".webp", ".gif", ".tif", ".tiff"];
-
-    public BaseViewModel BaseViewModel { get; }
-
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsReceiverSelected))]
     [NotifyPropertyChangedFor(nameof(IsNotReceiverSelected))]
@@ -44,40 +34,15 @@ public partial class WriteMessageDialogViewModel : ObservableObject
     [ObservableProperty]
     public partial ObservableCollection<HistoryFriendshipViewModel> SuggestedFriends { get; set; } = [];
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(TextLengthText))]
-    [NotifyPropertyChangedFor(nameof(CanSend))]
-    public partial string Text { get; set; } = string.Empty;
+    public override bool CanSend => IsReceiverSelected && base.CanSend;
 
-    public string TextLengthText => $"{Text?.Length ?? 0} / 100자";
-
-    public bool CanSend => IsReceiverSelected && !string.IsNullOrWhiteSpace(Text) && (Text?.Length ?? 0) <= 100 && !IsSending;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanSend))]
-    public partial bool IsSending { get; set; }
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(AttachmentVisibility))]
-    public partial bool HasAttachment { get; set; }
-
-    public bool AttachmentVisibility => HasAttachment;
-
-    [ObservableProperty]
-    public partial BitmapImage AttachmentImageSource { get; set; }
-
-    public byte[] AttachmentData { get; private set; }
-    public string AttachmentFileName { get; private set; }
-
-    public bool IsSent { get; private set; }
-
-    public WriteMessageDialogViewModel(BaseViewModel baseViewModel, UserResponseDto receiver = null)
+    public WriteMessageDialogViewModel(BaseViewModel baseViewModel, UserResponseDto receiver = null) : base(baseViewModel)
     {
-        BaseViewModel = baseViewModel;
         SelectedReceiver = receiver;
         PopulateDefaultSuggestions();
     }
-private void PopulateDefaultSuggestions()
+
+    private void PopulateDefaultSuggestions()
     {
         if (CommonShared.Friends == null)
         {
@@ -106,6 +71,7 @@ private void PopulateDefaultSuggestions()
 
         SuggestedFriends = new(filtered.Select(x => new HistoryFriendshipViewModel(x, BaseViewModel) { FriendshipVisibility = Visibility.Collapsed }));
     }
+
     [RelayCommand]
     public void SelectReceiver(UserResponseDto user) => SelectedReceiver = user;
 
@@ -116,93 +82,16 @@ private void PopulateDefaultSuggestions()
         PopulateDefaultSuggestions();
     }
 
-    [RelayCommand]
-    public async Task HandleMediaTapAsync()
-    {
-        var result = await BaseViewModel.PickFileAsync(new FileOpenPickerParameters(s_imageFileTypeFilters, PickerLocationId.PicturesLibrary, "이미지 추가"));
-        if (result == null) return;
+    protected override string ReceiverId => SelectedReceiver.UserId;
 
-        var fileName = Path.GetFileName(result.Path);
-        var imageData = await File.ReadAllBytesAsync(result.Path);
-        await ApplyAttachmentAsync(fileName, imageData);
-    }
-
-    [RelayCommand]
-    public void ClearAttachment()
-    {
-        AttachmentData = null;
-        AttachmentFileName = null;
-        AttachmentImageSource = null;
-        HasAttachment = false;
-    }
-
-    public async Task ApplyAttachmentAsync(string fileName, byte[] imageData)
-    {
-        ClearAttachment();
-
-        var bitmapImage = new BitmapImage();
-        using (var stream = new InMemoryRandomAccessStream())
-        {
-            using (var outputStream = stream.GetOutputStreamAt(0))
-            {
-                using var dataWriter = new DataWriter(outputStream);
-                dataWriter.WriteBytes(imageData);
-                await dataWriter.StoreAsync();
-                await dataWriter.FlushAsync();
-            }
-            stream.Seek(0);
-            await bitmapImage.SetSourceAsync(stream);
-        }
-
-        AttachmentImageSource = bitmapImage;
-        AttachmentFileName = fileName;
-        AttachmentData = imageData;
-        HasAttachment = true;
-    }
-
-    public async Task<bool> SendAsync()
+    protected override async Task<bool> ValidateAsync()
     {
         if (SelectedReceiver == null)
         {
-            await BaseViewModel.ShowMessageDialogAsync(new("오류", "받는 사람을 선택하세요."));
+            await BaseViewModel.ShowMessageDialogAsync(new(Constants.ErrorTitle, "받는 사람을 선택하세요."));
             return false;
         }
 
-        var text = Text?.Trim();
-        if (string.IsNullOrEmpty(text))
-        {
-            await BaseViewModel.ShowMessageDialogAsync(new("오류", "쪽지 내용을 입력하세요."));
-            return false;
-        }
-
-        if (text.Length > 100)
-        {
-            await BaseViewModel.ShowMessageDialogAsync(new("오류", "쪽지는 100자 이내로 작성해야 합니다."));
-            return false;
-        }
-
-        IsSending = true;
-        try
-        {
-            var contents = new List<BaseContent> { new TextContent { Text = text } };
-            var files = new Dictionary<string, byte[]>();
-
-            if (HasAttachment && AttachmentData != null && !string.IsNullOrEmpty(AttachmentFileName))
-            {
-                contents.Add(new UploadContent { FileName = AttachmentFileName });
-                files[AttachmentFileName] = AttachmentData;
-            }
-
-            var result = await BaseViewModel.ExecuteRequestAsync(new SendMessage(SelectedReceiver.UserId, contents, files));
-            if (result.IsSuccess)
-            {
-                IsSent = true;
-                await BaseViewModel.ShowMessageDialogAsync(new("성공", "쪽지가 전송되었습니다."));
-                return true;
-            }
-
-            return false;
-        }
-        finally { IsSending = false; }
+        return true;
     }
 }

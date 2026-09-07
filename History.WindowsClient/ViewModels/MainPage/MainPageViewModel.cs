@@ -26,7 +26,7 @@ public partial class MainPageViewModel : BaseViewModel
             var myProfileResult = await ExecuteRequestAsync(new GetMyProfile());
             if (!myProfileResult.IsSuccess)
             {
-                await ShowMessageDialogAsync(new("오류", "프로필 정보 갱신에 실패하였습니다."));
+                await ShowMessageDialogAsync(new(Constants.ErrorTitle, "프로필 정보 갱신에 실패하였습니다."));
                 return;
             }
 

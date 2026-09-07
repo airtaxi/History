@@ -184,7 +184,7 @@ public sealed partial class EditCommentWindow : BaseWindow
         var inserted = await CommentEditor.InsertStickerAsync(stickerContent);
         if (!inserted)
         {
-            await _viewModel.ShowMessageDialogAsync(new MessageDialogParameters("오류", "스티커 이미지를 불러올 수 없습니다."));
+            await _viewModel.ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, Constants.StickerLoadErrorMessage));
             return;
         }
 

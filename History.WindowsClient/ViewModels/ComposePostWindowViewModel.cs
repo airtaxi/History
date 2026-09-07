@@ -26,12 +26,6 @@ namespace History.WindowsClient.ViewModels;
 // runs ModifyPost) and post sharing (the origin post bounds the share's audience).
 public sealed partial class ComposePostWindowViewModel : BaseViewModel
 {
-    // Image extensions for the media picker, shared with the comment attachment flow.
-    private static readonly string[] s_imageFileTypeFilters = [".png", ".apng", ".jpg", ".jpeg", ".webp", ".gif", ".tif", ".tiff"];
-
-    // Video extensions for the media picker; the server converts WEPBs and GIFs to video on its own.
-    private static readonly string[] s_videoFileTypeFilters = [".mp4", ".mov", ".avi", ".mkv", ".webm"];
-
     private const int CommentPermissionNotSetSelectedIndex = 0;
 
     [ObservableProperty]
@@ -205,7 +199,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         // A share (composing or editing) cannot widen the audience beyond the origin post's scope.
         if (ScopeOriginPost is { } originPost && value.Option > originPost.DiscoveryOption)
         {
-            _ = ShowMessageDialogAsync(new MessageDialogParameters("오류", "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다."));
+            _ = ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다."));
             SelectedDiscoveryOptionItem = DiscoveryOptionItems.FirstOrDefault(x => x.Option == originPost.DiscoveryOption) ?? DiscoveryOptionItems[0];
             return;
         }
@@ -246,7 +240,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
             return;
         }
 
-        var results = await PickFilesAsync(new FileOpenPickerParameters([.. s_imageFileTypeFilters, .. s_videoFileTypeFilters], PickerLocationId.PicturesLibrary, "사진/영상 추가"));
+        var results = await PickFilesAsync(new FileOpenPickerParameters(Constants.MediaFileTypeFilters, PickerLocationId.PicturesLibrary, "사진/영상 추가"));
         if (results == null || results.Count == 0) return;
 
         if (results.Count > remainingCount) await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", $"{remainingCount}개가 넘는 미디어 파일은 무시됩니다."));
@@ -302,7 +296,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         return true;
     }
 
-    private static bool IsVideoFile(string path) => s_videoFileTypeFilters.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
+    private static bool IsVideoFile(string path) => Constants.VideoFileTypeFilters.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
 
     private string GenerateRandomFileName(string sourcePath)
     {
@@ -323,7 +317,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         var fillResult = await ExecuteRequestAsync(new FillExternalUrlContent(new ExternalUrlContent { SourceUrl = url }), ErrorType.BadRequest);
         if (fillResult.IsFailure)
         {
-            if (fillResult.Error == ErrorType.BadRequest) await ShowMessageDialogAsync(new MessageDialogParameters("오류", fillResult.ErrorMessage));
+            if (fillResult.Error == ErrorType.BadRequest) await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, fillResult.ErrorMessage));
             return;
         }
 
@@ -415,7 +409,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
             discoveryOptionSelectedUserIds = await TrySelectDiscoveryOptionUsersAsync();
             if (discoveryOptionSelectedUserIds == null)
             {
-                await ShowMessageDialogAsync(new MessageDialogParameters("오류", "선택된 친구가 없습니다."));
+                await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "선택된 친구가 없습니다."));
                 RevertDiscoveryOptionToLastUsed();
                 return;
             }
@@ -448,14 +442,14 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         // Shares may carry no text of their own; the origin post renders as the content.
         if (!IsShareMode && string.IsNullOrWhiteSpace(plainText) && mediaAndUploadContents.Count == 0 && ExternalUrlContent == null && PollContent == null && !editorContents.OfType<HashtagContent>().Any())
         {
-            await ShowMessageDialogAsync(new MessageDialogParameters("오류", "빈 내용의 글은 작성할 수 없습니다"));
+            await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "빈 내용의 글은 작성할 수 없습니다"));
             return;
         }
 
         var result = IsEditMode ? await ExecuteRequestAsync(new ModifyPost(Post.Id, contents, discoveryOption, SelectedCommentPermissionItem.Permission, IsShareRepostDisallowed, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest) : await ExecuteRequestAsync(new WritePost(contents, discoveryOption, SelectedCommentPermissionItem.Permission, IsShareRepostDisallowed, ParentPost?.Id, discoveryOptionSelectedUserIds, files, reservationTime?.ToUniversalTime()), ErrorType.BadRequest);
         if (result.Error == ErrorType.BadRequest)
         {
-            await ShowMessageDialogAsync(new MessageDialogParameters("오류", result.ErrorMessage));
+            await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, result.ErrorMessage));
             return;
         }
         else if (result.IsSuccess)

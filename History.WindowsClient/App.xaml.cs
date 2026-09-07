@@ -111,8 +111,8 @@ public partial class App : Application
 
     public static async Task ShowErrorDialogAsync(string message)
     {
-        if (MainWindow.Frame.DispatcherQueue.HasThreadAccess) await MainWindow.Frame.ShowMessageDialogAsync(new("오류", message));
-        else MainWindow.Frame.DispatcherQueue.TryEnqueue(async () => await MainWindow.Frame.ShowMessageDialogAsync(new("오류", message)));
+        if (MainWindow.Frame.DispatcherQueue.HasThreadAccess) await MainWindow.Frame.ShowMessageDialogAsync(new(Constants.ErrorTitle, message));
+        else MainWindow.Frame.DispatcherQueue.TryEnqueue(async () => await MainWindow.Frame.ShowMessageDialogAsync(new(Constants.ErrorTitle, message)));
     }
 
     private static string GetApplicationVersion()

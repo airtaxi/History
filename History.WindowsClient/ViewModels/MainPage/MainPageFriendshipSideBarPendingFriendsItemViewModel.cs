@@ -49,7 +49,7 @@ public partial class MainPageFriendshipSideBarPendingFriendsItemViewModel : Base
             var result = await BaseViewModel.ExecuteRequestAsync(new GetPendingRequests());
             if (!result.IsSuccess)
             {
-                await BaseViewModel.ShowMessageDialogAsync(new("오류", "받은 친구 신청 목록을 가져오는 데에 실패하였습니다."));
+                await BaseViewModel.ShowMessageDialogAsync(new(Constants.ErrorTitle, "받은 친구 신청 목록을 가져오는 데에 실패하였습니다."));
                 return;
             }
 

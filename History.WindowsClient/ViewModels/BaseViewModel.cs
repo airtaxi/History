@@ -84,6 +84,9 @@ public abstract partial class BaseViewModel : ObservableObject
         return await args.ResultTask;
     }
 
+    // Opens the shared image-only picker with the standard image file type filters.
+    public Task<PickFileResult> PickImageAsync(string commitButtonText = "이미지 추가") => PickFileAsync(new FileOpenPickerParameters(Constants.ImageFileTypeFilters, PickerLocationId.PicturesLibrary, commitButtonText));
+
     public async Task<PickFileResult> SaveFileAsync(FileSavePickerParameters parameters)
     {
         var args = new PickerRequestedEventArgs<FileSavePickerParameters, PickFileResult>(parameters);

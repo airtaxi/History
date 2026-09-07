@@ -49,14 +49,14 @@ public partial class HistoryEditCommentBoxViewModel : BaseCommentBoxViewModel
 
         if (contents.Count == 0)
         {
-            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("오류", "빈 내용의 댓글은 작성할 수 없습니다"));
+            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "빈 내용의 댓글은 작성할 수 없습니다"));
             return;
         }
 
         var result = await BaseViewModel.ExecuteRequestAsync(new ModifyComment(_comment.Id, contents, files), ErrorType.BadRequest, ErrorType.Forbidden);
         if (result.Error == ErrorType.BadRequest || result.Error == ErrorType.Forbidden)
         {
-            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("오류", result.ErrorMessage));
+            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, result.ErrorMessage));
             return;
         }
         else if (result.IsSuccess)

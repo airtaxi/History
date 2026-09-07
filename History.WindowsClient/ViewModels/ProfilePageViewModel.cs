@@ -19,8 +19,6 @@ public partial class ProfilePageViewModel : BaseViewModel,
     IRecipient<ValueDeletedMessage<PostResponseDto>>,
     IRecipient<PostPinnedMessage>
 {
-    private const int PageSize = 30;
-
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
     private bool _areThereNoMorePostsToLoad;
     private string _userId;
@@ -87,7 +85,7 @@ public partial class ProfilePageViewModel : BaseViewModel,
             }
             Profile = new HistoryProfileViewModel(userResult.Value, this);
 
-            var postsResult = await ExecuteRequestAsync(new GetUserPosts(_userId, null, PageSize));
+            var postsResult = await ExecuteRequestAsync(new GetUserPosts(_userId, null, Constants.PageSize));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null)).ToList();
@@ -120,7 +118,7 @@ public partial class ProfilePageViewModel : BaseViewModel,
             var lastViewModel = Items.OfType<HistoryPostViewModel>().LastOrDefault();
             if (lastViewModel == null) return;
 
-            var postsResult = await ExecuteRequestAsync(new GetUserPosts(_userId, lastViewModel.RepostId ?? lastViewModel.Post.Id, PageSize));
+            var postsResult = await ExecuteRequestAsync(new GetUserPosts(_userId, lastViewModel.RepostId ?? lastViewModel.Post.Id, Constants.PageSize));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null)).ToList();

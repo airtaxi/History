@@ -374,7 +374,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         var renderBytes = await BaseViewModel.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.RenderAsync(Post.Contents, post, comments));
         if (renderBytes == null)
         {
-            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("오류", "이미지로 저장할 내용이 없습니다."));
+            await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "이미지로 저장할 내용이 없습니다."));
             return;
         }
 

@@ -56,7 +56,7 @@ public partial class MainPageFriendshipSideBarIgnoredUsersItemViewModel : BaseMa
             var result = await BaseViewModel.ExecuteRequestAsync(new GetIgnoredUsers());
             if (!result.IsSuccess)
             {
-                await BaseViewModel.ShowMessageDialogAsync(new("오류", "무시한 사용자 목록을 가져오는 데에 실패하였습니다."));
+                await BaseViewModel.ShowMessageDialogAsync(new(Constants.ErrorTitle, "무시한 사용자 목록을 가져오는 데에 실패하였습니다."));
                 return;
             }
 

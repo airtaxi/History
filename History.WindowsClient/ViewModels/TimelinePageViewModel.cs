@@ -14,8 +14,6 @@ namespace History.WindowsClient.ViewModels;
 // and post deletion sync.
 public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDeletedMessage<PostResponseDto>>
 {
-    private const int PageSize = 30;
-
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
     private bool _areThereNoMorePostsToLoad;
 
@@ -46,7 +44,7 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
 
             _areThereNoMorePostsToLoad = false;
 
-            var postsResult = await ExecuteRequestAsync(new GetTimelinePosts(null, PageSize));
+            var postsResult = await ExecuteRequestAsync(new GetTimelinePosts(null, Constants.PageSize));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null)).ToList();
@@ -79,7 +77,7 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
             var lastViewModel = Items.OfType<HistoryPostViewModel>().LastOrDefault();
             if (lastViewModel == null) return;
 
-            var postsResult = await ExecuteRequestAsync(new GetTimelinePosts(lastViewModel.RepostId ?? lastViewModel.Post.Id, PageSize));
+            var postsResult = await ExecuteRequestAsync(new GetTimelinePosts(lastViewModel.RepostId ?? lastViewModel.Post.Id, Constants.PageSize));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null)).ToList();

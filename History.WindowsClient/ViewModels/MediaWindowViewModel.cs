@@ -93,7 +93,7 @@ public sealed partial class MediaWindowViewModel : BaseViewModel
                 await DownloadFileAsync(CommonUtils.GenerateMediaUri(mediaId), tempPath);
                 File.Copy(tempPath, saveResult.Path, true);
             }
-            catch { await ShowMessageDialogAsync(new MessageDialogParameters("오류", "미디어 파일 저장 중 오류가 발생하였습니다.")); }
+            catch { await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "미디어 파일 저장 중 오류가 발생하였습니다.")); }
             finally
             {
                 if (File.Exists(tempPath))
@@ -165,7 +165,7 @@ public sealed partial class MediaWindowViewModel : BaseViewModel
                 }
             }
 
-            if (failedCount > 0) await ShowMessageDialogAsync(new MessageDialogParameters("오류", $"{targets.Count}개 중 {failedCount}개의 미디어 파일 저장에 실패하였습니다."));
+            if (failedCount > 0) await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, $"{targets.Count}개 중 {failedCount}개의 미디어 파일 저장에 실패하였습니다."));
         });
     }
 

@@ -93,7 +93,7 @@ public partial class LoginPageViewModel : BaseViewModel
 
         LoginPanelVisibility = Visibility.Visible;
 
-        var timeoutDialogParameters = new MessageDialogParameters("오류", "브라우저 로그인이 완료되지 않았습니다. 다시 시도해주세요.");
+        var timeoutDialogParameters = new MessageDialogParameters(Constants.ErrorTitle, "브라우저 로그인이 완료되지 않았습니다. 다시 시도해주세요.");
         await ShowMessageDialogAsync(timeoutDialogParameters);
     }
 
@@ -166,7 +166,7 @@ public partial class LoginPageViewModel : BaseViewModel
         }
         else
         {
-            var unknownErrorDialogParameters = new MessageDialogParameters("오류", $"알 수 없는 오류가 발생했습니다: {loginResult.Error}/{loginResult.ErrorMessage}");
+            var unknownErrorDialogParameters = new MessageDialogParameters(Constants.ErrorTitle, $"알 수 없는 오류가 발생했습니다: {loginResult.Error}/{loginResult.ErrorMessage}");
             await ShowMessageDialogAsync(unknownErrorDialogParameters);
         }
 

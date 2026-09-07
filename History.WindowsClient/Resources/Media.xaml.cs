@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.WinUI;
+using History.WindowsClient.Helpers;
 using History.WindowsClient.ViewModels.Media;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -105,19 +106,9 @@ public sealed partial class Media : ResourceDictionary
         if (FindAncestorScrollViewer(element) is ScrollViewer scrollViewer) FitImageToViewport(scrollViewer);
     }
 
-    // Keeps the float-rounded zoomed extent strictly inside the viewport. Without this the
-    // Auto scrollbars appear at the exact-fit boundary, shrink the viewport, and lock the
-    // content into a small overflow that makes the ScrollViewer swallow the wheel (the
-    // FlipView then never flips to the next media).
-    private const double FitMargin = 2.0;
-
     private static void FitImageToViewport(ScrollViewer scrollViewer)
     {
-        if (FindDescendantImage(scrollViewer) is not Image { Source: BitmapImage bitmap }) return;
-
-        double zoomFactor = Math.Min((scrollViewer.ActualWidth - FitMargin) / bitmap.PixelWidth, (scrollViewer.ActualHeight - FitMargin) / bitmap.PixelHeight);
-        if (double.IsNaN(zoomFactor) || double.IsInfinity(zoomFactor) || zoomFactor <= 0) return;
-
+        if (MediaViewportHelper.CalculateFitZoomFactor(scrollViewer) is not { } zoomFactor) return;
         scrollViewer.ChangeView(null, null, (float)zoomFactor, true);
     }
 
@@ -128,18 +119,6 @@ public sealed partial class Media : ResourceDictionary
         {
             if (current is ScrollViewer scrollViewer) return scrollViewer;
             current = VisualTreeHelper.GetParent(current);
-        }
-        return null;
-    }
-
-    private static Image FindDescendantImage(DependencyObject root)
-    {
-        int childCount = VisualTreeHelper.GetChildrenCount(root);
-        for (int i = 0; i < childCount; i++)
-        {
-            DependencyObject child = VisualTreeHelper.GetChild(root, i);
-            if (child is Image image) return image;
-            if (FindDescendantImage(child) is Image found) return found;
         }
         return null;
     }
