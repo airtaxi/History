@@ -25,12 +25,22 @@
 
         <TitleBar
             x:Name="AppTitleBar"
-            Title="히스토리"
             BackRequested="OnAppTitleBarBackRequested"
             PaneToggleRequested="OnAppTitleBarPaneToggleRequested">
-            <TitleBar.IconSource>
-                <ImageIconSource ImageSource="ms-appx:///Assets/Icon.ico" />
-            </TitleBar.IconSource>
+            <TitleBar.LeftHeader>
+                <Button
+                    Margin="4,0,0,0"
+                    BorderThickness="0"
+                    Click="OnLeftHeaderButtonClicked">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Image
+                            Width="16"
+                            Height="16"
+                            Source="ms-appx:///Assets/Icon.ico" />
+                        <TextBlock VerticalAlignment="Center" Text="히스토리" />
+                    </StackPanel>
+                </Button>
+            </TitleBar.LeftHeader>
             <TitleBar.RightHeader>
                 <StackPanel
                     HorizontalAlignment="Center"

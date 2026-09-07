@@ -119,4 +119,14 @@ public sealed partial class MainWindow : BaseWindow
 
     // Refreshing on open keeps the flyout list current without polling.
     private void OnNotificationsFlyoutOpening(object sender, object e) => _ = ((NotificationsFlyoutControl)NotificationsFlyout.Content).ViewModel.RefreshAsync();
+
+    private void OnLeftHeaderButtonClicked(object sender, RoutedEventArgs e)
+    {
+        if (AppFrame.Content is MainPage) WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
+        else
+        {
+            AppFrame.Navigate(typeof(MainPage));
+            AppFrame.BackStack.Clear();
+        }
+    }
 }
