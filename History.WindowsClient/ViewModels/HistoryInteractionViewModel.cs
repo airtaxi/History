@@ -44,8 +44,21 @@ public partial class HistoryInteractionViewModel : BaseInteractionViewModel
             ReactionEnum.Support => Color.FromArgb(0xFF, 0xA0, 0x61, 0xB1),
             _ => throw new ArgumentOutOfRangeException(nameof(reaction.Type), reaction.Type, null),
         });
+    }
 
-        if (reaction.Type == ReactionEnum.Like) IconSize = 9;
+    // Comment Like
+    public HistoryInteractionViewModel(UserResponseDto user, BaseViewModel baseViewModel)
+    {
+        _baseViewModel = baseViewModel;
+        Type = InteractionType.CommentLike;
+        CreatedAt = DateTime.UtcNow; // Comment likes do not have a created date in the API
+        User = user;
+        ReactionType = ReactionEnum.Like;
+
+        ProfileImageSource = CreateProfileImageSource(user);
+
+        Glyph = "\uEB52";
+        ColorBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0xEB, 0x55, 0x27));
     }
 
     public HistoryInteractionViewModel(SharedAndRepostedUserDto sharedUser, bool isShare, BaseViewModel baseViewModel)

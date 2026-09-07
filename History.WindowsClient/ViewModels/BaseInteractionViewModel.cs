@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.Enums;
 using Microsoft.UI.Xaml.Media;
@@ -14,7 +14,7 @@ public abstract partial class BaseInteractionViewModel : BaseViewModel
     public string TargetPostId { get; init; }
     public ReactionType? ReactionType { get; init; }
 
-    public double IconSize { get; init; } = 12;
+    public double IconSize { get; init; } = 9;
     public ImageSource ProfileImageSource { get; init; }
     public string Glyph { get; init; }
     public Brush ColorBrush { get; init; }

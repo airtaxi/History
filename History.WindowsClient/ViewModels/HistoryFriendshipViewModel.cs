@@ -22,10 +22,11 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
 
     private readonly BaseViewModel _baseViewModel;
 
-    public HistoryFriendshipViewModel(UserResponseDto user, BaseViewModel baseViewModel)
+    public HistoryFriendshipViewModel(UserResponseDto user, BaseViewModel baseViewModel, HistoryInteractionViewModel interactionViewModel = null)
     {
         _baseViewModel = baseViewModel;
         User = user;
+        InteractionViewModel = interactionViewModel;
 
         Update(user);
 

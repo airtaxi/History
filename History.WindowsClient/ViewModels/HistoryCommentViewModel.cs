@@ -56,7 +56,7 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
             HasLikes = comment.LikedUsers.Count > 0;
             LikesCount = comment.LikedUsers.Count;
             Liked = comment.LikedUsers.Any(x => x.UserId == CommonShared.UserId);
-            LikedUsers = comment.LikedUsers != null ? [.. comment.LikedUsers.Select(x => new HistoryFriendshipViewModel(x, ParentViewModel.BaseViewModel) { FriendshipVisibility = x.UserId == CommonShared.UserId ? Visibility.Collapsed : Visibility.Visible })] : [];
+            LikedUsers = comment.LikedUsers != null ? [.. comment.LikedUsers.Select(x => new HistoryFriendshipViewModel(x, ParentViewModel.BaseViewModel, new HistoryInteractionViewModel(x, ParentViewModel.BaseViewModel)) { FriendshipVisibility = x.UserId == CommonShared.UserId ? Visibility.Collapsed : Visibility.Visible })] : [];
 
             Contents = PostHelper.GenerateContentViewModels(comment.Contents, PostType, ParentViewModel.BaseViewModel);
 

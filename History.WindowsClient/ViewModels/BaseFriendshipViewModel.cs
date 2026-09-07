@@ -39,6 +39,10 @@ public abstract partial class BaseFriendshipViewModel : BaseViewModel
 
     public Visibility FriendshipVisibility { get; init; } = Visibility.Visible;
 
+    public BaseInteractionViewModel InteractionViewModel { get; protected set; }
+
+    public bool IsInteractionAvailable => InteractionViewModel != null;
+
     [RelayCommand]
     public abstract Task HandleFriendshipActionAsync();
 

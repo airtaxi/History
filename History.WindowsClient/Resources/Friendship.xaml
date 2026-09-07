@@ -42,6 +42,23 @@
                         Foreground="{StaticResource SystemAccentColor}"
                         Glyph="&#xE735;" />
                 </Border>
+                <Border
+                    Width="16"
+                    Height="16"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Background="{x:Bind InteractionViewModel.ColorBrush, Mode=OneWay}"
+                    CornerRadius="8"
+                    IsHitTestVisible="False"
+                    Visibility="{x:Bind IsInteractionAvailable, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                    <Border.RenderTransform>
+                        <TranslateTransform X="2" Y="2" />
+                    </Border.RenderTransform>
+                    <FontIcon
+                        FontSize="{x:Bind InteractionViewModel.IconSize, Mode=OneWay}"
+                        Foreground="White"
+                        Glyph="{x:Bind InteractionViewModel.Glyph, Mode=OneWay}" />
+                </Border>
             </Grid>
             <StackPanel
                 Grid.Column="1"
