@@ -58,6 +58,9 @@ public sealed partial class ComposePostWindow : BaseWindow
 
     protected override void HideLoading()
     {
+        // While the post media is uploading, hide requests are ignored so intermediate
+        // request loadings cannot unlock the composer mid-upload.
+        if (_viewModel.IsUploading) return;
         if (DispatcherQueue.HasThreadAccess) SetLoadingState(Visibility.Collapsed, null);
         else DispatcherQueue.TryEnqueue(() => SetLoadingState(Visibility.Collapsed, null));
     }
