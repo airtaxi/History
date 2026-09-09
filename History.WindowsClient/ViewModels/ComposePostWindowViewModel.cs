@@ -389,9 +389,16 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         }
 
         // The Kakao Story mirror cannot be scheduled, so a reserved post is posted
-        // there immediately; the user is told about the mismatch up front.
+        // there immediately; the saved session is validated here before any upload.
         if (IsKakaoPostEnabled && !IsEditMode && !IsShareMode)
         {
+            if (!await KakaoStoryUtils.EnsureLoggedInAsync(this))
+            {
+                IsKakaoPostEnabled = false;
+                await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "카카오스토리 로그인에 실패하였습니다."));
+                return;
+            }
+
             if (!await TryValidateKakaoStoryMirrorAsync(editorContents)) return;
             if (IsReservationEnabled) await ShowMessageDialogAsync(new MessageDialogParameters("카카오 게시", "게시 예약이 설정되어 있어도 카카오스토리에는 즉시 게시됩니다."));
         }

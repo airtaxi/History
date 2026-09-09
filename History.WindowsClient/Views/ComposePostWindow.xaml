@@ -384,12 +384,11 @@
                             Glyph="&#xEA98;" />
                     </Button>
 
-                    <!--  Kakao cross-post toggle: arming it gates the saved Kakao Story session  -->
+                    <!--  Kakao cross-post toggle  -->
                     <ToggleButton
                         x:Name="KakaoPostToggleButton"
                         Height="36"
                         Padding="12,0"
-                        Command="{x:Bind ViewModel.HandleKakaoPostTapCommand, Mode=OneWay}"
                         Content="카카오 게시"
                         IsChecked="{x:Bind ViewModel.IsKakaoPostEnabled, Mode=TwoWay}"
                         ToolTipService.ToolTip="카카오 게시" />

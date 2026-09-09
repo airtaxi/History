@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Helpers;
@@ -8,30 +7,15 @@ using History.WindowsClient.Models;
 
 namespace History.WindowsClient.ViewModels;
 
-// Kakao Story cross-post surface of the composer. The toggle gates on the saved
-// Kakao Story session and the submit flow mirrors the post there: ordinary posts
-// are written to Kakao Story first so a failure leaves nothing published, while
-// fortune-only posts (#오늘의운세) are written to History first because the server
-// generates their contents on write.
+// Kakao Story cross-post surface of the composer: ordinary posts are written to
+// Kakao Story first so a failure leaves nothing published, while fortune-only
+// posts (#오늘의운세) are written to History first because the server generates
+// their contents on write.
 public sealed partial class ComposePostWindowViewModel : BaseViewModel
 {
-    // Kakao cross-post toggle. Arming the toggle opens the login flow when the saved
-    // session is invalid so a later mirror never silently fails on an expired session.
+    // Kakao cross-post toggle; the saved session is validated before the mirror upload.
     [ObservableProperty]
     public partial bool IsKakaoPostEnabled { get; set; }
-
-    // The toggle is armed when IsKakaoPostEnabled becomes true and disarmed when the
-    // user turns it off; the command only gates the arming direction.
-    [RelayCommand]
-    private async Task HandleKakaoPostTapAsync()
-    {
-        if (!IsKakaoPostEnabled) return;
-
-        if (await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
-
-        IsKakaoPostEnabled = false;
-        await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "카카오스토리 로그인에 실패하였습니다."));
-    }
 
     // Blocks the submit when the Kakao Story text limit would be exceeded so the
     // mirror never fails after the History write.
