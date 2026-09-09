@@ -32,10 +32,10 @@ public partial class ContentEditorViewModel(BaseViewModel baseViewModel) : Obser
     {
         var orderedFriends = CommonShared.Friends.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname);
 
-        if (string.IsNullOrEmpty(query)) return [.. orderedFriends.Select(friendUser => new HistoryFriendshipViewModel(friendUser, baseViewModel) { FriendshipVisibility = Visibility.Collapsed })];
+        if (string.IsNullOrEmpty(query)) return [.. orderedFriends.Select(friendUser => new HistoryFriendshipViewModel(friendUser, baseViewModel) { FriendshipVisibility = Visibility.Collapsed, IsRootButtonHitTestVisible = false })];
         else return [.. orderedFriends
             .Where(friendUser => friendUser.Handle.Contains(query, StringComparison.InvariantCultureIgnoreCase) || friendUser.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(friendUser.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase))
-            .Select(friendUser => new HistoryFriendshipViewModel(friendUser, baseViewModel) { FriendshipVisibility = Visibility.Collapsed })];
+            .Select(friendUser => new HistoryFriendshipViewModel(friendUser, baseViewModel) { FriendshipVisibility = Visibility.Collapsed, IsRootButtonHitTestVisible = false })];
     }
 
     //private List<BaseFriendshipViewModel> BuildKakaoMentionViewModels(string query)

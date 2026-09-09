@@ -39,6 +39,10 @@ public abstract partial class BaseFriendshipViewModel : BaseViewModel
 
     public Visibility FriendshipVisibility { get; init; } = Visibility.Visible;
 
+    // Defaults to true; false makes the template root button transparent to input
+    // so taps fall through to the hosting control (e.g. suggestion selection).
+    public bool IsRootButtonHitTestVisible { get; init; } = true;
+
     public BaseInteractionViewModel InteractionViewModel { get; protected set; }
 
     public bool IsInteractionAvailable => InteractionViewModel != null;

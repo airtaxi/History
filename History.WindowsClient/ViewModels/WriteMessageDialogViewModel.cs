@@ -50,7 +50,7 @@ public partial class WriteMessageDialogViewModel : BaseMessageDialogViewModel
             return;
         }
 
-        SuggestedFriends = new(CommonShared.Friends.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x, BaseViewModel) { FriendshipVisibility = Visibility.Collapsed }));
+        SuggestedFriends = new(CommonShared.Friends.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x, BaseViewModel) { FriendshipVisibility = Visibility.Collapsed, IsRootButtonHitTestVisible = false }));
     }
 
     public void FilterFriends(string query)
@@ -69,7 +69,7 @@ public partial class WriteMessageDialogViewModel : BaseMessageDialogViewModel
 
         var filtered = CommonShared.Friends.Where(x => (x.Nickname != null && (x.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(x.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase))) || (x.Handle != null && x.Handle.Contains(query, StringComparison.OrdinalIgnoreCase))).OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname);
 
-        SuggestedFriends = new(filtered.Select(x => new HistoryFriendshipViewModel(x, BaseViewModel) { FriendshipVisibility = Visibility.Collapsed }));
+        SuggestedFriends = new(filtered.Select(x => new HistoryFriendshipViewModel(x, BaseViewModel) { FriendshipVisibility = Visibility.Collapsed, IsRootButtonHitTestVisible = false }));
     }
 
     [RelayCommand]

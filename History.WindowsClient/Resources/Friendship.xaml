@@ -14,7 +14,8 @@
             VerticalContentAlignment="Stretch"
             Background="Transparent"
             BorderThickness="0"
-            Command="{x:Bind HandleTapCommand}">
+            Command="{x:Bind HandleTapCommand}"
+            IsHitTestVisible="{x:Bind IsRootButtonHitTestVisible}">
             <Grid Padding="12,8" ColumnSpacing="12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="32" />

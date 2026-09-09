@@ -5,7 +5,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:vm="using:History.WindowsClient.ViewModels"
     Title="쪽지 작성"
     CloseButtonText="취소"
     DefaultButton="Primary"
@@ -14,64 +13,6 @@
     PrimaryButtonText="보내기"
     Style="{ThemeResource DefaultContentDialogStyle}"
     mc:Ignorable="d">
-
-    <ContentDialog.Resources>
-        <DataTemplate x:Key="WriteMessageReceiverSuggestionTemplate" x:DataType="vm:HistoryFriendshipViewModel">
-            <Grid Padding="12,8" ColumnSpacing="12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="32" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Grid Grid.Column="0">
-                    <PersonPicture
-                        Width="32"
-                        Height="32"
-                        ProfilePicture="{x:Bind ProfileThumbnailImageSource}" />
-                    <Border
-                        Width="12"
-                        Height="12"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Bottom"
-                        Background="{ThemeResource ControlSolidFillColorDefaultBrush}"
-                        CornerRadius="6"
-                        Visibility="{x:Bind IsFavorite, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <Border.RenderTransform>
-                            <TranslateTransform X="2" Y="2" />
-                        </Border.RenderTransform>
-                        <FontIcon
-                            FontSize="10"
-                            Foreground="{StaticResource SystemAccentColor}"
-                            Glyph="&#xE735;" />
-                    </Border>
-                </Grid>
-                <StackPanel
-                    Grid.Column="1"
-                    VerticalAlignment="Center"
-                    Orientation="Horizontal"
-                    Spacing="4">
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        FontSize="18"
-                        FontWeight="Bold"
-                        MaxLines="1"
-                        Text="{x:Bind Nickname, Mode=OneWay}"
-                        TextTrimming="CharacterEllipsis" />
-                    <FontIcon
-                        VerticalAlignment="Center"
-                        FontSize="14"
-                        Foreground="#1a5bf3"
-                        Glyph="&#xF760;"
-                        Visibility="{x:Bind IsModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
-                    <FontIcon
-                        VerticalAlignment="Center"
-                        FontSize="14"
-                        Foreground="#f78501"
-                        Glyph="&#xF760;"
-                        Visibility="{x:Bind IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
-                </StackPanel>
-            </Grid>
-        </DataTemplate>
-    </ContentDialog.Resources>
 
     <Grid Width="420" RowSpacing="12">
         <Grid.RowDefinitions>
@@ -85,7 +26,7 @@
             <AutoSuggestBox
                 x:Name="ReceiverAutoSuggestBox"
                 HorizontalAlignment="Stretch"
-                ItemTemplate="{StaticResource WriteMessageReceiverSuggestionTemplate}"
+                ItemTemplate="{StaticResource FriendshipTemplate}"
                 ItemsSource="{x:Bind ViewModel.SuggestedFriends, Mode=OneWay}"
                 PlaceholderText="받는 사람 검색 (친구 닉네임 또는 핸들)"
                 QueryIcon="Find"
