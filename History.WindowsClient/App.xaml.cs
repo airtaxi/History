@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Enums;
+using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Services;
@@ -59,6 +60,10 @@ public partial class App : Application
     {
         _window = new MainWindow();
         _window.Activate();
+
+        // Kakao Story requests that return 401 trigger the login window so the session
+        // can be restored without restarting the app.
+        KakaoStoryApiHandler.OnReloginRequired = KakaoStoryUtils.ReLoginAsync;
 
         // Cold start via "history-app://" protocol activation: the login view model
         // subscribes to messages during MainWindow construction above, so handle
