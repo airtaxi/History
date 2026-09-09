@@ -30,21 +30,41 @@ public static class PostImageRendererHelper
     /// Optional header (profile image, nickname, timestamp) is drawn above the contents;
     /// header values are derived from the shared post view model surface, and the
     /// timestamp is always absolute (relative timestamps are meaningless in exported images).
+    /// When the post view model is a share (IsShare), the shared (parent) post card is drawn
+    /// between the contents and the comments with the parent's profile header and contents.
+    /// When includeHeader is false the profile header is omitted but the shared post card is kept.
     /// Optional comments are drawn below the contents under a thin separator, with the
     /// same absolute timestamp rule; contents are built from the comment view model surface.
     /// When excludeMediaExceptFirst is set, only the first MediaContent is rendered and
     /// every later MediaContent is skipped so it can be attached as a regular file instead.
     /// </summary>
-    public static async Task<byte[]> RenderAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null, IEnumerable<BaseCommentViewModel> comments = null, bool excludeMediaExceptFirst = false)
+    public static async Task<byte[]> RenderAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null, IEnumerable<BaseCommentViewModel> comments = null, bool excludeMediaExceptFirst = false, bool includeHeader = true)
     {
         var resources = await GetResourcesAsync();
-        var header = post != null ? new PostRenderHeader
+        var header = post != null && includeHeader ? new PostRenderHeader
         {
             ProfileImageUrl = post.ProfileMedia?.Uri,
             Nickname = post.Nickname,
             CreatedAt = post.CreatedAt,
             ModifiedAt = post.ModifiedAt
         } : null;
+
+        SharedPostRenderData sharedPostData = null;
+        if (post is { IsShare: true, ParentPost: not null })
+        {
+            var parent = post.ParentPost;
+            var parentContents = parent.GetRenderRawContents();
+            if (parentContents is { Count: > 0 })
+            {
+                sharedPostData = new SharedPostRenderData
+                {
+                    ProfileImageUrl = parent.ProfileMedia?.Uri,
+                    Nickname = parent.Nickname,
+                    Contents = parentContents,
+                    SharedUsersCount = parent.HasSharedUsers ? parent.SharedUsersCount : 0
+                };
+            }
+        }
 
         var commentData = comments?.Select(comment => new CommentRenderData
         {
@@ -55,17 +75,19 @@ public static class PostImageRendererHelper
             ModifiedAt = comment.ModifiedAt
         });
 
-        return await PostImageRenderer.RenderAsync(contents, resources, header, commentData, excludeMediaExceptFirst);
+        return await PostImageRenderer.RenderAsync(contents, resources, header, commentData, excludeMediaExceptFirst, sharedPostData);
     }
 
     /// <summary>
     /// Renders the post contents with a header derived from the shared post view model
     /// surface (profile media URI, nickname, absolute timestamp) and saves the resulting
-    /// PNG to the device gallery. Comments are appended below the contents when provided.
+    /// PNG to the device gallery. When the post view model is a share, the shared (parent)
+    /// post card is included; when includeHeader is false the profile header is omitted
+    /// but the shared post card is kept. Comments are appended below the contents when provided.
     /// Mirrors the save flow of FullScreenMediaViewerPage (permission → temp file →
     /// gallery → cleanup) and surfaces the result through a toast or an error alert.
     /// </summary>
-    public static async Task SaveAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null, IEnumerable<BaseCommentViewModel> comments = null)
+    public static async Task SaveAsync(IEnumerable<BaseContent> contents, BasePostViewModel post = null, IEnumerable<BaseCommentViewModel> comments = null, bool includeHeader = true)
     {
 #if !WINDOWS
         var status = await Permissions.RequestAsync<SaveMediaPermission>();
@@ -73,7 +95,7 @@ public static class PostImageRendererHelper
 #endif
 
         byte[] bytes;
-        try { bytes = await RenderAsync(contents, post, comments); }
+        try { bytes = await RenderAsync(contents, post, comments, includeHeader: includeHeader); }
         catch
         {
             await App.TopPage.DisplayAlertAsync("오류", "게시글 이미지 생성 중 오류가 발생하였습니다.", Constants.PromptOk);

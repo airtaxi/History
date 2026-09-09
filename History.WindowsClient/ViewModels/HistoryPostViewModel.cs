@@ -7,6 +7,7 @@ using History.Commons.Api.Moderation;
 using History.Commons.Api.Post;
 using History.Commons.Api.Report;
 using History.Commons.Api.User;
+using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.WindowsClient.Dialogs;
@@ -172,6 +173,8 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     private static BitmapImage CreateProfileImageSource(UserResponseDto user) => user?.ProfileThumbnailMediaId == null ? null : new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(user.ProfileThumbnailMediaId)));
 
     public override string ProfileMediaUri => User?.ProfileMediaId != null ? CommonUtils.GenerateMediaUri(User.ProfileMediaId) : null;
+
+    public override List<BaseContent> GetRenderRawContents() => Post?.Contents ?? [];
 
     // Adds a clickable item that runs the given async action when tapped.
     private static MenuFlyoutItem CreateActionItem(string text, string glyph, Func<Task> action, Windows.UI.Color? iconColor = null)
@@ -358,20 +361,21 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     }
 
     // Saves only the post contents without the profile header (profile image, nickname, timestamp).
+    // The shared (parent) post card, when present, is still included because it is part of the body.
     private async Task HandleSaveBodyImageAsync()
     {
         var saveTarget = await ConfirmSaveTargetAsync();
         if (saveTarget == null) return;
 
-        await SavePostImageAsync(null, null, saveTarget == SaveToClipboardText);
+        await SavePostImageAsync(this, null, saveTarget == SaveToClipboardText, includeHeader: false);
     }
 
     // Asks whether the rendered image should go to the clipboard or to a file.
     private async Task<string> ConfirmSaveTargetAsync() => await BaseViewModel.ShowSelectionDialogAsync("저장 방식 선택", [SaveAsFileText, SaveToClipboardText]);
 
-    private async Task SavePostImageAsync(BasePostViewModel post, IEnumerable<BaseCommentViewModel> comments, bool saveToClipboard)
+    private async Task SavePostImageAsync(BasePostViewModel post, IEnumerable<BaseCommentViewModel> comments, bool saveToClipboard, bool includeHeader = true)
     {
-        var renderBytes = await BaseViewModel.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.RenderAsync(Post.Contents, post, comments));
+        var renderBytes = await BaseViewModel.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.RenderAsync(Post.Contents, post, comments, includeHeader: includeHeader));
         if (renderBytes == null)
         {
             await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "이미지로 저장할 내용이 없습니다."));

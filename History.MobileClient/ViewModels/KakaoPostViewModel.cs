@@ -38,6 +38,8 @@ public partial class KakaoPostViewModel : BasePostViewModel
         WeakReferenceMessenger.Default.Register<ValueChangedMessage<PostData>>(this, OnPostChangedMessageReceived);
     }
 
+    public override List<BaseContent> GetRenderRawContents() => BuildBaseContents(_postData);
+
     private void OnPostChangedMessageReceived(object _, ValueChangedMessage<PostData> message)
     {
         if (message.Value.id != _postData.id) return;
@@ -320,8 +322,9 @@ public partial class KakaoPostViewModel : BasePostViewModel
         }
         else if (action == "게시글 본문만 이미지로 저장")
         {
-            // Pass null for the post so the profile header (profile image, nickname, timestamp) is omitted.
-            await App.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), null, null));
+            // Pass includeHeader false so the profile header (profile image, nickname, timestamp) is omitted.
+            // The shared (parent) post card, when present, is still included because it is part of the body.
+            await App.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.SaveAsync(BuildBaseContents(_postData), this, null, includeHeader: false));
         }
     }
 

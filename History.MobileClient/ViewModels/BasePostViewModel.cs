@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons;
+using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using System.Collections.ObjectModel;
 
@@ -10,7 +11,7 @@ namespace History.MobileClient.ViewModels;
 // Holds the full UI surface used by the shared templates and virtual command entry points.
 // Derived types fill the surface and override behavior; commands are declared here only
 // (adding [RelayCommand] on overrides would create duplicate command names).
-public partial class BasePostViewModel : ObservableObject
+public partial class BasePostViewModel(PostType postType, bool isParentPost = false) : ObservableObject
 {
     // User-dependent properties.
     [ObservableProperty]
@@ -21,6 +22,9 @@ public partial class BasePostViewModel : ObservableObject
     public partial bool IsAdmin { get; protected set; }
     [ObservableProperty]
     public partial IMediaViewModel ProfileMedia { get; protected set; }
+
+    // Raw contents for image export; derived types return their underlying DTO contents.
+    public virtual List<BaseContent> GetRenderRawContents() => throw new NotSupportedException("[BasePostViewModel] GetRenderRawContents must be overridden");
 
     // Post-dependent simple properties — all set by derived types.
     [ObservableProperty]
@@ -124,14 +128,8 @@ public partial class BasePostViewModel : ObservableObject
     [ObservableProperty]
     public partial string RepostCountPrefix { get; protected set; }
 
-    public PostType PostType { get; }
-    public bool IsParentPost { get; }
-
-    public BasePostViewModel(PostType postType, bool isParentPost = false)
-    {
-        PostType = postType;
-        IsParentPost = isParentPost;
-    }
+    public PostType PostType { get; } = postType;
+    public bool IsParentPost { get; } = isParentPost;
 
     [RelayCommand]
     public virtual async Task HandleTapAsync() => throw new NotSupportedException("[BasePostViewModel] HandleTapAsync must be overridden");

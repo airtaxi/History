@@ -28,3 +28,12 @@ public sealed class CommentRenderData
     public DateTime CreatedAt { get; init; }
     public DateTime? ModifiedAt { get; init; }
 }
+
+// Shared (parent) post surface for image export: compact header + raw contents.
+public sealed class SharedPostRenderData
+{
+    public string ProfileImageUrl { get; init; }
+    public string Nickname { get; init; }
+    public List<BaseContent> Contents { get; init; }
+    public int SharedUsersCount { get; init; }
+}

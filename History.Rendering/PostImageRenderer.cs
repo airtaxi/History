@@ -46,6 +46,11 @@ public static class PostImageRenderer
     private const float CommentRowSpacing = 12f;
     private const float CommentSeparatorHeight = 3f;
 
+    // Shared post layout (SharedPostTemplate 3x: 1px divider, 28dp profile, ColumnSpacing 6, bold name 14dp)
+    private const float SharedPostDividerHeight = 3f;
+    private const float SharedPostProfileSize = 84f;
+    private const float SharedPostColumnSpacing = 18f;
+
     // Kakao Story emoticon CDN details: emoticon URLs are hotlink-protected with
     // allow_referer=story.kakao.com, so downloads need the Referer header.
     private const string KakaoEmoticonUrlPrefix = "https://mk.kakaocdn.net/dna/emoticons";
@@ -81,12 +86,14 @@ public static class PostImageRenderer
     /// Renders the given post contents into PNG bytes.
     /// Optional header (profile image, nickname, timestamp) is drawn above the contents;
     /// the timestamp is always absolute (relative timestamps are meaningless in exported images).
+    /// Optional shared (parent) post is drawn between the contents and the comments as a
+    /// compact card: a divider, the parent's profile header, and the parent's contents.
     /// Optional comments are drawn below the contents under a thin separator, with the
     /// same absolute timestamp rule.
     /// When excludeMediaExceptFirst is set, only the first MediaContent is rendered and
     /// every later MediaContent is skipped so it can be attached as a regular file instead.
     /// </summary>
-    public static async Task<byte[]> RenderAsync(IEnumerable<BaseContent> contents, PostImageRendererResources resources = null, PostRenderHeader header = null, IEnumerable<CommentRenderData> comments = null, bool excludeMediaExceptFirst = false) => await Task.Run(async () =>
+    public static async Task<byte[]> RenderAsync(IEnumerable<BaseContent> contents, PostImageRendererResources resources = null, PostRenderHeader header = null, IEnumerable<CommentRenderData> comments = null, bool excludeMediaExceptFirst = false, SharedPostRenderData sharedPost = null) => await Task.Run(async () =>
     {
         var contentList = contents?.ToList() ?? [];
         var hasHeader = header != null;
@@ -114,6 +121,11 @@ public static class PostImageRenderer
         {
             var headerBlock = await BuildHeaderBlockAsync(header.ProfileImageUrl, header.Nickname, BuildFullTimestampText(header.CreatedAt, header.ModifiedAt), resources?.DefaultProfileImageBytes, style);
             if (headerBlock != null) blocks.Insert(0, headerBlock);
+        }
+        if (sharedPost != null)
+        {
+            var sharedPostBlock = await BuildSharedPostBlockAsync(sharedPost, contentWidth, resources?.DefaultProfileImageBytes, style, excludeMediaExceptFirst);
+            if (sharedPostBlock != null) blocks.Add(sharedPostBlock);
         }
         if (comments != null) blocks.AddRange(await BuildCommentBlocksAsync(comments, contentWidth, resources?.DefaultProfileImageBytes, style, excludeMediaExceptFirst));
         if (blocks.Count == 0) return null;
@@ -267,6 +279,75 @@ public static class PostImageRenderer
                 else if (hasTimestamp)
                 {
                     canvas.DrawText(timeText, textLeft, middleY - style.BodyFont.Metrics.Ascent, SKTextAlign.Left, style.BodyFont, style.SecondaryPaint);
+                }
+            }
+            finally { image?.Dispose(); }
+        });
+    }
+
+    // Assembles the shared (parent) post section mirroring SharedPostTemplate: a thin divider,
+    // a compact header (circular profile, bold nickname, share count) and the parent contents.
+    // FontIcon glyphs (share icon, admin/moderator badges) are omitted because the bundled
+    // font only covers the text glyphs. Returns null when the parent post has no contents.
+    private static async Task<RenderBlock> BuildSharedPostBlockAsync(SharedPostRenderData sharedPost, float contentWidth, byte[] defaultProfileImageBytes, RenderStyle style, bool excludeMediaExceptFirst = false)
+    {
+        if (sharedPost.Contents is not { Count: > 0 }) return null;
+
+        var innerBlocks = await BuildBlocksAsync(sharedPost.Contents, contentWidth, contentWidth, style, excludeMediaExceptFirst);
+        var innerHeight = innerBlocks.Count > 0 ? innerBlocks.Sum(block => block.Height) + ContentSpacing * (innerBlocks.Count - 1) : 0;
+
+        var image = sharedPost.ProfileImageUrl != null ? await DownloadProfileImageOrDefaultAsync(sharedPost.ProfileImageUrl, defaultProfileImageBytes) : null;
+        var hasProfile = image != null;
+
+        var hasName = !string.IsNullOrEmpty(sharedPost.Nickname);
+        var shareCountText = sharedPost.SharedUsersCount > 0 ? $"공유 {sharedPost.SharedUsersCount}" : null;
+
+        var maxTextWidth = contentWidth - SharedPostProfileSize - SharedPostColumnSpacing;
+        if (shareCountText != null) maxTextWidth -= style.BoldFont.MeasureText(shareCountText) + SharedPostColumnSpacing;
+        var nameText = hasName ? TruncateText(sharedPost.Nickname, style.BoldFont, maxTextWidth) : null;
+
+        var height = SharedPostDividerHeight + ContentSpacing + SharedPostProfileSize + ContentSpacing + innerHeight;
+
+        return new RenderBlock(height, (canvas, x, y) =>
+        {
+            try
+            {
+                // Divider
+                style.FillPaint.Color = ProgressTrackColor;
+                canvas.DrawRect(x, y, contentWidth, SharedPostDividerHeight, style.FillPaint);
+
+                var headerTop = y + SharedPostDividerHeight + ContentSpacing;
+                if (hasProfile)
+                {
+                    canvas.Save();
+                    var center = new SKPoint(x + SharedPostProfileSize / 2, headerTop + SharedPostProfileSize / 2);
+                    var circleBuilder = new SKPathBuilder();
+                    circleBuilder.AddCircle(center.X, center.Y, SharedPostProfileSize / 2);
+                    canvas.ClipPath(circleBuilder.Detach());
+
+                    // Cover crop (AspectFill) so the full circle is filled
+                    var scale = Math.Max(SharedPostProfileSize / (float)image.Width, SharedPostProfileSize / (float)image.Height);
+                    var drawWidth = image.Width * scale;
+                    var drawHeight = image.Height * scale;
+                    var dest = new SKRect(center.X - drawWidth / 2, center.Y - drawHeight / 2, center.X + drawWidth / 2, center.Y + drawHeight / 2);
+                    canvas.DrawImage(image, dest, new SKSamplingOptions(SKFilterMode.Linear));
+                    canvas.Restore();
+                }
+
+                var middleY = headerTop + SharedPostProfileSize / 2;
+                if (hasName) canvas.DrawText(nameText, x + SharedPostProfileSize + SharedPostColumnSpacing, middleY - style.BoldFont.Metrics.Ascent, SKTextAlign.Left, style.BoldFont, style.TextPaint);
+                if (shareCountText != null)
+                {
+                    var shareWidth = style.BoldFont.MeasureText(shareCountText);
+                    canvas.DrawText(shareCountText, x + contentWidth - shareWidth, middleY - style.BoldFont.Metrics.Ascent, SKTextAlign.Left, style.BoldFont, style.SecondaryPaint);
+                }
+
+                var cursorY = headerTop + SharedPostProfileSize + ContentSpacing;
+                for (var index = 0; index < innerBlocks.Count; index++)
+                {
+                    innerBlocks[index].Draw(canvas, x, cursorY);
+                    cursorY += innerBlocks[index].Height;
+                    if (index < innerBlocks.Count - 1) cursorY += ContentSpacing;
                 }
             }
             finally { image?.Dispose(); }

@@ -8,6 +8,7 @@ using History.Commons.Api.Moderation;
 using History.Commons.Api.Post;
 using History.Commons.Api.Report;
 using History.Commons.Api.User;
+using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.MobileClient.Helpers;
@@ -39,6 +40,8 @@ public partial class HistoryPostViewModel : BasePostViewModel
         }
         catch (Exception exception) { App.Page.DisplayAlertAsync("오류", $"{exception.Message}\n{exception.StackTrace}", Constants.PromptOk); }
     }
+
+    public override List<BaseContent> GetRenderRawContents() => Post?.Contents ?? [];
 
     private void OnNotificationPostReadMessage(object _, NotificationPostReadMessage message)
     {
@@ -275,8 +278,9 @@ public partial class HistoryPostViewModel : BasePostViewModel
         }
         else if (action == "게시글 본문만 이미지로 저장")
         {
-            // Pass null for the post so the profile header (profile image, nickname, timestamp) is omitted.
-            await App.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.SaveAsync(Post.Contents, null, null));
+            // Pass includeHeader false so the profile header (profile image, nickname, timestamp) is omitted.
+            // The shared (parent) post card, when present, is still included because it is part of the body.
+            await App.ExecuteWithLoadingAsync(async () => await PostImageRendererHelper.SaveAsync(Post.Contents, this, null, includeHeader: false));
         }
         else await App.Page.DisplayAlertAsync("안내", "아직 지원하지 않는 기능입니다.", Constants.PromptOk);
     }

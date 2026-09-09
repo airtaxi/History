@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons;
+using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -28,6 +29,9 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
 
     // Profile media URI for image export; null when the user has no profile media.
     public virtual string ProfileMediaUri => null;
+
+    // Raw contents for image export; derived types return their underlying DTO contents.
+    public virtual List<BaseContent> GetRenderRawContents() => throw new NotSupportedException("[BasePostViewModel] GetRenderRawContents must be overridden");
 
     // Post-dependent simple properties — all set by derived types.
     [ObservableProperty]
