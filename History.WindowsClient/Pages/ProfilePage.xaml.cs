@@ -125,8 +125,9 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClic
 
     // The InteractionTracker applies each mouse wheel notch directly with no inertia, so the
     // default wheel scrolling is far slower than ScrollViewer's. MouseWheel is excluded through
-    // IgnoredInputKinds and converted here into an inertial velocity change instead. Touchpad
-    // input is unaffected because it still goes through the CapableTouchpadOnly redirection.
+    // IgnoredInputKinds and converted here into an inertial velocity change instead. Most
+    // touchpad input stays on the tracker, but wheel events still leak through at gesture
+    // boundaries with arbitrary deltas, so those are filtered out in the handler below.
     private const float MouseWheelVelocityPerDelta = 5.0f;
     private const float MouseWheelInertiaDecayRate = 0.95f;
 
@@ -134,6 +135,10 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClic
     {
         var wheelDelta = e.GetCurrentPoint(null).Properties.MouseWheelDelta;
         if (wheelDelta == 0) return;
+
+        // Physical wheels always deliver multiples of 120, while touchpad deltas are
+        // arbitrary values, so non-multiples are ignored as touchpad input.
+        if (wheelDelta % 120 != 0) return;
 
         MainScrollView.AddScrollVelocity(new Vector2(0, -wheelDelta * MouseWheelVelocityPerDelta), new Vector2(MouseWheelInertiaDecayRate, MouseWheelInertiaDecayRate));
     }
