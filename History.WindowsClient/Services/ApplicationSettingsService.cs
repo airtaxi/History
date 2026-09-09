@@ -11,6 +11,7 @@ public sealed partial class ApplicationSettingsService : IDisposable
     private const string IsAutomaticUpdateCheckEnabledSettingKey = "IsAutomaticUpdateCheckEnabled";
     private const string AccessTokenSettingKey = "AccessToken";
     private const string RefreshTokenSettingKey = "RefreshToken";
+    private const string IsKakaoPostEnabledSettingKey = "IsKakaoPostEnabled";
 
     private bool _disposed;
 
@@ -35,6 +36,7 @@ public sealed partial class ApplicationSettingsService : IDisposable
         localSettings.Values[IsAutomaticUpdateCheckEnabledSettingKey] = Settings.IsAutomaticUpdateCheckEnabled;
         localSettings.Values[AccessTokenSettingKey] = Settings.AccessToken;
         localSettings.Values[RefreshTokenSettingKey] = Settings.RefreshToken;
+        localSettings.Values[IsKakaoPostEnabledSettingKey] = Settings.IsKakaoPostEnabled;
         SettingsChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -55,13 +57,17 @@ public sealed partial class ApplicationSettingsService : IDisposable
         string refreshToken = null;
         if (localSettings.Values.TryGetValue(RefreshTokenSettingKey, out var storedRefreshToken) && storedRefreshToken is string refreshTokenValue) refreshToken = refreshTokenValue;
 
+        var isKakaoPostEnabled = false;
+        if (localSettings.Values.TryGetValue(IsKakaoPostEnabledSettingKey, out var storedKakaoPostEnabled) && storedKakaoPostEnabled is bool kakaoPostEnabledValue) isKakaoPostEnabled = kakaoPostEnabledValue;
+
         // Compose normalized settings and return
         var applicationSettings = new ApplicationSettings
         {
             Theme = theme,
             IsAutomaticUpdateCheckEnabled = isAutomaticUpdateCheckEnabled,
             AccessToken = accessToken,
-            RefreshToken = refreshToken
+            RefreshToken = refreshToken,
+            IsKakaoPostEnabled = isKakaoPostEnabled
         };
         NormalizeSettings(applicationSettings);
         return applicationSettings;

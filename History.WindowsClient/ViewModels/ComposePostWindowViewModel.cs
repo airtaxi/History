@@ -164,8 +164,11 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     // for ordinary posts.
     public PostResponseDto ScopeOriginPost => IsEditMode ? Post.ParentPost : ParentPost;
 
-    public ComposePostWindowViewModel(PostResponseDto post = null, PostResponseDto parentPost = null)
+    private readonly ApplicationSettings _settings;
+
+    public ComposePostWindowViewModel(ApplicationSettings settings, PostResponseDto post = null, PostResponseDto parentPost = null)
     {
+        _settings = settings;
         Post = post;
         ParentPost = parentPost;
 

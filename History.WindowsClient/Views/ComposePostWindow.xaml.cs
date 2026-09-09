@@ -170,6 +170,7 @@ public sealed partial class ComposePostWindow : BaseWindow
     private async void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
         PostEditor.Initialize(_viewModel);
+        _viewModel.LoadIsKakaoPostEnabledSetting();
         if (_viewModel.IsShareMode)
         {
             Title = "게시글 공유";

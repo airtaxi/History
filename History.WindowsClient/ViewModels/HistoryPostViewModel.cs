@@ -17,6 +17,7 @@ using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using History.WindowsClient.ViewModels.DiscoveryOptions;
 using History.WindowsClient.Views;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -305,7 +306,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
     }
 
     // Opens the post composer in edit mode for this post.
-    private void HandleEditPost() => new ComposePostWindow(new ComposePostWindowViewModel(Post)).MakeModal(MainWindow.Instance);
+    private void HandleEditPost() => new ComposePostWindow(new ComposePostWindowViewModel(App.Services.GetRequiredService<ApplicationSettings>(), Post)).MakeModal(MainWindow.Instance);
 
     private async Task HandlePinPostAsync()
     {
@@ -503,7 +504,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
 
         // The share composer carries only the new text and attachments; the origin post
         // renders as the shared content on the server.
-        new ComposePostWindow(new ComposePostWindowViewModel(parentPost: Post)).MakeModal(MainWindow.Instance);
+        new ComposePostWindow(new ComposePostWindowViewModel(App.Services.GetRequiredService<ApplicationSettings>(), parentPost: Post)).MakeModal(MainWindow.Instance);
     }
 
     public override async Task HandleRepostAsync()

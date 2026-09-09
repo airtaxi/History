@@ -16,4 +16,7 @@ public sealed partial class ApplicationSettings : ObservableObject
 
     [ObservableProperty]
     public partial string RefreshToken { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsKakaoPostEnabled { get; set; }
 }

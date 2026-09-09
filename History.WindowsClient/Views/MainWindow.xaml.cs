@@ -2,6 +2,7 @@
 using History.WindowsClient.Controls;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
+using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using History.WindowsClient.Services;
 using History.WindowsClient.ViewModels;
@@ -126,7 +127,7 @@ public sealed partial class MainWindow : BaseWindow
     private void OnRefreshButtonClicked(object sender, RoutedEventArgs e) => WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
 
     // Opens the compose-post shell window. The actual post-writing flow is implemented later.
-    private void OnComposePostButtonClicked(object sender, RoutedEventArgs e) => new ComposePostWindow(new ComposePostWindowViewModel()).MakeModal(this);
+    private void OnComposePostButtonClicked(object sender, RoutedEventArgs e) => new ComposePostWindow(new ComposePostWindowViewModel(App.Services.GetRequiredService<ApplicationSettings>())).MakeModal(this);
 
     // Refreshing on open keeps the flyout list current without polling.
     private void OnNotificationsFlyoutOpening(object sender, object e) => _ = ((NotificationsFlyoutControl)NotificationsFlyout.Content).ViewModel.RefreshAsync();

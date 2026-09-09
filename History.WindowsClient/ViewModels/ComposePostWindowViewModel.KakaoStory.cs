@@ -17,6 +17,13 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     [ObservableProperty]
     public partial bool IsKakaoPostEnabled { get; set; }
 
+    // Persists the toggle through the application settings so the next compose
+    // window restores the last used state.
+    partial void OnIsKakaoPostEnabledChanged(bool value) => _settings.IsKakaoPostEnabled = value;
+
+    // Restores the last used toggle state on window load.
+    public void LoadIsKakaoPostEnabledSetting() => IsKakaoPostEnabled = _settings.IsKakaoPostEnabled;
+
     // Blocks the submit when the Kakao Story text limit would be exceeded so the
     // mirror never fails after the History write.
     private async Task<bool> TryValidateKakaoStoryMirrorAsync(List<BaseContent> contents)
