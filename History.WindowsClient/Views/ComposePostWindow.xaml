@@ -438,6 +438,23 @@
                                             <MenuFlyout x:Name="CommentPermissionMenuFlyout" Opening="OnCommentPermissionMenuFlyoutOpening" />
                                         </SplitButton.Flyout>
                                     </SplitButton>
+
+                                    <MenuFlyoutSeparator Visibility="{x:Bind ViewModel.IsTimelineRefreshToggleVisible, Mode=OneWay}" />
+
+                                    <Grid ColumnSpacing="8" Visibility="{x:Bind ViewModel.IsTimelineRefreshToggleVisible, Mode=OneWay}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            Text="타임라인 새로고침" />
+                                        <ToggleSwitch
+                                            Grid.Column="1"
+                                            MinWidth="0"
+                                            IsOn="{x:Bind ViewModel.IsTimelineRefreshEnabled, Mode=TwoWay}" />
+                                    </Grid>
                                 </StackPanel>
                             </Flyout>
                         </Button.Flyout>

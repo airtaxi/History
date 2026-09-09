@@ -182,6 +182,7 @@ public sealed partial class ComposePostWindow : BaseWindow
     {
         PostEditor.Initialize(_viewModel);
         _viewModel.LoadIsKakaoPostEnabledSetting();
+        _viewModel.LoadIsTimelineRefreshEnabledSetting();
         if (_viewModel.IsShareMode)
         {
             Title = "게시글 공유";

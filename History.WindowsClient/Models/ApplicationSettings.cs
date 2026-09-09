@@ -19,4 +19,10 @@ public sealed partial class ApplicationSettings : ObservableObject
 
     [ObservableProperty]
     public partial bool IsKakaoPostEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsTimelineRefreshEnabledOnNewPost { get; set; } = true;
+
+    [ObservableProperty]
+    public partial bool IsTimelineRefreshEnabledOnNewShare { get; set; } = false;
 }

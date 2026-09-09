@@ -39,6 +39,26 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     [ObservableProperty]
     public partial bool IsShareRepostDisallowed { get; set; }
 
+    // Timeline refresh toggle: the open feed refreshes after a successful write only while it
+    // is on. The state is stored separately for ordinary posts and share posts so each mode
+    // keeps its own default.
+    [ObservableProperty]
+    public partial bool IsTimelineRefreshEnabled { get; set; }
+
+    // Edit mode never refreshes the feed (the edited post updates in place), so the toggle is
+    // hidden there.
+    public bool IsTimelineRefreshToggleVisible => !IsEditMode;
+
+    // Persists the toggle through the application settings for the current mode.
+    partial void OnIsTimelineRefreshEnabledChanged(bool value)
+    {
+        if (IsShareMode) _settings.IsTimelineRefreshEnabledOnNewShare = value;
+        else _settings.IsTimelineRefreshEnabledOnNewPost = value;
+    }
+
+    // Restores the last used toggle state for the current mode on window load.
+    public void LoadIsTimelineRefreshEnabledSetting() => IsTimelineRefreshEnabled = IsShareMode ? _settings.IsTimelineRefreshEnabledOnNewShare : _settings.IsTimelineRefreshEnabledOnNewPost;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedCommentPermissionDisplayText))]
     [NotifyPropertyChangedFor(nameof(SelectedCommentPermissionGlyph))]
@@ -359,8 +379,9 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     // Submits the post from the given editor snapshot: validates the reservation (write
     // only), resolves the discovery audience, assembles the media upload, and sends the
     // WritePost/ModifyPost request. A successful write saves the last-used discovery
-    // option, disposes the uploaded attachments, refreshes the open feeds (or updates the
-    // edited post), and raises SubmitCompleted so the window can close itself.
+    // option, disposes the uploaded attachments, refreshes the open feeds while the timeline
+    // refresh toggle is on (or updates the edited post), and raises SubmitCompleted so the
+    // window can close itself.
     public async Task SubmitAsync(string plainText, List<BaseContent> editorContents)
     {
         // Name-only posts are usually written once; prompt when the most recent post is
@@ -506,7 +527,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
                 foreach (var attachment in MediaAttachments) attachment.Dispose();
                 if (IsEditMode) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
-                else WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
+                else if (IsTimelineRefreshEnabled) WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
                 SubmitCompleted?.Invoke(this, EventArgs.Empty);
             }
             else if (IsKakaoPostEnabled && !IsEditMode && !IsShareMode && !IsFortuneOnlyPost(editorContents))

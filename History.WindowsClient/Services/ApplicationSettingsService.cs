@@ -12,6 +12,8 @@ public sealed partial class ApplicationSettingsService : IDisposable
     private const string AccessTokenSettingKey = "AccessToken";
     private const string RefreshTokenSettingKey = "RefreshToken";
     private const string IsKakaoPostEnabledSettingKey = "IsKakaoPostEnabled";
+    private const string IsTimelineRefreshEnabledOnNewPostSettingKey = "IsTimelineRefreshEnabledOnNewPost";
+    private const string IsTimelineRefreshEnabledOnNewShareSettingKey = "IsTimelineRefreshEnabledOnNewShare";
 
     private bool _disposed;
 
@@ -37,6 +39,8 @@ public sealed partial class ApplicationSettingsService : IDisposable
         localSettings.Values[AccessTokenSettingKey] = Settings.AccessToken;
         localSettings.Values[RefreshTokenSettingKey] = Settings.RefreshToken;
         localSettings.Values[IsKakaoPostEnabledSettingKey] = Settings.IsKakaoPostEnabled;
+        localSettings.Values[IsTimelineRefreshEnabledOnNewPostSettingKey] = Settings.IsTimelineRefreshEnabledOnNewPost;
+        localSettings.Values[IsTimelineRefreshEnabledOnNewShareSettingKey] = Settings.IsTimelineRefreshEnabledOnNewShare;
         SettingsChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -60,6 +64,12 @@ public sealed partial class ApplicationSettingsService : IDisposable
         var isKakaoPostEnabled = false;
         if (localSettings.Values.TryGetValue(IsKakaoPostEnabledSettingKey, out var storedKakaoPostEnabled) && storedKakaoPostEnabled is bool kakaoPostEnabledValue) isKakaoPostEnabled = kakaoPostEnabledValue;
 
+        var isTimelineRefreshEnabledOnNewPost = true;
+        if (localSettings.Values.TryGetValue(IsTimelineRefreshEnabledOnNewPostSettingKey, out var storedTimelineRefreshOnNewPost) && storedTimelineRefreshOnNewPost is bool timelineRefreshOnNewPostValue) isTimelineRefreshEnabledOnNewPost = timelineRefreshOnNewPostValue;
+
+        var isTimelineRefreshEnabledOnNewShare = false;
+        if (localSettings.Values.TryGetValue(IsTimelineRefreshEnabledOnNewShareSettingKey, out var storedTimelineRefreshOnNewShare) && storedTimelineRefreshOnNewShare is bool timelineRefreshOnNewShareValue) isTimelineRefreshEnabledOnNewShare = timelineRefreshOnNewShareValue;
+
         // Compose normalized settings and return
         var applicationSettings = new ApplicationSettings
         {
@@ -67,7 +77,9 @@ public sealed partial class ApplicationSettingsService : IDisposable
             IsAutomaticUpdateCheckEnabled = isAutomaticUpdateCheckEnabled,
             AccessToken = accessToken,
             RefreshToken = refreshToken,
-            IsKakaoPostEnabled = isKakaoPostEnabled
+            IsKakaoPostEnabled = isKakaoPostEnabled,
+            IsTimelineRefreshEnabledOnNewPost = isTimelineRefreshEnabledOnNewPost,
+            IsTimelineRefreshEnabledOnNewShare = isTimelineRefreshEnabledOnNewShare
         };
         NormalizeSettings(applicationSettings);
         return applicationSettings;
