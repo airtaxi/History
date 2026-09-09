@@ -29,5 +29,6 @@
         PlaceholderText="{x:Bind PlaceholderText, Mode=OneWay}"
         PreviewKeyDown="OnMainRichSuggestBoxPreviewKeyDown"
         SuggestionChosen="OnMainRichSuggestBoxSuggestionChosen"
-        SuggestionRequested="OnMainRichSuggestBoxSuggestionRequested" />
+        SuggestionRequested="OnMainRichSuggestBoxSuggestionRequested"
+        TextChanged="OnMainRichSuggestBoxTextChanged" />
 </UserControl>

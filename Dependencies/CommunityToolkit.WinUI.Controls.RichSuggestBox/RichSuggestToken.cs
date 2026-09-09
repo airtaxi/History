@@ -69,6 +69,18 @@ public partial class RichSuggestToken : INotifyPropertyChanged
         DisplayText = displayText;
     }
 
+    internal bool RefreshTrackedTextRange()
+    {
+        if (_range == null || DisplayText == null) return false;
+
+        _range.GetText(TextGetOptions.NoHidden, out var text);
+        // Sticker token ranges may be padded with ZWSPs; the comparison ignores them.
+        if (_range.Length == 0 || text.Replace("\u200B", string.Empty) != DisplayText) return false;
+
+        UpdateTextRange(_range);
+        return true;
+    }
+
     internal void UpdateTextRange(ITextRange range)
     {
         bool rangeStartChanged = RangeStart != range.StartPosition;

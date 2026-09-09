@@ -100,10 +100,7 @@ public partial class RichSuggestBox2
 
     private void ValidateTokensInDocument()
     {
-        foreach (var (_, token) in _tokens)
-        {
-            if (!token.SkipValidation) token.Active = false;
-        }
+        foreach (var (_, token) in _tokens) token.Active = token.SkipValidation && token.RefreshTrackedTextRange();
         if (TextDocument != null)
         {
             ForEachLinkInDocument(TextDocument, ValidateTokenFromRange);

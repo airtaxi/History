@@ -168,6 +168,18 @@ public sealed partial class ContentEditorControl : UserControl
         return text?.Replace(ZeroWidthSpace, string.Empty).Replace(ObjectReplacementCharacter, string.Empty) ?? string.Empty;
     }
 
+    // Restores the default character format when the document becomes empty so that
+    // newly typed text does not inherit the format of a deleted token.
+    private void OnMainRichSuggestBoxTextChanged(object sender, RoutedEventArgs e)
+    {
+        var document = Document;
+        document.GetText(TextGetOptions.NoHidden, out var text);
+        var plainText = text?.Replace(ZeroWidthSpace, string.Empty).Replace(ObjectReplacementCharacter, string.Empty) ?? string.Empty;
+        if (plainText.Length > 0) return;
+
+        document.Selection.CharacterFormat.SetClone(document.GetDefaultCharacterFormat());
+    }
+
     private void SetPlainText(string text)
     {
         MainRichSuggestBox.Clear();
@@ -281,9 +293,12 @@ public sealed partial class ContentEditorControl : UserControl
         formatHashtag.ForegroundColor = AccentColor;
         formatHashtag.Bold = FormatEffect.On;
 
+        // Every token adds two ZWSP padding characters; the offset keeps the
+        // precomputed token positions valid as the document grows.
+        var paddingOffset = 0;
         foreach (var (token, startIndex) in tokens)
         {
-            var tokenRange = document.GetRange(startIndex, startIndex + token.DisplayText.Length);
+            var tokenRange = document.GetRange(startIndex + paddingOffset, startIndex + paddingOffset + token.DisplayText.Length);
             if (token.Item is StickerContent stickerContent)
             {
                 await InsertStickerImageAsync(tokenRange, stickerContent);
@@ -291,17 +306,17 @@ public sealed partial class ContentEditorControl : UserControl
             }
             else
             {
-                // Padding mirrors the control's PadRange so token validation matches the link range text.
                 var format = token.DisplayText[0] == '#' ? formatHashtag : formatMention;
                 tokenRange.CharacterFormat.SetClone(format);
                 PadStickerRange(tokenRange, format);
                 tokenRange.Link = $"\"{token.Id}\"";
             }
 
+            paddingOffset += 2;
             MainRichSuggestBox.RegisterTokenRange(token, tokenRange);
         }
 
-        document.Selection.SetRange(text.Length, text.Length);
+        document.Selection.SetRange(text.Length + paddingOffset, text.Length + paddingOffset);
     }
 
     // Appends a mention of the given user to the end of the editor with the standard mention
@@ -382,8 +397,8 @@ public sealed partial class ContentEditorControl : UserControl
         return true;
     }
 
-    // Pads the range with ZWSPs: gives InsertImage a non-empty slot to replace,
-    // and mirrors the control's PadRange token layout (ZWSP + content + ZWSP inside a link).
+    // Pads the range with ZWSPs so InsertImage has a non-empty slot to replace,
+    // and gives tokens the ZWSP + content + ZWSP layout inside the link.
     private static void PadStickerRange(ITextRange range, ITextCharacterFormat format)
     {
         var startPosition = range.StartPosition;
