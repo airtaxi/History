@@ -1,3 +1,4 @@
+﻿using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Dispatching;
@@ -60,7 +61,6 @@ public sealed partial class KakaoStoryLoginWindow : BaseWindow
     {
         LoadingGrid.Visibility = visibility;
         AppTitleBar.IsEnabled = visibility == Visibility.Collapsed;
-        BrowserWebView.IsEnabled = visibility == Visibility.Collapsed;
         LoadingTextBlock.Text = message;
     }
 
@@ -82,7 +82,7 @@ public sealed partial class KakaoStoryLoginWindow : BaseWindow
         // Polling picks up the captured s/oauth callback URL once the code is available.
         _timer = DispatcherQueue.CreateTimer();
         _timer.Interval = LoginResultPollInterval;
-        _timer.Tick += (_, __) => _ = CheckLoginResultAsync();
+        _timer.Tick += (__, ___) => _ = CheckLoginResultAsync();
         _timer.Start();
 
         Activate();
@@ -109,7 +109,7 @@ public sealed partial class KakaoStoryLoginWindow : BaseWindow
         // A cancelled navigation reports the previous page's URL (the kauth page),
         // which would clobber the s/oauth URL captured in OnBrowserWebViewNavigationStarting.
         // Keep the pending code URL so CheckLoginResult completes.
-        if (_currentUrl?.StartsWith(KakaoStoryLoginWindowViewModel.OAuthRedirectUri) != true) _currentUrl = e.Uri;
+        if (_currentUrl?.StartsWith(KakaoStoryLoginWindowViewModel.OAuthRedirectUri) != true) _currentUrl = sender.Source.OriginalString;
 
         await CheckLoginResultAsync();
         await UncheckSaveSignedInAsync();
