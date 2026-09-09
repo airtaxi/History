@@ -80,6 +80,8 @@ public sealed partial class ComposePostWindow : BaseWindow
         _viewModel.ContentDialogRequested += OnContentDialogRequested;
         _viewModel.FilePickRequested += OnFilePickRequested;
         _viewModel.LoadingStateRequested += OnLoadingStateRequested;
+        _viewModel.ShowLoadingRequested += OnShowLoadingRequested;
+        _viewModel.HideLoadingRequested += OnHideLoadingRequested;
         _viewModel.FilesPickRequested += OnFilesPickRequested;
         _viewModel.StickerSelected += OnViewModelStickerSelected;
         _viewModel.SubmitCompleted += OnSubmitCompleted;
@@ -136,6 +138,12 @@ public sealed partial class ComposePostWindow : BaseWindow
     // Forwards the view model's loading requests to this window's overlay through the
     // weak-reference messenger; BaseWindow routes them by XamlRoot.
     private void OnLoadingStateRequested(object sender, LoadingStateRequestedEventArgs args) => LoadingStateRequestedMessage.Send(Content.XamlRoot, args);
+
+    // Forwards the view model's show/hide loading requests through the weak-reference
+    // messenger so this window's overlay follows them.
+    private void OnShowLoadingRequested(object sender, ShowLoadingRequestedEventArgs args) => ShowLoadingMessage.Send(args);
+
+    private void OnHideLoadingRequested(object sender, HideLoadingRequestedEventArgs args) => HideLoadingMessage.Send();
 
     // The sticker picker returned a sticker: insert it into the editor and record its usage.
     private async void OnViewModelStickerSelected(object sender, StickerContent stickerContent)
