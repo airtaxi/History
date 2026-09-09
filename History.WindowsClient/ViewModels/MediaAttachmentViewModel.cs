@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
@@ -25,6 +25,7 @@ public sealed partial class MediaAttachmentViewModel : ObservableObject, IDispos
 
     public string FileName { get; }
     public string FilePath { get; }
+    public bool IsVideo { get; }
     public BitmapImage ThumbnailImageSource { get; }
 
     // The original server media kept during editing; null for local uploads.
@@ -76,11 +77,12 @@ public sealed partial class MediaAttachmentViewModel : ObservableObject, IDispos
 
     public string SpoilerToolTip => IsSpoiler ? "스포일러 해제" : "스포일러로 표시";
 
-    private MediaAttachmentViewModel(ComposePostWindowViewModel parent, string fileName, string filePath, BitmapImage thumbnailImageSource)
+    private MediaAttachmentViewModel(ComposePostWindowViewModel parent, string fileName, string filePath, BitmapImage thumbnailImageSource, bool isVideo = false)
     {
         _parent = parent;
         FileName = fileName;
         FilePath = filePath;
+        IsVideo = isVideo;
         ThumbnailImageSource = thumbnailImageSource;
     }
 
@@ -88,6 +90,7 @@ public sealed partial class MediaAttachmentViewModel : ObservableObject, IDispos
     {
         _parent = parent;
         _serverContent = serverContent;
+        IsVideo = serverContent.IsVideo;
         ThumbnailImageSource = thumbnailImageSource;
         Description = serverContent.Description ?? string.Empty;
         IsSpoiler = serverContent.IsSpoiler;
@@ -114,7 +117,7 @@ public sealed partial class MediaAttachmentViewModel : ObservableObject, IDispos
     public static async Task<MediaAttachmentViewModel> CreateVideoAsync(ComposePostWindowViewModel parent, string fileName, string filePath)
     {
         var thumbnailImageSource = await CreateVideoThumbnailImageSourceAsync(filePath);
-        return new MediaAttachmentViewModel(parent, fileName, filePath, thumbnailImageSource);
+        return new MediaAttachmentViewModel(parent, fileName, filePath, thumbnailImageSource, isVideo: true);
     }
 
     private static async Task<BitmapImage> CreateThumbnailImageSourceAsync(byte[] imageData)

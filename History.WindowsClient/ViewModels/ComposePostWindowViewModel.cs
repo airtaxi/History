@@ -20,10 +20,10 @@ using Microsoft.Windows.Storage.Pickers;
 namespace History.WindowsClient.ViewModels;
 
 // Compose post window state. Poll composing delegates to the PollEditWindow and arrives
-// through the attached poll card; kakao cross-post is a stub to be filled in later;
-// media attachment, the option pickers, reservation, and the submit pipeline are real.
-// The same window hosts post editing (an existing post prefills the editor and submit
-// runs ModifyPost) and post sharing (the origin post bounds the share's audience).
+// through the attached poll card; the kakao cross-post toggle and mirror live in the
+// KakaoStory partial. The same window hosts post editing (an existing post prefills
+// the editor and submit runs ModifyPost) and post sharing (the origin post bounds the
+// share's audience).
 public sealed partial class ComposePostWindowViewModel : BaseViewModel
 {
     private const int CommentPermissionNotSetSelectedIndex = 0;
@@ -64,11 +64,6 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     [NotifyPropertyChangedFor(nameof(ReservationToolTip))]
     [NotifyPropertyChangedFor(nameof(ReservationDateTime))]
     public partial TimeSpan? ReservationTime { get; set; }
-
-    // Kakao cross-post toggle. The login flow is not wired up yet; the toggle itself only
-    // reflects the current stub state until the kakao game posting is implemented.
-    [ObservableProperty]
-    public partial bool IsKakaoPostEnabled { get; set; }
 
     public ObservableCollection<ComposePostDiscoveryOptionItemViewModel> DiscoveryOptionItems { get; } = [.. Enum.GetValues<DiscoveryOption>().OrderBy(x => (int)x).Select(option => new ComposePostDiscoveryOptionItemViewModel(option))];
 
@@ -353,15 +348,6 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     [RelayCommand]
     private void RemovePoll() => PollContent = null;
 
-    // TODO: kakao login and cross-post routing is decided here when the game posting is
-    // implemented; until then the toggle press shows the login-needed hint.
-    [RelayCommand]
-    private async Task HandleKakaoPostTapAsync()
-    {
-        IsKakaoPostEnabled = false;
-        await ShowMessageDialogAsync(new MessageDialogParameters("카카오 게시", "카카오 게시 연동은 아직 준비 중입니다."));
-    }
-
     // Submits the post from the given editor snapshot: validates the reservation (write
     // only), resolves the discovery audience, assembles the media upload, and sends the
     // WritePost/ModifyPost request. A successful write saves the last-used discovery
@@ -400,6 +386,14 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         {
             var proceedResult = await ShowMessageDialogAsync(new MessageDialogParameters("게시 예약", "예약 시간을 설정하셨습니다. 예약 게시글은 예약 시간이 지나야 게시되며, 게시가 되기 전까지는 게시글을 수정할 수 없습니다. 예약 게시글을 작성하시겠습니까?", "예약", cancelButtonText: "취소"));
             if (proceedResult != ContentDialogResult.Primary) return;
+        }
+
+        // The Kakao Story mirror cannot be scheduled, so a reserved post is posted
+        // there immediately; the user is told about the mismatch up front.
+        if (IsKakaoPostEnabled && !IsEditMode && !IsShareMode)
+        {
+            if (!await TryValidateKakaoStoryMirrorAsync(editorContents)) return;
+            if (IsReservationEnabled) await ShowMessageDialogAsync(new MessageDialogParameters("카카오 게시", "게시 예약이 설정되어 있어도 카카오스토리에는 즉시 게시됩니다."));
         }
 
         var discoveryOption = SelectedDiscoveryOption;
@@ -446,6 +440,18 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
             return;
         }
 
+        // Ordinary posts are mirrored to Kakao Story before the History write so a
+        // mirror failure leaves nothing published and the composer stays open.
+        if (IsKakaoPostEnabled && !IsEditMode && !IsShareMode && !IsFortuneOnlyPost(editorContents))
+        {
+            var mirrorResult = await TryWriteKakaoStoryPostAsync(editorContents);
+            if (!mirrorResult.IsSuccess)
+            {
+                await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, $"카카오스토리 게시에 실패했습니다: {mirrorResult.ErrorMessage}"));
+                return;
+            }
+        }
+
         var result = IsEditMode ? await ExecuteRequestAsync(new ModifyPost(Post.Id, contents, discoveryOption, SelectedCommentPermissionItem.Permission, IsShareRepostDisallowed, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest) : await ExecuteRequestAsync(new WritePost(contents, discoveryOption, SelectedCommentPermissionItem.Permission, IsShareRepostDisallowed, ParentPost?.Id, discoveryOptionSelectedUserIds, files, reservationTime?.ToUniversalTime()), ErrorType.BadRequest);
         if (result.Error == ErrorType.BadRequest)
         {
@@ -455,10 +461,35 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         else if (result.IsSuccess)
         {
             if (ScopeOriginPost == null) CommonShared.LastUsedPostDiscoveryOption = discoveryOption;
+
+            // Fortune-only posts are mirrored after the write because the server
+            // generates their contents; a mirror failure keeps the composer open since
+            // the History post is already published.
+            if (IsKakaoPostEnabled && !IsEditMode && !IsShareMode && IsFortuneOnlyPost(editorContents))
+            {
+                var fortuneText = BuildKakaoStoryTextFromPostContents(result.Value?.Contents);
+                if (!string.IsNullOrWhiteSpace(fortuneText))
+                {
+                    var mirrorResult = await TryWriteKakaoStoryPostAsync([new TextContent { Text = fortuneText }]);
+                    if (!mirrorResult.IsSuccess)
+                    {
+                        await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, $"게시글은 작성되었지만 카카오스토리 게시에 실패했습니다: {mirrorResult.ErrorMessage}"));
+                        return;
+                    }
+                }
+            }
+
             foreach (var attachment in MediaAttachments) attachment.Dispose();
             if (IsEditMode) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
             else WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
             SubmitCompleted?.Invoke(this, EventArgs.Empty);
+        }
+        else if (IsKakaoPostEnabled && !IsEditMode && !IsShareMode && !IsFortuneOnlyPost(editorContents))
+        {
+            // The Kakao Story post is already published when a non-fortune History
+            // write fails after the mirror; surface that so the user can decide.
+            var failureDetail = string.IsNullOrEmpty(result.ErrorMessage) ? string.Empty : $" ({result.ErrorMessage})";
+            await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, $"히스토리 게시글 작성에 실패했습니다. 카카오스토리 게시글은 이미 작성되었습니다.{failureDetail}"));
         }
     }
 

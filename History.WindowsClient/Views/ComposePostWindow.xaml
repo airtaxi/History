@@ -384,8 +384,9 @@
                             Glyph="&#xEA98;" />
                     </Button>
 
-                    <!--  Kakao cross-post toggle: the command reverts the toggle and shows the stub hint  -->
+                    <!--  Kakao cross-post toggle: arming it gates the saved Kakao Story session  -->
                     <ToggleButton
+                        x:Name="KakaoPostToggleButton"
                         Height="36"
                         Padding="12,0"
                         Command="{x:Bind ViewModel.HandleKakaoPostTapCommand, Mode=OneWay}"

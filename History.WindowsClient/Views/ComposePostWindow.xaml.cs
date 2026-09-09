@@ -187,6 +187,10 @@ public sealed partial class ComposePostWindow : BaseWindow
             ReservationButton.Visibility = Visibility.Collapsed;
         }
 
+        // Kakao cross-post only applies to ordinary new posts; editing and sharing have
+        // no Kakao Story counterpart to mirror against.
+        if (_viewModel.IsEditMode || _viewModel.IsShareMode) KakaoPostToggleButton.Visibility = Visibility.Collapsed;
+
         PostEditor.FocusEditor();
 
         UpdateWindowSize();

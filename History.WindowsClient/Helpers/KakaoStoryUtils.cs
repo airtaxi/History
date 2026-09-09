@@ -1,6 +1,10 @@
+using System.Net;
 using History.Commons;
+using History.Commons.DataTypes.Contents;
+using History.Commons.Enums;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Models;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using History.WindowsClient.ViewModels;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml.Controls;
@@ -98,4 +102,167 @@ public partial class KakaoStoryUtils : CommonKakaoStoryUtils
 
         return await loginWindow.GetResultAsync();
     }
+
+    // Posts the given contents to Kakao Story on behalf of a History post: converts
+    // the editor contents to QuoteData, uploads stickers/photos/videos (converting
+    // unsupported image formats to PNG), attaches the external URL as a scrap card
+    // when no media is present (otherwise as trailing text), and maps the discovery
+    // option to the Kakao Story permission. Images that exceed the Kakao Story limit
+    // or fail to convert are skipped and counted. Returns the upload outcome.
+    public static async Task<KakaoStoryMirrorResult> WriteMirrorPostAsync(List<BaseContent> contents, IEnumerable<MediaAttachmentViewModel> attachments, ExternalUrlContent externalUrlContent, DiscoveryOption discoveryOption, bool disallowShare)
+    {
+        var skippedImageCount = 0;
+        try
+        {
+            var quoteDatas = GetQuoteDataFromContents(contents);
+            var medias = new List<MediaData.MediaObject>();
+            var uploadedImageCount = 0;
+
+            // Stickers are uploaded as images ahead of the photos.
+            foreach (var stickerContent in contents.OfType<StickerContent>())
+            {
+                if (uploadedImageCount >= CommonConstants.KakaoStoryMaxImageCount) break;
+                if (stickerContent.StickerMediaId == null) continue;
+
+                var stickerData = await CommonUtils.GetStickerImageDataAsync(stickerContent.StickerMediaId);
+                if (stickerData is not { Length: > 0 }) continue;
+
+                var convertedData = ImageConversionHelper.ConvertToPng(stickerData);
+                if (convertedData == null) continue;
+
+                var stickerFilePath = Path.Combine(Path.GetTempPath(), $"kakaostory_sticker_{Guid.NewGuid():N}.png");
+                try
+                {
+                    await File.WriteAllBytesAsync(stickerFilePath, convertedData);
+                    var stickerMediaPath = await KakaoStoryApiHandler.UploadImage(stickerFilePath);
+                    medias.Add(new MediaData.MediaObject { media_path = stickerMediaPath, media_type = "image" });
+                    uploadedImageCount++;
+                }
+                finally { TryDeleteTempFile(stickerFilePath); }
+            }
+
+            foreach (var attachment in attachments)
+            {
+                if (!attachment.IsVideo)
+                {
+                    if (uploadedImageCount >= CommonConstants.KakaoStoryMaxImageCount) { skippedImageCount++; continue; }
+
+                    var uploadPath = attachment.FilePath;
+                    var convertedFilePath = (string)null;
+                    if (IsKakaoStoryUnsupportedImageFormat(attachment.FileName))
+                    {
+                        var convertedData = ImageConversionHelper.ConvertToPng(attachment.FilePath);
+                        if (convertedData == null) { skippedImageCount++; continue; }
+
+                        convertedFilePath = Path.Combine(Path.GetTempPath(), $"kakaostory_photo_{Guid.NewGuid():N}.png");
+                        await File.WriteAllBytesAsync(convertedFilePath, convertedData);
+                        uploadPath = convertedFilePath;
+                    }
+
+                    try
+                    {
+                        var mediaPath = await KakaoStoryApiHandler.UploadImage(uploadPath);
+                        medias.Add(new MediaData.MediaObject { media_path = mediaPath, media_type = "image", caption = BuildKakaoStoryMediaCaption(attachment.Description) });
+                        uploadedImageCount++;
+                    }
+                    finally
+                    {
+                        if (convertedFilePath != null)
+                        {
+                            TryDeleteTempFile(convertedFilePath);
+                        }
+                    }
+                }
+                else
+                {
+                    if (!File.Exists(attachment.FilePath)) await File.WriteAllBytesAsync(attachment.FilePath, attachment.Data);
+                    var videoAccessKey = await KakaoStoryApiHandler.UploadVideo(attachment.FilePath);
+                    await KakaoStoryApiHandler.WaitForVideoUploadFinish(videoAccessKey);
+                    medias.Add(new MediaData.MediaObject { media_path = videoAccessKey, media_type = "video", caption = BuildKakaoStoryMediaCaption(attachment.Description) });
+                }
+            }
+
+            MediaData mediaData = null;
+            if (medias.Count > 0)
+            {
+                mediaData = new MediaData { media = medias };
+                var hasImage = medias.Any(x => x.media_type == "image");
+                var hasVideo = medias.Any(x => x.media_type == "video");
+                mediaData.media_type = hasImage && hasVideo ? "mixed" : hasImage ? "image" : "video";
+            }
+
+            // Kakao Story scrapes a URL only when no media is attached; otherwise the
+            // URL is appended as plain text at the end of the body.
+            var externalUrl = externalUrlContent?.SourceUrl;
+            string scrap = null;
+            if (mediaData == null && !string.IsNullOrWhiteSpace(externalUrl))
+            {
+                var scrapTryCount = 0;
+                const int scrapMaxRetryCount = 5;
+                async Task DoScrapAsync()
+                {
+                    try { scrap = await KakaoStoryApiHandler.GetScrapData(externalUrl); }
+                    catch (WebException)
+                    {
+                        scrapTryCount++;
+                        if (scrapTryCount >= scrapMaxRetryCount) throw;
+                        else await DoScrapAsync();
+                    }
+
+                    if (!KakaoStoryApiHandler.IsScrapDataUsable(scrap))
+                    {
+                        scrapTryCount++;
+                        if (scrapTryCount >= scrapMaxRetryCount) return;
+                        else await DoScrapAsync();
+                    }
+                }
+                await DoScrapAsync();
+            }
+            else if (mediaData != null && !string.IsNullOrWhiteSpace(externalUrl)) quoteDatas.Add(new QuoteData { type = "text", text = $"\n\n{externalUrl}" });
+
+            await KakaoStoryApiHandler.WritePost(quoteDatas, mediaData, MapDiscoveryOptionToKakaoPermission(discoveryOption), true, !disallowShare, null, null, scrap);
+            return new KakaoStoryMirrorResult(true, null, skippedImageCount);
+        }
+        catch (Exception exception) { return new KakaoStoryMirrorResult(false, GetMirrorErrorMessage(exception), skippedImageCount); }
+    }
+
+    public static bool IsKakaoStoryUnsupportedImageFormat(string fileName) =>
+        fileName.EndsWith(".webp", StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(".heic", StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(".heif", StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(".avif", StringComparison.OrdinalIgnoreCase);
+
+    // Maps a History discovery option to the Kakao Story permission value. Only
+    // Everyone/OnlyMe have exact Kakao Story equivalents; everything else is friends.
+    private static string MapDiscoveryOptionToKakaoPermission(DiscoveryOption discoveryOption)
+    {
+        if (discoveryOption == DiscoveryOption.Everyone) return "A";
+        else if (discoveryOption == DiscoveryOption.OnlyMe) return "M";
+        else return "F";
+    }
+
+    // Builds the Kakao Story media caption payload from a media description. An empty
+    // description maps to an empty caption array (verified web request format).
+    private static List<MediaData.CaptionData> BuildKakaoStoryMediaCaption(string description) => string.IsNullOrEmpty(description) ? [] : [new MediaData.CaptionData { text = description }];
+
+    private static void TryDeleteTempFile(string filePath)
+    {
+        try { File.Delete(filePath); }
+        catch { }
+    }
+
+    // Reads the Kakao Story API error body (when the failure is an HTTP error) so the
+    // user sees the server's reason instead of a generic message.
+    private static string GetMirrorErrorMessage(Exception exception)
+    {
+        if (exception is not WebException { Response: HttpWebResponse response }) return exception.Message;
+
+        try
+        {
+            using var responseReader = new StreamReader(response.GetResponseStream());
+            return $"[{(int)response.StatusCode}] {responseReader.ReadToEnd()}";
+        }
+        catch { return exception.Message; }
+    }
 }
+
+// Outcome of a Kakao Story mirror attempt: the error message (when it failed) and the
+// number of images skipped (format conversion failure or the image count limit).
+public record KakaoStoryMirrorResult(bool IsSuccess, string ErrorMessage, int SkippedImageCount);
