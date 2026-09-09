@@ -474,6 +474,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
                 }
             }
 
+            ShowLoading("히스토리에 게시하는 중...");
             var result = IsEditMode ? await ExecuteRequestAsync(new ModifyPost(Post.Id, contents, discoveryOption, SelectedCommentPermissionItem.Permission, IsShareRepostDisallowed, discoveryOptionSelectedUserIds, files), ErrorType.BadRequest)
                 : await ExecuteRequestAsync(new WritePost(contents, discoveryOption, SelectedCommentPermissionItem.Permission, IsShareRepostDisallowed, ParentPost?.Id, discoveryOptionSelectedUserIds, files, reservationTime?.ToUniversalTime()), ErrorType.BadRequest);
             if (result.Error == ErrorType.BadRequest)
@@ -493,6 +494,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
                     var fortuneText = BuildKakaoStoryTextFromPostContents(result.Value?.Contents);
                     if (!string.IsNullOrWhiteSpace(fortuneText))
                     {
+                        ShowLoading("카카오스토리에 게시하는 중...");
                         var mirrorResult = await TryWriteKakaoStoryPostAsync([new TextContent { Text = fortuneText }]);
                         if (!mirrorResult.IsSuccess)
                         {
