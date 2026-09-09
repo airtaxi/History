@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
@@ -45,7 +45,7 @@ public partial class KakaoStoryUtils : CommonKakaoStoryUtils
     // available afterwards. When the session is already valid, the friends and
     // user-id caches are refreshed only when they are empty (cold start or an
     // earlier cache wipe); otherwise routine navigation costs no extra requests.
-    public static async Task<bool> EnsureLoggedInAsync()
+    public static async Task<bool> EnsureLoggedInAsync(BaseViewModel baseViewModel = null)
     {
         if (await KakaoStoryApiHandler.EnsureKAuthTokenAsync() != null)
         {
@@ -59,24 +59,30 @@ public partial class KakaoStoryUtils : CommonKakaoStoryUtils
             return true;
         }
 
-        return await ShowLoginModalAsync();
+        return await ShowLoginModalAsync(baseViewModel);
     }
 
     // Presents the auto-fill prompt (when no credential is saved) and the login window.
     // The login window refreshes friends and uploads the poll token on success.
-    private static async Task<bool> ShowLoginModalAsync()
+    private static async Task<bool> ShowLoginModalAsync(BaseViewModel baseViewModel = null)
     {
         // 401 responses can arrive from background threads; the dialogs and the modal
         // window must run on the UI thread.
-        var frame = MainWindow.Frame;
-        if (!frame.DispatcherQueue.HasThreadAccess)
-        {
-            var taskCompletionSource = new TaskCompletionSource<bool>();
-            frame.DispatcherQueue.TryEnqueue(async () => taskCompletionSource.TrySetResult(await ShowLoginModalOnUiThreadAsync(frame)));
-            return await taskCompletionSource.Task;
-        }
 
-        return await ShowLoginModalOnUiThreadAsync(frame);
+        if (baseViewModel == null)
+        {
+
+            var frame = MainWindow.Frame;
+            if (!frame.DispatcherQueue.HasThreadAccess)
+            {
+                var taskCompletionSource = new TaskCompletionSource<bool>();
+                frame.DispatcherQueue.TryEnqueue(async () => taskCompletionSource.TrySetResult(await ShowLoginModalOnUiThreadAsync(frame)));
+                return await taskCompletionSource.Task;
+            }
+
+            return await ShowLoginModalOnUiThreadAsync(frame);
+        }
+        else return await ShowLoginModalOnUiThreadAsync(baseViewModel);
     }
 
     private static async Task<bool> ShowLoginModalOnUiThreadAsync(Frame frame)
@@ -92,6 +98,30 @@ public partial class KakaoStoryUtils : CommonKakaoStoryUtils
                 if (!string.IsNullOrWhiteSpace(email))
                 {
                     var password = await frame.ShowInputDialogAsync(new InputDialogParameters("비밀번호 입력", "카카오 계정 비밀번호를 입력해주세요.", "비밀번호", showCancel: true));
+                    if (!string.IsNullOrWhiteSpace(password)) await KakaoStoryCredentialStore.SaveAsync(email, password);
+                }
+            }
+        }
+
+        var loginWindow = new KakaoStoryLoginWindow(new KakaoStoryLoginWindowViewModel());
+        loginWindow.MakeModal(MainWindow.Instance);
+
+        return await loginWindow.GetResultAsync();
+    }
+
+    private static async Task<bool> ShowLoginModalOnUiThreadAsync(BaseViewModel baseViewModel)
+    {
+        var savedEmail = await KakaoStoryCredentialStore.GetEmailAsync();
+        var savedPassword = await KakaoStoryCredentialStore.GetPasswordAsync();
+        if (savedEmail == null || savedPassword == null)
+        {
+            var useAutoFill = await baseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("자동 입력", "세션이 만료되어 로그인이 필요합니다. 카카오스토리 로그인 정보를 저장하여 자동 입력하시겠습니까?", "확인", "취소"));
+            if (useAutoFill == ContentDialogResult.Primary)
+            {
+                var email = await baseViewModel.ShowInputDialogAsync(new InputDialogParameters("이메일 입력", "카카오 계정 이메일을 입력해주세요.", "이메일", showCancel: true));
+                if (!string.IsNullOrWhiteSpace(email))
+                {
+                    var password = await baseViewModel.ShowInputDialogAsync(new InputDialogParameters("비밀번호 입력", "카카오 계정 비밀번호를 입력해주세요.", "비밀번호", showCancel: true));
                     if (!string.IsNullOrWhiteSpace(password)) await KakaoStoryCredentialStore.SaveAsync(email, password);
                 }
             }

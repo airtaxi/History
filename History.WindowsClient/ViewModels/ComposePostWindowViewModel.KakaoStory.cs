@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons;
@@ -27,7 +27,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     {
         if (!IsKakaoPostEnabled) return;
 
-        if (await KakaoStoryUtils.EnsureLoggedInAsync()) return;
+        if (await KakaoStoryUtils.EnsureLoggedInAsync(this)) return;
 
         IsKakaoPostEnabled = false;
         await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "카카오스토리 로그인에 실패하였습니다."));
