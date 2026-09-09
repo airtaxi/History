@@ -43,6 +43,8 @@ public partial class BlazorUserPage : ContentPage
 
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
+        BlazorWebViewBootGuard.Attach(UserBlazorWebView);
+
 #if ANDROID
         // Suppress the webview long-click haptic (timelineInterop.attachLongPress
         // handles copy) and install the kakao emoticon interceptor.

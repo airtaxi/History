@@ -423,6 +423,10 @@ window.timelineInterop = (() => {
 
     function init(ref, theme) {
         dotnetRef = ref;
+        // Boot marker for BlazorWebViewBootGuard: this runs only after the Blazor
+        // runtime has booted and rendered, so its absence detects a stuck "Loading..."
+        // page (e.g. after an Android activity recreation) and triggers a webview reload.
+        window.__blazorBooted = true;
         setTheme(theme);
 
         // Long-press copy is handled by the app (TextContents); suppress the native

@@ -34,6 +34,8 @@ public partial class BlazorTimelinePage : ContentPage
         _viewModel.ModeChanged += OnModeChanged;
         SearchImage.IsVisible = !_viewModel.IsKakaoStoryMode;
 
+        BlazorWebViewBootGuard.Attach(TimelineBlazorWebView);
+
 #if ANDROID
         // Suppress the webview long-click haptic (timelineInterop.attachLongPress
         // handles copy) and install the kakao emoticon interceptor.

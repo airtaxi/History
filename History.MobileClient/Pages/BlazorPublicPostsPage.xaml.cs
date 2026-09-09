@@ -24,6 +24,8 @@ public partial class BlazorPublicPostsPage : ContentPage
             }
         });
 
+        BlazorWebViewBootGuard.Attach(MainBlazorWebView);
+
 #if ANDROID
         // Long-press copy is handled by the app itself (timelineInterop.attachLongPress),
         // so suppress the native webview long-click haptic.

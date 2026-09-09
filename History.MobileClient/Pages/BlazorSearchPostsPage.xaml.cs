@@ -24,6 +24,8 @@ public partial class BlazorSearchPostsPage : ContentPage
             }
         });
 
+        BlazorWebViewBootGuard.Attach(MainBlazorWebView);
+
 #if IOS
         RootGrid.SafeAreaEdges = new(SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.Default, SafeAreaRegions.SoftInput);
 #endif
