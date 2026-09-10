@@ -37,6 +37,21 @@ public partial class MainPageViewModel : BaseViewModel
         }
     }
 
+    public async Task RefreshSideBarAsync()
+    {
+        if (SideBarViewModel is MainPageFriendshipSideBarViewModel friendshipSideBarViewModel)
+        {
+            if (friendshipSideBarViewModel.SideBarContent is not null)
+            {
+                await friendshipSideBarViewModel.SideBarContent.RefreshAsync();
+            }
+        }
+        else if (SideBarViewModel is MainPageMessagesSideBarViewModel messagesSideBarViewModel)
+        {
+            await messagesSideBarViewModel.RefreshAsync();
+        }
+    }
+
     public void OnSideBarSelectorBarSelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
     {
         var tag = sender.SelectedItem.Tag as string;
