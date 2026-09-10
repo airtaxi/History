@@ -194,13 +194,14 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
         if (IsShareMode)
         {
-            var initialOption = (DiscoveryOption)Math.Min((int)CommonShared.LastUsedPostDiscoveryOption, (int)parentPost.DiscoveryOption);
-            SelectedDiscoveryOptionItem = DiscoveryOptionItems.FirstOrDefault(x => x.Option == initialOption) ?? DiscoveryOptionItems[0];
+            // A share starts from the origin post's scope; it can only be narrowed afterwards.
+            SelectedDiscoveryOptionItem = DiscoveryOptionItems.FirstOrDefault(x => x.Option == parentPost.DiscoveryOption) ?? DiscoveryOptionItems[0];
             SelectedCommentPermissionItem = CommentPermissionItems[CommentPermissionNotSetSelectedIndex];
             return;
         }
 
-        SelectedDiscoveryOptionItem = DiscoveryOptionItems.FirstOrDefault(x => x.Option == (post?.DiscoveryOption ?? SelectedDiscoveryOption)) ?? DiscoveryOptionItems[0];
+        // A new post starts from the last used scope; editing keeps the post's own scope.
+        SelectedDiscoveryOptionItem = DiscoveryOptionItems.FirstOrDefault(x => x.Option == (post?.DiscoveryOption ?? CommonShared.LastUsedPostDiscoveryOption)) ?? DiscoveryOptionItems[0];
         SelectedCommentPermissionItem = CommentPermissionItems.FirstOrDefault(x => x.Permission == post?.CommentPermission) ?? CommentPermissionItems[CommentPermissionNotSetSelectedIndex];
         if (post == null) return;
 
