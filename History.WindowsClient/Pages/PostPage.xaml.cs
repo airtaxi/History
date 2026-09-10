@@ -14,17 +14,24 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace History.WindowsClient.Pages;
 
+// Post detail page: dispatches between the History post and the Kakao Story post; each
+// platform page view model wires its own comment box.
 public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClickedMessage>, IRecipient<CommentReplyRequestedMessage>
 {
-    protected override HistoryPostPageViewModel ViewModel { get; }
+    private readonly HistoryPostPageViewModel _historyViewModel;
+
+    protected override BasePostPageViewModel ViewModel => _activeViewModel;
+
+    private BasePostPageViewModel _activeViewModel;
+    private bool _isInForeground;
 
     public PostPage()
     {
-        ViewModel = App.Services.GetRequiredService<HistoryPostPageViewModel>();
+        _historyViewModel = App.Services.GetRequiredService<HistoryPostPageViewModel>();
 
         InitializeComponent();
 
-        CommentEditor.Initialize(ViewModel);
+        CommentEditor.Initialize(_historyViewModel);
 
         WeakReferenceMessenger.Default.Register((IRecipient<RefreshButtonClickedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<CommentReplyRequestedMessage>)this);
@@ -42,16 +49,24 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
     public void Receive(CommentReplyRequestedMessage message)
     {
         if (!_isInForeground) return;
+        if (ViewModel.CommentBox == null) return;
 
         CommentEditor.AppendMention(message.Value);
         CommentEditor.FocusEditor();
     }
 
-    private bool _isInForeground;
-
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        if (e.Parameter is PostResponseDto historyData) ViewModel.Initialize(historyData);
+        if (e.Parameter is PostResponseDto historyData)
+        {
+            _historyViewModel.Initialize(historyData);
+            _activeViewModel = _historyViewModel;
+        }
+        else if (!TryInitializeKakaoStory(e.Parameter)) _activeViewModel = _historyViewModel;
+
+        // Kakao Story posts mention Kakao Story friends; History posts keep History friends.
+        CommentEditor.IsKakaoMentionMode = ViewModel.Post is KakaoPostViewModel;
+
         if (ViewModel.CommentBox != null)
         {
             ViewModel.CommentBox.CommentSent -= OnCommentBoxCommentSent;
@@ -97,16 +112,28 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
     // Pasted images become the comment attachment.
     private async void OnCommentEditorImageInputRequested(object sender, string path)
     {
+        if (ViewModel.CommentBox == null) return;
+
         var fileName = Path.GetFileName(path);
         var imageData = await File.ReadAllBytesAsync(path);
         await ViewModel.CommentBox.ApplyAttachmentAsync(fileName, imageData);
     }
 
     // Ctrl+Enter submits the comment (mirrors the send button flow).
-    private async void OnCommentEditorSubmitRequested(object sender, EventArgs e) => await ViewModel.CommentBox.SendCommentAsync(CommentEditor.GetContents());
+    private async void OnCommentEditorSubmitRequested(object sender, EventArgs e)
+    {
+        if (ViewModel.CommentBox == null) return;
+
+        await ViewModel.CommentBox.SendCommentAsync(CommentEditor.GetContents());
+    }
 
     // Collects the editor contents and hands them to the platform comment box.
-    private async void OnSendCommentButtonClicked(object sender, RoutedEventArgs e) => await ViewModel.CommentBox.SendCommentAsync(CommentEditor.GetContents());
+    private async void OnSendCommentButtonClicked(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.CommentBox == null) return;
+
+        await ViewModel.CommentBox.SendCommentAsync(CommentEditor.GetContents());
+    }
 
     // The comment box sent a comment successfully: reset the composer and anchor the comment
     // column at the newest comment.

@@ -91,8 +91,10 @@ public partial class CommonKakaoStoryUtils
 
 
     /// <summary>
-    /// Loads the logged-in Kakao Story user's id into CommonShared.KakaoUserId so post
-    /// action sheets can distinguish own posts (e.g. hide vs. delete).
+    /// Loads the logged-in Kakao Story user's id and profile image into CommonShared so post
+    /// action sheets can distinguish own posts (e.g. hide vs. delete) and rows that show the
+    /// current user next to third-party data (e.g. a received mail's recipient) can render
+    /// their profile image.
     /// </summary>
     protected static async Task SaveCurrentUserAsync()
     {
@@ -100,8 +102,13 @@ public partial class CommonKakaoStoryUtils
         {
             var profile = await KakaoStoryApiHandler.GetProfileData();
             CommonShared.KakaoUserId = profile?.id;
+            CommonShared.KakaoProfileImageUrl = profile?.profile_thumbnail_url ?? profile?.profile_image_url;
         }
-        catch { CommonShared.KakaoUserId = null; }
+        catch
+        {
+            CommonShared.KakaoUserId = null;
+            CommonShared.KakaoProfileImageUrl = null;
+        }
     }
 
     protected static readonly DateTime epoch = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -264,7 +271,10 @@ public partial class CommonKakaoStoryUtils
         {
             if (content is TextContent textContent)
             {
-                if (!string.IsNullOrEmpty(textContent.Text)) quoteDatas.Add(new QuoteData { type = "text", text = textContent.Text });
+                // RichEdit-based editors emit CR paragraph separators; normalize them to LF
+                // so the payload never carries stray CR characters.
+                var text = textContent.Text.Replace("\r\n", "\n").Replace('\r', '\n');
+                if (!string.IsNullOrEmpty(text)) quoteDatas.Add(new QuoteData { type = "text", text = text });
             }
             else if (content is HyperlinkContent hyperlinkContent)
             {
@@ -299,6 +309,30 @@ public partial class CommonKakaoStoryUtils
                 }
             }
         }
+        // Trim leading whitespace from the first text decorator and trailing whitespace
+        // from the last one so the post never starts or ends with blank lines (the
+        // editor appends a newline after inline images and paste can leave stray
+        // whitespace at the document edges).
+        while (quoteDatas.Count > 0 && quoteDatas[0].type == "text")
+        {
+            var trimmedText = quoteDatas[0].text.TrimStart();
+            if (trimmedText.Length > 0)
+            {
+                quoteDatas[0].text = trimmedText;
+                break;
+            }
+            quoteDatas.RemoveAt(0);
+        }
+        while (quoteDatas.Count > 0 && quoteDatas[^1].type == "text")
+        {
+            var trimmedText = quoteDatas[^1].text.TrimEnd();
+            if (trimmedText.Length > 0)
+            {
+                quoteDatas[^1].text = trimmedText;
+                break;
+            }
+            quoteDatas.RemoveAt(quoteDatas.Count - 1);
+        }
         return quoteDatas;
     }
 
@@ -330,9 +364,10 @@ public partial class CommonKakaoStoryUtils
                     break;
                 case "image":
                     // Appended after all text fragments to mirror the UI layout
-                    // (FormattedText first, media carousel last).
+                    // (FormattedText first, media carousel last). The detail surface uses the
+                    // original image; the display copy is kept for wrapped surfaces.
                     var mediaUrl = data.media?.url ?? data.media?.thumbnail_url;
-                    if (mediaUrl != null) mediaContents.Add(new MediaContent { MediaId = mediaUrl, MimeType = "image/jpeg" });
+                    if (mediaUrl != null) mediaContents.Add(new MediaContent { MediaId = data.media?.origin_url ?? mediaUrl, ThumbnailMediaId = mediaUrl, MimeType = "image/jpeg" });
                     else mediaContents.Add(new TextContent { Text = "(이미지)" });
                     break;
                 case "emoticon":

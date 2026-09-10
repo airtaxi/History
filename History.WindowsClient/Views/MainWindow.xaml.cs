@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.WindowsClient.Controls;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
@@ -50,8 +51,13 @@ public sealed partial class MainWindow : BaseWindow
     protected override void Navigate(Type pageType, object parameter)
     {
         // Ignore the request when the same user's profile is already showing in the frame: navigating
-        // again is a meaningless action that would only consume more memory.
-        if (pageType == typeof(ProfilePage) && AppFrame.Content is ProfilePage currentProfilePage && parameter is string userId && currentProfilePage.UserId == userId) return;
+        // again is a meaningless action that would only consume more memory. The History and Kakao
+        // Story profiles stay distinct even when their user id strings match.
+        if (pageType == typeof(ProfilePage) && AppFrame.Content is ProfilePage currentProfilePage)
+        {
+            if (parameter is string userId && !currentProfilePage.IsKakaoStoryPage && currentProfilePage.UserId == userId) return;
+            if (parameter is KakaoProfileParameters kakaoProfile && currentProfilePage.IsKakaoStoryPage && currentProfilePage.UserId == kakaoProfile.KakaoUserId) return;
+        }
 
         AppFrame.Navigate(pageType, parameter);
     }
@@ -126,11 +132,19 @@ public sealed partial class MainWindow : BaseWindow
 
     private void OnRefreshButtonClicked(object sender, RoutedEventArgs e) => WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
 
-    // Opens the compose-post shell window. The actual post-writing flow is implemented later.
-    private void OnComposePostButtonClicked(object sender, RoutedEventArgs e) => new ComposePostWindow(new ComposePostWindowViewModel(App.Services.GetRequiredService<ApplicationSettings>())).MakeModal(this);
+    // Opens the compose window for the current mode: Kakao Story mode composes a new Kakao
+    // Story post that mirrors to History, otherwise the History composer opens.
+    private void OnComposePostButtonClicked(object sender, RoutedEventArgs e)
+    {
+        var settings = App.Services.GetRequiredService<ApplicationSettings>();
+        var viewModel = CommonShared.LastUsedKakaoStoryMode ? new ComposePostWindowViewModel(settings, isKakaoWriteMode: true) : new ComposePostWindowViewModel(settings);
+        new ComposePostWindow(viewModel).MakeModal(this);
+    }
 
-    // Refreshing on open keeps the flyout list current without polling.
-    private void OnNotificationsFlyoutOpening(object sender, object e) => _ = ((NotificationsFlyoutControl)NotificationsFlyout.Content).ViewModel.RefreshAsync();
+    // Refreshing on open keeps the flyout list current without polling. The login prompt is
+    // enabled for the Kakao Story session so an expired session asks the user to re-login
+    // only here, never during the quiet badge refresh.
+    private void OnNotificationsFlyoutOpening(object sender, object e) => _ = ((NotificationsFlyoutControl)NotificationsFlyout.Content).ViewModel.RefreshAsync(promptLoginOnExpiredSession: true);
 
     // Keeps the notification button badge in sync with the flyout's unread notification count.
     private void OnNotificationsViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)

@@ -11,7 +11,7 @@ public partial class MainPageSideBarDataTemplateSelector : DataTemplateSelector
     protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
     {
         if (item is not BaseMainPageSideBarViewModel sideBarViewModel) return base.SelectTemplateCore(item, container);
-        if (sideBarViewModel is MainPageFriendshipSideBarViewModel) return Friendship;
+        if (sideBarViewModel is BaseMainPageFriendshipSideBarViewModel) return Friendship;
         else return Messages;
     }
 }

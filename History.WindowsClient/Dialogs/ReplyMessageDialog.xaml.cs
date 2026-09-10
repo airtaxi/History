@@ -5,9 +5,9 @@ namespace History.WindowsClient.Dialogs;
 
 public sealed partial class ReplyMessageDialog : ContentDialog
 {
-    public ReplyMessageDialogViewModel ViewModel { get; }
+    public HistoryReplyMessageDialogViewModel ViewModel { get; }
 
-    public ReplyMessageDialog(ReplyMessageDialogViewModel viewModel)
+    public ReplyMessageDialog(HistoryReplyMessageDialogViewModel viewModel)
     {
         ViewModel = viewModel;
         InitializeComponent();

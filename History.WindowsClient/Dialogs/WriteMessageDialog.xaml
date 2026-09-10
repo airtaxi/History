@@ -159,7 +159,8 @@
                 Background="Transparent"
                 BorderThickness="0"
                 Command="{x:Bind ViewModel.HandleMediaTapCommand, Mode=OneWay}"
-                ToolTipService.ToolTip="이미지 추가">
+                ToolTipService.ToolTip="이미지 추가"
+                Visibility="{x:Bind ViewModel.IsAttachmentAvailable, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                 <FontIcon
                     FontSize="18"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"

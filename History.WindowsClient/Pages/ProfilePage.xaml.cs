@@ -11,50 +11,58 @@ using System.Numerics;
 
 namespace History.WindowsClient.Pages;
 
+// Profile page: dispatches between the History profile and the Kakao Story profile.
+// View models are cached per user id instead of caching the page itself: a cached
+// page would keep showing the previous user's profile when navigated to with a
+// different user id, while a fresh page bound to the cached view model preserves
+// the feed and scroll position without any stale content.
 public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClickedMessage>
 {
-    // View models are cached per user id instead of caching the page itself: a cached
-    // page would keep showing the previous user's profile when navigated to with a
-    // different user id, while a fresh page bound to the cached view model preserves
-    // the feed and scroll position without any stale content.
-    private static readonly Dictionary<string, ProfilePageViewModel> ViewModelCache = [];
+    private static readonly Dictionary<string, HistoryProfilePageViewModel> HistoryViewModelCache = [];
 
-    private ProfilePageViewModel _viewModel;
+    private HistoryProfilePageViewModel _historyViewModel;
     private bool _shouldRestoreScroll;
 
-    protected override ProfilePageViewModel ViewModel => _viewModel!;
+    protected override BaseProfilePageViewModel ViewModel => _activeViewModel;
 
     // The user id of the profile being shown, used by the window to skip
     // redundant navigation to the same user's profile.
     public string UserId => ViewModel.UserId;
 
+    // Whether the page currently shows a Kakao Story profile. The History and Kakao
+    // Story user id spaces are separate, so the window distinguishes them here.
+    public bool IsKakaoStoryPage { get; private set; }
+
     public ProfilePage()
     {
-        _viewModel = App.Services.GetRequiredService<ProfilePageViewModel>();
+        _historyViewModel = App.Services.GetRequiredService<HistoryProfilePageViewModel>();
 
         InitializeComponent();
 
         WeakReferenceMessenger.Default.Register(this);
     }
 
+    private BaseProfilePageViewModel _activeViewModel;
     private bool _isInForeground;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         if (e.Parameter is string userId)
         {
-            if (!ViewModelCache.TryGetValue(userId, out var cachedViewModel))
+            if (!HistoryViewModelCache.TryGetValue(userId, out var cachedViewModel))
             {
-                cachedViewModel = _viewModel;
+                cachedViewModel = _historyViewModel;
                 cachedViewModel.Initialize(userId);
-                ViewModelCache[userId] = cachedViewModel;
+                HistoryViewModelCache[userId] = cachedViewModel;
             }
             else
             {
                 _shouldRestoreScroll = cachedViewModel.ScrollHeight > 0;
-                _viewModel = cachedViewModel;
+                _historyViewModel = cachedViewModel;
             }
+            _activeViewModel = _historyViewModel;
         }
+        else if (!TryInitializeKakaoStory(e.Parameter)) _activeViewModel = _historyViewModel;
 
         base.OnNavigatedTo(e);
 
@@ -69,7 +77,11 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClic
 
         // Leaving through back navigation removes this page from the frame history,
         // so its cached view model can never be revisited and is released.
-        if (e.NavigationMode == NavigationMode.Back && ViewModel.UserId is string userId) ViewModelCache.Remove(userId);
+        if (e.NavigationMode == NavigationMode.Back)
+        {
+            if (ViewModel is HistoryProfilePageViewModel) HistoryViewModelCache.Remove(ViewModel.UserId);
+            else if (ViewModel is KakaoProfilePageViewModel) ReleaseKakaoViewModel();
+        }
     }
 
     public void Receive(RefreshButtonClickedMessage message)
@@ -108,7 +120,7 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClic
 
         // Fire-and-forget like the friend-notification read clearing; the feed refresh
         // does not wait for it.
-        _ = ViewModel.MarkFriendNotificationsAsReadAsync();
+        if (ViewModel is HistoryProfilePageViewModel historyViewModel) _ = historyViewModel.MarkFriendNotificationsAsReadAsync();
         await ViewModel.RefreshAsync();
     }
 

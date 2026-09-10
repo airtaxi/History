@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml.Media;
 
 namespace History.WindowsClient.ViewModels;
 
-public partial class ReplyMessageDialogViewModel(BaseViewModel baseViewModel, string receiverId, string receiverName, ImageSource receiverProfileImage = null) : BaseMessageDialogViewModel(baseViewModel)
+public partial class HistoryReplyMessageDialogViewModel(BaseViewModel baseViewModel, string receiverId, string receiverName, ImageSource receiverProfileImage = null) : BaseMessageDialogViewModel(baseViewModel)
 {
     public string ReceiverName { get; } = receiverName;
     public ImageSource ReceiverProfileImage { get; } = receiverProfileImage;

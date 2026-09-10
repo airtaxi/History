@@ -1,6 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.Post;
@@ -13,9 +11,9 @@ using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels;
 
-// Profile page view model: profile loading, the user's post feed with
+// History profile page view model: History user loading, the user's post feed with
 // infinite-scroll pagination, and post deletion/pin sync.
-public partial class ProfilePageViewModel : BaseViewModel,
+public partial class HistoryProfilePageViewModel : BaseProfilePageViewModel,
     IRecipient<ValueDeletedMessage<PostResponseDto>>,
     IRecipient<PostPinnedMessage>
 {
@@ -23,26 +21,9 @@ public partial class ProfilePageViewModel : BaseViewModel,
     private bool _areThereNoMorePostsToLoad;
     private string _userId;
 
-    [ObservableProperty]
-    public partial BaseProfileViewModel Profile { get; private set; }
+    public override string UserId => _userId;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsEmpty))]
-    public partial ObservableCollection<BasePostViewModel> Items { get; private set; } = [];
-
-    public bool IsEmpty => Items.Count == 0;
-
-    // Vertical scroll offset captured continuously so revisiting the same user
-    // can restore the reading position.
-    public double ScrollHeight { get; set; }
-
-    // Stores the navigation parameter only (XamlRoot-independent, called from
-    // OnNavigatedTo); the actual loading runs from OnLoaded.
-    public void Initialize(string userId) => _userId = userId;
-
-    public string UserId => _userId;
-
-    public ProfilePageViewModel()
+    public HistoryProfilePageViewModel()
     {
         WeakReferenceMessenger.Default.Register((IRecipient<ValueDeletedMessage<PostResponseDto>>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<PostPinnedMessage>)this);
@@ -58,7 +39,11 @@ public partial class ProfilePageViewModel : BaseViewModel,
 
     public void Receive(PostPinnedMessage message) => _ = RefreshAsync();
 
-    public async Task RefreshAsync()
+    // Stores the navigation parameter only (XamlRoot-independent, called from
+    // OnNavigatedTo); the actual loading runs from OnLoaded.
+    public override void Initialize(string userId) => _userId = userId;
+
+    public override async Task RefreshAsync()
     {
         if (_fetchSemaphore.CurrentCount == 0) return;
 
@@ -105,8 +90,7 @@ public partial class ProfilePageViewModel : BaseViewModel,
         finally { _fetchSemaphore.Release(); }
     }
 
-    [RelayCommand]
-    public async Task LoadMoreAsync()
+    public override async Task LoadMoreAsync()
     {
         if (_fetchSemaphore.CurrentCount == 0) return;
         else if (_areThereNoMorePostsToLoad) return;

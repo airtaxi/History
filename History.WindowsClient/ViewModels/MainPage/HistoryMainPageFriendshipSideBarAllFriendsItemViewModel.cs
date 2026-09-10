@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
@@ -12,13 +12,13 @@ using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels.MainPage;
 
-public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMainPageFriendshipSideBarItemViewModel, IRecipient<FriendshipChangedMessage>
+public partial class HistoryMainPageFriendshipSideBarAllFriendsItemViewModel : BaseMainPageFriendshipSideBarItemViewModel, IRecipient<FriendshipChangedMessage>
 {
     private ObservableCollection<BaseFriendshipViewModel> _items;
 
-    public MainPageFriendshipSideBarAllFriendsItemViewModel(MainPageViewModel baseViewModel) : base(baseViewModel)
+    public HistoryMainPageFriendshipSideBarAllFriendsItemViewModel(MainPageViewModel baseViewModel) : base(baseViewModel)
     {
-        if (!BaseViewModel.IsKakaoStoryMode) SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 또는 핸들 검색";
+        SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 또는 핸들 검색";
         RightHeaderText = "친구 목록";
 
         Query = string.Empty;
@@ -29,8 +29,6 @@ public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMain
 
     public void Receive(FriendshipChangedMessage message)
     {
-        if (BaseViewModel.IsKakaoStoryMode) return; // Kakao Story friends are not tracked by the History friendship message.
-
         var data = message.Value;
         var isFriend = data.NewStatus == FriendshipStatus.Accepted;
         var existingViewModel = _items?.OfType<HistoryFriendshipViewModel>().FirstOrDefault(x => x.User.UserId == data.UserId);
@@ -58,21 +56,18 @@ public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMain
 
     public override async Task RefreshAsync()
     {
-        if (!BaseViewModel.IsKakaoStoryMode)
+        var result = await BaseViewModel.ExecuteRequestAsync(new GetFriends(CommonShared.UserId));
+        if (!result.IsSuccess)
         {
-            var result = await BaseViewModel.ExecuteRequestAsync(new GetFriends(CommonShared.UserId));
-            if (!result.IsSuccess)
-            {
-                await BaseViewModel.ShowMessageDialogAsync(new(Constants.ErrorTitle, "친구 목록을 가져오는 데에 실패하였습니다."));
-                return;
-            }
-
-            _items = new(result.Value.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x, BaseViewModel) { FriendshipVisibility = Visibility.Collapsed }));
-            Items = _items;
-            RightHeaderText = $"친구 목록 (총 {result.Value.Count}명)";
-
-            IsEmpty = _items.Count == 0;
+            await BaseViewModel.ShowMessageDialogAsync(new(Constants.ErrorTitle, "친구 목록을 가져오는 데에 실패하였습니다."));
+            return;
         }
+
+        _items = new(result.Value.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x, BaseViewModel) { FriendshipVisibility = Visibility.Collapsed }));
+        Items = _items;
+        RightHeaderText = $"친구 목록 (총 {result.Value.Count}명)";
+
+        IsEmpty = _items.Count == 0;
     }
 
     public override void OnFriendshipSideBarAutoSuggestBoxTextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args) => ApplyQuery(sender.Text);
@@ -81,7 +76,6 @@ public partial class MainPageFriendshipSideBarAllFriendsItemViewModel : BaseMain
     private void ApplyQuery(string query)
     {
         if (string.IsNullOrWhiteSpace(query)) Items = _items;
-        else Items = new(_items.Where(x => x.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(x.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase)
-                || (x is HistoryFriendshipViewModel historyFriendshipViewModel && historyFriendshipViewModel.User.Handle.Contains(query, StringComparison.OrdinalIgnoreCase))));
+        else Items = new(_items.Where(x => x.Nickname.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(x.Nickname).Contains(query, StringComparison.OrdinalIgnoreCase) || (x is HistoryFriendshipViewModel historyFriendshipViewModel && historyFriendshipViewModel.User.Handle.Contains(query, StringComparison.OrdinalIgnoreCase))));
     }
 }

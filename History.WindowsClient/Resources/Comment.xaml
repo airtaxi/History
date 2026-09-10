@@ -77,6 +77,7 @@
                         Padding="0"
                         Background="Transparent"
                         BorderThickness="0"
+                        Tag="{x:Bind}"
                         Visibility="{x:Bind HasLikes, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="4">
                             <TextBlock
@@ -89,7 +90,7 @@
                                 Text="{x:Bind LikesCount, Mode=OneWay}" />
                         </StackPanel>
                         <Button.Flyout>
-                            <Flyout Placement="BottomEdgeAlignedLeft">
+                            <Flyout Opening="OnCommentLikeUsersFlyoutOpening" Placement="BottomEdgeAlignedLeft">
                                 <Flyout.FlyoutPresenterStyle>
                                     <Style BasedOn="{StaticResource DefaultFlyoutPresenterStyle}" TargetType="FlyoutPresenter">
                                         <Setter Property="Padding" Value="0" />

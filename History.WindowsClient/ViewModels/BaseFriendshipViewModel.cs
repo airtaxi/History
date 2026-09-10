@@ -39,6 +39,11 @@ public abstract partial class BaseFriendshipViewModel : BaseViewModel
 
     public Visibility FriendshipVisibility { get; init; } = Visibility.Visible;
 
+    // Visibility surface for the shared friendship template; derived types hide the
+    // action and badge for rows that must not offer them (e.g. the current user's own row).
+    public virtual bool IsFriendshipActionVisible => FriendshipVisibility == Visibility.Visible;
+    public virtual bool IsFavoriteVisible => IsFavorite;
+
     // Defaults to true; false makes the template root button transparent to input
     // so taps fall through to the hosting control (e.g. suggestion selection).
     public bool IsRootButtonHitTestVisible { get; init; } = true;

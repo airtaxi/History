@@ -4,7 +4,7 @@ using History.Commons.DataTypes.ResponseDtos;
 namespace History.WindowsClient.ViewModels;
 
 // Comment edit state for EditCommentWindow. Prefills the editor contents from the comment
-// and hosts the edit comment box, which owns the attachment surface and the ModifyComment
+// and hosts the platform edit comment box, which owns the attachment surface and the edit
 // request; the dialog, picker, and loading events are fulfilled by the window code-behind.
 public sealed partial class EditCommentWindowViewModel : BaseViewModel
 {

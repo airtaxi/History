@@ -6,9 +6,9 @@ namespace History.WindowsClient.Dialogs;
 
 public sealed partial class WriteMessageDialog : ContentDialog
 {
-    public WriteMessageDialogViewModel ViewModel { get; }
+    public HistoryWriteMessageDialogViewModel ViewModel { get; }
 
-    public WriteMessageDialog(WriteMessageDialogViewModel viewModel)
+    public WriteMessageDialog(HistoryWriteMessageDialogViewModel viewModel)
     {
         ViewModel = viewModel;
         InitializeComponent();
@@ -24,9 +24,9 @@ public sealed partial class WriteMessageDialog : ContentDialog
 
     private void OnReceiverSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
     {
-        if (args.SelectedItem is HistoryFriendshipViewModel friendshipViewModel)
+        if (args.SelectedItem is BaseFriendshipViewModel friendshipViewModel)
         {
-            ViewModel.SelectReceiver(friendshipViewModel.User);
+            ViewModel.SelectReceiver(friendshipViewModel);
             sender.Text = string.Empty;
         }
     }

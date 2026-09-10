@@ -1,37 +1,12 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using History.Commons.Api.Message;
-using History.WindowsClient.Dialogs;
-using Microsoft.UI.Xaml;
-using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels.MainPage;
 
-public partial class MainPageMessagesSideBarViewModel(MainPageViewModel baseViewModel) : BaseMainPageSideBarViewModel
+public partial class HistoryMainPageMessagesSideBarViewModel(MainPageViewModel baseViewModel) : BaseMainPageMessagesSideBarViewModel(baseViewModel)
 {
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
-    private bool _isFirstLoad;
 
-    public MainPageViewModel BaseViewModel { get; } = baseViewModel;
-
-    [ObservableProperty]
-    public partial ObservableCollection<BaseMessageViewModel> Items { get; set; } = [];
-
-    [ObservableProperty]
-    public partial bool IsEmpty { get; set; }
-
-    [ObservableProperty]
-    public partial string EmptyText { get; set; } = "쪽지가 없습니다.";
-
-    public async void OnLoaded(object sender, RoutedEventArgs e)
-    {
-        if (_isFirstLoad) return;
-        _isFirstLoad = true;
-
-        await RefreshAsync();
-    }
-
-    public async Task RefreshAsync()
+    public override async Task RefreshAsync()
     {
         if (_fetchSemaphore.CurrentCount == 0) return;
         await _fetchSemaphore.WaitAsync();
@@ -70,14 +45,4 @@ public partial class MainPageMessagesSideBarViewModel(MainPageViewModel baseView
         }
         finally { _fetchSemaphore.Release(); }
     }
-
-    [RelayCommand]
-    public async Task WriteMessageAsync()
-    {
-        var dialogViewModel = new WriteMessageDialogViewModel(BaseViewModel);
-        var dialog = new WriteMessageDialog(dialogViewModel);
-        await BaseViewModel.ShowContentDialogAsync(dialog);
-        if (dialogViewModel.IsSent) await RefreshAsync();
-    }
 }
-

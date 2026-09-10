@@ -146,9 +146,12 @@ public partial class App : Application
         serviceCollection.AddTransient(sp => new LoginPageViewModel(sp.GetRequiredService<ApplicationSettingsService>()));
         serviceCollection.AddTransient(sp => new RegisterPageViewModel(sp.GetRequiredService<ApplicationSettingsService>()));
         serviceCollection.AddTransient(sp => new MainPageViewModel());
-        serviceCollection.AddTransient(sp => new TimelinePageViewModel());
+        serviceCollection.AddTransient(sp => new HistoryTimelinePageViewModel());
+        serviceCollection.AddTransient(sp => new KakaoTimelinePageViewModel());
         serviceCollection.AddTransient(sp => new HistoryPostPageViewModel());
-        serviceCollection.AddTransient(sp => new ProfilePageViewModel());
+        serviceCollection.AddTransient(sp => new KakaoPostPageViewModel());
+        serviceCollection.AddTransient(sp => new HistoryProfilePageViewModel());
+        serviceCollection.AddTransient(sp => new KakaoProfilePageViewModel());
         serviceCollection.AddTransient(sp => new SearchResultPageViewModel());
         serviceCollection.AddTransient(sp => new NotificationsFlyoutViewModel());
     }

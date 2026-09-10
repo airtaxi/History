@@ -1,5 +1,3 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Post;
@@ -14,31 +12,27 @@ using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace History.WindowsClient.ViewModels.Notifications;
 
-// Notification list item view model: holds the DTO and the display surface used by the
-// notifications flyout template.
-public partial class NotificationViewModel : BaseViewModel, IRecipient<NotificationsReadAllMessage>, IRecipient<NotificationPostReadMessage>, IRecipient<NotificationFriendUserReadMessage>
+// History notification list item view model: holds the DTO and the display surface used by
+// the notifications flyout template.
+public partial class HistoryNotificationViewModel : BaseNotificationViewModel, IRecipient<NotificationsReadAllMessage>, IRecipient<NotificationPostReadMessage>, IRecipient<NotificationFriendUserReadMessage>
 {
     private readonly BaseViewModel _baseViewModel;
 
     public NotificationResponseDto Notification { get; }
 
-    [ObservableProperty]
-    public partial bool IsUnread { get; private set; }
+    public override string Title => Notification.Title;
+    public override string Body => Notification.Body;
+    public override bool IsBodyVisible => !string.IsNullOrEmpty(Notification.Body);
+    public override string TimestampText => PostHelper.GenerateFriendlyTimestamp(Notification.CreatedAt, null);
+    public override bool IsImageVisible => !string.IsNullOrEmpty(Notification.ImageUrl);
 
-    public string Title => Notification.Title;
-    public string Body => Notification.Body;
-    public bool IsBodyVisible => !string.IsNullOrEmpty(Notification.Body);
-    public string TimestampText => PostHelper.GenerateFriendlyTimestamp(Notification.CreatedAt, null);
-    public bool IsImageVisible => !string.IsNullOrEmpty(Notification.ImageUrl);
+    public override ImageSource ProfileImageSource => Notification.User?.ProfileThumbnailMediaId == null ? null : new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(Notification.User.ProfileThumbnailMediaId)));
+    public override ImageSource ImageSource => string.IsNullOrEmpty(Notification.ImageUrl) ? null : new BitmapImage(new Uri(Notification.ImageUrl));
 
-    public ImageSource ProfileImageSource => Notification.User?.ProfileThumbnailMediaId == null ? null : new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(Notification.User.ProfileThumbnailMediaId)));
-    public ImageSource ImageSource => string.IsNullOrEmpty(Notification.ImageUrl) ? null : new BitmapImage(new Uri(Notification.ImageUrl));
-
-    public NotificationViewModel(NotificationResponseDto notification, BaseViewModel baseViewModel)
+    public HistoryNotificationViewModel(NotificationResponseDto notification, BaseViewModel baseViewModel) : base(notification.IsUnread)
     {
         _baseViewModel = baseViewModel;
         Notification = notification;
-        IsUnread = notification.IsUnread;
 
         WeakReferenceMessenger.Default.Register((IRecipient<NotificationsReadAllMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<NotificationPostReadMessage>)this);
@@ -67,8 +61,7 @@ public partial class NotificationViewModel : BaseViewModel, IRecipient<Notificat
 
     // Entry point for notification taps: navigates to the notification target and marks the
     // notification as read. Targets without a destination in this project stay no-op stubs.
-    [RelayCommand]
-    public async Task HandleTapAsync()
+    public override async Task HandleTapAsync()
     {
         var type = Notification.Type;
 
@@ -98,7 +91,7 @@ public partial class NotificationViewModel : BaseViewModel, IRecipient<Notificat
     }
 
     // Silent best-effort read: the unread marker clears locally only after the server confirms.
-    private async Task MarkAsReadAsync()
+    public override async Task MarkAsReadAsync()
     {
         if (!IsUnread) return;
 
@@ -107,9 +100,5 @@ public partial class NotificationViewModel : BaseViewModel, IRecipient<Notificat
     }
 
     // Keeps the DTO and the bindable surface in sync when the notification is marked as read.
-    private void SetUnread(bool value)
-    {
-        Notification.IsUnread = value;
-        IsUnread = value;
-    }
+    protected override void OnUnreadStateChanged(bool value) => Notification.IsUnread = value;
 }

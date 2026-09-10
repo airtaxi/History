@@ -16,4 +16,14 @@ public sealed partial class Comment : ResourceDictionary
 
         commentViewModel.PopulateMoreMenuFlyout(menuFlyout);
     }
+
+    // Hands the like-user flyout to the comment view model, which precomputes the list for
+    // History or loads it on demand for other comment types.
+    private void OnCommentLikeUsersFlyoutOpening(object sender, object e)
+    {
+        if (sender is not Flyout flyout) return;
+        if (flyout.Target?.Tag is not BaseCommentViewModel commentViewModel) return;
+
+        _ = commentViewModel.LoadLikedUsersAsync();
+    }
 }

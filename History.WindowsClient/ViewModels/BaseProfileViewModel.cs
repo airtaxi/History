@@ -14,6 +14,7 @@ public abstract partial class BaseProfileViewModel : BaseViewModel
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotMe))]
+    [NotifyPropertyChangedFor(nameof(IsMemoButtonVisible))]
     public partial bool IsMe { get; protected set; }
 
     public bool IsNotMe => !IsMe;
@@ -35,6 +36,19 @@ public abstract partial class BaseProfileViewModel : BaseViewModel
     [NotifyPropertyChangedFor(nameof(IsNotBlocked))]
     public partial bool IsBlocked { get; protected set; }
     public bool IsNotBlocked => !IsBlocked;
+
+    // Memo is a History-only action, so the Kakao Story profile hides the button
+    // while the shared profile card template stays unchanged.
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMemoButtonVisible))]
+    public partial bool IsMemoVisible { get; protected set; } = true;
+
+    public bool IsMemoButtonVisible => IsNotMe && IsMemoVisible;
+
+    // Ban button label: "차단 / 무시" for History (ban and ignore), "차단" for
+    // Kakao Story (ban only).
+    [ObservableProperty]
+    public partial string BanButtonText { get; protected set; } = "차단 / 무시";
 
     // Friendship-dependent surface filled by derived types (used by the profile card template).
     [ObservableProperty]

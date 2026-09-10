@@ -43,7 +43,7 @@
                         VerticalAlignment="Bottom"
                         Background="{ThemeResource ControlSolidFillColorDefaultBrush}"
                         CornerRadius="6"
-                        Visibility="{x:Bind IsFavorite, Converter={StaticResource BoolToVisibilityConverter}}">
+                        Visibility="{x:Bind IsFavoriteVisible, Converter={StaticResource BoolToVisibilityConverter}}">
                         <Border.RenderTransform>
                             <TranslateTransform X="2" Y="2" />
                         </Border.RenderTransform>
@@ -103,7 +103,7 @@
                     Background="Transparent"
                     BorderThickness="0"
                     Command="{x:Bind HandleFriendshipActionCommand}"
-                    Visibility="{x:Bind FriendshipVisibility}">
+                    Visibility="{x:Bind IsFriendshipActionVisible, Converter={StaticResource BoolToVisibilityConverter}}">
                     <FontIcon
                         FontSize="20"
                         Foreground="{x:Bind FriendshipForeground, Mode=OneWay}"

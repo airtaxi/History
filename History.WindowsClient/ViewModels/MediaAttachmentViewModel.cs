@@ -6,6 +6,7 @@ using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage.Streams;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.WindowsClient.ViewModels;
 
@@ -33,13 +34,23 @@ public sealed partial class MediaAttachmentViewModel : ObservableObject, IDispos
 
     public bool IsServerMedia => _serverContent != null;
 
+    // The Kakao Story server media path kept during a Kakao Story post edit; null for local
+    // uploads and History server media.
+    public string KakaoServerPath { get; }
+
+    public bool IsKakaoServerMedia => KakaoServerPath != null;
+
+    // History posts support spoilers while Kakao Story does not, so the attachment strip
+    // hides the spoiler toggle for Kakao Story edits.
+    public bool IsSpoilerToggleVisible => !_parent.IsKakaoMode;
+
     // Upload payload: read lazily from the temp file so large images are not buffered in
     // memory for the whole editing session. Server media has no local file to upload.
     public byte[] Data
     {
         get
         {
-            if (IsServerMedia || _data != null) return _data;
+            if (IsServerMedia || IsKakaoServerMedia || _data != null) return _data;
             if (File.Exists(FilePath)) _data = File.ReadAllBytes(FilePath);
             return _data;
         }
@@ -96,6 +107,15 @@ public sealed partial class MediaAttachmentViewModel : ObservableObject, IDispos
         IsSpoiler = serverContent.IsSpoiler;
     }
 
+    private MediaAttachmentViewModel(ComposePostWindowViewModel parent, Medium kakaoServerMedia, BitmapImage thumbnailImageSource)
+    {
+        _parent = parent;
+        KakaoServerPath = kakaoServerMedia.media_path;
+        IsVideo = kakaoServerMedia.content_type?.StartsWith("video", StringComparison.OrdinalIgnoreCase) == true;
+        ThumbnailImageSource = thumbnailImageSource;
+        Description = kakaoServerMedia.caption?.FirstOrDefault(x => x.type == "text")?.text ?? string.Empty;
+    }
+
     // Builds the attachment for a media item already stored on the server: the thumbnail
     // comes from its server thumbnail and there is no local file, so the content is sent
     // back unchanged on submit.
@@ -103,6 +123,15 @@ public sealed partial class MediaAttachmentViewModel : ObservableObject, IDispos
     {
         var thumbnailImageSource = new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(serverContent.ThumbnailMediaId)));
         return new MediaAttachmentViewModel(parent, serverContent, thumbnailImageSource);
+    }
+
+    // Builds the attachment for a media item kept on Kakao Story: the thumbnail comes from
+    // the server copy and the media path is sent back on submit so it is not re-uploaded.
+    public static MediaAttachmentViewModel CreateFromKakaoServer(ComposePostWindowViewModel parent, Medium kakaoServerMedia)
+    {
+        var thumbnailUrl = kakaoServerMedia.thumbnail_url ?? kakaoServerMedia.origin_url ?? kakaoServerMedia.url;
+        var thumbnailImageSource = thumbnailUrl != null ? new BitmapImage(new Uri(thumbnailUrl)) : null;
+        return new MediaAttachmentViewModel(parent, kakaoServerMedia, thumbnailImageSource);
     }
 
     // Builds the attachment and its preview thumbnail from the picked image bytes.

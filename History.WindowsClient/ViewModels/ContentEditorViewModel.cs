@@ -16,8 +16,7 @@ public partial class ContentEditorViewModel(BaseViewModel baseViewModel) : Obser
     public List<BaseFriendshipViewModel> GetUserSuggestions(string query)
     {
         query = query?.Trim() ?? string.Empty;
-        return BuildHistoryMentionViewModels(query);
-        //return IsKakaoMentionMode ? BuildKakaoMentionViewModels(query) : BuildHistoryMentionViewModels(query);
+        return IsKakaoMentionMode ? BuildKakaoMentionViewModels(query) : BuildHistoryMentionViewModels(query);
     }
 
     public List<string> GetHashtagSuggestions(string query)
@@ -38,12 +37,14 @@ public partial class ContentEditorViewModel(BaseViewModel baseViewModel) : Obser
             .Select(friendUser => new HistoryFriendshipViewModel(friendUser, baseViewModel) { FriendshipVisibility = Visibility.Collapsed, IsRootButtonHitTestVisible = false })];
     }
 
-    //private List<BaseFriendshipViewModel> BuildKakaoMentionViewModels(string query)
-    //{
-    //    if (string.IsNullOrEmpty(query)) return [.. CommonShared.KakaoFriends.Select(profile => new KakaoFriendshipViewModel(profile, baseViewModel))];
+    private List<BaseFriendshipViewModel> BuildKakaoMentionViewModels(string query)
+    {
+        if (CommonShared.KakaoFriends == null) return [];
 
-    //    return [.. CommonShared.KakaoFriends
-    //        .Where(profile => profile.display_name != null && (profile.display_name.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(profile.display_name).Contains(query, StringComparison.OrdinalIgnoreCase)))
-    //        .Select(profile => new KakaoFriendshipViewModel(profile, baseViewModel))];
-    //}
+        if (string.IsNullOrEmpty(query)) return [.. CommonShared.KakaoFriends.Select(profile => new KakaoFriendshipViewModel(profile, baseViewModel) { FriendshipVisibility = Visibility.Collapsed, IsRootButtonHitTestVisible = false })];
+
+        return [.. CommonShared.KakaoFriends
+            .Where(profile => profile.display_name != null && (profile.display_name.Contains(query, StringComparison.OrdinalIgnoreCase) || KoreanHelper.SplitToChosung(profile.display_name).Contains(query, StringComparison.OrdinalIgnoreCase)))
+            .Select(profile => new KakaoFriendshipViewModel(profile, baseViewModel) { FriendshipVisibility = Visibility.Collapsed, IsRootButtonHitTestVisible = false })];
+    }
 }

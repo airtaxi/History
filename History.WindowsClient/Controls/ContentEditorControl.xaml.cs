@@ -141,11 +141,19 @@ public sealed partial class ContentEditorControl : UserControl
     {
         if (args.Prefix == "@")
         {
-            if (args.SelectedItem is not HistoryFriendshipViewModel userViewModel) return;
+            if (args.SelectedItem is not BaseFriendshipViewModel userViewModel) return;
+
+            var userId = userViewModel switch
+            {
+                HistoryFriendshipViewModel historyFriendship => historyFriendship.User.UserId,
+                KakaoFriendshipViewModel kakaoFriendship => kakaoFriendship.UserId,
+                _ => null,
+            };
+            if (userId == null) return;
 
             // Embed a ProfileContent so GetContents emits a mention instead of plain text.
             args.DisplayText = userViewModel.Nickname;
-            args.Item = new ProfileContent { UserId = userViewModel.User.UserId, Nickname = userViewModel.Nickname };
+            args.Item = new ProfileContent { UserId = userId, Nickname = userViewModel.Nickname };
             args.Format.BackgroundColor = AccentColor;
             args.Format.ForegroundColor = Colors.White;
             args.Format.Bold = FormatEffect.On;

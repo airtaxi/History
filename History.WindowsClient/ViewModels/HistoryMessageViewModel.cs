@@ -90,7 +90,7 @@ public partial class HistoryMessageViewModel : BaseMessageViewModel
         var senderId = Message?.Sender?.UserId;
         if (string.IsNullOrEmpty(senderId)) return;
 
-        var dialogViewModel = new ReplyMessageDialogViewModel(BaseViewModel, senderId, SenderName, ProfileImageSource);
+        var dialogViewModel = new HistoryReplyMessageDialogViewModel(BaseViewModel, senderId, SenderName, ProfileImageSource);
         var dialog = new ReplyMessageDialog(dialogViewModel);
         await BaseViewModel.ShowContentDialogAsync(dialog);
     }

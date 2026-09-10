@@ -1,6 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
@@ -12,18 +10,12 @@ namespace History.WindowsClient.ViewModels;
 
 // Timeline feed view model: first-page loading, infinite scroll pagination
 // and post deletion sync.
-public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDeletedMessage<PostResponseDto>>
+public partial class HistoryTimelinePageViewModel : BaseTimelinePageViewModel, IRecipient<ValueDeletedMessage<PostResponseDto>>
 {
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
     private bool _areThereNoMorePostsToLoad;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsEmpty))]
-    public partial ObservableCollection<BasePostViewModel> Items { get; private set; } = [];
-
-    public bool IsEmpty => Items.Count == 0;
-
-    public TimelinePageViewModel() => WeakReferenceMessenger.Default.Register(this);
+    public HistoryTimelinePageViewModel() => WeakReferenceMessenger.Default.Register(this);
 
     public void Receive(ValueDeletedMessage<PostResponseDto> message)
     {
@@ -33,7 +25,7 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
         OnPropertyChanged(nameof(IsEmpty));
     }
 
-    public async Task RefreshAsync()
+    public override async Task RefreshAsync()
     {
         if (_fetchSemaphore.CurrentCount == 0) return;
 
@@ -64,8 +56,7 @@ public partial class TimelinePageViewModel : BaseViewModel, IRecipient<ValueDele
         finally { _fetchSemaphore.Release(); }
     }
 
-    [RelayCommand]
-    public async Task LoadMoreAsync()
+    public override async Task LoadMoreAsync()
     {
         if (_fetchSemaphore.CurrentCount == 0) return;
         else if (_areThereNoMorePostsToLoad) return;

@@ -183,7 +183,31 @@ public sealed partial class ComposePostWindow : BaseWindow
         PostEditor.Initialize(_viewModel);
         _viewModel.LoadIsKakaoPostEnabledSetting();
         _viewModel.LoadIsTimelineRefreshEnabledSetting();
-        if (_viewModel.IsShareMode)
+        PostEditor.IsKakaoMentionMode = _viewModel.IsKakaoMode;
+        if (_viewModel.IsKakaoWriteMode)
+        {
+            Title = "카카오스토리 게시글 작성";
+            AppTitleBar.Title = "카카오스토리 게시글 작성";
+            CaptionTextBlock.Text = "카카오스토리와 히스토리에 함께 게시됩니다.";
+        }
+        else if (_viewModel.IsKakaoEditMode)
+        {
+            await PostEditor.SetContentsAsync(_viewModel.KakaoEditorContents);
+            Title = "카카오스토리 게시글 수정";
+            AppTitleBar.Title = "카카오스토리 게시글 수정";
+            SubmitButton.Content = "수정";
+            CaptionTextBlock.Text = "카카오스토리에 게시할 내용을 수정하세요.";
+            PostEditor.PlaceholderText = "수정할 내용을 입력하세요";
+        }
+        else if (_viewModel.IsKakaoShareMode)
+        {
+            Title = "카카오스토리 게시글 공유";
+            AppTitleBar.Title = "카카오스토리 게시글 공유";
+            SubmitButton.Content = "공유";
+            CaptionTextBlock.Text = "원하는 친구와 나누고 싶은 이야기를 적어보세요.";
+            PostEditor.PlaceholderText = "공유할 내용을 입력하세요";
+        }
+        else if (_viewModel.IsShareMode)
         {
             Title = "게시글 공유";
             AppTitleBar.Title = "게시글 공유";
@@ -199,10 +223,6 @@ public sealed partial class ComposePostWindow : BaseWindow
             SubmitButton.Content = "수정";
             ReservationButton.Visibility = Visibility.Collapsed;
         }
-
-        // Kakao cross-post only applies to ordinary new posts; editing and sharing have
-        // no Kakao Story counterpart to mirror against.
-        if (_viewModel.IsEditMode || _viewModel.IsShareMode) KakaoPostToggleButton.Visibility = Visibility.Collapsed;
 
         PostEditor.FocusEditor();
 

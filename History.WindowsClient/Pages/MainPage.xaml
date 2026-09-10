@@ -32,11 +32,25 @@
             RowSpacing="8">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <ContentControl
+            <segmented:SelectorBarSegmented
+                x:Name="ModeSelectorBar"
                 Grid.Row="0"
+                HorizontalAlignment="Center"
+                CornerRadius="8"
+                SelectionChanged="OnModeSelectorBarSelectionChanged">
+                <SelectorBarItem
+                    IsSelected="True"
+                    Tag="History"
+                    Text="히스토리" />
+                <SelectorBarItem Tag="KakaoStory" Text="카카오스토리" />
+            </segmented:SelectorBarSegmented>
+
+            <ContentControl
+                Grid.Row="1"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 HorizontalContentAlignment="Stretch"
@@ -88,9 +102,9 @@
                 </ContentControl.ContentTemplate>
             </ContentControl>
 
-            <Grid Grid.Row="1" RowSpacing="8">
+            <Grid Grid.Row="2" RowSpacing="8">
                 <Grid.Resources>
-                    <DataTemplate x:Key="SideBarFriendshipTemplate" x:DataType="vmp:MainPageFriendshipSideBarViewModel">
+                    <DataTemplate x:Key="SideBarFriendshipTemplate" x:DataType="vmp:BaseMainPageFriendshipSideBarViewModel">
                         <Grid RowSpacing="8">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -102,7 +116,7 @@
                                 HorizontalScrollMode="Auto"
                                 VerticalScrollBarVisibility="Disabled"
                                 VerticalScrollMode="Disabled">
-                                <segmented:SelectorBarSegmented SelectionChanged="{x:Bind OnSideBarSelectorBarSelectionChanged}">
+                                <segmented:SelectorBarSegmented SelectedIndex="{x:Bind SideBarSelectedIndex, Mode=OneWay}" SelectionChanged="{x:Bind OnSideBarSelectorBarSelectionChanged}">
                                     <SelectorBarItem
                                         IsSelected="True"
                                         Tag="AllFriends"
@@ -268,7 +282,7 @@
                         </Button>
                     </DataTemplate>
 
-                    <DataTemplate x:Key="SideBarMessagesTemplate" x:DataType="vmp:MainPageMessagesSideBarViewModel">
+                    <DataTemplate x:Key="SideBarMessagesTemplate" x:DataType="vmp:BaseMainPageMessagesSideBarViewModel">
                         <Grid Loaded="{x:Bind OnLoaded}" RowSpacing="8">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*" />

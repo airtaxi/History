@@ -14,6 +14,10 @@ public partial class CommonShared
     public static DiscoveryOption LastUsedPostDiscoveryOption { get; set; }
     public static string KakaoUserId { get; set; }
 
+    // The logged-in user's own profile image, shown where the surrounding data carries
+    // someone else (for example the recipient row of a received Kakao Story mail).
+    public static string KakaoProfileImageUrl { get; set; }
+
     // Last selected History/Kakao Story pill mode, persisted across app restarts.
     public static bool LastUsedKakaoStoryMode
     {

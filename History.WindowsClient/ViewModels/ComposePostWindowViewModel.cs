@@ -52,12 +52,12 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     // Persists the toggle through the application settings for the current mode.
     partial void OnIsTimelineRefreshEnabledChanged(bool value)
     {
-        if (IsShareMode) _settings.IsTimelineRefreshEnabledOnNewShare = value;
+        if (IsShareMode || IsKakaoShareMode) _settings.IsTimelineRefreshEnabledOnNewShare = value;
         else _settings.IsTimelineRefreshEnabledOnNewPost = value;
     }
 
     // Restores the last used toggle state for the current mode on window load.
-    public void LoadIsTimelineRefreshEnabledSetting() => IsTimelineRefreshEnabled = IsShareMode ? _settings.IsTimelineRefreshEnabledOnNewShare : _settings.IsTimelineRefreshEnabledOnNewPost;
+    public void LoadIsTimelineRefreshEnabledSetting() => IsTimelineRefreshEnabled = IsShareMode || IsKakaoShareMode ? _settings.IsTimelineRefreshEnabledOnNewShare : _settings.IsTimelineRefreshEnabledOnNewPost;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedCommentPermissionDisplayText))]
@@ -278,6 +278,13 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     // temp-file handling of the picker flow.
     public async Task AddImageAttachmentAsync(string sourcePath)
     {
+        // Kakao Story shares are text-only, so pasted images are not attached.
+        if (IsKakaoShareMode)
+        {
+            await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", "카카오스토리 게시글 공유는 텍스트만 입력할 수 있습니다."));
+            return;
+        }
+
         if (MediaAttachments.Count >= CommonConstants.MaxPostMediaCount)
         {
             await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", $"미디어는 최대 {CommonConstants.MaxPostMediaCount}개까지 추가할 수 있습니다."));
@@ -385,6 +392,13 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     // window can close itself.
     public async Task SubmitAsync(string plainText, List<BaseContent> editorContents)
     {
+        // Kakao Story edit/share runs through the Kakao Story surface instead of the History write.
+        if (IsKakaoMode)
+        {
+            await SubmitKakaoStoryAsync(plainText, editorContents);
+            return;
+        }
+
         // Name-only posts are usually written once; prompt when the most recent post is
         // private and the current selection is private too.
         // TODO: expose an OnlyMePostContinuationPromptEnabled toggle (and a settings page

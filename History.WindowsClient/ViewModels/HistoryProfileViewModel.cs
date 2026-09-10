@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
+using History.Commons.KakaoStory;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.WindowsClient.Helpers;
@@ -318,8 +319,74 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
         else await _baseViewModel.ShowMessageDialogAsync(new(Constants.ErrorTitle, result.ErrorMessage));
     }
 
-    // TODO: Implement profile mirroring once the external story integration is available on Windows.
-    private async Task ChangeProfileMirroringAsync() => await _baseViewModel.ShowMessageDialogAsync(new("프로필 미러링", "프로필 미러링은 아직 준비 중입니다."));
+    // Mirrors the History profile photo and/or background to the Kakao Story profile:
+    // downloads the History media, converts it to a Kakao Story-supported format,
+    // uploads it and applies it through the Kakao Story profile APIs.
+    private async Task ChangeProfileMirroringAsync()
+    {
+        var action = await _baseViewModel.ShowSelectionDialogAsync("프로필 미러링", ["프로필 사진 미러링", "배경 사진 미러링", "둘 다 미러링"]);
+        if (action == null) return;
+
+        var mirrorProfile = action == "프로필 사진 미러링" || action == "둘 다 미러링";
+        var mirrorBackground = action == "배경 사진 미러링" || action == "둘 다 미러링";
+
+        if (mirrorProfile && User.ProfileMediaId == null)
+        {
+            await _baseViewModel.ShowMessageDialogAsync(new("안내", "히스토리에 프로필 사진이 없어 미러링할 수 없습니다."));
+            return;
+        }
+        if (mirrorBackground && User.BackgroundMediaId == null)
+        {
+            await _baseViewModel.ShowMessageDialogAsync(new("안내", "히스토리에 배경 사진이 없어 미러링할 수 없습니다."));
+            return;
+        }
+
+        if (!await KakaoStoryUtils.EnsureLoggedInAsync(_baseViewModel)) return;
+
+        try
+        {
+            if (mirrorProfile && !await MirrorImageAsync(CommonUtils.GenerateMediaUri(User.ProfileMediaId), KakaoStoryApiHandler.SetProfileImage)) return;
+            if (mirrorBackground && !await MirrorImageAsync(CommonUtils.GenerateMediaUri(User.BackgroundMediaId), KakaoStoryApiHandler.SetBackgroundImage)) return;
+
+            await _baseViewModel.ShowMessageDialogAsync(new("안내", "카카오스토리 프로필에 미러링되었습니다."));
+            await RefreshAsync();
+        }
+        catch (Exception exception) { await _baseViewModel.ShowMessageDialogAsync(new(Constants.ErrorTitle, $"프로필 미러링에 실패하였습니다.\n{exception.Message}")); }
+    }
+
+    // Downloads the History media, converts it to a Kakao Story-supported format, then
+    // uploads and applies it through the given Kakao Story profile API. Returns false
+    // when the image could not be converted.
+    private async Task<bool> MirrorImageAsync(string imageUri, Func<string, Task> applyImage)
+    {
+        using var httpClient = new HttpClient();
+        var imageData = await httpClient.GetByteArrayAsync(imageUri);
+
+        // History media may be webp, which Kakao Story rejects, and the source format
+        // cannot be known from the URL alone, so the download is always re-encoded.
+        var convertedData = ImageConversionHelper.ConvertToPng(imageData);
+        if (convertedData == null)
+        {
+            await _baseViewModel.ShowMessageDialogAsync(new(Constants.ErrorTitle, "이미지를 카카오스토리 지원 형식으로 변환하지 못했습니다."));
+            return false;
+        }
+
+        var tempFilePath = Path.Combine(Path.GetTempPath(), $"kakaostory_mirror_{Guid.NewGuid():N}.png");
+        try
+        {
+            await File.WriteAllBytesAsync(tempFilePath, convertedData);
+            var mediaPath = await _baseViewModel.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.UploadImage(tempFilePath));
+            await _baseViewModel.ExecuteWithLoadingAsync(() => applyImage(mediaPath));
+            return true;
+        }
+        finally { TryDeleteTempFile(tempFilePath); }
+    }
+
+    private static void TryDeleteTempFile(string filePath)
+    {
+        try { File.Delete(filePath); }
+        catch { }
+    }
 
     public override void HandleProfileTap(string parameter)
     {

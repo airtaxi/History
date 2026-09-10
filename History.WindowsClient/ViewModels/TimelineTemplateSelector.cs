@@ -13,6 +13,8 @@ public partial class TimelineTemplateSelector : DataTemplateSelector
 
     protected override DataTemplate SelectTemplateCore(object item) => item switch
     {
+        KakaoRepostViewModel => RepostTemplate,
+        KakaoPostViewModel => PostTemplate,
         HistoryRepostViewModel => RepostTemplate,
         HistoryPostViewModel => PostTemplate,
         _ => null,

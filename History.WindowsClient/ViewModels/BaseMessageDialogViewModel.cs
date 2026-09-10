@@ -2,12 +2,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.Api.Message;
 using History.Commons.DataTypes.Contents;
+using History.Commons;
 using System.IO;
 
 namespace History.WindowsClient.ViewModels;
 
 // Shared message-compose surface for the write and reply dialogs: the text state, the
-// 100-character limit, and the SendMessage pipeline. The receiver id and any pre-send
+// 100-character limit, and the send pipeline. The receiver id and any pre-send
 // validation are supplied by the derived dialog.
 public abstract partial class BaseMessageDialogViewModel : ImageAttachmentViewModel
 {
@@ -16,6 +17,9 @@ public abstract partial class BaseMessageDialogViewModel : ImageAttachmentViewMo
     public BaseViewModel BaseViewModel { get; }
 
     protected abstract string ReceiverId { get; }
+
+    // Whether the account mode accepts an image attachment on a mail.
+    public virtual bool IsAttachmentAvailable => true;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TextLengthText))]
@@ -67,16 +71,7 @@ public abstract partial class BaseMessageDialogViewModel : ImageAttachmentViewMo
         IsSending = true;
         try
         {
-            var contents = new List<BaseContent> { new TextContent { Text = text } };
-            var files = new Dictionary<string, byte[]>();
-
-            if (HasAttachment && AttachmentData != null && !string.IsNullOrEmpty(AttachmentFileName))
-            {
-                contents.Add(new UploadContent { FileName = AttachmentFileName });
-                files[AttachmentFileName] = AttachmentData;
-            }
-
-            var result = await BaseViewModel.ExecuteRequestAsync(new SendMessage(ReceiverId, contents, files));
+            var result = await SendContentsAsync(text);
             if (result.IsSuccess)
             {
                 IsSent = true;
@@ -87,5 +82,21 @@ public abstract partial class BaseMessageDialogViewModel : ImageAttachmentViewMo
             return false;
         }
         finally { IsSending = false; }
+    }
+
+    // Sends the composed mail through the History message API. Account-mode dialogs
+    // override this to send through their own mail API.
+    protected virtual async Task<Result> SendContentsAsync(string text)
+    {
+        var contents = new List<BaseContent> { new TextContent { Text = text } };
+        var files = new Dictionary<string, byte[]>();
+
+        if (HasAttachment && AttachmentData != null && !string.IsNullOrEmpty(AttachmentFileName))
+        {
+            contents.Add(new UploadContent { FileName = AttachmentFileName });
+            files[AttachmentFileName] = AttachmentData;
+        }
+
+        return await BaseViewModel.ExecuteRequestAsync(new SendMessage(ReceiverId, contents, files));
     }
 }

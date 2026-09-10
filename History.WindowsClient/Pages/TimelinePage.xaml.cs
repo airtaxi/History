@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.WindowsClient.Messages;
 using History.WindowsClient.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,11 +14,11 @@ namespace History.WindowsClient.Pages;
 
 public sealed partial class TimelinePage : BasePage, IRecipient<RefreshButtonClickedMessage>
 {
-    protected override TimelinePageViewModel ViewModel { get; }
+    protected override BaseTimelinePageViewModel ViewModel { get; }
 
     public TimelinePage()
     {
-        ViewModel = App.Services.GetRequiredService<TimelinePageViewModel>();
+        ViewModel = CommonShared.LastUsedKakaoStoryMode ? App.Services.GetRequiredService<KakaoTimelinePageViewModel>() : App.Services.GetRequiredService<HistoryTimelinePageViewModel>();
 
         InitializeComponent();
 

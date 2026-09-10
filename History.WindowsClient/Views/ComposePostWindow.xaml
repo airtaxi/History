@@ -125,7 +125,8 @@
                                             BorderThickness="0"
                                             Command="{x:Bind ToggleSpoilerCommand}"
                                             CornerRadius="12"
-                                            ToolTipService.ToolTip="{x:Bind SpoilerToolTip, Mode=OneWay}">
+                                            ToolTipService.ToolTip="{x:Bind SpoilerToolTip, Mode=OneWay}"
+                                            Visibility="{x:Bind IsSpoilerToggleVisible}">
                                             <FontIcon
                                                 FontSize="12"
                                                 Foreground="White"
@@ -284,7 +285,10 @@
                     </ComboBox>
 
                     <!--  Post reservation: the toggle arms the date/time pickers; both must hold a value  -->
-                    <Button x:Name="ReservationButton" ToolTipService.ToolTip="{x:Bind ViewModel.ReservationToolTip, Mode=OneWay}">
+                    <Button
+                        x:Name="ReservationButton"
+                        ToolTipService.ToolTip="{x:Bind ViewModel.ReservationToolTip, Mode=OneWay}"
+                        Visibility="{x:Bind ViewModel.IsHistoryMode, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon
                                 VerticalAlignment="Center"
@@ -332,7 +336,8 @@
                         BorderThickness="1"
                         Command="{x:Bind ViewModel.HandleMediaTapCommand, Mode=OneWay}"
                         CornerRadius="8"
-                        ToolTipService.ToolTip="사진/영상">
+                        ToolTipService.ToolTip="사진/영상"
+                        Visibility="{x:Bind ViewModel.IsMediaAttachVisible, Mode=OneWay}">
                         <FontIcon
                             FontSize="16"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -347,7 +352,8 @@
                         BorderThickness="1"
                         Command="{x:Bind ViewModel.HandleStickerTapCommand, Mode=OneWay}"
                         CornerRadius="8"
-                        ToolTipService.ToolTip="스티커">
+                        ToolTipService.ToolTip="스티커"
+                        Visibility="{x:Bind ViewModel.IsMediaAttachVisible, Mode=OneWay}">
                         <FontIcon
                             FontSize="16"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -362,7 +368,8 @@
                         BorderThickness="1"
                         Command="{x:Bind ViewModel.HandleUrlTapCommand, Mode=OneWay}"
                         CornerRadius="8"
-                        ToolTipService.ToolTip="URL 첨부">
+                        ToolTipService.ToolTip="URL 첨부"
+                        Visibility="{x:Bind ViewModel.IsMediaAttachVisible, Mode=OneWay}">
                         <FontIcon
                             FontSize="16"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -377,7 +384,8 @@
                         BorderThickness="1"
                         Command="{x:Bind ViewModel.HandlePollTapCommand, Mode=OneWay}"
                         CornerRadius="8"
-                        ToolTipService.ToolTip="{x:Bind ViewModel.PollToolTip, Mode=OneWay}">
+                        ToolTipService.ToolTip="{x:Bind ViewModel.PollToolTip, Mode=OneWay}"
+                        Visibility="{x:Bind ViewModel.IsHistoryMode, Mode=OneWay}">
                         <FontIcon
                             FontSize="16"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
@@ -386,12 +394,12 @@
 
                     <!--  Kakao cross-post toggle  -->
                     <ToggleButton
-                        x:Name="KakaoPostToggleButton"
                         Height="36"
                         Padding="12,0"
                         Content="카카오 게시"
                         IsChecked="{x:Bind ViewModel.IsKakaoPostEnabled, Mode=TwoWay}"
-                        ToolTipService.ToolTip="카카오 게시" />
+                        ToolTipService.ToolTip="카카오 게시"
+                        Visibility="{x:Bind ViewModel.IsKakaoCrossPostToggleVisible, Mode=OneWay}" />
 
                     <!--  More options: share/repost block and comment permission  -->
                     <Button
@@ -408,7 +416,42 @@
                         <Button.Flyout>
                             <Flyout Placement="BottomEdgeAlignedRight">
                                 <StackPanel Width="260" Spacing="8">
-                                    <Grid ColumnSpacing="8">
+                                    <!--  History-only options: share/repost block and comment permission  -->
+                                    <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.IsHistoryMode, Mode=OneWay}">
+                                        <Grid ColumnSpacing="8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
+                                                Grid.Column="0"
+                                                VerticalAlignment="Center"
+                                                Text="공유 및 리포스트 금지" />
+                                            <ToggleSwitch
+                                                Grid.Column="1"
+                                                MinWidth="0"
+                                                IsOn="{x:Bind ViewModel.IsShareRepostDisallowed, Mode=TwoWay}" />
+                                        </Grid>
+
+                                        <MenuFlyoutSeparator />
+
+                                        <TextBlock FontWeight="SemiBold" Text="댓글 작성 권한" />
+                                        <SplitButton HorizontalAlignment="Stretch">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon
+                                                    VerticalAlignment="Center"
+                                                    FontSize="16"
+                                                    Glyph="{x:Bind ViewModel.SelectedCommentPermissionGlyph, Mode=OneWay}" />
+                                                <TextBlock VerticalAlignment="Center" Text="{x:Bind ViewModel.SelectedCommentPermissionDisplayText, Mode=OneWay}" />
+                                            </StackPanel>
+                                            <SplitButton.Flyout>
+                                                <MenuFlyout x:Name="CommentPermissionMenuFlyout" Opening="OnCommentPermissionMenuFlyoutOpening" />
+                                            </SplitButton.Flyout>
+                                        </SplitButton>
+                                    </StackPanel>
+
+                                    <!--  Kakao Story comment writable flag (comment_all_writable)  -->
+                                    <Grid ColumnSpacing="8" Visibility="{x:Bind ViewModel.IsKakaoCommentWritableVisible, Mode=OneWay}">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
@@ -416,28 +459,12 @@
                                         <TextBlock
                                             Grid.Column="0"
                                             VerticalAlignment="Center"
-                                            Text="공유 및 리포스트 금지" />
+                                            Text="댓글 허용" />
                                         <ToggleSwitch
                                             Grid.Column="1"
                                             MinWidth="0"
-                                            IsOn="{x:Bind ViewModel.IsShareRepostDisallowed, Mode=TwoWay}" />
+                                            IsOn="{x:Bind ViewModel.IsKakaoCommentWritable, Mode=TwoWay}" />
                                     </Grid>
-
-                                    <MenuFlyoutSeparator />
-
-                                    <TextBlock FontWeight="SemiBold" Text="댓글 작성 권한" />
-                                    <SplitButton HorizontalAlignment="Stretch">
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <FontIcon
-                                                VerticalAlignment="Center"
-                                                FontSize="16"
-                                                Glyph="{x:Bind ViewModel.SelectedCommentPermissionGlyph, Mode=OneWay}" />
-                                            <TextBlock VerticalAlignment="Center" Text="{x:Bind ViewModel.SelectedCommentPermissionDisplayText, Mode=OneWay}" />
-                                        </StackPanel>
-                                        <SplitButton.Flyout>
-                                            <MenuFlyout x:Name="CommentPermissionMenuFlyout" Opening="OnCommentPermissionMenuFlyoutOpening" />
-                                        </SplitButton.Flyout>
-                                    </SplitButton>
 
                                     <MenuFlyoutSeparator Visibility="{x:Bind ViewModel.IsTimelineRefreshToggleVisible, Mode=OneWay}" />
 

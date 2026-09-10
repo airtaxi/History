@@ -20,10 +20,11 @@ public partial class CommonKakaoStoryCommentHelper
             if (contents[index] is not StickerContent) continue;
 
             // Strip the leading newlines from the text that follows the sticker
-            // (the '\n' the editor appends after a sticker token plus any user-typed ones).
+            // (the newline the editor appends after a sticker token plus any user-typed
+            // ones; RichEdit-based editors emit CR, so both CR and LF are stripped).
             if (index + 1 < contents.Count && contents[index + 1] is TextContent bodyContent)
             {
-                bodyContent.Text = bodyContent.Text.TrimStart('\n');
+                bodyContent.Text = bodyContent.Text.TrimStart('\r', '\n');
                 if (string.IsNullOrWhiteSpace(bodyContent.Text)) contents.RemoveAt(index + 1);
             }
         }

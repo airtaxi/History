@@ -44,6 +44,10 @@ public static class CommonUtils
     {
         if (mediaId == null) return null;
 
+        // Absolute URLs already point at their own host (signed Kakao Story media/emoticon
+        // URLs) and must not be routed through the History media endpoint.
+        if (Uri.IsWellFormedUriString(mediaId, UriKind.Absolute)) return mediaId;
+
         return $"https://api.history.cenox.io/api/media/{mediaId}";
     }
 }

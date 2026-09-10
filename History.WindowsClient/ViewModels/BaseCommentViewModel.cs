@@ -72,6 +72,9 @@ public abstract partial class BaseCommentViewModel : BaseViewModel
     // Fills the comment "..." menu with the actions available for the current user.
     public virtual void PopulateMoreMenuFlyout(MenuFlyout menuFlyout) => throw new NotSupportedException("[BaseCommentViewModel] PopulateMoreMenuFlyout must be overridden");
 
+    // Loads the like user list when the like flyout opens.
+    public virtual Task LoadLikedUsersAsync() => throw new NotSupportedException("[BaseCommentViewModel] LoadLikedUsersAsync must be overridden");
+
     [RelayCommand]
     public virtual async Task HandleMore() => throw new NotSupportedException("[BaseCommentViewModel] HandleMore must be overridden");
 

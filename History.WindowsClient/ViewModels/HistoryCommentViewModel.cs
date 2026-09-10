@@ -112,6 +112,9 @@ public partial class HistoryCommentViewModel : BaseCommentViewModel, IRecipient<
         if (result.IsSuccess) await ParentViewModel.BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "댓글 신고가 성공적으로 전송되었습니다. 관리자 검토 후 처리 예정입니다."));
     }
 
+    // The comment DTO already carries the like user list, so there is nothing to load.
+    public override Task LoadLikedUsersAsync() => Task.CompletedTask;
+
     public override async Task HandleCommentLikeTapAsync() => await Task.CompletedTask;
 
     public override async Task HandleLikeAsync()
