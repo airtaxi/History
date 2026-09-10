@@ -39,6 +39,7 @@ public partial class MainPageFriendshipSideBarPendingFriendsItemViewModel : Base
 
         _items.Remove(removedViewModel);
         IsEmpty = _items.Count == 0;
+        BaseViewModel.PendingFriendRequestCount = _items.Count;
         ApplyQuery(Query);
     }
 
@@ -58,6 +59,7 @@ public partial class MainPageFriendshipSideBarPendingFriendsItemViewModel : Base
 
             RightHeaderText = $"받은 친구 신청 목록 (총 {result.Value.Count}명)";
             IsEmpty = _items.Count == 0;
+            BaseViewModel.PendingFriendRequestCount = result.Value.Count;
         }
     }
 

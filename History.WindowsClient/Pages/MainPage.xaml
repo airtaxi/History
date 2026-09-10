@@ -108,7 +108,10 @@
                                         Tag="AllFriends"
                                         Text="친구 목록" />
                                     <SelectorBarItem Tag="AddFriends" Text="친구 추가" />
-                                    <SelectorBarItem Tag="PendingFriends" Text="받은 신청" />
+                                    <SelectorBarItem
+                                        segmented:SelectorBarSegmented.BadgeValue="{x:Bind MainPageViewModel.PendingFriendRequestCount, Mode=OneWay}"
+                                        Tag="PendingFriends"
+                                        Text="받은 신청" />
                                     <SelectorBarItem Tag="WaitingFriends" Text="보낸 신청" />
                                     <SelectorBarItem
                                         Tag="IgnoredUsers"

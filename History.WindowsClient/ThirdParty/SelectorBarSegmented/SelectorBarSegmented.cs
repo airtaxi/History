@@ -27,6 +27,12 @@ public partial class SelectorBarSegmented : SelectorBar
         DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(SelectorBarSegmented), new PropertyMetadata(Orientation.Horizontal, OnOrientationChanged));
 
     /// <summary>
+    /// Identifies the <see cref="GetBadgeValue"/> attached property.
+    /// </summary>
+    public static readonly DependencyProperty BadgeValueProperty =
+        DependencyProperty.RegisterAttached("BadgeValue", typeof(int), typeof(SelectorBarSegmented), new PropertyMetadata(0));
+
+    /// <summary>
     /// Gets or sets the index of the currently selected item, or -1 when nothing is selected.
     /// </summary>
     public int SelectedIndex
@@ -43,6 +49,16 @@ public partial class SelectorBarSegmented : SelectorBar
         get => (Orientation)GetValue(OrientationProperty);
         set => SetValue(OrientationProperty, value);
     }
+
+    /// <summary>
+    /// Gets the badge count rendered on the given item, where zero hides the badge.
+    /// </summary>
+    public static int GetBadgeValue(DependencyObject element) => (int)element.GetValue(BadgeValueProperty);
+
+    /// <summary>
+    /// Sets the badge count rendered on the given item, where zero hides the badge.
+    /// </summary>
+    public static void SetBadgeValue(DependencyObject element, int value) => element.SetValue(BadgeValueProperty, value);
 
     public SelectorBarSegmented()
     {

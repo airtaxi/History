@@ -88,6 +88,8 @@
         MiddleItemMargin="{StaticResource SelectorBarMiddleItemHoverVerticalMargin}"
         RightItemMargin="{StaticResource SelectorBarRightItemHoverVerticalMargin}" />
 
+    <local:SelectorBarSegmentedBadgeVisibilityConverter x:Name="BadgeVisibilityConverter" />
+
     <Style BasedOn="{StaticResource DefaultSelectorBarSegmentedStyle}" TargetType="local:SelectorBarSegmented" />
 
     <Style x:Key="DefaultSelectorBarSegmentedStyle" TargetType="local:SelectorBarSegmented">
@@ -204,6 +206,12 @@
                                 Foreground="{TemplateBinding Foreground}"
                                 Text="{TemplateBinding Text}"
                                 TextWrapping="Wrap" />
+                            <InfoBadge
+                                VerticalAlignment="Center"
+                                IsHitTestVisible="False"
+                                Style="{StaticResource AttentionValueInfoBadgeStyle}"
+                                Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(local:SelectorBarSegmented.BadgeValue), Converter={StaticResource BadgeVisibilityConverter}}"
+                                Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(local:SelectorBarSegmented.BadgeValue)}" />
                         </StackPanel>
 
                         <Rectangle
@@ -460,6 +468,12 @@
                                 Foreground="{TemplateBinding Foreground}"
                                 Text="{TemplateBinding Text}"
                                 TextWrapping="Wrap" />
+                            <InfoBadge
+                                VerticalAlignment="Center"
+                                IsHitTestVisible="False"
+                                Style="{StaticResource AttentionValueInfoBadgeStyle}"
+                                Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(local:SelectorBarSegmented.BadgeValue), Converter={StaticResource BadgeVisibilityConverter}}"
+                                Value="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=(local:SelectorBarSegmented.BadgeValue)}" />
                         </StackPanel>
 
                         <Rectangle

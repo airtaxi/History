@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
 using Microsoft.UI.Xaml.Controls;
 
@@ -15,9 +16,8 @@ public partial class MainPageViewModel : BaseViewModel
     [ObservableProperty]
     public partial BaseMainPageSideBarViewModel SideBarViewModel { get; private set; }
 
-    public MainPageViewModel()
-    {
-    }
+    [ObservableProperty]
+    public partial int PendingFriendRequestCount { get; set; }
 
     public async Task RefreshAsync()
     {
@@ -31,6 +31,9 @@ public partial class MainPageViewModel : BaseViewModel
             }
 
             MyProfileViewModel = new HistoryProfileViewModel(myProfileResult.Value, this);
+
+            var pendingRequestResult = await ExecuteRequestAsync(new GetPendingRequests());
+            if (pendingRequestResult.IsSuccess) PendingFriendRequestCount = pendingRequestResult.Value.Count;
         }
     }
 
