@@ -57,8 +57,7 @@ public sealed partial class ExternalUrlContentViewModel : ObservableObject
         var sourceUrl = ExternalUrlContent?.SourceUrl;
         if (!Uri.IsWellFormedUriString(sourceUrl, UriKind.Absolute)) return;
 
-        // TODO: Navigate to the in-app post/profile page for internal links once implemented (Utils.OpenLinkAsync parity).
-        await Windows.System.Launcher.LaunchUriAsync(new Uri(sourceUrl));
+        await Utils.OpenLinkAsync(sourceUrl);
     }
 
     [RelayCommand]

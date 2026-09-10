@@ -124,7 +124,7 @@ public sealed partial class BodyContentControl : BaseControl
     private static void AppendUrlInline(InlineCollection inlines, string url, string displayText)
     {
         var hyperlink = CreateHyperlink(text: displayText, isBold: false);
-        hyperlink.Click += async (_, _) => await OpenInBrowserAsync(url);
+        hyperlink.Click += async (_, _) => await OpenLinkAsync(url);
         inlines.Add(hyperlink);
     }
 
@@ -163,9 +163,11 @@ public sealed partial class BodyContentControl : BaseControl
         return new Hyperlink { Foreground = new SolidColorBrush(AccentColor), Inlines = { run } };
     }
 
-    private static async Task OpenInBrowserAsync(string url)
+    // Opens the link, navigating in-app for History/Kakao Story URLs and falling back
+    // to the external browser for everything else.
+    private static async Task OpenLinkAsync(string url)
     {
         if (!Uri.IsWellFormedUriString(url, UriKind.Absolute)) return;
-        await Windows.System.Launcher.LaunchUriAsync(new Uri(url));
+        await Utils.OpenLinkAsync(url);
     }
 }
