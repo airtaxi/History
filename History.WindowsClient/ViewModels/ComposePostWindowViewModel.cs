@@ -550,7 +550,8 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     private async Task<bool> IsMostRecentPostOnlyMeAsync()
     {
         var postsResult = await ExecuteRequestAsync(new GetUserPosts(CommonShared.UserId, null, 1));
-        return postsResult.IsSuccess && postsResult.Value is { Count: > 0 } && postsResult.Value[0].DiscoveryOption == DiscoveryOption.OnlyMe;
+        // The first page carries the pinned post at the front, so the newest post is resolved by creation time.
+        return postsResult.IsSuccess && postsResult.Value is { Count: > 0 } && postsResult.Value.OrderByDescending(x => x.CreatedAt).First().DiscoveryOption == DiscoveryOption.OnlyMe;
     }
 
     // Opens the friend picker for SelectedUsers/UnselectedUsers scopes and returns the

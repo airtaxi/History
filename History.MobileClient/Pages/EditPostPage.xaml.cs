@@ -560,7 +560,8 @@ public partial class EditPostPage : ContentPage
             if (_post == null && !_isHistoryShare && isOnlyMePostContinuationPromptEnabled && (DiscoveryOption)DiscoveryOptionPicker.SelectedIndex == DiscoveryOption.OnlyMe)
             {
                 var postsResult = await App.ExecuteRequestAsync(new GetUserPosts(CommonShared.UserId, null, 1));
-                if (postsResult.IsSuccess && postsResult.Value is { Count: > 0 } && postsResult.Value[0].DiscoveryOption == DiscoveryOption.OnlyMe)
+                // The first page carries the pinned post at the front, so the newest post is resolved by creation time.
+                if (postsResult.IsSuccess && postsResult.Value is { Count: > 0 } && postsResult.Value.OrderByDescending(x => x.CreatedAt).First().DiscoveryOption == DiscoveryOption.OnlyMe)
                 {
                     // This guide can be turned off in 프로필 -> 설정.
                     var proceed = await DisplayAlertAsync("안내", "마지막으로 작성한 게시글이 나만 보기로 설정되어 있습니다. 이 글도 나만 보기로 작성하시겠습니까?\n\n이 알림은 프로필 → 설정에서 끌 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
