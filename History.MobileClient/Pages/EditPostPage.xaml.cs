@@ -637,7 +637,9 @@ public partial class EditPostPage : ContentPage
                 return;
             }
 
-            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && _pollContentViewModel == null && !_isHistoryShare && !_isKakaoShare && !editorContents.OfType<HashtagContent>().Any())
+            // Shares may carry no text of their own while composing or editing; the origin post renders as the content.
+            var isShare = _isHistoryShare || _isKakaoShare || (_post != null && _post.ParentPost != null);
+            if (string.IsNullOrEmpty(MainTextContent.Text?.Trim()) && mediaAndUploadContents.Count == 0 && _externalUrlContentViewModel == null && _pollContentViewModel == null && !isShare && !editorContents.OfType<HashtagContent>().Any())
             {
                 await DisplayAlertAsync("오류", "빈 내용의 글은 작성할 수 없습니다", Constants.PromptOk);
                 return;

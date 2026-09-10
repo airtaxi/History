@@ -470,8 +470,8 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         if (ExternalUrlContent != null) contents.Add(ExternalUrlContent);
         if (PollContent != null) contents.Add(PollContent);
 
-        // Shares may carry no text of their own; the origin post renders as the content.
-        if (!IsShareMode && string.IsNullOrWhiteSpace(plainText) && mediaAndUploadContents.Count == 0 && ExternalUrlContent == null && PollContent == null && !editorContents.OfType<HashtagContent>().Any())
+        // Shares may carry no text of their own while composing or editing; the origin post renders as the content.
+        if (ScopeOriginPost == null && string.IsNullOrWhiteSpace(plainText) && mediaAndUploadContents.Count == 0 && ExternalUrlContent == null && PollContent == null && !editorContents.OfType<HashtagContent>().Any())
         {
             await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "빈 내용의 글은 작성할 수 없습니다"));
             return;
