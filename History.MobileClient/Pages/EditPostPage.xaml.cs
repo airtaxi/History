@@ -1096,20 +1096,19 @@ public partial class EditPostPage : ContentPage
         if (_commentPermission.HasValue && (discoveryOption == DiscoveryOption.SelectedUsers || discoveryOption == DiscoveryOption.UnselectedUsers))
         {
             await DisplayAlertAsync("오류", "댓글 작성 권한을 설정한 경우, 공개 범위를 특정 친구 (비)공개로 설정할 수 없습니다.", Constants.PromptOk);
-            DiscoveryOptionPicker.SelectedIndex = (int)CommonShared.LastUsedPostDiscoveryOption;
+
+            // Editing reverts to the post's own scope; a new post reverts to the last used scope.
+            DiscoveryOptionPicker.SelectedIndex = _post != null && !_isHistoryShare ? (int)_post.DiscoveryOption : (int)CommonShared.LastUsedPostDiscoveryOption;
             return;
         }
 
-        if (!_isHistoryShare || _isKakaoShare || _isKakaoEdit)
-        {
-            DiscoveryOptionFontImageSource.Glyph = Utils.GetDiscoveryOptionGlyph(discoveryOption);
-            return;
-        }
-
-        if (discoveryOption > _post.DiscoveryOption)
+        // The origin post bounds a share's audience: composing a share uses the shared post
+        // itself, while editing a share uses the post's parent.
+        var scopeOriginPost = _isHistoryShare ? _post : _post?.ParentPost;
+        if (scopeOriginPost != null && discoveryOption > scopeOriginPost.DiscoveryOption)
         {
             await DisplayAlertAsync("오류", "공유된 글의 공개 범위는 원본 글의 공개 범위보다 클 수 없습니다.", Constants.PromptOk);
-            DiscoveryOptionPicker.SelectedIndex = (int)_post.DiscoveryOption;
+            DiscoveryOptionPicker.SelectedIndex = (int)scopeOriginPost.DiscoveryOption;
             return;
         }
 
