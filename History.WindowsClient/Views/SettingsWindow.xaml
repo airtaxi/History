@@ -83,7 +83,7 @@
                     </Grid>
                 </Border>
 
-                <dev:SettingsExpander Header="계정 관리">
+                <dev:SettingsExpander Description="생일과 친구 목록 공개 범위를 설정하고 계정을 관리합니다" Header="계정 관리">
                     <dev:SettingsExpander.HeaderIcon>
                         <FontIcon Glyph="&#xE716;" />
                     </dev:SettingsExpander.HeaderIcon>
@@ -172,7 +172,7 @@
                     </dev:SettingsExpander.Items>
                 </dev:SettingsExpander>
 
-                <dev:SettingsExpander Header="앱 설정">
+                <dev:SettingsExpander Description="테마와 게시글 작성 안내, 업데이트 확인 방식을 설정합니다" Header="앱 설정">
                     <dev:SettingsExpander.HeaderIcon>
                         <FontIcon Glyph="&#xE713;" />
                     </dev:SettingsExpander.HeaderIcon>
@@ -208,7 +208,7 @@
                     </dev:SettingsExpander.Items>
                 </dev:SettingsExpander>
 
-                <dev:SettingsExpander Header="서비스 정보">
+                <dev:SettingsExpander Description="앱 버전과 업데이트, 약관 및 개인정보처리방침을 확인합니다" Header="서비스 정보">
                     <dev:SettingsExpander.HeaderIcon>
                         <FontIcon Glyph="&#xE946;" />
                     </dev:SettingsExpander.HeaderIcon>
@@ -249,7 +249,10 @@
                     </dev:SettingsExpander.Items>
                 </dev:SettingsExpander>
 
-                <dev:SettingsExpander Header="카카오스토리" Visibility="{x:Bind ViewModel.KakaoStorySectionVisibility, Mode=OneWay}">
+                <dev:SettingsExpander
+                    Description="카카오스토리 로그인 정보와 욕설 검사, 알림을 관리합니다"
+                    Header="카카오스토리"
+                    Visibility="{x:Bind ViewModel.KakaoStorySectionVisibility, Mode=OneWay}">
                     <dev:SettingsExpander.HeaderIcon>
                         <FontIcon Glyph="&#xE8F2;" />
                     </dev:SettingsExpander.HeaderIcon>
