@@ -759,11 +759,12 @@ public partial class EditPostPage : ContentPage
                 if (_post == null || _isHistoryShare)
                 {
                     var isKakaoStoryFeaturesEnabled = Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false;
-                    shouldWritePostToKakaoStory = isKakaoStoryFeaturesEnabled && (Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory") ?? false);
-                    if (isKakaoStoryFeaturesEnabled && !Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory").HasValue)
+                    var shouldWritePostToKakaoStorySetting = Configuration.GetValue<bool?>(ShouldWritePostToKakaoStoryConfigurationKey);
+                    shouldWritePostToKakaoStory = isKakaoStoryFeaturesEnabled && (shouldWritePostToKakaoStorySetting ?? false);
+                    if (isKakaoStoryFeaturesEnabled && !shouldWritePostToKakaoStorySetting.HasValue)
                     {
                         shouldWritePostToKakaoStory = await DisplayAlertAsync("안내", "카카오스토리에도 게시글을 작성하는 옵션을 활성화하시겠습니까? 이 옵션은 글쓰기 하단의 설정을 펼쳐 언제든지 변경할 수 있습니다.", Constants.PromptOk, Constants.PromptCancel);
-                        Configuration.SetValue("ShouldWritePostToKakaoStory", shouldWritePostToKakaoStory);
+                        Configuration.SetValue(ShouldWritePostToKakaoStoryConfigurationKey, shouldWritePostToKakaoStory);
                     }
                 }
 
@@ -1145,10 +1146,17 @@ public partial class EditPostPage : ContentPage
         Configuration.SetValue($"ShouldRefreshOnNewPost[{_isHistoryShare || _isKakaoShare}]", @switch.IsToggled);
     }
 
+    /// <summary>
+    /// Configuration key for the KakaoStory mirroring preference. The general (non-share)
+    /// preference keeps the long-established global key, while the History share preference
+    /// is remembered under its own key (defaulting to off) so the two no longer overwrite each other.
+    /// </summary>
+    private string ShouldWritePostToKakaoStoryConfigurationKey => _isHistoryShare ? "ShouldWritePostToKakaoStory[True]" : "ShouldWritePostToKakaoStory";
+
     private void OnWritePostToKakaoStorySwitchToggled(object sender, ToggledEventArgs e)
     {
         var @switch = sender as Switch;
-        Configuration.SetValue("ShouldWritePostToKakaoStory", @switch.IsToggled);
+        Configuration.SetValue(ShouldWritePostToKakaoStoryConfigurationKey, @switch.IsToggled);
     }
 
     private void OnDisallowShareSwitchSwitchToggled(object sender, ToggledEventArgs e)
@@ -1220,7 +1228,7 @@ public partial class EditPostPage : ContentPage
         var shouldRefreshOnNewPost = Configuration.GetValue<bool?>($"ShouldRefreshOnNewPost[{_isHistoryShare || _isKakaoShare}]") ?? !(_isHistoryShare || _isKakaoShare);
         RefreshSwitch.IsToggled = shouldRefreshOnNewPost;
 
-        var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>("ShouldWritePostToKakaoStory");
+        var shouldWritePostToKakaoStory = Configuration.GetValue<bool?>(ShouldWritePostToKakaoStoryConfigurationKey);
         if (shouldWritePostToKakaoStory.HasValue) WritePostToKakaoStorySwitch.IsToggled = shouldWritePostToKakaoStory.Value;
         WritePostToKakaoStoryGrid.IsVisible = (Configuration.GetValue<bool?>("KakaoStoryFeaturesEnabled") ?? false) && !_isKakaoShare && !_isKakaoEdit && !_isKakaoOnlyWrite && (_post == null || _isHistoryShare);
 
