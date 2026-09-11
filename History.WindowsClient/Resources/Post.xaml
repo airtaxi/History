@@ -705,6 +705,112 @@
         </Button>
     </DataTemplate>
 
+    <!--  Discover card: header, contents and shared section only; the whole card opens the author's profile  -->
+    <DataTemplate x:Key="PublicPostTemplate" x:DataType="vm:HistoryPublicPostViewModel">
+        <Button
+            Padding="0"
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            Background="Transparent"
+            BorderThickness="0"
+            Command="{x:Bind HandleProfileTapCommand}"
+            CornerRadius="16">
+            <Border
+                Padding="12"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="16">
+                <StackPanel Spacing="8">
+                    <!--  Header  -->
+                    <Grid ColumnSpacing="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel
+                            Grid.Column="0"
+                            Orientation="Horizontal"
+                            Spacing="6">
+                            <Button
+                                Width="36"
+                                Height="36"
+                                Padding="0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Command="{x:Bind HandleProfileTapCommand}"
+                                CornerRadius="18">
+                                <PersonPicture
+                                    Width="36"
+                                    Height="36"
+                                    ProfilePicture="{x:Bind ProfileThumbnailImageSource, Mode=OneWay}" />
+                            </Button>
+                            <StackPanel VerticalAlignment="Center">
+                                <Button
+                                    Padding="0"
+                                    HorizontalAlignment="Left"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Command="{x:Bind HandleProfileTapCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <TextBlock
+                                            FontSize="14"
+                                            FontWeight="Bold"
+                                            MaxLines="1"
+                                            Text="{x:Bind Nickname, Mode=OneWay}"
+                                            TextTrimming="CharacterEllipsis" />
+                                        <FontIcon
+                                            FontSize="14"
+                                            Foreground="#f78501"
+                                            Glyph="&#xF760;"
+                                            Visibility="{x:Bind IsAdmin, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                                        <FontIcon
+                                            FontSize="14"
+                                            Foreground="#1a5bf3"
+                                            Glyph="&#xF760;"
+                                            Visibility="{x:Bind IsModerator, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="{x:Bind TimestampText, Mode=OneWay}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <Button
+                            Grid.Column="2"
+                            Width="32"
+                            Height="32"
+                            Padding="0"
+                            VerticalAlignment="Center"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Tag="{x:Bind}">
+                            <SymbolIcon Foreground="{ThemeResource TextFillColorSecondaryBrush}" Symbol="More" />
+                            <Button.Flyout>
+                                <MenuFlyout Opening="OnMoreMenuFlyoutOpening" />
+                            </Button.Flyout>
+                        </Button>
+                    </Grid>
+                    <!--  Contents  -->
+                    <ItemsControl ItemTemplateSelector="{StaticResource PostContentSelector}" ItemsSource="{x:Bind Contents, Mode=OneWay}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Spacing="8" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <!--  Shared post  -->
+                    <ContentPresenter
+                        Content="{x:Bind ParentPost, Mode=OneWay}"
+                        ContentTemplate="{StaticResource SharedPostTemplate}"
+                        Visibility="{x:Bind IsShare, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+        </Button>
+    </DataTemplate>
+
     <!--  Repost card: post card + repost attribution footer  -->
     <DataTemplate x:Key="RepostTemplate" x:DataType="vm:BasePostViewModel">
         <Grid Padding="6">

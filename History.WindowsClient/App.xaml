@@ -48,6 +48,11 @@
                 PostTemplate="{StaticResource PostTemplate}"
                 RepostTemplate="{StaticResource RepostTemplate}" />
 
+            <vm:TimelineTemplateSelector
+                x:Key="PublicPostTemplateSelector"
+                PostTemplate="{StaticResource PublicPostTemplate}"
+                RepostTemplate="{StaticResource RepostTemplate}" />
+
             <Color x:Key="SystemAccentColor">#ED664D</Color>
 
             <Color x:Key="SystemAccentColorLight1">#ED664D</Color>

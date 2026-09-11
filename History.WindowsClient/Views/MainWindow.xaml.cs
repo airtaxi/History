@@ -18,7 +18,9 @@ using WinUIEx;
 
 namespace History.WindowsClient.Views;
 
-public sealed partial class MainWindow : BaseWindow
+public sealed partial class MainWindow : BaseWindow,
+    IRecipient<DiscoverModeChangedMessage>,
+    IRecipient<KakaoStoryModeChangedMessage>
 {
     private static MainWindow s_instance;
     private readonly NotificationsFlyoutViewModel _notificationsViewModel;
@@ -38,6 +40,9 @@ public sealed partial class MainWindow : BaseWindow
         _notificationsViewModel = ((NotificationsFlyoutControl)NotificationsFlyout.Content).ViewModel;
         _notificationsViewModel.PropertyChanged += OnNotificationsViewModelPropertyChanged;
 
+        WeakReferenceMessenger.Default.Register((IRecipient<DiscoverModeChangedMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<KakaoStoryModeChangedMessage>)this);
+
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
 
@@ -47,6 +52,12 @@ public sealed partial class MainWindow : BaseWindow
     }
 
     public static void SetForegroundWindow() => s_instance.SetForegroundWindow();
+
+    // Keeps the title bar toggle in sync with the left feed selected on the main page.
+    public void Receive(DiscoverModeChangedMessage message) => DiscoverButton.IsChecked = message.Value;
+
+    // The discover toggle only applies to the main page in History mode.
+    public void Receive(KakaoStoryModeChangedMessage message) => UpdateDiscoverButtonVisibility();
 
     protected override void Navigate(Type pageType, object parameter)
     {
@@ -116,7 +127,12 @@ public sealed partial class MainWindow : BaseWindow
         RefreshButton.Visibility = isToolbarVisible;
         NotificationsButton.Visibility = isToolbarVisible;
         ComposePostButton.Visibility = isToolbarVisible;
+        UpdateDiscoverButtonVisibility();
     }
+
+    // The discover toggle only applies to the main page in History mode, where the
+    // left feed area can switch between the timeline and the discover page.
+    private void UpdateDiscoverButtonVisibility() => DiscoverButton.Visibility = AppFrame.Content is MainPage && !CommonShared.LastUsedKakaoStoryMode ? Visibility.Visible : Visibility.Collapsed;
 
     private void OnAppTitleBarPaneToggleRequested(Microsoft.UI.Xaml.Controls.TitleBar sender, object args) => WeakReferenceMessenger.Default.Send(new ToggleNavigationPaneMessage());
 
@@ -131,6 +147,8 @@ public sealed partial class MainWindow : BaseWindow
     private void OnMainSearchBoxQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args) => WeakReferenceMessenger.Default.Send(new MainWindowAutoSuggestBoxQuerySubmittedMessage(args.QueryText));
 
     private void OnRefreshButtonClicked(object sender, RoutedEventArgs e) => WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
+
+    private void OnDiscoverButtonClicked(object sender, RoutedEventArgs e) => WeakReferenceMessenger.Default.Send(new DiscoverModeToggleRequestedMessage());
 
     // Opens the compose window for the current mode: Kakao Story mode composes a new Kakao
     // Story post that mirrors to History, otherwise the History composer opens.

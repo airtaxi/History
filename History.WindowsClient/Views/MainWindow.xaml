@@ -83,6 +83,15 @@
                             </InfoBadge.RenderTransform>
                         </InfoBadge>
                     </Grid>
+                    <ToggleButton
+                        x:Name="DiscoverButton"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Click="OnDiscoverButtonClicked"
+                        ToolTipService.ToolTip="발견"
+                        Visibility="Collapsed">
+                        <FontIcon FontSize="16" Glyph="&#xF6FA;" />
+                    </ToggleButton>
                     <Button
                         x:Name="RefreshButton"
                         HorizontalAlignment="Center"

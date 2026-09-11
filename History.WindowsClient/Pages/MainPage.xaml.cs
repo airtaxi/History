@@ -11,7 +11,7 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace History.WindowsClient.Pages;
 
-public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSuggestBoxQuerySubmittedMessage>, IRecipient<RefreshButtonClickedMessage>
+public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSuggestBoxQuerySubmittedMessage>, IRecipient<RefreshButtonClickedMessage>, IRecipient<DiscoverModeToggleRequestedMessage>
 {
     protected override MainPageViewModel ViewModel { get; }
 
@@ -25,15 +25,40 @@ public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSugges
 
         WeakReferenceMessenger.Default.Register((IRecipient<MainWindowAutoSuggestBoxQuerySubmittedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<RefreshButtonClickedMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<DiscoverModeToggleRequestedMessage>)this);
     }
 
     public void Receive(MainWindowAutoSuggestBoxQuerySubmittedMessage message)
     {
+        // Searching leaves the discover feed, so the toggle is cleared before the frame changes.
+        ResetDiscoverMode();
+
         if (string.IsNullOrWhiteSpace(message.Value)) MainFrame.Navigate(typeof(TimelinePage));
         else MainFrame.Navigate(typeof(SearchResultPage), message.Value);
     }
 
+    public void Receive(DiscoverModeToggleRequestedMessage message) => SetDiscoverMode(!_isDiscoverMode);
+
+    // Switches the left feed area between the timeline and the discover page, then notifies
+    // the window so the title bar toggle stays in sync.
+    private void SetDiscoverMode(bool isDiscoverMode)
+    {
+        _isDiscoverMode = isDiscoverMode;
+        MainFrame.Navigate(isDiscoverMode ? typeof(PublicPostsPage) : typeof(TimelinePage));
+        WeakReferenceMessenger.Default.Send(new DiscoverModeChangedMessage(_isDiscoverMode));
+    }
+
+    // Clears the discover state without touching the frame, for paths that navigate elsewhere.
+    private void ResetDiscoverMode()
+    {
+        if (!_isDiscoverMode) return;
+
+        _isDiscoverMode = false;
+        WeakReferenceMessenger.Default.Send(new DiscoverModeChangedMessage(false));
+    }
+
     private bool _isInForeground;
+    private bool _isDiscoverMode;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -78,7 +103,7 @@ public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSugges
         try
         {
             var switched = await ViewModel.SwitchModeAsync(isKakaoStoryMode);
-            if (switched) MainFrame.Navigate(typeof(TimelinePage));
+            if (switched) SetDiscoverMode(false);
         }
         finally
         {
