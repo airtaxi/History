@@ -127,6 +127,7 @@ public sealed partial class MainWindow : BaseWindow,
         RefreshButton.Visibility = isToolbarVisible;
         NotificationsButton.Visibility = isToolbarVisible;
         ComposePostButton.Visibility = isToolbarVisible;
+        MoreButton.Visibility = isToolbarVisible;
         UpdateDiscoverButtonVisibility();
     }
 

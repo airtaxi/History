@@ -100,6 +100,27 @@
                         Visibility="Collapsed">
                         <FontIcon FontSize="16" Glyph="&#xE72C;" />
                     </Button>
+                    <Button
+                        x:Name="MoreButton"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Visibility="Collapsed">
+                        <FontIcon FontSize="16" Glyph="&#xE712;" />
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="부가메뉴">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xEC7A;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem Text="설정">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE713;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
                 </StackPanel>
             </TitleBar.RightHeader>
             <TitleBar.Content>
