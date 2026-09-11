@@ -46,7 +46,10 @@
                     IsSelected="True"
                     Tag="History"
                     Text="히스토리" />
-                <SelectorBarItem Tag="KakaoStory" Text="카카오스토리" />
+                <SelectorBarItem
+                    Tag="KakaoStory"
+                    Text="카카오스토리"
+                    Visibility="{x:Bind ViewModel.KakaoStorySelectorVisibility, Mode=OneWay}" />
             </segmented:SelectorBarSegmented>
 
             <ContentControl

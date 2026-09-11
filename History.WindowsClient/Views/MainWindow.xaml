@@ -113,7 +113,10 @@
                                         <FontIcon Glyph="&#xEC7A;" />
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
-                                <MenuFlyoutItem Text="설정">
+                                <MenuFlyoutItem
+                                    x:Name="SettingsMenuFlyoutItem"
+                                    Click="OnSettingsMenuFlyoutItemClicked"
+                                    Text="설정">
                                     <MenuFlyoutItem.Icon>
                                         <FontIcon Glyph="&#xE713;" />
                                     </MenuFlyoutItem.Icon>

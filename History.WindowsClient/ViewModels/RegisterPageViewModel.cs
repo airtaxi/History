@@ -13,7 +13,7 @@ namespace History.WindowsClient.ViewModels;
 public partial class RegisterPageViewModel(ApplicationSettingsService settingsService) : BaseViewModel
 {
     private const string TermsUrl = "https://history.cenox.io/terms.html";
-    private const string PrivacyAgreementUrl = "https://history.cenox.io/privacyagreement.html";
+    private const string PrivacyAgreementUrl = "https://history.cenox.io/privacypolicy.html";
     private const string DefaultDialogPrimaryButtonText = "확인";
 
     private string _idToken;

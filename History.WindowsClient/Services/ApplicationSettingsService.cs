@@ -14,6 +14,7 @@ public sealed partial class ApplicationSettingsService : IDisposable
     private const string IsKakaoPostEnabledSettingKey = "IsKakaoPostEnabled";
     private const string IsTimelineRefreshEnabledOnNewPostSettingKey = "IsTimelineRefreshEnabledOnNewPost";
     private const string IsTimelineRefreshEnabledOnNewShareSettingKey = "IsTimelineRefreshEnabledOnNewShare";
+    private const string IsOnlyMePostContinuationPromptEnabledSettingKey = "IsOnlyMePostContinuationPromptEnabled";
 
     private bool _disposed;
 
@@ -41,6 +42,7 @@ public sealed partial class ApplicationSettingsService : IDisposable
         localSettings.Values[IsKakaoPostEnabledSettingKey] = Settings.IsKakaoPostEnabled;
         localSettings.Values[IsTimelineRefreshEnabledOnNewPostSettingKey] = Settings.IsTimelineRefreshEnabledOnNewPost;
         localSettings.Values[IsTimelineRefreshEnabledOnNewShareSettingKey] = Settings.IsTimelineRefreshEnabledOnNewShare;
+        localSettings.Values[IsOnlyMePostContinuationPromptEnabledSettingKey] = Settings.IsOnlyMePostContinuationPromptEnabled;
         SettingsChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -70,6 +72,9 @@ public sealed partial class ApplicationSettingsService : IDisposable
         var isTimelineRefreshEnabledOnNewShare = false;
         if (localSettings.Values.TryGetValue(IsTimelineRefreshEnabledOnNewShareSettingKey, out var storedTimelineRefreshOnNewShare) && storedTimelineRefreshOnNewShare is bool timelineRefreshOnNewShareValue) isTimelineRefreshEnabledOnNewShare = timelineRefreshOnNewShareValue;
 
+        var isOnlyMePostContinuationPromptEnabled = true;
+        if (localSettings.Values.TryGetValue(IsOnlyMePostContinuationPromptEnabledSettingKey, out var storedOnlyMePostContinuationPrompt) && storedOnlyMePostContinuationPrompt is bool onlyMePostContinuationPromptValue) isOnlyMePostContinuationPromptEnabled = onlyMePostContinuationPromptValue;
+
         // Compose normalized settings and return
         var applicationSettings = new ApplicationSettings
         {
@@ -79,7 +84,8 @@ public sealed partial class ApplicationSettingsService : IDisposable
             RefreshToken = refreshToken,
             IsKakaoPostEnabled = isKakaoPostEnabled,
             IsTimelineRefreshEnabledOnNewPost = isTimelineRefreshEnabledOnNewPost,
-            IsTimelineRefreshEnabledOnNewShare = isTimelineRefreshEnabledOnNewShare
+            IsTimelineRefreshEnabledOnNewShare = isTimelineRefreshEnabledOnNewShare,
+            IsOnlyMePostContinuationPromptEnabled = isOnlyMePostContinuationPromptEnabled
         };
         NormalizeSettings(applicationSettings);
         return applicationSettings;

@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
@@ -6,9 +6,11 @@ using History.Commons.Api.Post;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using History.Commons.KakaoStory;
+using History.WindowsClient.Dialogs;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
+using Microsoft.UI.Xaml.Controls;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
@@ -20,10 +22,13 @@ namespace History.WindowsClient.ViewModels;
 // toggle.
 public sealed partial class ComposePostWindowViewModel : BaseViewModel
 {
+    private const string KakaoStoryProfanityCheckEnabledKey = "KakaoStoryProfanityCheckEnabled";
+
     private readonly PostData _kakaoPost;
     private readonly bool _isKakaoWriteMode;
     private readonly bool _isKakaoEditMode;
     private readonly bool _isKakaoShareMode;
+    private bool _isSuppressingKakaoPostEnabledPersist;
 
     public bool IsKakaoMode => _isKakaoWriteMode || _isKakaoEditMode || _isKakaoShareMode;
 
@@ -42,7 +47,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
     public bool IsKakaoCommentWritableVisible => _isKakaoEditMode;
 
-    public bool IsKakaoCrossPostToggleVisible => IsHistoryMode && !IsEditMode && !IsShareMode;
+    public bool IsKakaoCrossPostToggleVisible => IsHistoryMode && !IsEditMode && !IsShareMode && KakaoStoryFeatureGateHelper.IsEnabled;
 
     // Editor prefill for a Kakao Story post edit.
     public List<BaseContent> KakaoEditorContents { get; } = [];
@@ -101,10 +106,49 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
     // Persists the toggle through the application settings so the next compose
     // window restores the last used state.
-    partial void OnIsKakaoPostEnabledChanged(bool value) => _settings.IsKakaoPostEnabled = value;
+    partial void OnIsKakaoPostEnabledChanged(bool value)
+    {
+        if (_isSuppressingKakaoPostEnabledPersist) return;
+        _settings.IsKakaoPostEnabled = value;
+    }
 
-    // Restores the last used toggle state on window load.
-    public void LoadIsKakaoPostEnabledSetting() => IsKakaoPostEnabled = _settings.IsKakaoPostEnabled;
+    // Restores the last used toggle state on window load. While the feature set is locked the
+    // toggle is forced off without overwriting the saved state.
+    public void LoadIsKakaoPostEnabledSetting()
+    {
+        if (!KakaoStoryFeatureGateHelper.IsEnabled)
+        {
+            _isSuppressingKakaoPostEnabledPersist = true;
+            IsKakaoPostEnabled = false;
+            _isSuppressingKakaoPostEnabledPersist = false;
+            return;
+        }
+
+        IsKakaoPostEnabled = _settings.IsKakaoPostEnabled;
+    }
+
+    // Checks the text that is about to be uploaded to Kakao Story for profanity. When matches are
+    // found the user can rewrite the post in the review dialog (the returned contents), keep the
+    // original text for the upload, or cancel the upload (null). The setting lives in the shared
+    // configuration so the same toggle drives every Kakao Story upload.
+    private async Task<List<BaseContent>> TryResolveKakaoStoryProfanityAsync(List<BaseContent> contents)
+    {
+        if (Configuration.GetValue<bool?>(KakaoStoryProfanityCheckEnabledKey) is false) return contents;
+
+        await ProfanityFilterHelper.LoadAsync();
+        var profanityWords = ProfanityFilterHelper.FindProfanity(GetKakaoStoryText(contents));
+        if (profanityWords.Count == 0) return contents;
+
+        var profanityWordList = string.Join(", ", profanityWords.Take(20));
+        if (profanityWords.Count > 20) profanityWordList += $" 외 {profanityWords.Count - 20}개";
+
+        var choice = await ShowMessageDialogAsync(new MessageDialogParameters("욕설 감지", $"카카오스토리에 게시할 글에서 다음 욕설이 감지되었습니다:\n\n{profanityWordList}\n\n자동화된 계정 정지를 방지하기 위해 글 내용을 수정하시겠습니까?", "글 수정", cancelButtonText: "그대로 게시"));
+        if (choice != ContentDialogResult.Primary) return contents;
+
+        var rewriteDialog = new KakaoStoryRewriteDialog(this, profanityWordList, contents);
+        var rewriteResult = await ShowContentDialogAsync(rewriteDialog);
+        return rewriteResult == ContentDialogResult.Primary ? rewriteDialog.EditedContents : null;
+    }
 
     // Blocks the submit when the Kakao Story text limit would be exceeded so the
     // mirror never fails after the History write.
@@ -186,6 +230,11 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
             return;
         }
 
+        // Only the Kakao Story upload receives the rewritten text; the History mirror keeps the
+        // post as composed.
+        var kakaoContents = await TryResolveKakaoStoryProfanityAsync(editorContents);
+        if (kakaoContents == null) return;
+
         if (!await KakaoStoryUtils.EnsureLoggedInAsync(this))
         {
             await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "카카오스토리 로그인에 실패하였습니다."));
@@ -196,9 +245,9 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         ShowLoading(_isKakaoWriteMode ? "카카오스토리에 게시하는 중..." : _isKakaoEditMode ? "카카오스토리 게시글 수정 중..." : "카카오스토리 게시글 공유 중...");
         try
         {
-            if (_isKakaoWriteMode && !await TryWriteKakaoStoryWriteAsync(editorContents)) return;
-            if (_isKakaoEditMode) await ExecuteKakaoStoryEditAsync(editorContents);
-            else if (_isKakaoShareMode) await ExecuteKakaoStoryShareAsync(editorContents);
+            if (_isKakaoWriteMode && !await TryWriteKakaoStoryWriteAsync(editorContents, kakaoContents)) return;
+            if (_isKakaoEditMode) await ExecuteKakaoStoryEditAsync(kakaoContents);
+            else if (_isKakaoShareMode) await ExecuteKakaoStoryShareAsync(kakaoContents);
 
             foreach (var attachment in MediaAttachments) attachment.Dispose();
             if (IsTimelineRefreshEnabled) WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
@@ -291,13 +340,13 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     // Writes a new Kakao Story post and mirrors it to History. The Kakao Story write runs
     // first so a failure leaves nothing published and the composer stays open; the History
     // mirror reports its own failure because the Kakao Story post is already published.
-    private async Task<bool> TryWriteKakaoStoryWriteAsync(List<BaseContent> editorContents)
+    private async Task<bool> TryWriteKakaoStoryWriteAsync(List<BaseContent> historyContents, List<BaseContent> kakaoContents)
     {
-        var mirrorResult = await TryWriteKakaoStoryPostAsync(editorContents);
+        var mirrorResult = await TryWriteKakaoStoryPostAsync(kakaoContents);
         if (mirrorResult.IsSuccess)
         {
             ShowLoading("히스토리에 게시하는 중...");
-            await TryWriteHistoryMirrorAsync(BuildHistoryMirroredContents(editorContents));
+            await TryWriteHistoryMirrorAsync(BuildHistoryMirroredContents(historyContents));
             return true;
         }
 

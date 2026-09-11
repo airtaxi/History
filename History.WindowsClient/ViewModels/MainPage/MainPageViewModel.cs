@@ -6,13 +6,25 @@ using History.Commons.Api.User;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
 namespace History.WindowsClient.ViewModels.MainPage;
 
-public partial class MainPageViewModel : BaseViewModel
+public partial class MainPageViewModel : BaseViewModel, IRecipient<KakaoStoryFeaturesEnabledMessage>
 {
     private string _sideBarTag = "Friendship";
+
+    public MainPageViewModel()
+    {
+        KakaoStorySelectorVisibility = KakaoStoryFeatureGateHelper.IsEnabled ? Visibility.Visible : Visibility.Collapsed;
+        WeakReferenceMessenger.Default.Register(this);
+    }
+
+    // Revealed only after the hidden unlock, so the Kakao Story account mode is unreachable
+    // while the feature set is locked.
+    [ObservableProperty]
+    public partial Visibility KakaoStorySelectorVisibility { get; private set; }
 
     [ObservableProperty]
     public partial bool IsKakaoStoryMode { get; private set; }
@@ -107,4 +119,6 @@ public partial class MainPageViewModel : BaseViewModel
         if (tag == "Messages") return IsKakaoStoryMode ? new KakaoMainPageMessagesSideBarViewModel(this) : new HistoryMainPageMessagesSideBarViewModel(this);
         else return IsKakaoStoryMode ? new KakaoMainPageFriendshipSideBarViewModel(this) : new HistoryMainPageFriendshipSideBarViewModel(this);
     }
+
+    public void Receive(KakaoStoryFeaturesEnabledMessage message) => KakaoStorySelectorVisibility = Visibility.Visible;
 }

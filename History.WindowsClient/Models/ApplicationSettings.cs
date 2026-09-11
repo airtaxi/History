@@ -25,4 +25,7 @@ public sealed partial class ApplicationSettings : ObservableObject
 
     [ObservableProperty]
     public partial bool IsTimelineRefreshEnabledOnNewShare { get; set; } = false;
+
+    [ObservableProperty]
+    public partial bool IsOnlyMePostContinuationPromptEnabled { get; set; } = true;
 }

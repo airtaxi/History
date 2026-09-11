@@ -58,6 +58,10 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
+        // Clear a stored Kakao Story mode while the feature set is still locked so the app
+        // always starts in History mode.
+        KakaoStoryFeatureGateHelper.NormalizeStoredMode();
+
         _window = new MainWindow();
         _window.Activate();
 
@@ -120,7 +124,7 @@ public partial class App : Application
         else MainWindow.Frame.DispatcherQueue.TryEnqueue(async () => await MainWindow.Frame.ShowMessageDialogAsync(new(Constants.ErrorTitle, message)));
     }
 
-    private static string GetApplicationVersion()
+    public static string GetApplicationVersion()
     {
         try
         {
@@ -155,6 +159,7 @@ public partial class App : Application
         serviceCollection.AddTransient(sp => new KakaoProfilePageViewModel());
         serviceCollection.AddTransient(sp => new SearchResultPageViewModel());
         serviceCollection.AddTransient(sp => new NotificationsFlyoutViewModel());
+        serviceCollection.AddTransient(sp => new SettingsWindowViewModel(sp.GetRequiredService<ApplicationSettingsService>(), sp.GetRequiredService<ApplicationThemeService>(), sp.GetRequiredService<StoreUpdateService>(), sp.GetRequiredService<PushNotificationService>()));
     }
     private static void OnApplicationUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs unhandledExceptionEventArguments)
     {

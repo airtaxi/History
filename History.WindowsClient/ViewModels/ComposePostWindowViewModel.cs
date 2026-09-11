@@ -400,10 +400,9 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         }
 
         // Name-only posts are usually written once; prompt when the most recent post is
-        // private and the current selection is private too.
-        // TODO: expose an OnlyMePostContinuationPromptEnabled toggle (and a settings page
-        // entry for it) so the user can turn this prompt off.
-        if (!IsEditMode && !IsShareMode && SelectedDiscoveryOption == DiscoveryOption.OnlyMe && await IsMostRecentPostOnlyMeAsync())
+        // private and the current selection is private too, unless the continuation prompt
+        // is turned off in the settings window.
+        if (_settings.IsOnlyMePostContinuationPromptEnabled && !IsEditMode && !IsShareMode && SelectedDiscoveryOption == DiscoveryOption.OnlyMe && await IsMostRecentPostOnlyMeAsync())
         {
             var proceedResult = await ShowMessageDialogAsync(new MessageDialogParameters("안내", "마지막으로 작성한 게시글이 나만 보기로 설정되어 있습니다. 이 글도 나만 보기로 작성하시겠습니까?", "작성", cancelButtonText: "취소"));
             if (proceedResult != ContentDialogResult.Primary) return;
@@ -434,6 +433,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
         // The Kakao Story mirror cannot be scheduled, so a reserved post is posted
         // there immediately; the saved session is validated here before any upload.
+        var kakaoMirrorContents = editorContents;
         if (IsKakaoPostEnabled && !IsEditMode && !IsShareMode)
         {
             if (!await KakaoStoryUtils.EnsureLoggedInAsync(this))
@@ -444,6 +444,15 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
             }
 
             if (!await TryValidateKakaoStoryMirrorAsync(editorContents)) return;
+
+            // The server-generated fortune text is mirrored as-is, so only user-authored posts run
+            // the profanity review; a cancel aborts before the History write.
+            if (!IsFortuneOnlyPost(editorContents))
+            {
+                kakaoMirrorContents = await TryResolveKakaoStoryProfanityAsync(editorContents);
+                if (kakaoMirrorContents == null) return;
+            }
+
             if (IsReservationEnabled) await ShowMessageDialogAsync(new MessageDialogParameters("카카오 게시", "게시 예약이 설정되어 있어도 카카오스토리에는 즉시 게시됩니다."));
         }
 
@@ -502,7 +511,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
             // mirror failure leaves nothing published and the composer stays open.
             if (IsKakaoPostEnabled && !IsEditMode && !IsShareMode && !IsFortuneOnlyPost(editorContents))
             {
-                var mirrorResult = await TryWriteKakaoStoryPostAsync(editorContents);
+                var mirrorResult = await TryWriteKakaoStoryPostAsync(kakaoMirrorContents);
                 if (!mirrorResult.IsSuccess)
                 {
                     await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, $"카카오스토리 게시에 실패했습니다: {mirrorResult.ErrorMessage}"));

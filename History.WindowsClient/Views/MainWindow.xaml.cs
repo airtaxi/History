@@ -20,7 +20,8 @@ namespace History.WindowsClient.Views;
 
 public sealed partial class MainWindow : BaseWindow,
     IRecipient<DiscoverModeChangedMessage>,
-    IRecipient<KakaoStoryModeChangedMessage>
+    IRecipient<KakaoStoryModeChangedMessage>,
+    IRecipient<LogoutRequestedMessage>
 {
     private static MainWindow s_instance;
     private readonly NotificationsFlyoutViewModel _notificationsViewModel;
@@ -42,6 +43,7 @@ public sealed partial class MainWindow : BaseWindow,
 
         WeakReferenceMessenger.Default.Register((IRecipient<DiscoverModeChangedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<KakaoStoryModeChangedMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<LogoutRequestedMessage>)this);
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
@@ -58,6 +60,13 @@ public sealed partial class MainWindow : BaseWindow,
 
     // The discover toggle only applies to the main page in History mode.
     public void Receive(KakaoStoryModeChangedMessage message) => UpdateDiscoverButtonVisibility();
+
+    // A successful sign-out or account withdrawal returns the window to the login page.
+    public void Receive(LogoutRequestedMessage message)
+    {
+        AppFrame.Navigate(typeof(LoginPage));
+        AppFrame.BackStack.Clear();
+    }
 
     protected override void Navigate(Type pageType, object parameter)
     {
@@ -150,6 +159,9 @@ public sealed partial class MainWindow : BaseWindow,
     private void OnRefreshButtonClicked(object sender, RoutedEventArgs e) => WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
 
     private void OnDiscoverButtonClicked(object sender, RoutedEventArgs e) => WeakReferenceMessenger.Default.Send(new DiscoverModeToggleRequestedMessage());
+
+    // Opens the settings window as a modal over the main window.
+    private void OnSettingsMenuFlyoutItemClicked(object sender, RoutedEventArgs e) => new SettingsWindow(App.Services.GetRequiredService<SettingsWindowViewModel>()).MakeModal(this);
 
     // Opens the compose window for the current mode: Kakao Story mode composes a new Kakao
     // Story post that mirrors to History, otherwise the History composer opens.

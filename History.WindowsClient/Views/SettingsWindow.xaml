@@ -1,0 +1,343 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<views:BaseWindow
+    x:Class="History.WindowsClient.Views.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dev="using:DevWinUI"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:views="using:History.WindowsClient.Views"
+    Title="설정"
+    Width="1000"
+    Height="750"
+    Closed="OnWindowClosed"
+    mc:Ignorable="d">
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid KeyboardAcceleratorPlacementMode="Hidden" Loaded="OnWindowLoaded">
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Key="Escape" Invoked="OnEscapeKeyInvoked" />
+        </Grid.KeyboardAccelerators>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TitleBar
+            x:Name="AppTitleBar"
+            Title="설정"
+            IsPaneToggleButtonVisible="False">
+            <TitleBar.IconSource>
+                <ImageIconSource ImageSource="ms-appx:///Assets/Icon.ico" />
+            </TitleBar.IconSource>
+        </TitleBar>
+
+        <ScrollViewer
+            x:Name="SettingsScrollViewer"
+            Grid.Row="1"
+            Padding="24,8,24,24">
+            <StackPanel
+                MaxWidth="1000"
+                HorizontalAlignment="Stretch"
+                Spacing="8">
+
+                <Border
+                    Margin="0,8,0,12"
+                    Padding="20"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8">
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border
+                            Width="64"
+                            Height="64"
+                            Background="{ThemeResource ControlFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12">
+                            <Image
+                                Width="40"
+                                Height="40"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Source="ms-appx:///Assets/Icon.png"
+                                Stretch="Uniform" />
+                        </Border>
+
+                        <StackPanel
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Spacing="2">
+                            <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="히스토리 설정" />
+                            <TextBlock
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Style="{ThemeResource BodyTextBlockStyle}"
+                                Text="계정, 알림, 앱 환경을 한 곳에서 관리하세요."
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <dev:SettingsExpander Header="계정 관리">
+                    <dev:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE716;" />
+                    </dev:SettingsExpander.HeaderIcon>
+                    <dev:SettingsExpander.Items>
+                        <dev:SettingsCard
+                            Command="{x:Bind ViewModel.SetBirthdayCommand}"
+                            Header="생일 설정"
+                            IsClickEnabled="True">
+                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.BirthdayText, Mode=OneWay}" />
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Header="친구 목록 공개 범위">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE716;" />
+                            </dev:SettingsCard.HeaderIcon>
+                            <ComboBox
+                                MinWidth="160"
+                                ItemsSource="{x:Bind ViewModel.FriendListDiscoveryOptions}"
+                                SelectedIndex="{x:Bind ViewModel.FriendListDiscoveryIndex, Mode=TwoWay}" />
+                        </dev:SettingsCard>
+                        <dev:SettingsCard
+                            Command="{x:Bind ViewModel.LogoutCommand}"
+                            Header="로그아웃"
+                            IsClickEnabled="True">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xF3B1;" />
+                            </dev:SettingsCard.HeaderIcon>
+                        </dev:SettingsCard>
+                        <dev:SettingsCard
+                            Command="{x:Bind ViewModel.WithdrawCommand}"
+                            Header="회원 탈퇴"
+                            IsClickEnabled="True">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE74D;" />
+                            </dev:SettingsCard.HeaderIcon>
+                        </dev:SettingsCard>
+                    </dev:SettingsExpander.Items>
+                </dev:SettingsExpander>
+
+                <dev:SettingsExpander Description="수신할 알림 유형과 범위를 설정합니다" Header="푸시 알림">
+                    <dev:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xEA8F;" />
+                    </dev:SettingsExpander.HeaderIcon>
+                    <dev:SettingsExpander.Items>
+                        <dev:SettingsCard Header="댓글 푸시 알림">
+                            <ComboBox
+                                MinWidth="160"
+                                ItemsSource="{x:Bind ViewModel.PushPermissionOptions}"
+                                SelectedIndex="{x:Bind ViewModel.CommentPushNotificationIndex, Mode=TwoWay}" />
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Header="댓글 언급 푸시 알림">
+                            <ComboBox
+                                MinWidth="160"
+                                ItemsSource="{x:Bind ViewModel.PushPermissionOptions}"
+                                SelectedIndex="{x:Bind ViewModel.CommentMentionPushNotificationIndex, Mode=TwoWay}" />
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Header="댓글 좋아요 푸시 알림">
+                            <ComboBox
+                                MinWidth="160"
+                                ItemsSource="{x:Bind ViewModel.PushPermissionOptions}"
+                                SelectedIndex="{x:Bind ViewModel.CommentLikePushNotificationIndex, Mode=TwoWay}" />
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Header="공유글의 댓글 푸시 알림">
+                            <ComboBox
+                                MinWidth="160"
+                                ItemsSource="{x:Bind ViewModel.PushPermissionOptions}"
+                                SelectedIndex="{x:Bind ViewModel.SharedPostCommentPushNotificationIndex, Mode=TwoWay}" />
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Header="게시글 좋아요 푸시 알림">
+                            <ComboBox
+                                MinWidth="160"
+                                ItemsSource="{x:Bind ViewModel.PushPermissionOptions}"
+                                SelectedIndex="{x:Bind ViewModel.PostReactionPushNotificationIndex, Mode=TwoWay}" />
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Header="게시글 언급 푸시 알림">
+                            <ComboBox
+                                MinWidth="160"
+                                ItemsSource="{x:Bind ViewModel.PushPermissionOptions}"
+                                SelectedIndex="{x:Bind ViewModel.PostMentionPushNotificationIndex, Mode=TwoWay}" />
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Description="관심 친구가 새 게시글을 작성하면 알립니다" Header="관심 친구의 새 게시글 푸시 알림">
+                            <ToggleSwitch
+                                IsOn="{x:Bind ViewModel.IsFavoriteFriendNewPostPushNotificationEnabled, Mode=TwoWay}"
+                                OffContent="꺼짐"
+                                OnContent="켜짐" />
+                        </dev:SettingsCard>
+                    </dev:SettingsExpander.Items>
+                </dev:SettingsExpander>
+
+                <dev:SettingsExpander Header="앱 설정">
+                    <dev:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </dev:SettingsExpander.HeaderIcon>
+                    <dev:SettingsExpander.Items>
+                        <dev:SettingsCard Header="테마 설정">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE706;" />
+                            </dev:SettingsCard.HeaderIcon>
+                            <ComboBox MinWidth="160" SelectedIndex="{x:Bind ViewModel.ThemeIndex, Mode=TwoWay}">
+                                <ComboBoxItem Content="시스템 설정 따름" />
+                                <ComboBoxItem Content="라이트 모드" />
+                                <ComboBoxItem Content="다크 모드" />
+                            </ComboBox>
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Description="마지막 게시글이 나만 보기일 때 연속 작성 여부를 묻습니다" Header="나만 보기 연속 작성 안내">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE890;" />
+                            </dev:SettingsCard.HeaderIcon>
+                            <ToggleSwitch
+                                IsOn="{x:Bind ViewModel.IsOnlyMePostContinuationPromptEnabled, Mode=TwoWay}"
+                                OffContent="꺼짐"
+                                OnContent="켜짐" />
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Description="Microsoft Store에서 새 버전을 주기적으로 확인합니다" Header="자동 업데이트 확인">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE895;" />
+                            </dev:SettingsCard.HeaderIcon>
+                            <ToggleSwitch
+                                IsOn="{x:Bind ViewModel.IsAutomaticUpdateCheckEnabled, Mode=TwoWay}"
+                                OffContent="꺼짐"
+                                OnContent="켜짐" />
+                        </dev:SettingsCard>
+                    </dev:SettingsExpander.Items>
+                </dev:SettingsExpander>
+
+                <dev:SettingsExpander Header="서비스 정보">
+                    <dev:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE946;" />
+                    </dev:SettingsExpander.HeaderIcon>
+                    <dev:SettingsExpander.Items>
+                        <dev:SettingsCard
+                            Command="{x:Bind ViewModel.HandleVersionInfoCommand}"
+                            Description="{x:Bind ViewModel.VersionText}"
+                            Header="버전 정보"
+                            IsClickEnabled="True">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE946;" />
+                            </dev:SettingsCard.HeaderIcon>
+                        </dev:SettingsCard>
+                        <dev:SettingsCard
+                            Command="{x:Bind ViewModel.CheckForUpdateCommand}"
+                            Header="업데이트 확인"
+                            IsClickEnabled="True">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE895;" />
+                            </dev:SettingsCard.HeaderIcon>
+                        </dev:SettingsCard>
+                        <dev:SettingsCard
+                            Command="{x:Bind ViewModel.OpenTermsCommand}"
+                            Header="서비스 이용 약관"
+                            IsClickEnabled="True">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE8A5;" />
+                            </dev:SettingsCard.HeaderIcon>
+                        </dev:SettingsCard>
+                        <dev:SettingsCard
+                            Command="{x:Bind ViewModel.OpenPrivacyPolicyCommand}"
+                            Header="개인정보처리방침"
+                            IsClickEnabled="True">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE72E;" />
+                            </dev:SettingsCard.HeaderIcon>
+                        </dev:SettingsCard>
+                    </dev:SettingsExpander.Items>
+                </dev:SettingsExpander>
+
+                <dev:SettingsExpander Header="카카오스토리" Visibility="{x:Bind ViewModel.KakaoStorySectionVisibility, Mode=OneWay}">
+                    <dev:SettingsExpander.HeaderIcon>
+                        <FontIcon Glyph="&#xE8F2;" />
+                    </dev:SettingsExpander.HeaderIcon>
+                    <dev:SettingsExpander.Items>
+                        <dev:SettingsCard
+                            Command="{x:Bind ViewModel.KakaoReloginCommand}"
+                            Header="카카오스토리 계정 (재)로그인"
+                            IsClickEnabled="True">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE910;" />
+                            </dev:SettingsCard.HeaderIcon>
+                        </dev:SettingsCard>
+                        <dev:SettingsCard
+                            Command="{x:Bind ViewModel.ResetKakaoCredentialsCommand}"
+                            Header="저장된 로그인 정보 초기화"
+                            IsClickEnabled="True">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE75C;" />
+                            </dev:SettingsCard.HeaderIcon>
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Header="카카오스토리 업로드 시 욕설 체크">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE71C;" />
+                            </dev:SettingsCard.HeaderIcon>
+                            <ToggleSwitch
+                                IsOn="{x:Bind ViewModel.IsKakaoStoryProfanityCheckEnabled, Mode=TwoWay}"
+                                OffContent="꺼짐"
+                                OnContent="켜짐" />
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Header="카카오스토리 푸시 알림">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xEA8F;" />
+                            </dev:SettingsCard.HeaderIcon>
+                            <ToggleSwitch
+                                IsOn="{x:Bind ViewModel.IsKakaoStoryNotificationEnabled, Mode=TwoWay}"
+                                OffContent="꺼짐"
+                                OnContent="켜짐" />
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Header="카카오스토리 관심 친구 푸시 알림">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE734;" />
+                            </dev:SettingsCard.HeaderIcon>
+                            <ToggleSwitch
+                                IsOn="{x:Bind ViewModel.IsKakaoStoryFavoriteFriendNotificationEnabled, Mode=TwoWay}"
+                                OffContent="꺼짐"
+                                OnContent="켜짐" />
+                        </dev:SettingsCard>
+                        <dev:SettingsCard Header="카카오스토리 느낌 푸시 알림">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xE899;" />
+                            </dev:SettingsCard.HeaderIcon>
+                            <ToggleSwitch
+                                IsOn="{x:Bind ViewModel.IsKakaoStoryEmotionNotificationEnabled, Mode=TwoWay}"
+                                OffContent="꺼짐"
+                                OnContent="켜짐" />
+                        </dev:SettingsCard>
+                    </dev:SettingsExpander.Items>
+                </dev:SettingsExpander>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid
+            x:Name="LoadingGrid"
+            Grid.RowSpan="2"
+            Visibility="Collapsed">
+
+            <Rectangle Fill="{ThemeResource ThemeColor}" Opacity="0.3" />
+
+            <dev:BlurEffectControl
+                BlurAmount="10"
+                IsBlurEnabled="True"
+                IsTintEnabled="False" />
+
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="8">
+                <dev:LoadingIndicator Foreground="{ThemeResource SystemAccentColor}" Mode="Arcs" />
+                <TextBlock
+                    x:Name="LoadingTextBlock"
+                    HorizontalAlignment="Center"
+                    FontWeight="Bold"
+                    HorizontalTextAlignment="Center" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</views:BaseWindow>
