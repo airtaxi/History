@@ -44,7 +44,6 @@ public sealed class PushNotificationService
     }
 
     // Removes the registered channel from the server and forgets the local channel state.
-    // TODO: Call this from the logout flow once the Windows client has one.
     public async Task UnregisterAsync()
     {
         await _channelLock.WaitAsync();
