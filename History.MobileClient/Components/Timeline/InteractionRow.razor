@@ -2,7 +2,7 @@
     @foreach (var interaction in Interactions)
     {
         <div class="interaction-item" @onclick="() => interaction.HandleTapCommand.Execute(null)">
-            <img class="avatar avatar-36" src="@interaction.ProfileMedia?.Uri" />
+            <img class="avatar avatar-36" src="@(interaction.ProfileMedia?.Uri ?? Constants.DefaultProfileImageFileName)" data-fallback="@Constants.DefaultProfileImageFileName" />
             @if (interaction.Glyph != null)
             {
                 <span class="interaction-badge" style="background:@interaction.Color?.ToArgbHex()">

@@ -2,7 +2,7 @@
 
 <article class="card" @onclick="OnCardClicked">
     <div class="card-header @(ViewModel.IsRepost ? "card-header-repost" : string.Empty)">
-        <img class="avatar avatar-36" src="@ViewModel.ProfileMedia?.Uri" @onclick="OnProfileClicked" @onclick:stopPropagation="true" />
+        <img class="avatar avatar-36" src="@(ViewModel.ProfileMedia?.Uri ?? Constants.DefaultProfileImageFileName)" data-fallback="@Constants.DefaultProfileImageFileName" @onclick="OnProfileClicked" @onclick:stopPropagation="true" />
         <div class="header-text">
             <div class="name-row">
                 <span class="name">@ViewModel.Nickname</span>
@@ -37,7 +37,7 @@
         <div class="shared-post" @onclick="OnParentPostClicked" @onclick:stopPropagation="true">
             <div class="divider"></div>
             <div class="shared-header">
-                <img class="avatar avatar-28" src="@ViewModel.ParentPost.ProfileMedia?.Uri" />
+                <img class="avatar avatar-28" src="@(ViewModel.ParentPost.ProfileMedia?.Uri ?? Constants.DefaultProfileImageFileName)" data-fallback="@Constants.DefaultProfileImageFileName" />
                 <div class="shared-name-row">
                     <span class="name">@ViewModel.ParentPost.Nickname</span>
                     @if (ViewModel.ParentPost.IsAdmin)

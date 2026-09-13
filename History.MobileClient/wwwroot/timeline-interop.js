@@ -294,6 +294,21 @@ window.timelineInterop = (() => {
         if (event.target.closest('.sticker')) scheduleMasonryUpdate();
     }
 
+    // Any <img data-fallback="..."> that fails to load (404/offline) swaps to the
+    // fallback once. Feed avatars use this because the MAUI Resources/Images default
+    // files are not reachable from the BlazorWebView, whose only web root is wwwroot.
+    function onImageFailed(event) {
+        const image = event.target;
+        if (!(image instanceof HTMLImageElement)) return;
+        const fallback = image.dataset.fallback;
+        if (!fallback || image.src.endsWith(fallback)) return;
+        image.src = fallback;
+    }
+
+    // Registered at script load instead of init() (which runs after the first render)
+    // so the images of the initial feed are covered too.
+    document.addEventListener('error', onImageFailed, { capture: true });
+
     // Chromium-based webviews never fire the 'longpress' DOM event, so long-press is
     // detected from raw touch input here. A 500ms hold with minimal movement fires the
     // component's copy method once; the native webview long-press (haptic/context menu)

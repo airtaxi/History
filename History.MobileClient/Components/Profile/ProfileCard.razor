@@ -4,15 +4,12 @@
 <div class="profile-card">
     @if (ViewModel.BackgroundMedia != null)
     {
-        <img class="profile-bg" src="@ViewModel.BackgroundMedia.Uri" @onclick="OnBackgroundClicked" />
+        <img class="profile-bg" src="@ViewModel.BackgroundMedia.Uri" data-fallback="@Constants.DefaultBackgroundImageFileName" @onclick="OnBackgroundClicked" />
     }
     <div class="profile-overlay"></div>
     <div class="profile-top">
         <div class="profile-avatar-wrap">
-            @if (ViewModel.ProfileMedia != null)
-            {
-                <img class="profile-avatar" src="@ViewModel.ProfileMedia.Uri" @ref="ProfileImageElement" @onclick="OnProfileClicked" />
-            }
+            <img class="profile-avatar" src="@(ViewModel.ProfileMedia?.Uri ?? Constants.DefaultProfileImageFileName)" data-fallback="@Constants.DefaultProfileImageFileName" @ref="ProfileImageElement" @onclick="OnProfileClicked" />
             @if (ViewModel.IsFriend)
             {
                 <button type="button" class="profile-favorite" @onclick="OnFavoriteClicked" @onclick:stopPropagation="true">
