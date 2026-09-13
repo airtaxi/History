@@ -1,4 +1,5 @@
-﻿using History.Commons;
+﻿using System.Text;
+using History.Commons;
 using History.Commons.DataTypes.Contents;
 using SkiaSharp;
 
@@ -69,6 +70,13 @@ public static class PostImageRenderer
     private static readonly SemaphoreSlim s_typefaceSemaphore = new(1, 1);
     private static SKTypeface s_regularTypeface;
     private static SKTypeface s_boldTypeface;
+
+    // Characters the bundled font cannot draw (emoji, symbols, other scripts) are
+    // rendered with a matching system typeface resolved through the platform font
+    // manager. Resolved typefaces and their fonts are cached for the app lifetime.
+    private static readonly Lock s_fallbackLock = new();
+    private static readonly Dictionary<int, SKTypeface> s_fallbackTypefaces = new();
+    private static readonly Dictionary<(IntPtr TypefaceHandle, float Size), SKFont> s_fallbackFonts = new();
 
     /// <summary>
     /// Builds the absolute timestamp text for image export headers.
@@ -269,16 +277,16 @@ public static class PostImageRenderer
                 {
                     var stackTop = middleY - stackHeight / 2;
                     var nameBaseline = stackTop - style.TitleFont.Metrics.Ascent;
-                    canvas.DrawText(nameText, textLeft, nameBaseline, SKTextAlign.Left, style.TitleFont, style.TextPaint);
-                    canvas.DrawText(timeText, textLeft, nameBaseline + nameLineHeight, SKTextAlign.Left, style.BodyFont, style.SecondaryPaint);
+                    DrawTextWithFallback(canvas, nameText, textLeft, nameBaseline, style.TitleFont, style.TextPaint);
+                    DrawTextWithFallback(canvas, timeText, textLeft, nameBaseline + nameLineHeight, style.BodyFont, style.SecondaryPaint);
                 }
                 else if (hasName)
                 {
-                    canvas.DrawText(nameText, textLeft, middleY - style.TitleFont.Metrics.Ascent, SKTextAlign.Left, style.TitleFont, style.TextPaint);
+                    DrawTextWithFallback(canvas, nameText, textLeft, middleY - style.TitleFont.Metrics.Ascent, style.TitleFont, style.TextPaint);
                 }
                 else if (hasTimestamp)
                 {
-                    canvas.DrawText(timeText, textLeft, middleY - style.BodyFont.Metrics.Ascent, SKTextAlign.Left, style.BodyFont, style.SecondaryPaint);
+                    DrawTextWithFallback(canvas, timeText, textLeft, middleY - style.BodyFont.Metrics.Ascent, style.BodyFont, style.SecondaryPaint);
                 }
             }
             finally { image?.Dispose(); }
@@ -335,7 +343,7 @@ public static class PostImageRenderer
                 }
 
                 var middleY = headerTop + SharedPostProfileSize / 2;
-                if (hasName) canvas.DrawText(nameText, x + SharedPostProfileSize + SharedPostColumnSpacing, middleY - style.BoldFont.Metrics.Ascent, SKTextAlign.Left, style.BoldFont, style.TextPaint);
+                if (hasName) DrawTextWithFallback(canvas, nameText, x + SharedPostProfileSize + SharedPostColumnSpacing, middleY - style.BoldFont.Metrics.Ascent, style.BoldFont, style.TextPaint);
                 if (shareCountText != null)
                 {
                     var shareWidth = style.BoldFont.MeasureText(shareCountText);
@@ -395,7 +403,7 @@ public static class PostImageRenderer
 
                 var textLeft = x + CommentProfileSize + CommentColumnSpacing;
                 var nickname = TruncateText(comment.Nickname, style.BoldFont, columnWidth);
-                if (nickname != null) canvas.DrawText(nickname, textLeft, y - style.BoldFont.Metrics.Ascent, SKTextAlign.Left, style.BoldFont, style.TextPaint);
+                if (nickname != null) DrawTextWithFallback(canvas, nickname, textLeft, y - style.BoldFont.Metrics.Ascent, style.BoldFont, style.TextPaint);
 
                 var cursorY = y + nameLineHeight + CommentRowSpacing;
                 for (var index = 0; index < innerBlocks.Count; index++)
@@ -527,7 +535,9 @@ public static class PostImageRenderer
                     style.FillPaint.Color = OverlayColor;
                     canvas.DrawRect(barRect, style.FillPaint);
 
-                    var lines = WrapRuns([new TextRun(mediaContent.Description, style.BoldFont, style.WhitePaint)], drawWidth);
+                    var descriptionRuns = new List<TextRun>();
+                    AddRuns(descriptionRuns, mediaContent.Description, style.BoldFont, style.WhitePaint);
+                    var lines = WrapRuns(descriptionRuns, drawWidth);
                     var fontHeight = style.BoldFont.Metrics.Descent - style.BoldFont.Metrics.Ascent;
                     var baseline = barRect.MidY - (lines.Count - 1) * style.LineHeight / 2 - fontHeight / 2 - style.BoldFont.Metrics.Ascent;
                     foreach (var line in lines.Take(2))
@@ -551,7 +561,9 @@ public static class PostImageRenderer
     private static RenderBlock BuildPollBlock(PollContent pollContent, float contentWidth, RenderStyle style)
     {
         var innerWidth = contentWidth - CardPadding * 2;
-        var questionLines = WrapRuns([new TextRun(pollContent.Question ?? string.Empty, style.TitleFont, style.TextPaint)], innerWidth);
+        var questionRuns = new List<TextRun>();
+        AddRuns(questionRuns, pollContent.Question ?? string.Empty, style.TitleFont, style.TextPaint);
+        var questionLines = WrapRuns(questionRuns, innerWidth);
         var questionHeight = questionLines.Count * style.LineHeight;
 
         var showResults = pollContent.TotalVotes > 0;
@@ -563,7 +575,9 @@ public static class PostImageRenderer
             var percentageText = showResults ? $"{percentage:P0}" : null;
 
             var measuredWidth = innerWidth - OptionPaddingX * 2 - (percentageText != null ? style.BoldFont.MeasureText(percentageText) : 0);
-            var optionLines = WrapRuns([new TextRun(option.Text ?? string.Empty, style.BodyFont, style.TextPaint)], measuredWidth);
+            var optionRuns = new List<TextRun>();
+            AddRuns(optionRuns, option.Text ?? string.Empty, style.BodyFont, style.TextPaint);
+            var optionLines = WrapRuns(optionRuns, measuredWidth);
             var optionHeight = optionLines.Count * style.LineHeight + OptionPaddingY * 2 + (showResults ? ProgressBarHeight : 0);
 
             options.Add((optionLines, (float)percentage, percentageText));
@@ -690,19 +704,19 @@ public static class PostImageRenderer
                 var description = TruncateText(externalUrlContent.Description, style.BodyFont, textRight - textLeft);
                 if (description != null)
                 {
-                    canvas.DrawText(description, textLeft, baseline, SKTextAlign.Left, style.BodyFont, style.LightTextPaint);
+                    DrawTextWithFallback(canvas, description, textLeft, baseline, style.BodyFont, style.LightTextPaint);
                     baseline -= (style.BodyFont.Metrics.Descent - style.BodyFont.Metrics.Ascent) + 6;
                 }
 
                 var title = TruncateText(externalUrlContent.Title, style.TitleFont, textRight - textLeft);
                 if (title != null)
                 {
-                    canvas.DrawText(title, textLeft, baseline, SKTextAlign.Left, style.TitleFont, style.WhitePaint);
+                    DrawTextWithFallback(canvas, title, textLeft, baseline, style.TitleFont, style.WhitePaint);
                     baseline -= (style.TitleFont.Metrics.Descent - style.TitleFont.Metrics.Ascent) + 6;
                 }
 
                 var domain = TruncateText(externalUrlContent.Domain, style.SmallFont, textRight - textLeft);
-                if (domain != null) canvas.DrawText(domain, textLeft, baseline, SKTextAlign.Left, style.SmallFont, style.LightTextPaint);
+                if (domain != null) DrawTextWithFallback(canvas, domain, textLeft, baseline, style.SmallFont, style.LightTextPaint);
             }
             finally { image?.Dispose(); }
         });
@@ -712,13 +726,100 @@ public static class PostImageRenderer
     {
         if (string.IsNullOrEmpty(text)) return;
 
-        var segments = text.Split('\n');
-        for (var i = 0; i < segments.Length; i++)
+        var lineSegments = text.Split('\n');
+        for (var i = 0; i < lineSegments.Length; i++)
         {
             if (i > 0) runs.Add(TextRun.LineBreak);
-            if (segments[i].Length == 0) continue;
-            runs.Add(new TextRun(segments[i], font, paint));
+            if (lineSegments[i].Length == 0) continue;
+            foreach (var (segmentText, segmentFont) in SplitFallbackSegments(lineSegments[i], font)) runs.Add(new TextRun(segmentText, segmentFont, paint));
         }
+    }
+
+    // Splits one line of text into segments that each use a font able to draw their
+    // characters, so characters missing from the bundled font (emoji, symbols,
+    // other scripts) render through a system fallback typeface instead of tofu.
+    private static List<(string Text, SKFont Font)> SplitFallbackSegments(string text, SKFont font)
+    {
+        var segments = new List<(string Text, SKFont Font)>();
+        var segmentStart = 0;
+        var segmentFont = font;
+        for (var index = 0; index < text.Length;)
+        {
+            var isSurrogatePair = char.IsSurrogatePair(text, index);
+            var codePoint = isSurrogatePair ? char.ConvertToUtf32(text, index) : text[index];
+            var nextFont = ResolveFontForCodePoint(font, codePoint);
+            if (!ReferenceEquals(nextFont, segmentFont))
+            {
+                if (index > segmentStart) segments.Add((text[segmentStart..index], segmentFont));
+                segmentStart = index;
+                segmentFont = nextFont;
+            }
+            index += isSurrogatePair ? 2 : 1;
+        }
+        if (text.Length > segmentStart) segments.Add((text[segmentStart..], segmentFont));
+        return segments;
+    }
+
+    private static SKFont ResolveFontForCodePoint(SKFont font, int codePoint)
+    {
+        if (codePoint < 0x80 || font.ContainsGlyph(codePoint)) return font;
+        return GetFallbackFont(codePoint, font.Size) ?? font;
+    }
+
+    private static SKTypeface GetFallbackTypeface(int codePoint)
+    {
+        lock (s_fallbackLock)
+        {
+            if (s_fallbackTypefaces.TryGetValue(codePoint, out var cachedTypeface)) return cachedTypeface;
+        }
+
+        SKTypeface fallbackTypeface = null;
+        try { fallbackTypeface = SKFontManager.Default.MatchCharacter(codePoint); }
+        catch { fallbackTypeface = null; }
+
+        lock (s_fallbackLock) s_fallbackTypefaces[codePoint] = fallbackTypeface;
+        return fallbackTypeface;
+    }
+
+    private static SKFont GetFallbackFont(int codePoint, float size)
+    {
+        var fallbackTypeface = GetFallbackTypeface(codePoint);
+        if (fallbackTypeface == null) return null;
+
+        var cacheKey = (fallbackTypeface.Handle, size);
+        lock (s_fallbackLock)
+        {
+            if (s_fallbackFonts.TryGetValue(cacheKey, out var cachedFont)) return cachedFont.ContainsGlyph(codePoint) ? cachedFont : null;
+
+            var font = new SKFont(fallbackTypeface, size);
+            if (!font.ContainsGlyph(codePoint))
+            {
+                s_fallbackTypefaces[codePoint] = null;
+                return null;
+            }
+
+            s_fallbackFonts[cacheKey] = font;
+            return font;
+        }
+    }
+
+    // Draws left-aligned text with fallback typefaces for characters the bundled
+    // font cannot draw, advancing the cursor by each segment's measured width.
+    private static void DrawTextWithFallback(SKCanvas canvas, string text, float x, float baseline, SKFont font, SKPaint paint)
+    {
+        var cursor = x;
+        foreach (var (segmentText, segmentFont) in SplitFallbackSegments(text, font))
+        {
+            canvas.DrawText(segmentText, cursor, baseline, SKTextAlign.Left, segmentFont, paint);
+            cursor += segmentFont.MeasureText(segmentText);
+        }
+    }
+
+    private static float MeasureTextWidth(string text, SKFont font)
+    {
+        var width = 0f;
+        foreach (var (segmentText, segmentFont) in SplitFallbackSegments(text, font)) width += segmentFont.MeasureText(segmentText);
+        return width;
     }
 
     private static List<TextLine> WrapRuns(List<TextRun> inputRuns, float maxWidth)
@@ -774,12 +875,27 @@ public static class PostImageRenderer
     private static string TruncateText(string text, SKFont font, float maxWidth)
     {
         if (string.IsNullOrEmpty(text)) return null;
-        if (font.MeasureText(text) <= maxWidth) return text;
+        if (MeasureTextWidth(text, font) <= maxWidth) return text;
 
-        var ellipsisWidth = font.MeasureText("…");
-        var count = font.BreakText(text, maxWidth - ellipsisWidth);
-        if (count <= 0) return "…";
-        return text[..count] + "…";
+        var remainingWidth = maxWidth - MeasureTextWidth("…", font);
+        var builder = new StringBuilder();
+        var usedWidth = 0f;
+        foreach (var (segmentText, segmentFont) in SplitFallbackSegments(text, font))
+        {
+            var segmentWidth = segmentFont.MeasureText(segmentText);
+            if (usedWidth + segmentWidth <= remainingWidth)
+            {
+                builder.Append(segmentText);
+                usedWidth += segmentWidth;
+                continue;
+            }
+
+            var availableWidth = remainingWidth - usedWidth;
+            var count = availableWidth > 0 ? segmentFont.BreakText(segmentText, availableWidth) : 0;
+            if (count > 0) builder.Append(segmentText[..count]);
+            break;
+        }
+        return builder.Length > 0 ? builder.ToString() + "…" : "…";
     }
 
     private static string GetExpiresAtText(PollContent poll)
