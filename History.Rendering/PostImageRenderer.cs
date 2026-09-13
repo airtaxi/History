@@ -35,6 +35,8 @@ public static class PostImageRenderer
     private const float PlayCircleRadius = 225f;
     private const float ProgressBarHeight = 18f;
     private const float OptionSpacing = 12f;
+    private const float OptionProgressGap = 18f;
+    private const float PollFooterGap = 24f;
 
     // Header layout (PostContentTemplate 3x: 48dp profile, ColumnSpacing 8, bold name 16dp, timestamp 14dp)
     private const float HeaderProfileSize = 144f;
@@ -578,7 +580,7 @@ public static class PostImageRenderer
             var optionRuns = new List<TextRun>();
             AddRuns(optionRuns, option.Text ?? string.Empty, style.BodyFont, style.TextPaint);
             var optionLines = WrapRuns(optionRuns, measuredWidth);
-            var optionHeight = optionLines.Count * style.LineHeight + OptionPaddingY * 2 + (showResults ? ProgressBarHeight : 0);
+            var optionHeight = optionLines.Count * style.LineHeight + OptionPaddingY * 2 + (showResults ? ProgressBarHeight + OptionProgressGap : 0);
 
             options.Add((optionLines, (float)percentage, percentageText));
             optionsHeight += optionHeight;
@@ -587,7 +589,8 @@ public static class PostImageRenderer
 
         var footerText = $"{pollContent.TotalVoters}명 참여";
         var expiresText = GetExpiresAtText(pollContent);
-        var height = CardPadding * 2 + questionHeight + optionsHeight + 12 + style.SmallFont.Size;
+        var footerHeight = style.SmallFont.Metrics.Descent - style.SmallFont.Metrics.Ascent;
+        var height = CardPadding * 2 + questionHeight + optionsHeight + 12 + PollFooterGap + footerHeight;
 
         return new RenderBlock(height, (canvas, x, y) =>
         {
@@ -615,7 +618,7 @@ public static class PostImageRenderer
             foreach (var (optionLines, percentage, percentageText) in options)
             {
                 var optionTextHeight = optionLines.Count * style.LineHeight;
-                var optionRect = new SKRect(x + CardPadding, cursorY, x + contentWidth - CardPadding, cursorY + optionTextHeight + OptionPaddingY * 2 + (showResults ? ProgressBarHeight : 0));
+                var optionRect = new SKRect(x + CardPadding, cursorY, x + contentWidth - CardPadding, cursorY + optionTextHeight + OptionPaddingY * 2 + (showResults ? ProgressBarHeight + OptionProgressGap : 0));
                 style.FillPaint.Color = SKColors.White;
                 canvas.DrawRoundRect(optionRect, OptionCornerRadius, OptionCornerRadius, style.FillPaint);
 
@@ -633,7 +636,7 @@ public static class PostImageRenderer
                         canvas.DrawRoundRect(fillRect, ProgressBarHeight / 2, ProgressBarHeight / 2, style.FillPaint);
                     }
 
-                    innerY += ProgressBarHeight;
+                    innerY += ProgressBarHeight + OptionProgressGap;
                 }
 
                 var textBaseline = innerY - style.BodyFont.Metrics.Ascent;
@@ -651,14 +654,15 @@ public static class PostImageRenderer
                 if (percentageText != null)
                 {
                     var percentageWidth = style.BoldFont.MeasureText(percentageText);
-                    canvas.DrawText(percentageText, optionRect.Right - OptionPaddingX - percentageWidth, optionRect.Top + OptionPaddingY + (showResults ? ProgressBarHeight : 0) - style.BoldFont.Metrics.Ascent, SKTextAlign.Left, style.BoldFont, style.PrimaryPaint);
+                    canvas.DrawText(percentageText, optionRect.Right - OptionPaddingX - percentageWidth, optionRect.Top + OptionPaddingY + (showResults ? ProgressBarHeight + OptionProgressGap : 0) - style.BoldFont.Metrics.Ascent, SKTextAlign.Left, style.BoldFont, style.PrimaryPaint);
                 }
 
                 cursorY += optionRect.Height + OptionSpacing;
             }
 
             // Footer
-            var footerBaseline = cursorY - OptionSpacing + style.SmallFont.Metrics.Ascent;
+            var footerTop = cursorY - OptionSpacing + PollFooterGap;
+            var footerBaseline = footerTop - style.SmallFont.Metrics.Ascent;
             canvas.DrawText(footerText, x + CardPadding, footerBaseline, SKTextAlign.Left, style.SmallFont, style.SecondaryPaint);
             var expiresWidth = style.SmallFont.MeasureText(expiresText);
             canvas.DrawText(expiresText, x + contentWidth - CardPadding - expiresWidth, footerBaseline, SKTextAlign.Left, style.SmallFont, style.SecondaryPaint);
