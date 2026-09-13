@@ -36,7 +36,7 @@
     </DataTemplate>
 
     <DataTemplate x:Key="ExternalUrlContentTemplate" x:DataType="vm:ExternalUrlContentItemViewModel">
-        <controls:ExternalUrlContentControl ExternalUrlContent="{x:Bind ExternalUrlContent}" />
+        <controls:ExternalUrlContentControl BaseViewModel="{x:Bind BaseViewModel}" ExternalUrlContent="{x:Bind ExternalUrlContent}" />
     </DataTemplate>
 
     <vm:ContentTemplateSelector

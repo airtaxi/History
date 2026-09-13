@@ -1,4 +1,4 @@
-using History.WindowsClient.Helpers;
+﻿using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels;

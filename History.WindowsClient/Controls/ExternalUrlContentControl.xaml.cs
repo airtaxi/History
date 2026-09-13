@@ -11,10 +11,17 @@ public sealed partial class ExternalUrlContentControl : UserControl
 {
     public static readonly DependencyProperty ExternalUrlContentProperty = DependencyProperty.Register(nameof(ExternalUrlContent), typeof(ExternalUrlContent), typeof(ExternalUrlContentControl), new PropertyMetadata(null, OnDataPropertyChanged));
     public static readonly DependencyProperty ScrapProperty = DependencyProperty.Register(nameof(Scrap), typeof(Scrap), typeof(ExternalUrlContentControl), new PropertyMetadata(null, OnDataPropertyChanged));
+    public static readonly DependencyProperty BaseViewModelProperty = DependencyProperty.Register(nameof(BaseViewModel), typeof(BaseViewModel), typeof(ExternalUrlContentControl), new PropertyMetadata(null, OnBaseViewModelPropertyChanged));
 
     public ExternalUrlContentControl() => InitializeComponent();
 
     public ExternalUrlContentViewModel ViewModel { get; } = new();
+
+    public BaseViewModel BaseViewModel
+    {
+        get => (BaseViewModel)GetValue(BaseViewModelProperty);
+        set => SetValue(BaseViewModelProperty, value);
+    }
 
     public ExternalUrlContent ExternalUrlContent
     {
@@ -29,6 +36,8 @@ public sealed partial class ExternalUrlContentControl : UserControl
     }
 
     private static void OnDataPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((ExternalUrlContentControl)sender).Rebuild();
+
+    private static void OnBaseViewModelPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e) => ((ExternalUrlContentControl)sender).ViewModel.BaseViewModel = (BaseViewModel)e.NewValue;
 
     private void Rebuild()
     {

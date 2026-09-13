@@ -1,4 +1,5 @@
 ﻿using History.WindowsClient.Helpers;
+using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Dispatching;
@@ -64,13 +65,21 @@ public sealed partial class KakaoStoryLoginWindow : BaseWindow
         LoadingTextBlock.Text = message;
     }
 
-    private void SubscribeViewModelEvents() => _viewModel.MessageDialogRequested += OnMessageDialogRequested;
+    private void SubscribeViewModelEvents()
+    {
+        _viewModel.MessageDialogRequested += OnMessageDialogRequested;
+        _viewModel.LoadingStateRequested += OnLoadingStateRequested;
+    }
 
     private void OnMessageDialogRequested(object sender, MessageDialogRequestedEventArgs args)
     {
         var result = Content.ShowMessageDialogAsync(args.Parameters);
         args.ResultTask = result;
     }
+
+    // Forwards the view model's loading requests to this window's overlay through the
+    // weak-reference messenger; BaseWindow routes them by XamlRoot.
+    private void OnLoadingStateRequested(object sender, LoadingStateRequestedEventArgs args) => LoadingStateRequestedMessage.Send(Content.XamlRoot, args);
 
     private async void OnWindowLoaded(object sender, RoutedEventArgs e)
     {

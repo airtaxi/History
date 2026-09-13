@@ -121,7 +121,7 @@ public sealed partial class BodyContentControl : BaseControl
         });
     }
 
-    private static void AppendUrlInline(InlineCollection inlines, string url, string displayText)
+    private void AppendUrlInline(InlineCollection inlines, string url, string displayText)
     {
         var hyperlink = CreateHyperlink(text: displayText, isBold: false);
         hyperlink.Click += async (_, _) => await OpenLinkAsync(url);
@@ -164,10 +164,11 @@ public sealed partial class BodyContentControl : BaseControl
     }
 
     // Opens the link, navigating in-app for History/Kakao Story URLs and falling back
-    // to the external browser for everything else.
-    private static async Task OpenLinkAsync(string url)
+    // to the external browser for everything else. In-app fetches run under the owning
+    // window's loading overlay, routed through the injected view model.
+    private async Task OpenLinkAsync(string url)
     {
         if (!Uri.IsWellFormedUriString(url, UriKind.Absolute)) return;
-        await Utils.OpenLinkAsync(url);
+        await Utils.OpenLinkAsync(url, BaseViewModel ?? ViewModel);
     }
 }

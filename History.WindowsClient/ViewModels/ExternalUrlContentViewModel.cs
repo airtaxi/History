@@ -40,6 +40,9 @@ public sealed partial class ExternalUrlContentViewModel : ObservableObject
         }
     }
 
+    // Routes the in-app link fetch under the owning window's loading overlay.
+    public BaseViewModel BaseViewModel { get; set; }
+
     public void Update(ExternalUrlContent externalUrlContent) => ExternalUrlContent = externalUrlContent;
 
     // Kakao Story scrap overload — maps the scrap card onto the same surface.
@@ -57,7 +60,7 @@ public sealed partial class ExternalUrlContentViewModel : ObservableObject
         var sourceUrl = ExternalUrlContent?.SourceUrl;
         if (!Uri.IsWellFormedUriString(sourceUrl, UriKind.Absolute)) return;
 
-        await Utils.OpenLinkAsync(sourceUrl);
+        await Utils.OpenLinkAsync(sourceUrl, BaseViewModel);
     }
 
     [RelayCommand]

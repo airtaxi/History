@@ -42,12 +42,16 @@ public partial class KakaoStoryLoginWindowViewModel : BaseViewModel
             var code = query?.Split('&').FirstOrDefault(parameter => parameter.StartsWith("code="))?.Substring("code=".Length);
             if (string.IsNullOrEmpty(code)) return false;
 
-            var token = await KakaoStoryApiHandler.RefreshSdkTokenAsync(authorizationCode: code);
-            if (token == null) return false;
+            var loginSucceeded = await ExecuteWithLoadingAsync(async () =>
+            {
+                var token = await KakaoStoryApiHandler.RefreshSdkTokenAsync(authorizationCode: code);
+                if (token == null) return false;
 
-            KakaoStoryApiHandler.Init(null, null, null);
-
-            CommonShared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
+                KakaoStoryApiHandler.Init(null, null, null);
+                CommonShared.KakaoFriends = (await KakaoStoryApiHandler.GetFriends())?.profiles;
+                return true;
+            }, "카카오스토리에 로그인하는 중...");
+            if (!loginSucceeded) return false;
 
             _gotLoginResult = true;
             _taskCompletionSource.TrySetResult(true);

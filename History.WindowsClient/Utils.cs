@@ -5,6 +5,7 @@ using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
+using History.WindowsClient.ViewModels;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -107,7 +108,7 @@ public static partial class Utils
     // Kakao Story user profile URLs (https://story.kakao.com/{userId}) navigate to the
     // in-app user profile page; the user id is extracted directly from the URL path.
     // When the URL is not an in-app target, it opens in the external browser.
-    public static async Task OpenLinkAsync(string url)
+    public static async Task OpenLinkAsync(string url, BaseViewModel baseViewModel = null)
     {
         var historyUserId = GetHistoryUserId(url);
         if (historyUserId != null)
@@ -126,14 +127,14 @@ public static partial class Utils
         var historyPostId = GetHistoryPostId(url);
         if (historyPostId != null)
         {
-            await OpenHistoryPostAsync(historyPostId);
+            await OpenHistoryPostAsync(historyPostId, baseViewModel);
             return;
         }
 
-        var kakaoStoryPostId = await GetKakaoStoryPostIdAsync(url);
+        var kakaoStoryPostId = await GetKakaoStoryPostIdAsync(url, baseViewModel);
         if (kakaoStoryPostId != null)
         {
-            await OpenKakaoStoryPostAsync(kakaoStoryPostId);
+            await OpenKakaoStoryPostAsync(kakaoStoryPostId, baseViewModel);
             return;
         }
 
@@ -193,7 +194,7 @@ public static partial class Utils
     // a short code (e.g. eNOIUHoOHQA), so the authenticated page must be fetched to
     // read the embedded feed_id (e.g. "_63msr.6MgT2Z7CfP9"). Returns null when the
     // URL is not a story post URL or the id cannot be resolved.
-    private static async Task<string> GetKakaoStoryPostIdAsync(string url)
+    private static async Task<string> GetKakaoStoryPostIdAsync(string url, BaseViewModel baseViewModel)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return null;
         if (uri.Host != "story.kakao.com") return null;
@@ -203,7 +204,7 @@ public static partial class Utils
 
         if (!await KakaoStoryUtils.EnsureLoggedInAsync()) return null;
 
-        var page = await KakaoStoryApiHandler.GetPostPageAsync(url);
+        var page = await RunWithLoadingAsync(baseViewModel, () => KakaoStoryApiHandler.GetPostPageAsync(url), "게시글 불러오는 중...");
         if (page == null) return null;
 
         var match = KakaoStoryFeedIdRegex().Match(page);
@@ -214,11 +215,11 @@ public static partial class Utils
 
     // Fetches the History post and navigates to it; the fetched post is passed as the
     // page parameter so the detail page renders without an extra request.
-    private static async Task OpenHistoryPostAsync(string postId)
+    private static async Task OpenHistoryPostAsync(string postId, BaseViewModel baseViewModel)
     {
         try
         {
-            var post = await CommonShared.ApiHandler.ExecuteRequestAsync<PostResponseDto>(new GetPost(postId));
+            var post = await RunWithLoadingAsync(baseViewModel, () => CommonShared.ApiHandler.ExecuteRequestAsync<PostResponseDto>(new GetPost(postId)), "게시글 불러오는 중...");
             NavigateToPage(typeof(PostPage), post);
         }
         catch (Exception exception) { await ShowMessageDialogAsync(Constants.ErrorTitle, $"게시글을 불러오지 못했습니다.\n{exception.Message}"); }
@@ -226,13 +227,13 @@ public static partial class Utils
 
     // Fetches the Kakao Story post and navigates to it; a missing session shows the
     // Kakao Story login flow first.
-    private static async Task OpenKakaoStoryPostAsync(string postId)
+    private static async Task OpenKakaoStoryPostAsync(string postId, BaseViewModel baseViewModel)
     {
         try
         {
             if (!await KakaoStoryUtils.EnsureLoggedInAsync()) return;
 
-            var post = await KakaoStoryApiHandler.GetPost(postId);
+            var post = await RunWithLoadingAsync(baseViewModel, () => KakaoStoryApiHandler.GetPost(postId), "게시글 불러오는 중...");
             if (post == null)
             {
                 await ShowMessageDialogAsync(Constants.ErrorTitle, "카카오스토리 게시글을 불러오지 못했습니다.");
@@ -268,6 +269,14 @@ public static partial class Utils
         var taskCompletionSource = new TaskCompletionSource<ContentDialogResult>();
         frame.DispatcherQueue.TryEnqueue(async () => taskCompletionSource.TrySetResult(await frame.ShowMessageDialogAsync(new MessageDialogParameters(title, message))));
         await taskCompletionSource.Task;
+    }
+
+    // Runs the action under the owning window's loading overlay when a view model is
+    // available; without one the action still runs, just without the overlay.
+    private static async Task<T> RunWithLoadingAsync<T>(BaseViewModel baseViewModel, Func<Task<T>> action, string loadingMessage)
+    {
+        if (baseViewModel == null) return await action();
+        else return await baseViewModel.ExecuteWithLoadingAsync(action, loadingMessage);
     }
 
     // Captures the feed_id from a story.kakao.com post page response. The feed_id

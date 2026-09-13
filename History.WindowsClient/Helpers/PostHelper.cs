@@ -64,7 +64,7 @@ public static partial class PostHelper
                 {
                     FlushMediaContents();
                     FlushTextTypeContents();
-                    contentViewModels.Add(new ExternalUrlContentItemViewModel(externalUrlContent));
+                    contentViewModels.Add(new ExternalUrlContentItemViewModel(externalUrlContent, baseViewModel));
                 }
                 else if (content is PollContent pollContent)
                 {
