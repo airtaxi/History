@@ -26,7 +26,7 @@ public sealed partial class EditCommentWindow : BaseWindow
 
     public EditCommentWindowViewModel ViewModel => _viewModel;
 
-    public EditCommentWindow(EditCommentWindowViewModel viewModel) : base()
+    public EditCommentWindow(EditCommentWindowViewModel viewModel) : base(viewModel)
     {
         _viewModel = viewModel;
 
@@ -36,8 +36,6 @@ public sealed partial class EditCommentWindow : BaseWindow
         SetTitleBar(AppTitleBar);
 
         this.CenterOnScreen();
-
-        SubscribeViewModelEvents();
     }
 
     // no-op for this window
@@ -66,15 +64,22 @@ public sealed partial class EditCommentWindow : BaseWindow
         LoadingTextBlock.Text = message;
     }
 
-    private void SubscribeViewModelEvents()
+    protected override void SubscribeViewModelEvents()
     {
-        _viewModel.MessageDialogRequested += OnMessageDialogRequested;
-        _viewModel.ContentDialogRequested += OnContentDialogRequested;
-        _viewModel.FilePickRequested += OnFilePickRequested;
-        _viewModel.LoadingStateRequested += OnLoadingStateRequested;
+        base.SubscribeViewModelEvents();
+
         _viewModel.CommentBox.CommentSent += OnCommentBoxCommentSent;
         _viewModel.CommentBox.StickerSelected += OnCommentBoxStickerSelected;
         _viewModel.CommentBox.PropertyChanged += OnCommentBoxPropertyChanged;
+    }
+
+    protected override void UnsubscribeViewModelEvents()
+    {
+        _viewModel.CommentBox.CommentSent -= OnCommentBoxCommentSent;
+        _viewModel.CommentBox.StickerSelected -= OnCommentBoxStickerSelected;
+        _viewModel.CommentBox.PropertyChanged -= OnCommentBoxPropertyChanged;
+
+        base.UnsubscribeViewModelEvents();
     }
 
     // Fits the window to the content whenever the attachment preview appears or disappears.
@@ -109,37 +114,15 @@ public sealed partial class EditCommentWindow : BaseWindow
         this.CenterOnScreen();
     }
 
-    private void OnMessageDialogRequested(object sender, MessageDialogRequestedEventArgs args)
-    {
-        var result = Content.ShowMessageDialogAsync(args.Parameters);
-        args.ResultTask = result;
-    }
-
-    // Fulfills the view model's prebuilt dialog requests (sticker picker) with the
-    // window-bound dialog.
-    private void OnContentDialogRequested(object sender, ContentDialogRequestedEventArgs args)
-    {
-        var result = Content.ShowContentDialogAsync(args.Dialog);
-        args.ResultTask = result;
-    }
-
-    private void OnFilePickRequested(object sender, PickerRequestedEventArgs<FileOpenPickerParameters, PickFileResult> args)
-    {
-        var result = Content.PickFileAsync(args.Parameters);
-        args.ResultTask = result;
-    }
-
-    // Forwards the view model's loading requests to this window's overlay through the
-    // weak-reference messenger; BaseWindow routes them by XamlRoot.
-    private void OnLoadingStateRequested(object sender, LoadingStateRequestedEventArgs args) => LoadingStateRequestedMessage.Send(Content.XamlRoot, args);
-
     // The comment box edited the comment successfully: close the window.
     private void OnCommentBoxCommentSent(object sender, EventArgs e) => Close();
 
     // Prefills the editor with the original comment contents and fits the window to the
     // content once the bindings are applied.
-    private async void OnWindowLoaded(object sender, RoutedEventArgs e)
+    protected override async void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
+        base.OnWindowLoaded(sender, e);
+
         CommentEditor.Initialize(_viewModel);
         await CommentEditor.SetContentsAsync(_viewModel.EditorContents);
         CommentEditor.FocusEditor();
@@ -156,12 +139,12 @@ public sealed partial class EditCommentWindow : BaseWindow
     }
 
     private bool _isWindowClosed;
-    private void OnWindowClosed(object sender, WindowEventArgs args)
+    protected override void OnWindowClosed(object sender, WindowEventArgs args)
     {
         if (_isWindowClosed) return;
         _isWindowClosed = true;
 
-        UnregisterMessengerRecipients();
+        base.OnWindowClosed(sender, args);
     }
 
     // Collects the editor contents and hands them to the edit comment box.

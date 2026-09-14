@@ -29,7 +29,7 @@ public sealed partial class ComposePostWindow : BaseWindow
     private readonly ComposePostWindowViewModel _viewModel;
     public ComposePostWindowViewModel ViewModel => _viewModel;
 
-    public ComposePostWindow(ComposePostWindowViewModel viewModel) : base()
+    public ComposePostWindow(ComposePostWindowViewModel viewModel) : base(viewModel)
     {
         s_instance = this;
         _viewModel = viewModel;
@@ -40,8 +40,6 @@ public sealed partial class ComposePostWindow : BaseWindow
         SetTitleBar(AppTitleBar);
 
         this.CenterOnScreen();
-
-        SubscribeViewModelEvents();
     }
 
     // no-op for this window
@@ -73,19 +71,22 @@ public sealed partial class ComposePostWindow : BaseWindow
         LoadingTextBlock.Text = message;
     }
 
-    private void SubscribeViewModelEvents()
+    protected override void SubscribeViewModelEvents()
     {
-        _viewModel.MessageDialogRequested += OnMessageDialogRequested;
-        _viewModel.InputDialogRequested += OnInputDialogRequested;
-        _viewModel.ContentDialogRequested += OnContentDialogRequested;
-        _viewModel.FilePickRequested += OnFilePickRequested;
-        _viewModel.LoadingStateRequested += OnLoadingStateRequested;
-        _viewModel.ShowLoadingRequested += OnShowLoadingRequested;
-        _viewModel.HideLoadingRequested += OnHideLoadingRequested;
-        _viewModel.FilesPickRequested += OnFilesPickRequested;
+        base.SubscribeViewModelEvents();
+
         _viewModel.StickerSelected += OnViewModelStickerSelected;
         _viewModel.SubmitCompleted += OnSubmitCompleted;
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+    }
+
+    protected override void UnsubscribeViewModelEvents()
+    {
+        _viewModel.StickerSelected -= OnViewModelStickerSelected;
+        _viewModel.SubmitCompleted -= OnSubmitCompleted;
+        _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+
+        base.UnsubscribeViewModelEvents();
     }
 
     // Fits the window to the content: measures the root grid's DesiredSize and resizes the
@@ -109,42 +110,6 @@ public sealed partial class ComposePostWindow : BaseWindow
         this.CenterOnScreen();
     }
 
-    private void OnMessageDialogRequested(object sender, MessageDialogRequestedEventArgs args)
-    {
-        var result = Content.ShowMessageDialogAsync(args.Parameters);
-        args.ResultTask = result;
-    }
-
-    private void OnInputDialogRequested(object sender, InputDialogRequestedEventArgs args)
-    {
-        var result = Content.ShowInputDialogAsync(args.Parameters);
-        args.ResultTask = result;
-    }
-
-    // Fulfills the view model's prebuilt dialog requests (sticker picker) with the
-    // window-bound dialog.
-    private void OnContentDialogRequested(object sender, ContentDialogRequestedEventArgs args)
-    {
-        var result = Content.ShowContentDialogAsync(args.Dialog);
-        args.ResultTask = result;
-    }
-
-    private void OnFilePickRequested(object sender, PickerRequestedEventArgs<FileOpenPickerParameters, PickFileResult> args)
-    {
-        var result = Content.PickFileAsync(args.Parameters);
-        args.ResultTask = result;
-    }
-
-    // Forwards the view model's loading requests to this window's overlay through the
-    // weak-reference messenger; BaseWindow routes them by XamlRoot.
-    private void OnLoadingStateRequested(object sender, LoadingStateRequestedEventArgs args) => LoadingStateRequestedMessage.Send(Content.XamlRoot, args);
-
-    // Forwards the view model's show/hide loading requests through the weak-reference
-    // messenger so this window's overlay follows them.
-    private void OnShowLoadingRequested(object sender, ShowLoadingRequestedEventArgs args) => ShowLoadingMessage.Send(args);
-
-    private void OnHideLoadingRequested(object sender, HideLoadingRequestedEventArgs args) => HideLoadingMessage.Send();
-
     // The sticker picker returned a sticker: insert it into the editor and record its usage.
     private async void OnViewModelStickerSelected(object sender, StickerContent stickerContent)
     {
@@ -157,12 +122,6 @@ public sealed partial class ComposePostWindow : BaseWindow
 
         _ = _viewModel.ExecuteRequestAsync(new RecordStickerUsage(stickerContent.StickerId, stickerContent.StickerContentId));
         PostEditor.FocusEditor();
-    }
-
-    private void OnFilesPickRequested(object sender, PickerRequestedEventArgs<FileOpenPickerParameters, IReadOnlyList<PickFileResult>> args)
-    {
-        var result = Content.PickFilesAsync(args.Parameters);
-        args.ResultTask = result;
     }
 
     // An image was pasted into the editor: add it to the attachment list.
@@ -178,8 +137,10 @@ public sealed partial class ComposePostWindow : BaseWindow
         }
     }
 
-    private async void OnWindowLoaded(object sender, RoutedEventArgs e)
+    protected override async void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
+        base.OnWindowLoaded(sender, e);
+
         PostEditor.Initialize(_viewModel);
         _viewModel.LoadIsKakaoPostEnabledSetting();
         _viewModel.LoadIsTimelineRefreshEnabledSetting();
@@ -243,7 +204,14 @@ public sealed partial class ComposePostWindow : BaseWindow
     // Collects the editor contents and hands them to the submit flow.
     private async void OnSubmitButtonClicked(object sender, RoutedEventArgs e) => await _viewModel.SubmitAsync(PostEditor.Text, PostEditor.GetContents());
 
-    private void OnWindowClosed(object sender, WindowEventArgs args) => UnregisterMessengerRecipients();
+    // Clears the static instance on close so the closed composer and its content tree are not
+    // kept alive for the rest of the app session.
+    protected override void OnWindowClosed(object sender, WindowEventArgs args)
+    {
+        if (ReferenceEquals(s_instance, this)) s_instance = null;
+
+        base.OnWindowClosed(sender, args);
+    }
 
     // Rebuilds the comment permission menu so the check mark follows the current selection
     // and out-of-scope permissions are disabled and cannot be picked.

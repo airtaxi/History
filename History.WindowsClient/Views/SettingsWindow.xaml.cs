@@ -19,7 +19,7 @@ public sealed partial class SettingsWindow : BaseWindow
 
     public SettingsWindowViewModel ViewModel => _viewModel;
 
-    public SettingsWindow(SettingsWindowViewModel viewModel) : base()
+    public SettingsWindow(SettingsWindowViewModel viewModel) : base(viewModel)
     {
         _viewModel = viewModel;
 
@@ -29,8 +29,6 @@ public sealed partial class SettingsWindow : BaseWindow
         SetTitleBar(AppTitleBar);
 
         this.CenterOnScreen();
-
-        SubscribeViewModelEvents();
     }
 
     // no-op for this window
@@ -59,50 +57,21 @@ public sealed partial class SettingsWindow : BaseWindow
         LoadingTextBlock.Text = message;
     }
 
-    private void SubscribeViewModelEvents()
+    protected override void SubscribeViewModelEvents()
     {
-        _viewModel.MessageDialogRequested += OnMessageDialogRequested;
-        _viewModel.InputDialogRequested += OnInputDialogRequested;
-        _viewModel.ContentDialogRequested += OnContentDialogRequested;
-        _viewModel.SelectionDialogRequested += OnSelectionDialogRequested;
-        _viewModel.LoadingStateRequested += OnLoadingStateRequested;
-        _viewModel.ShowLoadingRequested += OnShowLoadingRequested;
-        _viewModel.HideLoadingRequested += OnHideLoadingRequested;
+        base.SubscribeViewModelEvents();
+
         _viewModel.CloseRequested += OnViewModelCloseRequested;
         _viewModel.KakaoReloginRequested += OnKakaoReloginRequested;
     }
 
-    private void OnMessageDialogRequested(object sender, MessageDialogRequestedEventArgs args)
+    protected override void UnsubscribeViewModelEvents()
     {
-        var result = Content.ShowMessageDialogAsync(args.Parameters);
-        args.ResultTask = result;
+        _viewModel.CloseRequested -= OnViewModelCloseRequested;
+        _viewModel.KakaoReloginRequested -= OnKakaoReloginRequested;
+
+        base.UnsubscribeViewModelEvents();
     }
-
-    private void OnInputDialogRequested(object sender, InputDialogRequestedEventArgs args)
-    {
-        var result = Content.ShowInputDialogAsync(args.Parameters);
-        args.ResultTask = result;
-    }
-
-    private void OnContentDialogRequested(object sender, ContentDialogRequestedEventArgs args)
-    {
-        var result = Content.ShowContentDialogAsync(args.Dialog);
-        args.ResultTask = result;
-    }
-
-    private void OnSelectionDialogRequested(object sender, SelectionDialogRequestedEventArgs args)
-    {
-        var result = Content.ShowSelectionDialogAsync(args.Title, args.Options);
-        args.ResultTask = result;
-    }
-
-    // Forwards the view model's loading requests to this window's overlay through the
-    // weak-reference messenger; BaseWindow routes them by XamlRoot.
-    private void OnLoadingStateRequested(object sender, LoadingStateRequestedEventArgs args) => LoadingStateRequestedMessage.Send(Content.XamlRoot, args);
-
-    private void OnShowLoadingRequested(object sender, ShowLoadingRequestedEventArgs args) => ShowLoadingMessage.Send(args);
-
-    private void OnHideLoadingRequested(object sender, HideLoadingRequestedEventArgs args) => HideLoadingMessage.Send();
 
     private void OnViewModelCloseRequested(object sender, EventArgs e) => Close();
 
@@ -113,8 +82,10 @@ public sealed partial class SettingsWindow : BaseWindow
         await loginWindow.GetResultAsync();
     }
 
-    private async void OnWindowLoaded(object sender, RoutedEventArgs e)
+    protected override async void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
+        base.OnWindowLoaded(sender, e);
+
         await _viewModel.LoadAsync();
         Activate();
     }
@@ -124,6 +95,4 @@ public sealed partial class SettingsWindow : BaseWindow
         args.Handled = true;
         Close();
     }
-
-    private void OnWindowClosed(object sender, WindowEventArgs args) => UnregisterMessengerRecipients();
 }

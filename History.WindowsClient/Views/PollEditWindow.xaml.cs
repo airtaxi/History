@@ -20,7 +20,7 @@ public sealed partial class PollEditWindow : BaseWindow
 
     public PollEditWindowViewModel ViewModel => _viewModel;
 
-    public PollEditWindow(PollEditWindowViewModel viewModel) : base()
+    public PollEditWindow(PollEditWindowViewModel viewModel) : base(viewModel)
     {
         _viewModel = viewModel;
 
@@ -30,15 +30,6 @@ public sealed partial class PollEditWindow : BaseWindow
         SetTitleBar(AppTitleBar);
 
         this.CenterOnScreen();
-
-        SubscribeViewModelEvents();
-    }
-
-    private void SubscribeViewModelEvents()
-    {
-        _viewModel.MessageDialogRequested += OnMessageDialogRequested;
-        _viewModel.Confirmed += OnViewModelConfirmed;
-        _viewModel.Options.CollectionChanged += OnOptionsCollectionChanged;
     }
 
     // no-op for this window
@@ -66,6 +57,22 @@ public sealed partial class PollEditWindow : BaseWindow
         LoadingTextBlock.Text = message;
     }
 
+    protected override void SubscribeViewModelEvents()
+    {
+        base.SubscribeViewModelEvents();
+
+        _viewModel.Confirmed += OnViewModelConfirmed;
+        _viewModel.Options.CollectionChanged += OnOptionsCollectionChanged;
+    }
+
+    protected override void UnsubscribeViewModelEvents()
+    {
+        _viewModel.Confirmed -= OnViewModelConfirmed;
+        _viewModel.Options.CollectionChanged -= OnOptionsCollectionChanged;
+
+        base.UnsubscribeViewModelEvents();
+    }
+
     // Fits the window to the content: measures the root grid's DesiredSize and resizes the
     // window's client area. Runs once on load and whenever the option rows change.
     private void UpdateWindowSize()
@@ -87,22 +94,16 @@ public sealed partial class PollEditWindow : BaseWindow
         this.CenterOnScreen();
     }
 
-    // Fulfills the view model's message dialog requests (validation errors) with the
-    // window-bound dialog.
-    private void OnMessageDialogRequested(object sender, MessageDialogRequestedEventArgs args)
-    {
-        var result = Content.ShowMessageDialogAsync(args.Parameters);
-        args.ResultTask = result;
-    }
-
     // Fits the window whenever an option row is added or removed.
     private void OnOptionsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => DispatcherQueue.TryEnqueue(UpdateWindowSize);
 
     // The poll definition was confirmed: report it and close the window.
     private void OnViewModelConfirmed(object sender, PollContent pollContent) => Close();
 
-    private void OnWindowLoaded(object sender, RoutedEventArgs e)
+    protected override void OnWindowLoaded(object sender, RoutedEventArgs e)
     {
+        base.OnWindowLoaded(sender, e);
+
         UpdateWindowSize();
 
         Activate();
@@ -113,6 +114,4 @@ public sealed partial class PollEditWindow : BaseWindow
         args.Handled = true;
         Close();
     }
-
-    private void OnWindowClosed(object sender, WindowEventArgs args) => UnregisterMessengerRecipients();
 }

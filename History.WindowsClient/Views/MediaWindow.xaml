@@ -16,7 +16,7 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid KeyboardAcceleratorPlacementMode="Hidden">
+    <Grid KeyboardAcceleratorPlacementMode="Hidden" Loaded="OnWindowLoaded">
         <Grid.KeyboardAccelerators>
             <KeyboardAccelerator Key="Escape" Invoked="OnEscapeKeyInvoked" />
         </Grid.KeyboardAccelerators>

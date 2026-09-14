@@ -23,7 +23,7 @@ public sealed partial class MediaWindow : BaseWindow
 
     public MediaWindowViewModel ViewModel => _viewModel;
 
-    public MediaWindow(MediaWindowViewModel viewModel) : base()
+    public MediaWindow(MediaWindowViewModel viewModel) : base(viewModel)
     {
         _viewModel = viewModel;
 
@@ -33,8 +33,6 @@ public sealed partial class MediaWindow : BaseWindow
         SetTitleBar(AppTitleBar);
 
         this.CenterOnScreen();
-
-        SubscribeViewModelEvents();
     }
 
     // no-op for this window
@@ -63,57 +61,17 @@ public sealed partial class MediaWindow : BaseWindow
         LoadingTextBlock.Text = message;
     }
 
-    private void SubscribeViewModelEvents()
-    {
-        _viewModel.MessageDialogRequested += OnMessageDialogRequested;
-        _viewModel.SelectionDialogRequested += OnSelectionDialogRequested;
-        _viewModel.SaveFileRequested += OnSaveFileRequested;
-        _viewModel.FolderPickRequested += OnFolderPickRequested;
-        _viewModel.LoadingStateRequested += OnLoadingStateRequested;
-    }
-
-    private void OnMessageDialogRequested(object sender, MessageDialogRequestedEventArgs args)
-    {
-        var result = Content.ShowMessageDialogAsync(args.Parameters);
-        args.ResultTask = result;
-    }
-
-    private void OnSelectionDialogRequested(object sender, SelectionDialogRequestedEventArgs args)
-    {
-        var result = Content.ShowSelectionDialogAsync(args.Title, args.Options);
-        args.ResultTask = result;
-    }
-
-    private void OnSaveFileRequested(object sender, PickerRequestedEventArgs<FileSavePickerParameters, PickFileResult> args)
-    {
-        var result = Content.SaveFileAsync(args.Parameters);
-        args.ResultTask = result;
-    }
-
-    private void OnFolderPickRequested(object sender, PickerRequestedEventArgs<FolderPickerParameters, PickFolderResult> args)
-    {
-        var result = Content.PickFolderAsync(args.Parameters);
-        args.ResultTask = result;
-    }
-
-    // Forwards the view model's loading requests to this window's overlay through the
-    // weak-reference messenger; BaseWindow routes them by XamlRoot.
-    private void OnLoadingStateRequested(object sender, LoadingStateRequestedEventArgs args) => LoadingStateRequestedMessage.Send(Content.XamlRoot, args);
-
     private void OnEscapeKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         args.Handled = true;
         Close();
     }
 
-    private void OnWindowClosed(object sender, WindowEventArgs args)
+    protected override void OnWindowClosed(object sender, WindowEventArgs args)
     {
-        UnregisterMessengerRecipients();
+        base.OnWindowClosed(sender, args);
 
-        foreach (var media in _viewModel.Medias)
-        {
-            media.ResetForReuse();
-        }
+        foreach (var media in _viewModel.Medias) media.ResetForReuse();
     }
 
     private const double ZoomStep = 0.25;
