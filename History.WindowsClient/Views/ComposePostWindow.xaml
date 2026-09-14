@@ -23,13 +23,6 @@
         x:Name="RootGrid"
         KeyboardAcceleratorPlacementMode="Hidden"
         Loaded="OnWindowLoaded">
-        <Grid.KeyboardAccelerators>
-            <KeyboardAccelerator Key="Escape" Invoked="OnCloseKeyInvoked" />
-            <KeyboardAccelerator
-                Key="W"
-                Invoked="OnCloseKeyInvoked"
-                Modifiers="Control" />
-        </Grid.KeyboardAccelerators>
 
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
