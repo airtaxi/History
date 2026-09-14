@@ -166,6 +166,7 @@ public partial class App : Application
         serviceCollection.AddTransient(sp => new ExtrasPageViewModel());
         serviceCollection.AddTransient(sp => new InviteCodesPageViewModel());
         serviceCollection.AddTransient(sp => new InviteCodeRequestsPageViewModel());
+        serviceCollection.AddTransient(sp => new StickersPageViewModel());
     }
     private static void OnApplicationUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs unhandledExceptionEventArguments)
     {

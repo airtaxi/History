@@ -2,6 +2,7 @@
 using History.WindowsClient.Pages.Extras;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
@@ -51,11 +52,23 @@ public sealed partial class ExtrasWindow : BaseWindow
     {
         var isInviteCodesPage = e.SourcePageType == typeof(InviteCodesPage);
         var isInviteCodeRequestsPage = e.SourcePageType == typeof(InviteCodeRequestsPage);
+        var isStickersPage = e.SourcePageType == typeof(StickersPage);
 
         AppTitleBar.IsBackButtonVisible = ExtrasFrame.CanGoBack;
-        AppTitleBar.Title = isInviteCodesPage ? "초대 코드" : isInviteCodeRequestsPage ? "초대 코드 요청 관리" : "부가메뉴";
-        AddButton.Visibility = isInviteCodesPage ? Visibility.Visible : Visibility.Collapsed;
-        RefreshButton.Visibility = isInviteCodesPage || isInviteCodeRequestsPage ? Visibility.Visible : Visibility.Collapsed;
+        AppTitleBar.Title = e.SourcePageType switch
+        {
+            _ when e.SourcePageType == typeof(StickersPage) => "스티커",
+            _ when e.SourcePageType == typeof(InviteCodesPage) => "초대 코드",
+            _ when e.SourcePageType == typeof(InviteCodeRequestsPage) => "초대 코드 요청 관리",
+            _ => "부가메뉴",
+        };
+        AddButton.Visibility = isStickersPage || isInviteCodesPage ? Visibility.Visible : Visibility.Collapsed;
+        RefreshButton.Visibility = isStickersPage || isInviteCodesPage || isInviteCodeRequestsPage ? Visibility.Visible : Visibility.Collapsed;
+
+        // The add button starts the create flow of the hosted page, so its label follows it.
+        var addButtonText = isStickersPage ? "스티커 만들기" : "초대 코드 요청";
+        ToolTipService.SetToolTip(AddButton, addButtonText);
+        AutomationProperties.SetName(AddButton, addButtonText);
     }
 
     private void OnAppTitleBarBackRequested(TitleBar sender, object args)
@@ -69,9 +82,13 @@ public sealed partial class ExtrasWindow : BaseWindow
     // Refreshes the hosted page through the messenger so the request stays inside this window.
     private void OnRefreshButtonClicked(object sender, RoutedEventArgs e) => RefreshRequestedMessage.Send(Content.XamlRoot);
 
-    // Runs the hosted page's invite code request flow through the messenger so the request
-    // stays inside this window.
-    private void OnAddButtonClicked(object sender, RoutedEventArgs e) => InviteCodeRequestRequestedMessage.Send(Content.XamlRoot);
+    // Runs the hosted page's add flow through the messenger so the request stays inside this
+    // window: sticker pages open the sticker create flow, invite code pages the request flow.
+    private void OnAddButtonClicked(object sender, RoutedEventArgs e)
+    {
+        if (ExtrasFrame.CurrentSourcePageType == typeof(StickersPage)) StickerCreateRequestedMessage.Send(Content.XamlRoot);
+        else InviteCodeRequestRequestedMessage.Send(Content.XamlRoot);
+    }
 
     // Ctrl+R and F5 refresh the hosted page the same way the title bar refresh button does,
     // but only while that button is part of the current page's toolbar.

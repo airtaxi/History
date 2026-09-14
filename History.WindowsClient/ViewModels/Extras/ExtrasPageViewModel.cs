@@ -21,9 +21,8 @@ public sealed partial class ExtrasPageViewModel : BaseViewModel
 
     public Visibility KakaoStoryExtrasVisibility { get; } = KakaoStoryFeatureGateHelper.IsEnabled ? Visibility.Visible : Visibility.Collapsed;
 
-    // TODO: Open the sticker browse page once it exists.
     [RelayCommand]
-    private async Task OpenStickersAsync() => await ShowUnderImplementationMessageAsync();
+    private void OpenStickers() => RequestNavigation(typeof(StickersPage));
 
     [RelayCommand]
     private void OpenInviteCodes() => RequestNavigation(typeof(InviteCodesPage));
