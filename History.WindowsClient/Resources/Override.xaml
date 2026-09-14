@@ -12,4 +12,33 @@
     <Color x:Key="SystemAccentColorDark1">#ED664D</Color>
     <Color x:Key="SystemAccentColorDark2">#FF8452</Color>
     <Color x:Key="SystemAccentColorDark3">#BA503C</Color>
+
+    <!--  Accent-colored text follows the accent button color of the theme.  -->
+    <!--  Labels on accent buttons and checked toggles use the regular button text color: black in light, white in dark.  -->
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#E4000000" />
+            <SolidColorBrush x:Key="TextOnAccentFillColorSecondaryBrush" Color="#E4000000" />
+
+            <SolidColorBrush x:Key="AccentButtonForeground" Color="#E4000000" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#E4000000" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#E4000000" />
+
+            <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="#E4000000" />
+            <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="#E4000000" />
+            <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#E4000000" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="TextOnAccentFillColorSecondaryBrush" Color="#FFFFFF" />
+
+            <SolidColorBrush x:Key="AccentButtonForeground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#FFFFFF" />
+
+            <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#FFFFFF" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>
