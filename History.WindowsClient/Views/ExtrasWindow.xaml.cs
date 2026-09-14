@@ -1,4 +1,5 @@
-﻿using History.WindowsClient.Pages.Extras;
+﻿using History.WindowsClient.Messages;
+using History.WindowsClient.Pages.Extras;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -43,8 +44,18 @@ public sealed partial class ExtrasWindow : BaseWindow
         return true;
     }
 
-    // Keeps the title bar back button in sync with the frame's back stack.
-    private void OnExtrasFrameNavigated(object sender, NavigationEventArgs e) => AppTitleBar.IsBackButtonVisible = ExtrasFrame.CanGoBack;
+    // Keeps the title bar back button in sync with the frame's back stack, labels the window
+    // after the page it is currently hosting, and shows the page-specific actions for pages
+    // that support them.
+    private void OnExtrasFrameNavigated(object sender, NavigationEventArgs e)
+    {
+        var isInviteCodesPage = e.SourcePageType == typeof(InviteCodesPage);
+
+        AppTitleBar.IsBackButtonVisible = ExtrasFrame.CanGoBack;
+        AppTitleBar.Title = isInviteCodesPage ? "초대 코드" : "부가메뉴";
+        AddButton.Visibility = isInviteCodesPage ? Visibility.Visible : Visibility.Collapsed;
+        RefreshButton.Visibility = isInviteCodesPage ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     private void OnAppTitleBarBackRequested(TitleBar sender, object args)
     {
@@ -52,6 +63,23 @@ public sealed partial class ExtrasWindow : BaseWindow
         {
             ExtrasFrame.GoBack();
         }
+    }
+
+    // Refreshes the hosted page through the messenger so the request stays inside this window.
+    private void OnRefreshButtonClicked(object sender, RoutedEventArgs e) => RefreshRequestedMessage.Send(Content.XamlRoot);
+
+    // Runs the hosted page's invite code request flow through the messenger so the request
+    // stays inside this window.
+    private void OnAddButtonClicked(object sender, RoutedEventArgs e) => InviteCodeRequestRequestedMessage.Send(Content.XamlRoot);
+
+    // Ctrl+R and F5 refresh the hosted page the same way the title bar refresh button does,
+    // but only while that button is part of the current page's toolbar.
+    private void OnRefreshKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (RefreshButton.Visibility != Visibility.Visible) return;
+
+        args.Handled = true;
+        RefreshRequestedMessage.Send(Content.XamlRoot);
     }
 
     protected override void ShowLoading(string message = null)

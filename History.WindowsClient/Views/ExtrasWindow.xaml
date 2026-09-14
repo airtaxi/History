@@ -23,6 +23,11 @@
                 Key="W"
                 Invoked="OnCloseKeyInvoked"
                 Modifiers="Control" />
+            <KeyboardAccelerator
+                Key="R"
+                Invoked="OnRefreshKeyInvoked"
+                Modifiers="Control" />
+            <KeyboardAccelerator Key="F5" Invoked="OnRefreshKeyInvoked" />
         </Grid.KeyboardAccelerators>
 
         <Grid.RowDefinitions>
@@ -30,15 +35,48 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TitleBar
-            x:Name="AppTitleBar"
-            Title="부가메뉴"
-            BackRequested="OnAppTitleBarBackRequested"
-            IsPaneToggleButtonVisible="False">
-            <TitleBar.IconSource>
-                <ImageIconSource ImageSource="ms-appx:///Assets/Icon.ico" />
-            </TitleBar.IconSource>
-        </TitleBar>
+        <Grid Grid.Row="0">
+            <TitleBar
+                x:Name="AppTitleBar"
+                Title="부가메뉴"
+                BackRequested="OnAppTitleBarBackRequested"
+                IsPaneToggleButtonVisible="False">
+                <TitleBar.IconSource>
+                    <ImageIconSource ImageSource="ms-appx:///Assets/Icon.ico" />
+                </TitleBar.IconSource>
+            </TitleBar>
+            <StackPanel
+                Margin="0,0,138,0"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal"
+                Spacing="4">
+                <Button
+                    x:Name="AddButton"
+                    Padding="16,0"
+                    VerticalAlignment="Stretch"
+                    AutomationProperties.Name="초대 코드 요청"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Click="OnAddButtonClicked"
+                    CornerRadius="0"
+                    ToolTipService.ToolTip="초대 코드 요청"
+                    Visibility="Collapsed">
+                    <FontIcon FontSize="16" Glyph="&#xE710;" />
+                </Button>
+                <Button
+                    x:Name="RefreshButton"
+                    Padding="16,0"
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Click="OnRefreshButtonClicked"
+                    CornerRadius="0"
+                    ToolTipService.ToolTip="새로 고침"
+                    Visibility="Collapsed">
+                    <FontIcon FontSize="16" Glyph="&#xE72C;" />
+                </Button>
+            </StackPanel>
+        </Grid>
 
         <Frame
             x:Name="ExtrasFrame"

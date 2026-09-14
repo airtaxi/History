@@ -81,6 +81,7 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshRequestedM
 
     public void Receive(RefreshRequestedMessage message)
     {
+        if (message.XamlRoot != XamlRoot) return;
         if (IsInForeground)
         {
             _ = ViewModel.RefreshAsync();

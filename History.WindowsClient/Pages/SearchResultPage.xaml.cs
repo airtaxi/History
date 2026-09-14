@@ -30,6 +30,7 @@ public sealed partial class SearchResultPage : BasePage, IRecipient<RefreshReque
 
     public void Receive(RefreshRequestedMessage message)
     {
+        if (message.XamlRoot != XamlRoot) return;
         if (IsInForeground)
         {
             _ = ViewModel.RefreshAsync();

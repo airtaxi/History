@@ -15,7 +15,7 @@ namespace History.WindowsClient.ViewModels.Notifications;
 
 // History notification list item view model: holds the DTO and the display surface used by
 // the notifications flyout template.
-public partial class HistoryNotificationViewModel : BaseNotificationViewModel, IRecipient<NotificationsReadAllMessage>, IRecipient<NotificationPostReadMessage>, IRecipient<NotificationFriendUserReadMessage>
+public partial class HistoryNotificationViewModel : BaseNotificationViewModel, IRecipient<NotificationsReadAllMessage>, IRecipient<NotificationPostReadMessage>, IRecipient<NotificationFriendUserReadMessage>, IRecipient<NotificationTypeReadMessage>
 {
     private readonly BaseViewModel _baseViewModel;
 
@@ -38,6 +38,7 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel, I
         WeakReferenceMessenger.Default.Register((IRecipient<NotificationsReadAllMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<NotificationPostReadMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<NotificationFriendUserReadMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<NotificationTypeReadMessage>)this);
     }
 
     public void Receive(NotificationsReadAllMessage message)
@@ -62,6 +63,14 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel, I
         if (Notification.Type != NotificationType.FriendRequest) return;
         if (Notification.Data == null || !Notification.Data.TryGetValue("UserId", out var userId)) return;
         if (userId != message.Value) return;
+        SetUnread(false);
+    }
+
+    // Pages that list a notification type's targets clear that type when they open.
+    public void Receive(NotificationTypeReadMessage message)
+    {
+        if (!IsUnread) return;
+        if (Notification.Type != message.Value) return;
         SetUnread(false);
     }
 

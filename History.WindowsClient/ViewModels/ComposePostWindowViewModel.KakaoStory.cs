@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.Contents;
@@ -10,6 +9,7 @@ using History.WindowsClient.Dialogs;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
+using History.WindowsClient.Views;
 using Microsoft.UI.Xaml.Controls;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
@@ -250,7 +250,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
             else if (_isKakaoShareMode) await ExecuteKakaoStoryShareAsync(kakaoContents);
 
             foreach (var attachment in MediaAttachments) attachment.Dispose();
-            if (IsTimelineRefreshEnabled) WeakReferenceMessenger.Default.Send(new RefreshRequestedMessage());
+            if (IsTimelineRefreshEnabled) RefreshRequestedMessage.Send(MainWindow.Frame.XamlRoot);
             SubmitCompleted?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception exception) { await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, $"카카오스토리 API 오류가 발생하였습니다: {KakaoStoryUtils.GetApiErrorMessage(exception)}")); }

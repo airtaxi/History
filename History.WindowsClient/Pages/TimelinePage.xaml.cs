@@ -27,6 +27,7 @@ public sealed partial class TimelinePage : BasePage, IRecipient<RefreshRequested
 
     public void Receive(RefreshRequestedMessage message)
     {
+        if (message.XamlRoot != XamlRoot) return;
         if (IsInForeground)
         {
             _ = ViewModel.RefreshAsync();

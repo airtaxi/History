@@ -38,6 +38,7 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshRequestedMess
 
     public void Receive(RefreshRequestedMessage message)
     {
+        if (message.XamlRoot != XamlRoot) return;
         if (IsInForeground && ViewModel.Post != null)
         {
             _ = ViewModel.Post.RefreshAsync();
