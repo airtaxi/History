@@ -1,7 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.Api.Sticker;
+using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
+using History.WindowsClient.Views;
+using Microsoft.UI.Xaml;
 using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels.Extras;
@@ -78,8 +81,24 @@ public sealed partial class StickersPageViewModel : BaseViewModel
         finally { _fetchSemaphore.Release(); }
     }
 
-    // TODO: Replace the notice with the sticker detail navigation once the page exists.
-    public async Task OpenStickerDetailAsync() => await ShowMessageDialogAsync(new MessageDialogParameters(UnderImplementationTitle, UnderImplementationMessage));
+    // Opens the sticker detail window modally over this window; the list refreshes when the
+    // detail reports a change (subscription state or deletion).
+    public void OpenStickerDetail(string stickerId)
+    {
+        var detailWindow = new StickerDetailWindow(new StickerDetailWindowViewModel(stickerId));
+        detailWindow.Closed += OnStickerDetailWindowClosed;
+
+        detailWindow.ActivateModal(ExtrasWindow.Instance);
+    }
+
+    // Refreshes the list when the closed detail changed sticker data.
+    private void OnStickerDetailWindowClosed(object sender, WindowEventArgs args)
+    {
+        if (sender is not StickerDetailWindow detailWindow) return;
+        if (!detailWindow.ViewModel.HasChanges) return;
+
+        _ = RefreshAsync();
+    }
 
     // TODO: Replace the notice with the sticker create flow once it exists.
     public async Task OpenStickerCreateAsync() => await ShowMessageDialogAsync(new MessageDialogParameters(UnderImplementationTitle, UnderImplementationMessage));

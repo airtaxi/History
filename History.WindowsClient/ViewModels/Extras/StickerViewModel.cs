@@ -23,5 +23,5 @@ public sealed partial class StickerViewModel(StickerResponseDto sticker, Sticker
     public BitmapImage IconSource => string.IsNullOrEmpty(sticker.IconMediaId) ? null : new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(sticker.IconMediaId)));
 
     [RelayCommand]
-    private async Task HandleTapAsync() => await pageViewModel.OpenStickerDetailAsync();
+    private void HandleTap() => pageViewModel.OpenStickerDetail(Id);
 }

@@ -17,12 +17,18 @@ namespace History.WindowsClient.Views;
 // dialog/loading requests on this window's content.
 public sealed partial class ExtrasWindow : BaseWindow
 {
+    private static ExtrasWindow s_instance;
+
+    public static ExtrasWindow Instance => s_instance;
+
     private readonly ExtrasWindowViewModel _viewModel;
 
     public ExtrasWindowViewModel ViewModel => _viewModel;
 
     public ExtrasWindow(ExtrasWindowViewModel viewModel) : base(viewModel)
     {
+        s_instance = this;
+
         _viewModel = viewModel;
 
         InitializeComponent();
@@ -131,5 +137,15 @@ public sealed partial class ExtrasWindow : BaseWindow
     {
         args.Handled = true;
         Close();
+    }
+
+    // Clears the static instance on close so the closed window and its content tree are not
+    // kept alive for the rest of the app session (hosted flows use the instance as their modal
+    // owner).
+    protected override void OnWindowClosed(object sender, WindowEventArgs args)
+    {
+        if (ReferenceEquals(s_instance, this)) s_instance = null;
+
+        base.OnWindowClosed(sender, args);
     }
 }
