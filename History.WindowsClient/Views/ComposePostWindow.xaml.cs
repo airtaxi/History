@@ -10,7 +10,9 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Windows.Storage.Pickers;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics;
+using Windows.Storage;
 using WinUIEx;
 
 namespace History.WindowsClient.Views;
@@ -35,6 +37,12 @@ public sealed partial class ComposePostWindow : BaseWindow
         _viewModel = viewModel;
 
         InitializeComponent();
+
+        // The attachment strip's ListView handles drag events for its own reorder pass, so
+        // the window subscribes with handledEventsToo to also receive file drags over the
+        // strip and anywhere else in the window content.
+        RootGrid.AddHandler(UIElement.DragOverEvent, new DragEventHandler(OnRootGridDragOver), true);
+        RootGrid.AddHandler(UIElement.DropEvent, new DragEventHandler(OnRootGridDrop), true);
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
@@ -135,6 +143,45 @@ public sealed partial class ComposePostWindow : BaseWindow
         {
             DispatcherQueue.TryEnqueue(UpdateWindowSize);
         }
+    }
+
+    // Window-wide file drops are accepted only while the composer can take new media; the
+    // loading overlay blocks the window and the view model owns the mode and slot rules.
+    private bool CanAcceptDroppedMediaFiles => LoadingGrid.Visibility == Visibility.Collapsed && _viewModel.CanAcceptMediaFiles;
+
+    // File drags are the only ones the window reacts to, so the attachment reorder and text
+    // drags keep their own behavior. The cursor shows copy with a caption while the composer
+    // can take media and a blocked cursor while it cannot.
+    private void OnRootGridDragOver(object sender, DragEventArgs e)
+    {
+        if (!e.DataView.Contains(StandardDataFormats.StorageItems)) return;
+
+        e.AcceptedOperation = CanAcceptDroppedMediaFiles ? DataPackageOperation.Copy : DataPackageOperation.None;
+        if (e.AcceptedOperation != DataPackageOperation.Copy) return;
+
+        if (e.DragUIOverride is { } dragUIOverride)
+        {
+            dragUIOverride.Caption = "사진/영상 첨부";
+            dragUIOverride.IsCaptionVisible = true;
+        }
+    }
+
+    // Receives the dropped storage files and hands their paths to the view model, which
+    // filters the supported formats and reports the excluded files.
+    private async void OnRootGridDrop(object sender, DragEventArgs e)
+    {
+        if (!e.DataView.Contains(StandardDataFormats.StorageItems) || !CanAcceptDroppedMediaFiles) return;
+
+        e.Handled = true;
+        var deferral = e.GetDeferral();
+        try
+        {
+            var storageItems = await e.DataView.GetStorageItemsAsync();
+            var sourcePaths = storageItems.OfType<StorageFile>().Select(file => file.Path).Where(path => !string.IsNullOrEmpty(path)).ToList();
+            if (sourcePaths.Count == 0) return;
+            await _viewModel.AddDroppedMediaFilesAsync(sourcePaths);
+        }
+        finally { deferral.Complete(); }
     }
 
     protected override async void OnWindowLoaded(object sender, RoutedEventArgs e)

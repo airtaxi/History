@@ -21,6 +21,8 @@
 
     <Grid
         x:Name="RootGrid"
+        AllowDrop="True"
+        Background="Transparent"
         KeyboardAcceleratorPlacementMode="Hidden"
         Loaded="OnWindowLoaded">
 

@@ -133,6 +133,11 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
     public bool MediaAttachmentsVisibility => MediaAttachments.Count > 0;
 
+    // Window-wide file drops are accepted while the composer can still take media: the
+    // text-only Kakao Story share rejects attachments, and the upload lock and the media
+    // slot limit close the composer to new files. The window adds the loading-overlay check.
+    public bool CanAcceptMediaFiles => IsMediaAttachVisible && !IsUploading && MediaAttachments.Count < CommonConstants.MaxPostMediaCount;
+
     // Attached external URL card state. The preview surface is kept in sync through the
     // changed handler so the window only ever binds one view model for the card.
     [ObservableProperty]
@@ -256,8 +261,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
     [RelayCommand]
     private async Task HandleMediaTapAsync()
     {
-        var remainingCount = CommonConstants.MaxPostMediaCount - MediaAttachments.Count;
-        if (remainingCount <= 0)
+        if (MediaAttachments.Count >= CommonConstants.MaxPostMediaCount)
         {
             await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", $"미디어는 최대 {CommonConstants.MaxPostMediaCount}개까지 추가할 수 있습니다."));
             return;
@@ -266,12 +270,26 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         var results = await PickFilesAsync(new FileOpenPickerParameters(Constants.MediaFileTypeFilters, PickerLocationId.PicturesLibrary, "사진/영상 추가"));
         if (results == null || results.Count == 0) return;
 
-        if (results.Count > remainingCount) await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", $"{remainingCount}개가 넘는 미디어 파일은 무시됩니다."));
+        await AddMediaFilesAsync([.. results.Select(result => result.Path)]);
+    }
+
+    // Appends the given media files through the shared slot and size checks; files beyond
+    // the remaining slots or exceeding their upload size limit are skipped and reported.
+    private async Task AddMediaFilesAsync(IReadOnlyList<string> sourcePaths)
+    {
+        var remainingCount = CommonConstants.MaxPostMediaCount - MediaAttachments.Count;
+        if (remainingCount <= 0)
+        {
+            await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", $"미디어는 최대 {CommonConstants.MaxPostMediaCount}개까지 추가할 수 있습니다."));
+            return;
+        }
+
+        if (sourcePaths.Count > remainingCount) await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", $"{remainingCount}개가 넘는 미디어 파일은 무시됩니다."));
 
         var sizeExceededCount = 0;
-        foreach (var result in results.Take(remainingCount))
+        foreach (var sourcePath in sourcePaths.Take(remainingCount))
         {
-            if (await TryAddMediaAttachmentAsync(result.Path)) continue;
+            if (await TryAddMediaAttachmentAsync(sourcePath)) continue;
             sizeExceededCount++;
         }
 
@@ -296,6 +314,28 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
         }
 
         await TryAddMediaAttachmentAsync(sourcePath);
+    }
+
+    // Window-wide drop entry point: only supported media formats attach, and the excluded
+    // files are reported once before the shared slot and size checks run. The Kakao Story
+    // share guard is defensive because the drag cursor already blocks that mode.
+    public async Task AddDroppedMediaFilesAsync(IReadOnlyList<string> sourcePaths)
+    {
+        if (IsKakaoShareMode)
+        {
+            await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", "카카오스토리 게시글 공유는 텍스트만 입력할 수 있습니다."));
+            return;
+        }
+
+        var mediaPaths = sourcePaths.Where(path => File.Exists(path) && Constants.MediaFileTypeFilters.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase)).ToList();
+        if (mediaPaths.Count == 0)
+        {
+            await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", "사진 또는 영상 파일만 첨부할 수 있습니다."));
+            return;
+        }
+
+        if (mediaPaths.Count < sourcePaths.Count) await ShowMessageDialogAsync(new MessageDialogParameters("사진/영상", "지원하지 않는 형식의 파일은 제외되었습니다."));
+        await AddMediaFilesAsync(mediaPaths);
     }
 
     // Removes the attachment from the list and deletes its temp file.
