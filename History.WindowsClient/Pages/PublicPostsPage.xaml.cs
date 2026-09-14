@@ -10,7 +10,7 @@ using System.Numerics;
 
 namespace History.WindowsClient.Pages;
 
-public sealed partial class PublicPostsPage : BasePage, IRecipient<RefreshButtonClickedMessage>
+public sealed partial class PublicPostsPage : BasePage, IRecipient<RefreshRequestedMessage>
 {
     protected override BaseTimelinePageViewModel ViewModel { get; }
 
@@ -23,7 +23,7 @@ public sealed partial class PublicPostsPage : BasePage, IRecipient<RefreshButton
         WeakReferenceMessenger.Default.Register(this);
     }
 
-    public void Receive(RefreshButtonClickedMessage message)
+    public void Receive(RefreshRequestedMessage message)
     {
         if (IsInForeground)
         {

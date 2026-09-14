@@ -175,7 +175,7 @@ public sealed partial class KakaoStoryLoginWindow : BaseWindow
         catch { await _viewModel.ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "저장된 로그인 정보 자동 입력에 실패하였습니다. 수동으로 로그인해주세요.")); }
     }
 
-    private void OnEscapeKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    private void OnCloseKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         args.Handled = true;
         Close();

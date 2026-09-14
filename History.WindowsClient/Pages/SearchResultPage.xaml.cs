@@ -8,7 +8,7 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace History.WindowsClient.Pages;
 
-public sealed partial class SearchResultPage : BasePage, IRecipient<RefreshButtonClickedMessage>
+public sealed partial class SearchResultPage : BasePage, IRecipient<RefreshRequestedMessage>
 {
     protected override SearchResultPageViewModel ViewModel { get; }
 
@@ -28,7 +28,7 @@ public sealed partial class SearchResultPage : BasePage, IRecipient<RefreshButto
         base.OnNavigatedTo(e);
     }
 
-    public void Receive(RefreshButtonClickedMessage message)
+    public void Receive(RefreshRequestedMessage message)
     {
         if (IsInForeground)
         {

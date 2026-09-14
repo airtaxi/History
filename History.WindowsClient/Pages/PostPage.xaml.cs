@@ -16,7 +16,7 @@ namespace History.WindowsClient.Pages;
 
 // Post detail page: dispatches between the History post and the Kakao Story post; each
 // platform page view model wires its own comment box.
-public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClickedMessage>, IRecipient<CommentReplyRequestedMessage>
+public sealed partial class PostPage : BasePage, IRecipient<RefreshRequestedMessage>, IRecipient<CommentReplyRequestedMessage>
 {
     private readonly HistoryPostPageViewModel _historyViewModel;
 
@@ -32,11 +32,11 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
 
         CommentEditor.Initialize(_historyViewModel);
 
-        WeakReferenceMessenger.Default.Register((IRecipient<RefreshButtonClickedMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<RefreshRequestedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<CommentReplyRequestedMessage>)this);
     }
 
-    public void Receive(RefreshButtonClickedMessage message)
+    public void Receive(RefreshRequestedMessage message)
     {
         if (IsInForeground && ViewModel.Post != null)
         {

@@ -12,7 +12,7 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace History.WindowsClient.Pages;
 
-public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSuggestBoxQuerySubmittedMessage>, IRecipient<RefreshButtonClickedMessage>, IRecipient<DiscoverModeToggleRequestedMessage>
+public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSuggestBoxQuerySubmittedMessage>, IRecipient<RefreshRequestedMessage>, IRecipient<DiscoverModeToggleRequestedMessage>
 {
     protected override MainPageViewModel ViewModel { get; }
 
@@ -28,7 +28,7 @@ public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSugges
         MainFrame.Navigate(typeof(TimelinePage));
 
         WeakReferenceMessenger.Default.Register((IRecipient<MainWindowAutoSuggestBoxQuerySubmittedMessage>)this);
-        WeakReferenceMessenger.Default.Register((IRecipient<RefreshButtonClickedMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<RefreshRequestedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<DiscoverModeToggleRequestedMessage>)this);
     }
 
@@ -63,7 +63,7 @@ public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSugges
 
     private bool _isDiscoverMode;
 
-    public void Receive(RefreshButtonClickedMessage message)
+    public void Receive(RefreshRequestedMessage message)
     {
         if (IsInForeground)
         {

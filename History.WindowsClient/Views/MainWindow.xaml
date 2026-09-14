@@ -18,7 +18,15 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid Loaded="OnWindowLoaded">
+    <Grid KeyboardAcceleratorPlacementMode="Hidden" Loaded="OnWindowLoaded">
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator
+                Key="R"
+                Invoked="OnRefreshKeyInvoked"
+                Modifiers="Control" />
+            <KeyboardAccelerator Key="F5" Invoked="OnRefreshKeyInvoked" />
+        </Grid.KeyboardAccelerators>
+
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />

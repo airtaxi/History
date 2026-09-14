@@ -250,7 +250,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
             else if (_isKakaoShareMode) await ExecuteKakaoStoryShareAsync(kakaoContents);
 
             foreach (var attachment in MediaAttachments) attachment.Dispose();
-            if (IsTimelineRefreshEnabled) WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
+            if (IsTimelineRefreshEnabled) WeakReferenceMessenger.Default.Send(new RefreshRequestedMessage());
             SubmitCompleted?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception exception) { await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, $"카카오스토리 API 오류가 발생하였습니다: {KakaoStoryUtils.GetApiErrorMessage(exception)}")); }

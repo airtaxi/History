@@ -109,7 +109,7 @@ public sealed partial class PollEditWindow : BaseWindow
         Activate();
     }
 
-    private void OnEscapeKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    private void OnCloseKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         args.Handled = true;
         Close();

@@ -16,7 +16,7 @@ namespace History.WindowsClient.Pages;
 // page would keep showing the previous user's profile when navigated to with a
 // different user id, while a fresh page bound to the cached view model preserves
 // the feed and scroll position without any stale content.
-public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClickedMessage>
+public sealed partial class ProfilePage : BasePage, IRecipient<RefreshRequestedMessage>
 {
     private static readonly Dictionary<string, HistoryProfilePageViewModel> HistoryViewModelCache = [];
 
@@ -79,7 +79,7 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClic
         }
     }
 
-    public void Receive(RefreshButtonClickedMessage message)
+    public void Receive(RefreshRequestedMessage message)
     {
         if (IsInForeground)
         {

@@ -194,7 +194,7 @@ public sealed partial class ComposePostWindow : BaseWindow
         Activate();
     }
 
-    private void OnEscapeKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    private void OnCloseKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         args.Handled = true;
         Close();

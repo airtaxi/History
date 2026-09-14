@@ -24,7 +24,11 @@
         KeyboardAcceleratorPlacementMode="Hidden"
         Loaded="OnWindowLoaded">
         <Grid.KeyboardAccelerators>
-            <KeyboardAccelerator Key="Escape" Invoked="OnEscapeKeyInvoked" />
+            <KeyboardAccelerator Key="Escape" Invoked="OnCloseKeyInvoked" />
+            <KeyboardAccelerator
+                Key="W"
+                Invoked="OnCloseKeyInvoked"
+                Modifiers="Control" />
         </Grid.KeyboardAccelerators>
 
         <Grid.RowDefinitions>

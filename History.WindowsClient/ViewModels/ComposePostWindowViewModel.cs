@@ -555,7 +555,7 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
                 foreach (var attachment in MediaAttachments) attachment.Dispose();
                 if (IsEditMode) WeakReferenceMessenger.Default.Send(new ValueChangedMessage<PostResponseDto>(result.Value));
-                else if (IsTimelineRefreshEnabled) WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
+                else if (IsTimelineRefreshEnabled) WeakReferenceMessenger.Default.Send(new RefreshRequestedMessage());
                 SubmitCompleted?.Invoke(this, EventArgs.Empty);
             }
             else if (IsKakaoPostEnabled && !IsEditMode && !IsShareMode && !IsFortuneOnlyPost(editorContents))

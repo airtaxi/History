@@ -11,6 +11,7 @@ using History.WindowsClient.ViewModels.Notifications;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Navigation;
 using MongoDB.Driver.GridFS;
 using System.ComponentModel;
@@ -182,7 +183,17 @@ public sealed partial class MainWindow : BaseWindow,
 
     private void OnMainSearchBoxQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args) => WeakReferenceMessenger.Default.Send(new MainWindowAutoSuggestBoxQuerySubmittedMessage(args.QueryText));
 
-    private void OnRefreshButtonClicked(object sender, RoutedEventArgs e) => WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
+    private void OnRefreshButtonClicked(object sender, RoutedEventArgs e) => WeakReferenceMessenger.Default.Send(new RefreshRequestedMessage());
+
+    // Ctrl+R and F5 refresh the current page the same way the title bar refresh button does,
+    // but only while that button is part of the current page's toolbar.
+    private void OnRefreshKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (RefreshButton.Visibility != Visibility.Visible) return;
+
+        args.Handled = true;
+        WeakReferenceMessenger.Default.Send(new RefreshRequestedMessage());
+    }
 
     private void OnDiscoverButtonClicked(object sender, RoutedEventArgs e) => WeakReferenceMessenger.Default.Send(new DiscoverModeToggleRequestedMessage());
 
@@ -223,7 +234,7 @@ public sealed partial class MainWindow : BaseWindow,
 
     private void OnLeftHeaderButtonClicked(object sender, RoutedEventArgs e)
     {
-        if (AppFrame.Content is MainPage) WeakReferenceMessenger.Default.Send(new RefreshButtonClickedMessage());
+        if (AppFrame.Content is MainPage) WeakReferenceMessenger.Default.Send(new RefreshRequestedMessage());
         else
         {
             AppFrame.Navigate(typeof(MainPage));

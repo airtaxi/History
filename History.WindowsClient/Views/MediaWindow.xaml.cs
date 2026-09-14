@@ -61,7 +61,7 @@ public sealed partial class MediaWindow : BaseWindow
         LoadingTextBlock.Text = message;
     }
 
-    private void OnEscapeKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    private void OnCloseKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         args.Handled = true;
         Close();
