@@ -50,11 +50,12 @@ public sealed partial class ExtrasWindow : BaseWindow
     private void OnExtrasFrameNavigated(object sender, NavigationEventArgs e)
     {
         var isInviteCodesPage = e.SourcePageType == typeof(InviteCodesPage);
+        var isInviteCodeRequestsPage = e.SourcePageType == typeof(InviteCodeRequestsPage);
 
         AppTitleBar.IsBackButtonVisible = ExtrasFrame.CanGoBack;
-        AppTitleBar.Title = isInviteCodesPage ? "초대 코드" : "부가메뉴";
+        AppTitleBar.Title = isInviteCodesPage ? "초대 코드" : isInviteCodeRequestsPage ? "초대 코드 요청 관리" : "부가메뉴";
         AddButton.Visibility = isInviteCodesPage ? Visibility.Visible : Visibility.Collapsed;
-        RefreshButton.Visibility = isInviteCodesPage ? Visibility.Visible : Visibility.Collapsed;
+        RefreshButton.Visibility = isInviteCodesPage || isInviteCodeRequestsPage ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void OnAppTitleBarBackRequested(TitleBar sender, object args)

@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<local:BasePage
+    x:Class="History.WindowsClient.Pages.Extras.InviteCodeRequestsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:extras="using:History.WindowsClient.ViewModels.Extras"
+    xmlns:local="using:History.WindowsClient.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Loaded="OnPageLoaded"
+    NavigationCacheMode="Required"
+    mc:Ignorable="d">
+
+    <local:BasePage.Resources>
+        <DataTemplate x:Key="InviteCodeRequestTemplate" x:DataType="extras:InviteCodeRequestViewModel">
+            <Border
+                Padding="16"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <StackPanel Spacing="8">
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            Text="{x:Bind RequesterNickname}"
+                            TextTrimming="CharacterEllipsis" />
+
+                        <Border
+                            Grid.Column="1"
+                            Padding="8,4"
+                            VerticalAlignment="Top"
+                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                            CornerRadius="12">
+                            <TextBlock
+                                FontSize="{StaticResource CaptionTextBlockFontSize}"
+                                FontWeight="SemiBold"
+                                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                Text="{x:Bind StatusText}" />
+                        </Border>
+                    </Grid>
+
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind RequestCountText}" />
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind ActiveCodeCountText}" />
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind Reason}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind CreatedAtText}" />
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind ModeratorMessageText}"
+                        TextWrapping="Wrap"
+                        Visibility="{x:Bind IsPending, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=True}" />
+
+                    <StackPanel
+                        Orientation="Horizontal"
+                        Spacing="8"
+                        Visibility="{x:Bind IsPending, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Button
+                            Command="{x:Bind AcceptCommand}"
+                            Content="수락"
+                            Style="{StaticResource AccentButtonStyle}" />
+                        <Button Command="{x:Bind RejectCommand}" Content="거부" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </local:BasePage.Resources>
+
+    <Grid Padding="24,8,24,24">
+        <RefreshContainer RefreshRequested="OnRefreshRequested">
+            <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                <ItemsRepeater
+                    x:Name="MainItemsRepeater"
+                    ElementPrepared="OnMainItemsRepeaterElementPrepared"
+                    ItemTemplate="{StaticResource InviteCodeRequestTemplate}"
+                    ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="8" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </ScrollViewer>
+        </RefreshContainer>
+
+        <TextBlock
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Style="{StaticResource SubtitleTextBlockStyle}"
+            Text="대기 중인 초대 코드 요청이 없습니다"
+            Visibility="{x:Bind ViewModel.IsEmpty, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+    </Grid>
+</local:BasePage>

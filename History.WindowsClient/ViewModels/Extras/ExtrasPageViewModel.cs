@@ -28,9 +28,8 @@ public sealed partial class ExtrasPageViewModel : BaseViewModel
     [RelayCommand]
     private void OpenInviteCodes() => RequestNavigation(typeof(InviteCodesPage));
 
-    // TODO: Open the invite code request management page once it exists.
     [RelayCommand]
-    private async Task OpenInviteCodeRequestsAsync() => await ShowUnderImplementationMessageAsync();
+    private void OpenInviteCodeRequests() => RequestNavigation(typeof(InviteCodeRequestsPage));
 
     // TODO: Open the bulk post management page once it exists.
     [RelayCommand]

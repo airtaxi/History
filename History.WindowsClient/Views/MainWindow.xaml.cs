@@ -22,7 +22,8 @@ namespace History.WindowsClient.Views;
 public sealed partial class MainWindow : BaseWindow,
     IRecipient<DiscoverModeChangedMessage>,
     IRecipient<KakaoStoryModeChangedMessage>,
-    IRecipient<LogoutRequestedMessage>
+    IRecipient<LogoutRequestedMessage>,
+    IRecipient<ExtrasWindowRequestedMessage>
 {
     private static MainWindow s_instance;
     private readonly MainWindowViewModel _viewModel;
@@ -57,6 +58,7 @@ public sealed partial class MainWindow : BaseWindow,
         WeakReferenceMessenger.Default.Register((IRecipient<DiscoverModeChangedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<KakaoStoryModeChangedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<LogoutRequestedMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<ExtrasWindowRequestedMessage>)this);
 
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
@@ -81,6 +83,14 @@ public sealed partial class MainWindow : BaseWindow,
         _notificationsViewModel.ResetUnreadCount();
         AppFrame.Navigate(typeof(LoginPage));
         AppFrame.BackStack.Clear();
+    }
+
+    // Opens the extras window on behalf of notification surfaces; a toast activation can
+    // arrive on a background thread, so the window work is marshalled to the UI thread.
+    public void Receive(ExtrasWindowRequestedMessage message)
+    {
+        if (DispatcherQueue.HasThreadAccess) ShowExtrasWindow();
+        else DispatcherQueue.TryEnqueue(ShowExtrasWindow);
     }
 
     protected override void Navigate(Type pageType, object parameter)
@@ -200,8 +210,14 @@ public sealed partial class MainWindow : BaseWindow,
     // Opens the settings window as a modal over the main window.
     private void OnSettingsMenuFlyoutItemClicked(object sender, RoutedEventArgs e) => new SettingsWindow(App.Services.GetRequiredService<SettingsWindowViewModel>()).MakeModal(this);
 
-    // Opens the extras window as a modal over the main window.
-    private void OnExtrasMenuFlyoutItemClicked(object sender, RoutedEventArgs e) => new ExtrasWindow(App.Services.GetRequiredService<ExtrasWindowViewModel>()).MakeModal(this);
+    private void OnExtrasMenuFlyoutItemClicked(object sender, RoutedEventArgs e) => ShowExtrasWindow();
+
+    // Brings this window forward and opens the extras window as a modal over it.
+    private void ShowExtrasWindow()
+    {
+        SetForegroundWindow();
+        new ExtrasWindow(App.Services.GetRequiredService<ExtrasWindowViewModel>()).MakeModal(this);
+    }
 
     // Opens the compose window for the current mode: Kakao Story mode composes a new Kakao
     // Story post that mirrors to History, otherwise the History composer opens.

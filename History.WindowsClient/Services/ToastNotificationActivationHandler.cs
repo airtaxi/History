@@ -1,10 +1,12 @@
-﻿using History.Commons;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using History.Commons;
 using History.Commons.Api.Message;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
+using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using History.WindowsClient.ViewModels;
@@ -30,13 +32,18 @@ public static class ToastNotificationActivationHandler
         var typeText = parameters["Type"];
         if (string.IsNullOrEmpty(typeText) || !Enum.TryParse<NotificationType>(typeText, out var type)) return;
 
-        if (type == NotificationType.InviteCodeRequest || type == NotificationType.InviteCodeRequestResult) return; // TODO: Open the invite code request pages once they exist.
-
         // A toast clicked during a cold start can arrive before the login completes; the
         // arguments are replayed once the user signs in.
         if (string.IsNullOrEmpty(CommonShared.UserId))
         {
             _pendingArguments = query;
+            return;
+        }
+
+        // The invite code pages live in the extras window; opening it is enough for the tap.
+        if (type == NotificationType.InviteCodeRequest || type == NotificationType.InviteCodeRequestResult)
+        {
+            WeakReferenceMessenger.Default.Send(new ExtrasWindowRequestedMessage());
             return;
         }
 

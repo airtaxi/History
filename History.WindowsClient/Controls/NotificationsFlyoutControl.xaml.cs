@@ -1,3 +1,5 @@
+using CommunityToolkit.Mvvm.Messaging;
+using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels.Notifications;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,7 +10,7 @@ using Microsoft.UI.Xaml.Media;
 
 namespace History.WindowsClient.Controls;
 
-public sealed partial class NotificationsFlyoutControl : BaseControl
+public sealed partial class NotificationsFlyoutControl : BaseControl, IRecipient<ExtrasWindowRequestedMessage>
 {
     public override NotificationsFlyoutViewModel ViewModel { get; }
 
@@ -17,6 +19,8 @@ public sealed partial class NotificationsFlyoutControl : BaseControl
         ViewModel = App.Services.GetRequiredService<NotificationsFlyoutViewModel>();
 
         InitializeComponent();
+
+        WeakReferenceMessenger.Default.Register((IRecipient<ExtrasWindowRequestedMessage>)this);
     }
 
     protected override void OnControlLoaded(object sender, RoutedEventArgs e)
@@ -34,8 +38,19 @@ public sealed partial class NotificationsFlyoutControl : BaseControl
         base.OnControlUnloaded(sender, e);
     }
 
+    // Closes the hosting flyout for notification taps that open the extras window instead of
+    // navigating; a toast activation can arrive on a background thread.
+    public void Receive(ExtrasWindowRequestedMessage message)
+    {
+        if (DispatcherQueue.HasThreadAccess) CloseHostingFlyout();
+        else DispatcherQueue.TryEnqueue(CloseHostingFlyout);
+    }
+
     // Closes the hosting flyout so the navigated destination is visible behind it.
-    private void OnViewModelNavigationRequested(object sender, NavigationRequestedEventArgs args)
+    private void OnViewModelNavigationRequested(object sender, NavigationRequestedEventArgs args) => CloseHostingFlyout();
+
+    // Closes the flyout that hosts this control.
+    private void CloseHostingFlyout()
     {
         DependencyObject node = this;
         while (node is not null and not Popup) node = VisualTreeHelper.GetParent(node);

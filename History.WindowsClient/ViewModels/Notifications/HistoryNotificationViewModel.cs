@@ -86,7 +86,12 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel, I
             await RestrictionNoticeHelper.ShowAsync(_baseViewModel, Notification.Body);
             return;
         }
-        else if (type == NotificationType.InviteCodeRequest || type == NotificationType.InviteCodeRequestResult) return; // TODO: Open the invite code request pages once they exist.
+        else if (type == NotificationType.InviteCodeRequest || type == NotificationType.InviteCodeRequestResult)
+        {
+            // The invite code pages live in the extras window; opening it is enough for the tap.
+            WeakReferenceMessenger.Default.Send(new ExtrasWindowRequestedMessage());
+            return;
+        }
 
         if (Notification.Data == null) return;
 
