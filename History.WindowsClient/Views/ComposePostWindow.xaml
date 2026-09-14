@@ -67,9 +67,10 @@
                     CanDragItems="True"
                     CanReorderItems="True"
                     ItemsSource="{x:Bind ViewModel.MediaAttachments, Mode=OneWay}"
-                    ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                    ScrollViewer.HorizontalScrollMode="Enabled"
+                    ScrollViewer.HorizontalScrollBarVisibility="Hidden"
+                    ScrollViewer.HorizontalScrollMode="Auto"
                     ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                    ScrollViewer.VerticalScrollMode="Disabled"
                     SelectionMode="None"
                     Visibility="{x:Bind ViewModel.MediaAttachmentsVisibility, Mode=OneWay}">
                     <ListView.ItemsPanel>
