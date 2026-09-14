@@ -1,8 +1,12 @@
 ﻿using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
+using History.WindowsClient.Helpers;
+using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using History.WindowsClient.ViewModels;
 using History.WindowsClient.ViewModels.Segments;
+using History.WindowsClient.Views;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -138,11 +142,16 @@ public sealed partial class BodyContentControl : BaseControl
     private static void AppendHashtagInline(InlineCollection inlines, HashtagSegmentViewModel segment)
     {
         var hyperlink = CreateHyperlink(text: "#" + segment.Tag, isBold: true);
-        hyperlink.Click += (_, _) =>
-        {
-            // TODO: Navigate to the hashtag page once it is implemented.
-        };
+        hyperlink.Click += (_, _) => OpenHashtagComposeWindow(segment.Tag);
         inlines.Add(hyperlink);
+    }
+
+    // Opens the composer with the tapped hashtag pre-inserted so a post can be written
+    // under that tag.
+    private static void OpenHashtagComposeWindow(string hashtag)
+    {
+        var settings = App.Services.GetRequiredService<ApplicationSettings>();
+        new ComposePostWindow(new ComposePostWindowViewModel(settings, hashtags: [hashtag])).MakeModal(MainWindow.Instance);
     }
 
     // GIF/WebP animation is not supported by BitmapImage; only the first frame is shown.
