@@ -19,6 +19,7 @@
 
                 <segmented:SelectorBarSegmentedDictionary />
 
+                <srd:Override />
                 <srd:Content />
                 <srd:Friendship />
                 <srd:Comment />
@@ -52,16 +53,6 @@
                 x:Key="PublicPostTemplateSelector"
                 PostTemplate="{StaticResource PublicPostTemplate}"
                 RepostTemplate="{StaticResource RepostTemplate}" />
-
-            <Color x:Key="SystemAccentColor">#ED664D</Color>
-
-            <Color x:Key="SystemAccentColorLight1">#ED664D</Color>
-            <Color x:Key="SystemAccentColorLight2">#FF8452</Color>
-            <Color x:Key="SystemAccentColorLight3">#BA503C</Color>
-
-            <Color x:Key="SystemAccentColorDark1">#ED664D</Color>
-            <Color x:Key="SystemAccentColorDark2">#FF8452</Color>
-            <Color x:Key="SystemAccentColorDark3">#BA503C</Color>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
