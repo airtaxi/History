@@ -25,7 +25,7 @@ public sealed partial class MainWindow : BaseWindow,
 {
     private static MainWindow s_instance;
     private readonly NotificationsFlyoutViewModel _notificationsViewModel;
-    private readonly NotificationBadgePollerService _notificationBadgePollerService;
+    private readonly BadgePollerService _badgePollerService;
 
     public static MainWindow Instance => s_instance;
 
@@ -42,9 +42,10 @@ public sealed partial class MainWindow : BaseWindow,
         _notificationsViewModel = ((NotificationsFlyoutControl)NotificationsFlyout.Content).ViewModel;
         _notificationsViewModel.PropertyChanged += OnNotificationsViewModelPropertyChanged;
 
-        // The poller keeps the unread count fresh while the user is elsewhere in the app;
-        // the view model owns the actual count fetch for the active account mode.
-        _notificationBadgePollerService = new NotificationBadgePollerService(_notificationsViewModel.RefreshUnreadCountAsync);
+        // The poller keeps the unread counts fresh while the user is elsewhere in the app;
+        // each registered view model owns the actual count fetch for the active account mode.
+        _badgePollerService = App.Services.GetRequiredService<BadgePollerService>();
+        _badgePollerService.AddRefreshTarget(_notificationsViewModel.RefreshUnreadCountAsync);
 
         WeakReferenceMessenger.Default.Register((IRecipient<DiscoverModeChangedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<KakaoStoryModeChangedMessage>)this);
@@ -69,7 +70,7 @@ public sealed partial class MainWindow : BaseWindow,
     // A successful sign-out or account withdrawal returns the window to the login page.
     public void Receive(LogoutRequestedMessage message)
     {
-        _notificationBadgePollerService.Stop();
+        _badgePollerService.Stop();
         _notificationsViewModel.ResetUnreadCount();
         AppFrame.Navigate(typeof(LoginPage));
         AppFrame.BackStack.Clear();
@@ -100,7 +101,7 @@ public sealed partial class MainWindow : BaseWindow,
     // Detaches the badge polling loop when the window closes so the timer does not outlive it.
     protected override void OnWindowClosed(object sender, WindowEventArgs args)
     {
-        _notificationBadgePollerService.Stop();
+        _badgePollerService.Stop();
         base.OnWindowClosed(sender, args);
     }
 

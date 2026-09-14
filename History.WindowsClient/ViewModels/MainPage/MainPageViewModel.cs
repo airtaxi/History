@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.Commons.Api.Friendship;
+using History.Commons.Api.Message;
 using History.Commons.Api.User;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
@@ -11,14 +12,16 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace History.WindowsClient.ViewModels.MainPage;
 
-public partial class MainPageViewModel : BaseViewModel, IRecipient<KakaoStoryFeaturesEnabledMessage>
+public partial class MainPageViewModel : BaseViewModel, IRecipient<KakaoStoryFeaturesEnabledMessage>, IRecipient<LogoutRequestedMessage>
 {
+    private readonly SemaphoreSlim _badgeFetchSemaphore = new(1, 1);
     private string _sideBarTag = "Friendship";
 
     public MainPageViewModel()
     {
         KakaoStorySelectorVisibility = KakaoStoryFeatureGateHelper.IsEnabled ? Visibility.Visible : Visibility.Collapsed;
-        WeakReferenceMessenger.Default.Register(this);
+        WeakReferenceMessenger.Default.Register((IRecipient<KakaoStoryFeaturesEnabledMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<LogoutRequestedMessage>)this);
     }
 
     // Revealed only after the hidden unlock, so the Kakao Story account mode is unreachable
@@ -38,6 +41,9 @@ public partial class MainPageViewModel : BaseViewModel, IRecipient<KakaoStoryFea
     [ObservableProperty]
     public partial int PendingFriendRequestCount { get; set; }
 
+    [ObservableProperty]
+    public partial int UnreadMessageCount { get; set; }
+
     public async Task RefreshAsync()
     {
         if (!IsKakaoStoryMode)
@@ -50,9 +56,6 @@ public partial class MainPageViewModel : BaseViewModel, IRecipient<KakaoStoryFea
             }
 
             MyProfileViewModel = new HistoryProfileViewModel(myProfileResult.Value, this);
-
-            var pendingRequestResult = await ExecuteRequestAsync(new GetPendingRequests());
-            if (pendingRequestResult.IsSuccess) PendingFriendRequestCount = pendingRequestResult.Value.Count;
         }
         else
         {
@@ -60,11 +63,61 @@ public partial class MainPageViewModel : BaseViewModel, IRecipient<KakaoStoryFea
 
             var profileObject = await ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetProfileFeed(CommonShared.KakaoUserId, null, true));
             MyProfileViewModel = profileObject?.profile != null ? new KakaoProfileViewModel(profileObject.profile, profileObject.mutual_friend, this) : null;
-
-            // The badge shows the received Kakao Story friend requests.
-            var invitations = await ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetInvitations());
-            PendingFriendRequestCount = invitations?.Count(x => x.type == "received") ?? 0;
         }
+
+        // The badges stay current for the active account mode; the poller keeps them fresh
+        // while the user is elsewhere in the app.
+        await RefreshBadgeCountsAsync();
+    }
+
+    // Quiet badge refresh for the side bar badges: fetches only the lists that drive the unread
+    // message and pending friend request counts for the active account mode, without the loading
+    // overlay or error dialogs, so the badge poller can run it on a cadence.
+    public async Task RefreshBadgeCountsAsync()
+    {
+        if (_badgeFetchSemaphore.CurrentCount == 0) return;
+
+        try
+        {
+            await _badgeFetchSemaphore.WaitAsync();
+
+            if (CommonShared.ApiHandler == ApiHandler.Public) return;
+
+            if (!IsKakaoStoryMode)
+            {
+                var messages = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetReceivedMessages());
+                var pendingRequests = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetPendingRequests());
+
+                // Signed out while the requests were in flight: the sign-out badge reset must stand.
+                if (CommonShared.ApiHandler == ApiHandler.Public) return;
+
+                UnreadMessageCount = messages?.Count(x => x.ReadAt == null) ?? 0;
+                PendingFriendRequestCount = pendingRequests?.Count ?? 0;
+            }
+            else
+            {
+                if (await KakaoStoryApiHandler.EnsureKAuthTokenAsync() == null) return;
+
+                // Background mode keeps a revoked session from popping the login modal during
+                // the quiet badge refresh.
+                var previousBackgroundMode = KakaoStoryApiHandler.IsBackgroundMode;
+                KakaoStoryApiHandler.IsBackgroundMode = true;
+                try
+                {
+                    var mails = await KakaoStoryApiHandler.GetMails();
+                    var invitations = await KakaoStoryApiHandler.GetInvitations();
+
+                    // Signed out while the requests were in flight: the sign-out badge reset must stand.
+                    if (CommonShared.ApiHandler == ApiHandler.Public) return;
+
+                    if (mails != null) UnreadMessageCount = mails.Count(x => x.type == "receive" && x.read_at == null);
+                    if (invitations != null) PendingFriendRequestCount = invitations.Count(x => x.type == "received");
+                }
+                finally { KakaoStoryApiHandler.IsBackgroundMode = previousBackgroundMode; }
+            }
+        }
+        catch (HttpRequestException) { }
+        finally { _badgeFetchSemaphore.Release(); }
     }
 
     // Applies the account mode requested by the mode selector. Switching to Kakao Story
@@ -121,4 +174,12 @@ public partial class MainPageViewModel : BaseViewModel, IRecipient<KakaoStoryFea
     }
 
     public void Receive(KakaoStoryFeaturesEnabledMessage message) => KakaoStorySelectorVisibility = Visibility.Visible;
+
+    // Clears the side bar badges on sign-out so they hide immediately and the next login
+    // refreshes them from the new session.
+    public void Receive(LogoutRequestedMessage message)
+    {
+        UnreadMessageCount = 0;
+        PendingFriendRequestCount = 0;
+    }
 }

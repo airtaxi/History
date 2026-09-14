@@ -147,6 +147,7 @@ public partial class App : Application
         serviceCollection.AddSingleton(sp => new ApplicationNotificationService());
         serviceCollection.AddSingleton<PushNotificationService>();
         serviceCollection.AddSingleton(sp => new StoreUpdateService(sp.GetRequiredService<ApplicationSettingsService>(), sp.GetRequiredService<ApplicationNotificationService>()));
+        serviceCollection.AddSingleton<BadgePollerService>();
         serviceCollection.AddTransient(sp => new LoginPageViewModel(sp.GetRequiredService<ApplicationSettingsService>()));
         serviceCollection.AddTransient(sp => new RegisterPageViewModel(sp.GetRequiredService<ApplicationSettingsService>()));
         serviceCollection.AddTransient(sp => new MainPageViewModel());

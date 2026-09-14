@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.WindowsClient.Messages;
+using History.WindowsClient.Services;
 using History.WindowsClient.ViewModels;
 using History.WindowsClient.ViewModels.MainPage;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,9 @@ public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSugges
         ViewModel = App.Services.GetRequiredService<MainPageViewModel>();
 
         InitializeComponent();
+
+        // The poller keeps the side bar badge counts fresh while the user is elsewhere in the app.
+        App.Services.GetRequiredService<BadgePollerService>().AddRefreshTarget(ViewModel.RefreshBadgeCountsAsync);
 
         MainFrame.Navigate(typeof(TimelinePage));
 

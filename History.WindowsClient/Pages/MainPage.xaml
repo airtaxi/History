@@ -333,6 +333,7 @@
                         Tag="Friendship"
                         Text="친구" />
                     <SelectorBarItem
+                        segmented:SelectorBarSegmented.BadgeValue="{x:Bind ViewModel.UnreadMessageCount, Mode=OneWay}"
                         Icon="Mail"
                         Tag="Messages"
                         Text="쪽지" />
