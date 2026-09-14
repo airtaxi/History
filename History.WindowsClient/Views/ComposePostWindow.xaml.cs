@@ -142,6 +142,8 @@ public sealed partial class ComposePostWindow : BaseWindow
         base.OnWindowLoaded(sender, e);
 
         PostEditor.Initialize(_viewModel);
+        // A hashtag tap opens the composer with the tapped tag pre-inserted.
+        foreach (var hashtag in _viewModel.InitialHashtags) PostEditor.AppendHashtag(new HashtagContent { Tag = hashtag });
         _viewModel.LoadIsKakaoPostEnabledSetting();
         _viewModel.LoadIsTimelineRefreshEnabledSetting();
         PostEditor.IsKakaoMentionMode = _viewModel.IsKakaoMode;

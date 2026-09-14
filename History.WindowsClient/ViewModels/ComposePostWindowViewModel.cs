@@ -172,6 +172,9 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
     public PostResponseDto ParentPost { get; }
 
+    // Editor prefill for a hashtag tap: the composer opens with the tapped tags inserted.
+    public List<string> InitialHashtags { get; } = [];
+
     // Edit mode reuses the composer for an existing post: the audience, permission, share
     // setting, media, and attachments are prefilled from the post and submit runs ModifyPost.
     public bool IsEditMode => Post != null;
@@ -186,11 +189,12 @@ public sealed partial class ComposePostWindowViewModel : BaseViewModel
 
     private readonly ApplicationSettings _settings;
 
-    public ComposePostWindowViewModel(ApplicationSettings settings, PostResponseDto post = null, PostResponseDto parentPost = null)
+    public ComposePostWindowViewModel(ApplicationSettings settings, PostResponseDto post = null, PostResponseDto parentPost = null, List<string> hashtags = null)
     {
         _settings = settings;
         Post = post;
         ParentPost = parentPost;
+        if (hashtags != null) InitialHashtags.AddRange(hashtags);
 
         if (IsShareMode)
         {
