@@ -31,7 +31,6 @@ public static class ToastNotificationActivationHandler
         if (string.IsNullOrEmpty(typeText) || !Enum.TryParse<NotificationType>(typeText, out var type)) return;
 
         if (type == NotificationType.InviteCodeRequest || type == NotificationType.InviteCodeRequestResult) return; // TODO: Open the invite code request pages once they exist.
-        if (type == NotificationType.Birthday) return; // TODO: Open the birthday profile once the birthday flow exists.
 
         // A toast clicked during a cold start can arrive before the login completes; the
         // arguments are replayed once the user signs in.
@@ -70,6 +69,7 @@ public static class ToastNotificationActivationHandler
             return;
         }
 
+        // Post activity and birthday notifications carry the target post id; open that post.
         var postId = parameters["PostId"];
         if (string.IsNullOrEmpty(postId)) return;
 

@@ -48,6 +48,7 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel, I
 
     public void Receive(NotificationPostReadMessage message)
     {
+        if (!IsUnread) return;
         if (Notification.Data == null || !Notification.Data.TryGetValue("PostId", out var postId)) return;
         if (postId != message.Value) return;
         SetUnread(false);
@@ -55,6 +56,10 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel, I
 
     public void Receive(NotificationFriendUserReadMessage message)
     {
+        if (!IsUnread) return;
+        // A friend-profile visit clears only friend request notifications; other types such as
+        // birthday notifications can carry the same UserId in their data.
+        if (Notification.Type != NotificationType.FriendRequest) return;
         if (Notification.Data == null || !Notification.Data.TryGetValue("UserId", out var userId)) return;
         if (userId != message.Value) return;
         SetUnread(false);
