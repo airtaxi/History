@@ -1,4 +1,4 @@
-using History.Commons;
+﻿using History.Commons;
 using History.Commons.Api.Message;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
@@ -75,7 +75,7 @@ public static class ToastNotificationActivationHandler
 
         try
         {
-            var post = await CommonShared.ApiHandler.ExecuteRequestAsync<PostResponseDto>(new GetPost(postId));
+            var post = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetPost(postId));
             MainWindow.SetForegroundWindow();
             MainWindow.Frame.Navigate(typeof(PostPage), post);
         }
@@ -143,7 +143,7 @@ public static class ToastNotificationActivationHandler
 
         try
         {
-            var message = await CommonShared.ApiHandler.ExecuteRequestAsync<MessageResponseDto>(new GetMessage(messageId));
+            var message = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetMessage(messageId));
             MainWindow.SetForegroundWindow();
             var messageViewModel = new HistoryMessageViewModel(message, MainWindow.Instance.ViewModel);
             await messageViewModel.HandleTapAsync();

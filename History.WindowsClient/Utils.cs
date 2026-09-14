@@ -219,7 +219,7 @@ public static partial class Utils
     {
         try
         {
-            var post = await RunWithLoadingAsync(baseViewModel, () => CommonShared.ApiHandler.ExecuteRequestAsync<PostResponseDto>(new GetPost(postId)), "게시글 불러오는 중...");
+            var post = await RunWithLoadingAsync(baseViewModel, () => CommonShared.ApiHandler.ExecuteRequestAsync(new GetPost(postId)), "게시글 불러오는 중...");
             NavigateToPage(typeof(PostPage), post);
         }
         catch (Exception exception) { await ShowMessageDialogAsync(Constants.ErrorTitle, $"게시글을 불러오지 못했습니다.\n{exception.Message}"); }
