@@ -7,8 +7,10 @@ using History.WindowsClient.ViewModels;
 using History.WindowsClient.ViewModels.Segments;
 using History.WindowsClient.Views;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Media;
@@ -155,14 +157,37 @@ public sealed partial class BodyContentControl : BaseControl
     }
 
     // GIF/WebP animation is not supported by BitmapImage; only the first frame is shown.
-    private static void AppendStickerInline(InlineCollection inlines, StickerSegmentViewModel segment)
+    private void AppendStickerInline(InlineCollection inlines, StickerSegmentViewModel segment)
     {
         var image = new Image { Width = StickerImageWidth, Stretch = Stretch.Uniform, Source = new BitmapImage(new Uri(segment.ImageUri)) };
-        image.Tapped += (_, _) =>
+
+        // The sticker image renders inside a transparent, paddingless button so tapping it opens
+        // the sticker detail window.
+        var button = new Button
         {
-            // TODO: Navigate to the sticker detail page once it is implemented.
+            Padding = new Thickness(0),
+            Background = new SolidColorBrush(Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            Content = image
         };
-        inlines.Add(new InlineUIContainer { Child = image });
+        button.Click += async (_, _) => await OpenStickerDetailAsync(segment.Sticker.StickerId);
+        ToolTipService.SetToolTip(button, "스티커 정보");
+        AutomationProperties.SetName(button, "스티커 정보");
+
+        inlines.Add(new InlineUIContainer { Child = button });
+    }
+
+    // Opens the sticker detail window for the tapped inline sticker; Kakao Story emoticons carry
+    // no sticker id and show the unsupported notice instead.
+    private async Task OpenStickerDetailAsync(string stickerId)
+    {
+        if (string.IsNullOrEmpty(stickerId))
+        {
+            await StickerDetailWindow.ShowEmoticonNoticeAsync(BaseViewModel ?? ViewModel);
+            return;
+        }
+
+        StickerDetailWindow.ShowModal(stickerId, MainWindow.Instance);
     }
 
     private static Hyperlink CreateHyperlink(string text, bool isBold)

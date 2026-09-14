@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.Api.Sticker;
-using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml;
@@ -85,10 +84,8 @@ public sealed partial class StickersPageViewModel : BaseViewModel
     // detail reports a change (subscription state or deletion).
     public void OpenStickerDetail(string stickerId)
     {
-        var detailWindow = new StickerDetailWindow(new StickerDetailWindowViewModel(stickerId));
+        var detailWindow = StickerDetailWindow.ShowModal(stickerId, ExtrasWindow.Instance);
         detailWindow.Closed += OnStickerDetailWindowClosed;
-
-        detailWindow.ActivateModal(ExtrasWindow.Instance);
     }
 
     // Refreshes the list when the closed detail changed sticker data.

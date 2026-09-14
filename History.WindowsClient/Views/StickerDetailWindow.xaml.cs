@@ -1,3 +1,5 @@
+using History.WindowsClient.Helpers;
+using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
@@ -10,6 +12,10 @@ namespace History.WindowsClient.Views;
 // dialog/loading events are fulfilled directly on this window's content.
 public sealed partial class StickerDetailWindow : BaseWindow
 {
+    // Kakao Story emoticons carry no sticker id, so their detail is not available yet.
+    private const string EmoticonNoticeTitle = "안내";
+    private const string EmoticonNoticeMessage = "카카오스토리 이모티콘은 스티커 상세를 지원하지 않습니다.";
+
     public StickerDetailWindowViewModel ViewModel { get; }
 
     public StickerDetailWindow(StickerDetailWindowViewModel viewModel) : base(viewModel)
@@ -22,6 +28,23 @@ public sealed partial class StickerDetailWindow : BaseWindow
         SetTitleBar(AppTitleBar);
 
         this.CenterOnScreen();
+    }
+
+    // Opens the sticker detail window for the given sticker id, modal to the owner window.
+    public static StickerDetailWindow ShowModal(string stickerId, Window ownerWindow)
+    {
+        var window = new StickerDetailWindow(new StickerDetailWindowViewModel(stickerId));
+
+        window.ActivateModal(ownerWindow);
+        return window;
+    }
+
+    // Reports the unsupported Kakao Story emoticon case on the given dialog surface.
+    public static async Task ShowEmoticonNoticeAsync(BaseViewModel baseViewModel)
+    {
+        if (baseViewModel == null) return;
+
+        await baseViewModel.ShowMessageDialogAsync(new MessageDialogParameters(EmoticonNoticeTitle, EmoticonNoticeMessage));
     }
 
     // no-op for this window

@@ -23,12 +23,21 @@
 
     <!--  GIF/WebP animation is not supported by BitmapImage; only the first frame is shown.  -->
     <DataTemplate x:Key="StickerContentTemplate" x:DataType="vm:StickerContentItemViewModel">
-        <Image
-            Width="120"
-            Height="120"
+        <!--  The sticker renders inside a transparent, paddingless button so tapping it opens its detail.  -->
+        <Button
+            Padding="0"
             HorizontalAlignment="Left"
-            Source="{x:Bind ImageSource}"
-            Stretch="Uniform" />
+            AutomationProperties.Name="스티커 정보"
+            Background="Transparent"
+            BorderThickness="0"
+            Command="{x:Bind HandleTapCommand}"
+            ToolTipService.ToolTip="스티커 정보">
+            <Image
+                Width="120"
+                Height="120"
+                Source="{x:Bind ImageSource}"
+                Stretch="Uniform" />
+        </Button>
     </DataTemplate>
 
     <DataTemplate x:Key="PollContentTemplate" x:DataType="vm:PollContentItemViewModel">

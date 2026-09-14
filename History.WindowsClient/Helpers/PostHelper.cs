@@ -58,7 +58,7 @@ public static partial class PostHelper
 
                     FlushMediaContents();
                     FlushTextTypeContents();
-                    contentViewModels.Add(new StickerContentItemViewModel(stickerContent));
+                    contentViewModels.Add(new StickerContentItemViewModel(stickerContent, baseViewModel));
                 }
                 else if (content is ExternalUrlContent externalUrlContent)
                 {
