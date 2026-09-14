@@ -7,6 +7,7 @@ using History.Commons.Api.User;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
+using History.WindowsClient.ViewModels.Notifications;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -17,12 +18,17 @@ public partial class MainPageViewModel : BaseViewModel, IRecipient<KakaoStoryFea
     private readonly SemaphoreSlim _badgeFetchSemaphore = new(1, 1);
     private string _sideBarTag = "Friendship";
 
-    public MainPageViewModel()
+    public MainPageViewModel(NotificationsViewModel notifications)
     {
+        Notifications = notifications;
         KakaoStorySelectorVisibility = KakaoStoryFeatureGateHelper.IsEnabled ? Visibility.Visible : Visibility.Collapsed;
         WeakReferenceMessenger.Default.Register((IRecipient<KakaoStoryFeaturesEnabledMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<LogoutRequestedMessage>)this);
     }
+
+    // Per-platform unread notification counts shown on the mode selector badges; the active
+    // platform's count is the same value the title bar notification badge shows.
+    public NotificationsViewModel Notifications { get; }
 
     // Revealed only after the hidden unlock, so the Kakao Story account mode is unreachable
     // while the feature set is locked.

@@ -151,7 +151,7 @@ public partial class App : Application
         serviceCollection.AddSingleton<BadgePollerService>();
         serviceCollection.AddTransient(sp => new LoginPageViewModel(sp.GetRequiredService<ApplicationSettingsService>()));
         serviceCollection.AddTransient(sp => new RegisterPageViewModel(sp.GetRequiredService<ApplicationSettingsService>()));
-        serviceCollection.AddTransient(sp => new MainPageViewModel());
+        serviceCollection.AddTransient(sp => new MainPageViewModel(sp.GetRequiredService<NotificationsViewModel>()));
         serviceCollection.AddTransient(sp => new HistoryTimelinePageViewModel());
         serviceCollection.AddTransient(sp => new KakaoTimelinePageViewModel());
         serviceCollection.AddTransient(sp => new PublicPostsPageViewModel());
@@ -160,7 +160,7 @@ public partial class App : Application
         serviceCollection.AddTransient(sp => new HistoryProfilePageViewModel());
         serviceCollection.AddTransient(sp => new KakaoProfilePageViewModel());
         serviceCollection.AddTransient(sp => new SearchResultPageViewModel());
-        serviceCollection.AddTransient(sp => new NotificationsFlyoutViewModel());
+        serviceCollection.AddSingleton(sp => new NotificationsViewModel());
         serviceCollection.AddTransient(sp => new SettingsWindowViewModel(sp.GetRequiredService<ApplicationSettingsService>(), sp.GetRequiredService<ApplicationThemeService>(), sp.GetRequiredService<StoreUpdateService>(), sp.GetRequiredService<PushNotificationService>()));
         serviceCollection.AddTransient(sp => new ExtrasWindowViewModel());
         serviceCollection.AddTransient(sp => new ExtrasPageViewModel());

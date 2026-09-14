@@ -43,10 +43,12 @@
                 CornerRadius="8"
                 SelectionChanged="OnModeSelectorBarSelectionChanged">
                 <SelectorBarItem
+                    segmented:SelectorBarSegmented.BadgeValue="{x:Bind ViewModel.Notifications.HistoryUnreadCount, Mode=OneWay}"
                     IsSelected="True"
                     Tag="History"
                     Text="히스토리" />
                 <SelectorBarItem
+                    segmented:SelectorBarSegmented.BadgeValue="{x:Bind ViewModel.Notifications.KakaoStoryUnreadCount, Mode=OneWay}"
                     Tag="KakaoStory"
                     Text="카카오스토리"
                     Visibility="{x:Bind ViewModel.KakaoStorySelectorVisibility, Mode=OneWay}" />

@@ -27,7 +27,7 @@ public sealed partial class MainWindow : BaseWindow,
 {
     private static MainWindow s_instance;
     private readonly MainWindowViewModel _viewModel;
-    private readonly NotificationsFlyoutViewModel _notificationsViewModel;
+    private readonly NotificationsViewModel _notificationsViewModel;
     private readonly BadgePollerService _badgePollerService;
 
     public static MainWindow Instance => s_instance;
@@ -236,7 +236,7 @@ public sealed partial class MainWindow : BaseWindow,
     // Keeps the notification button badge in sync with the flyout's unread notification count.
     private void OnNotificationsViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName != nameof(NotificationsFlyoutViewModel.UnreadCount)) return;
+        if (e.PropertyName != nameof(NotificationsViewModel.UnreadCount)) return;
         if (DispatcherQueue.HasThreadAccess) UpdateInfoBadgeValue(NotificationsInfoBadge, _notificationsViewModel.UnreadCount);
         else DispatcherQueue.TryEnqueue(() => UpdateInfoBadgeValue(NotificationsInfoBadge, _notificationsViewModel.UnreadCount));
     }

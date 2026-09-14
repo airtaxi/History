@@ -12,11 +12,11 @@ namespace History.WindowsClient.Controls;
 
 public sealed partial class NotificationsFlyoutControl : BaseControl, IRecipient<ExtrasWindowRequestedMessage>
 {
-    public override NotificationsFlyoutViewModel ViewModel { get; }
+    public override NotificationsViewModel ViewModel { get; }
 
     public NotificationsFlyoutControl()
     {
-        ViewModel = App.Services.GetRequiredService<NotificationsFlyoutViewModel>();
+        ViewModel = App.Services.GetRequiredService<NotificationsViewModel>();
 
         InitializeComponent();
 
