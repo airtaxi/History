@@ -150,7 +150,7 @@ public sealed partial class MainWindow : BaseWindow,
         if (e.SourcePageType == typeof(MainPage))
         {
             _ = _notificationsViewModel.RefreshAsync();
-            _notificationBadgePollerService.Start();
+            _badgePollerService.Start();
         }
         var isToolbarVisible = e.SourcePageType == typeof(LoginPage) || e.SourcePageType == typeof(RegisterPage) || e.SourcePageType == typeof(BrowserPage) ? Visibility.Collapsed : Visibility.Visible;
         RefreshButton.Visibility = isToolbarVisible;

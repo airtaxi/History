@@ -9,7 +9,7 @@ namespace History.WindowsClient.Services;
 // and a failed target is skipped silently.
 public sealed class BadgePollerService : IDisposable
 {
-    private const bool IsPollLoggingEnabled = true;
+    private static readonly bool s_isPollLoggingEnabled = true;
     private static readonly TimeSpan s_pollInterval = TimeSpan.FromSeconds(10);
 
     private readonly List<Func<Task>> _refreshTargets = [];
@@ -82,7 +82,7 @@ public sealed class BadgePollerService : IDisposable
 
     private static void LogPoll(string message)
     {
-        if (!IsPollLoggingEnabled) return;
+        if (!s_isPollLoggingEnabled) return;
         Debug.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] {message}");
     }
 }
