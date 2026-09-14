@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.KakaoStory;
@@ -90,7 +90,7 @@ public partial class KakaoStoryNotificationViewModel : BaseNotificationViewModel
         var scheme = Notification.scheme;
         if (scheme == null || !scheme.Contains("?profile_id=") || !scheme.Contains("activities/")) return null;
 
-        var postId = scheme.Split(new[] { "activities/" }, StringSplitOptions.None)[1];
+        var postId = scheme.Split(["activities/"], StringSplitOptions.None)[1];
         var queryIndex = postId.IndexOf('?');
         if (queryIndex >= 0) postId = postId[..queryIndex];
         return postId;

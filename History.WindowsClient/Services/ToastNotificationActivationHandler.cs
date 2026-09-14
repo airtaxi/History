@@ -167,7 +167,7 @@ public static class ToastNotificationActivationHandler
     {
         if (!scheme.Contains("?profile_id=") || !scheme.Contains("activities/")) return null;
 
-        var postId = scheme.Split(new[] { "activities/" }, StringSplitOptions.None)[1];
+        var postId = scheme.Split(["activities/"], StringSplitOptions.None)[1];
         var queryIndex = postId.IndexOf('?');
         if (queryIndex >= 0) postId = postId[..queryIndex];
         return postId;
