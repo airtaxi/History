@@ -14,7 +14,6 @@ using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.UI;
 
 namespace History.WindowsClient.Controls;
@@ -157,9 +156,12 @@ public sealed partial class BodyContentControl : BaseControl
     }
 
     // GIF/WebP animation is not supported by BitmapImage; only the first frame is shown.
+    // The image source loads asynchronously because Kakao Story emoticons require the
+    // Referer-aware loader instead of BitmapImage's direct URI fetch.
     private void AppendStickerInline(InlineCollection inlines, StickerSegmentViewModel segment)
     {
-        var image = new Image { Width = StickerImageWidth, Stretch = Stretch.Uniform, Source = new BitmapImage(new Uri(segment.ImageUri)) };
+        var image = new Image { Width = StickerImageWidth, Stretch = Stretch.Uniform };
+        _ = LoadStickerImageAsync(image, segment.ImageUri);
 
         // The sticker image renders inside a transparent, paddingless button so tapping it opens
         // the sticker detail window.
@@ -176,6 +178,8 @@ public sealed partial class BodyContentControl : BaseControl
 
         inlines.Add(new InlineUIContainer { Child = button });
     }
+
+    private static async Task LoadStickerImageAsync(Image image, string mediaId) => image.Source = await KakaoEmoticonImageLoader.CreateImageSourceAsync(mediaId);
 
     // Opens the sticker detail window for the tapped inline sticker; Kakao Story emoticons carry
     // no sticker id and show the unsupported notice instead.

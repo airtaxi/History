@@ -35,7 +35,7 @@
             <Image
                 Width="120"
                 Height="120"
-                Source="{x:Bind ImageSource}"
+                Source="{x:Bind ImageSource, Mode=OneWay}"
                 Stretch="Uniform" />
         </Button>
     </DataTemplate>
