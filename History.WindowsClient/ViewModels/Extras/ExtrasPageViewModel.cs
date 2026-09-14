@@ -26,7 +26,7 @@ public sealed partial class ExtrasPageViewModel : BaseViewModel
     private async Task OpenStickersAsync() => await ShowUnderImplementationMessageAsync();
 
     [RelayCommand]
-    private void OpenInviteCodes() => RequestNavigation(typeof(InviteCodesPage), null);
+    private void OpenInviteCodes() => RequestNavigation(typeof(InviteCodesPage));
 
     // TODO: Open the invite code request management page once it exists.
     [RelayCommand]

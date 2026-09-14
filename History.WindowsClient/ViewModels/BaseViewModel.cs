@@ -146,7 +146,7 @@ public abstract partial class BaseViewModel : ObservableObject
 
     // Requests the owning window to navigate its root frame to the given page type with
     // the given parameter (fulfilled by the host page or control).
-    public void RequestNavigation(Type pageType, object parameter)
+    public void RequestNavigation(Type pageType, object parameter = null)
     {
         var args = new NavigationRequestedEventArgs(pageType, parameter);
         NavigationRequested?.Invoke(this, args);
