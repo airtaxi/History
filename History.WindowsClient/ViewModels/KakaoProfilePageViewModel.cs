@@ -30,7 +30,7 @@ public partial class KakaoProfilePageViewModel : BaseProfilePageViewModel, IReci
     }
 
     // Stores the navigation parameter only (XamlRoot-independent, called from
-    // OnNavigatedTo); the actual loading runs from OnLoaded.
+    // OnNavigatedTo); the actual loading runs from OnFirstPageLoad.
     public override void Initialize(string kakaoUserId) => _kakaoUserId = kakaoUserId;
 
     public override async Task RefreshAsync()

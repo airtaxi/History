@@ -12,14 +12,15 @@
 
 ## Initial Load Pattern and XamlRoot Rules
 
-- Pages perform **initial data loading in OnLoaded, not OnNavigatedTo** (run once with the `_isFirstLoad` guard — see the `Pages/MainPage.xaml.cs` and `Pages/TimelinePage.xaml.cs` pattern).
+- Pages perform **initial data loading in `OnFirstPageLoad`, not `OnNavigatedTo`**: derived page roots declare `Loaded="OnPageLoaded"` in XAML, and `BasePage` (`Pages/BasePage.cs`) runs `OnFirstPageLoad` exactly once per page instance through its `_isFirstLoad` guard (see `Pages/TimelinePage.xaml.cs` for a minimal override).
+- `BasePage` owns the page lifecycle: it subscribes the common view-model events (dialogs, pickers, loading, navigation) in `OnNavigatedTo` and detaches them in `OnNavigatedFrom`; derived pages override `SubscribeViewModelEvents`/`UnsubscribeViewModelEvents` and call `base` to add page-specific events, and read `IsInForeground` instead of tracking their own active-page flag.
 - **At OnNavigatedTo, the page's XamlRoot is null**, so view-model calls started at that point that touch XamlRoot-dependent behaviors (loading overlay, dialogs, pickers) can cause behavioral errors.
 - Therefore, **view-model methods called from OnNavigatedTo must not call the XamlRoot-dependent methods of `BaseViewModel` (`ViewModels/BaseViewModel.cs`).** Those methods:
   - Loading: `ExecuteRequestAsync`/`ExecuteWithLoadingAsync`/`ShowLoading`/`HideLoading`
   - Dialogs: `ShowMessageDialogAsync`/`ShowInputDialogAsync`/`ShowContentDialogAsync`
   - Pickers: `PickFileAsync`/`PickFilesAsync`/`SaveFileAsync`/`PickFolderAsync`
   - Navigation: `RequestNavigation`
-- Defer initial work that needs loading/dialogs until after OnLoaded; in OnNavigatedTo, run only XamlRoot-independent logic via `base.OnNavigatedTo` (event subscription, parameter setup, etc.).
+- Defer initial work that needs loading/dialogs until `OnFirstPageLoad`; in `OnNavigatedTo`, run only XamlRoot-independent logic via `base.OnNavigatedTo` (parameter setup, etc.).
 - Loading request flow: `BaseViewModel` events (`LoadingStateRequested`/`ShowLoadingRequested`/`HideLoadingRequested`) → `BasePage`/`BaseControl` sends WRM messages → `MainWindow` receives them and shows/hides the overlay.
 
 ## Standard Navigation

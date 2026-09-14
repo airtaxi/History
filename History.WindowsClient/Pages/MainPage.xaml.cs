@@ -57,26 +57,11 @@ public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSugges
         WeakReferenceMessenger.Default.Send(new DiscoverModeChangedMessage(false));
     }
 
-    private bool _isInForeground;
     private bool _isDiscoverMode;
-
-    protected override void OnNavigatedTo(NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
-
-        _isInForeground = true;
-    }
-
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        base.OnNavigatedFrom(e);
-
-        _isInForeground = false;
-    }
 
     public void Receive(RefreshButtonClickedMessage message)
     {
-        if (_isInForeground)
+        if (IsInForeground)
         {
             _ = ViewModel.RefreshAsync();
             _ = ViewModel.RefreshSideBarAsync();
@@ -120,12 +105,8 @@ public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSugges
         finally { _isSyncingModeSelector = false; }
     }
 
-    private bool _isFirstLoad;
-    private async void OnLoaded(object sender, RoutedEventArgs e)
+    protected override async void OnFirstPageLoad()
     {
-        if (_isFirstLoad) return;
-        _isFirstLoad = true;
-
         if (CommonShared.LastUsedKakaoStoryMode)
         {
             // Restore the saved mode; when the login is cancelled the view model stays

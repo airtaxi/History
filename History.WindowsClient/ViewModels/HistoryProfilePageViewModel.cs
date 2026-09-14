@@ -40,7 +40,7 @@ public partial class HistoryProfilePageViewModel : BaseProfilePageViewModel,
     public void Receive(PostPinnedMessage message) => _ = RefreshAsync();
 
     // Stores the navigation parameter only (XamlRoot-independent, called from
-    // OnNavigatedTo); the actual loading runs from OnLoaded.
+    // OnNavigatedTo); the actual loading runs from OnFirstPageLoad.
     public override void Initialize(string userId) => _userId = userId;
 
     public override async Task RefreshAsync()

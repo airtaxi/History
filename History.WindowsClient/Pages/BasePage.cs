@@ -2,6 +2,7 @@
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Windows.Storage.Pickers;
@@ -10,44 +11,90 @@ namespace History.WindowsClient.Pages;
 
 public partial class BasePage : Page
 {
+    // The view model instance the shared handlers are attached to, so navigation detaches the
+    // same instance even when a page switches its active view model in between.
+    private BaseViewModel _subscribedViewModel;
+
+    private bool _isFirstLoad;
+
     protected virtual BaseViewModel ViewModel { get; }
+
+    // Whether this page is the active page in its frame; maintained by the navigation lifecycle.
+    protected bool IsInForeground { get; private set; }
+
+    // XAML-declared first-load hook: derived page roots declare Loaded="OnPageLoaded". The base
+    // runs the derived first-load work exactly once per page instance and ignores later passes.
+    protected void OnPageLoaded(object sender, RoutedEventArgs e)
+    {
+        if (_isFirstLoad) return;
+        _isFirstLoad = true;
+
+        OnFirstPageLoad();
+    }
+
+    // Runs once per page instance, after the page's XamlRoot is available; start initial data
+    // loading and other XamlRoot-dependent work here.
+    protected virtual void OnFirstPageLoad() { }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
 
-        ViewModel.MessageDialogRequested += OnMessageDialogRequested;
-        ViewModel.InputDialogRequested += OnInputDialogRequested;
-        ViewModel.ContentDialogRequested += OnContentDialogRequested;
-        ViewModel.SelectionDialogRequested += OnSelectionDialogRequested;
-        ViewModel.FilePickRequested += OnFilePickRequested;
-        ViewModel.FilesPickRequested += OnFilesPickRequested;
-        ViewModel.SaveFileRequested += OnSaveFileRequested;
-        ViewModel.FolderPickRequested += OnFolderPickRequested;
-        ViewModel.LoadingStateRequested += OnLoadingStateRequested;
-        ViewModel.ShowLoadingRequested += OnShowLoadingRequested;
-        ViewModel.HideLoadingRequested += OnHideLoadingRequested;
-        ViewModel.NavigationRequested += OnNavigationRequested;
-        ViewModel.TryNavigateBackRequested += OnTryNavigateBackRequested;
+        SubscribeViewModelEvents();
+        IsInForeground = true;
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
-        base.OnNavigatedFrom(e);
+        IsInForeground = false;
 
-        ViewModel.MessageDialogRequested -= OnMessageDialogRequested;
-        ViewModel.InputDialogRequested -= OnInputDialogRequested;
-        ViewModel.ContentDialogRequested -= OnContentDialogRequested;
-        ViewModel.SelectionDialogRequested -= OnSelectionDialogRequested;
-        ViewModel.FilePickRequested -= OnFilePickRequested;
-        ViewModel.FilesPickRequested -= OnFilesPickRequested;
-        ViewModel.SaveFileRequested -= OnSaveFileRequested;
-        ViewModel.FolderPickRequested -= OnFolderPickRequested;
-        ViewModel.LoadingStateRequested -= OnLoadingStateRequested;
-        ViewModel.ShowLoadingRequested -= OnShowLoadingRequested;
-        ViewModel.HideLoadingRequested -= OnHideLoadingRequested;
-        ViewModel.NavigationRequested -= OnNavigationRequested;
-        ViewModel.TryNavigateBackRequested -= OnTryNavigateBackRequested;
+        UnsubscribeViewModelEvents();
+        base.OnNavigatedFrom(e);
+    }
+
+    // Subscribes the shared view model events every page fulfills on its own content: dialogs,
+    // pickers, loading overlay, and navigation requests. Derived pages override this and call
+    // base to add the events that are specific to their view model.
+    protected virtual void SubscribeViewModelEvents()
+    {
+        if (ViewModel == null) return;
+
+        _subscribedViewModel = ViewModel;
+
+        _subscribedViewModel.MessageDialogRequested += OnMessageDialogRequested;
+        _subscribedViewModel.InputDialogRequested += OnInputDialogRequested;
+        _subscribedViewModel.ContentDialogRequested += OnContentDialogRequested;
+        _subscribedViewModel.SelectionDialogRequested += OnSelectionDialogRequested;
+        _subscribedViewModel.FilePickRequested += OnFilePickRequested;
+        _subscribedViewModel.FilesPickRequested += OnFilesPickRequested;
+        _subscribedViewModel.SaveFileRequested += OnSaveFileRequested;
+        _subscribedViewModel.FolderPickRequested += OnFolderPickRequested;
+        _subscribedViewModel.LoadingStateRequested += OnLoadingStateRequested;
+        _subscribedViewModel.ShowLoadingRequested += OnShowLoadingRequested;
+        _subscribedViewModel.HideLoadingRequested += OnHideLoadingRequested;
+        _subscribedViewModel.NavigationRequested += OnNavigationRequested;
+        _subscribedViewModel.TryNavigateBackRequested += OnTryNavigateBackRequested;
+    }
+
+    protected virtual void UnsubscribeViewModelEvents()
+    {
+        if (_subscribedViewModel == null) return;
+
+        _subscribedViewModel.MessageDialogRequested -= OnMessageDialogRequested;
+        _subscribedViewModel.InputDialogRequested -= OnInputDialogRequested;
+        _subscribedViewModel.ContentDialogRequested -= OnContentDialogRequested;
+        _subscribedViewModel.SelectionDialogRequested -= OnSelectionDialogRequested;
+        _subscribedViewModel.FilePickRequested -= OnFilePickRequested;
+        _subscribedViewModel.FilesPickRequested -= OnFilesPickRequested;
+        _subscribedViewModel.SaveFileRequested -= OnSaveFileRequested;
+        _subscribedViewModel.FolderPickRequested -= OnFolderPickRequested;
+        _subscribedViewModel.LoadingStateRequested -= OnLoadingStateRequested;
+        _subscribedViewModel.ShowLoadingRequested -= OnShowLoadingRequested;
+        _subscribedViewModel.HideLoadingRequested -= OnHideLoadingRequested;
+        _subscribedViewModel.NavigationRequested -= OnNavigationRequested;
+        _subscribedViewModel.TryNavigateBackRequested -= OnTryNavigateBackRequested;
+
+        _subscribedViewModel = null;
     }
 
     private void OnMessageDialogRequested(object sender, MessageDialogRequestedEventArgs args)

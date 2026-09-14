@@ -26,7 +26,7 @@ public abstract partial class BaseProfilePageViewModel : BaseViewModel
     public abstract string UserId { get; }
 
     // Stores the navigation parameter only (XamlRoot-independent, called from
-    // OnNavigatedTo); the actual loading runs from OnLoaded.
+    // OnNavigatedTo); the actual loading runs from OnFirstPageLoad.
     public abstract void Initialize(string userId);
 
     public abstract Task RefreshAsync();

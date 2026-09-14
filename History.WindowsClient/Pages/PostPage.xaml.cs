@@ -23,7 +23,6 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
     protected override BasePostPageViewModel ViewModel => _activeViewModel;
 
     private BasePostPageViewModel _activeViewModel;
-    private bool _isInForeground;
 
     public PostPage()
     {
@@ -39,7 +38,7 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
 
     public void Receive(RefreshButtonClickedMessage message)
     {
-        if (_isInForeground && ViewModel.Post != null)
+        if (IsInForeground && ViewModel.Post != null)
         {
             _ = ViewModel.Post.RefreshAsync();
         }
@@ -48,7 +47,7 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
     // A comment reply was requested: append the comment author mention to the editor and focus it.
     public void Receive(CommentReplyRequestedMessage message)
     {
-        if (!_isInForeground) return;
+        if (!IsInForeground) return;
         if (ViewModel.CommentBox == null) return;
 
         CommentEditor.AppendMention(message.Value);
@@ -67,17 +66,7 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
         // Kakao Story posts mention Kakao Story friends; History posts keep History friends.
         CommentEditor.IsKakaoMentionMode = ViewModel.Post is KakaoPostViewModel;
 
-        if (ViewModel.CommentBox != null)
-        {
-            ViewModel.CommentBox.CommentSent -= OnCommentBoxCommentSent;
-            ViewModel.CommentBox.CommentSent += OnCommentBoxCommentSent;
-            ViewModel.CommentBox.StickerSelected -= OnCommentBoxStickerSelected;
-            ViewModel.CommentBox.StickerSelected += OnCommentBoxStickerSelected;
-        }
-
         base.OnNavigatedTo(e);
-
-        _isInForeground = true;
 
         _ = MarkPostNotificationsAsReadAsync();
 
@@ -85,17 +74,27 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshButtonClicked
         ScrollCommentsToEnd();
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    // The comment box belongs to the active platform view model, so its events follow the
+    // active view model through the navigation lifecycle.
+    protected override void SubscribeViewModelEvents()
     {
-        base.OnNavigatedFrom(e);
+        base.SubscribeViewModelEvents();
 
-        _isInForeground = false;
+        if (ViewModel.CommentBox == null) return;
 
+        ViewModel.CommentBox.CommentSent += OnCommentBoxCommentSent;
+        ViewModel.CommentBox.StickerSelected += OnCommentBoxStickerSelected;
+    }
+
+    protected override void UnsubscribeViewModelEvents()
+    {
         if (ViewModel.CommentBox != null)
         {
             ViewModel.CommentBox.CommentSent -= OnCommentBoxCommentSent;
             ViewModel.CommentBox.StickerSelected -= OnCommentBoxStickerSelected;
         }
+
+        base.UnsubscribeViewModelEvents();
     }
 
     // Marks notifications that point to this post as read and broadcasts the result so

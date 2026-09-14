@@ -23,25 +23,9 @@ public sealed partial class PublicPostsPage : BasePage, IRecipient<RefreshButton
         WeakReferenceMessenger.Default.Register(this);
     }
 
-    private bool _isInForeground;
-
-    protected override void OnNavigatedTo(NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
-
-        _isInForeground = true;
-    }
-
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        base.OnNavigatedFrom(e);
-
-        _isInForeground = false;
-    }
-
     public void Receive(RefreshButtonClickedMessage message)
     {
-        if (_isInForeground)
+        if (IsInForeground)
         {
             _ = ViewModel.RefreshAsync();
         }
@@ -56,14 +40,7 @@ public sealed partial class PublicPostsPage : BasePage, IRecipient<RefreshButton
         await ViewModel.LoadMoreAsync();
     }
 
-    private bool _isFirstLoad;
-    private async void OnLoaded(object sender, RoutedEventArgs e)
-    {
-        if (_isFirstLoad) return;
-        _isFirstLoad = true;
-
-        await ViewModel.RefreshAsync();
-    }
+    protected override async void OnFirstPageLoad() => await ViewModel.RefreshAsync();
 
     private void OnMainScrollViewViewChanged(ScrollView sender, object args) => UpdateScrollToTopButtonVisibility(sender.VerticalOffset);
 

@@ -15,12 +15,5 @@ public sealed partial class LoginPage : BasePage
         InitializeComponent();
     }
 
-    private bool _isFirstLoad;
-    private async void OnLoaded(object sender, RoutedEventArgs e)
-    {
-        if (_isFirstLoad) return;
-        _isFirstLoad = true;
-
-        await ViewModel.TryAutoLoginAsync();
-    }
+    protected override async void OnFirstPageLoad() => await ViewModel.TryAutoLoginAsync();
 }

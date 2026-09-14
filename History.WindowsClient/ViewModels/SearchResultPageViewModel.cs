@@ -25,7 +25,7 @@ public partial class SearchResultPageViewModel : BaseViewModel, IRecipient<Value
     public bool IsEmpty => Items.Count == 0;
 
     // Stores the navigation parameter only (XamlRoot-independent, called from
-    // OnNavigatedTo); the actual loading runs from OnLoaded.
+    // OnNavigatedTo); the actual loading runs from OnFirstPageLoad.
     public void Initialize(string query) => _query = query?.Trim();
 
     public SearchResultPageViewModel() => WeakReferenceMessenger.Default.Register(this);

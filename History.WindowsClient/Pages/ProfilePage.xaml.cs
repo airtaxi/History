@@ -43,7 +43,6 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClic
     }
 
     private BaseProfilePageViewModel _activeViewModel;
-    private bool _isInForeground;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -65,15 +64,11 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClic
         else if (!TryInitializeKakaoStory(e.Parameter)) _activeViewModel = _historyViewModel;
 
         base.OnNavigatedTo(e);
-
-        _isInForeground = true;
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-
-        _isInForeground = false;
 
         // Leaving through back navigation removes this page from the frame history,
         // so its cached view model can never be revisited and is released.
@@ -86,7 +81,7 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClic
 
     public void Receive(RefreshButtonClickedMessage message)
     {
-        if (_isInForeground)
+        if (IsInForeground)
         {
             _ = ViewModel.RefreshAsync();
         }
@@ -101,12 +96,8 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClic
         await ViewModel.LoadMoreAsync();
     }
 
-    private bool _isFirstLoad;
-    private async void OnLoaded(object sender, RoutedEventArgs e)
+    protected override async void OnFirstPageLoad()
     {
-        if (_isFirstLoad) return;
-        _isFirstLoad = true;
-
         // A cached view model already holds the loaded feed, so restore its stored
         // scroll offset instead of reloading, which would reset the position.
         if (ViewModel.Profile != null)
@@ -130,7 +121,7 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshButtonClic
     {
         // Layout passes running before the stored offset is restored would overwrite
         // it with the initial zero, so capture only after the restore point.
-        if (_isInForeground && !_shouldRestoreScroll) ViewModel.ScrollHeight = sender.VerticalOffset;
+        if (IsInForeground && !_shouldRestoreScroll) ViewModel.ScrollHeight = sender.VerticalOffset;
 
         UpdateScrollToTopButtonVisibility(sender.VerticalOffset);
     }
