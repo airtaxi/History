@@ -28,12 +28,12 @@ public sealed partial class StickersPage : BasePage, IRecipient<RefreshRequested
         if (IsInForeground) _ = ViewModel.RefreshAsync();
     }
 
-    // Runs the sticker create stub for the window's add button, with the same window routing
-    // as the refresh requests.
+    // Opens the sticker create window for the window's add button, with the same window
+    // routing as the refresh requests.
     public void Receive(StickerCreateRequestedMessage message)
     {
         if (message.XamlRoot != XamlRoot) return;
-        if (IsInForeground) _ = ViewModel.OpenStickerCreateAsync();
+        if (IsInForeground) ViewModel.OpenStickerCreate();
     }
 
     protected override async void OnFirstPageLoad() => await ViewModel.RefreshAsync();

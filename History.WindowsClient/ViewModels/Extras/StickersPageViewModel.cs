@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.Api.Sticker;
-using History.WindowsClient.Models;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml;
 using System.Collections.ObjectModel;
@@ -9,12 +8,10 @@ using System.Collections.ObjectModel;
 namespace History.WindowsClient.ViewModels.Extras;
 
 // Sticker list page view model: first-page loading, infinite scroll pagination and the
-// search query that filters the list. The sticker detail entry point is still a notice.
+// search query that filters the list. The sticker detail and create windows open modally
+// over the owning extras window.
 public sealed partial class StickersPageViewModel : BaseViewModel
 {
-    private const string UnderImplementationTitle = "안내";
-    private const string UnderImplementationMessage = "구현 중인 기능입니다.";
-
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
     private bool _areThereNoMoreStickersToLoad;
     private string _searchQuery;
@@ -97,6 +94,20 @@ public sealed partial class StickersPageViewModel : BaseViewModel
         _ = RefreshAsync();
     }
 
-    // TODO: Replace the notice with the sticker create flow once it exists.
-    public async Task OpenStickerCreateAsync() => await ShowMessageDialogAsync(new MessageDialogParameters(UnderImplementationTitle, UnderImplementationMessage));
+    // Opens the sticker create window modally over this window; the list refreshes when the
+    // create reports a successful creation.
+    public void OpenStickerCreate()
+    {
+        var createWindow = CreateStickerWindow.ShowModal(ExtrasWindow.Instance);
+        createWindow.Closed += OnCreateStickerWindowClosed;
+    }
+
+    // Refreshes the list when the closed create window produced a new sticker.
+    private void OnCreateStickerWindowClosed(object sender, WindowEventArgs args)
+    {
+        if (sender is not CreateStickerWindow createWindow) return;
+        if (!createWindow.ViewModel.HasCreated) return;
+
+        _ = RefreshAsync();
+    }
 }
