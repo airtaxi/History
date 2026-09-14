@@ -117,7 +117,10 @@
                         <FontIcon FontSize="16" Glyph="&#xE712;" />
                         <Button.Flyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem Text="부가메뉴">
+                                <MenuFlyoutItem
+                                    x:Name="ExtrasMenuFlyoutItem"
+                                    Click="OnExtrasMenuFlyoutItemClicked"
+                                    Text="부가메뉴">
                                     <MenuFlyoutItem.Icon>
                                         <FontIcon Glyph="&#xEC7A;" />
                                     </MenuFlyoutItem.Icon>

@@ -200,6 +200,9 @@ public sealed partial class MainWindow : BaseWindow,
     // Opens the settings window as a modal over the main window.
     private void OnSettingsMenuFlyoutItemClicked(object sender, RoutedEventArgs e) => new SettingsWindow(App.Services.GetRequiredService<SettingsWindowViewModel>()).MakeModal(this);
 
+    // Opens the extras window as a modal over the main window.
+    private void OnExtrasMenuFlyoutItemClicked(object sender, RoutedEventArgs e) => new ExtrasWindow(App.Services.GetRequiredService<ExtrasWindowViewModel>()).MakeModal(this);
+
     // Opens the compose window for the current mode: Kakao Story mode composes a new Kakao
     // Story post that mirrors to History, otherwise the History composer opens.
     private void OnComposePostButtonClicked(object sender, RoutedEventArgs e)
