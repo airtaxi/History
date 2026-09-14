@@ -34,6 +34,11 @@ public sealed partial class MediaWindowViewModel : BaseViewModel
         SelectedIndex = Math.Clamp(initialIndex, 0, Math.Max(Medias.Count - 1, 0));
     }
 
+    // Profile media viewer: a single profile photo or background image at original resolution,
+    // without post context or swipe navigation. An absolute Kakao Story URL is accepted in
+    // place of a History media id.
+    public MediaWindowViewModel(string mediaId) : this([new MediaContent { MediaId = mediaId, MimeType = "image/webp" }], PostType.Unwrapped, false, 0) { }
+
     public List<MediaContentViewModel> Medias { get; }
 
     public bool HasMultipleMedias => Medias.Count > 1;

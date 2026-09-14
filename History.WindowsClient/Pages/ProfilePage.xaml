@@ -43,6 +43,11 @@
                                         Background="{ThemeResource SubtleFillColorSecondaryBrush}"
                                         CornerRadius="12">
                                         <Grid>
+                                            <interactivity:Interaction.Behaviors>
+                                                <behaviors:EventTriggerBehavior EventName="Tapped">
+                                                    <behaviors:InvokeCommandAction Command="{x:Bind HandleBackgroundTapCommand}" />
+                                                </behaviors:EventTriggerBehavior>
+                                            </interactivity:Interaction.Behaviors>
                                             <Image Source="{x:Bind BackgroundImageSource, Mode=OneWay}" Stretch="UniformToFill" />
                                             <Border Background="Black" Opacity="0.6" />
                                         </Grid>

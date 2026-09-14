@@ -5,6 +5,7 @@ using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
+using History.WindowsClient.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -393,14 +394,16 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
 
             _baseViewModel.RequestNavigation(typeof(ProfilePage), new KakaoProfileParameters(KakaoUserId));
         }
-        else
-        {
-            // TODO: Open the profile image in the full-screen media viewer once it is implemented.
-        }
+        else if (Profile?.profile_image_url2 == null) _ = _baseViewModel.ShowMessageDialogAsync(new("안내", "프로필 이미지가 없습니다."));
+        else new MediaWindow(new MediaWindowViewModel(Profile.profile_image_url2)).ActivateModal(MainWindow.Instance);
     }
 
-    // TODO: Open the background image in the full-screen media viewer once it is implemented.
-    public override void HandleBackgroundTap() { }
+    // Opens the background image in the full-screen media viewer.
+    public override void HandleBackgroundTap()
+    {
+        if (Profile?.bg_image_url2 == null) _ = _baseViewModel.ShowMessageDialogAsync(new("안내", "배경 이미지가 없습니다."));
+        else new MediaWindow(new MediaWindowViewModel(Profile.bg_image_url2)).ActivateModal(MainWindow.Instance);
+    }
 
     private string GetFriendButtonText()
     {

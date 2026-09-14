@@ -11,6 +11,7 @@ using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
+using History.WindowsClient.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -391,14 +392,16 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
     public override void HandleProfileTap(string parameter)
     {
         if (parameter == "Navigate") _baseViewModel.RequestNavigation(typeof(ProfilePage), User.UserId);
-        else
-        {
-            // TODO: Open the profile image in the full-screen media viewer once it is implemented.
-        }
+        else if (User.ProfileMediaId == null) _ = _baseViewModel.ShowMessageDialogAsync(new("안내", "프로필 이미지가 없습니다."));
+        else new MediaWindow(new MediaWindowViewModel(User.ProfileMediaId)).ActivateModal(MainWindow.Instance);
     }
 
-    // TODO: Open the background image in the full-screen media viewer once it is implemented.
-    public override void HandleBackgroundTap() { }
+    // Opens the background image in the full-screen media viewer.
+    public override void HandleBackgroundTap()
+    {
+        if (User.BackgroundMediaId == null) _ = _baseViewModel.ShowMessageDialogAsync(new("안내", "배경 이미지가 없습니다."));
+        else new MediaWindow(new MediaWindowViewModel(User.BackgroundMediaId)).ActivateModal(MainWindow.Instance);
+    }
 
     private void Update(UserResponseDto user)
     {
