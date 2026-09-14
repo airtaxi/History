@@ -25,6 +25,7 @@ public sealed partial class MainWindow : BaseWindow,
 {
     private static MainWindow s_instance;
     private readonly NotificationsFlyoutViewModel _notificationsViewModel;
+    private readonly NotificationBadgePollerService _notificationBadgePollerService;
 
     public static MainWindow Instance => s_instance;
 
@@ -40,6 +41,10 @@ public sealed partial class MainWindow : BaseWindow,
         // of truth for the unread notification count shown on the notification button badge.
         _notificationsViewModel = ((NotificationsFlyoutControl)NotificationsFlyout.Content).ViewModel;
         _notificationsViewModel.PropertyChanged += OnNotificationsViewModelPropertyChanged;
+
+        // The poller keeps the unread count fresh while the user is elsewhere in the app;
+        // the view model owns the actual count fetch for the active account mode.
+        _notificationBadgePollerService = new NotificationBadgePollerService(_notificationsViewModel.RefreshUnreadCountAsync);
 
         WeakReferenceMessenger.Default.Register((IRecipient<DiscoverModeChangedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<KakaoStoryModeChangedMessage>)this);
@@ -64,6 +69,8 @@ public sealed partial class MainWindow : BaseWindow,
     // A successful sign-out or account withdrawal returns the window to the login page.
     public void Receive(LogoutRequestedMessage message)
     {
+        _notificationBadgePollerService.Stop();
+        _notificationsViewModel.ResetUnreadCount();
         AppFrame.Navigate(typeof(LoginPage));
         AppFrame.BackStack.Clear();
     }
@@ -88,6 +95,13 @@ public sealed partial class MainWindow : BaseWindow,
 
         AppFrame.GoBack();
         return true;
+    }
+
+    // Detaches the badge polling loop when the window closes so the timer does not outlive it.
+    protected override void OnWindowClosed(object sender, WindowEventArgs args)
+    {
+        _notificationBadgePollerService.Stop();
+        base.OnWindowClosed(sender, args);
     }
 
     protected override void ShowLoading(string message = null)
@@ -130,8 +144,13 @@ public sealed partial class MainWindow : BaseWindow,
         if (e.SourcePageType == typeof(MainPage) || e.SourcePageType == typeof(LoginPage)) frame.BackStack.Clear();
         AppTitleBar.IsBackButtonVisible = frame.CanGoBack;
         MainSearchBox.Visibility = e.SourcePageType == typeof(MainPage) ? Visibility.Visible : Visibility.Collapsed;
-        // Refreshes the unread badge whenever the main page appears so the count is current right after login.
-        if (e.SourcePageType == typeof(MainPage)) _ = _notificationsViewModel.RefreshAsync();
+        // Refreshes the unread badge whenever the main page appears so the count is current
+        // right after login, and keeps the badge polling running while the user is signed in.
+        if (e.SourcePageType == typeof(MainPage))
+        {
+            _ = _notificationsViewModel.RefreshAsync();
+            _notificationBadgePollerService.Start();
+        }
         var isToolbarVisible = e.SourcePageType == typeof(LoginPage) || e.SourcePageType == typeof(RegisterPage) || e.SourcePageType == typeof(BrowserPage) ? Visibility.Collapsed : Visibility.Visible;
         RefreshButton.Visibility = isToolbarVisible;
         NotificationsButton.Visibility = isToolbarVisible;

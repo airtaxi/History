@@ -114,6 +114,46 @@ public partial class NotificationsFlyoutViewModel : BaseViewModel, IRecipient<Ka
         }
     }
 
+    // Quiet badge refresh for the title bar badge poller: fetches the active platform's
+    // notification list and updates only the unread count, leaving the loaded list untouched.
+    // The list refresh semaphore is shared so a poll cycle never overlaps a list refresh, and
+    // a failed cycle is skipped silently.
+    public async Task RefreshUnreadCountAsync()
+    {
+        if (_fetchSemaphore.CurrentCount == 0) return;
+
+        try
+        {
+            await _fetchSemaphore.WaitAsync();
+
+            if (!CommonShared.LastUsedKakaoStoryMode)
+            {
+                var notifications = await CommonShared.ApiHandler.ExecuteRequestAsync(new GetNotifications(null, Constants.PageSize));
+
+                // Signed out while the request was in flight: the sign-out badge reset must stand.
+                if (CommonShared.ApiHandler == ApiHandler.Public) return;
+
+                UnreadCount = notifications?.Count(x => x.IsUnread) ?? 0;
+            }
+            else
+            {
+                var notifications = await FetchKakaoStoryNotificationsAsync(promptLoginOnExpiredSession: false);
+                if (notifications == null) return;
+
+                // Signed out while the request was in flight: the sign-out badge reset must stand.
+                if (CommonShared.ApiHandler == ApiHandler.Public) return;
+
+                UnreadCount = notifications.Count(x => x.is_new);
+            }
+        }
+        catch (HttpRequestException) { }
+        finally { _fetchSemaphore.Release(); }
+    }
+
+    // Clears the badge count on sign-out so the badge hides immediately and the next login
+    // refreshes it from the new session.
+    public void ResetUnreadCount() => UnreadCount = 0;
+
     // Fetches the full Kakao Story notification list. A missing or expired token skips the
     // fetch silently unless the caller wants the login flow. Background mode keeps a revoked
     // session from popping the login modal during the quiet badge refresh.

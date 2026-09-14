@@ -12,6 +12,7 @@
     Title="History.WindowsClient"
     Width="1400"
     Height="800"
+    Closed="OnWindowClosed"
     mc:Ignorable="d">
     <Window.SystemBackdrop>
         <MicaBackdrop />
