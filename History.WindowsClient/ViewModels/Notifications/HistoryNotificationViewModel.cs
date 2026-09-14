@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
+using History.Commons.Api.Message;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
@@ -65,13 +66,28 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel, I
     {
         var type = Notification.Type;
 
-        if (type == NotificationType.Message) return; // TODO: Open the message thread once a message page exists.
+        if (type == NotificationType.Restriction)
+        {
+            _ = MarkAsReadAsync();
+            await RestrictionNoticeHelper.ShowAsync(_baseViewModel, Notification.Body);
+            return;
+        }
         else if (type == NotificationType.InviteCodeRequest || type == NotificationType.InviteCodeRequestResult) return; // TODO: Open the invite code request pages once they exist.
-        else if (type == NotificationType.Restriction) return; // TODO: Show the restriction notice with the appeal flow.
 
         if (Notification.Data == null) return;
 
-        if (type == NotificationType.FriendRequest)
+        if (type == NotificationType.Message)
+        {
+            if (!Notification.Data.TryGetValue("MessageId", out var messageId)) return;
+
+            var messageResult = await _baseViewModel.ExecuteRequestAsync(new GetMessage(messageId));
+            if (!messageResult.IsSuccess) return;
+
+            _ = MarkAsReadAsync();
+            var messageViewModel = new HistoryMessageViewModel(messageResult.Value, _baseViewModel);
+            await messageViewModel.HandleTapAsync();
+        }
+        else if (type == NotificationType.FriendRequest)
         {
             if (!Notification.Data.TryGetValue("UserId", out var userId)) return;
 

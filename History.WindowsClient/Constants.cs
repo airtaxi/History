@@ -23,4 +23,7 @@ public static class Constants
 
     // Sticker load failure message shown when the picked sticker image cannot be fetched.
     public const string StickerLoadErrorMessage = "스티커 이미지를 불러올 수 없습니다.";
+
+    // Official Discord invite used for restriction appeal requests.
+    public const string DiscordInviteUrl = "https://discord.com/invite/g9jk3GR3vD";
 }

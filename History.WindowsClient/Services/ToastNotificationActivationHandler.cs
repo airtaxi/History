@@ -1,4 +1,5 @@
 using History.Commons;
+using History.Commons.Api.Message;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
@@ -6,6 +7,7 @@ using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
+using History.WindowsClient.ViewModels;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.Specialized;
@@ -28,9 +30,7 @@ public static class ToastNotificationActivationHandler
         var typeText = parameters["Type"];
         if (string.IsNullOrEmpty(typeText) || !Enum.TryParse<NotificationType>(typeText, out var type)) return;
 
-        if (type == NotificationType.Message) return; // TODO: Open the message thread once a message page exists.
         if (type == NotificationType.InviteCodeRequest || type == NotificationType.InviteCodeRequestResult) return; // TODO: Open the invite code request pages once they exist.
-        if (type == NotificationType.Restriction) return; // TODO: Show the restriction notice with the appeal flow.
         if (type == NotificationType.Birthday) return; // TODO: Open the birthday profile once the birthday flow exists.
 
         // A toast clicked during a cold start can arrive before the login completes; the
@@ -44,6 +44,18 @@ public static class ToastNotificationActivationHandler
         if (type == NotificationType.KakaoStory)
         {
             await HandleKakaoStoryAsync(parameters);
+            return;
+        }
+
+        if (type == NotificationType.Message)
+        {
+            await HandleMessageAsync(parameters);
+            return;
+        }
+
+        if (type == NotificationType.Restriction)
+        {
+            await HandleRestrictionAsync(parameters);
             return;
         }
 
@@ -120,6 +132,33 @@ public static class ToastNotificationActivationHandler
         }
 
         await ShowMessageDialogAsync("안내", "아직 지원하지 않는 알림입니다.");
+    }
+
+    // Opens the message notification through the main window view model so the message dialog
+    // and the reply flow run against the window-hosted dialogs.
+    private static async Task HandleMessageAsync(NameValueCollection parameters)
+    {
+        var messageId = parameters["MessageId"];
+        if (string.IsNullOrEmpty(messageId)) return;
+
+        try
+        {
+            var message = await CommonShared.ApiHandler.ExecuteRequestAsync<MessageResponseDto>(new GetMessage(messageId));
+            MainWindow.SetForegroundWindow();
+            var messageViewModel = new HistoryMessageViewModel(message, MainWindow.Instance.ViewModel);
+            await messageViewModel.HandleTapAsync();
+        }
+        catch { } // The message may have been deleted; the app stays on the current page.
+    }
+
+    // Shows the restriction notice with the appeal flow; the toast data carries the notice body.
+    private static async Task HandleRestrictionAsync(NameValueCollection parameters)
+    {
+        var body = parameters["Body"];
+        if (string.IsNullOrEmpty(body)) return;
+
+        MainWindow.SetForegroundWindow();
+        await RestrictionNoticeHelper.ShowAsync(MainWindow.Instance.ViewModel, body);
     }
 
     // Extracts the post id from a post notification scheme (e.g. "activities/{postId}?...").

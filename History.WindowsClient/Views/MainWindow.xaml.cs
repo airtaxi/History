@@ -24,6 +24,7 @@ public sealed partial class MainWindow : BaseWindow,
     IRecipient<LogoutRequestedMessage>
 {
     private static MainWindow s_instance;
+    private readonly MainWindowViewModel _viewModel;
     private readonly NotificationsFlyoutViewModel _notificationsViewModel;
     private readonly BadgePollerService _badgePollerService;
 
@@ -31,8 +32,13 @@ public sealed partial class MainWindow : BaseWindow,
 
     public static Frame Frame => s_instance.AppFrame;
 
-    public MainWindow() : base()
+    public MainWindowViewModel ViewModel => _viewModel;
+
+    public MainWindow() : this(new MainWindowViewModel()) { }
+
+    private MainWindow(MainWindowViewModel viewModel) : base(viewModel)
     {
+        _viewModel = viewModel;
         s_instance = this;
 
         InitializeComponent();
