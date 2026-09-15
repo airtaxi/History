@@ -65,7 +65,7 @@
 
         <ScrollViewer x:Name="DetailScrollViewer" Grid.Row="1">
             <StackPanel
-                Padding="24,8,24,24"
+                Padding="16,0,16,16"
                 HorizontalAlignment="Stretch"
                 Spacing="12">
                 <!--  Sticker information card  -->

@@ -65,7 +65,7 @@
         </Grid>
 
         <ScrollViewer x:Name="FormScrollViewer" Grid.Row="1">
-            <StackPanel Padding="24,8,24,24" Spacing="16">
+            <StackPanel Padding="16,0,16,16" Spacing="16">
                 <!--  Icon selection  -->
                 <StackPanel Spacing="8">
                     <TextBlock FontWeight="SemiBold" Text="아이콘 *" />

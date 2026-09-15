@@ -9,7 +9,7 @@
     xmlns:views="using:History.WindowsClient.Views"
     Title="부가메뉴"
     Width="760"
-    Height="660"
+    Height="644"
     Closed="OnWindowClosed"
     mc:Ignorable="d">
     <Window.SystemBackdrop>

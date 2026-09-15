@@ -118,7 +118,7 @@
         </DataTemplate>
     </local:BasePage.Resources>
 
-    <Grid Padding="24,8,24,24" RowSpacing="8">
+    <Grid Padding="16,0,16,16" RowSpacing="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />

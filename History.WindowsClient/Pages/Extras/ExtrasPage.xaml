@@ -11,7 +11,7 @@
     NavigationCacheMode="Required"
     mc:Ignorable="d">
 
-    <ScrollViewer x:Name="ExtrasScrollViewer" Padding="24,8,24,24">
+    <ScrollViewer x:Name="ExtrasScrollViewer" Padding="16,0,16,16">
         <StackPanel HorizontalAlignment="Stretch" Spacing="8">
             <Border
                 Margin="0,8,0,12"
