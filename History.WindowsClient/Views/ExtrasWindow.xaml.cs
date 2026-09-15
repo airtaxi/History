@@ -59,6 +59,7 @@ public sealed partial class ExtrasWindow : BaseWindow
         var isInviteCodesPage = e.SourcePageType == typeof(InviteCodesPage);
         var isInviteCodeRequestsPage = e.SourcePageType == typeof(InviteCodeRequestsPage);
         var isStickersPage = e.SourcePageType == typeof(StickersPage);
+        var isModerationRecordsPage = e.SourcePageType == typeof(ModerationRecordsPage);
 
         AppTitleBar.IsBackButtonVisible = ExtrasFrame.CanGoBack;
         AppTitleBar.Title = e.SourcePageType switch
@@ -66,10 +67,11 @@ public sealed partial class ExtrasWindow : BaseWindow
             _ when e.SourcePageType == typeof(StickersPage) => "스티커",
             _ when e.SourcePageType == typeof(InviteCodesPage) => "초대 코드",
             _ when e.SourcePageType == typeof(InviteCodeRequestsPage) => "초대 코드 요청 관리",
+            _ when e.SourcePageType == typeof(ModerationRecordsPage) => "제재 내역",
             _ => "부가메뉴",
         };
         AddButton.Visibility = isStickersPage || isInviteCodesPage ? Visibility.Visible : Visibility.Collapsed;
-        RefreshButton.Visibility = isStickersPage || isInviteCodesPage || isInviteCodeRequestsPage ? Visibility.Visible : Visibility.Collapsed;
+        RefreshButton.Visibility = isStickersPage || isInviteCodesPage || isInviteCodeRequestsPage || isModerationRecordsPage ? Visibility.Visible : Visibility.Collapsed;
 
         // The add button starts the create flow of the hosted page, so its label follows it.
         var addButtonText = isStickersPage ? "스티커 만들기" : "초대 코드 요청";

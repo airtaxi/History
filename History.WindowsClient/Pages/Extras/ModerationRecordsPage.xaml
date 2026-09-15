@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<local:BasePage
+    x:Class="History.WindowsClient.Pages.Extras.ModerationRecordsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:extras="using:History.WindowsClient.ViewModels.Extras"
+    xmlns:local="using:History.WindowsClient.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Loaded="OnPageLoaded"
+    NavigationCacheMode="Required"
+    mc:Ignorable="d">
+
+    <local:BasePage.Resources>
+        <DataTemplate x:Key="ModerationRecordTemplate" x:DataType="extras:ModerationRecordViewModel">
+            <Border
+                Padding="16"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <StackPanel Spacing="8">
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border
+                            Grid.Column="0"
+                            Padding="8,4"
+                            HorizontalAlignment="Left"
+                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                            CornerRadius="12">
+                            <TextBlock
+                                FontSize="{StaticResource CaptionTextBlockFontSize}"
+                                FontWeight="SemiBold"
+                                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                Text="{x:Bind TypeText}" />
+                        </Border>
+
+                        <TextBlock
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="{x:Bind CreatedAtText}" />
+                    </Grid>
+
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind TargetText}" />
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind ModeratorText}" />
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind ReasonText}"
+                        TextWrapping="Wrap" />
+
+                    <StackPanel Spacing="4" Visibility="{x:Bind HasContents, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Text="콘텐츠" />
+                        <ItemsControl ItemTemplateSelector="{StaticResource PostContentSelector}" ItemsSource="{x:Bind Contents}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+    </local:BasePage.Resources>
+
+    <Grid Padding="24,8,24,24">
+        <RefreshContainer RefreshRequested="OnRefreshRequested">
+            <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                <ItemsRepeater
+                    x:Name="MainItemsRepeater"
+                    ElementPrepared="OnMainItemsRepeaterElementPrepared"
+                    ItemTemplate="{StaticResource ModerationRecordTemplate}"
+                    ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="8" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+            </ScrollViewer>
+        </RefreshContainer>
+
+        <TextBlock
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Style="{StaticResource SubtitleTextBlockStyle}"
+            Text="제재 내역이 없습니다"
+            Visibility="{x:Bind ViewModel.IsEmpty, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+    </Grid>
+</local:BasePage>

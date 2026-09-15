@@ -15,13 +15,15 @@ public static partial class PostHelper
 
     // Fills content items with the batching rules below:
     // consecutive media contents are batched, consecutive text-type contents are
-    // batched, and stickers/external URLs/polls flush both batches.
-    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, PostType postType, BaseViewModel baseViewModel, bool isParentPost = false, string postId = null)
+    // batched, and stickers/external URLs/polls flush both batches. Moderation records
+    // drop media (the files are already deleted) and polls (the target post is gone).
+    public static List<IContentViewModel> GenerateContentViewModels(IEnumerable<BaseContent> contents, PostType postType, BaseViewModel baseViewModel, bool isParentPost = false, string postId = null, bool forModerationRecord = false)
     {
         var contentViewModels = new List<IContentViewModel>();
 
         var mediaContents = new List<MediaContent>();
         var allMediaContents = contents?.OfType<MediaContent>().ToList() ?? [];
+        if (forModerationRecord) allMediaContents = [];
         void FlushMediaContents()
         {
             if (mediaContents.Count > 0)
@@ -66,13 +68,13 @@ public static partial class PostHelper
                     FlushTextTypeContents();
                     contentViewModels.Add(new ExternalUrlContentItemViewModel(externalUrlContent, baseViewModel));
                 }
-                else if (content is PollContent pollContent)
+                else if (!forModerationRecord && content is PollContent pollContent)
                 {
                     FlushMediaContents();
                     FlushTextTypeContents();
                     contentViewModels.Add(new PollContentItemViewModel(pollContent, postId));
                 }
-                else if (content is MediaContent mediaContent)
+                else if (!forModerationRecord && content is MediaContent mediaContent)
                 {
                     FlushTextTypeContents();
                     mediaContents.Add(mediaContent);

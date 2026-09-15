@@ -38,9 +38,8 @@ public sealed partial class ExtrasPageViewModel : BaseViewModel
     [RelayCommand]
     private async Task OpenKakaoStoryExtrasAsync() => await ShowUnderImplementationMessageAsync();
 
-    // TODO: Open the moderation records page once it exists.
     [RelayCommand]
-    private async Task OpenModerationRecordsAsync() => await ShowUnderImplementationMessageAsync();
+    private void OpenModerationRecords() => RequestNavigation(typeof(ModerationRecordsPage));
 
     // TODO: Remove this helper once every entry above is implemented.
     private async Task ShowUnderImplementationMessageAsync() => await ShowMessageDialogAsync(new MessageDialogParameters(UnderImplementationTitle, UnderImplementationMessage));
