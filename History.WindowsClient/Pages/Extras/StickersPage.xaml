@@ -118,7 +118,7 @@
         </DataTemplate>
     </local:BasePage.Resources>
 
-    <Grid Padding="16,0,16,16" RowSpacing="8">
+    <Grid RowSpacing="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -137,20 +137,22 @@
         <Grid Grid.Row="1">
             <RefreshContainer RefreshRequested="OnRefreshRequested">
                 <ScrollViewer VerticalScrollBarVisibility="Hidden">
-                    <ItemsRepeater
-                        x:Name="MainItemsRepeater"
-                        ElementPrepared="OnMainItemsRepeaterElementPrepared"
-                        ItemTemplate="{StaticResource StickerTemplate}"
-                        ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
-                        <ItemsRepeater.Layout>
-                            <UniformGridLayout
-                                ItemsStretch="Fill"
-                                MinColumnSpacing="8"
-                                MinItemHeight="92"
-                                MinItemWidth="260"
-                                MinRowSpacing="8" />
-                        </ItemsRepeater.Layout>
-                    </ItemsRepeater>
+                    <Grid Padding="16,0,16,16">
+                        <ItemsRepeater
+                            x:Name="MainItemsRepeater"
+                            ElementPrepared="OnMainItemsRepeaterElementPrepared"
+                            ItemTemplate="{StaticResource StickerTemplate}"
+                            ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+                            <ItemsRepeater.Layout>
+                                <UniformGridLayout
+                                    ItemsStretch="Fill"
+                                    MinColumnSpacing="8"
+                                    MinItemHeight="92"
+                                    MinItemWidth="260"
+                                    MinRowSpacing="8" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                    </Grid>
                 </ScrollViewer>
             </RefreshContainer>
 

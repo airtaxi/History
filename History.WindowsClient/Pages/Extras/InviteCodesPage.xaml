@@ -56,18 +56,20 @@
         </DataTemplate>
     </local:BasePage.Resources>
 
-    <Grid Padding="16,0,16,16">
+    <Grid>
         <RefreshContainer RefreshRequested="OnRefreshRequested">
             <ScrollViewer VerticalScrollBarVisibility="Hidden">
-                <ItemsRepeater
-                    x:Name="MainItemsRepeater"
-                    ElementPrepared="OnMainItemsRepeaterElementPrepared"
-                    ItemTemplate="{StaticResource InviteCodeTemplate}"
-                    ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
-                    <ItemsRepeater.Layout>
-                        <StackLayout Spacing="8" />
-                    </ItemsRepeater.Layout>
-                </ItemsRepeater>
+                <Grid Padding="16,0,16,16">
+                    <ItemsRepeater
+                        x:Name="MainItemsRepeater"
+                        ElementPrepared="OnMainItemsRepeaterElementPrepared"
+                        ItemTemplate="{StaticResource InviteCodeTemplate}"
+                        ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Spacing="8" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                </Grid>
             </ScrollViewer>
         </RefreshContainer>
 
