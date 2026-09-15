@@ -50,7 +50,7 @@
                         <TextBlock
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             Style="{ThemeResource BodyTextBlockStyle}"
-                            Text="게시글 관리, 스티커, 초대 코드 등 부가 기능을 한 곳에서 이용하세요."
+                            Text="게시글 관리부터 스티커와 초대 코드까지, 다양한 부가 기능을 이용해 보세요."
                             TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
