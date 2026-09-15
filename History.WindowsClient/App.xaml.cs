@@ -165,6 +165,7 @@ public partial class App : Application
         serviceCollection.AddTransient(sp => new SettingsWindowViewModel(sp.GetRequiredService<ApplicationSettingsService>(), sp.GetRequiredService<ApplicationThemeService>(), sp.GetRequiredService<StoreUpdateService>(), sp.GetRequiredService<PushNotificationService>()));
         serviceCollection.AddTransient(sp => new ExtrasWindowViewModel());
         serviceCollection.AddTransient(sp => new ExtrasPageViewModel());
+        serviceCollection.AddTransient(sp => new BulkPostManagePageViewModel());
         serviceCollection.AddTransient(sp => new InviteCodesPageViewModel());
         serviceCollection.AddTransient(sp => new InviteCodeRequestsPageViewModel());
         serviceCollection.AddTransient(sp => new StickersPageViewModel());

@@ -68,6 +68,7 @@ public sealed partial class ExtrasWindow : BaseWindow
             _ when e.SourcePageType == typeof(InviteCodesPage) => "초대 코드",
             _ when e.SourcePageType == typeof(InviteCodeRequestsPage) => "초대 코드 요청 관리",
             _ when e.SourcePageType == typeof(ModerationRecordsPage) => "제재 내역",
+            _ when e.SourcePageType == typeof(BulkPostManagePage) => "게시글 일괄 관리",
             _ => "부가메뉴",
         };
         AddButton.Visibility = isStickersPage || isInviteCodesPage ? Visibility.Visible : Visibility.Collapsed;
