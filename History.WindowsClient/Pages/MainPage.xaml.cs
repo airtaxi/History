@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
+using History.WindowsClient.Enums;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Services;
 using History.WindowsClient.ViewModels;
@@ -12,7 +13,7 @@ using Microsoft.UI.Xaml.Navigation;
 
 namespace History.WindowsClient.Pages;
 
-public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSuggestBoxQuerySubmittedMessage>, IRecipient<RefreshRequestedMessage>, IRecipient<DiscoverModeToggleRequestedMessage>
+public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSuggestBoxQuerySubmittedMessage>, IRecipient<RefreshRequestedMessage>, IRecipient<MainFeedModeRequestedMessage>
 {
     protected override MainPageViewModel ViewModel { get; }
 
@@ -25,43 +26,48 @@ public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSugges
         // The poller keeps the side bar badge counts fresh while the user is elsewhere in the app.
         App.Services.GetRequiredService<BadgePollerService>().AddRefreshTarget(ViewModel.RefreshBadgeCountsAsync);
 
-        MainFrame.Navigate(typeof(TimelinePage));
+        SetFeedMode(MainFeedMode.Timeline);
 
         WeakReferenceMessenger.Default.Register((IRecipient<MainWindowAutoSuggestBoxQuerySubmittedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<RefreshRequestedMessage>)this);
-        WeakReferenceMessenger.Default.Register((IRecipient<DiscoverModeToggleRequestedMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<MainFeedModeRequestedMessage>)this);
     }
 
     public void Receive(MainWindowAutoSuggestBoxQuerySubmittedMessage message)
     {
-        // Searching leaves the discover feed, so the toggle is cleared before the frame changes.
-        ResetDiscoverMode();
+        // Searching leaves the active feed, so the toggles are cleared before the frame changes.
+        ResetFeedMode();
 
         if (string.IsNullOrWhiteSpace(message.Value)) MainFrame.Navigate(typeof(TimelinePage));
         else MainFrame.Navigate(typeof(SearchResultPage), message.Value);
     }
 
-    public void Receive(DiscoverModeToggleRequestedMessage message) => SetDiscoverMode(!_isDiscoverMode);
+    public void Receive(MainFeedModeRequestedMessage message) => SetFeedMode(message.Value);
 
-    // Switches the left feed area between the timeline and the discover page, then notifies
-    // the window so the title bar toggle stays in sync.
-    private void SetDiscoverMode(bool isDiscoverMode)
+    // Switches the left feed area between the timeline, discover and bookmarks feeds, then
+    // notifies the window so every title bar toggle stays in sync.
+    private void SetFeedMode(MainFeedMode mode)
     {
-        _isDiscoverMode = isDiscoverMode;
-        MainFrame.Navigate(isDiscoverMode ? typeof(PublicPostsPage) : typeof(TimelinePage));
-        WeakReferenceMessenger.Default.Send(new DiscoverModeChangedMessage(_isDiscoverMode));
+        _feedMode = mode;
+        MainFrame.Navigate(mode switch
+        {
+            MainFeedMode.Discover => typeof(PublicPostsPage),
+            MainFeedMode.Bookmarks => typeof(BookmarkedPostsPage),
+            _ => typeof(TimelinePage),
+        });
+        WeakReferenceMessenger.Default.Send(new MainFeedModeChangedMessage(_feedMode));
     }
 
-    // Clears the discover state without touching the frame, for paths that navigate elsewhere.
-    private void ResetDiscoverMode()
+    // Clears the feed mode without touching the frame, for paths that navigate elsewhere.
+    private void ResetFeedMode()
     {
-        if (!_isDiscoverMode) return;
+        if (_feedMode == MainFeedMode.Timeline) return;
 
-        _isDiscoverMode = false;
-        WeakReferenceMessenger.Default.Send(new DiscoverModeChangedMessage(false));
+        _feedMode = MainFeedMode.Timeline;
+        WeakReferenceMessenger.Default.Send(new MainFeedModeChangedMessage(MainFeedMode.Timeline));
     }
 
-    private bool _isDiscoverMode;
+    private MainFeedMode _feedMode = MainFeedMode.Timeline;
 
     public void Receive(RefreshRequestedMessage message)
     {
@@ -93,7 +99,7 @@ public sealed partial class MainPage : BasePage, IRecipient<MainWindowAutoSugges
         try
         {
             var switched = await ViewModel.SwitchModeAsync(isKakaoStoryMode);
-            if (switched) SetDiscoverMode(false);
+            if (switched) SetFeedMode(MainFeedMode.Timeline);
         }
         finally
         {

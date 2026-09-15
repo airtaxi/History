@@ -96,10 +96,24 @@
                         x:Name="DiscoverButton"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Click="OnDiscoverButtonClicked"
+                        Checked="OnDiscoverButtonChecked"
                         ToolTipService.ToolTip="발견"
+                        Unchecked="OnDiscoverButtonUnchecked"
                         Visibility="Collapsed">
                         <FontIcon FontSize="16" Glyph="&#xF6FA;" />
+                    </ToggleButton>
+                    <ToggleButton
+                        x:Name="BookmarksButton"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Checked="OnBookmarksButtonChecked"
+                        ToolTipService.ToolTip="관심글"
+                        Unchecked="OnBookmarksButtonUnchecked"
+                        Visibility="Collapsed">
+                        <FontIcon
+                            x:Name="BookmarksButtonIcon"
+                            FontSize="16"
+                            Glyph="&#xE734;" />
                     </ToggleButton>
                     <Button
                         x:Name="RefreshButton"

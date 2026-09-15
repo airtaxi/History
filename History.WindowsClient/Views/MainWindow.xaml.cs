@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.WindowsClient.Controls;
+using History.WindowsClient.Enums;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
@@ -20,7 +21,7 @@ using WinUIEx;
 namespace History.WindowsClient.Views;
 
 public sealed partial class MainWindow : BaseWindow,
-    IRecipient<DiscoverModeChangedMessage>,
+    IRecipient<MainFeedModeChangedMessage>,
     IRecipient<KakaoStoryModeChangedMessage>,
     IRecipient<LogoutRequestedMessage>,
     IRecipient<ExtrasWindowRequestedMessage>
@@ -29,6 +30,10 @@ public sealed partial class MainWindow : BaseWindow,
     private readonly MainWindowViewModel _viewModel;
     private readonly NotificationsViewModel _notificationsViewModel;
     private readonly BadgePollerService _badgePollerService;
+
+    // True while the title bar toggles are updated from the main page's feed mode, so the
+    // Checked/Unchecked handlers can tell a programmatic change from a user toggle.
+    private bool _isSyncingFeedToggles;
 
     public static MainWindow Instance => s_instance;
 
@@ -55,7 +60,7 @@ public sealed partial class MainWindow : BaseWindow,
         _badgePollerService = App.Services.GetRequiredService<BadgePollerService>();
         _badgePollerService.AddRefreshTarget(_notificationsViewModel.RefreshUnreadCountAsync);
 
-        WeakReferenceMessenger.Default.Register((IRecipient<DiscoverModeChangedMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<MainFeedModeChangedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<KakaoStoryModeChangedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<LogoutRequestedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<ExtrasWindowRequestedMessage>)this);
@@ -70,11 +75,29 @@ public sealed partial class MainWindow : BaseWindow,
 
     public static void SetForegroundWindow() => s_instance.SetForegroundWindow();
 
-    // Keeps the title bar toggle in sync with the left feed selected on the main page.
-    public void Receive(DiscoverModeChangedMessage message) => DiscoverButton.IsChecked = message.Value;
+    // Keeps every title bar feed toggle in sync with the feed selected on the main page.
+    public void Receive(MainFeedModeChangedMessage message)
+    {
+        if (DispatcherQueue.HasThreadAccess) SyncFeedToggles(message.Value);
+        else DispatcherQueue.TryEnqueue(() => SyncFeedToggles(message.Value));
+    }
 
-    // The discover toggle only applies to the main page in History mode.
-    public void Receive(KakaoStoryModeChangedMessage message) => UpdateDiscoverButtonVisibility();
+    // The buttons encode the feed mode as their checked state and the bookmarks button encodes it
+    // as its glyph, so every toggle is rebuilt from the single feed mode value.
+    private void SyncFeedToggles(MainFeedMode mode)
+    {
+        _isSyncingFeedToggles = true;
+        try
+        {
+            DiscoverButton.IsChecked = mode == MainFeedMode.Discover;
+            BookmarksButton.IsChecked = mode == MainFeedMode.Bookmarks;
+            BookmarksButtonIcon.Glyph = mode == MainFeedMode.Bookmarks ? "\uE735" : "\uE734";
+        }
+        finally { _isSyncingFeedToggles = false; }
+    }
+
+    // The feed toggles only apply to the main page in History mode.
+    public void Receive(KakaoStoryModeChangedMessage message) => UpdateFeedToggleVisibility();
 
     // A successful sign-out or account withdrawal returns the window to the login page.
     public void Receive(LogoutRequestedMessage message)
@@ -174,12 +197,17 @@ public sealed partial class MainWindow : BaseWindow,
         NotificationsButton.Visibility = isToolbarVisible;
         ComposePostButton.Visibility = isToolbarVisible;
         MoreButton.Visibility = isToolbarVisible;
-        UpdateDiscoverButtonVisibility();
+        UpdateFeedToggleVisibility();
     }
 
-    // The discover toggle only applies to the main page in History mode, where the
-    // left feed area can switch between the timeline and the discover page.
-    private void UpdateDiscoverButtonVisibility() => DiscoverButton.Visibility = AppFrame.Content is MainPage && !CommonShared.LastUsedKakaoStoryMode ? Visibility.Visible : Visibility.Collapsed;
+    // The feed toggles only apply to the main page in History mode, where the left feed area
+    // can switch between the timeline, the discover feed and the bookmarks feed.
+    private void UpdateFeedToggleVisibility()
+    {
+        var visibility = AppFrame.Content is MainPage && !CommonShared.LastUsedKakaoStoryMode ? Visibility.Visible : Visibility.Collapsed;
+        DiscoverButton.Visibility = visibility;
+        BookmarksButton.Visibility = visibility;
+    }
 
     private void OnAppTitleBarPaneToggleRequested(Microsoft.UI.Xaml.Controls.TitleBar sender, object args) => WeakReferenceMessenger.Default.Send(new ToggleNavigationPaneMessage());
 
@@ -205,7 +233,21 @@ public sealed partial class MainWindow : BaseWindow,
         RefreshRequestedMessage.Send(Content.XamlRoot);
     }
 
-    private void OnDiscoverButtonClicked(object sender, RoutedEventArgs e) => WeakReferenceMessenger.Default.Send(new DiscoverModeToggleRequestedMessage());
+    // A checked toggle requests its own feed; unchecking any toggle returns to the timeline.
+    private void OnDiscoverButtonChecked(object sender, RoutedEventArgs e) => RequestFeedMode(MainFeedMode.Discover);
+
+    private void OnDiscoverButtonUnchecked(object sender, RoutedEventArgs e) => RequestFeedMode(MainFeedMode.Timeline);
+
+    private void OnBookmarksButtonChecked(object sender, RoutedEventArgs e) => RequestFeedMode(MainFeedMode.Bookmarks);
+
+    private void OnBookmarksButtonUnchecked(object sender, RoutedEventArgs e) => RequestFeedMode(MainFeedMode.Timeline);
+
+    private void RequestFeedMode(MainFeedMode mode)
+    {
+        if (_isSyncingFeedToggles) return;
+
+        WeakReferenceMessenger.Default.Send(new MainFeedModeRequestedMessage(mode));
+    }
 
     // Opens the settings window as a modal over the main window.
     private void OnSettingsMenuFlyoutItemClicked(object sender, RoutedEventArgs e) => new SettingsWindow(App.Services.GetRequiredService<SettingsWindowViewModel>()).MakeModal(this);
