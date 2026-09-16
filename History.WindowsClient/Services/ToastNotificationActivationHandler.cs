@@ -117,7 +117,7 @@ public static class ToastNotificationActivationHandler
         {
             try
             {
-                if (!await KakaoStoryUtils.EnsureLoggedInAsync()) return;
+                if (!await KakaoStoryUtils.EnsureLoggedInAsync(MainWindow.Instance.ViewModel)) return;
                 var post = await KakaoStoryApiHandler.GetPost(postId);
                 if (post != null) NavigateToPage(typeof(PostPage), post);
                 else await ShowMessageDialogAsync("안내", "해당 게시글을 불러올 수 없습니다.");

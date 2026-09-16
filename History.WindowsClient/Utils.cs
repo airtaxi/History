@@ -203,7 +203,7 @@ public static partial class Utils
         var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length != 2) return null;
 
-        if (!await KakaoStoryUtils.EnsureLoggedInAsync()) return null;
+        if (!await KakaoStoryUtils.EnsureLoggedInAsync(baseViewModel)) return null;
 
         var page = await RunWithLoadingAsync(baseViewModel, () => KakaoStoryApiHandler.GetPostPageAsync(url), "게시글 불러오는 중...");
         if (page == null) return null;
@@ -232,7 +232,7 @@ public static partial class Utils
     {
         try
         {
-            if (!await KakaoStoryUtils.EnsureLoggedInAsync()) return;
+            if (!await KakaoStoryUtils.EnsureLoggedInAsync(baseViewModel)) return;
 
             var post = await RunWithLoadingAsync(baseViewModel, () => KakaoStoryApiHandler.GetPost(postId), "게시글 불러오는 중...");
             if (post == null)
