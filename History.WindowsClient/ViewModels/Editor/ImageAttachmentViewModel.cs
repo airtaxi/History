@@ -4,7 +4,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using System.IO;
 using Windows.Storage.Streams;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Editor;
 
 // Shared single-image attachment surface for editors that hold at most one image
 // (comment box, message write/reply dialogs): the preview source, visibility, and the

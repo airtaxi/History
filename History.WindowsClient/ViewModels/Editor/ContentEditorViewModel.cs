@@ -2,10 +2,9 @@
 using History.Commons;
 using History.Commons.Helpers;
 using History.WindowsClient.ViewModels.Friendship;
-using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Editor;
 
 public partial class ContentEditorViewModel(BaseViewModel baseViewModel) : ObservableObject
 {

@@ -5,6 +5,7 @@ using History.Commons;
 using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
+using History.WindowsClient.ViewModels.Editor;
 using History.WindowsClient.ViewModels.Friendship;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI;

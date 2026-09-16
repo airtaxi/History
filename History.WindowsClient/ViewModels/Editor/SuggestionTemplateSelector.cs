@@ -1,8 +1,8 @@
-﻿using Microsoft.UI.Xaml;
-using History.WindowsClient.ViewModels.Friendship;
+﻿using History.WindowsClient.ViewModels.Friendship;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Editor;
 
 public partial class SuggestionTemplateSelector : DataTemplateSelector
 {

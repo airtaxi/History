@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Dialogs;
+using History.WindowsClient.ViewModels.Editor;
 
 namespace History.WindowsClient.ViewModels;
 

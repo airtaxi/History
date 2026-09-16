@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using History.Commons.Api.Message;
 using History.Commons.DataTypes.Contents;
 using History.Commons;
+using History.WindowsClient.ViewModels.Editor;
 using System.IO;
 
 namespace History.WindowsClient.ViewModels;
