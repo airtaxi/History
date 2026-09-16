@@ -1,6 +1,7 @@
 ﻿using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
+using History.WindowsClient.ViewModels.Account;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;

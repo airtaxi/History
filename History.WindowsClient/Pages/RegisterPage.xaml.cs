@@ -1,4 +1,5 @@
 ﻿using History.WindowsClient.Models;
+using History.WindowsClient.ViewModels.Account;
 using History.WindowsClient.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Navigation;

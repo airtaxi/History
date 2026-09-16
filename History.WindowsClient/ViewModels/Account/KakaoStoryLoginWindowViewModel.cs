@@ -1,7 +1,7 @@
 using History.Commons;
 using History.Commons.KakaoStory;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Account;
 
 public partial class KakaoStoryLoginWindowViewModel : BaseViewModel
 {

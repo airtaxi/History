@@ -16,7 +16,7 @@ using Microsoft.UI.Xaml;
 using System.Diagnostics;
 using System.Text.Json.Nodes;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Account;
 
 public partial class LoginPageViewModel : BaseViewModel
 {

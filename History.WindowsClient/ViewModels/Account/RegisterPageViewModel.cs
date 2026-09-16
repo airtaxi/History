@@ -8,7 +8,7 @@ using History.WindowsClient.Pages;
 using History.WindowsClient.Services;
 using History.WindowsClient.Views;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Account;
 
 public partial class RegisterPageViewModel(ApplicationSettingsService settingsService) : BaseViewModel
 {
