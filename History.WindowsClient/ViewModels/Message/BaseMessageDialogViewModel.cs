@@ -6,7 +6,7 @@ using History.Commons;
 using History.WindowsClient.ViewModels.Editor;
 using System.IO;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Message;
 
 // Shared message-compose surface for the write and reply dialogs: the text state, the
 // 100-character limit, and the send pipeline. The receiver id and any pre-send

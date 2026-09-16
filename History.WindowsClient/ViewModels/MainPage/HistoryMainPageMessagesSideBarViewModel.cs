@@ -1,4 +1,5 @@
 using History.Commons.Api.Message;
+using History.WindowsClient.ViewModels.Message;
 
 namespace History.WindowsClient.ViewModels.MainPage;
 

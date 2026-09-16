@@ -1,5 +1,6 @@
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
+using History.WindowsClient.ViewModels.Message;
 
 namespace History.WindowsClient.ViewModels.MainPage;
 

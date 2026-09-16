@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Media;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Message;
 
 public abstract partial class BaseMessageViewModel(BaseViewModel baseViewModel) : ObservableObject
 {

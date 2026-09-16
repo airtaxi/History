@@ -6,7 +6,7 @@ using History.WindowsClient.ViewModels.Friendship;
 using Microsoft.UI.Xaml;
 using System.Collections.ObjectModel;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Message;
 
 // Kakao Story write-message dialog: the receiver list comes from the Kakao Story friends
 // cache and the composed mail is sent through the Kakao Story message API.

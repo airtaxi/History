@@ -6,9 +6,9 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:History.WindowsClient.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:message="using:History.WindowsClient.ViewModels.Message"
     xmlns:profile="using:History.WindowsClient.ViewModels.Profile"
     xmlns:segmented="using:History.WindowsClient.ThirdParty.SelectorBarSegmented"
-    xmlns:vm="using:History.WindowsClient.ViewModels"
     xmlns:vmp="using:History.WindowsClient.ViewModels.MainPage"
     Loaded="OnPageLoaded"
     NavigationCacheMode="Required"
@@ -190,7 +190,7 @@
                         </Grid>
                     </DataTemplate>
 
-                    <DataTemplate x:Key="MessageTemplate" x:DataType="vm:BaseMessageViewModel">
+                    <DataTemplate x:Key="MessageTemplate" x:DataType="message:BaseMessageViewModel">
                         <Button
                             Padding="0"
                             HorizontalAlignment="Stretch"

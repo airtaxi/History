@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using History.WindowsClient.Dialogs;
+using History.WindowsClient.ViewModels.Message;
 using Microsoft.UI.Xaml;
 using System.Collections.ObjectModel;
 

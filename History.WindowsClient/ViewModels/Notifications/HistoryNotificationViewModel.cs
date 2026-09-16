@@ -8,6 +8,7 @@ using History.Commons.Enums;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Pages;
+using History.WindowsClient.ViewModels.Message;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 

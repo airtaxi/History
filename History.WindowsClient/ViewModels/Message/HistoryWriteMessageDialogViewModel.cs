@@ -11,7 +11,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System.Collections.ObjectModel;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Message;
 
 public partial class HistoryWriteMessageDialogViewModel : BaseMessageDialogViewModel
 {

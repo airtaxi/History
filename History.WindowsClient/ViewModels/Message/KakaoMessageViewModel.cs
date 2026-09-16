@@ -10,7 +10,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Message;
 
 // Kakao Story message view model: fills the shared message surface from the mail list
 // response. The list carries only the summary, so the detail is fetched when the mail is

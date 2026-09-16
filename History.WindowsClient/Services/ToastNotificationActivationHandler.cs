@@ -9,6 +9,7 @@ using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
+using History.WindowsClient.ViewModels.Message;
 using History.WindowsClient.ViewModels;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml.Controls;
