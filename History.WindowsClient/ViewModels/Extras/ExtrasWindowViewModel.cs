@@ -1,4 +1,4 @@
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Extras;
 
 // Extras window view model: hosts the window-level dialog and loading requests raised by
 // flows that start outside a page.

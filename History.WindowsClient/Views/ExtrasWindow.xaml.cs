@@ -1,6 +1,7 @@
 ﻿using History.WindowsClient.Enums;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Pages.Extras;
+using History.WindowsClient.ViewModels.Extras;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
