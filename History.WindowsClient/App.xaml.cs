@@ -5,6 +5,7 @@ using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Services;
+using History.WindowsClient.ViewModels.Post;
 using History.WindowsClient.ViewModels.Profile;
 using History.WindowsClient.ViewModels.Sticker;
 using History.WindowsClient.ViewModels;

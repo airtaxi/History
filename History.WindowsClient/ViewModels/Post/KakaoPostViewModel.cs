@@ -22,7 +22,7 @@ using Windows.ApplicationModel.DataTransfer;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Post;
 
 // Kakao Story post view model: fills the shared post surface from the activity DTO.
 // Bundled feeds (share/UP activities) are unwrapped before construction

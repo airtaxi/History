@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using History.WindowsClient.ViewModels.Post;
 using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels;

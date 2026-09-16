@@ -1,7 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Post;
 
 // Selects the timeline cell for each post view model kind. The profile cell is
 // deferred until the user page work; only repost and post cells are served.

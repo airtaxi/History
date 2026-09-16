@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
+using History.WindowsClient.ViewModels.Post;
 using System.Collections.ObjectModel;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;

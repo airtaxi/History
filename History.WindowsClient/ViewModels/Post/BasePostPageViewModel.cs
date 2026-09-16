@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using History.WindowsClient.ViewModels.Comment;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Post;
 
 // Base page view model for post detail pages, shared by History and (future) Kakao Story posts.
 // The post surface is platform-agnostic; comment composing differs per platform and lives on

@@ -14,6 +14,7 @@ using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using History.WindowsClient.ViewModels.Friendship;
 using History.WindowsClient.ViewModels.Interaction;
+using History.WindowsClient.ViewModels.Post;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;

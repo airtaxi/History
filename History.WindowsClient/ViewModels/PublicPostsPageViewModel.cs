@@ -3,6 +3,7 @@ using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Services;
+using History.WindowsClient.ViewModels.Post;
 using System.Collections.ObjectModel;
 
 namespace History.WindowsClient.ViewModels;

@@ -1,7 +1,7 @@
 ﻿using History.Commons.Enums;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Post;
 
 // Kakao Story UP (sympathy) bundled-feed view model: fills the shared repost surface
 // (RepostId, RepostedUserNickname, RepostPostfix) from the bundled feed. The bundled feed

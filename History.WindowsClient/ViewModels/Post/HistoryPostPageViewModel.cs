@@ -2,7 +2,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.WindowsClient.ViewModels.Comment;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Post;
 
 // History post detail page: hosts the post view model and the History comment box.
 public partial class HistoryPostPageViewModel : BasePostPageViewModel

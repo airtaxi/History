@@ -5,7 +5,7 @@ using History.Commons.Enums;
 using History.WindowsClient.Models;
 using Microsoft.UI.Xaml.Controls;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Post;
 
 // Discover feed post view model: the "..." menu exposes only the moderation,
 // report and friend-request actions available for a promoted public post.

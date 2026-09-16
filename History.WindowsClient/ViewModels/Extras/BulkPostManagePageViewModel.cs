@@ -8,6 +8,7 @@ using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.Services;
+using History.WindowsClient.ViewModels.Post;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.ObjectModel;

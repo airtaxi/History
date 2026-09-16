@@ -2,7 +2,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.WindowsClient.Pages;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Post;
 
 // A thin wrapper that renders the parent post with repost attribution.
 // The template surface (RepostTemplate) reads the Repost* properties from BasePostViewModel.

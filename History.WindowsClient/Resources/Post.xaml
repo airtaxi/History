@@ -4,7 +4,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:interaction="using:History.WindowsClient.ViewModels.Interaction"
-    xmlns:vm="using:History.WindowsClient.ViewModels">
+    xmlns:post="using:History.WindowsClient.ViewModels.Post"
 
     <DataTemplate x:Key="InteractionTemplate" x:DataType="interaction:BaseInteractionViewModel">
         <Grid>
@@ -39,7 +39,7 @@
         </Grid>
     </DataTemplate>
 
-    <DataTemplate x:Key="SharedPostTemplate" x:DataType="vm:BasePostViewModel">
+    <DataTemplate x:Key="SharedPostTemplate" x:DataType="post:BasePostViewModel">
         <StackPanel
             PointerPressed="OnSharedPostPointerPressed"
             Spacing="8"
@@ -125,7 +125,7 @@
         </StackPanel>
     </DataTemplate>
 
-    <DataTemplate x:Key="PostContentTemplate" x:DataType="vm:BasePostViewModel">
+    <DataTemplate x:Key="PostContentTemplate" x:DataType="post:BasePostViewModel">
         <StackPanel Padding="16" Spacing="8">
             <!--  Header  -->
             <Grid ColumnSpacing="8">
@@ -455,7 +455,7 @@
     </DataTemplate>
 
     <!--  Full comment list area (hosted beside PostContentTemplate by the post page)  -->
-    <DataTemplate x:Key="PostCommentTemplate" x:DataType="vm:BasePostViewModel">
+    <DataTemplate x:Key="PostCommentTemplate" x:DataType="post:BasePostViewModel">
         <StackPanel
             Padding="16"
             Spacing="16"
@@ -500,7 +500,7 @@
         </StackPanel>
     </DataTemplate>
     <!--  Empty state shown beside the comment list when the post has no comments  -->
-    <DataTemplate x:Key="PostNoCommentsTemplate" x:DataType="vm:BasePostViewModel">
+    <DataTemplate x:Key="PostNoCommentsTemplate" x:DataType="post:BasePostViewModel">
         <TextBlock
             Margin="16"
             HorizontalAlignment="Center"
@@ -511,7 +511,7 @@
     </DataTemplate>
 
     <!--  Timeline card  -->
-    <DataTemplate x:Key="PostTemplate" x:DataType="vm:BasePostViewModel">
+    <DataTemplate x:Key="PostTemplate" x:DataType="post:BasePostViewModel">
         <Button
             Padding="0"
             HorizontalAlignment="Stretch"
@@ -707,7 +707,7 @@
     </DataTemplate>
 
     <!--  Discover card: header, contents and shared section only; the whole card opens the author's profile  -->
-    <DataTemplate x:Key="PublicPostTemplate" x:DataType="vm:HistoryPublicPostViewModel">
+    <DataTemplate x:Key="PublicPostTemplate" x:DataType="post:HistoryPublicPostViewModel">
         <Button
             Padding="0"
             HorizontalAlignment="Stretch"
@@ -813,7 +813,7 @@
     </DataTemplate>
 
     <!--  Repost card: post card + repost attribution footer  -->
-    <DataTemplate x:Key="RepostTemplate" x:DataType="vm:BasePostViewModel">
+    <DataTemplate x:Key="RepostTemplate" x:DataType="post:BasePostViewModel">
         <Grid Padding="6">
             <Button
                 Padding="0"

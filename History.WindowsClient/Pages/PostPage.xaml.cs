@@ -6,6 +6,7 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
+using History.WindowsClient.ViewModels.Post;
 using History.WindowsClient.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;

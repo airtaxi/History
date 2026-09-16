@@ -2,6 +2,7 @@
 using History.Commons.Api.Comment;
 using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Models;
+using History.WindowsClient.ViewModels.Post;
 
 namespace History.WindowsClient.ViewModels.Comment;
 

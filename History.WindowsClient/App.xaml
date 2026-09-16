@@ -8,7 +8,7 @@
     xmlns:localconverters="using:History.WindowsClient.Converters"
     xmlns:segmented="using:History.WindowsClient.ThirdParty.SelectorBarSegmented"
     xmlns:srd="using:History.WindowsClient.Resources"
-    xmlns:vm="using:History.WindowsClient.ViewModels">
+    xmlns:vm="using:History.WindowsClient.ViewModels.Post">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

@@ -5,6 +5,7 @@ using History.Commons.Enums;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels.ComposePost;
+using History.WindowsClient.ViewModels.Post;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using History.WindowsClient.ViewModels;
 using History.WindowsClient.Views;

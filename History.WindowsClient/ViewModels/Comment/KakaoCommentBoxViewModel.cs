@@ -3,6 +3,7 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
+using History.WindowsClient.ViewModels.Post;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 
 namespace History.WindowsClient.ViewModels.Comment;

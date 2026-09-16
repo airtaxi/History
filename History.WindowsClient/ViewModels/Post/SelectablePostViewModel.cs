@@ -4,7 +4,7 @@ using History.WindowsClient.Helpers;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 
-namespace History.WindowsClient.ViewModels.Extras;
+namespace History.WindowsClient.ViewModels.Post;
 
 // A post item in the bulk management grid: adds selection toggling and the compact cell
 // surface (text, timestamp, thumbnail) that the selection template binds to.

@@ -1,4 +1,5 @@
 ﻿using History.WindowsClient.ViewModels;
+using History.WindowsClient.ViewModels.Post;
 using Microsoft.Extensions.DependencyInjection;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
