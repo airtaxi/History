@@ -8,6 +8,7 @@ using History.WindowsClient.Services;
 using History.WindowsClient.ViewModels.Post;
 using History.WindowsClient.ViewModels.Profile;
 using History.WindowsClient.ViewModels.Sticker;
+using History.WindowsClient.ViewModels.Timeline;
 using History.WindowsClient.ViewModels;
 using History.WindowsClient.ViewModels.Extras;
 using History.WindowsClient.ViewModels.MainPage;

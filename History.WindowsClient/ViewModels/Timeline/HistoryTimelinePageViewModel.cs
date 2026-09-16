@@ -7,7 +7,7 @@ using History.WindowsClient.Services;
 using History.WindowsClient.ViewModels.Post;
 using System.Collections.ObjectModel;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Timeline;
 
 // Timeline feed view model: first-page loading, infinite scroll pagination
 // and post deletion sync.

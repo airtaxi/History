@@ -7,7 +7,7 @@ using System.Collections.ObjectModel;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Timeline;
 
 // Kakao Story timeline feed view model: first-page loading, feed cursor paging
 // and post deletion sync.

@@ -1,3 +1,5 @@
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
@@ -7,30 +9,27 @@ using History.WindowsClient.Services;
 using History.WindowsClient.ViewModels.Post;
 using System.Collections.ObjectModel;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Timeline;
 
-// Bookmarked feed view model: first-page loading, infinite scroll pagination,
-// unbookmark removal and post deletion sync.
-public partial class BookmarkedPostsPageViewModel : BaseTimelinePageViewModel, IRecipient<PostUnbookmarkedMessage>, IRecipient<ValueDeletedMessage<PostResponseDto>>
+// Search results view model: query-driven first-page loading, infinite scroll
+// pagination and post deletion sync.
+public partial class SearchResultPageViewModel : BaseViewModel, IRecipient<ValueDeletedMessage<PostResponseDto>>
 {
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
     private bool _areThereNoMorePostsToLoad;
+    private string _query;
 
-    public BookmarkedPostsPageViewModel()
-    {
-        WeakReferenceMessenger.Default.Register((IRecipient<PostUnbookmarkedMessage>)this);
-        WeakReferenceMessenger.Default.Register((IRecipient<ValueDeletedMessage<PostResponseDto>>)this);
-    }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    public partial ObservableCollection<BasePostViewModel> Items { get; private set; } = [];
 
-    // Removing a bookmark drops the post from this feed immediately, before any refetch.
-    // The unbookmarked id is the repost wrapper id for reposts, so both ids are matched.
-    public void Receive(PostUnbookmarkedMessage message)
-    {
-        var viewModels = Items.OfType<HistoryPostViewModel>().Where(x => x.Post.Id == message.Value || x.RepostId == message.Value).ToList(); // ToList is needed (Collection will be modified)
-        foreach (var viewModel in viewModels) Items.Remove(viewModel);
+    public bool IsEmpty => Items.Count == 0;
 
-        OnPropertyChanged(nameof(IsEmpty));
-    }
+    // Stores the navigation parameter only (XamlRoot-independent, called from
+    // OnNavigatedTo); the actual loading runs from OnFirstPageLoad.
+    public void Initialize(string query) => _query = query?.Trim();
+
+    public SearchResultPageViewModel() => WeakReferenceMessenger.Default.Register(this);
 
     public void Receive(ValueDeletedMessage<PostResponseDto> message)
     {
@@ -40,9 +39,10 @@ public partial class BookmarkedPostsPageViewModel : BaseTimelinePageViewModel, I
         OnPropertyChanged(nameof(IsEmpty));
     }
 
-    public override async Task RefreshAsync()
+    public async Task RefreshAsync()
     {
-        if (_fetchSemaphore.CurrentCount == 0) return;
+        if (string.IsNullOrWhiteSpace(_query)) return;
+        else if (_fetchSemaphore.CurrentCount == 0) return;
 
         Items.Clear();
         try
@@ -51,7 +51,7 @@ public partial class BookmarkedPostsPageViewModel : BaseTimelinePageViewModel, I
 
             _areThereNoMorePostsToLoad = false;
 
-            var postsResult = await ExecuteRequestAsync(new GetBookmarkedPosts(null, Constants.PageSize));
+            var postsResult = await ExecuteRequestAsync(new SearchPosts(_query));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null)).ToList();
@@ -60,7 +60,7 @@ public partial class BookmarkedPostsPageViewModel : BaseTimelinePageViewModel, I
                 // every carousel sees a cache hit and its height is final on the first measure.
                 await ExecuteWithLoadingAsync(() => MediaCacheService.PrefetchTimelineMediaAsync(posts));
 
-                var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User, this) : new HistoryPostViewModel(x, PostType.Bookmarked, this)));
+                var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User, this) : new HistoryPostViewModel(x, PostType.Timeline, this)));
 
                 // Swap the whole collection once so the repeater sees a single reset
                 // instead of one incremental change per post.
@@ -71,9 +71,11 @@ public partial class BookmarkedPostsPageViewModel : BaseTimelinePageViewModel, I
         finally { _fetchSemaphore.Release(); }
     }
 
-    public override async Task LoadMoreAsync()
+    [RelayCommand]
+    public async Task LoadMoreAsync()
     {
-        if (_fetchSemaphore.CurrentCount == 0) return;
+        if (string.IsNullOrWhiteSpace(_query)) return;
+        else if (_fetchSemaphore.CurrentCount == 0) return;
         else if (_areThereNoMorePostsToLoad) return;
 
         try
@@ -83,7 +85,7 @@ public partial class BookmarkedPostsPageViewModel : BaseTimelinePageViewModel, I
             var lastViewModel = Items.OfType<HistoryPostViewModel>().LastOrDefault();
             if (lastViewModel == null) return;
 
-            var postsResult = await ExecuteRequestAsync(new GetBookmarkedPosts(lastViewModel.RepostId ?? lastViewModel.Post.Id, Constants.PageSize));
+            var postsResult = await ExecuteRequestAsync(new SearchPosts(_query, lastViewModel.RepostId ?? lastViewModel.Post.Id));
             if (postsResult.IsSuccess)
             {
                 var posts = postsResult.Value.Where(x => !x.IsRepost || (x.IsRepost && x.ParentPost != null)).ToList();
@@ -92,7 +94,7 @@ public partial class BookmarkedPostsPageViewModel : BaseTimelinePageViewModel, I
                 // mid-scroll and freezing the frame behind a blocking indicator feels broken.
                 await MediaCacheService.PrefetchTimelineMediaAsync(posts);
 
-                var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User, this) : new HistoryPostViewModel(x, PostType.Bookmarked, this))).ToList();
+                var viewModels = posts.Select(x => (BasePostViewModel)(x.IsRepost ? new HistoryRepostViewModel(x.Id, x.ParentPost, x.User, this) : new HistoryPostViewModel(x, PostType.Timeline, this))).ToList();
 
                 // One reset per fetched page instead of one incremental change per post.
                 if (viewModels.Count > 0) Items = new ObservableCollection<BasePostViewModel>([.. Items, .. viewModels]);

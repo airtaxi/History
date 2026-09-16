@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
 using History.WindowsClient.Messages;
+using History.WindowsClient.ViewModels.Timeline;
 using History.WindowsClient.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;

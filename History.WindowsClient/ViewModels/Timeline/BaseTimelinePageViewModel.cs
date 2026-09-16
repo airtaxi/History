@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using History.WindowsClient.ViewModels.Post;
 using System.Collections.ObjectModel;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Timeline;
 
 // Shared surface for the timeline feed: post items, empty state and the
 // refresh/load-more contract implemented by each account mode feed.
