@@ -7,7 +7,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.UI;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Interaction;
 
 // Interaction entry for a Kakao Story like/share/UP. The glyph and color palette follows
 // the History reaction visuals so the shared interaction template renders both identically.

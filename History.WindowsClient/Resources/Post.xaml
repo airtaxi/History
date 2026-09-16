@@ -3,9 +3,10 @@
     x:Class="History.WindowsClient.Resources.Post"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:interaction="using:History.WindowsClient.ViewModels.Interaction"
     xmlns:vm="using:History.WindowsClient.ViewModels">
 
-    <DataTemplate x:Key="InteractionTemplate" x:DataType="vm:BaseInteractionViewModel">
+    <DataTemplate x:Key="InteractionTemplate" x:DataType="interaction:BaseInteractionViewModel">
         <Grid>
             <Button
                 Width="36"

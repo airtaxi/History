@@ -10,6 +10,7 @@ using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
+using History.WindowsClient.ViewModels.Interaction;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;

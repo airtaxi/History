@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using History.Commons.Enums;
 using Microsoft.UI.Xaml.Media;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Interaction;
 
 // Base interaction (reaction/share/repost entry) view model shared by History and (future) Kakao Story.
 // Holds the surface used by the interaction template and the virtual tap entry point.

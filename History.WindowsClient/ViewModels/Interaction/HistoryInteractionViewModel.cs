@@ -7,7 +7,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.UI;
 using ReactionEnum = History.Commons.Enums.ReactionType;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Interaction;
 
 // Reaction glyphs use the Segoe Fluent glyphs provided by the project owner,
 // and the reaction colors are fixed palette values.
