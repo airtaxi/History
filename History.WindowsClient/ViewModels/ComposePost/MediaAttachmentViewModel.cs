@@ -8,7 +8,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage.Streams;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.ComposePost;
 
 // Local media attachment for the post composer: owns the temp file that will be uploaded,
 // the preview thumbnail, the optional description, and the spoiler flag. Videos show a

@@ -3,6 +3,7 @@ using History.Commons.Enums;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
+using History.WindowsClient.ViewModels.ComposePost;
 using History.WindowsClient.ViewModels;
 using History.WindowsClient.ViewModels.Segments;
 using History.WindowsClient.Views;

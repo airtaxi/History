@@ -20,7 +20,7 @@ using History.WindowsClient.Views;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.Storage.Pickers;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.ComposePost;
 
 // Compose post window state. Poll composing delegates to the PollEditWindow and arrives
 // through the attached poll card; the kakao cross-post toggle and mirror live in the

@@ -5,6 +5,7 @@ using History.WindowsClient.Dialogs;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
+using History.WindowsClient.ViewModels.ComposePost;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;

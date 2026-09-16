@@ -14,7 +14,7 @@ using Microsoft.UI.Xaml.Controls;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.ComposePost;
 
 // Kakao Story surface of the composer: Kakao Story mode composes a new post that is
 // mirrored to History, while the post menu opens the composer to edit or share an

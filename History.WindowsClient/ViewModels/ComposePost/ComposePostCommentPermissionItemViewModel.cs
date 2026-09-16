@@ -3,7 +3,7 @@ using History.Commons.Enums;
 using History.WindowsClient.Helpers;
 using Microsoft.UI.Xaml;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.ComposePost;
 
 // Single comment-permission choice for the compose post options surface. An option is
 // selectable only when its audience is not wider than the post's discovery option: the
