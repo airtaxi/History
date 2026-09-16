@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 
-namespace History.WindowsClient.ViewModels.Extras;
+namespace History.WindowsClient.ViewModels.Sticker;
 
 // Draft sticker asset added in the create window: keeps the picked file bytes for the upload
 // payload and the decoded preview thumbnail, and forwards the tile removal to the create

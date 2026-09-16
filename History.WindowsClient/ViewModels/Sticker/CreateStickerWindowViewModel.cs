@@ -11,7 +11,7 @@ using System.Collections.Specialized;
 using System.IO;
 using Windows.Storage.Streams;
 
-namespace History.WindowsClient.ViewModels.Extras;
+namespace History.WindowsClient.ViewModels.Sticker;
 
 // Sticker create window state: icon/asset picking, form validation, and the create request
 // that closes the window with a success flag. External sticker imports (DCCon/Arca/Inven)

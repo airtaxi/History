@@ -9,7 +9,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System.Collections.ObjectModel;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Sticker;
 
 // Sticker detail window state: loads the sticker and its assets, owns the subscribe toggle,
 // the delete flow, and the in-window asset preview overlay.

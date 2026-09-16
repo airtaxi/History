@@ -4,7 +4,7 @@ using History.Commons;
 using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.UI.Xaml.Media.Imaging;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Sticker;
 
 // Sticker detail asset tile: wraps a single sticker asset and forwards the tap to the detail
 // window view model, which shows the asset in the in-window preview overlay.

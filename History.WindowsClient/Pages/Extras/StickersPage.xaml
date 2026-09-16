@@ -4,14 +4,14 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:extras="using:History.WindowsClient.ViewModels.Extras"
     xmlns:local="using:History.WindowsClient.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:History.WindowsClient.ViewModels.Sticker"
     Loaded="OnPageLoaded"
     mc:Ignorable="d">
 
     <local:BasePage.Resources>
-        <DataTemplate x:Key="StickerTemplate" x:DataType="extras:StickerViewModel">
+        <DataTemplate x:Key="StickerTemplate" x:DataType="vm:StickerViewModel">
             <Button
                 Padding="0"
                 HorizontalAlignment="Stretch"

@@ -5,7 +5,7 @@ using History.WindowsClient.Views;
 using Microsoft.UI.Xaml;
 using System.Collections.ObjectModel;
 
-namespace History.WindowsClient.ViewModels.Extras;
+namespace History.WindowsClient.ViewModels.Sticker;
 
 // Sticker list page view model: first-page loading, infinite scroll pagination and the
 // search query that filters the list. The sticker detail and create windows open modally

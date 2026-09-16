@@ -2,6 +2,7 @@
 using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Dialogs;
 using History.WindowsClient.ViewModels.Editor;
+using History.WindowsClient.ViewModels.Sticker;
 
 namespace History.WindowsClient.ViewModels;
 

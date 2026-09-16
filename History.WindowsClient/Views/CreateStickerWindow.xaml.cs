@@ -1,5 +1,6 @@
 ﻿using History.WindowsClient.Helpers;
 using History.WindowsClient.ViewModels.Extras;
+using History.WindowsClient.ViewModels.Sticker;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using WinUIEx;

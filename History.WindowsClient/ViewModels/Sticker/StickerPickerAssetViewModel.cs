@@ -2,7 +2,7 @@ using History.Commons;
 using History.Commons.DataTypes.Contents;
 using Microsoft.UI.Xaml.Media.Imaging;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Sticker;
 
 // Sticker picker grid item: wraps a sticker asset and carries the StickerContent
 // the comment editor consumes when the asset is selected.

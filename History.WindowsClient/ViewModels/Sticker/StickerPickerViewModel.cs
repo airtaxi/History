@@ -6,7 +6,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Interfaces;
 using System.Collections.ObjectModel;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Sticker;
 
 // Sticker selection dialog surface: loads the user's sticker tabs (subscribed + own,
 // deduplicated) plus the recent-usage tab, and the asset grid of the active tab.

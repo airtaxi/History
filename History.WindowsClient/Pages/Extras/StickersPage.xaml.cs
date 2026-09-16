@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using History.WindowsClient.Messages;
 using History.WindowsClient.ViewModels.Extras;
+using History.WindowsClient.ViewModels.Sticker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Controls;
 

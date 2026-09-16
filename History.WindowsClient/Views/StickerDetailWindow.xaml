@@ -7,7 +7,7 @@
     xmlns:dev="using:DevWinUI"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="using:History.WindowsClient.Views"
-    xmlns:vm="using:History.WindowsClient.ViewModels"
+    xmlns:vm="using:History.WindowsClient.ViewModels.Sticker"
     Title="스티커"
     Width="560"
     Height="680"

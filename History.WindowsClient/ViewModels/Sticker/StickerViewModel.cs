@@ -4,7 +4,7 @@ using History.Commons;
 using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.UI.Xaml.Media.Imaging;
 
-namespace History.WindowsClient.ViewModels.Extras;
+namespace History.WindowsClient.ViewModels.Sticker;
 
 // Wraps a sticker entry (icon + metadata) for the sticker list card and owns the card tap,
 // which runs on the page view model's dialog surface.

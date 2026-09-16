@@ -3,7 +3,7 @@ using History.Commons;
 using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.UI.Xaml.Media.Imaging;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Sticker;
 
 // Sticker picker tab bar item: the recent-usage tab or one available sticker.
 // The recent tab carries no sticker and shows a clock icon instead.
