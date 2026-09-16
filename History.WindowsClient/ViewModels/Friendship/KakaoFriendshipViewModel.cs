@@ -14,7 +14,7 @@ using Windows.UI;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Friendship;
 
 // Kakao Story friendship row surface: friend entries, invitations, search results and
 // blocked users. The relationship code drives the action button: F friend, R sent

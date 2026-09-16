@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using History.WindowsClient.ViewModels.Friendship;
 using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;

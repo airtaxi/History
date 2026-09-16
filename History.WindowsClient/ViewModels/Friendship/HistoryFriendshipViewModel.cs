@@ -17,7 +17,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.UI;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Friendship;
 
 public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IRecipient<ValueChangedMessage<UserResponseDto>>
 {

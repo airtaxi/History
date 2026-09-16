@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using History.Commons;
 using History.Commons.Helpers;
+using History.WindowsClient.ViewModels.Friendship;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
 

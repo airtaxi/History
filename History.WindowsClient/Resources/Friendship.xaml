@@ -3,7 +3,7 @@
     x:Class="History.WindowsClient.Resources.Friendship"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:vm="using:History.WindowsClient.ViewModels">
+    xmlns:vm="using:History.WindowsClient.ViewModels.Friendship">
 
     <DataTemplate x:Key="FriendshipTemplate" x:DataType="vm:BaseFriendshipViewModel">
         <Button

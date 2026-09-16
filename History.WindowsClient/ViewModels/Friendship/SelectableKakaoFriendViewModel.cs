@@ -1,7 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using History.WindowsClient.ViewModels.Extras;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 
-namespace History.WindowsClient.ViewModels.Extras;
+namespace History.WindowsClient.ViewModels.Friendship;
 
 // A Kakao Story friend row in the batch delete list: adds selection toggling and the
 // restricted-user identifier on top of the shared friendship row surface.

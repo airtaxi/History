@@ -16,6 +16,7 @@ using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using History.WindowsClient.ViewModels.DiscoveryOptions;
+using History.WindowsClient.ViewModels.Friendship;
 using History.WindowsClient.ViewModels.Interaction;
 using History.WindowsClient.Views;
 using Microsoft.Extensions.DependencyInjection;

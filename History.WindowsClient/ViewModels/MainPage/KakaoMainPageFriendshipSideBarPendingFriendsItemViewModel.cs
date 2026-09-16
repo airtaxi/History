@@ -2,6 +2,7 @@ using History.Commons;
 using History.Commons.Helpers;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
+using History.WindowsClient.ViewModels.Friendship;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.ObjectModel;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;

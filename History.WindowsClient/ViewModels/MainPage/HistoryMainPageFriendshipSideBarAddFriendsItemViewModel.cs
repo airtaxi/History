@@ -6,6 +6,7 @@ using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Helpers;
 using History.WindowsClient.Messages;
+using History.WindowsClient.ViewModels.Friendship;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.ObjectModel;

@@ -1,6 +1,7 @@
 using History.Commons;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
+using History.WindowsClient.ViewModels.Friendship;
 using Microsoft.UI.Xaml.Controls;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 

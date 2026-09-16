@@ -4,14 +4,14 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:extras="using:History.WindowsClient.ViewModels.Extras"
+    xmlns:friendship="using:History.WindowsClient.ViewModels.Friendship"
     xmlns:local="using:History.WindowsClient.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Loaded="OnPageLoaded"
     mc:Ignorable="d">
 
     <local:BasePage.Resources>
-        <DataTemplate x:Key="SelectableFriendTemplate" x:DataType="extras:SelectableKakaoFriendViewModel">
+        <DataTemplate x:Key="SelectableFriendTemplate" x:DataType="friendship:SelectableKakaoFriendViewModel">
             <Button
                 Padding="0"
                 HorizontalAlignment="Stretch"

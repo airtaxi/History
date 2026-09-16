@@ -7,7 +7,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using Windows.UI;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Friendship;
 
 // Base friendship view model shared by History and Kakao Story.
 // Holds the surface used by the friendship template and the virtual command entry points.

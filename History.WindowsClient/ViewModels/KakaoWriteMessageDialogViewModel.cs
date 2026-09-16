@@ -2,6 +2,7 @@ using History.Commons;
 using History.Commons.Helpers;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
+using History.WindowsClient.ViewModels.Friendship;
 using Microsoft.UI.Xaml;
 using System.Collections.ObjectModel;
 

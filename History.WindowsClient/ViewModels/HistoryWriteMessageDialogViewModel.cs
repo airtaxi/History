@@ -5,6 +5,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.Commons.Helpers;
 using History.WindowsClient.Models;
+using History.WindowsClient.ViewModels.Friendship;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;

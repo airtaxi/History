@@ -1,4 +1,5 @@
 ﻿using Microsoft.UI.Xaml;
+using History.WindowsClient.ViewModels.Friendship;
 using Microsoft.UI.Xaml.Controls;
 
 namespace History.WindowsClient.ViewModels;
