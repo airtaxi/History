@@ -2,7 +2,7 @@ using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 using History.WindowsClient.ViewModels.Media;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Content;
 
 // Wraps a batch of consecutive media contents for the WrappedMediaContentControl.
 // Owns the carousel state view model so the carousel position and decoded media sources

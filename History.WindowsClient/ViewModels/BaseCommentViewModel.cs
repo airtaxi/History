@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
+using History.WindowsClient.ViewModels.Content;
 using History.WindowsClient.ViewModels.Friendship;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;

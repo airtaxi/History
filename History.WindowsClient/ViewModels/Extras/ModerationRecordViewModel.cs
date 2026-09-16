@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.WindowsClient.Helpers;
+using History.WindowsClient.ViewModels.Content;
 
 namespace History.WindowsClient.ViewModels.Extras;
 

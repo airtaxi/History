@@ -1,7 +1,7 @@
 ﻿using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Content;
 
 // Wraps a batch of consecutive text-type contents (Text/Profile/Hashtag/Hyperlink)
 // for the BodyContentControl, which decomposes them into renderable segments.

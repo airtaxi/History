@@ -5,7 +5,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.TimeLineData;
 using Windows.ApplicationModel.DataTransfer;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Content;
 
 // External URL preview card surface. The control owns a single instance and
 // pushes data in through the Update overloads.

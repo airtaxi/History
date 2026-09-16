@@ -1,7 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Content;
 
 // Selects the content-slot template for each wrapped content item kind.
 // The templates themselves live in Resources/Post.xaml and host the existing

@@ -1,6 +1,6 @@
 using History.Commons.DataTypes.Contents;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Content;
 
 // Wraps a poll content for the PollContentControl, which owns a PollContentViewModel
 // and receives data through its dependency properties.

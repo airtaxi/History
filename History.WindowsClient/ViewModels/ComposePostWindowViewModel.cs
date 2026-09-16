@@ -12,6 +12,7 @@ using History.WindowsClient.Dialogs;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
+using History.WindowsClient.ViewModels.Content;
 using History.WindowsClient.ViewModels.DiscoveryOptions;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml.Controls;

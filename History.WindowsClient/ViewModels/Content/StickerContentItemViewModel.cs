@@ -5,7 +5,7 @@ using History.WindowsClient.Helpers;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml.Media.Imaging;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Content;
 
 // Wraps a single sticker content for the inline sticker image slot and opens the sticker
 // detail window when the sticker is tapped. Kakao Story emoticons carry no sticker id, so

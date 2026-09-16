@@ -1,3 +1,4 @@
+using History.WindowsClient.ViewModels.Content;
 using System.Text;
 using System.Text.RegularExpressions;
 using History.Commons;
