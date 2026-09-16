@@ -5,6 +5,7 @@ using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
+using History.WindowsClient.ViewModels.Media;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;

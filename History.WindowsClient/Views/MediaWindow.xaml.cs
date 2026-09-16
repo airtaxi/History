@@ -1,4 +1,5 @@
 ﻿using System;
+using History.WindowsClient.ViewModels.Media;
 using System.Collections.Generic;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;

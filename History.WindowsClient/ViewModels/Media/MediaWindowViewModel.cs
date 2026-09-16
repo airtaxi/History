@@ -8,7 +8,7 @@ using History.WindowsClient.ViewModels.Media;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.Storage.Pickers;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Media;
 
 // Full-screen media viewer state for MediaWindow. Owns the full-screen media
 // items (original resolution, Uniform stretch) and drives the single/all download
