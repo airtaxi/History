@@ -14,6 +14,7 @@ using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels.Content;
 using History.WindowsClient.ViewModels.DiscoveryOptions;
+using History.WindowsClient.ViewModels.Poll;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.Storage.Pickers;

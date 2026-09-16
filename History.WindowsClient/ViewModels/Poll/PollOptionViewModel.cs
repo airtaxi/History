@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.Contents;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Poll;
 
 // A single poll option row in the poll card.
 public sealed partial class PollOptionViewModel(PollOption option, int index, bool isSelected, PollContentViewModel parent) : ObservableObject

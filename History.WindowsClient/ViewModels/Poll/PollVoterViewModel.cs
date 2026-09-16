@@ -4,7 +4,7 @@ using History.WindowsClient.Helpers;
 using History.WindowsClient.Pages;
 using Microsoft.UI.Xaml.Media.Imaging;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Poll;
 
 // Wraps a poll voter entry (user + voted-at) for the voters dialog rows.
 public sealed class PollVoterViewModel(PollVoterResponseDto voter, BaseViewModel baseViewModel)

@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Models;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Poll;
 
 // Poll composing state for PollEditWindow. Confirm validates the definition and hands the
 // built PollContent to the opener through the Confirmed event; the dialog events are

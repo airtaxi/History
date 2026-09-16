@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Poll;
 
 // Single poll option row for the poll edit window. The placeholder follows the row order
 // and deletion is delegated to the owning PollEditWindowViewModel.

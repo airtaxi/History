@@ -8,7 +8,7 @@ using History.Commons.DataTypes.ResponseDtos;
 using History.WindowsClient.Dialogs;
 using Microsoft.UI.Xaml.Controls;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Poll;
 
 // Poll card surface. The control owns a single instance and pushes data in
 // through the Update method.

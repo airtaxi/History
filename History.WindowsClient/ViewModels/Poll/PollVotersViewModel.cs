@@ -2,7 +2,7 @@
 using History.Commons.Api.Post;
 using System.Collections.ObjectModel;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Poll;
 
 // Voters dialog surface: loads the voters of a single poll option through GetPollVoters.
 public sealed partial class PollVotersViewModel(BaseViewModel baseViewModel, string postId, string pollId, int optionIndex, string optionText) : ObservableObject

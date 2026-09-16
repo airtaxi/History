@@ -1,4 +1,5 @@
 ﻿using History.WindowsClient.ViewModels;
+using History.WindowsClient.ViewModels.Poll;
 using Microsoft.UI.Xaml.Controls;
 
 namespace History.WindowsClient.Dialogs;
