@@ -20,7 +20,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.Windows.Storage.Pickers;
 using Windows.ApplicationModel.DataTransfer;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Profile;
 
 // Owns the user DTO, fills the shared BaseProfileViewModel surface, and
 // implements the friendship/favorite/ban/memo/copy actions with the

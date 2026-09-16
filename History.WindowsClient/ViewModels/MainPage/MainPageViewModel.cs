@@ -8,6 +8,7 @@ using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.ViewModels.Notifications;
+using History.WindowsClient.ViewModels.Profile;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 

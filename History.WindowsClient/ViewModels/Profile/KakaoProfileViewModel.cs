@@ -14,7 +14,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.UI;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Profile;
 
 // Kakao Story profile view model: fills the shared profile surface from the profile
 // feed response (ProfileData.Profile + MutualFriend) and implements the friendship,

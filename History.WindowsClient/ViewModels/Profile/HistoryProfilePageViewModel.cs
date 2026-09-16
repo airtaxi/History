@@ -9,7 +9,7 @@ using History.WindowsClient.Messages;
 using History.WindowsClient.Services;
 using System.Collections.ObjectModel;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Profile;
 
 // History profile page view model: History user loading, the user's post feed with
 // infinite-scroll pagination, and post deletion/pin sync.

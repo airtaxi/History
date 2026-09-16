@@ -1,4 +1,5 @@
 using History.WindowsClient.Models;
+using History.WindowsClient.ViewModels.Profile;
 using History.WindowsClient.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 

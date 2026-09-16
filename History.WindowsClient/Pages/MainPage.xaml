@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:History.WindowsClient.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:profile="using:History.WindowsClient.ViewModels.Profile"
     xmlns:segmented="using:History.WindowsClient.ThirdParty.SelectorBarSegmented"
     xmlns:vm="using:History.WindowsClient.ViewModels"
     xmlns:vmp="using:History.WindowsClient.ViewModels.MainPage"
@@ -62,7 +63,7 @@
                 VerticalContentAlignment="Stretch"
                 Content="{x:Bind ViewModel.MyProfileViewModel, Mode=OneWay}">
                 <ContentControl.ContentTemplate>
-                    <DataTemplate x:DataType="vm:BaseProfileViewModel">
+                    <DataTemplate x:DataType="profile:BaseProfileViewModel">
                         <Grid RowSpacing="8">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="100" />

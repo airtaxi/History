@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Profile;
 
 // Kakao Story profile page view model: profile feed loading, activity cursor paging
 // and post deletion sync.

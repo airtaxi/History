@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Profile;
 
 // Shared surface for the profile pages: the profile card view model, the post feed
 // with paging, and the scroll offset kept for revisit restores.
