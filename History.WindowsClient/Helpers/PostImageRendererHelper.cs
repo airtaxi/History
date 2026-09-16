@@ -1,5 +1,6 @@
 ﻿using History.Commons.DataTypes.Contents;
 using History.Rendering;
+using History.WindowsClient.ViewModels.Comment;
 using History.WindowsClient.ViewModels;
 
 namespace History.WindowsClient.Helpers;

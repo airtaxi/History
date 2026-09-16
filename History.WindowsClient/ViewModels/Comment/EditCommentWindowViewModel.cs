@@ -1,7 +1,7 @@
 ﻿using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Comment;
 
 // Comment edit state for EditCommentWindow. Prefills the editor contents from the comment
 // and hosts the platform edit comment box, which owns the attachment surface and the edit

@@ -4,7 +4,7 @@ using History.WindowsClient.Dialogs;
 using History.WindowsClient.ViewModels.Editor;
 using History.WindowsClient.ViewModels.Sticker;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Comment;
 
 // Base comment box view model shared by History and (future) Kakao Story comment composing.
 // Holds the attachment surface and command contracts; derived types implement the actual sending.

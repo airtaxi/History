@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using History.Commons;
 using History.Commons.DataTypes.Contents;
 using History.Commons.Enums;
+using History.WindowsClient.ViewModels.Comment;
 using History.WindowsClient.ViewModels.Content;
 using History.WindowsClient.ViewModels.Friendship;
 using History.WindowsClient.ViewModels.Interaction;

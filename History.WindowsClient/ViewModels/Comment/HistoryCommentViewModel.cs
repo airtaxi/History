@@ -19,7 +19,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Comment;
 
 // Dialog prompts are requested on the parent post's base view model; the "..."
 // menu is populated by PopulateMoreMenuFlyout with the action labels as item Tag values.

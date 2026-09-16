@@ -5,7 +5,7 @@ using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Comment;
 
 // Kakao Story comment composing: builds the comment payload (stickers and the picker
 // image upload as image decorators) and posts it through ReplyToPost, then refreshes

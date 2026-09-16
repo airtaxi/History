@@ -7,7 +7,7 @@ using History.WindowsClient.ViewModels.Friendship;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Comment;
 
 // Base comment view model shared by History and (future) Kakao Story comment types.
 // Holds the full UI surface used by the shared comment template and virtual command entry points.

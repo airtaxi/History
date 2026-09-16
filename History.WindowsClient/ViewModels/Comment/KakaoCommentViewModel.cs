@@ -16,7 +16,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Comment;
 
 // Kakao Story comment view model: fills the shared comment surface from a feed comment.
 // Like, edit, and delete are available from the comment menu.

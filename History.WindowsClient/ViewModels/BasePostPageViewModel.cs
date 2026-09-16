@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using History.WindowsClient.ViewModels.Comment;
 
 namespace History.WindowsClient.ViewModels;
 

@@ -3,7 +3,7 @@ using History.Commons.Api.Comment;
 using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Models;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Comment;
 
 // History comment composing: sends CreateComment and refreshes the post so the
 // messenger propagates the new comment list to every bound view.

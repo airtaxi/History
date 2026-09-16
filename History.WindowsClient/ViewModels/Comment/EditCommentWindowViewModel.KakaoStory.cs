@@ -2,7 +2,7 @@ using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Helpers;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Comment;
 
 // Kakao Story editing surface of EditCommentWindow: prefills the editor from the comment
 // decorators (the image decorator stays in the box attachment surface) and hosts the

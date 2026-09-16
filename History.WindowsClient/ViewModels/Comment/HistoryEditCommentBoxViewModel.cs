@@ -8,7 +8,7 @@ using History.Commons.Enums;
 using History.WindowsClient.Models;
 using Microsoft.UI.Xaml.Media.Imaging;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Comment;
 
 // Comment edit box: owns the edit attachment surface, including the original server-side
 // media attachment that stays in place while the user keeps it, and drives the ModifyComment

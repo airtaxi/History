@@ -1,5 +1,6 @@
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.WindowsClient.ViewModels.Comment;
 
 namespace History.WindowsClient.ViewModels;
 

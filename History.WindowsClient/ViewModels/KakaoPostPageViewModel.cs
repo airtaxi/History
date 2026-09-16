@@ -1,4 +1,5 @@
 ﻿using History.Commons.Enums;
+using History.WindowsClient.ViewModels.Comment;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.WindowsClient.ViewModels;

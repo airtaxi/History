@@ -9,7 +9,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
-namespace History.WindowsClient.ViewModels;
+namespace History.WindowsClient.ViewModels.Comment;
 
 // Kakao Story comment edit box: owns the original comment image while the user keeps it,
 // rebuilds the comment payload from the editor contents, and drives the EditComment request
