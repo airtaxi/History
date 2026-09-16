@@ -1,5 +1,6 @@
 using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Helpers;
+using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
 namespace History.WindowsClient.ViewModels.Comment;
@@ -9,7 +10,7 @@ namespace History.WindowsClient.ViewModels.Comment;
 // Kakao edit comment box.
 public sealed partial class EditCommentWindowViewModel : BaseViewModel
 {
-    public EditCommentWindowViewModel(Comment comment, string postId)
+    public EditCommentWindowViewModel(CommentData.Comment comment, string postId)
     {
         // Like responses may omit the decorators; fall back to the plain text so the
         // prefill matches what the comment list renders.

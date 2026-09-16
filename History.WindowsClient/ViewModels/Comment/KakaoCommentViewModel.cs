@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
@@ -21,7 +21,7 @@ namespace History.WindowsClient.ViewModels.Comment;
 
 // Kakao Story comment view model: fills the shared comment surface from a feed comment.
 // Like, edit, and delete are available from the comment menu.
-public partial class KakaoCommentViewModel : BaseCommentViewModel, IRecipient<ValueChangedMessage<Comment>>
+public partial class KakaoCommentViewModel : BaseCommentViewModel, IRecipient<ValueChangedMessage<CommentData.Comment>>
 {
     private readonly BaseViewModel _baseViewModel;
     private readonly KakaoPostViewModel _parentPostViewModel;
@@ -29,11 +29,11 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel, IRecipient<Va
     private List<QuoteData> _decorators;
 
     [ObservableProperty]
-    public partial Comment Comment { get; private set; }
+    public partial CommentData.Comment Comment { get; private set; }
 
     private string PostId => Comment?.activity_id ?? _parentPostViewModel.PostData.id;
 
-    public KakaoCommentViewModel(Comment comment, PostType postType, KakaoPostViewModel parentViewModel) : base(parentViewModel.PostData.actor?.id == CommonShared.KakaoUserId, postType, parentViewModel)
+    public KakaoCommentViewModel(CommentData.Comment comment, PostType postType, KakaoPostViewModel parentViewModel) : base(parentViewModel.PostData.actor?.id == CommonShared.KakaoUserId, postType, parentViewModel)
     {
         _baseViewModel = parentViewModel.BaseViewModel;
         _parentPostViewModel = parentViewModel;
@@ -42,14 +42,14 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel, IRecipient<Va
         WeakReferenceMessenger.Default.Register(this);
     }
 
-    public void Receive(ValueChangedMessage<Comment> message)
+    public void Receive(ValueChangedMessage<CommentData.Comment> message)
     {
         if (message.Value.id != _commentId) return;
 
         UpdateComment(message.Value);
     }
 
-    private void UpdateComment(Comment comment)
+    private void UpdateComment(CommentData.Comment comment)
     {
         // Compute all derived properties from the new comment before assigning Comment.
         var writer = comment.writer;
@@ -115,7 +115,7 @@ public partial class KakaoCommentViewModel : BaseCommentViewModel, IRecipient<Va
 
         // Like responses may omit the decorators; keep the current ones.
         if (commentResult.decorators is not { Count: > 0 }) commentResult.decorators = _decorators;
-        WeakReferenceMessenger.Default.Send(new ValueChangedMessage<Comment>(commentResult));
+        WeakReferenceMessenger.Default.Send(new ValueChangedMessage<CommentData.Comment>(commentResult));
     }
 
     public override async Task DeleteAsync()

@@ -1,6 +1,7 @@
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.WindowsClient.Helpers;
+using History.WindowsClient.ViewModels.Extras;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 

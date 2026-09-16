@@ -2,6 +2,7 @@
 using History.Commons.DataTypes.Contents;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
+using History.WindowsClient.ViewModels.Poll;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;

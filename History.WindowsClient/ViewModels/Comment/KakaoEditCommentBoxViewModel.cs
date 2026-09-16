@@ -18,10 +18,10 @@ namespace History.WindowsClient.ViewModels.Comment;
 // close itself.
 public partial class KakaoEditCommentBoxViewModel : BaseCommentBoxViewModel
 {
-    private readonly Comment _comment;
+    private readonly CommentData.Comment _comment;
     private readonly string _postId;
 
-    public KakaoEditCommentBoxViewModel(Comment comment, string postId, BaseViewModel dialogBaseViewModel) : base(dialogBaseViewModel)
+    public KakaoEditCommentBoxViewModel(CommentData.Comment comment, string postId, BaseViewModel dialogBaseViewModel) : base(dialogBaseViewModel)
     {
         _comment = comment;
         _postId = postId;
@@ -61,7 +61,7 @@ public partial class KakaoEditCommentBoxViewModel : BaseCommentBoxViewModel
             if (comment == null) return;
 
             ClearAttachment();
-            WeakReferenceMessenger.Default.Send(new ValueChangedMessage<Comment>(comment));
+            WeakReferenceMessenger.Default.Send(new ValueChangedMessage<CommentData.Comment>(comment));
             RaiseCommentSent();
         }
         catch (Exception exception) { await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, $"카카오스토리 API 오류가 발생하였습니다: {KakaoStoryUtils.GetApiErrorMessage(exception)}")); }
