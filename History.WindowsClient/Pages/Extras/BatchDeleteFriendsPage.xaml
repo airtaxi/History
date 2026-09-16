@@ -1,0 +1,187 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<local:BasePage
+    x:Class="History.WindowsClient.Pages.Extras.BatchDeleteFriendsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:extras="using:History.WindowsClient.ViewModels.Extras"
+    xmlns:local="using:History.WindowsClient.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Loaded="OnPageLoaded"
+    mc:Ignorable="d">
+
+    <local:BasePage.Resources>
+        <DataTemplate x:Key="SelectableFriendTemplate" x:DataType="extras:SelectableKakaoFriendViewModel">
+            <Button
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch"
+                Background="Transparent"
+                BorderThickness="0"
+                Command="{x:Bind HandleTapCommand}"
+                CornerRadius="8">
+                <Grid
+                    Padding="12,8"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    ColumnSpacing="12"
+                    CornerRadius="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <PersonPicture
+                        Grid.Column="0"
+                        Width="40"
+                        Height="40"
+                        VerticalAlignment="Center"
+                        ProfilePicture="{x:Bind ProfileThumbnailImageSource}" />
+
+                    <StackPanel
+                        Grid.Column="1"
+                        VerticalAlignment="Center"
+                        Spacing="2">
+                        <TextBlock
+                            FontSize="16"
+                            FontWeight="SemiBold"
+                            MaxLines="1"
+                            Text="{x:Bind Nickname}"
+                            TextTrimming="CharacterEllipsis" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="#bd0000"
+                                Text="{x:Bind UserId}"
+                                Visibility="{x:Bind IsRestricted, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                Text="관심 친구"
+                                Visibility="{x:Bind IsFavorite, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Grid
+                        Grid.Column="2"
+                        Width="24"
+                        Height="24"
+                        VerticalAlignment="Center">
+                        <Border
+                            Background="#80000000"
+                            BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="12" />
+                        <Border
+                            Background="{ThemeResource AccentFillColorDefaultBrush}"
+                            CornerRadius="12"
+                            Visibility="{x:Bind IsSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                            <FontIcon
+                                FontSize="14"
+                                Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                Glyph="&#xE73E;" />
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Button>
+        </DataTemplate>
+    </local:BasePage.Resources>
+
+    <Grid Padding="16,0,16,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <RefreshContainer RefreshRequested="OnRefreshRequested">
+                <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                    <ItemsRepeater
+                        x:Name="MainItemsRepeater"
+                        IsHitTestVisible="{x:Bind ViewModel.IsNotDeleting, Mode=OneWay}"
+                        ItemTemplate="{StaticResource SelectableFriendTemplate}"
+                        ItemsSource="{x:Bind ViewModel.Items, Mode=OneWay}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Spacing="8" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                </ScrollViewer>
+            </RefreshContainer>
+
+            <TextBlock
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Style="{StaticResource SubtitleTextBlockStyle}"
+                Text="친구가 없습니다"
+                Visibility="{x:Bind ViewModel.IsEmpty, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel
+                Grid.Row="0"
+                Margin="0,8,0,0"
+                Orientation="Horizontal"
+                Spacing="12"
+                Visibility="{x:Bind ViewModel.IsDeleting, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                <ProgressBar
+                    Width="240"
+                    VerticalAlignment="Center"
+                    Maximum="{x:Bind ViewModel.DeleteTotal, Mode=OneWay}"
+                    Value="{x:Bind ViewModel.DeleteProgress, Mode=OneWay}" />
+                <TextBlock VerticalAlignment="Center" Text="{x:Bind ViewModel.DeleteProgressText, Mode=OneWay}" />
+                <Button Command="{x:Bind ViewModel.CancelDeleteCommand}" Content="중단" />
+            </StackPanel>
+
+            <Grid
+                Grid.Row="1"
+                Margin="0,8,0,0"
+                Background="{ThemeResource CardBackgroundFillColorDefault}"
+                CornerRadius="8">
+                <CommandBar
+                    Padding="16"
+                    VerticalContentAlignment="Center"
+                    DefaultLabelPosition="Right"
+                    IsEnabled="{x:Bind ViewModel.IsNotDeleting, Mode=OneWay}"
+                    IsOpen="False">
+                    <CommandBar.Content>
+                        <TextBlock FontSize="12" Text="{x:Bind ViewModel.SelectedCountText, Mode=OneWay}" />
+                    </CommandBar.Content>
+                    <AppBarToggleButton IsChecked="{x:Bind ViewModel.IsSelectAll, Mode=TwoWay}" Label="전체 선택">
+                        <AppBarToggleButton.Icon>
+                            <FontIcon Glyph="&#xE8B3;" />
+                        </AppBarToggleButton.Icon>
+                    </AppBarToggleButton>
+                    <AppBarButton Label="선택 도구">
+                        <AppBarButton.Icon>
+                            <FontIcon Glyph="&#xE71C;" />
+                        </AppBarButton.Icon>
+                        <AppBarButton.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Command="{x:Bind ViewModel.SelectRestrictedCommand}" Text="제한된 사용자 선택" />
+                                <MenuFlyoutItem Command="{x:Bind ViewModel.DeselectFavoriteCommand}" Text="관심 친구 선택 해제" />
+                                <MenuFlyoutItem Command="{x:Bind ViewModel.InvertSelectionCommand}" Text="선택 반전" />
+                            </MenuFlyout>
+                        </AppBarButton.Flyout>
+                    </AppBarButton>
+                    <AppBarButton
+                        Command="{x:Bind ViewModel.DeleteSelectedCommand}"
+                        IsEnabled="{x:Bind ViewModel.HasSelection, Mode=OneWay}"
+                        Label="삭제">
+                        <AppBarButton.Icon>
+                            <FontIcon Glyph="&#xE74D;" />
+                        </AppBarButton.Icon>
+                    </AppBarButton>
+                </CommandBar>
+            </Grid>
+        </Grid>
+    </Grid>
+</local:BasePage>

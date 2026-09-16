@@ -1,6 +1,7 @@
 ﻿using History.Commons;
 using History.Commons.Api.Post;
 using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Helpers;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
@@ -283,4 +284,24 @@ public static partial class Utils
     // is the real post id used by the story API (e.g. "_63msr.6MgT2Z7CfP9").
     [GeneratedRegex("\"feed_id\"\\s*:\\s*\"([^\"]+)\"", RegexOptions.Compiled)]
     private static partial Regex KakaoStoryFeedIdRegex();
+
+    // Returns the Korean subject particle (이/가) for the given word.
+    public static string GetSubjectParticle(string word) => HasJongsung(word) ? "이" : "가";
+
+    // Returns the Korean topic particle (은/는) for the given word.
+    public static string GetTopicParticle(string word) => HasJongsung(word) ? "은" : "는";
+
+    // Returns the Korean object particle (을/를) for the given word.
+    public static string GetObjectParticle(string word) => HasJongsung(word) ? "을" : "를";
+
+    private static bool HasJongsung(string word)
+    {
+        if (string.IsNullOrEmpty(word)) return false;
+
+        var lastCharacter = word[^1];
+        if (!KoreanHelper.IsKoreanCharacrer(lastCharacter)) return false;
+
+        var split = KoreanHelper.SplitCharacter(lastCharacter);
+        return split.Length == 3 && split[2] != ' ';
+    }
 }

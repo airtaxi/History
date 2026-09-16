@@ -16,7 +16,8 @@ public abstract class BaseWindow : WindowEx,
     IRecipient<ShowLoadingMessage>,
     IRecipient<HideLoadingMessage>,
     IRecipient<NavigationRequestedMessage>,
-    IRecipient<TryNavigateBackRequestedMessage>
+    IRecipient<TryNavigateBackRequestedMessage>,
+    IRecipient<WindowCloseBlockRequestedMessage>
 {
     // Serializes this window's loading overlay sequences: concurrent loading requests from
     // different pages (for example MainPage and TimelinePage refreshing on startup) would
@@ -25,6 +26,14 @@ public abstract class BaseWindow : WindowEx,
     private readonly SemaphoreSlim _loadingSemaphore = new(1, 1);
 
     private readonly BaseViewModel _viewModel;
+
+    // Close guard: while a long-running flow owns the window, close attempts are cancelled and
+    // the notice with that flow's reason is shown instead.
+    private const string DefaultCloseBlockedReason = "작업이 진행 중입니다. 중단한 뒤 닫아주세요.";
+
+    private bool _isCloseBlocked;
+    private string _closeBlockedReason;
+    private bool _isCloseBlockedNoticeOpen;
 
     protected readonly ApplicationThemeService _applicationThemeService = App.Services.GetRequiredService<ApplicationThemeService>();
 
@@ -38,6 +47,15 @@ public abstract class BaseWindow : WindowEx,
         _applicationThemeService.ThemeChanged += OnApplicationThemeServiceThemeChanged;
         Closed += OnBaseWindowClosed;
 
+        // Wired once here so the close-block flag alone decides whether a close is cancelled.
+        AppWindow.Closing += (_, args) =>
+        {
+            if (!_isCloseBlocked) return;
+
+            args.Cancel = true;
+            ShowCloseBlockedNotice();
+        };
+
         AppWindow.SetIcon("Assets/Icon.ico");
 
         WeakReferenceMessenger.Default.Register((IRecipient<LoadingStateRequestedMessage>)this);
@@ -45,6 +63,7 @@ public abstract class BaseWindow : WindowEx,
         WeakReferenceMessenger.Default.Register((IRecipient<HideLoadingMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<NavigationRequestedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<TryNavigateBackRequestedMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<WindowCloseBlockRequestedMessage>)this);
     }
 
     // XAML-declared lifecycle hooks: derived roots declare Loaded="OnWindowLoaded" and windows
@@ -192,6 +211,41 @@ public abstract class BaseWindow : WindowEx,
         message.Complete(TryNavigateBack());
     }
 
+    // Applies close-block requests that originated from this window's pages/controls: the
+    // XamlRoot reference comparison routes requests from other windows away.
+    public void Receive(WindowCloseBlockRequestedMessage message)
+    {
+        if (Content.XamlRoot != message.XamlRoot) return;
+
+        SetCloseBlocked(message.IsCloseBlocked, message.Reason);
+    }
+
+    // Blocks or unblocks closing the window. While blocked, every close attempt (the title bar
+    // close button, Alt+F4, the system menu, or a programmatic Close) is cancelled and the
+    // notice with the optional reason is shown.
+    public void SetCloseBlocked(bool isCloseBlocked, string reason = null)
+    {
+        _isCloseBlocked = isCloseBlocked;
+        _closeBlockedReason = reason;
+    }
+
+    // Whether closing the window is currently blocked.
+    public bool IsCloseBlocked => _isCloseBlocked;
+
+    public void ShowCloseBlockedNotice()
+    {
+        if (_isCloseBlockedNoticeOpen) return;
+
+        _isCloseBlockedNoticeOpen = true;
+        _ = ShowCloseBlockedNoticeAsync();
+    }
+
+    private async Task ShowCloseBlockedNoticeAsync()
+    {
+        try { await Content.ShowMessageDialogAsync(new MessageDialogParameters("안내", _closeBlockedReason ?? DefaultCloseBlockedReason)); }
+        finally { _isCloseBlockedNoticeOpen = false; }
+    }
+
     // Detaches the theme service subscription and the messenger registrations on close so the
     // application-lifetime theme service does not keep closed windows and their content trees alive.
     private void OnBaseWindowClosed(object _, WindowEventArgs __)
@@ -207,6 +261,7 @@ public abstract class BaseWindow : WindowEx,
         WeakReferenceMessenger.Default.Unregister<HideLoadingMessage>(this);
         WeakReferenceMessenger.Default.Unregister<NavigationRequestedMessage>(this);
         WeakReferenceMessenger.Default.Unregister<TryNavigateBackRequestedMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<WindowCloseBlockRequestedMessage>(this);
     }
 
     protected abstract void Navigate(Type pageType, object parameter);

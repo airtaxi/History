@@ -1,4 +1,5 @@
-﻿using History.WindowsClient.Messages;
+﻿using History.WindowsClient.Enums;
+using History.WindowsClient.Messages;
 using History.WindowsClient.Pages.Extras;
 using History.WindowsClient.ViewModels;
 using Microsoft.UI.Xaml;
@@ -69,6 +70,9 @@ public sealed partial class ExtrasWindow : BaseWindow
             _ when e.SourcePageType == typeof(InviteCodeRequestsPage) => "초대 코드 요청 관리",
             _ when e.SourcePageType == typeof(ModerationRecordsPage) => "제재 내역",
             _ when e.SourcePageType == typeof(BulkPostManagePage) => "게시글 일괄 관리",
+            _ when e.SourcePageType == typeof(BatchManageKakaoPostsPage) => e.Parameter as KakaoStoryBatchManageMode? == KakaoStoryBatchManageMode.ChangePermission ? "스토리 일괄 변경" : "스토리 일괄 삭제",
+            _ when e.SourcePageType == typeof(KakaoStoryExtrasPage) => "카카오스토리 부가기능",
+            _ when e.SourcePageType == typeof(BatchDeleteFriendsPage) => "친구 일괄 삭제",
             _ => "부가메뉴",
         };
         AddButton.Visibility = isStickersPage || isInviteCodesPage ? Visibility.Visible : Visibility.Collapsed;
@@ -139,6 +143,13 @@ public sealed partial class ExtrasWindow : BaseWindow
     private void OnCloseKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         args.Handled = true;
+
+        if (IsCloseBlocked)
+        {
+            ShowCloseBlockedNotice();
+            return;
+        }
+
         Close();
     }
 

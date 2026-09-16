@@ -35,6 +35,7 @@ public partial class BaseControl : UserControl
         ViewModel.HideLoadingRequested += OnHideLoadingRequested;
         ViewModel.NavigationRequested += OnNavigationRequested;
         ViewModel.TryNavigateBackRequested += OnTryNavigateBackRequested;
+        ViewModel.WindowCloseBlockRequested += OnWindowCloseBlockRequested;
     }
 
     private void UnsubscribeViewModelEvents()
@@ -52,6 +53,7 @@ public partial class BaseControl : UserControl
         ViewModel.HideLoadingRequested -= OnHideLoadingRequested;
         ViewModel.NavigationRequested -= OnNavigationRequested;
         ViewModel.TryNavigateBackRequested -= OnTryNavigateBackRequested;
+        ViewModel.WindowCloseBlockRequested -= OnWindowCloseBlockRequested;
     }
 
     private void OnMessageDialogRequested(object sender, MessageDialogRequestedEventArgs args)
@@ -121,4 +123,8 @@ public partial class BaseControl : UserControl
     // Forwards the view model's back navigation requests to the owning window through the
     // weak-reference messenger (the window matches the control's XamlRoot).
     private void OnTryNavigateBackRequested(object sender, TryNavigateBackRequestedEventArgs args) => TryNavigateBackRequestedMessage.Send(XamlRoot, args);
+
+    // Forwards the view model's close-block requests to the owning window through the
+    // weak-reference messenger (the window matches the control's XamlRoot).
+    private void OnWindowCloseBlockRequested(object sender, WindowCloseBlockRequestedEventArgs args) => WindowCloseBlockRequestedMessage.Send(XamlRoot, args.IsCloseBlocked, args.Reason);
 }

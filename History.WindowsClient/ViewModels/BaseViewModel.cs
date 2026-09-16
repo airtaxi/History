@@ -25,6 +25,7 @@ public abstract partial class BaseViewModel : ObservableObject
     public event EventHandler<HideLoadingRequestedEventArgs> HideLoadingRequested;
     public event EventHandler<NavigationRequestedEventArgs> NavigationRequested;
     public event EventHandler<TryNavigateBackRequestedEventArgs> TryNavigateBackRequested;
+    public event EventHandler<WindowCloseBlockRequestedEventArgs> WindowCloseBlockRequested;
 
     public async Task<ContentDialogResult?> ShowMessageDialogAsync(MessageDialogParameters parameters)
     {
@@ -150,6 +151,15 @@ public abstract partial class BaseViewModel : ObservableObject
     {
         var args = new NavigationRequestedEventArgs(pageType, parameter);
         NavigationRequested?.Invoke(this, args);
+    }
+
+    // Requests the owning window to block or unblock closing, so a long-running flow cannot
+    // leave its page behind a close; the optional reason is shown when a close is attempted
+    // while the block is on (fulfilled by the host page or control).
+    public void SetWindowCloseBlocked(bool isCloseBlocked, string reason = null)
+    {
+        var args = new WindowCloseBlockRequestedEventArgs(isCloseBlocked, reason);
+        WindowCloseBlockRequested?.Invoke(this, args);
     }
 
     // Requests the owning window to navigate its root frame back; returns whether the back

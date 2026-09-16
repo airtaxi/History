@@ -48,6 +48,10 @@ public partial class BasePage : Page
     {
         IsInForeground = false;
 
+        // Leaving the page aborts any running flow it guarded, so a close block it requested
+        // must not outlive the page and lock the window shut.
+        WindowCloseBlockRequestedMessage.Send(XamlRoot, false);
+
         UnsubscribeViewModelEvents();
         base.OnNavigatedFrom(e);
     }
@@ -74,6 +78,7 @@ public partial class BasePage : Page
         _subscribedViewModel.HideLoadingRequested += OnHideLoadingRequested;
         _subscribedViewModel.NavigationRequested += OnNavigationRequested;
         _subscribedViewModel.TryNavigateBackRequested += OnTryNavigateBackRequested;
+        _subscribedViewModel.WindowCloseBlockRequested += OnWindowCloseBlockRequested;
     }
 
     protected virtual void UnsubscribeViewModelEvents()
@@ -93,6 +98,7 @@ public partial class BasePage : Page
         _subscribedViewModel.HideLoadingRequested -= OnHideLoadingRequested;
         _subscribedViewModel.NavigationRequested -= OnNavigationRequested;
         _subscribedViewModel.TryNavigateBackRequested -= OnTryNavigateBackRequested;
+        _subscribedViewModel.WindowCloseBlockRequested -= OnWindowCloseBlockRequested;
 
         _subscribedViewModel = null;
     }
@@ -164,4 +170,8 @@ public partial class BasePage : Page
     // Forwards the view model's back navigation requests to the owning window through the
     // weak-reference messenger (the window matches the page's XamlRoot).
     private void OnTryNavigateBackRequested(object sender, TryNavigateBackRequestedEventArgs args) => TryNavigateBackRequestedMessage.Send(XamlRoot, args);
+
+    // Forwards the view model's close-block requests to the owning window through the
+    // weak-reference messenger (the window matches the page's XamlRoot).
+    private void OnWindowCloseBlockRequested(object sender, WindowCloseBlockRequestedEventArgs args) => WindowCloseBlockRequestedMessage.Send(XamlRoot, args.IsCloseBlocked, args.Reason);
 }

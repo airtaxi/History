@@ -170,6 +170,9 @@ public partial class App : Application
         serviceCollection.AddTransient(sp => new InviteCodeRequestsPageViewModel());
         serviceCollection.AddTransient(sp => new StickersPageViewModel());
         serviceCollection.AddTransient(sp => new ModerationRecordsPageViewModel());
+        serviceCollection.AddTransient(sp => new KakaoStoryExtrasPageViewModel());
+        serviceCollection.AddTransient(sp => new BatchManageKakaoPostsPageViewModel());
+        serviceCollection.AddTransient(sp => new BatchDeleteFriendsPageViewModel());
     }
     private static void OnApplicationUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs unhandledExceptionEventArguments)
     {

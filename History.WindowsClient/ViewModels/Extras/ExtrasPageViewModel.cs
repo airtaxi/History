@@ -13,12 +13,8 @@ using Microsoft.UI.Xaml.Controls;
 namespace History.WindowsClient.ViewModels.Extras;
 
 // Extras page state: resolves which extra-feature entries the signed-in account can see.
-// Entries whose target page is not implemented yet answer with an under-implementation notice.
 public sealed partial class ExtrasPageViewModel : BaseViewModel
 {
-    private const string UnderImplementationTitle = "안내";
-    private const string UnderImplementationMessage = "구현 중인 기능입니다.";
-
     private const string SelectPostsText = "원하는 게시글만 선택해 변경/삭제";
     private const string ChangeByFilterText = "특정 공개 범위를 다른 범위로 일괄 전환";
     private const string DeleteByFilterText = "특정 공개 범위를 가진 글을 전부 삭제";
@@ -55,9 +51,8 @@ public sealed partial class ExtrasPageViewModel : BaseViewModel
         else if (action == DeleteAllText) await DeleteAllPostsAsync();
     }
 
-    // TODO: Navigate to the Kakao Story extras page once it exists.
     [RelayCommand]
-    private async Task OpenKakaoStoryExtrasAsync() => await ShowUnderImplementationMessageAsync();
+    private void OpenKakaoStoryExtras() => RequestNavigation(typeof(KakaoStoryExtrasPage));
 
     [RelayCommand]
     private void OpenModerationRecords() => RequestNavigation(typeof(ModerationRecordsPage));
@@ -141,7 +136,4 @@ public sealed partial class ExtrasPageViewModel : BaseViewModel
     // Bulk operations replace or remove many posts at once, so the main window's post surfaces
     // are asked to reload instead of receiving per-post change messages.
     private static void RefreshPostPages() => RefreshRequestedMessage.Send(MainWindow.Frame.XamlRoot);
-
-    // TODO: Remove this helper once every entry above is implemented.
-    private async Task ShowUnderImplementationMessageAsync() => await ShowMessageDialogAsync(new MessageDialogParameters(UnderImplementationTitle, UnderImplementationMessage));
 }
