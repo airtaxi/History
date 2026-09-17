@@ -29,6 +29,21 @@ public static class ToastNotificationActivationHandler
     {
         if (string.IsNullOrWhiteSpace(query)) return;
 
+        // A toast click for an already running app is redirected to this instance and arrives on a
+        // thread pool thread, so the whole handler moves to the UI thread before it touches the
+        // window, its frame, or any dialog.
+        var dispatcherQueue = MainWindow.Frame.DispatcherQueue;
+        if (!dispatcherQueue.HasThreadAccess)
+        {
+            dispatcherQueue.TryEnqueue(() => _ = HandleOnUiThreadAsync(query));
+            return;
+        }
+
+        await HandleOnUiThreadAsync(query);
+    }
+
+    private static async Task HandleOnUiThreadAsync(string query)
+    {
         var parameters = HttpUtility.ParseQueryString(query);
         var typeText = parameters["Type"];
         if (string.IsNullOrEmpty(typeText) || !Enum.TryParse<NotificationType>(typeText, out var type)) return;
