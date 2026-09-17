@@ -15,6 +15,7 @@ public sealed partial class ApplicationSettingsService : IDisposable
     private const string IsTimelineRefreshEnabledOnNewPostSettingKey = "IsTimelineRefreshEnabledOnNewPost";
     private const string IsTimelineRefreshEnabledOnNewShareSettingKey = "IsTimelineRefreshEnabledOnNewShare";
     private const string IsOnlyMePostContinuationPromptEnabledSettingKey = "IsOnlyMePostContinuationPromptEnabled";
+    private const string IsFriendsListSortedByTimeSettingKey = "IsFriendsListSortedByTime";
 
     private bool _disposed;
 
@@ -43,6 +44,7 @@ public sealed partial class ApplicationSettingsService : IDisposable
         localSettings.Values[IsTimelineRefreshEnabledOnNewPostSettingKey] = Settings.IsTimelineRefreshEnabledOnNewPost;
         localSettings.Values[IsTimelineRefreshEnabledOnNewShareSettingKey] = Settings.IsTimelineRefreshEnabledOnNewShare;
         localSettings.Values[IsOnlyMePostContinuationPromptEnabledSettingKey] = Settings.IsOnlyMePostContinuationPromptEnabled;
+        localSettings.Values[IsFriendsListSortedByTimeSettingKey] = Settings.IsFriendsListSortedByTime;
         SettingsChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -75,6 +77,9 @@ public sealed partial class ApplicationSettingsService : IDisposable
         var isOnlyMePostContinuationPromptEnabled = true;
         if (localSettings.Values.TryGetValue(IsOnlyMePostContinuationPromptEnabledSettingKey, out var storedOnlyMePostContinuationPrompt) && storedOnlyMePostContinuationPrompt is bool onlyMePostContinuationPromptValue) isOnlyMePostContinuationPromptEnabled = onlyMePostContinuationPromptValue;
 
+        var isFriendsListSortedByTime = false;
+        if (localSettings.Values.TryGetValue(IsFriendsListSortedByTimeSettingKey, out var storedFriendsListSortedByTime) && storedFriendsListSortedByTime is bool friendsListSortedByTimeValue) isFriendsListSortedByTime = friendsListSortedByTimeValue;
+
         // Compose normalized settings and return
         var applicationSettings = new ApplicationSettings
         {
@@ -85,7 +90,8 @@ public sealed partial class ApplicationSettingsService : IDisposable
             IsKakaoPostEnabled = isKakaoPostEnabled,
             IsTimelineRefreshEnabledOnNewPost = isTimelineRefreshEnabledOnNewPost,
             IsTimelineRefreshEnabledOnNewShare = isTimelineRefreshEnabledOnNewShare,
-            IsOnlyMePostContinuationPromptEnabled = isOnlyMePostContinuationPromptEnabled
+            IsOnlyMePostContinuationPromptEnabled = isOnlyMePostContinuationPromptEnabled,
+            IsFriendsListSortedByTime = isFriendsListSortedByTime
         };
         NormalizeSettings(applicationSettings);
         return applicationSettings;

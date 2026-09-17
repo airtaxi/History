@@ -165,13 +165,36 @@
                                                 Text="{x:Bind Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                 TextChanged="{x:Bind OnFriendshipSideBarAutoSuggestBoxTextChanged}" />
 
-                                            <TextBlock
-                                                Grid.Row="1"
-                                                HorizontalAlignment="Left"
-                                                VerticalAlignment="Center"
-                                                FontWeight="Bold"
-                                                Style="{StaticResource CaptionTextBlockStyle}"
-                                                Text="{x:Bind RightHeaderText, Mode=OneWay}" />
+                                            <Grid Grid.Row="1" ColumnSpacing="8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    Grid.Column="0"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    FontWeight="Bold"
+                                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                                    Text="{x:Bind RightHeaderText, Mode=OneWay}" />
+                                                <Button
+                                                    Grid.Column="1"
+                                                    Padding="0"
+                                                    VerticalAlignment="Center"
+                                                    Background="Transparent"
+                                                    BorderThickness="0"
+                                                    Command="{x:Bind HandleSortTapCommand}"
+                                                    Visibility="{x:Bind IsSortButtonVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <FontIcon FontSize="12" Glyph="{x:Bind SortGlyph, Mode=OneWay}" />
+                                                        <TextBlock
+                                                            VerticalAlignment="Center"
+                                                            FontWeight="Bold"
+                                                            Style="{StaticResource CaptionTextBlockStyle}"
+                                                            Text="{x:Bind SortText, Mode=OneWay}" />
+                                                    </StackPanel>
+                                                </Button>
+                                            </Grid>
 
                                             <ScrollViewer Grid.Row="2">
                                                 <ItemsRepeater ItemTemplate="{StaticResource FriendshipTemplate}" ItemsSource="{x:Bind Items, Mode=OneWay}" />

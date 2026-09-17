@@ -23,6 +23,8 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
 {
     public UserResponseDto User { get; }
 
+    public DateTime CreatedAt => User.Friendship?.CreatedAt ?? DateTime.MinValue;
+
     private readonly BaseViewModel _baseViewModel;
 
     public HistoryFriendshipViewModel(UserResponseDto user, BaseViewModel baseViewModel, HistoryInteractionViewModel interactionViewModel = null)

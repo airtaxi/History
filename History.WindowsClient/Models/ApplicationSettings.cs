@@ -28,4 +28,7 @@ public sealed partial class ApplicationSettings : ObservableObject
 
     [ObservableProperty]
     public partial bool IsOnlyMePostContinuationPromptEnabled { get; set; } = true;
+
+    [ObservableProperty]
+    public partial bool IsFriendsListSortedByTime { get; set; }
 }

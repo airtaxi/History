@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using History.WindowsClient.ViewModels.Friendship;
 using Microsoft.UI.Xaml.Controls;
 using System;
@@ -29,6 +30,19 @@ public abstract partial class BaseMainPageFriendshipSideBarItemViewModel(MainPag
 
     [ObservableProperty]
     public partial ObservableCollection<BaseFriendshipViewModel> Items { get; set; }
+
+    // Sort surface for the shared friendship side bar template; only the friend list tab enables the toggle.
+    [ObservableProperty]
+    public partial bool IsSortButtonVisible { get; protected set; }
+
+    [ObservableProperty]
+    public partial string SortText { get; protected set; } = "이름순";
+
+    [ObservableProperty]
+    public partial string SortGlyph { get; protected set; } = "\uE8CB";
+
+    [RelayCommand]
+    public virtual void HandleSortTap() { }
 
     public abstract Task RefreshAsync();
 
