@@ -1,9 +1,9 @@
 using History.Commons;
 using History.Commons.DataTypes;
+using History.Commons.Helpers;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using System.Collections.Concurrent;
-using System.Security;
 using System.Text;
 using System.Text.Json;
 
@@ -15,11 +15,6 @@ public class WnsPushNotificationProvider(IMongoDatabase database, WnsAccessToken
 
     private const string ToastType = "wns/toast";
     private const int MaxConcurrentChannelSends = 20;
-    private const int MaxTitleLength = 80;
-    private const int MaxBodyLength = 100;
-
-    // Protocol activation is handled by the Windows client's "history-app://toast" deep link.
-    private const string ToastProtocolLaunchPrefix = "history-app://toast?";
 
     private readonly IMongoCollection<WnsChannel> _wnsChannelCollection = database.GetCollection<WnsChannel>("WnsChannels");
     private readonly SemaphoreSlim _sendSemaphore = new(MaxConcurrentChannelSends, MaxConcurrentChannelSends);
@@ -33,7 +28,7 @@ public class WnsPushNotificationProvider(IMongoDatabase database, WnsAccessToken
         var channels = await _wnsChannelCollection.Find(filter).ToListAsync();
         if (channels.Count == 0) return Result.Success();
 
-        var payload = BuildToastPayload(title, body, imageUrl, data);
+        var payload = ToastPayloadBuilder.Build(title, body, imageUrl, data);
         if (payload == null) return Result.Success();
 
         var httpClient = httpClientFactory.CreateClient(HttpClientName);
@@ -132,36 +127,6 @@ public class WnsPushNotificationProvider(IMongoDatabase database, WnsAccessToken
         var expiresInSeconds = root.TryGetProperty("expires_in", out var expiresProperty) && expiresProperty.TryGetInt32(out var expiresIn) ? expiresIn : 86400;
         return (accessToken, expiresInSeconds);
     }
-
-    private static string BuildToastPayload(string title, string body, string imageUrl, Dictionary<string, string> data)
-    {
-        if (string.IsNullOrWhiteSpace(title)) return null;
-
-        if (title.Length > MaxTitleLength) title = title[..MaxTitleLength];
-        if (body != null && body.Length > MaxBodyLength) body = body[..MaxBodyLength];
-
-        data.TryGetValue("notification_id", out var tag);
-        data.TryGetValue("Type", out var group);
-
-        var launchArguments = ToastProtocolLaunchPrefix + string.Join("&", data.Select(entry => $"{Uri.EscapeDataString(entry.Key)}={Uri.EscapeDataString(entry.Value)}"));
-
-        var builder = new StringBuilder();
-        builder.Append("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-        builder.Append("<toast activationType=\"protocol\"");
-        if (launchArguments.Length > 0) builder.Append($" launch=\"{XmlEscape(launchArguments)}\"");
-        if (!string.IsNullOrEmpty(tag)) builder.Append($" tag=\"{XmlEscape(tag)}\"");
-        if (!string.IsNullOrEmpty(group)) builder.Append($" group=\"{XmlEscape(group)}\"");
-        builder.Append(">");
-        builder.Append("<visual><binding template=\"ToastGeneric\">");
-        builder.Append($"<text>{XmlEscape(title)}</text>");
-        if (!string.IsNullOrEmpty(body)) builder.Append($"<text>{XmlEscape(body)}</text>");
-        if (Uri.IsWellFormedUriString(imageUrl, UriKind.Absolute)) builder.Append($"<image placement=\"inline\" src=\"{XmlEscape(imageUrl)}\"/>");
-        builder.Append("</binding></visual></toast>");
-
-        return builder.ToString();
-    }
-
-    private static string XmlEscape(string value) => SecurityElement.Escape(value) ?? string.Empty;
 
     private sealed record WnsSendResult(WnsChannel Channel, int StatusCode);
 }

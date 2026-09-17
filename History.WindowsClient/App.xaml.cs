@@ -71,6 +71,14 @@ public partial class App : Application
         _window = new MainWindow();
         _window.Activate();
 
+        // Lets the background notification service ask this process to refresh the shared tokens
+        // instead of spending the single-use refresh token itself.
+        Services.GetRequiredService<TokenBridgeService>().Start();
+
+        // The startup task only launches at logon, so the service is also started when the task is
+        // already enabled and the app comes up.
+        _ = BackgroundNotificationServiceController.EnsureRunningIfEnabledAsync();
+
         // Kakao Story requests that return 401 trigger the login window so the session
         // can be restored without restarting the app.
         KakaoStoryApiHandler.OnReloginRequired = KakaoStoryUtils.ReLoginAsync;
@@ -152,10 +160,11 @@ public partial class App : Application
         serviceCollection.AddSingleton(sp => new ApplicationThemeService(sp.GetRequiredService<ApplicationSettingsService>()));
         serviceCollection.AddSingleton(sp => new ApplicationNotificationService());
         serviceCollection.AddSingleton<PushNotificationService>();
+        serviceCollection.AddSingleton<TokenBridgeService>();
         serviceCollection.AddSingleton(sp => new StoreUpdateService(sp.GetRequiredService<ApplicationSettingsService>(), sp.GetRequiredService<ApplicationNotificationService>()));
         serviceCollection.AddSingleton<BadgePollerService>();
-        serviceCollection.AddTransient(sp => new LoginPageViewModel(sp.GetRequiredService<ApplicationSettingsService>()));
-        serviceCollection.AddTransient(sp => new RegisterPageViewModel(sp.GetRequiredService<ApplicationSettingsService>()));
+        serviceCollection.AddTransient<LoginPageViewModel>();
+        serviceCollection.AddTransient<RegisterPageViewModel>();
         serviceCollection.AddTransient(sp => new MainPageViewModel(sp.GetRequiredService<NotificationsViewModel>()));
         serviceCollection.AddTransient(sp => new HistoryTimelinePageViewModel());
         serviceCollection.AddTransient(sp => new KakaoTimelinePageViewModel());

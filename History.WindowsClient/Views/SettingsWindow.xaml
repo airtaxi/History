@@ -215,6 +215,15 @@
                                 OffContent="꺼짐"
                                 OnContent="켜짐" />
                         </dev:SettingsCard>
+                        <dev:SettingsCard Description="앱이 꺼져 있어도 새 알림을 확인해 Windows 알림으로 표시합니다" Header="백그라운드 알림">
+                            <dev:SettingsCard.HeaderIcon>
+                                <FontIcon Glyph="&#xEA8F;" />
+                            </dev:SettingsCard.HeaderIcon>
+                            <ToggleSwitch
+                                IsOn="{x:Bind ViewModel.IsBackgroundNotificationEnabled, Mode=TwoWay}"
+                                OffContent="꺼짐"
+                                OnContent="켜짐" />
+                        </dev:SettingsCard>
                     </dev:SettingsExpander.Items>
                 </dev:SettingsExpander>
 

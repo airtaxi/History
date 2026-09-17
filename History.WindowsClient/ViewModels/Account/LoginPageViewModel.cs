@@ -6,6 +6,7 @@ using History.Commons.Api.Friendship;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
@@ -24,20 +25,17 @@ public partial class LoginPageViewModel : BaseViewModel
     private const string AppleLoginUrl = "https://api.history.cenox.io/api/auth/apple/login?redirectUrl=history-app://auth/apple";
     private static readonly TimeSpan OAuthTimeout = TimeSpan.FromMinutes(5);
 
-    private readonly ApplicationSettingsService _settingsService;
     private TaskCompletionSource<OAuthLoginMessage> _pendingOAuthTaskCompletionSource;
 
     [ObservableProperty]
     public partial Visibility LoginPanelVisibility { get; set; }
 
-    public LoginPageViewModel(ApplicationSettingsService settingsService)
+    public LoginPageViewModel()
     {
-        _settingsService = settingsService;
-
         WeakReferenceMessenger.Default.Register<OAuthLoginMessage>(this, OnOAuthLoginMessageReceived);
 
-        var accessToken = settingsService.Settings.AccessToken;
-        var refreshToken = settingsService.Settings.RefreshToken;
+        var accessToken = AuthTokenStore.AccessToken;
+        var refreshToken = AuthTokenStore.RefreshToken;
         if (!string.IsNullOrEmpty(accessToken) && !string.IsNullOrEmpty(refreshToken)) LoginPanelVisibility = Visibility.Collapsed;
         else LoginPanelVisibility = Visibility.Visible;
     }
@@ -117,8 +115,8 @@ public partial class LoginPageViewModel : BaseViewModel
     // and loading events, so every request is fulfilled by the page/window.
     public async Task TryAutoLoginAsync()
     {
-        var accessToken = _settingsService.Settings.AccessToken;
-        var refreshToken = _settingsService.Settings.RefreshToken;
+        var accessToken = AuthTokenStore.AccessToken;
+        var refreshToken = AuthTokenStore.RefreshToken;
         if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
         {
             LoginPanelVisibility = Visibility.Visible;
@@ -180,8 +178,7 @@ public partial class LoginPageViewModel : BaseViewModel
         if (loginResult.IsFailure) return loginResult;
 
         CommonShared.ApiHandler = new(loginResult.Value.AccessToken, loginResult.Value.RefreshToken);
-        _settingsService.Settings.AccessToken = loginResult.Value.AccessToken;
-        _settingsService.Settings.RefreshToken = loginResult.Value.RefreshToken;
+        AuthTokenStore.SetTokens(loginResult.Value.AccessToken, loginResult.Value.RefreshToken);
 
         return loginResult;
     }

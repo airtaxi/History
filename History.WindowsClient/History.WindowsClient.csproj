@@ -81,4 +81,31 @@
 		<PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
 		<PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
 	</PropertyGroup>
+
+	<!--
+		Publishes the background notification service for the package architecture and copies the
+		result next to the app so the single-project MSIX packages it. The manifest declares the
+		executable as a logon startup task, and the app settings toggle enables or disables it.
+		The service publish reuses the shared History.Commons intermediate and output folders, so it
+		must keep the same configuration, target framework, platform, and runtime identifier as this
+		project; an isolated intermediate path would break the referenced project's default
+		obj folder exclusion.
+	-->
+	<Target Name="PublishNotificationService" BeforeTargets="PrepareForBuild" Condition="'$(Platform)' == 'ARM64' or '$(Platform)' == 'x64'">
+		<PropertyGroup>
+			<NotificationServiceProjectPath>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\..\History.WindowsClientNotificationService\History.WindowsClientNotificationService.csproj'))</NotificationServiceProjectPath>
+			<NotificationServiceRuntimeIdentifier Condition="'$(Platform)' == 'ARM64'">win-arm64</NotificationServiceRuntimeIdentifier>
+			<NotificationServiceRuntimeIdentifier Condition="'$(Platform)' == 'x64'">win-x64</NotificationServiceRuntimeIdentifier>
+			<NotificationServicePublishDirectory>$(IntermediateOutputPath)notification-service</NotificationServicePublishDirectory>
+		</PropertyGroup>
+		<Exec Command="dotnet publish &quot;$(NotificationServiceProjectPath)&quot; -c $(Configuration) -r $(NotificationServiceRuntimeIdentifier) --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false -p:Platform=$(Platform) -o &quot;$(NotificationServicePublishDirectory)&quot;" />
+		<!--
+			Link keeps the executable at the root of the build output, the publish output, and the
+			MSIX payload, which is where the manifest startup task expects it. Without it the target
+			path would follow the intermediate folder the service is published to.
+		-->
+		<ItemGroup>
+			<Content Include="$(NotificationServicePublishDirectory)\History.WindowsClientNotificationService.exe" Link="History.WindowsClientNotificationService.exe" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+		</ItemGroup>
+	</Target>
 </Project>

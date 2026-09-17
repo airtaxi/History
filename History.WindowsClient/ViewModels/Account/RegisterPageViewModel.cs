@@ -3,14 +3,14 @@ using CommunityToolkit.Mvvm.Input;
 using History.Commons;
 using History.Commons.Api.User;
 using History.Commons.Enums;
+using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
-using History.WindowsClient.Services;
 using History.WindowsClient.Views;
 
 namespace History.WindowsClient.ViewModels.Account;
 
-public partial class RegisterPageViewModel(ApplicationSettingsService settingsService) : BaseViewModel
+public partial class RegisterPageViewModel : BaseViewModel
 {
     private const string TermsUrl = "https://history.cenox.io/terms.html";
     private const string PrivacyAgreementUrl = "https://history.cenox.io/privacypolicy.html";
@@ -67,8 +67,7 @@ public partial class RegisterPageViewModel(ApplicationSettingsService settingsSe
             await ShowMessageDialogAsync(new("안내", "가입이 완료되었습니다."));
 
             CommonShared.ApiHandler = new(result.Value.AccessToken, result.Value.RefreshToken);
-            settingsService.Settings.AccessToken = result.Value.AccessToken;
-            settingsService.Settings.RefreshToken = result.Value.RefreshToken;
+            AuthTokenStore.SetTokens(result.Value.AccessToken, result.Value.RefreshToken);
 
             await LoginPageViewModel.LoadMyProfileAsync(this);
             LoginPageViewModel.NavigateToMainPage(this);

@@ -26,4 +26,10 @@
     <Platform Solution="Release|Any CPU" Project="x64" />
     <Deploy />
   </Project>
+  <Project Path="History.WindowsClientNotificationService/History.WindowsClientNotificationService.csproj">
+    <Platform Solution="*|ARM64" Project="ARM64" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="Debug|Any CPU" Project="ARM64" />
+    <Platform Solution="Release|Any CPU" Project="x64" />
+  </Project>
 </Solution>

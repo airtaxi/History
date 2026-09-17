@@ -1,5 +1,6 @@
 ﻿using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Helpers;
 using History.Commons.Interfaces;
 using RestSharp;
 using System.Net;
@@ -11,6 +12,8 @@ public class ApiHandler(string accessToken = null, string refreshToken = null)
 {
     public static ApiHandler Public { get; } = new();
     private static readonly RestClient Client = new(CommonConstants.ApiBaseUrl);
+    private static readonly SemaphoreSlim s_refreshSemaphore = new(1, 1);
+    private static readonly TimeSpan s_refreshLockTimeout = TimeSpan.FromSeconds(30);
 
     public static string ApplicationVersion { get; set; } = "unknown";
     public static string Platform { get; set; } = "unknown";
@@ -106,14 +109,8 @@ public class ApiHandler(string accessToken = null, string refreshToken = null)
         if (response.IsSuccessStatusCode) return response.Data;
         else if (response.StatusCode == HttpStatusCode.Unauthorized && request is not RefreshToken)
         {
-            var refreshTokenRequest = new RefreshToken(refreshToken);
-            var refreshResponse = await ExecuteRequestAsync(refreshTokenRequest);
+            await RefreshTokensAsync();
 
-            accessToken = refreshResponse.AccessToken;
-            refreshToken = refreshResponse.RefreshToken;
-            Configuration.SetValue("AccessToken", accessToken);
-            Configuration.SetValue("RefreshToken", refreshToken);
-			
             return await ExecuteRequestAsync(request);
         }
         else throw new HttpRequestException(response.Content, response.ErrorException, response.StatusCode);
@@ -127,13 +124,7 @@ public class ApiHandler(string accessToken = null, string refreshToken = null)
 
         if (!response.IsSuccessful && response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            var refreshTokenRequest = new RefreshToken(refreshToken);
-            var refreshResponse = await ExecuteRequestAsync(refreshTokenRequest);
-
-            accessToken = refreshResponse.AccessToken;
-            refreshToken = refreshResponse.RefreshToken;
-            Configuration.SetValue("AccessToken", accessToken);
-            Configuration.SetValue("RefreshToken", refreshToken);
+            await RefreshTokensAsync();
 
             await ExecuteRequestAsync(request);
         }
@@ -148,5 +139,40 @@ public class ApiHandler(string accessToken = null, string refreshToken = null)
             return true;
         }
         catch { return false; }
+    }
+
+    // Refreshes the token pair, serialized inside this process and across the other client
+    // process on the same machine. The persisted pair is re-read after the locks are taken
+    // because the other process may have already spent the single-use refresh token; using the
+    // stale one would revoke the session and sign the user out.
+    private async Task RefreshTokensAsync()
+    {
+        await s_refreshSemaphore.WaitAsync();
+        try
+        {
+            using var crossProcessLock = CrossProcessTokenRefreshLock.Acquire(s_refreshLockTimeout);
+            AdoptPersistedTokens();
+
+            var refreshResponse = await ExecuteRequestAsync(new RefreshToken(refreshToken));
+            accessToken = refreshResponse.AccessToken;
+            refreshToken = refreshResponse.RefreshToken;
+            Configuration.SetValue("AccessToken", accessToken);
+            Configuration.SetValue("RefreshToken", refreshToken);
+        }
+        finally { s_refreshSemaphore.Release(); }
+    }
+
+    // Adopts a token pair another process persisted since this instance was created, so the
+    // refresh spends the freshest refresh token instead of one the server already revoked.
+    private void AdoptPersistedTokens()
+    {
+        Configuration.ReloadFromDisk();
+
+        var persistedAccessToken = Configuration.GetValue<string>("AccessToken");
+        var persistedRefreshToken = Configuration.GetValue<string>("RefreshToken");
+        if (string.IsNullOrEmpty(persistedRefreshToken) || persistedRefreshToken == refreshToken) return;
+
+        accessToken = persistedAccessToken;
+        refreshToken = persistedRefreshToken;
     }
 }

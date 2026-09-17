@@ -148,6 +148,32 @@ public class Configuration
             }
         }
     }
+
+    /// <summary>
+    /// Drops the in-memory cache and re-reads the configuration file. Pending writes are flushed
+    /// first so a value set moments ago in this process is never lost. Long-running processes use
+    /// this to observe values written by the other client process, for example tokens refreshed
+    /// on the other side.
+    /// </summary>
+    public static void ReloadFromDisk()
+    {
+        lock (LockObject)
+        {
+            FlushPendingWrites();
+            s_cache = null;
+            _ = GetConfigurationFileContent();
+        }
+    }
+
+    private static void FlushPendingWrites()
+    {
+        if (s_buffer == null) return;
+
+        s_timer?.Stop();
+        ValidateConfigurationFile();
+        File.WriteAllText(ConfigurationFilePath, s_buffer);
+        File.WriteAllText(ConfigurationBackupFilePath, s_buffer);
+    }
 }
 
 [JsonSourceGenerationOptions()]

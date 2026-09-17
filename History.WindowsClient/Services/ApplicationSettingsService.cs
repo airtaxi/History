@@ -9,8 +9,6 @@ public sealed partial class ApplicationSettingsService : IDisposable
 {
     private const string ThemeSettingKey = "Theme";
     private const string IsAutomaticUpdateCheckEnabledSettingKey = "IsAutomaticUpdateCheckEnabled";
-    private const string AccessTokenSettingKey = "AccessToken";
-    private const string RefreshTokenSettingKey = "RefreshToken";
     private const string IsKakaoPostEnabledSettingKey = "IsKakaoPostEnabled";
     private const string IsTimelineRefreshEnabledOnNewPostSettingKey = "IsTimelineRefreshEnabledOnNewPost";
     private const string IsTimelineRefreshEnabledOnNewShareSettingKey = "IsTimelineRefreshEnabledOnNewShare";
@@ -38,8 +36,6 @@ public sealed partial class ApplicationSettingsService : IDisposable
         var localSettings = ApplicationData.Current.LocalSettings;
         localSettings.Values[ThemeSettingKey] = Settings.Theme.ToString();
         localSettings.Values[IsAutomaticUpdateCheckEnabledSettingKey] = Settings.IsAutomaticUpdateCheckEnabled;
-        localSettings.Values[AccessTokenSettingKey] = Settings.AccessToken;
-        localSettings.Values[RefreshTokenSettingKey] = Settings.RefreshToken;
         localSettings.Values[IsKakaoPostEnabledSettingKey] = Settings.IsKakaoPostEnabled;
         localSettings.Values[IsTimelineRefreshEnabledOnNewPostSettingKey] = Settings.IsTimelineRefreshEnabledOnNewPost;
         localSettings.Values[IsTimelineRefreshEnabledOnNewShareSettingKey] = Settings.IsTimelineRefreshEnabledOnNewShare;
@@ -58,12 +54,6 @@ public sealed partial class ApplicationSettingsService : IDisposable
 
         var isAutomaticUpdateCheckEnabled = true;
         if (localSettings.Values.TryGetValue(IsAutomaticUpdateCheckEnabledSettingKey, out var storedAutoCheck) && storedAutoCheck is bool autoCheckValue) isAutomaticUpdateCheckEnabled = autoCheckValue;
-
-        string accessToken = null;
-        if (localSettings.Values.TryGetValue(AccessTokenSettingKey, out var storedAccessToken) && storedAccessToken is string accessTokenValue) accessToken = accessTokenValue;
-
-        string refreshToken = null;
-        if (localSettings.Values.TryGetValue(RefreshTokenSettingKey, out var storedRefreshToken) && storedRefreshToken is string refreshTokenValue) refreshToken = refreshTokenValue;
 
         var isKakaoPostEnabled = false;
         if (localSettings.Values.TryGetValue(IsKakaoPostEnabledSettingKey, out var storedKakaoPostEnabled) && storedKakaoPostEnabled is bool kakaoPostEnabledValue) isKakaoPostEnabled = kakaoPostEnabledValue;
@@ -85,8 +75,6 @@ public sealed partial class ApplicationSettingsService : IDisposable
         {
             Theme = theme,
             IsAutomaticUpdateCheckEnabled = isAutomaticUpdateCheckEnabled,
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
             IsKakaoPostEnabled = isKakaoPostEnabled,
             IsTimelineRefreshEnabledOnNewPost = isTimelineRefreshEnabledOnNewPost,
             IsTimelineRefreshEnabledOnNewShare = isTimelineRefreshEnabledOnNewShare,

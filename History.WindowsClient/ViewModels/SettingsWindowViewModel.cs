@@ -5,6 +5,7 @@ using History.Commons;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.Commons.Ipc;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
@@ -12,6 +13,7 @@ using History.WindowsClient.Models;
 using History.WindowsClient.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Windows.ApplicationModel;
 using Windows.System;
 
 namespace History.WindowsClient.ViewModels;
@@ -193,8 +195,62 @@ public sealed partial class SettingsWindowViewModel : BaseViewModel
         Configuration.SetValue(KakaoStoryProfanityCheckEnabledKey, value);
     }
 
+    // Mirrors the MSIX startup task that runs the background notification service. This row is
+    // the only place the task is toggled in the app; users can also disable it in Task Manager,
+    // and a task disabled there cannot be re-enabled programmatically.
+    [ObservableProperty]
+    public partial bool IsBackgroundNotificationEnabled { get; set; }
+
+    partial void OnIsBackgroundNotificationEnabledChanged(bool value)
+    {
+        if (_suppressChangeHandlers) return;
+        _ = ApplyBackgroundNotificationAsync(value);
+    }
+
+    private async Task ApplyBackgroundNotificationAsync(bool isEnabled)
+    {
+        try
+        {
+            var startupTask = await StartupTask.GetAsync(NotificationServiceProtocol.TaskId);
+            if (isEnabled)
+            {
+                if (await startupTask.RequestEnableAsync() != StartupTaskState.Enabled)
+                {
+                    _suppressChangeHandlers = true;
+                    IsBackgroundNotificationEnabled = false;
+                    _suppressChangeHandlers = false;
+                    await ShowMessageDialogAsync(new MessageDialogParameters("안내", "백그라운드 알림을 켜려면 Windows 작업 관리자의 시작 프로그램 탭에서 '히스토리'를 사용하도록 변경해주세요."));
+                    return;
+                }
+
+                // The startup task only runs at logon, so the service is started right away too.
+                if (!BackgroundNotificationServiceController.TryStart()) await ShowMessageDialogAsync(new MessageDialogParameters("안내", "백그라운드 알림 서비스를 지금 시작하지 못했습니다. 다음 로그온부터 자동으로 실행됩니다."));
+                return;
+            }
+
+            startupTask.Disable();
+            await BackgroundNotificationServiceController.StopAsync();
+        }
+        catch (Exception exception) { await ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, $"백그라운드 알림 설정에 실패하였습니다.\n{exception.Message}")); }
+    }
+
+    // A build without the declared startup task keeps the row off instead of failing.
+    private async Task LoadBackgroundNotificationStateAsync()
+    {
+        try
+        {
+            var startupTask = await StartupTask.GetAsync(NotificationServiceProtocol.TaskId);
+            _suppressChangeHandlers = true;
+            IsBackgroundNotificationEnabled = startupTask.State == StartupTaskState.Enabled;
+            _suppressChangeHandlers = false;
+        }
+        catch { }
+    }
+
     public async Task LoadAsync()
     {
+        _ = LoadBackgroundNotificationStateAsync();
+
         var profileResult = await ExecuteRequestAsync(new GetMyProfile());
         if (profileResult.IsFailure) return;
 
@@ -307,7 +363,7 @@ public sealed partial class SettingsWindowViewModel : BaseViewModel
             await CommonKakaoStoryUtils.DeleteTokenFromServerAsync();
 
             // Revoke the current refresh token on the server so the session cannot be resumed.
-            var refreshToken = _settings.RefreshToken;
+            var refreshToken = AuthTokenStore.RefreshToken;
             if (!string.IsNullOrEmpty(refreshToken)) await CommonShared.ApiHandler.TryExecuteRequestAsync(new Logout(refreshToken));
 
             await _pushNotificationService.UnregisterAsync();
@@ -483,8 +539,7 @@ public sealed partial class SettingsWindowViewModel : BaseViewModel
 
     private void ClearSharedState()
     {
-        _settings.AccessToken = null;
-        _settings.RefreshToken = null;
+        AuthTokenStore.ClearTokens();
         _settingsService.SaveSettings();
 
         CommonShared.ApiHandler = ApiHandler.Public;
