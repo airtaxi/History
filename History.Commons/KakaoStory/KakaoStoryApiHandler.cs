@@ -644,24 +644,6 @@ public partial class KakaoStoryApiHandler
         string response = await GetResponseFromRequest(webRequest);
         return JsonConvert.DeserializeObject<UserProfile.ProfileData>(response);
     }
-    public static async Task<bool> SendMail(string content, string id, bool bomb, string imgURI = null)
-    {
-        string requestURI = "https://story.kakao.com/a/messages?_=" + ((long)DateTime.Now.Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds - 32400).ToString() + "11149";
-        string objectStr = $"&object=%7B%22background%22%3A%7B%22type%22%3A%22color%22%2C%22value%22%3A{new Random().Next(10983816, 10983816)}%7D%7D";
-
-        if (imgURI != null)
-            objectStr = "";
-
-        string postData = $"content={Uri.EscapeDataString("[{\"type\":\"text\",\"text\":\"" + content + "\"}]")}&bomb={bomb.ToString().ToLower()}" + objectStr + $"&receiver_id%5B%5D={id}&reference_id=";
-
-        HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "POST");
-        webRequest.Headers["Origin"] = "https://story.kakao.com";
-        webRequest.Headers["Cache-Control"] = "no-cache";
-        webRequest.Referer = "https://story.kakao.com/";
-
-        byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-        return await GetResponseFromRequest(webRequest, byteArray) != null;
-    }
 
     /// <summary>
     /// Sends a Kakao Story message through the Android app's API endpoint
