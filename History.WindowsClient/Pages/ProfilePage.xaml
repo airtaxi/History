@@ -148,12 +148,21 @@
                                                 TextLineBounds="TrimToCapHeight" />
                                         </StackPanel>
 
-                                        <!--  Header action row (memo / copy profile link)  -->
+                                        <!--  Header action row (message / memo / copy profile link)  -->
                                         <StackPanel
                                             Grid.Column="2"
                                             VerticalAlignment="Top"
                                             Orientation="Horizontal"
                                             Spacing="4">
+                                            <Button
+                                                Width="36"
+                                                Height="36"
+                                                Padding="0"
+                                                Command="{x:Bind HandleMessageCommand}"
+                                                ToolTipService.ToolTip="쪽지 보내기"
+                                                Visibility="{x:Bind IsMessageButtonVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                                                <FontIcon FontSize="16" Glyph="&#xE715;" />
+                                            </Button>
                                             <Button
                                                 Width="36"
                                                 Height="36"

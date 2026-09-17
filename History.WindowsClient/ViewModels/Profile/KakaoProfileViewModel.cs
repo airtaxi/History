@@ -2,10 +2,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using History.Commons;
 using History.Commons.Api.User;
 using History.Commons.KakaoStory;
+using History.WindowsClient.Dialogs;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using History.WindowsClient.ViewModels.Media;
+using History.WindowsClient.ViewModels.Message;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -60,6 +62,7 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
         IsFavorite = Profile?.is_favorite ?? false;
         IsBlocked = Profile?.blocked ?? false;
         IsMemoVisible = false;
+        IsMessageVisible = Profile?.message_sendable ?? false;
         BanButtonText = "차단";
         FavoriteBrush = IsFavorite ? new SolidColorBrush((Color)Application.Current.Resources["SystemAccentColor"]) : new SolidColorBrush(Color.FromArgb(0xFF, 0x30, 0x30, 0x30));
 
@@ -148,6 +151,18 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
         }
         catch (Exception exception) { await _baseViewModel.ShowMessageDialogAsync(new(Constants.ErrorTitle, $"즐겨찾기 처리에 실패하였습니다.\n{exception.Message}")); }
     }
+
+    // Opens the compose dialog with this profile already selected as the receiver; the
+    // composed mail is sent through the Kakao Story message API.
+    public override async Task HandleMessageAsync()
+    {
+        if (Profile?.id == null) return;
+
+        var dialog = new WriteMessageDialog(new KakaoWriteMessageDialogViewModel(_baseViewModel, CreateMessageReceiver()));
+        await _baseViewModel.ShowContentDialogAsync(dialog);
+    }
+
+    private MessageReceiver CreateMessageReceiver() => new(Profile.id, Profile.display_name ?? Profile.id, ProfileThumbnailImageSource, false, false);
 
     public override async Task HandleBanAsync()
     {

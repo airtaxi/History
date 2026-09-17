@@ -2,6 +2,7 @@ using History.Commons;
 using History.Commons.Helpers;
 using History.Commons.KakaoStory;
 using History.WindowsClient.Helpers;
+using History.WindowsClient.Models;
 using History.WindowsClient.ViewModels.Friendship;
 using Microsoft.UI.Xaml;
 using System.Collections.ObjectModel;
@@ -10,8 +11,16 @@ namespace History.WindowsClient.ViewModels.Message;
 
 // Kakao Story write-message dialog: the receiver list comes from the Kakao Story friends
 // cache and the composed mail is sent through the Kakao Story message API.
-public partial class KakaoWriteMessageDialogViewModel(BaseViewModel baseViewModel) : HistoryWriteMessageDialogViewModel(baseViewModel)
+public partial class KakaoWriteMessageDialogViewModel : HistoryWriteMessageDialogViewModel
 {
+    public KakaoWriteMessageDialogViewModel(BaseViewModel baseViewModel, MessageReceiver receiver = null) : base(baseViewModel)
+    {
+        if (receiver != null)
+        {
+            Receiver = receiver;
+        }
+    }
+
     public override bool IsAttachmentAvailable => false;
 
     protected override void PopulateDefaultSuggestions()

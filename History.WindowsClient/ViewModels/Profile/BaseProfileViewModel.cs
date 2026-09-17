@@ -15,6 +15,7 @@ public abstract partial class BaseProfileViewModel : BaseViewModel
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotMe))]
     [NotifyPropertyChangedFor(nameof(IsMemoButtonVisible))]
+    [NotifyPropertyChangedFor(nameof(IsMessageButtonVisible))]
     public partial bool IsMe { get; protected set; }
 
     public bool IsNotMe => !IsMe;
@@ -44,6 +45,14 @@ public abstract partial class BaseProfileViewModel : BaseViewModel
     public partial bool IsMemoVisible { get; protected set; } = true;
 
     public bool IsMemoButtonVisible => IsNotMe && IsMemoVisible;
+
+    // Message is available on other users' profiles; the account-mode flows decide
+    // whether the receiver may actually be messaged.
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMessageButtonVisible))]
+    public partial bool IsMessageVisible { get; protected set; } = true;
+
+    public bool IsMessageButtonVisible => IsNotMe && IsMessageVisible;
 
     // Ban button label: "차단 / 무시" for History (ban and ignore), "차단" for
     // Kakao Story (ban only).
@@ -95,6 +104,9 @@ public abstract partial class BaseProfileViewModel : BaseViewModel
 
     [RelayCommand]
     public virtual void HandleBackgroundTap() => throw new NotSupportedException("[BaseProfileViewModel] HandleBackgroundTap must be overridden");
+
+    [RelayCommand]
+    public virtual async Task HandleMessageAsync() => throw new NotSupportedException("[BaseProfileViewModel] HandleMessageAsync must be overridden");
 
     [RelayCommand]
     public virtual async Task HandleMemoAsync() => throw new NotSupportedException("[BaseProfileViewModel] HandleMemoAsync must be overridden");

@@ -3,16 +3,19 @@ using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.Mvvm.Messaging.Messages;
 using History.Commons;
 using History.Commons.Api.Friendship;
+using History.Commons.Api.Message;
 using History.Commons.Api.User;
 using History.Commons.KakaoStory;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
+using History.WindowsClient.Dialogs;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using History.WindowsClient.ViewModels.Friendship;
 using History.WindowsClient.ViewModels.Media;
+using History.WindowsClient.ViewModels.Message;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -118,6 +121,17 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
     {
         var result = await _baseViewModel.ExecuteRequestAsync(new ToggleFavorite(User.UserId));
         if (result.IsSuccess) await RefreshAsync();
+    }
+
+    // Verifies that the server accepts a mail to this user, then opens the compose
+    // dialog with the receiver already selected.
+    public override async Task HandleMessageAsync()
+    {
+        var canSend = await _baseViewModel.ExecuteRequestAsync(new CheckMessagePermission(User.UserId));
+        if (canSend.IsFailure) return;
+
+        var dialog = new WriteMessageDialog(new HistoryWriteMessageDialogViewModel(_baseViewModel, User));
+        await _baseViewModel.ShowContentDialogAsync(dialog);
     }
 
     // An empty memo deletes it, and success refreshes the profile surface.
