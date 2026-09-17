@@ -26,7 +26,7 @@ public partial class KakaoStoryNotificationViewModel : BaseNotificationViewModel
     public override bool IsBodyVisible => !string.IsNullOrEmpty(Notification.content);
     public override string TimestampText => KakaoStoryUtils.GetTimeString(Notification.created_at);
     // Kakao Story notification keys classify the notification type; "invt:" is a friend request.
-    public bool IsFriendRequest => Notification.key?.StartsWith("invt:", StringComparison.OrdinalIgnoreCase) == true;
+    public override bool IsFriendRequest => Notification.key?.StartsWith("invt:", StringComparison.OrdinalIgnoreCase) == true;
     public override bool IsImageVisible => !string.IsNullOrEmpty(Notification.thumbnail_url) && !IsFriendRequest;
 
     public override ImageSource ProfileImageSource => Notification.actor?.profile_image_url != null ? new BitmapImage(new Uri(Notification.actor.profile_image_url)) : Notification.actor?.profile_thumbnail_url != null ? new BitmapImage(new Uri(Notification.actor.profile_thumbnail_url)) : null;
@@ -94,6 +94,28 @@ public partial class KakaoStoryNotificationViewModel : BaseNotificationViewModel
         var queryIndex = postId.IndexOf('?');
         if (queryIndex >= 0) postId = postId[..queryIndex];
         return postId;
+    }
+
+    // Accepts the friend request from the notification row; the row keeps its place with the
+    // accept button hidden once the request is answered.
+    public override async Task AcceptFriendRequestAsync()
+    {
+        if (!IsFriendRequest) return;
+
+        var userId = Notification.actor?.id;
+        if (userId == null)
+        {
+            await _baseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "친구 요청을 보낸 사용자를 찾을 수 없습니다."));
+            return;
+        }
+
+        try
+        {
+            await _baseViewModel.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.AcceptFriendRequest(userId, false));
+            IsAccepted = true;
+            await MarkAsReadAsync();
+        }
+        catch (Exception exception) { await _baseViewModel.ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, $"친구 요청 수락에 실패하였습니다.\n{exception.Message}")); }
     }
 
     // Kakao Story marks a notification as read server-side when its target is fetched, so

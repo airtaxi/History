@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using History.Commons;
+using History.Commons.Api.Friendship;
 using History.Commons.Api.Message;
 using History.Commons.Api.Post;
 using History.Commons.Api.User;
@@ -26,7 +27,9 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel, I
     public override string Body => Notification.Body;
     public override bool IsBodyVisible => !string.IsNullOrEmpty(Notification.Body);
     public override string TimestampText => PostHelper.GenerateFriendlyTimestamp(Notification.CreatedAt, null);
-    public override bool IsImageVisible => !string.IsNullOrEmpty(Notification.ImageUrl);
+    // The accept button takes the thumbnail slot, so friend request rows hide their image.
+    public override bool IsImageVisible => !string.IsNullOrEmpty(Notification.ImageUrl) && Notification.Type != NotificationType.FriendRequest && !IsAcceptButtonVisible;
+    public override bool IsFriendRequest => Notification.Type == NotificationType.FriendRequest;
 
     public override ImageSource ProfileImageSource => Notification.User?.ProfileThumbnailMediaId == null ? null : new BitmapImage(new Uri(CommonUtils.GenerateMediaUri(Notification.User.ProfileThumbnailMediaId)));
     public override ImageSource ImageSource => string.IsNullOrEmpty(Notification.ImageUrl) ? null : new BitmapImage(new Uri(Notification.ImageUrl));
@@ -35,6 +38,9 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel, I
     {
         _baseViewModel = baseViewModel;
         Notification = notification;
+
+        // A friend request that was already answered keeps its row but hides the accept button.
+        if (Notification.Type == NotificationType.FriendRequest && Notification.Data != null && Notification.Data.TryGetValue("FriendshipStatus", out var friendshipStatus)) IsAccepted = friendshipStatus != nameof(FriendshipStatus.Waiting);
 
         WeakReferenceMessenger.Default.Register((IRecipient<NotificationsReadAllMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<NotificationPostReadMessage>)this);
@@ -124,6 +130,21 @@ public partial class HistoryNotificationViewModel : BaseNotificationViewModel, I
             _ = MarkAsReadAsync();
             _baseViewModel.RequestNavigation(typeof(PostPage), postResult.Value);
         }
+    }
+
+    // Accepts the friend request from the notification row and keeps the friend lists and the
+    // shared friend cache in sync through the friendship change message.
+    public override async Task AcceptFriendRequestAsync()
+    {
+        if (Notification.Type != NotificationType.FriendRequest) return;
+        if (Notification.Data == null || !Notification.Data.TryGetValue("UserId", out var userId)) return;
+
+        var result = await _baseViewModel.ExecuteRequestAsync(new AcceptFriendRequest(userId));
+        if (!result.IsSuccess) return;
+
+        IsAccepted = true;
+        WeakReferenceMessenger.Default.Send(new FriendshipChangedMessage(userId, FriendshipStatus.Accepted, Notification.User));
+        await MarkAsReadAsync();
     }
 
     // Silent best-effort read: the unread marker clears locally only after the server confirms.
