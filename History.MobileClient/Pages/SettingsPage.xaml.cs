@@ -47,6 +47,7 @@ public partial class SettingsPage : ContentPage
         SharedPostCommentPushNotificationPermissionLabel.Text = user.SharedPostCommentPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
         PostReactionPushNotificationPermissionLabel.Text = user.PostReactionPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
         PostMentionPushNotificationPermissionLabel.Text = user.PostMentionPushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
+        MessagePushNotificationPermissionLabel.Text = user.MessagePushNotificationPermission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
         IsFavoriteFriendNewPostPushNotificationEnabledLabel.Text = user.IsFavoriteFriendNewPostPushNotificationEnabled ? OnText : OffText;
 
         var theme = Configuration.GetValue<string>("Theme");
@@ -213,6 +214,10 @@ public partial class SettingsPage : ContentPage
                 case PushNotificationType.PostMention:
                     PostMentionPushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
                     _user.PostMentionPushNotificationPermission = permission;
+                    break;
+                case PushNotificationType.Message:
+                    MessagePushNotificationPermissionLabel.Text = permission.ToDisplayString().Replace(AccessPermission.OnlyMe.ToDisplayString(), OffText);
+                    _user.MessagePushNotificationPermission = permission;
                     break;
             }
 
@@ -527,6 +532,7 @@ public partial class SettingsPage : ContentPage
     private async void OnSharedPostCommentPushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.SharedPostComment);
     private async void OnPostReactionPushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.PostReaction);
     private async void OnPostMentionPushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.PostMention);
+    private async void OnMessagePushNotificationPermissionGridTapped(object sender, TappedEventArgs e) => await SetupPushNotificationPermission(PushNotificationType.Message);
     private async void OnIsFavoriteFriendNewPostPushNotificationEnabledGridTapped(object sender, TappedEventArgs e) 
     {
         var action = await DisplayActionSheetAsync("관심 친구 새 글 푸시 알림", Constants.PromptCancel, null, OnText, OffText);

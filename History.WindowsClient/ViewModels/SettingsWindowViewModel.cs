@@ -137,6 +137,10 @@ public sealed partial class SettingsWindowViewModel : BaseViewModel
     partial void OnPostMentionPushNotificationIndexChanged(int value) => _ = ApplyPushNotificationPermissionAsync(PushNotificationType.PostMention, value);
 
     [ObservableProperty]
+    public partial int MessagePushNotificationIndex { get; set; }
+    partial void OnMessagePushNotificationIndexChanged(int value) => _ = ApplyPushNotificationPermissionAsync(PushNotificationType.Message, value);
+
+    [ObservableProperty]
     public partial bool IsOnlyMePostContinuationPromptEnabled { get; set; }
     partial void OnIsOnlyMePostContinuationPromptEnabledChanged(bool value) => _settings.IsOnlyMePostContinuationPromptEnabled = value;
 
@@ -205,6 +209,7 @@ public sealed partial class SettingsWindowViewModel : BaseViewModel
         SharedPostCommentPushNotificationIndex = (int)_profile.SharedPostCommentPushNotificationPermission;
         PostReactionPushNotificationIndex = (int)_profile.PostReactionPushNotificationPermission;
         PostMentionPushNotificationIndex = (int)_profile.PostMentionPushNotificationPermission;
+        MessagePushNotificationIndex = (int)_profile.MessagePushNotificationPermission;
         _suppressChangeHandlers = false;
 
         OnPropertyChanged(nameof(BirthdayText));
@@ -446,6 +451,7 @@ public sealed partial class SettingsWindowViewModel : BaseViewModel
             case PushNotificationType.SharedPostComment: _profile.SharedPostCommentPushNotificationPermission = permission; break;
             case PushNotificationType.PostReaction: _profile.PostReactionPushNotificationPermission = permission; break;
             case PushNotificationType.PostMention: _profile.PostMentionPushNotificationPermission = permission; break;
+            case PushNotificationType.Message: _profile.MessagePushNotificationPermission = permission; break;
         }
     }
 
@@ -457,6 +463,7 @@ public sealed partial class SettingsWindowViewModel : BaseViewModel
         PushNotificationType.SharedPostComment => _profile.SharedPostCommentPushNotificationPermission,
         PushNotificationType.PostReaction => _profile.PostReactionPushNotificationPermission,
         PushNotificationType.PostMention => _profile.PostMentionPushNotificationPermission,
+        PushNotificationType.Message => _profile.MessagePushNotificationPermission,
         _ => AccessPermission.OnlyMe,
     };
 
@@ -470,6 +477,7 @@ public sealed partial class SettingsWindowViewModel : BaseViewModel
             case PushNotificationType.SharedPostComment: SharedPostCommentPushNotificationIndex = index; break;
             case PushNotificationType.PostReaction: PostReactionPushNotificationIndex = index; break;
             case PushNotificationType.PostMention: PostMentionPushNotificationIndex = index; break;
+            case PushNotificationType.Message: MessagePushNotificationIndex = index; break;
         }
     }
 

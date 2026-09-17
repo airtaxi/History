@@ -186,7 +186,7 @@ public abstract partial class BaseViewModel : ObservableObject
         {
             var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
 
-            if (!hiddenErrorTypes.Contains(errorType)) await App.ShowErrorDialogAsync($"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}");
+            if (!hiddenErrorTypes.Contains(errorType)) await App.ShowErrorDialogAsync(GetErrorDialogMessage(exception, errorType));
             return (errorType, exception.Message);
         }
     }
@@ -200,9 +200,22 @@ public abstract partial class BaseViewModel : ObservableObject
         {
             var errorType = StatusCodeToErrorType(exception.StatusCode ?? HttpStatusCode.InternalServerError);
 
-            if (!hiddenErrorTypes.Contains(errorType)) await App.ShowErrorDialogAsync($"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}");
+            if (!hiddenErrorTypes.Contains(errorType)) await App.ShowErrorDialogAsync(GetErrorDialogMessage(exception, errorType));
             return (errorType, exception.Message);
         }
+    }
+
+    // HttpRequestException falls back to the framework default text when the response has no body.
+    private static readonly string s_defaultHttpRequestExceptionMessage = new HttpRequestException().Message;
+
+    // The server sends user-facing Korean messages for the client-visible error types
+    // (bad request, forbidden, not found, conflict); other failures keep the generic text.
+    private static string GetErrorDialogMessage(HttpRequestException exception, ErrorType errorType)
+    {
+        var isClientError = errorType is ErrorType.BadRequest or ErrorType.Forbidden or ErrorType.NotFound or ErrorType.Conflict;
+        var hasServerMessage = !string.IsNullOrWhiteSpace(exception.Message) && exception.Message != s_defaultHttpRequestExceptionMessage;
+        if (isClientError && hasServerMessage) return exception.Message;
+        return $"알 수 없는 오류가 발생했습니다.\n[{exception.StatusCode}]: {exception.Message}";
     }
 
     private static ErrorType StatusCodeToErrorType(HttpStatusCode statusCode) => statusCode switch

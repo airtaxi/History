@@ -167,6 +167,12 @@
                                 ItemsSource="{x:Bind ViewModel.PushPermissionOptions}"
                                 SelectedIndex="{x:Bind ViewModel.PostMentionPushNotificationIndex, Mode=TwoWay}" />
                         </dev:SettingsCard>
+                        <dev:SettingsCard Header="쪽지 푸시 알림">
+                            <ComboBox
+                                MinWidth="160"
+                                ItemsSource="{x:Bind ViewModel.PushPermissionOptions}"
+                                SelectedIndex="{x:Bind ViewModel.MessagePushNotificationIndex, Mode=TwoWay}" />
+                        </dev:SettingsCard>
                         <dev:SettingsCard Description="관심 친구가 새 게시글을 작성하면 알립니다" Header="관심 친구의 새 게시글 푸시 알림">
                             <ToggleSwitch
                                 IsOn="{x:Bind ViewModel.IsFavoriteFriendNewPostPushNotificationEnabled, Mode=TwoWay}"

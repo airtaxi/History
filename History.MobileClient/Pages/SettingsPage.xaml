@@ -354,6 +354,33 @@
                 </Grid>
                 <Grid Padding="14,0,14,0" HeightRequest="36">
                     <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMessagePushNotificationPermissionGridTapped" />
+                    </Grid.GestureRecognizers>
+
+                    <Label
+                        FontSize="16"
+                        HorizontalOptions="Start"
+                        Text="쪽지 푸시 알림"
+                        VerticalOptions="Center" />
+
+                    <Label
+                        x:Name="MessagePushNotificationPermissionLabel"
+                        FontSize="16"
+                        HorizontalOptions="End"
+                        TextColor="{StaticResource Primary}"
+                        VerticalOptions="Center" />
+
+                    <Rectangle
+                        Margin="-14,0,-14,0"
+                        Fill="{AppThemeBinding Dark={StaticResource DividerDark},
+                                               Light={StaticResource DividerLight}}"
+                        HeightRequest="{OnPlatform iOS=1.5,
+                                                   Android=1}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="End" />
+                </Grid>
+                <Grid Padding="14,0,14,0" HeightRequest="36">
+                    <Grid.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnIsFavoriteFriendNewPostPushNotificationEnabledGridTapped" />
                     </Grid.GestureRecognizers>
 
