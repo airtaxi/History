@@ -8,6 +8,7 @@ using History.WindowsClient.Models;
 using History.WindowsClient.Pages;
 using History.WindowsClient.ViewModels.Media;
 using History.WindowsClient.ViewModels.Message;
+using History.WindowsClient.ViewModels.Friendship;
 using History.WindowsClient.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -163,6 +164,29 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
     }
 
     private MessageReceiver CreateMessageReceiver() => new(Profile.id, Profile.display_name ?? Profile.id, ProfileThumbnailImageSource, false, false);
+
+    // The flyout reloads on every open. Kakao Story answers with a message instead of
+    // profiles when the owner restricts the friend list to themselves, so that case is
+    // explained inside the flyout instead of a dialog.
+    public override async Task HandleFriendsAsync()
+    {
+        FriendsEmptyText = "친구가 없습니다";
+        if (!await KakaoStoryUtils.EnsureLoggedInAsync(_baseViewModel)) return;
+
+        try
+        {
+            var friends = await _baseViewModel.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.GetProfileFriends(KakaoUserId));
+            if (friends?.profiles == null)
+            {
+                FriendsEmptyText = "친구 목록을 공개하지 않은 사용자입니다";
+                SetFriends([]);
+                return;
+            }
+
+            SetFriends(friends.profiles.Select(x => (BaseFriendshipViewModel)new KakaoFriendshipViewModel(x, _baseViewModel)));
+        }
+        catch (Exception exception) { await _baseViewModel.ShowMessageDialogAsync(new(Constants.ErrorTitle, $"친구 목록을 불러오지 못했습니다.\n{exception.Message}")); }
+    }
 
     public override async Task HandleBanAsync()
     {

@@ -98,6 +98,15 @@ public sealed partial class ProfilePage : BasePage, IRecipient<RefreshRequestedM
         await ViewModel.LoadMoreAsync();
     }
 
+    // The friends flyout reloads its list on every open so the relationships stay current.
+    private void OnFriendsFlyoutOpening(object sender, object e)
+    {
+        if (sender is not Flyout flyout) return;
+        if (flyout.Target?.Tag is not BaseProfileViewModel profileViewModel) return;
+
+        _ = profileViewModel.HandleFriendsAsync();
+    }
+
     protected override async void OnFirstPageLoad()
     {
         // A cached view model already holds the loaded feed, so restore its stored

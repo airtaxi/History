@@ -148,7 +148,7 @@
                                                 TextLineBounds="TrimToCapHeight" />
                                         </StackPanel>
 
-                                        <!--  Header action row (message / memo / copy profile link)  -->
+                                        <!--  Header action row (message / memo / friends / copy profile link)  -->
                                         <StackPanel
                                             Grid.Column="2"
                                             VerticalAlignment="Top"
@@ -171,6 +171,65 @@
                                                 ToolTipService.ToolTip="메모 작성"
                                                 Visibility="{x:Bind IsMemoButtonVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                                                 <FontIcon FontSize="16" Glyph="&#xE70F;" />
+                                            </Button>
+                                            <Button
+                                                Width="36"
+                                                Height="36"
+                                                Padding="0"
+                                                Tag="{x:Bind}"
+                                                ToolTipService.ToolTip="친구 목록"
+                                                Visibility="{x:Bind IsFriendsButtonVisible, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                                                <FontIcon FontSize="16" Glyph="&#xE716;" />
+                                                <Button.Flyout>
+                                                    <Flyout Opening="OnFriendsFlyoutOpening" Placement="BottomEdgeAlignedRight">
+                                                        <Flyout.FlyoutPresenterStyle>
+                                                            <Style BasedOn="{StaticResource DefaultFlyoutPresenterStyle}" TargetType="FlyoutPresenter">
+                                                                <Setter Property="Padding" Value="0" />
+                                                                <Setter Property="MinWidth" Value="260" />
+                                                                <Setter Property="MaxWidth" Value="320" />
+                                                            </Style>
+                                                        </Flyout.FlyoutPresenterStyle>
+                                                        <Grid MinWidth="260" MaxWidth="320">
+                                                            <Grid.RowDefinitions>
+                                                                <RowDefinition Height="Auto" />
+                                                                <RowDefinition Height="*" />
+                                                            </Grid.RowDefinitions>
+
+                                                            <Border
+                                                                Grid.Row="0"
+                                                                Padding="12,10,12,8"
+                                                                BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
+                                                                BorderThickness="0,0,0,1">
+                                                                <AutoSuggestBox
+                                                                    PlaceholderText="친구의 닉네임 또는 핸들 검색"
+                                                                    QueryIcon="Find"
+                                                                    Text="{x:Bind FriendsQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                            </Border>
+
+                                                            <ScrollViewer
+                                                                Grid.Row="1"
+                                                                MaxHeight="260"
+                                                                VerticalScrollBarVisibility="Auto">
+                                                                <ItemsRepeater ItemTemplate="{StaticResource FriendshipTemplate}" ItemsSource="{x:Bind Friends, Mode=OneWay}">
+                                                                    <ItemsRepeater.Layout>
+                                                                        <StackLayout Orientation="Vertical" />
+                                                                    </ItemsRepeater.Layout>
+                                                                </ItemsRepeater>
+                                                            </ScrollViewer>
+
+                                                            <TextBlock
+                                                                Grid.Row="1"
+                                                                Margin="20"
+                                                                HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                                Text="{x:Bind FriendsEmptyText, Mode=OneWay}"
+                                                                TextAlignment="Center"
+                                                                TextWrapping="Wrap"
+                                                                Visibility="{x:Bind IsFriendsEmpty, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
+                                                        </Grid>
+                                                    </Flyout>
+                                                </Button.Flyout>
                                             </Button>
                                             <Button
                                                 Width="36"

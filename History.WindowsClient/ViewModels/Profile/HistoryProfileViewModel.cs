@@ -144,6 +144,27 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
         if (result.IsSuccess) await RefreshAsync();
     }
 
+    // The flyout reloads on every open, so the friend list always reflects the latest
+    // relationships. The server rejects non-public friend lists, so that failure is
+    // hidden here and explained inside the flyout instead of a dialog.
+    public override async Task HandleFriendsAsync()
+    {
+        FriendsEmptyText = "친구가 없습니다";
+
+        var result = await _baseViewModel.ExecuteRequestAsync(new GetFriends(User.UserId), ErrorType.Forbidden);
+        if (result.IsFailure)
+        {
+            FriendsEmptyText = "친구 목록을 공개하지 않은 사용자입니다";
+            SetFriends([]);
+            return;
+        }
+
+        SetFriends(result.Value.Select(x => (BaseFriendshipViewModel)new HistoryFriendshipViewModel(x, _baseViewModel)));
+    }
+
+    protected override bool MatchesFriendsQuery(BaseFriendshipViewModel friendshipViewModel, string query) =>
+        base.MatchesFriendsQuery(friendshipViewModel, query) || (friendshipViewModel is HistoryFriendshipViewModel historyFriendship && historyFriendship.User.Handle.Contains(query, StringComparison.OrdinalIgnoreCase));
+
     // Shows the checkmark glyph on the button for two seconds after copying and
     // ignores re-taps while that feedback is active.
     public override async Task HandleCopyProfileLinkAsync()
