@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
@@ -16,6 +18,8 @@ namespace History.WindowsClient.Services;
 // are recorded in index.json so carousels can compute their initial height before the bitmap
 // decodes. The least recently used entries are evicted when the cap is exceeded. Raw video
 // files are never cached; video posts display their thumbnail image, which is cached normally.
+// Media ids that are absolute http(s) URLs (Kakao Story CDN images) cannot be used as file
+// names, so their cache key and cache file name use the lowercase hex SHA-256 of the URL.
 public static class MediaCacheService
 {
     private const string CacheFolderName = "MediaCache";
@@ -53,11 +57,16 @@ public static class MediaCacheService
     {
         if (string.IsNullOrEmpty(mediaId)) return (0, 0);
 
+        return await TryGetPixelSizeByCacheKeyAsync(GetMediaCacheKey(mediaId));
+    }
+
+    private static async Task<(int PixelWidth, int PixelHeight)> TryGetPixelSizeByCacheKeyAsync(string mediaCacheKey)
+    {
         await s_indexSemaphore.WaitAsync();
         try
         {
             await EnsureIndexLoadedAsync();
-            if (!s_cacheIndex.TryGetValue(mediaId, out var entry)) return (0, 0);
+            if (!s_cacheIndex.TryGetValue(mediaCacheKey, out var entry)) return (0, 0);
 
             entry.LastAccessTimeUtc = DateTime.UtcNow; // LRU touch; the index save is deferred to structural changes.
             return (entry.PixelWidth, entry.PixelHeight);
@@ -73,12 +82,13 @@ public static class MediaCacheService
     {
         try
         {
+            var mediaCacheKey = GetMediaCacheKey(mediaId);
             await s_indexSemaphore.WaitAsync();
             StorageFile cacheFile;
             try
             {
                 await EnsureIndexLoadedAsync();
-                if (!s_cacheIndex.TryGetValue(mediaId, out var entry)) return null;
+                if (!s_cacheIndex.TryGetValue(mediaCacheKey, out var entry)) return null;
 
                 var cacheFolder = await GetCacheFolderAsync();
                 cacheFile = await cacheFolder.TryGetItemAsync(entry.FileName) as StorageFile;
@@ -105,16 +115,17 @@ public static class MediaCacheService
     public static async Task DownloadAsync(string mediaId)
     {
         if (string.IsNullOrEmpty(mediaId)) return;
-        if (await IsCachedAsync(mediaId)) return;
+        var mediaCacheKey = GetMediaCacheKey(mediaId);
+        if ((await TryGetPixelSizeByCacheKeyAsync(mediaCacheKey)).PixelWidth > 0) return;
 
         Task downloadTask;
         await s_inFlightSemaphore.WaitAsync();
         try
         {
-            if (!s_inFlightDownloads.TryGetValue(mediaId, out downloadTask))
+            if (!s_inFlightDownloads.TryGetValue(mediaCacheKey, out downloadTask))
             {
-                downloadTask = DownloadAndCacheAsync(mediaId);
-                s_inFlightDownloads[mediaId] = downloadTask;
+                downloadTask = DownloadAndCacheAsync(mediaId, mediaCacheKey);
+                s_inFlightDownloads[mediaCacheKey] = downloadTask;
             }
         }
         finally { s_inFlightSemaphore.Release(); }
@@ -166,6 +177,16 @@ public static class MediaCacheService
         finally { s_indexSemaphore.Release(); }
     }
 
+    // Kakao Story media ids are absolute CDN URLs, and their '/', '?' and '&' characters cannot
+    // be used in file names, so absolute http(s) URLs are keyed by the lowercase hex SHA-256 of
+    // the URL. Every other media id keeps using the id itself, so existing cache entries stay valid.
+    private static string GetMediaCacheKey(string mediaId)
+    {
+        if (mediaId == null) return mediaId;
+        if (mediaId.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || mediaId.StartsWith("http://", StringComparison.OrdinalIgnoreCase)) return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(mediaId)));
+        return mediaId;
+    }
+
     private static void CollectCarouselMediaIds(PostResponseDto post, List<string> mediaIds)
     {
         if (post?.Contents == null) return;
@@ -181,7 +202,7 @@ public static class MediaCacheService
         }
     }
 
-    private static async Task DownloadAndCacheAsync(string mediaId)
+    private static async Task DownloadAndCacheAsync(string mediaId, string mediaCacheKey)
     {
         try
         {
@@ -212,10 +233,10 @@ public static class MediaCacheService
             }
 
             var cacheFolder = await GetCacheFolderAsync();
-            // A unique temp name avoids colliding with a stale '{mediaId}.tmp' that a previous
+            // A unique temp name avoids colliding with a stale '{mediaCacheKey}.tmp' that a previous
             // run or a leftover app instance still holds open; the swap to the final name goes
             // through RenameFileWithRetryAsync below.
-            var tempFile = await cacheFolder.CreateFileAsync($"{mediaId}.{Guid.NewGuid():N}.tmp", CreationCollisionOption.ReplaceExisting);
+            var tempFile = await cacheFolder.CreateFileAsync($"{mediaCacheKey}.{Guid.NewGuid():N}.tmp", CreationCollisionOption.ReplaceExisting);
             await WriteBytesDirectAsync(tempFile, imageBytes);
 
             var (pixelWidth, pixelHeight) = await GetImagePixelSizeAsync(tempFile);
@@ -226,14 +247,14 @@ public static class MediaCacheService
                 return;
             }
 
-            await RenameFileWithRetryAsync(tempFile, $"{mediaId}.bin");
+            await RenameFileWithRetryAsync(tempFile, $"{mediaCacheKey}.bin");
 
             await s_indexSemaphore.WaitAsync();
             try
             {
                 await EnsureIndexLoadedAsync();
-                if (s_cacheIndex.TryGetValue(mediaId, out var oldEntry)) s_totalCacheSizeBytes -= oldEntry.FileSizeBytes;
-                s_cacheIndex[mediaId] = new MediaCacheEntry { FileName = $"{mediaId}.bin", PixelWidth = pixelWidth, PixelHeight = pixelHeight, FileSizeBytes = imageBytes.LongLength, LastAccessTimeUtc = DateTime.UtcNow };
+                if (s_cacheIndex.TryGetValue(mediaCacheKey, out var oldEntry)) s_totalCacheSizeBytes -= oldEntry.FileSizeBytes;
+                s_cacheIndex[mediaCacheKey] = new MediaCacheEntry { FileName = $"{mediaCacheKey}.bin", PixelWidth = pixelWidth, PixelHeight = pixelHeight, FileSizeBytes = imageBytes.LongLength, LastAccessTimeUtc = DateTime.UtcNow };
                 s_totalCacheSizeBytes += imageBytes.LongLength;
                 await SaveIndexAsync();
                 await EnforceCacheLimitAsync();
@@ -244,7 +265,7 @@ public static class MediaCacheService
         finally
         {
             await s_inFlightSemaphore.WaitAsync();
-            try { s_inFlightDownloads.Remove(mediaId); }
+            try { s_inFlightDownloads.Remove(mediaCacheKey); }
             finally { s_inFlightSemaphore.Release(); }
         }
     }
@@ -372,7 +393,7 @@ public static class MediaCacheService
         var cacheFolder = await GetCacheFolderAsync();
         var entriesByOldest = s_cacheIndex.OrderBy(x => x.Value.LastAccessTimeUtc).ToList();
 
-        foreach (var (mediaId, entry) in entriesByOldest)
+        foreach (var (mediaCacheKey, entry) in entriesByOldest)
         {
             try
             {
@@ -381,7 +402,7 @@ public static class MediaCacheService
             }
             catch (Exception exception) { Debug.WriteLine($"[MediaCacheService] Failed to evict '{entry.FileName}': {exception.Message}"); }
 
-            s_cacheIndex.Remove(mediaId);
+            s_cacheIndex.Remove(mediaCacheKey);
             s_totalCacheSizeBytes -= entry.FileSizeBytes;
 
             if (s_totalCacheSizeBytes <= MaxCacheSizeBytes) break;
