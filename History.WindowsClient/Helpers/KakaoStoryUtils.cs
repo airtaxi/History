@@ -463,7 +463,7 @@ public partial class KakaoStoryUtils : CommonKakaoStoryUtils
     {
         try
         {
-            var success = await baseViewModel.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.SendMail(text, receiverId, false));
+            var success = await baseViewModel.ExecuteWithLoadingAsync(() => KakaoStoryApiHandler.SendMailAndroid(text, receiverId, false));
             if (success) return Result.Success();
 
             await baseViewModel.ShowMessageDialogAsync(new MessageDialogParameters(Constants.ErrorTitle, "쪽지 전송에 실패하였습니다."));
