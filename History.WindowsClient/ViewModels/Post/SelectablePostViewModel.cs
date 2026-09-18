@@ -1,4 +1,4 @@
-using History.Commons.DataTypes.ResponseDtos;
+﻿using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.WindowsClient.Helpers;
 using History.WindowsClient.ViewModels.Extras;
@@ -26,7 +26,7 @@ public sealed class SelectablePostViewModel : HistoryPostViewModel
     public event EventHandler SelectionChanged;
 
     // The item's own post id: a repost keeps its own id in RepostId while Post holds the origin post.
-    public string PostId => RepostId ?? Post.Id;
+    public override string PostId => RepostId ?? Post.Id;
 
     public string PreviewText { get; }
     public string PreviewTimestamp { get; }
