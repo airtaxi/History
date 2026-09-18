@@ -4,8 +4,10 @@ using History.Commons.Api.Sticker;
 using History.Commons.Api.User;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
+using History.Commons.Enums;
 using History.WindowsClient.Messages;
 using History.WindowsClient.Models;
+using History.WindowsClient.Services;
 using History.WindowsClient.ViewModels.Post;
 using History.WindowsClient.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,9 +19,10 @@ namespace History.WindowsClient.Pages;
 
 // Post detail page: dispatches between the History post and the Kakao Story post; each
 // platform page view model wires its own comment box.
-public sealed partial class PostPage : BasePage, IRecipient<RefreshRequestedMessage>, IRecipient<CommentReplyRequestedMessage>
+public sealed partial class PostPage : BasePage, IRecipient<RefreshRequestedMessage>, IRecipient<CommentReplyRequestedMessage>, IRecipient<NotificationPostRefreshRequestedMessage>
 {
     private readonly HistoryPostPageViewModel _historyViewModel;
+    private readonly NotificationPostDisplayService _notificationPostDisplayService;
 
     protected override BasePostPageViewModel ViewModel => _activeViewModel;
 
@@ -28,6 +31,7 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshRequestedMess
     public PostPage()
     {
         _historyViewModel = App.Services.GetRequiredService<HistoryPostPageViewModel>();
+        _notificationPostDisplayService = App.Services.GetRequiredService<NotificationPostDisplayService>();
 
         InitializeComponent();
 
@@ -35,6 +39,7 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshRequestedMess
 
         WeakReferenceMessenger.Default.Register((IRecipient<RefreshRequestedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<CommentReplyRequestedMessage>)this);
+        WeakReferenceMessenger.Default.Register((IRecipient<NotificationPostRefreshRequestedMessage>)this);
     }
 
     public void Receive(RefreshRequestedMessage message)
@@ -44,6 +49,20 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshRequestedMess
         {
             _ = ViewModel.Post.RefreshAsync();
         }
+    }
+
+    // The background notification service saw activity for a post; the open post reloads when it
+    // is the same post, regardless of whether the window itself is in the foreground. Reloading
+    // also clears the notifications that point at the post so the unread badge stays current.
+    public void Receive(NotificationPostRefreshRequestedMessage message)
+    {
+        if (!IsInForeground) return;
+        if (ViewModel.Post == null) return;
+        if (GetActivePlatform() != message.Platform) return;
+        if (ViewModel.Post.PostId != message.PostId) return;
+
+        _ = ViewModel.Post.RefreshAsync();
+        _ = MarkPostNotificationsAsReadAsync();
     }
 
     // A comment reply was requested: append the comment author mention to the editor and focus it.
@@ -70,11 +89,27 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshRequestedMess
 
         base.OnNavigatedTo(e);
 
+        // The open post is published so the notification service can suppress a toast for it and
+        // ask for a reload while it stays open.
+        if (ViewModel.Post == null) _notificationPostDisplayService.ClearDisplayedPost();
+        else _notificationPostDisplayService.SetDisplayedPost(GetActivePlatform(), ViewModel.Post.PostId);
+
         _ = MarkPostNotificationsAsReadAsync();
 
         // Keep the comment column anchored at the newest comment after layout settles.
         ScrollCommentsToEnd();
     }
+
+    // Leaving the post clears the published display state so the notification service stops
+    // treating this post as the one the user is looking at.
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        _notificationPostDisplayService.ClearDisplayedPost();
+        base.OnNavigatedFrom(e);
+    }
+
+    // The platform of the post currently shown by this page.
+    private NotificationPostPlatform GetActivePlatform() => ViewModel.Post is KakaoPostViewModel ? NotificationPostPlatform.KakaoStory : NotificationPostPlatform.History;
 
     // The comment box belongs to the active platform view model, so its events follow the
     // active view model through the navigation lifecycle.

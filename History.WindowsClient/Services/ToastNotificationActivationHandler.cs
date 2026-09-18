@@ -128,7 +128,7 @@ public static class ToastNotificationActivationHandler
         }
 
         // Post notification (e.g. comment/emotion/UP): the scheme contains the activity id after "activities/".
-        var postId = GetKakaoPostId(scheme);
+        var postId = CommonKakaoStoryUtils.GetPostIdFromScheme(scheme);
         if (postId != null)
         {
             try
@@ -182,18 +182,6 @@ public static class ToastNotificationActivationHandler
 
         MainWindow.SetForegroundWindow();
         await RestrictionNoticeHelper.ShowAsync(MainWindow.Instance.ViewModel, body);
-    }
-
-    // Extracts the post id from a post notification scheme (e.g. "activities/{postId}?...").
-    // Returns null when the scheme does not target a post.
-    private static string GetKakaoPostId(string scheme)
-    {
-        if (!scheme.Contains("?profile_id=") || !scheme.Contains("activities/")) return null;
-
-        var postId = scheme.Split(["activities/"], StringSplitOptions.None)[1];
-        var queryIndex = postId.IndexOf('?');
-        if (queryIndex >= 0) postId = postId[..queryIndex];
-        return postId;
     }
 
     // Focuses the window and navigates its root frame, marshalling to the UI thread because

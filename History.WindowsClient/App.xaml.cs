@@ -75,6 +75,10 @@ public partial class App : Application
         // instead of spending the single-use refresh token itself.
         Services.GetRequiredService<TokenBridgeService>().Start();
 
+        // Publishes the open post and the window's activation state to the background notification
+        // service, and listens for its requests to reload a post that stays open.
+        Services.GetRequiredService<NotificationPostDisplayService>().Start();
+
         // The startup task only launches at logon, so the service is also started when the task is
         // already enabled and the app comes up.
         _ = BackgroundNotificationServiceController.EnsureRunningIfEnabledAsync();
@@ -163,6 +167,7 @@ public partial class App : Application
         serviceCollection.AddSingleton<TokenBridgeService>();
         serviceCollection.AddSingleton(sp => new StoreUpdateService(sp.GetRequiredService<ApplicationSettingsService>(), sp.GetRequiredService<ApplicationNotificationService>()));
         serviceCollection.AddSingleton<BadgePollerService>();
+        serviceCollection.AddSingleton<NotificationPostDisplayService>();
         serviceCollection.AddTransient<LoginPageViewModel>();
         serviceCollection.AddTransient<RegisterPageViewModel>();
         serviceCollection.AddTransient(sp => new MainPageViewModel(sp.GetRequiredService<NotificationsViewModel>()));

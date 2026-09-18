@@ -179,6 +179,8 @@ public partial class HistoryPostViewModel : BasePostViewModel,
 
     public override string ProfileMediaUri => User?.ProfileMediaId != null ? CommonUtils.GenerateMediaUri(User.ProfileMediaId) : null;
 
+    public override string PostId => Post?.Id;
+
     public override List<BaseContent> GetRenderRawContents() => Post?.Contents ?? [];
 
     // Adds a clickable item that runs the given async action when tapped.

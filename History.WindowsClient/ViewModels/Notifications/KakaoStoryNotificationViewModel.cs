@@ -85,16 +85,7 @@ public partial class KakaoStoryNotificationViewModel : BaseNotificationViewModel
 
     // Extracts the post id from a post notification scheme (e.g. "activities/{postId}?...").
     // Returns null when the notification does not target a post.
-    public string GetPostId()
-    {
-        var scheme = Notification.scheme;
-        if (scheme == null || !scheme.Contains("?profile_id=") || !scheme.Contains("activities/")) return null;
-
-        var postId = scheme.Split(["activities/"], StringSplitOptions.None)[1];
-        var queryIndex = postId.IndexOf('?');
-        if (queryIndex >= 0) postId = postId[..queryIndex];
-        return postId;
-    }
+    public string GetPostId() => CommonKakaoStoryUtils.GetPostIdFromScheme(Notification.scheme);
 
     // Accepts the friend request from the notification row; the row keeps its place with the
     // accept button hidden once the request is answered.

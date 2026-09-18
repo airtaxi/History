@@ -1,4 +1,5 @@
 using History.Commons;
+using History.Commons.Enums;
 using History.Commons.Ipc;
 using History.Commons.KakaoStory;
 using History.WindowsClientNotificationService.Core;
@@ -11,7 +12,7 @@ namespace History.WindowsClientNotificationService.Polling;
 // Polls the Kakao Story notification list with the same filtering and de-duplication the
 // server-side poller applies, so the local notifications match what the push path will deliver
 // once the WNS channel is live.
-public sealed class KakaoStoryNotificationPoller(NotificationStateStore stateStore, ToastPublisher toastPublisher, FileLogger logger)
+public sealed class KakaoStoryNotificationPoller(NotificationStateStore stateStore, ToastPublisher toastPublisher, ClientPostDisplayBridge clientPostDisplayBridge, FileLogger logger)
 {
     private static readonly TimeSpan MaxNotificationAge = TimeSpan.FromMinutes(60);
     private static readonly TimeSpan ServerTokenUploadInterval = TimeSpan.FromMinutes(15);
@@ -71,9 +72,21 @@ public sealed class KakaoStoryNotificationPoller(NotificationStateStore stateSto
             .OrderBy(notification => notification.created_at)
             .ToList();
 
-        foreach (var notification in newNotifications) toastPublisher.Show(notification.message ?? "카카오스토리 알림", notification.content, notification.thumbnail_url, BuildToastData(notification));
+        foreach (var notification in newNotifications)
+        {
+            if (ShouldDeferToClient(notification)) continue;
+            toastPublisher.Show(notification.message ?? "카카오스토리 알림", notification.content, notification.thumbnail_url, BuildToastData(notification));
+        }
 
         stateStore.RecordKakaoStoryNotifications(notifications.Select(notification => notification.id));
+    }
+
+    // A notification that targets the post the client currently shows is handled by the client
+    // through a reload instead of a toast when the client's main window is already active.
+    private bool ShouldDeferToClient(Notification notification)
+    {
+        var postId = CommonKakaoStoryUtils.GetPostIdFromScheme(notification.scheme);
+        return postId != null && clientPostDisplayBridge.ShouldSuppressToast(NotificationPostPlatform.KakaoStory, postId);
     }
 
     private static bool IsEnabled()

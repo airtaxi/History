@@ -135,6 +135,10 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
     // any page (including a future separate timeline window).
     public BaseViewModel BaseViewModel { get; } = baseViewModel;
 
+    // Platform-specific post identifier, used to match the post the background notification
+    // service reports activity for against the post this view model shows.
+    public virtual string PostId => null;
+
     // Fills the "..." menu flyout with the actions available for the current user.
     public virtual void PopulateMoreMenuFlyout(MenuFlyout menuFlyout) => throw new NotSupportedException("[BasePostViewModel] PopulateMoreMenuFlyout must be overridden");
 

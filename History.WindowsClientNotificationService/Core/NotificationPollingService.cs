@@ -15,6 +15,7 @@ public sealed class NotificationPollingService : IAsyncDisposable
 
     private readonly FileLogger _logger;
     private readonly NotificationStateStore _stateStore;
+    private readonly ClientPostDisplayBridge _clientPostDisplayBridge;
     private readonly HistoryNotificationPoller _historyNotificationPoller;
     private readonly KakaoStoryNotificationPoller _kakaoStoryNotificationPoller;
     private readonly CancellationTokenSource _cancellationTokenSource = new();
@@ -27,8 +28,9 @@ public sealed class NotificationPollingService : IAsyncDisposable
         _logger = logger;
         _stateStore = new NotificationStateStore(logger);
         var toastPublisher = new ToastPublisher(logger);
-        _historyNotificationPoller = new HistoryNotificationPoller(_stateStore, toastPublisher, logger);
-        _kakaoStoryNotificationPoller = new KakaoStoryNotificationPoller(_stateStore, toastPublisher, logger);
+        _clientPostDisplayBridge = new ClientPostDisplayBridge(logger);
+        _historyNotificationPoller = new HistoryNotificationPoller(_stateStore, toastPublisher, _clientPostDisplayBridge, logger);
+        _kakaoStoryNotificationPoller = new KakaoStoryNotificationPoller(_stateStore, toastPublisher, _clientPostDisplayBridge, logger);
     }
 
     public async Task RunAsync()
@@ -70,6 +72,7 @@ public sealed class NotificationPollingService : IAsyncDisposable
         _stopRegistration?.Unregister(null);
         _cancellationTokenSource.Cancel();
         _stateStore.Save();
+        _clientPostDisplayBridge.Dispose();
         _cancellationTokenSource.Dispose();
         _stopEvent.Dispose();
         return ValueTask.CompletedTask;

@@ -32,6 +32,7 @@ public sealed partial class MainWindow : BaseWindow,
     private readonly MainWindowViewModel _viewModel;
     private readonly NotificationsViewModel _notificationsViewModel;
     private readonly BadgePollerService _badgePollerService;
+    private readonly NotificationPostDisplayService _notificationPostDisplayService;
 
     // True while the title bar toggles are updated from the main page's feed mode, so the
     // Checked/Unchecked handlers can tell a programmatic change from a user toggle.
@@ -61,6 +62,10 @@ public sealed partial class MainWindow : BaseWindow,
         // each registered view model owns the actual count fetch for the active account mode.
         _badgePollerService = App.Services.GetRequiredService<BadgePollerService>();
         _badgePollerService.AddRefreshTarget(_notificationsViewModel.RefreshUnreadCountAsync);
+
+        // Keeps the background notification service told whether the user is already looking at
+        // the app, so it can skip a toast for a post this window is showing.
+        _notificationPostDisplayService = App.Services.GetRequiredService<NotificationPostDisplayService>();
 
         WeakReferenceMessenger.Default.Register((IRecipient<MainFeedModeChangedMessage>)this);
         WeakReferenceMessenger.Default.Register((IRecipient<KakaoStoryModeChangedMessage>)this);
@@ -144,8 +149,14 @@ public sealed partial class MainWindow : BaseWindow,
     protected override void OnWindowClosed(object sender, WindowEventArgs args)
     {
         _badgePollerService.Stop();
+        _notificationPostDisplayService.ClearDisplayedPost();
+        _notificationPostDisplayService.SetMainWindowForeground(false);
         base.OnWindowClosed(sender, args);
     }
+
+    // Publishes the main window's activation state so the notification service can tell whether
+    // the user is already looking at the app when a post activity arrives.
+    private void OnWindowActivated(object sender, WindowActivatedEventArgs args) => _notificationPostDisplayService.SetMainWindowForeground(args.WindowActivationState != WindowActivationState.Deactivated);
 
     protected override void ShowLoading(string message = null)
     {

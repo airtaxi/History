@@ -47,6 +47,8 @@ public partial class KakaoPostViewModel : BasePostViewModel, IRecipient<ValueCha
     public PostData PostData => _postData;
     public bool IsMyPost => _postData.actor?.id == CommonShared.KakaoUserId;
 
+    public override string PostId => _postData?.id;
+
     protected PostData CurrentPostData
     {
         get => _postData;

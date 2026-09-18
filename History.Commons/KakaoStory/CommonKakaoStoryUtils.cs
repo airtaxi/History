@@ -385,6 +385,21 @@ public partial class CommonKakaoStoryUtils
         return contents;
     }
 
+    /// <summary>
+    /// Extracts the target post id from a Kakao Story notification scheme (e.g.
+    /// "activities/{postId}?profile_id=..."). Returns null when the scheme does not point at a
+    /// post, so callers can treat the notification as a profile or unsupported target.
+    /// </summary>
+    public static string GetPostIdFromScheme(string scheme)
+    {
+        if (scheme == null || !scheme.Contains("?profile_id=") || !scheme.Contains("activities/")) return null;
+
+        var postId = scheme.Split(["activities/"], StringSplitOptions.None)[1];
+        var queryIndex = postId.IndexOf('?');
+        if (queryIndex >= 0) postId = postId[..queryIndex];
+        return postId;
+    }
+
     public static string GetTimeString(DateTime created_at, DateTime? modified_at = null)
     {
         int offset = DateTimeOffset.Now.Offset.Hours;
