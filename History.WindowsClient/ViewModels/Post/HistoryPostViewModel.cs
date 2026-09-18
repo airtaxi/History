@@ -465,11 +465,11 @@ public partial class HistoryPostViewModel : BasePostViewModel,
             }
 
             var reportTypes = Enum.GetValues<ReportType>().Select(x => x.ToDisplayString()).ToArray();
-            var action = await ShowSelectionDialogAsync("제재 카테고리 선택", reportTypes);
+            var action = await BaseViewModel.ShowSelectionDialogAsync("제재 카테고리 선택", reportTypes);
             if (action == null) return;
             var reportType = ReportTypeExtensions.FromDisplayString(action);
 
-            var reason = await ShowInputDialogAsync(new InputDialogParameters("게시글 삭제", "게시글을 삭제하는 이유를 입력해주세요."));
+            var reason = await BaseViewModel.ShowInputDialogAsync(new InputDialogParameters("게시글 삭제", "게시글을 삭제하는 이유를 입력해주세요."));
             if (string.IsNullOrWhiteSpace(reason)) return;
 
             var deleteResult = await BaseViewModel.ExecuteRequestAsync(new ModerationDeletePost(Post.Id, reason, reportType));

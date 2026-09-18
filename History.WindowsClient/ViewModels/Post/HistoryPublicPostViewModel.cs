@@ -25,7 +25,7 @@ public partial class HistoryPublicPostViewModel(PostResponseDto post, BaseViewMo
     private async Task PromptAndReportAsync()
     {
         var reportTypes = Enum.GetValues<ReportType>().Select(x => x.ToDisplayString()).ToArray();
-        var action = await ShowSelectionDialogAsync("신고 카테고리", reportTypes);
+        var action = await BaseViewModel.ShowSelectionDialogAsync("신고 카테고리", reportTypes);
         if (action == null) return;
 
         await HandleReportAsync(ReportTypeExtensions.FromDisplayString(action));
