@@ -28,7 +28,7 @@ public partial class HistoryMainPageFriendshipSideBarAllFriendsItemViewModel : B
         RightHeaderText = "친구 목록";
 
         Query = string.Empty;
-        EmptyText = "친구 목록이 비어있습니다";
+        EmptyText = "친구 목록이 비어 있습니다";
 
         _sortByTime = _settings.IsFriendsListSortedByTime;
         IsSortButtonVisible = true;

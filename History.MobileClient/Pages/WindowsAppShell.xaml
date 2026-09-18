@@ -30,7 +30,7 @@
         <ShellContent Title="무시한 친구" ContentTemplate="{DataTemplate pages:IgnoredFriendsPage}" />
         <ShellContent Title="차단한 친구" ContentTemplate="{DataTemplate pages:BlockedFriendsPage}" />
     </FlyoutItem>
-    <FlyoutItem Title="더보기">
+    <FlyoutItem Title="더 보기">
         <FlyoutItem.Icon>
             <FontImageSource FontFamily="MaterialSharp" Glyph="{x:Static m:MaterialSharp.More_horiz}" />
         </FlyoutItem.Icon>

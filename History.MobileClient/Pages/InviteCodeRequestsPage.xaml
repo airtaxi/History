@@ -99,7 +99,7 @@
                                 <Label FontSize="14" TextColor="#808080">
                                     <Label.FormattedText>
                                         <FormattedString>
-                                            <Span Text="요청 갯수: " />
+                                            <Span Text="요청 개수: " />
                                             <Span Text="{Binding RequestedCount}" />
                                             <Span Text="개" />
                                         </FormattedString>

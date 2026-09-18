@@ -51,7 +51,7 @@
                 <TextBlock
                     FontSize="{StaticResource CaptionTextBlockFontSize}"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="투표를 진행하는데 필요한 정보들을 입력해주세요." />
+                    Text="투표를 진행하는 데 필요한 정보들을 입력해주세요." />
 
                 <!--  Poll title  -->
                 <StackPanel Spacing="4">

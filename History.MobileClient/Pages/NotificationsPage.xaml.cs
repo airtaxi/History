@@ -62,7 +62,7 @@ public partial class NotificationsPage : ContentPage
 
                     if (notifications == null)
                     {
-                        await DisplayAlertAsync("오류", "카카오스토리 알림이 비어있습니다.", Constants.PromptOk);
+                        await DisplayAlertAsync("오류", "카카오스토리 알림이 비어 있습니다.", Constants.PromptOk);
                         return;
                     }
 

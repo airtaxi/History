@@ -154,7 +154,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
         }
         else if (User.Friendship.Status == FriendshipStatus.Blocked)
         {
-            var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님의 차단 조치를 해제하시곘습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
+            var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님의 차단 조치를 해제하시겠습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
             if (dialogResult == ContentDialogResult.Primary)
             {
                 result = await _baseViewModel.ExecuteRequestAsync(new UnblockUser(User.UserId));
@@ -163,7 +163,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
         }
         else if (User.Friendship.Status == FriendshipStatus.Ignored)
         {
-            var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님의 무시 조치를 해제하시곘습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
+            var dialogResult = await _baseViewModel.ShowMessageDialogAsync(new("안내", $"{Nickname}님의 무시 조치를 해제하시겠습니까?", DialogHelper.DefaultOkButtonText, DialogHelper.DefaultCancelButtonText));
             if (dialogResult == ContentDialogResult.Primary)
             {
                 result = await _baseViewModel.ExecuteRequestAsync(new UnignoreUser(User.UserId));

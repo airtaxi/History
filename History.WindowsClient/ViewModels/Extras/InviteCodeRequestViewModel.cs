@@ -18,7 +18,7 @@ public sealed partial class InviteCodeRequestViewModel(InviteCodeRequestResponse
     public string StatusText => request.Status.ToDisplayString();
     public string Reason => string.IsNullOrEmpty(request.Reason) ? "사유 없음" : request.Reason;
 
-    public string RequestCountText => $"요청 갯수: {request.RequestedCount}개";
+    public string RequestCountText => $"요청 개수: {request.RequestedCount}개";
     public string ActiveCodeCountText => $"보유 중인 유효 코드: {request.ActiveCodeCount}개";
     public string CreatedAtText => $"요청 시간: {request.CreatedAt.ToLocalTime():yyyy.MM.dd HH:mm}";
     public string ModeratorMessageText => $"관리자 메시지: {(string.IsNullOrEmpty(request.ModeratorMessage) ? "없음" : request.ModeratorMessage)}";

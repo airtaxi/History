@@ -61,7 +61,7 @@
             FontSize="16"
             HorizontalOptions="Center"
             IsVisible="{Binding IsEmptyVisible}"
-            Text="비어있음"
+            Text="비어 있음"
             VerticalOptions="Center" />
 
         <Border

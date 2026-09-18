@@ -464,7 +464,7 @@ public partial class KakaoProfileViewModel : BaseProfileViewModel
         }
         else
         {
-            var ban = await App.Page.DisplayAlertAsync("안내", $"정말로 {Nickname}님을 차단하시겠습니까? 차단하는 경우, 해제할 때 까지 카카오스토리에서 나와 상대방 모두 서로를 볼 수 없게 됩니다. 또한, 친구 관계인 경우 친구 삭제가 먼저 선행됩니다.", Constants.PromptYes, Constants.PromptNo);
+            var ban = await App.Page.DisplayAlertAsync("안내", $"정말로 {Nickname}님을 차단하시겠습니까? 차단하는 경우, 해제할 때까지 카카오스토리에서 나와 상대방 모두 서로를 볼 수 없게 됩니다. 또한, 친구 관계인 경우 친구 삭제가 먼저 선행됩니다.", Constants.PromptYes, Constants.PromptNo);
             if (!ban) return;
 
             try

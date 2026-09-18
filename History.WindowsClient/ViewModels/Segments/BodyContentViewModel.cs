@@ -10,7 +10,7 @@ namespace History.WindowsClient.ViewModels.Segments;
 // MediaContent, ExternalUrlContent, PollContent and UploadContent are not body
 // contents and are skipped; they are rendered by separate surfaces.
 // Long text is truncated to the configured length/line limits with a trailing
-// " ... 더보기" marker; Unwrapped posts render their full text.
+// " ... 더 보기" marker; Unwrapped posts render their full text.
 public partial class BodyContentViewModel : BaseViewModel
 {
     // Text truncation limits per post type and media presence.
@@ -31,7 +31,7 @@ public partial class BodyContentViewModel : BaseViewModel
         var currentLength = 0;
         var currentLines = 0;
 
-        // Appends the " ... 더보기" marker at the truncation point.
+        // Appends the " ... 더 보기" marker at the truncation point.
         void AddMoreSegment() => segments.Add(new MoreSegmentViewModel());
 
         // Trims the overrunning span text to fit within the configured limits.

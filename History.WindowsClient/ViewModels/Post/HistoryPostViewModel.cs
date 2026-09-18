@@ -331,7 +331,7 @@ public partial class HistoryPostViewModel : BasePostViewModel,
         if (shouldWritePublicPost != ContentDialogResult.Primary) return;
 
         var success = await BaseViewModel.ExecuteRequestAsync(new WritePublicPost(Post.Id));
-        if (success.IsSuccess) await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 홍보가 성공적으로 전송되었습니다. 발견탭에서 확인할 수 있습니다."));
+        if (success.IsSuccess) await BaseViewModel.ShowMessageDialogAsync(new MessageDialogParameters("안내", "게시글 홍보가 성공적으로 전송되었습니다. 발견 탭에서 확인할 수 있습니다."));
     }
 
     protected async Task HandleReportAsync(ReportType reportType)

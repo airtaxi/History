@@ -291,7 +291,7 @@ public static partial class Utils
                 formattedString.Spans.Add(span);
                 formattedString.Spans.Add(new Span
                 {
-                    Text = " ... 더보기",
+                    Text = " ... 더 보기",
                     FontAttributes = FontAttributes.Bold,
                     TextColor = Color.FromRgb(0x99, 0x99, 0x99)
                 });
@@ -466,7 +466,7 @@ public static partial class Utils
                 formattedString.Spans.Add(span);
                 formattedString.Spans.Add(new Span
                 {
-                    Text = " ... 더보기",
+                    Text = " ... 더 보기",
                     FontAttributes = FontAttributes.Bold,
                     TextColor = Color.FromRgb(0x99, 0x99, 0x99)
                 });

@@ -230,7 +230,7 @@
                     FontAttributes="Bold"
                     FontSize="16"
                     HorizontalOptions="Center"
-                    Text="비어있음"
+                    Text="비어 있음"
                     VerticalOptions="Center" />
             </Grid>
         </RefreshView>

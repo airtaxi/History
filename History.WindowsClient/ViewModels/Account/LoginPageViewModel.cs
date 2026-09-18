@@ -81,7 +81,7 @@ public partial class LoginPageViewModel : BaseViewModel
             message = completedTask == taskCompletionSource.Task ? await taskCompletionSource.Task : null;
 
             _pendingOAuthTaskCompletionSource = null;
-        }, "브라우저 로그인 대기중...");
+        }, "브라우저 로그인 대기 중...");
 
         if (message != null)
         {
@@ -135,7 +135,7 @@ public partial class LoginPageViewModel : BaseViewModel
 
         if (profileResult.Error == ErrorType.Unauthorized)
         {
-            var expiredDialogParameters = new MessageDialogParameters("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.");
+            var expiredDialogParameters = new MessageDialogParameters("안내", "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
             await ShowMessageDialogAsync(expiredDialogParameters);
         }
         LoginPanelVisibility = Visibility.Visible;

@@ -45,7 +45,7 @@
                 FontSize="18"
                 LineBreakMode="TailTruncation"
                 MaxLines="1"
-                Text="새로운 보금자리, 히스토리에 오신것을 환영합니다!"
+                Text="새로운 보금자리, 히스토리에 오신 것을 환영합니다!"
                 TextColor="{StaticResource Primary}" />
             <Label
                 FontSize="18"

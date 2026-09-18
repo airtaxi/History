@@ -96,7 +96,7 @@ public partial class LoginPage : ContentPage
                 }
             });
         }
-        else if (meResult.Error == ErrorType.Unauthorized) await App.Page.DisplayAlertAsync("안내", "로그인 세션이 만료되었습니다. 다시 로그인 해주세요.", Constants.PromptOk);
+        else if (meResult.Error == ErrorType.Unauthorized) await App.Page.DisplayAlertAsync("안내", "로그인 세션이 만료되었습니다. 다시 로그인해 주세요.", Constants.PromptOk);
 
         return meResult;
     }

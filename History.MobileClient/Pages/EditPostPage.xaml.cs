@@ -1750,7 +1750,7 @@ public partial class EditPostPage : ContentPage
             var photoCount = attachmentViewModels.Count(x => !x.IsVideo);
             if (stickerContents.Count > 0 && photoCount + stickerContents.Count > CommonConstants.KakaoStoryMaxImageCount)
             {
-                var proceed = await DisplayAlertAsync("경고", $"카카오스토리의 이미지 갯수 제한은 {CommonConstants.KakaoStoryMaxImageCount}개입니다. 스티커까지 첨부하면 총 {photoCount + stickerContents.Count}장이 되어 글을 올릴 수 없습니다. 스티커를 업로드하지 않고 사진만 올리시겠습니까?", "사진만 올리기", Constants.PromptCancel);
+                var proceed = await DisplayAlertAsync("경고", $"카카오스토리의 이미지 개수 제한은 {CommonConstants.KakaoStoryMaxImageCount}개입니다. 스티커까지 첨부하면 총 {photoCount + stickerContents.Count}장이 되어 글을 올릴 수 없습니다. 스티커를 업로드하지 않고 사진만 올리시겠습니까?", "사진만 올리기", Constants.PromptCancel);
                 if (!proceed) return false;
                 stickerContents = [];
             }

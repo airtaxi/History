@@ -132,7 +132,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel
         }
         else if (User.Friendship.Status == FriendshipStatus.Blocked)
         {
-            var unblock = await App.Page.DisplayAlertAsync("안내", $"{Nickname}님의 차단 조치를 해제하시곘습니까?", Constants.PromptYes, Constants.PromptNo);
+            var unblock = await App.Page.DisplayAlertAsync("안내", $"{Nickname}님의 차단 조치를 해제하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (unblock)
             {
                 result = await App.ExecuteRequestAsync(new UnblockUser(User.UserId));
@@ -141,7 +141,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel
         }
         else if (User.Friendship.Status == FriendshipStatus.Ignored)
         {
-            var unignore = await App.Page.DisplayAlertAsync("안내", $"{Nickname}님의 무시 조치를 해제하시곘습니까?", Constants.PromptYes, Constants.PromptNo);
+            var unignore = await App.Page.DisplayAlertAsync("안내", $"{Nickname}님의 무시 조치를 해제하시겠습니까?", Constants.PromptYes, Constants.PromptNo);
             if (unignore)
             {
                 result = await App.ExecuteRequestAsync(new UnignoreUser(User.UserId));

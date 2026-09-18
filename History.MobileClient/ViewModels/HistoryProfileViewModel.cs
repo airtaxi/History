@@ -72,13 +72,13 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
         {
             var friendDays = (DateTime.UtcNow - User.Friendship.CreatedAt).TotalDays;
             if (friendDays < 1)
-                return "친구가 된지 하루도 안됐어요!";
+                return "친구가 된 지 하루도 안 됐어요!";
             else if (friendDays < 30)
-                return $"{friendDays:N0}일째 친구에요!";
+                return $"{friendDays:N0}일째 친구예요!";
             else if (friendDays < 365)
-                return $"{friendDays / 30:N0}개월째 친구에요!";
+                return $"{friendDays / 30:N0}개월째 친구예요!";
             else
-                return $"{friendDays / 365:N0}년째 친구에요!";
+                return $"{friendDays / 365:N0}년째 친구예요!";
         }
         else if (User.Friendship != null && User.Friendship.Status == FriendshipStatus.Requested)
         {
@@ -376,7 +376,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
 
         async Task Block()
         {
-            var block = await App.Page.DisplayAlertAsync("안내", $"정말로 {Nickname}님을 차단하시겠습니까? 차단하는 경우, 해제할 때 까지  히스토리에서 나와 상대방 모두 서로를 볼 수 없게 됩니다. 또한, 친구 관계인 경우 친구 삭제가 먼저 선행됩니다.", Constants.PromptYes, Constants.PromptNo);
+            var block = await App.Page.DisplayAlertAsync("안내", $"정말로 {Nickname}님을 차단하시겠습니까? 차단하는 경우, 해제할 때까지 히스토리에서 나와 상대방 모두 서로를 볼 수 없게 됩니다. 또한, 친구 관계인 경우 친구 삭제가 먼저 선행됩니다.", Constants.PromptYes, Constants.PromptNo);
             if (block)
             {
                 var result = await App.ExecuteRequestAsync(new BlockUser(User.UserId));
@@ -391,7 +391,7 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel
 
         async Task Ignore()
         {
-            var block = await App.Page.DisplayAlertAsync("안내", $"정말로 {Nickname}님을 무시하시겠습니까? 무시하는 경우, 해제할 때 까지 히스토리에서 상대방을 볼 수 없습니다. 다만, 상대방은 나를 볼 수 있습니다. 또한, 친구 관계인 경우 친구 삭제가 먼저 선행됩니다.", Constants.PromptYes, Constants.PromptNo);
+            var block = await App.Page.DisplayAlertAsync("안내", $"정말로 {Nickname}님을 무시하시겠습니까? 무시하는 경우, 해제할 때까지 히스토리에서 상대방을 볼 수 없습니다. 다만, 상대방은 나를 볼 수 있습니다. 또한, 친구 관계인 경우 친구 삭제가 먼저 선행됩니다.", Constants.PromptYes, Constants.PromptNo);
             if (block)
             {
                 var result = await App.ExecuteRequestAsync(new IgnoreUser(User.UserId));

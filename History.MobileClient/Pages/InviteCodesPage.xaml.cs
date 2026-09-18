@@ -110,7 +110,7 @@ public partial class InviteCodesPage : ContentPage
     {
         var countStr = await App.Page.DisplayPromptAsync(
             "초대 코드 요청",
-            "요청할 초대 코드 갯수를 입력하세요 (1-50)",
+            "요청할 초대 코드 개수를 입력하세요 (1-50)",
             initialValue: "1",
             maxLength: 2,
             keyboard: Keyboard.Numeric);

@@ -94,7 +94,7 @@ public partial class TimelineViewModel : ObservableObject, IBlazorFeedViewModel
 
             if (timeline?.feeds == null)
             {
-                await App.TopPage.DisplayAlertAsync("오류", "카카오스토리 피드가 비어있습니다.", Constants.PromptOk);
+                await App.TopPage.DisplayAlertAsync("오류", "카카오스토리 피드가 비어 있습니다.", Constants.PromptOk);
                 return;
             }
 

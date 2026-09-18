@@ -33,7 +33,7 @@
             <TextBlock
                 FontSize="18"
                 FontWeight="Bold"
-                Text="새로운 보금자리, 히스토리에 오신것을 환영합니다!" />
+                Text="새로운 보금자리, 히스토리에 오신 것을 환영합니다!" />
             <TextBlock FontSize="18" Text="당신의 소중한 기록을 이제 여기서 자유롭게 시작해보세요!" />
 
             <TextBlock

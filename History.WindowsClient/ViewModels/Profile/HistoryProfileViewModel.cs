@@ -478,10 +478,10 @@ public partial class HistoryProfileViewModel : BaseProfileViewModel, IRecipient<
         else if (user.Friendship != null && user.Friendship.Status == FriendshipStatus.Accepted)
         {
             var friendDays = (DateTime.UtcNow - user.Friendship.CreatedAt).TotalDays;
-            if (friendDays < 1) return "친구가 된지 하루도 안됐어요!";
-            else if (friendDays < 30) return $"{friendDays:N0}일째 친구에요!";
-            else if (friendDays < 365) return $"{friendDays / 30:N0}개월째 친구에요!";
-            else return $"{friendDays / 365:N0}년째 친구에요!";
+            if (friendDays < 1) return "친구가 된 지 하루도 안 됐어요!";
+            else if (friendDays < 30) return $"{friendDays:N0}일째 친구예요!";
+            else if (friendDays < 365) return $"{friendDays / 30:N0}개월째 친구예요!";
+            else return $"{friendDays / 365:N0}년째 친구예요!";
         }
         else if (user.Friendship != null && user.Friendship.Status == FriendshipStatus.Requested) return "친구 요청을 보냈어요!";
         else return "친구가 아니에요.";

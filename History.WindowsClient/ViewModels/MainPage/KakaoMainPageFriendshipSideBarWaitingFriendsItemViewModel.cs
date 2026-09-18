@@ -18,7 +18,7 @@ public partial class KakaoMainPageFriendshipSideBarWaitingFriendsItemViewModel :
         SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 검색";
         RightHeaderText = "보낸 친구 신청 목록";
         Query = string.Empty;
-        EmptyText = "비어있음";
+        EmptyText = "비어 있음";
     }
 
     public override async Task RefreshAsync()

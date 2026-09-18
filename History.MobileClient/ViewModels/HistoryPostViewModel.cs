@@ -256,7 +256,7 @@ public partial class HistoryPostViewModel : BasePostViewModel
             if (success.IsSuccess)
             {
                 PublicPostsPage.ShouldRefresh = true;
-                await App.Page.DisplayAlertAsync("안내", "게시글 홍보가 성공적으로 전송되었습니다. 발견탭에서 확인할 수 있습니다.", Constants.PromptOk);
+                await App.Page.DisplayAlertAsync("안내", "게시글 홍보가 성공적으로 전송되었습니다. 발견 탭에서 확인할 수 있습니다.", Constants.PromptOk);
             }
         }
         else if (action == "관심글로 저장") await HandleBookmarkAsync();

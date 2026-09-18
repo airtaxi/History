@@ -22,7 +22,7 @@ public partial class HistoryMainPageFriendshipSideBarPendingFriendsItemViewModel
 
         Query = string.Empty;
         RightHeaderText = "받은 친구 신청 목록";
-        EmptyText = "비어있음";
+        EmptyText = "비어 있음";
 
         WeakReferenceMessenger.Default.Register(this);
     }

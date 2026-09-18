@@ -23,7 +23,7 @@
             <Label
                 FontAttributes="Bold"
                 FontSize="20"
-                Text="더보기"
+                Text="더 보기"
                 TextColor="White"
                 VerticalOptions="Center" />
         </Grid>

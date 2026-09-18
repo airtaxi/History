@@ -18,7 +18,7 @@ public partial class KakaoMainPageFriendshipSideBarAllFriendsItemViewModel : Bas
         SearchAutoSuggestBoxPlaceholderText = "친구의 닉네임 검색";
         RightHeaderText = "친구 목록";
         Query = string.Empty;
-        EmptyText = "친구 목록이 비어있습니다";
+        EmptyText = "친구 목록이 비어 있습니다";
         IsEmpty = true;
     }
 

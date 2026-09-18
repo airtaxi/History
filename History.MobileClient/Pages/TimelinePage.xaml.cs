@@ -105,7 +105,7 @@ public partial class TimelinePage : ContentPage
 
             if (timeline?.feeds == null)
             {
-                await DisplayAlertAsync("오류", "카카오스토리 피드가 비어있습니다.", Constants.PromptOk);
+                await DisplayAlertAsync("오류", "카카오스토리 피드가 비어 있습니다.", Constants.PromptOk);
                 return;
             }
 

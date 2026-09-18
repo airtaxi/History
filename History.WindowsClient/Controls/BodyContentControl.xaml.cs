@@ -116,12 +116,12 @@ public sealed partial class BodyContentControl : BaseControl
         }
     }
 
-    // Renders the " ... 더보기" indicator at the truncation point.
+    // Renders the " ... 더 보기" indicator at the truncation point.
     private static void AppendMoreInline(InlineCollection inlines)
     {
         inlines.Add(new Run
         {
-            Text = " ... 더보기",
+            Text = " ... 더 보기",
             FontWeight = FontWeights.Bold,
             Foreground = new SolidColorBrush(Color.FromArgb(0xFF, 0x99, 0x99, 0x99))
         });

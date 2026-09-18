@@ -95,7 +95,7 @@ public partial class InviteCodesPageViewModel : BaseViewModel
             }
         }
 
-        var countText = await ShowInputDialogAsync(new InputDialogParameters("초대 코드 요청", "요청할 초대 코드 갯수를 입력하세요 (1-50)", defaultText: "1", showCancel: true, numberOnly: true, maxLength: 2));
+        var countText = await ShowInputDialogAsync(new InputDialogParameters("초대 코드 요청", "요청할 초대 코드 개수를 입력하세요 (1-50)", defaultText: "1", showCancel: true, numberOnly: true, maxLength: 2));
         if (string.IsNullOrEmpty(countText)) return;
         if (!int.TryParse(countText, out var count) || count < 1 || count > 50)
         {
