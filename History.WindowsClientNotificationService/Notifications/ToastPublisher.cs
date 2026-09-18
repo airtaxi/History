@@ -15,13 +15,17 @@ public sealed class ToastPublisher(FileLogger logger)
 {
     private const string PackageName = "49536HowonLee.297428538D1EE";
     private const string ApplicationId = "App";
+    private const string AppLogoPackageSource = "ms-appx:///Assets/Square44x44Logo.targetsize-48.png";
+    private const string AppLogoRelativePath = @"Assets\Square44x44Logo.targetsize-48.png";
     private const string RepositoryPackagesKeyPath = @"Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages";
 
     private string _aumid;
+    private string _appLogoSource;
+    private bool _appLogoResolved;
 
     public void Show(string title, string body, string imageUrl, IReadOnlyDictionary<string, string> data)
     {
-        var payload = ToastPayloadBuilder.Build(title, body, imageUrl, data);
+        var payload = ToastPayloadBuilder.Build(title, body, imageUrl, data, ResolveAppLogoSource());
         if (payload == null) return;
 
         var aumid = ResolveAumid();
@@ -47,6 +51,41 @@ public sealed class ToastPublisher(FileLogger logger)
 
         try { ToastNotificationManager.History.Clear(aumid); }
         catch (Exception exception) { logger.Log($"Toast history clear failed: {exception.Message}"); }
+    }
+
+    // The notification shows the app icon next to the text. The package asset is referenced through
+    // ms-appx when the process runs with package identity, and through the absolute path of the
+    // installed package otherwise, because ms-appx cannot be resolved without identity.
+    private string ResolveAppLogoSource()
+    {
+        if (_appLogoResolved) return _appLogoSource;
+        _appLogoResolved = true;
+
+        _appLogoSource = HasPackageIdentity() ? AppLogoPackageSource : ResolveAppLogoSourceFromInstalledLocation();
+        return _appLogoSource;
+    }
+
+    private string ResolveAppLogoSourceFromInstalledLocation()
+    {
+        try
+        {
+            var installedLocation = new PackageManager().FindPackagesForUser(string.Empty, PackageName).FirstOrDefault()?.InstalledLocation.Path;
+            if (installedLocation == null) return null;
+
+            var logoPath = Path.Combine(installedLocation, AppLogoRelativePath);
+            return File.Exists(logoPath) ? new Uri(logoPath).AbsoluteUri : null;
+        }
+        catch (Exception exception)
+        {
+            logger.Log($"App logo lookup failed: {exception.Message}");
+            return null;
+        }
+    }
+
+    private static bool HasPackageIdentity()
+    {
+        try { return Windows.ApplicationModel.Package.Current != null; }
+        catch { return false; }
     }
 
     // Resolution order: the current package identity (when the app model launched the service),
