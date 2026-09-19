@@ -8,7 +8,7 @@ namespace History.WindowsClient.Services;
 
 public sealed partial class StoreUpdateService(ApplicationSettingsService settingsService, ApplicationNotificationService applicationNotificationService) : IDisposable
 {
-    private const string StoreProductIdentifier = "9P5GS17TCDQX";
+    private const string StoreProductIdentifier = "9P723KJVM3KB";
     private static readonly TimeSpan s_updateCheckInterval = TimeSpan.FromHours(8);
     private static readonly Uri s_storeProductPageAddress = new($"ms-windows-store://pdp/?ProductId={StoreProductIdentifier}");
 
