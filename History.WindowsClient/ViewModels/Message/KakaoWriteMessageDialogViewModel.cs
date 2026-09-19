@@ -22,6 +22,7 @@ public partial class KakaoWriteMessageDialogViewModel : HistoryWriteMessageDialo
     }
 
     public override bool IsAttachmentAvailable => false;
+    public override bool IsKakaoStoryMode => true;
 
     protected override void PopulateDefaultSuggestions()
     {

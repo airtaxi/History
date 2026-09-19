@@ -8,6 +8,8 @@ public partial class KakaoMainPageMessagesSideBarViewModel(MainPageViewModel bas
 {
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
+    protected override bool IsKakaoStoryMode => true;
+
     protected override HistoryWriteMessageDialogViewModel CreateWriteMessageDialogViewModel() => new KakaoWriteMessageDialogViewModel(BaseViewModel);
 
     public override async Task RefreshAsync()

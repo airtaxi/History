@@ -1,8 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using History.Commons.Api.Message;
 using History.Commons.DataTypes.Contents;
 using History.Commons;
+using History.WindowsClient.Messages;
 using History.WindowsClient.ViewModels.Editor;
 using System.IO;
 
@@ -22,6 +24,10 @@ public abstract partial class BaseMessageDialogViewModel : ImageAttachmentViewMo
     // Whether the account mode accepts an image attachment on a mail.
     public virtual bool IsAttachmentAvailable => true;
 
+    // Whether this compose dialog belongs to the Kakao Story account mode; the sent-mail
+    // notification carries it so only the matching message side bar reloads.
+    public virtual bool IsKakaoStoryMode => false;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TextLengthText))]
     [NotifyPropertyChangedFor(nameof(CanSend))]
@@ -34,8 +40,6 @@ public abstract partial class BaseMessageDialogViewModel : ImageAttachmentViewMo
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanSend))]
     public partial bool IsSending { get; set; }
-
-    public bool IsSent { get; private set; }
 
     // Rejects invalid states before the send pipeline runs (e.g. a write dialog without
     // a selected receiver).
@@ -75,7 +79,7 @@ public abstract partial class BaseMessageDialogViewModel : ImageAttachmentViewMo
             var result = await SendContentsAsync(text);
             if (result.IsSuccess)
             {
-                IsSent = true;
+                WeakReferenceMessenger.Default.Send(new MessageSentMessage(IsKakaoStoryMode));
                 await BaseViewModel.ShowMessageDialogAsync(new("성공", "쪽지가 전송되었습니다."));
                 return true;
             }

@@ -8,6 +8,7 @@ namespace History.WindowsClient.ViewModels.Message;
 public partial class KakaoReplyMessageDialogViewModel(BaseViewModel baseViewModel, string receiverId, string receiverName, ImageSource receiverProfileImage = null) : HistoryReplyMessageDialogViewModel(baseViewModel, receiverId, receiverName, receiverProfileImage)
 {
     public override bool IsAttachmentAvailable => false;
+    public override bool IsKakaoStoryMode => true;
 
     protected override async Task<Result> SendContentsAsync(string text) => await KakaoStoryUtils.SendMailAsync(BaseViewModel, ReceiverId, text);
 }

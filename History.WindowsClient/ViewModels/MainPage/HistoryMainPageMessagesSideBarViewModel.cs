@@ -7,6 +7,8 @@ public partial class HistoryMainPageMessagesSideBarViewModel(MainPageViewModel b
 {
     private readonly SemaphoreSlim _fetchSemaphore = new(1, 1);
 
+    protected override bool IsKakaoStoryMode => false;
+
     public override async Task RefreshAsync()
     {
         if (_fetchSemaphore.CurrentCount == 0) return;
