@@ -1,5 +1,4 @@
 using History.Commons.Interfaces;
-using RestSharp;
 
 namespace History.Commons.Api.Sticker;
 
@@ -9,7 +8,7 @@ namespace History.Commons.Api.Sticker;
 public class SubscribeSticker : IBaseRequest<string>, IAuthRequiredRequest
 {
     public string Path { get; }
-    public Method Method => Method.Post;
+    public HttpRequestMethod Method => HttpRequestMethod.Post;
 
     public SubscribeSticker(string stickerId)
     {

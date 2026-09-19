@@ -1,13 +1,12 @@
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Interfaces;
-using RestSharp;
 
 namespace History.Commons.Api.Sticker;
 
 public class SearchStickers : IBaseRequest<List<StickerResponseDto>>, IAuthRequiredRequest, IRequestWithQueryParameters
 {
     public string Path => "/api/sticker/search";
-    public Method Method => Method.Get;
+    public HttpRequestMethod Method => HttpRequestMethod.Get;
     public Dictionary<string, string> QueryParameters { get; set; } = [];
 
     public SearchStickers(string query, string from = null, int limit = 20)

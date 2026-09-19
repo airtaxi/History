@@ -7,13 +7,13 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using History.ApiService.DataTypes;
 using Microsoft.IdentityModel.Tokens;
-using RestSharp;
 
 namespace History.ApiService.Helpers;
 
 public static class AppleIdTokenHelper
 {
-    private static readonly RestClient s_client = new("https://appleid.apple.com/auth/keys");
+    private static readonly HttpClient s_httpClient = new();
+    private static readonly JsonSerializerOptions s_appleJsonOptions = new(JsonSerializerDefaults.Web);
 
     /// <summary>
     /// Validate Apple ID token
@@ -88,8 +88,8 @@ public static class AppleIdTokenHelper
     /// <returns>Apple public keys</returns>
     private static async Task<ApplePublicKeyResponse> GetApplePublicKeysAsync()
     {
-        var response = await s_client.ExecuteGetAsync<ApplePublicKeyResponse>(string.Empty);
-        return response.Data;
+        var json = await s_httpClient.GetStringAsync("https://appleid.apple.com/auth/keys");
+        return JsonSerializer.Deserialize<ApplePublicKeyResponse>(json, s_appleJsonOptions);
     }
 
     /// <summary>

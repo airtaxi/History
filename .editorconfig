@@ -2,3 +2,9 @@
 
 # CA1873: Avoid potentially expensive logging
 dotnet_diagnostic.CA1873.severity = silent
+
+# The WinUI XAML compiler emits XamlTypeInfo.g.cs that references the obsolete WinUIEx.Icon
+# (from WinUIEx WindowEx metadata). WinUIEx is already at its latest version (2.9.3), so this
+# generated-code warning is suppressed until the XAML compiler stops emitting the reference.
+[**/XamlTypeInfo.g.cs]
+dotnet_diagnostic.CS0618.severity = none

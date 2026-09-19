@@ -1,13 +1,12 @@
 ﻿using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Interfaces;
-using RestSharp;
 
 namespace History.Commons.Api.Post;
 
 public class GetUserPosts : IBaseRequest<List<PostResponseDto>>, IOptionalAuthRequest, IRequestWithUrlParameters, IRequestWithQueryParameters
 {
     public string Path => "/api/post/user/{userId}";
-    public Method Method => Method.Get;
+    public HttpRequestMethod Method => HttpRequestMethod.Get;
     public Dictionary<string, string> UrlParameters { get; set; } = [];
     public Dictionary<string, string> QueryParameters { get; set; } = [];
 

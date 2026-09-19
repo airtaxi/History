@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.ResponseDtos;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -47,6 +48,7 @@ public static class MediaCacheService
     private static readonly SemaphoreSlim s_indexSemaphore = new(1, 1);
     private static readonly SemaphoreSlim s_inFlightSemaphore = new(1, 1);
     private static readonly Dictionary<string, Task> s_inFlightDownloads = [];
+    private static readonly JsonTypeInfo<Dictionary<string, MediaCacheEntry>> s_indexJsonTypeInfo = (JsonTypeInfo<Dictionary<string, MediaCacheEntry>>)MediaCacheJsonSerializerContext.Default.GetTypeInfo(typeof(Dictionary<string, MediaCacheEntry>));
     private static bool s_isIndexLoaded;
     private static Dictionary<string, MediaCacheEntry> s_cacheIndex = [];
     private static long s_totalCacheSizeBytes;
@@ -286,7 +288,7 @@ public static class MediaCacheService
                 if (indexFile != null)
                 {
                     var indexJson = await FileIO.ReadTextAsync(indexFile);
-                    var loadedIndex = JsonSerializer.Deserialize<Dictionary<string, MediaCacheEntry>>(indexJson);
+                    var loadedIndex = JsonSerializer.Deserialize(indexJson, s_indexJsonTypeInfo);
                     if (loadedIndex != null)
                     {
                         s_cacheIndex = loadedIndex;
@@ -325,7 +327,7 @@ public static class MediaCacheService
 
         var cacheFolder = await GetCacheFolderAsync();
         var tempFile = await cacheFolder.CreateFileAsync($"{CacheIndexFileName}.{Guid.NewGuid():N}.tmp", CreationCollisionOption.ReplaceExisting);
-        await WriteBytesDirectAsync(tempFile, JsonSerializer.SerializeToUtf8Bytes(s_cacheIndex));
+        await WriteBytesDirectAsync(tempFile, JsonSerializer.SerializeToUtf8Bytes(s_cacheIndex, s_indexJsonTypeInfo));
         await RenameFileWithRetryAsync(tempFile, CacheIndexFileName);
     }
 

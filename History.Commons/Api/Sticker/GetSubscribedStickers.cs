@@ -1,6 +1,5 @@
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Interfaces;
-using RestSharp;
 
 namespace History.Commons.Api.Sticker;
 
@@ -10,7 +9,7 @@ namespace History.Commons.Api.Sticker;
 public class GetSubscribedStickers : IBaseRequest<List<StickerResponseDto>>, IAuthRequiredRequest, IRequestWithQueryParameters
 {
     public string Path => "/api/sticker/subscribed";
-    public Method Method => Method.Get;
+    public HttpRequestMethod Method => HttpRequestMethod.Get;
     public Dictionary<string, string> QueryParameters { get; set; } = [];
 
     public GetSubscribedStickers(string from = null, int limit = 20)

@@ -3,10 +3,8 @@
     x:Class="History.WindowsClient.Pages.ProfilePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:behaviors="using:Microsoft.Xaml.Interactivity"
     xmlns:controls="using:History.WindowsClient.ThirdParty.StaggeredLayout"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:local="using:History.WindowsClient.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:History.WindowsClient.ViewModels.Profile"
@@ -38,20 +36,21 @@
                                 <Grid>
 
                                     <!--  Background media with dark overlay for text readability  -->
-                                    <Border
+                                    <Button
                                         Grid.Row="0"
+                                        Padding="0"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        VerticalContentAlignment="Stretch"
                                         Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                        BorderThickness="0"
+                                        Command="{x:Bind HandleBackgroundTapCommand}"
                                         CornerRadius="12">
                                         <Grid>
-                                            <interactivity:Interaction.Behaviors>
-                                                <behaviors:EventTriggerBehavior EventName="Tapped">
-                                                    <behaviors:InvokeCommandAction Command="{x:Bind HandleBackgroundTapCommand}" />
-                                                </behaviors:EventTriggerBehavior>
-                                            </interactivity:Interaction.Behaviors>
                                             <Image Source="{x:Bind BackgroundImageSource, Mode=OneWay}" Stretch="UniformToFill" />
                                             <Border Background="Black" Opacity="0.6" />
                                         </Grid>
-                                    </Border>
+                                    </Button>
 
                                     <!--  Identity row, overlapping the background media  -->
                                     <Grid
@@ -85,7 +84,7 @@
                                                     Height="96"
                                                     ProfilePicture="{x:Bind ProfileImageSource, Mode=OneWay}" />
                                             </Button>
-                                            <Border
+                                            <Button
                                                 Width="32"
                                                 Height="32"
                                                 Padding="0"
@@ -94,18 +93,14 @@
                                                 Background="#8F8F8F"
                                                 BorderBrush="{ThemeResource LayerOnMicaBaseAltFillColorTertiaryBrush}"
                                                 BorderThickness="1"
+                                                Command="{x:Bind HandleFavoriteCommand}"
                                                 CornerRadius="16"
                                                 Visibility="{x:Bind IsFriend, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                                                <interactivity:Interaction.Behaviors>
-                                                    <behaviors:EventTriggerBehavior EventName="Tapped">
-                                                        <behaviors:InvokeCommandAction Command="{x:Bind HandleFavoriteCommand}" />
-                                                    </behaviors:EventTriggerBehavior>
-                                                </interactivity:Interaction.Behaviors>
                                                 <FontIcon
                                                     FontSize="16"
                                                     Foreground="{x:Bind FavoriteBrush, Mode=OneWay}"
                                                     Glyph="&#xE735;" />
-                                            </Border>
+                                            </Button>
                                         </Grid>
 
                                         <StackPanel

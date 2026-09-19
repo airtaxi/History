@@ -1,13 +1,12 @@
 using History.Commons.Enums;
 using History.Commons.Interfaces;
-using RestSharp;
 
 namespace History.Commons.Api.Post;
 
 public class BulkDeletePosts : IAuthRequiredRequest, IRequestWithQueryParameters
 {
     public string Path => "/api/post/bulk";
-    public Method Method => Method.Delete;
+    public HttpRequestMethod Method => HttpRequestMethod.Delete;
 
     public Dictionary<string, string> QueryParameters { get; } = [];
 

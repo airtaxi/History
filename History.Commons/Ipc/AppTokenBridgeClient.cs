@@ -23,9 +23,9 @@ public sealed class AppTokenBridgeClient
             await using var pipeClientStream = new NamedPipeClientStream(".", TokenBridgeProtocol.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
 
             await pipeClientStream.ConnectAsync((int)timeout.TotalMilliseconds);
-            await TokenBridgeProtocol.WriteMessageAsync(pipeClientStream, request, cancellationTokenSource.Token);
+            await TokenBridgeProtocol.WriteMessageAsync(pipeClientStream, request, TokenBridgeJsonSerializerContext.Default.TokenBridgeRequest, cancellationTokenSource.Token);
 
-            return await TokenBridgeProtocol.ReadMessageAsync<TokenBridgeResponse>(pipeClientStream, cancellationTokenSource.Token);
+            return await TokenBridgeProtocol.ReadMessageAsync<TokenBridgeResponse>(pipeClientStream, TokenBridgeJsonSerializerContext.Default.TokenBridgeResponse, cancellationTokenSource.Token);
         }
         catch (Exception)
         {

@@ -3,7 +3,6 @@ using DotNet.RateLimiter.ActionFilters;
 using Google.Apis.Auth.OAuth2;
 using History.ApiService.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using RestSharp;
 using System.Text.Json.Nodes;
 using System.Web;
 
@@ -47,19 +46,22 @@ public class AppleController(IConfiguration configuration) : ControllerBase
         if (!_stateProtector.TryUnprotect(state, out var redirectUrl)) return BadRequest("Invalid or expired state.");
 
         string idToken;
-        using (var client = new RestClient("https://appleid.apple.com/auth/token"))
+        using (var client = new HttpClient())
         {
-            var request = new RestRequest() { Method = Method.Post };
-            request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
-            request.AddParameter("client_id", _clientId, ParameterType.GetOrPost);
-            request.AddParameter("client_secret", GenerateJwtToken(), ParameterType.GetOrPost);
-            request.AddParameter("code", code, ParameterType.GetOrPost);
-            request.AddParameter("grant_type", "authorization_code", ParameterType.GetOrPost);
-            request.AddParameter("redirect_uri", _redirectUri, ParameterType.GetOrPost);
+            var request = new HttpRequestMessage(HttpMethod.Post, "https://appleid.apple.com/auth/token")
+            {
+                Content = new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    ["client_id"] = _clientId,
+                    ["client_secret"] = GenerateJwtToken(),
+                    ["code"] = code,
+                    ["grant_type"] = "authorization_code",
+                    ["redirect_uri"] = _redirectUri
+                })
+            };
 
-            var response = await client.ExecuteAsync(request);
-            var content = response.Content;
-            var data = JsonNode.Parse(response.Content).AsObject();
+            var response = await client.SendAsync(request);
+            var data = JsonNode.Parse(await response.Content.ReadAsStringAsync()).AsObject();
             idToken = (string)data["id_token"];
         }
 

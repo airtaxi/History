@@ -1,6 +1,5 @@
 ﻿using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Interfaces;
-using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +11,7 @@ namespace History.Commons.Api.Moderation
     public class GetModerationRecords : IBaseRequest<List<ModerationRecordResponseDto>>, IAuthRequiredRequest, IRequestWithQueryParameters
     {
         public string Path => "api/moderation/records";
-        public Method Method => Method.Get;
+        public HttpRequestMethod Method => HttpRequestMethod.Get;
         public Dictionary<string, string> QueryParameters { get; set; } = [];
 
         public GetModerationRecords(string from = null, int limit = 10)

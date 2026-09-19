@@ -25,10 +25,10 @@ public sealed class AppTokenBridgeServer : IAsyncDisposable
                 await using var pipeServerStream = new NamedPipeServerStream(TokenBridgeProtocol.PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
                 await pipeServerStream.WaitForConnectionAsync(_cancellationTokenSource.Token);
 
-                var request = await TokenBridgeProtocol.ReadMessageAsync<TokenBridgeRequest>(pipeServerStream, _cancellationTokenSource.Token);
+                var request = await TokenBridgeProtocol.ReadMessageAsync<TokenBridgeRequest>(pipeServerStream, TokenBridgeJsonSerializerContext.Default.TokenBridgeRequest, _cancellationTokenSource.Token);
                 var response = request == null ? InvalidRequestResponse() : await _handler(request, _cancellationTokenSource.Token);
 
-                await TokenBridgeProtocol.WriteMessageAsync(pipeServerStream, response, _cancellationTokenSource.Token);
+                await TokenBridgeProtocol.WriteMessageAsync(pipeServerStream, response, TokenBridgeJsonSerializerContext.Default.TokenBridgeResponse, _cancellationTokenSource.Token);
             }
             catch (OperationCanceledException) { return; }
             catch

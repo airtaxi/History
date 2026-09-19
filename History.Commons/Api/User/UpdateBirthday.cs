@@ -1,14 +1,16 @@
 ﻿using History.Commons.DataTypes.RequestDtos;
 using History.Commons.Interfaces;
-using RestSharp;
+using System.Text.Json.Serialization.Metadata;
+using History.Commons.Serialization;
 
 namespace History.Commons.Api.User;
 
 public class UpdateBirthday : IAuthRequiredRequest, IRequestWithBody
 {
     public string Path => "/api/user/birthday";
-    public Method Method => Method.Put;
+    public HttpRequestMethod Method => HttpRequestMethod.Put;
     public object Body { get; set; }
+    public JsonTypeInfo BodyTypeInfo => ApiWebJsonSerializerContext.Default.GetTypeInfo(typeof(UpdateUserBirthdayRequestDto));
 
     public UpdateBirthday(DateTime? birthday) => Body = new UpdateUserBirthdayRequestDto()
     {

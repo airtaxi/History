@@ -1,13 +1,12 @@
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Interfaces;
-using RestSharp;
 
 namespace History.Commons.Api.Sticker;
 
 public class CreateSticker : IBaseRequest<StickerResponseDto>, IAuthRequiredRequest, IRequestWithFormData
 {
     public string Path => "/api/sticker";
-    public Method Method => Method.Post;
+    public HttpRequestMethod Method => HttpRequestMethod.Post;
 
     public Dictionary<string, string> FormData { get; set; } = [];
     public Dictionary<string, byte[]> Files { get; set; } = [];

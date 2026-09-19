@@ -7,7 +7,7 @@ public class CreateInviteCodeRequestDto
     /// <summary>
     /// Optional reason for requesting invite codes.
     /// </summary>
-    [MaxLength(500)]
+    [StringLength(500)]
     public string Reason { get; set; }
 
     /// <summary>

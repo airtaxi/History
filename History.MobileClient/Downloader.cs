@@ -1,6 +1,4 @@
-﻿using RestSharp;
-
-namespace History.MobileClient;
+﻿namespace History.MobileClient;
 
 public static class Downloader
 {
@@ -50,8 +48,8 @@ public static class Downloader
 
 	public static async Task<string> DownloadString(string url)
 	{
-		var client = new RestClient(url);
-		var response = await client.ExecuteGetAsync(new RestRequest());
-		return response.Content;
+		using var httpClient = new HttpClient();
+		using var response = await httpClient.GetAsync(url);
+		return await response.Content.ReadAsStringAsync();
 	}
 }	

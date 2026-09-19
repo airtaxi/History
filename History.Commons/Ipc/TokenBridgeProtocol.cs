@@ -1,5 +1,7 @@
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace History.Commons.Ipc;
 
@@ -11,9 +13,9 @@ internal static class TokenBridgeProtocol
 
     private const int MaxMessageBytes = 64 * 1024;
 
-    public static async Task WriteMessageAsync<T>(Stream stream, T message, CancellationToken cancellationToken)
+    public static async Task WriteMessageAsync<T>(Stream stream, T message, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken)
     {
-        var payload = JsonSerializer.SerializeToUtf8Bytes(message);
+        var payload = JsonSerializer.SerializeToUtf8Bytes(message, jsonTypeInfo);
         var lengthPrefix = new byte[sizeof(int)];
         BinaryPrimitives.WriteInt32LittleEndian(lengthPrefix, payload.Length);
 
@@ -22,7 +24,7 @@ internal static class TokenBridgeProtocol
         await stream.FlushAsync(cancellationToken);
     }
 
-    public static async Task<T> ReadMessageAsync<T>(Stream stream, CancellationToken cancellationToken) where T : class
+    public static async Task<T> ReadMessageAsync<T>(Stream stream, JsonTypeInfo<T> jsonTypeInfo, CancellationToken cancellationToken) where T : class
     {
         var lengthPrefix = new byte[sizeof(int)];
         if (!await ReadExactAsync(stream, lengthPrefix, cancellationToken)) return null;
@@ -33,7 +35,7 @@ internal static class TokenBridgeProtocol
         var payload = new byte[length];
         if (!await ReadExactAsync(stream, payload, cancellationToken)) return null;
 
-        return JsonSerializer.Deserialize<T>(payload);
+        return JsonSerializer.Deserialize(payload, jsonTypeInfo);
     }
 
     private static async Task<bool> ReadExactAsync(Stream stream, byte[] buffer, CancellationToken cancellationToken)

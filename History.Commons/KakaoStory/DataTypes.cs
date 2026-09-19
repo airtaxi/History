@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace History.Commons.KakaoStory;
 
@@ -17,70 +18,70 @@ public partial class KakaoStoryApiHandler
 
         public class NotificationStatus
         {
-            [JsonProperty("feed_count")]
+            [JsonPropertyName("feed_count")]
             public int FeedCount { get; set; }
 
-            [JsonProperty("has_new_feed")]
+            [JsonPropertyName("has_new_feed")]
             public bool HasNewFeed { get; set; }
 
-            [JsonProperty("story_channel_updated")]
+            [JsonPropertyName("story_channel_updated")]
             public long StoryChannelUpdated { get; set; }
 
-            [JsonProperty("received_count")]
+            [JsonPropertyName("received_count")]
             public int ReceivedCount { get; set; }
 
-            [JsonProperty("print_app_badge_flag")]
+            [JsonPropertyName("print_app_badge_flag")]
             public bool PrintAppBadgeFlag { get; set; }
 
-            [JsonProperty("available")]
+            [JsonPropertyName("available")]
             public int Available { get; set; }
 
-            [JsonProperty("last_notice_id")]
+            [JsonPropertyName("last_notice_id")]
             public int LastNoticeId { get; set; }
 
-            [JsonProperty("notification_count")]
+            [JsonPropertyName("notification_count")]
             public int NotificationCount { get; set; }
 
-            [JsonProperty("has_new_tagged_activity")]
+            [JsonPropertyName("has_new_tagged_activity")]
             public bool HasNewTaggedActivity { get; set; }
 
-            [JsonProperty("notice_count")]
+            [JsonPropertyName("notice_count")]
             public int NoticeCount { get; set; }
 
-            [JsonProperty("message_count")]
+            [JsonPropertyName("message_count")]
             public int MessageCount { get; set; }
 
-            [JsonProperty("alert")]
+            [JsonPropertyName("alert")]
             public bool Alert { get; set; }
 
-            [JsonProperty("storyplus_badge_flag")]
+            [JsonPropertyName("storyplus_badge_flag")]
             public bool StoryplusBadgeFlag { get; set; }
 
-            [JsonProperty("friend_count")]
+            [JsonPropertyName("friend_count")]
             public int FriendCount { get; set; }
 
-            [JsonProperty("has_new_notification")]
+            [JsonPropertyName("has_new_notification")]
             public bool HasNewNotification { get; set; }
 
-            [JsonProperty("promoted_app_count")]
+            [JsonPropertyName("promoted_app_count")]
             public int PromotedAppCount { get; set; }
 
-            [JsonProperty("session_timeout")]
+            [JsonPropertyName("session_timeout")]
             public int SessionTimeout { get; set; }
         }
 
         public class EmoticonAuth
         {
-            [JsonProperty("credential")]
+            [JsonPropertyName("credential")]
             public string Credential { get; set; }
 
-            [JsonProperty("signature")]
+            [JsonPropertyName("signature")]
             public string Signature { get; set; }
 
-            [JsonProperty("path")]
+            [JsonPropertyName("path")]
             public string Path { get; set; }
 
-            [JsonProperty("expires")]
+            [JsonPropertyName("expires")]
             public int Expires { get; set; }
         }
 
@@ -88,69 +89,69 @@ public partial class KakaoStoryApiHandler
         {
             public class EmoticonItem
             {
-                [JsonProperty("id")]
+                [JsonPropertyName("id")]
                 public string Id { get; set; }
 
-                [JsonProperty("title")]
+                [JsonPropertyName("title")]
                 public string Title { get; set; }
 
-                [JsonProperty("editor_name")]
+                [JsonPropertyName("editor_name")]
                 public string EditorName { get; set; }
 
-                [JsonProperty("item_sub_type")]
+                [JsonPropertyName("item_sub_type")]
                 public int ItemSubType { get; set; }
 
-                [JsonProperty("version")]
+                [JsonPropertyName("version")]
                 public int Version { get; set; }
 
-                [JsonProperty("count")]
+                [JsonPropertyName("count")]
                 public int Count { get; set; }
 
-                [JsonProperty("expired_at")]
+                [JsonPropertyName("expired_at")]
                 public int ExpiredAt { get; set; }
 
-                [JsonProperty("title_image_url")]
+                [JsonPropertyName("title_image_url")]
                 public string TitleImageUrl { get; set; }
 
-                [JsonProperty("on_image_url")]
+                [JsonPropertyName("on_image_url")]
                 public string OnImageUrl { get; set; }
 
-                [JsonProperty("off_image_url")]
+                [JsonPropertyName("off_image_url")]
                 public string OffImageUrl { get; set; }
 
-                [JsonProperty("is_event_item")]
+                [JsonPropertyName("is_event_item")]
                 public bool IsEventItem { get; set; }
             }
 
-            [JsonProperty("id")]
+            [JsonPropertyName("id")]
             public string Id { get; set; }
 
-            [JsonProperty("items")]
+            [JsonPropertyName("items")]
             public List<EmoticonItem> Items { get; set; }
 
-            [JsonProperty("logged_in")]
+            [JsonPropertyName("logged_in")]
             public bool LoggedIn { get; set; }
 
-            [JsonProperty("normal_cp_supported")]
+            [JsonPropertyName("normal_cp_supported")]
             public bool NormalCpSupported { get; set; }
 
-            [JsonProperty("settings_banner_image_url")]
+            [JsonPropertyName("settings_banner_image_url")]
             public string SettingsBannerImageUrl { get; set; }
         }
 
         public class AuthController
         {
 
-            [JsonProperty("resource_url_build_method")]
+            [JsonPropertyName("resource_url_build_method")]
             public int ResourceUrlBuildMethod { get; set; }
 
-            [JsonProperty("host")]
+            [JsonPropertyName("host")]
             public string Host { get; set; }
 
-            [JsonProperty("base")]
+            [JsonPropertyName("base")]
             public string Base { get; set; }
 
-            [JsonProperty("auth")]
+            [JsonPropertyName("auth")]
             public EmoticonAuth Auth { get; set; }
         }
 
@@ -240,7 +241,7 @@ public partial class KakaoStoryApiHandler
             public class Face
             {
                 public Frame frame { get; set; }
-                public List<object> faces { get; set; }
+                public List<JsonElement> faces { get; set; }
             }
 
             public class Info
@@ -514,7 +515,7 @@ public partial class KakaoStoryApiHandler
                 public string profile_thumbnail_url { get; set; }
                 public string profile_image_url { get; set; }
                 public string display_name { get; set; }
-                public List<object> biography_summary { get; set; }
+                public List<JsonElement> biography_summary { get; set; }
                 public string permalink { get; set; }
                 public bool is_default_profile_image { get; set; }
                 public string birthday { get; set; }
@@ -649,6 +650,7 @@ public partial class KakaoStoryApiHandler
             public class Background
             {
                 public string type { get; set; }
+                [JsonConverter(typeof(KakaoStoryLenientStringJsonConverter))]
                 public string value { get; set; }
             }
 
@@ -661,7 +663,7 @@ public partial class KakaoStoryApiHandler
             {
                 public string content_id { get; set; }
                 public Sender sender { get; set; }
-                public DateTime read_at { get; set; }
+                public DateTime? read_at { get; set; }
                 public DateTime created_at { get; set; }
                 public string id { get; set; }
                 public string type { get; set; }
@@ -862,7 +864,7 @@ public partial class KakaoStoryApiHandler
                 public string bg_image_url { get; set; }
                 public bool allow_following { get; set; }
                 public string profile_thumbnail_url { get; set; }
-                public List<object> status_objects { get; set; }
+                public List<JsonElement> status_objects { get; set; }
                 public string profile_image_url { get; set; }
                 public string display_name { get; set; }
                 public string permalink { get; set; }
@@ -1119,7 +1121,7 @@ public partial class KakaoStoryApiHandler
                 public bool has_unread_reaction { get; set; }
                 public int share_count { get; set; }
                 public Actor actor { get; set; }
-                public List<object> latest_friend_emotion { get; set; }
+                public List<JsonElement> latest_friend_emotion { get; set; }
                 public bool push_mute { get; set; }
                 public bool with_me { get; set; }
                 public int sympathy_count { get; set; }
@@ -1216,6 +1218,8 @@ public partial class KakaoStoryApiHandler
             public string media_path { get; set; }
             public string type = "text";
             public string text { get; set; }
+
+            [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
             public string id { get; set; }
             public CommentMedia media { get; set; }
             public string permalink { get; set; }
@@ -1695,19 +1699,19 @@ public partial class KakaoStoryApiHandler
         /// </summary>
         public class SdkToken
         {
-            [JsonProperty("access_token")]
+            [JsonPropertyName("access_token")]
             public string AccessToken { get; set; }
 
-            [JsonProperty("refresh_token")]
+            [JsonPropertyName("refresh_token")]
             public string RefreshToken { get; set; }
 
-            [JsonProperty("id_token")]
+            [JsonPropertyName("id_token")]
             public string IdToken { get; set; }
 
-            [JsonProperty("expires_in")]
+            [JsonPropertyName("expires_in")]
             public int ExpiresIn { get; set; }
 
-            [JsonProperty("refresh_token_expires_in")]
+            [JsonPropertyName("refresh_token_expires_in")]
             public int RefreshTokenExpiresIn { get; set; }
         }
     }

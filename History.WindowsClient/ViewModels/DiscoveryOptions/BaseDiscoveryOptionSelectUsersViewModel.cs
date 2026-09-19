@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using History.Commons;
 using Windows.Storage;
 
 namespace History.WindowsClient.ViewModels.DiscoveryOptions;
@@ -10,6 +12,8 @@ namespace History.WindowsClient.ViewModels.DiscoveryOptions;
 public abstract partial class BaseDiscoveryOptionSelectUsersViewModel : BaseViewModel
 {
     private const string PresetsSettingKey = "DiscoveryOptionSelectUsersPresets";
+
+    private static readonly JsonTypeInfo<Dictionary<string, List<string>>> s_presetsJsonTypeInfo = (JsonTypeInfo<Dictionary<string, List<string>>>)SourceGenerationContext.Default.GetTypeInfo(typeof(Dictionary<string, List<string>>));
 
     public BaseViewModel BaseViewModel { get; }
 
@@ -220,7 +224,7 @@ public abstract partial class BaseDiscoveryOptionSelectUsersViewModel : BaseView
         try
         {
             var localSettings = ApplicationData.Current.LocalSettings;
-            if (localSettings.Values.TryGetValue(PresetsSettingKey, out var value) && value is string json && !string.IsNullOrWhiteSpace(json)) return JsonSerializer.Deserialize<Dictionary<string, List<string>>>(json) ?? [];
+            if (localSettings.Values.TryGetValue(PresetsSettingKey, out var value) && value is string json && !string.IsNullOrWhiteSpace(json)) return JsonSerializer.Deserialize(json, s_presetsJsonTypeInfo) ?? [];
         }
         catch { }
 
@@ -232,7 +236,7 @@ public abstract partial class BaseDiscoveryOptionSelectUsersViewModel : BaseView
         try
         {
             var localSettings = ApplicationData.Current.LocalSettings;
-            localSettings.Values[PresetsSettingKey] = JsonSerializer.Serialize(dictionary);
+            localSettings.Values[PresetsSettingKey] = JsonSerializer.Serialize(dictionary, s_presetsJsonTypeInfo);
         }
         catch { }
     }

@@ -46,10 +46,6 @@ public sealed partial class ExternalUrlContentControl : UserControl
         else ViewModel.Update(ExternalUrlContent);
     }
 
-    private void OnOpenMenuItemClicked(object sender, RoutedEventArgs e) => ViewModel.OpenLinkCommand.Execute(null);
-
-    private void OnCopyMenuItemClicked(object sender, RoutedEventArgs e) => ViewModel.CopyLinkCommand.Execute(null);
-
     // Prevent event bubbling to the parent control when the user clicks on the content, so that it doesn't trigger any unintended actions.
     private void OnPointerPressed(object sender, PointerRoutedEventArgs e) => e.Handled = true;
 }

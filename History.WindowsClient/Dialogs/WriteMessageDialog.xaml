@@ -32,7 +32,6 @@
                 QueryIcon="Find"
                 SuggestionChosen="OnReceiverSuggestionChosen"
                 TextChanged="OnReceiverTextChanged"
-                TextMemberPath="Nickname"
                 Visibility="{x:Bind ViewModel.IsNotReceiverSelected, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}" />
 
             <Border

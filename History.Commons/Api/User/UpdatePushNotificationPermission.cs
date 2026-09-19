@@ -6,15 +6,17 @@ using System.Threading.Tasks;
 using History.Commons.DataTypes.RequestDtos;
 using History.Commons.Enums;
 using History.Commons.Interfaces;
-using RestSharp;
+using System.Text.Json.Serialization.Metadata;
+using History.Commons.Serialization;
 
 namespace History.Commons.Api.User
 {
     public class UpdatePushNotificationPermission : IAuthRequiredRequest, IRequestWithBody
     {
         public string Path => "/api/user/push-notification-permission";
-        public Method Method => Method.Put;
+        public HttpRequestMethod Method => HttpRequestMethod.Put;
         public object Body { get; }
+        public JsonTypeInfo BodyTypeInfo => ApiWebJsonSerializerContext.Default.GetTypeInfo(typeof(UpdatePushNotificationPermissionRequestDto));
 
         public UpdatePushNotificationPermission(PushNotificationType type, AccessPermission accessPermission)
         {

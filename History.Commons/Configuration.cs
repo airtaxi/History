@@ -238,4 +238,5 @@ public class Configuration
 [JsonSerializable(typeof(List<ushort>))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(JsonArray))]
-internal partial class SourceGenerationContext : JsonSerializerContext;
+// Public so client projects can reuse this source-generated context for their own JSON calls.
+public partial class SourceGenerationContext : JsonSerializerContext;

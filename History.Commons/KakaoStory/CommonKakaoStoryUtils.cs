@@ -1,7 +1,7 @@
 ﻿using History.Commons.Api.KakaoStory;
 using History.Commons.DataTypes.Contents;
 using History.Commons.DataTypes.RequestDtos;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.Text;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 
@@ -126,17 +126,11 @@ public partial class CommonKakaoStoryUtils
             {
                 if (data.type.Equals("profile"))
                 {
-                    sb.Append("{!{" + JsonConvert.SerializeObject(data, Formatting.None, new JsonSerializerSettings
-                    {
-                        NullValueHandling = NullValueHandling.Ignore
-                    }) + "}!}");
+                    sb.Append("{!{" + JsonSerializer.Serialize(data, KakaoStoryJsonSerializer.IgnoreNullTypeInfo<QuoteData>()) + "}!}");
                 }
                 else if (data.type.Equals("emoticon"))
                 {
-                    sb.Append("{!{" + JsonConvert.SerializeObject(data, Formatting.None, new JsonSerializerSettings
-                    {
-                        NullValueHandling = NullValueHandling.Ignore
-                    }) + "}!}");
+                    sb.Append("{!{" + JsonSerializer.Serialize(data, KakaoStoryJsonSerializer.IgnoreNullTypeInfo<QuoteData>()) + "}!}");
                 }
                 else
                     sb.Append(data.text);
@@ -238,7 +232,7 @@ public partial class CommonKakaoStoryUtils
             {
                 string[] strs = fragmentBase.Split(new string[] { "}!}" }, StringSplitOptions.None);
                 string jsonStr = strs[0];
-                var quoteData = JsonConvert.DeserializeObject<QuoteData>(jsonStr);
+                var quoteData = JsonSerializer.Deserialize<QuoteData>(jsonStr, KakaoStoryJsonSerializer.TypeInfo<QuoteData>());
                 count++;
                 returnData.Add(quoteData);
                 if (strs.Length == 2)

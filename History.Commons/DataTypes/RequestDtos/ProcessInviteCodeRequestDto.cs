@@ -7,6 +7,6 @@ public class ProcessInviteCodeRequestDto
     /// <summary>
     /// Optional message from the moderator, included in the result notification.
     /// </summary>
-    [MaxLength(500)]
+    [StringLength(500)]
     public string Message { get; set; }
 }

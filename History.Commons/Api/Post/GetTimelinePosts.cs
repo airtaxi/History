@@ -1,13 +1,12 @@
 ﻿using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Interfaces;
-using RestSharp;
 
 namespace History.Commons.Api.Post;
 
 public class GetTimelinePosts : IBaseRequest<List<PostResponseDto>>, IOptionalAuthRequest, IRequestWithQueryParameters
 {
     public string Path => "/api/post/timeline";
-    public Method Method => Method.Get;
+    public HttpRequestMethod Method => HttpRequestMethod.Get;
     public Dictionary<string, string> QueryParameters { get; set; } = [];
 
     public GetTimelinePosts(string fromPostId = null, int limit = 10)

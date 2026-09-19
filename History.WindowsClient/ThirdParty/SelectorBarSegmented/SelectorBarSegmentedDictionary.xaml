@@ -233,6 +233,7 @@
 
                         <Rectangle
                             x:Name="PART_CommonVisual"
+                            x:SuppressXamlTrimWarnings="True"
                             Grid.RowSpan="2"
                             Grid.ColumnSpan="2"
                             HorizontalAlignment="Stretch"
@@ -494,6 +495,7 @@
 
                         <Rectangle
                             x:Name="PART_CommonVisual"
+                            x:SuppressXamlTrimWarnings="True"
                             Grid.RowSpan="2"
                             Grid.ColumnSpan="2"
                             HorizontalAlignment="Stretch"

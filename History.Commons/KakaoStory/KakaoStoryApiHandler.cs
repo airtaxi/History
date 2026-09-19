@@ -1,12 +1,11 @@
 ﻿#pragma warning disable SYSLIB0014 // Type or member is obsolete
 using System.Net;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using History.Commons;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using RestSharp;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType;
 using static History.Commons.KakaoStory.KakaoStoryApiHandler.DataType.CommentData;
 
@@ -82,6 +81,14 @@ public partial class KakaoStoryApiHandler
         if (!string.IsNullOrEmpty(appKey)) s_kakaoAppKey = appKey;
         Cookies = cookies;
     }
+
+    // The legacy Kakao Story endpoints reply with gzip/deflate/brotli when asked and keep
+    // session state in cookies; the previous HTTP client enabled automatic decompression
+    // and, for the upload calls, shared the caller's cookie container. The client is created
+    // per call just like the old client instance was.
+    private static HttpClient CreateKakaoHttpClient(CookieContainer cookieContainer = null)
+        => new(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.All, UseCookies = true, CookieContainer = cookieContainer ?? new CookieContainer() });
+
     public static async Task<ProfileData.ProfileObject> GetProfileFeed(string id, string from, bool noActivity = false)
     {
         string requestURI = "https://story.kakao.com/a/profiles/" + id + (!noActivity ? "?with=activities" : "");
@@ -89,7 +96,7 @@ public partial class KakaoStoryApiHandler
             requestURI += "&since=" + from;
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        ProfileData.ProfileObject obj = JsonConvert.DeserializeObject<ProfileData.ProfileObject>(response);
+        ProfileData.ProfileObject obj = JsonSerializer.Deserialize<ProfileData.ProfileObject>(response, KakaoStoryJsonSerializer.TypeInfo<ProfileData.ProfileObject>());
         return obj;
     }
     public static async Task<HighlightData.Highlight> GetProfileHighlight(string id)
@@ -97,7 +104,7 @@ public partial class KakaoStoryApiHandler
         string requestURI = "https://story.kakao.com/a/profiles/" + id + "?with=highlight";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        HighlightData.Highlight obj = JsonConvert.DeserializeObject<HighlightData.Highlight>(response);
+        HighlightData.Highlight obj = JsonSerializer.Deserialize<HighlightData.Highlight>(response, KakaoStoryJsonSerializer.TypeInfo<HighlightData.Highlight>());
         return obj;
     }
     public static async Task<ProfileData.Profile> GetBiography(string id)
@@ -105,7 +112,7 @@ public partial class KakaoStoryApiHandler
         string requestURI = "https://story.kakao.com/a/profiles/" + id + "/biography";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<ProfileData.Profile>(response);
+        return JsonSerializer.Deserialize<ProfileData.Profile>(response, KakaoStoryJsonSerializer.TypeInfo<ProfileData.Profile>());
     }
 
     private const string EmoticonListUrl = "https://api-item.kakao.com/api/sdk/items";
@@ -161,33 +168,28 @@ public partial class KakaoStoryApiHandler
     }
     private static async Task<AuthController> GetEmoticonCredential()
     {
-        var client = new RestClient(EmoticonAuthUrl);
-        var request = new RestRequest();
-
-		request.Method = Method.Get;
-
-        request.AddHeader("authorization", $"KakaoAK {s_kakaoAppKey}");
-        request.AddHeader("ka", $"sdk/1.14.0 os/javascript lang/ko-KR device/Win32 origin/https%3A%2F%2Fstory.kakao.com");
-        request.AddHeader("js-origin", $"https://story.kakao.com/");
-        var response = await client.ExecuteAsync(request);
-        var data = JsonConvert.DeserializeObject<AuthController>(response.Content);
+        using var client = CreateKakaoHttpClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, EmoticonAuthUrl);
+        request.Headers.TryAddWithoutValidation("authorization", $"KakaoAK {s_kakaoAppKey}");
+        request.Headers.TryAddWithoutValidation("ka", $"sdk/1.14.0 os/javascript lang/ko-KR device/Win32 origin/https%3A%2F%2Fstory.kakao.com");
+        request.Headers.TryAddWithoutValidation("js-origin", $"https://story.kakao.com/");
+        using var response = await client.SendAsync(request);
+        var content = response.Content == null ? null : await response.Content.ReadAsStringAsync();
+        var data = JsonSerializer.Deserialize<AuthController>(content, KakaoStoryJsonSerializer.TypeInfo<AuthController>());
         return data;
     }
 
     public static async Task<EmoticonItems> GetEmoticonList()
     {
-        var client = new RestClient(EmoticonListUrl);
-        var request = new RestRequest();
-
-		request.Method = Method.Get;
-
-        request.AddHeader("authorization", $"KakaoAK {s_kakaoAppKey}");
-        request.AddHeader("ka", "sdk/1.14.0 os/javascript lang/ko-KR device/Win32 origin/https%3A%2F%2Fstory.kakao.com");
-        request.AddHeader("js-origin", "https://story.kakao.com/");
-        request.AddHeader("referer", "https://api-item.kakao.com/cors/");
-        var response = await client.ExecuteAsync(request);
-        var text = response.Content;
-        var data = JsonConvert.DeserializeObject<EmoticonItems>(text);
+        using var client = CreateKakaoHttpClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, EmoticonListUrl);
+        request.Headers.TryAddWithoutValidation("authorization", $"KakaoAK {s_kakaoAppKey}");
+        request.Headers.TryAddWithoutValidation("ka", "sdk/1.14.0 os/javascript lang/ko-KR device/Win32 origin/https%3A%2F%2Fstory.kakao.com");
+        request.Headers.TryAddWithoutValidation("js-origin", "https://story.kakao.com/");
+        request.Headers.TryAddWithoutValidation("referer", "https://api-item.kakao.com/cors/");
+        using var response = await client.SendAsync(request);
+        var text = response.Content == null ? null : await response.Content.ReadAsStringAsync();
+        var data = JsonSerializer.Deserialize<EmoticonItems>(text, KakaoStoryJsonSerializer.TypeInfo<EmoticonItems>());
         return data;
     }
 		
@@ -196,7 +198,7 @@ public partial class KakaoStoryApiHandler
         string requestURI = "https://story.kakao.com/a/profiles/" + id + "?profile_only=true";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        ProfileRelationshipData.ProfileRelationship obj = JsonConvert.DeserializeObject<ProfileRelationshipData.ProfileRelationship>(response);
+        ProfileRelationshipData.ProfileRelationship obj = JsonSerializer.Deserialize<ProfileRelationshipData.ProfileRelationship>(response, KakaoStoryJsonSerializer.TypeInfo<ProfileRelationshipData.ProfileRelationship>());
         return obj;
     }
     public static async Task<TimeLineData.TimeLine> GetFeed(string from = null)
@@ -206,7 +208,7 @@ public partial class KakaoStoryApiHandler
             requestURI += "?since=" + from;
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<TimeLineData.TimeLine>(response);
+        return JsonSerializer.Deserialize<TimeLineData.TimeLine>(response, KakaoStoryJsonSerializer.TypeInfo<TimeLineData.TimeLine>());
     }
     public static async Task HidePost(string id)
     {
@@ -225,14 +227,14 @@ public partial class KakaoStoryApiHandler
         string requestURI = "https://story.kakao.com/a/profiles/" + id + "/ban";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "POST");
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<ProfileData.Profile>(response);
+        return JsonSerializer.Deserialize<ProfileData.Profile>(response, KakaoStoryJsonSerializer.TypeInfo<ProfileData.Profile>());
     }
     public static async Task<ProfileData.Profile> UnbanProfile(string id)
     {
         string requestURI = "https://story.kakao.com/a/profiles/" + id + "/ban";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "DELETE");
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<ProfileData.Profile>(response);
+        return JsonSerializer.Deserialize<ProfileData.Profile>(response, KakaoStoryJsonSerializer.TypeInfo<ProfileData.Profile>());
     }
     public static async Task<FriendData.Friends> GetFriends()
     {
@@ -240,7 +242,7 @@ public partial class KakaoStoryApiHandler
 
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         var content = await GetResponseFromRequest(webRequest);
-		return JsonConvert.DeserializeObject<FriendData.Friends>(content);
+		return JsonSerializer.Deserialize<FriendData.Friends>(content, KakaoStoryJsonSerializer.TypeInfo<FriendData.Friends>());
     }
     public static async Task<FriendData.Friends> GetProfileFriends(string id)
     {
@@ -253,28 +255,28 @@ public partial class KakaoStoryApiHandler
         var jsonNode = JsonNode.Parse(response);
         if (jsonNode?["message"]?.GetValue<string>() == "friendlist_blocked_by_permission_meonly") return null;
 
-        return JsonConvert.DeserializeObject<FriendData.Friends>(response);
+        return JsonSerializer.Deserialize<FriendData.Friends>(response, KakaoStoryJsonSerializer.TypeInfo<FriendData.Friends>());
     }
     public static async Task<SearchData.SearchResults> SearchUsers(string query)
     {
         string requestURI = "https://story.kakao.com/a/search/united?q=" + Uri.EscapeDataString(query) + "&profile_uri=true";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<SearchData.SearchResults>(response);
+        return JsonSerializer.Deserialize<SearchData.SearchResults>(response, KakaoStoryJsonSerializer.TypeInfo<SearchData.SearchResults>());
     }
     public static async Task<List<InvitationData.Invitation>> GetInvitations()
     {
         string requestURI = "https://story.kakao.com/a/invitations";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<List<InvitationData.Invitation>>(response);
+        return JsonSerializer.Deserialize<List<InvitationData.Invitation>>(response, KakaoStoryJsonSerializer.TypeInfo<List<InvitationData.Invitation>>());
     }
     public static async Task<List<ProfileData.Profile>> GetBannedUsers()
     {
         string requestURI = "https://story.kakao.com/a/bans";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<List<ProfileData.Profile>>(response);
+        return JsonSerializer.Deserialize<List<ProfileData.Profile>>(response, KakaoStoryJsonSerializer.TypeInfo<List<ProfileData.Profile>>());
     }
     public static async Task<BookmarkData.Bookmarks> GetBookmarks(string id, string from)
     {
@@ -283,7 +285,7 @@ public partial class KakaoStoryApiHandler
             requestURI += $"?since={from}";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<BookmarkData.Bookmarks>(response);
+        return JsonSerializer.Deserialize<BookmarkData.Bookmarks>(response, KakaoStoryJsonSerializer.TypeInfo<BookmarkData.Bookmarks>());
     }
     public static async Task<string> GetScrapData(string url)
     {
@@ -303,7 +305,7 @@ public partial class KakaoStoryApiHandler
     public static bool IsScrapDataUsable(string scrapJson)
     {
         if (string.IsNullOrEmpty(scrapJson)) return false;
-        var scrap = JsonConvert.DeserializeObject<DataType.TimeLineData.Scrap>(scrapJson);
+        var scrap = JsonSerializer.Deserialize<DataType.TimeLineData.Scrap>(scrapJson, KakaoStoryJsonSerializer.TypeInfo<DataType.TimeLineData.Scrap>());
         if (scrap == null) return false;
 
         // OpenGraph data or a thumbnail alone is enough for a usable preview.
@@ -346,7 +348,7 @@ public partial class KakaoStoryApiHandler
 
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<List<ShareData.Share>>(response);
+        return JsonSerializer.Deserialize<List<ShareData.Share>>(response, KakaoStoryJsonSerializer.TypeInfo<List<ShareData.Share>>());
     }
     public static async Task<List<Comment>> GetComments(string id, string since = null)
     {
@@ -355,7 +357,7 @@ public partial class KakaoStoryApiHandler
             requestURI += "&since=" + since;
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<List<Comment>>(response);
+        return JsonSerializer.Deserialize<List<Comment>>(response, KakaoStoryJsonSerializer.TypeInfo<List<Comment>>());
     }
     public static async Task<UserProfile.ProfileData> GetProfileData()
     {
@@ -363,14 +365,14 @@ public partial class KakaoStoryApiHandler
 
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<UserProfile.ProfileData>(response);
+        return JsonSerializer.Deserialize<UserProfile.ProfileData>(response, KakaoStoryJsonSerializer.TypeInfo<UserProfile.ProfileData>());
     }
     public static async Task<List<DataType.Actor>> GetSpecificFriend(string id)
     {
         string requestURI = "https://story.kakao.com/a/activities/" + id + "/specific_friends";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<List<DataType.Actor>>(response);
+        return JsonSerializer.Deserialize<List<DataType.Actor>>(response, KakaoStoryJsonSerializer.TypeInfo<List<DataType.Actor>>());
     }
     public static async Task<List<CommentLikes>> GetCommentLikes(string postId, string commentID)
     {
@@ -378,7 +380,7 @@ public partial class KakaoStoryApiHandler
         string method = "GET";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, method);
         var response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<List<CommentLikes>>(response);
+        return JsonSerializer.Deserialize<List<CommentLikes>>(response, KakaoStoryJsonSerializer.TypeInfo<List<CommentLikes>>());
     }
     public static async Task<Comment> LikeComment(string postId, string commentID, bool isDelete)
     {
@@ -390,7 +392,7 @@ public partial class KakaoStoryApiHandler
             method = "POST";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, method);
         var response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<Comment>(response);
+        return JsonSerializer.Deserialize<Comment>(response, KakaoStoryJsonSerializer.TypeInfo<Comment>());
     }
     public static async Task<bool> RequestFriend(string id, bool isDelete)
     {
@@ -457,16 +459,16 @@ public partial class KakaoStoryApiHandler
     {
         string requestURI = "https://story.kakao.com/a/activities/" + postId + "/share";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "POST");
-        string textContent = Uri.EscapeDataString(JsonConvert.SerializeObject(quoteDatas).Replace("\"id\":null,", ""));
+        string textContent = Uri.EscapeDataString(JsonSerializer.Serialize(quoteDatas, KakaoStoryJsonSerializer.TypeInfo<List<QuoteData>>()));
 
         string postData = "content=" + textContent
             + "&permission=" + permission + "&comment_all_writable=" + (commentable ? "true" : "false")
             + "&is_must_read=false&enable_share=true";
 
         if ((with_ids?.Count ?? 0) > 0)
-            postData += "&with_tags=" + Uri.EscapeDataString(JsonConvert.SerializeObject(with_ids));
+            postData += "&with_tags=" + Uri.EscapeDataString(JsonSerializer.Serialize(with_ids, KakaoStoryJsonSerializer.TypeInfo<List<string>>()));
         if ((trust_ids?.Count ?? 0) > 0)
-            postData += "&allowed_profile_ids=" + Uri.EscapeDataString(JsonConvert.SerializeObject(trust_ids));
+            postData += "&allowed_profile_ids=" + Uri.EscapeDataString(JsonSerializer.Serialize(trust_ids, KakaoStoryJsonSerializer.TypeInfo<List<string>>()));
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
         return await GetResponseFromRequest(webRequest, byteArray) != null;
@@ -531,7 +533,7 @@ public partial class KakaoStoryApiHandler
 
         PostData obj = null;
         if (respResult != null)
-            obj = JsonConvert.DeserializeObject<PostData>(respResult);
+            obj = JsonSerializer.Deserialize<PostData>(respResult, KakaoStoryJsonSerializer.TypeInfo<PostData>());
 
         return obj;
     }
@@ -614,7 +616,7 @@ public partial class KakaoStoryApiHandler
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
         string response = await GetResponseFromRequest(webRequest, byteArray);
-        return JsonConvert.DeserializeObject<UserProfile.ProfileData>(response);
+        return JsonSerializer.Deserialize<UserProfile.ProfileData>(response, KakaoStoryJsonSerializer.TypeInfo<UserProfile.ProfileData>());
     }
     public static async Task<UserProfile.ProfileData> SetProfileImage(string imagePath)
     {
@@ -624,7 +626,7 @@ public partial class KakaoStoryApiHandler
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
         string response = await GetResponseFromRequest(webRequest, byteArray);
-        return JsonConvert.DeserializeObject<UserProfile.ProfileData>(response);
+        return JsonSerializer.Deserialize<UserProfile.ProfileData>(response, KakaoStoryJsonSerializer.TypeInfo<UserProfile.ProfileData>());
     }
     public static async Task<UserProfile.ProfileData> DeleteProfileImage()
     {
@@ -634,7 +636,7 @@ public partial class KakaoStoryApiHandler
 
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
         string response = await GetResponseFromRequest(webRequest, byteArray);
-        return JsonConvert.DeserializeObject<UserProfile.ProfileData>(response);
+        return JsonSerializer.Deserialize<UserProfile.ProfileData>(response, KakaoStoryJsonSerializer.TypeInfo<UserProfile.ProfileData>());
     }
     public static async Task<UserProfile.ProfileData> DeleteBackgroundImage()
     {
@@ -642,7 +644,7 @@ public partial class KakaoStoryApiHandler
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "DELETE");
 
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<UserProfile.ProfileData>(response);
+        return JsonSerializer.Deserialize<UserProfile.ProfileData>(response, KakaoStoryJsonSerializer.TypeInfo<UserProfile.ProfileData>());
     }
 
     /// <summary>
@@ -743,7 +745,7 @@ public partial class KakaoStoryApiHandler
 
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "GET");
 
-        return JsonConvert.DeserializeObject<List<MailData.Mail>>(await GetResponseFromRequest(webRequest)); ;
+        return JsonSerializer.Deserialize<List<MailData.Mail>>(await GetResponseFromRequest(webRequest), KakaoStoryJsonSerializer.TypeInfo<List<MailData.Mail>>()); ;
     }
     public static async Task<MailData.MailDetail> GetMailDetail(string id)
     {
@@ -751,7 +753,7 @@ public partial class KakaoStoryApiHandler
 
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "GET");
 
-        return JsonConvert.DeserializeObject<MailData.MailDetail>(await GetResponseFromRequest(webRequest)); ;
+        return JsonSerializer.Deserialize<MailData.MailDetail>(await GetResponseFromRequest(webRequest), KakaoStoryJsonSerializer.TypeInfo<MailData.MailDetail>()); ;
     }
     public static async Task<bool> DeleteMail(string id)
     {
@@ -767,14 +769,14 @@ public partial class KakaoStoryApiHandler
         string requestURI = $"https://story.kakao.com/a/notifications/new_count?notice_since=&_={milliseconds}000";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<NotificationStatus>(response);
+        return JsonSerializer.Deserialize<NotificationStatus>(response, KakaoStoryJsonSerializer.TypeInfo<NotificationStatus>());
     }
     public static async Task<List<Notification>> GetNotifications()
     {
         string requestURI = "https://story.kakao.com/a/notifications";
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<List<Notification>>(response);
+        return JsonSerializer.Deserialize<List<Notification>>(response, KakaoStoryJsonSerializer.TypeInfo<List<Notification>>());
     }
     public static async Task<bool> DeletePost(string id)
     {
@@ -785,18 +787,20 @@ public partial class KakaoStoryApiHandler
     public static async Task<bool> ReplyToPost(string postId, string text, List<QuoteData> quoteDatas, UploadedImageProp img = null)
     {
         string requestURI = "https://story.kakao.com/a/activities/" + postId + "/comments";
-        string textContent = Uri.EscapeDataString(JsonConvert.SerializeObject(quoteDatas).Replace("\"id\":null,", ""));
-
         string postData;
         string imageData2 = "";
+        List<QuoteData> serializedQuoteDatas = [.. quoteDatas];
 
         if (img != null)
         {
+            // The API accepts the flat media_path image decorator; it is inserted before
+            // the existing items so the serialized array starts with the image.
             imageData2 = "(Image) ";
-            string imageData = "{\"media_path\":\"" + img.access_key + "/" + img.info.original.filename + "?width=" + img.info.original.width + "&height=" + img.info.original.height + "&avg=" + img.info.original.avg + "\",\"type\":\"image\",\"text\":\"(Image) \"},";
-            textContent = textContent.Insert(3, Uri.EscapeDataString(imageData));
+            string mediaPath = img.access_key + "/" + img.info.original.filename + "?width=" + img.info.original.width + "&height=" + img.info.original.height + "&avg=" + img.info.original.avg;
+            serializedQuoteDatas.Insert(0, new QuoteData { media_path = mediaPath, type = "image", text = "(Image) " });
         }
 
+        string textContent = Uri.EscapeDataString(JsonSerializer.Serialize(serializedQuoteDatas, KakaoStoryJsonSerializer.TypeInfo<List<QuoteData>>()));
         postData = "text=" + Uri.EscapeDataString(imageData2 + text) + "&decorators=" + textContent;
 
         postData = postData.Replace("%20", "+");
@@ -815,23 +819,22 @@ public partial class KakaoStoryApiHandler
     {
         string requestURI = "https://story.kakao.com/a/activities/" + postId + "/comments/" + comment.id + "/content";
 
-        string textContent = Uri.EscapeDataString(JsonConvert.SerializeObject(quoteDatas).Replace("\"id\":null,", ""));
         string imageData2 = "";
+        List<QuoteData> serializedQuoteDatas = [.. quoteDatas];
         if (preserveOldImage)
         {
             foreach (QuoteData qdata in comment.decorators)
             {
                 // The comment image arrives nested as media.media_path; the API accepts the
-                // flat media_path decorator (trailing comma joins the next decorator), same
-                // shape as the ReplyToPost image decorator.
+                // flat media_path decorator, same shape as the ReplyToPost image decorator.
                 if (qdata.media?.media_path != null)
                 {
                     imageData2 = "(Image) ";
-                    string imageData = "{\"media_path\":\"" + qdata.media.media_path + "\",\"type\":\"image\",\"text\":\"(Image) \"},";
-                    textContent = textContent.Insert(3, Uri.EscapeDataString(imageData));
+                    serializedQuoteDatas.Insert(0, new QuoteData { media_path = qdata.media.media_path, type = "image", text = "(Image) " });
                 }
             }
         }
+        string textContent = Uri.EscapeDataString(JsonSerializer.Serialize(serializedQuoteDatas, KakaoStoryJsonSerializer.TypeInfo<List<QuoteData>>()));
         string postData = "text=" + Uri.EscapeDataString(imageData2 + text);
         postData += "&decorators=" + textContent;
 
@@ -840,7 +843,7 @@ public partial class KakaoStoryApiHandler
         byte[] byteArray = Encoding.UTF8.GetBytes(postData);
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI, "PUT");
         var response = await GetResponseFromRequest(webRequest, byteArray);
-        return JsonConvert.DeserializeObject<Comment>(response);
+        return JsonSerializer.Deserialize<Comment>(response, KakaoStoryJsonSerializer.TypeInfo<Comment>());
     }
     public static async Task<List<ShareData.Share>> GetShares(bool isUP, PostData data, string from)
     {
@@ -854,7 +857,7 @@ public partial class KakaoStoryApiHandler
 
         HttpWebRequest webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<List<ShareData.Share>>(response);
+        return JsonSerializer.Deserialize<List<ShareData.Share>>(response, KakaoStoryJsonSerializer.TypeInfo<List<ShareData.Share>>());
     }
     public static async Task<List<ShareData.Share>> GetLikes(PostData data, string from)
     {
@@ -863,7 +866,7 @@ public partial class KakaoStoryApiHandler
             requestURI += "?since=" + from;
         var webRequest = GenerateDefaultProfile(requestURI);
         string response = await GetResponseFromRequest(webRequest);
-        return JsonConvert.DeserializeObject<List<ShareData.Share>>(response);
+        return JsonSerializer.Deserialize<List<ShareData.Share>>(response, KakaoStoryJsonSerializer.TypeInfo<List<ShareData.Share>>());
     }
     /// <summary>
     /// Sends the request (optionally writing <paramref name="body"/> once), returning the
@@ -1012,20 +1015,17 @@ public partial class KakaoStoryApiHandler
 
         string commentable = isCommentable ? "true" : "false";
         string sharable = isSharable ? "true" : "false";
-        string textContent = Uri.EscapeDataString(JsonConvert.SerializeObject(quoteDatas, Formatting.None, new JsonSerializerSettings
-        {
-            NullValueHandling = NullValueHandling.Ignore
-        }));
+        string textContent = Uri.EscapeDataString(JsonSerializer.Serialize(quoteDatas, KakaoStoryJsonSerializer.IgnoreNullTypeInfo<List<QuoteData>>()));
         StringBuilder postDataBuilder = new();
         postDataBuilder.Append("permission=" + permission + "&comment_all_writable=" + commentable + "&is_must_read=false&enable_share=" + sharable);
         postDataBuilder.Append("&content=" + textContent);
 
         if ((with_ids?.Count ?? 0) > 0)
-            postDataBuilder.Append("&with_tags=" + Uri.EscapeDataString(JsonConvert.SerializeObject(with_ids)));
+            postDataBuilder.Append("&with_tags=" + Uri.EscapeDataString(JsonSerializer.Serialize(with_ids, KakaoStoryJsonSerializer.TypeInfo<List<string>>())));
         if ((trust_ids?.Count ?? 0) > 0)
-            postDataBuilder.Append("&allowed_profile_ids=" + Uri.EscapeDataString(JsonConvert.SerializeObject(trust_ids)));
+            postDataBuilder.Append("&allowed_profile_ids=" + Uri.EscapeDataString(JsonSerializer.Serialize(trust_ids, KakaoStoryJsonSerializer.TypeInfo<List<string>>())));
 
-        string mediaText = JsonConvert.SerializeObject(mediaData);
+        string mediaText = JsonSerializer.Serialize(mediaData, KakaoStoryJsonSerializer.TypeInfo<MediaData>());
         if (mediaText != null && mediaData != null)
         {
             postDataBuilder.Append("&" + Uri.EscapeDataString("media") + "=" + Uri.EscapeDataString(mediaText));
@@ -1063,75 +1063,66 @@ public partial class KakaoStoryApiHandler
 
     private static async Task<string> GetUploadUrl(bool isImage)
     {
-        using var client = new RestClient("https://story.kakao.com/a/web/media/upload-url");
-        var request = new RestRequest();
-        request.Method = Method.Post;
-        request.CookieContainer = s_cookieContainer;
-        request.AddHeader("Accept", "application/json");
-        request.AddHeader("Accept-Encoding", "gzip, deflate, br");
-        request.AddHeader("Accept-Language", "ko");
-        request.AddHeader("Origin", "https://story.kakao.com");
-        request.AddHeader("Referer", "https://story.kakao.com/");
-        request.AddHeader("Sec-Ch-Ua", "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Microsoft Edge\";v=\"122\"");
-        request.AddHeader("Sec-Ch-Ua-Mobile", "?0");
-        request.AddHeader("Sec-Ch-Ua-Platform", "\"Windows\"");
-        request.AddHeader("Sec-Fetch-Dest", "empty");
-        request.AddHeader("Sec-Fetch-Mode", "cors");
-        request.AddHeader("Sec-Fetch-Site", "same-origin");
-        request.AddHeader("X-Kakao-Apilevel", "49");
-        request.AddHeader("X-Kakao-Deviceinfo", "web:d;-;-");
-        request.AddHeader("X-Kakao-Vc", GenerateKakaoVC());
-        request.AddHeader("X-Requested-With", "XMLHttpRequest");
+        using var client = CreateKakaoHttpClient(s_cookieContainer);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://story.kakao.com/a/web/media/upload-url");
+        request.Headers.TryAddWithoutValidation("Accept", "application/json");
+        request.Headers.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate, br");
+        request.Headers.TryAddWithoutValidation("Accept-Language", "ko");
+        request.Headers.TryAddWithoutValidation("Origin", "https://story.kakao.com");
+        request.Headers.TryAddWithoutValidation("Referer", "https://story.kakao.com/");
+        request.Headers.TryAddWithoutValidation("Sec-Ch-Ua", "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Microsoft Edge\";v=\"122\"");
+        request.Headers.TryAddWithoutValidation("Sec-Ch-Ua-Mobile", "?0");
+        request.Headers.TryAddWithoutValidation("Sec-Ch-Ua-Platform", "\"Windows\"");
+        request.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "empty");
+        request.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "cors");
+        request.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "same-origin");
+        request.Headers.TryAddWithoutValidation("X-Kakao-Apilevel", "49");
+        request.Headers.TryAddWithoutValidation("X-Kakao-Deviceinfo", "web:d;-;-");
+        request.Headers.TryAddWithoutValidation("X-Kakao-Vc", GenerateKakaoVC());
+        request.Headers.TryAddWithoutValidation("X-Requested-With", "XMLHttpRequest");
 
-        request.AddHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-        if (isImage)
-        {
-            request.AddParameter("config", "/web/webstory-img");
-            request.AddParameter("upload_url", "https://up-api-kage-4story.kakao.com");
-        }
-        else
-        {
-            request.AddParameter("config", "/web/webstory-video");
-            request.AddParameter("upload_url", "https://up-api-kage-4story-video.kakao.com");
-        }
+        var configParameter = isImage ? "/web/webstory-img" : "/web/webstory-video";
+        var uploadUrlParameter = isImage ? "https://up-api-kage-4story.kakao.com" : "https://up-api-kage-4story-video.kakao.com";
+        var requestContent = new StringContent($"config={Uri.EscapeDataString(configParameter)}&upload_url={Uri.EscapeDataString(uploadUrlParameter)}", Encoding.UTF8);
+        requestContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded; charset=UTF-8");
+        request.Content = requestContent;
 
-        var response = await client.ExecuteAsync(request);
-        var content = response.Content;
-        var jsonObject = JObject.Parse(content);
-        var uploadUrl = jsonObject["url"].ToString();
+        using var response = await client.SendAsync(request);
+        var content = await response.Content.ReadAsStringAsync();
+        using var jsonDocument = JsonDocument.Parse(content);
+        var uploadUrl = jsonDocument.RootElement.GetProperty("url").GetString();
         return uploadUrl;
     }
 
     private static async Task<string> GetVideoCheckUrl(string key)
     {
-        using var client = new RestClient("https://story.kakao.com/a/web/media/wcheck-url");
-        var request = new RestRequest();
-        request.Method = Method.Post;
-        request.CookieContainer = s_cookieContainer;
-        request.AddHeader("Accept", "application/json");
-        request.AddHeader("Accept-Encoding", "gzip, deflate, br");
-        request.AddHeader("Accept-Language", "ko");
-        request.AddHeader("Origin", "https://story.kakao.com");
-        request.AddHeader("Referer", "https://story.kakao.com/");
-        request.AddHeader("Sec-Ch-Ua", "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Microsoft Edge\";v=\"122\"");
-        request.AddHeader("Sec-Ch-Ua-Mobile", "?0");
-        request.AddHeader("Sec-Ch-Ua-Platform", "\"Windows\"");
-        request.AddHeader("Sec-Fetch-Dest", "empty");
-        request.AddHeader("Sec-Fetch-Mode", "cors");
-        request.AddHeader("Sec-Fetch-Site", "same-origin");
-        request.AddHeader("X-Kakao-Apilevel", "49");
-        request.AddHeader("X-Kakao-Deviceinfo", "web:d;-;-");
-        request.AddHeader("X-Kakao-Vc", GenerateKakaoVC());
-        request.AddHeader("X-Requested-With", "XMLHttpRequest");
+        using var client = CreateKakaoHttpClient(s_cookieContainer);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://story.kakao.com/a/web/media/wcheck-url");
+        request.Headers.TryAddWithoutValidation("Accept", "application/json");
+        request.Headers.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate, br");
+        request.Headers.TryAddWithoutValidation("Accept-Language", "ko");
+        request.Headers.TryAddWithoutValidation("Origin", "https://story.kakao.com");
+        request.Headers.TryAddWithoutValidation("Referer", "https://story.kakao.com/");
+        request.Headers.TryAddWithoutValidation("Sec-Ch-Ua", "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Microsoft Edge\";v=\"122\"");
+        request.Headers.TryAddWithoutValidation("Sec-Ch-Ua-Mobile", "?0");
+        request.Headers.TryAddWithoutValidation("Sec-Ch-Ua-Platform", "\"Windows\"");
+        request.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "empty");
+        request.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "cors");
+        request.Headers.TryAddWithoutValidation("Sec-Fetch-Site", "same-origin");
+        request.Headers.TryAddWithoutValidation("X-Kakao-Apilevel", "49");
+        request.Headers.TryAddWithoutValidation("X-Kakao-Deviceinfo", "web:d;-;-");
+        request.Headers.TryAddWithoutValidation("X-Kakao-Vc", GenerateKakaoVC());
+        request.Headers.TryAddWithoutValidation("X-Requested-With", "XMLHttpRequest");
 
-        request.AddHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
-        request.AddParameter("upload_url", "https://up-api-kage-4story-video.kakao.com");
-        request.AddParameter("key", key);
+        const string videoUploadUrl = "https://up-api-kage-4story-video.kakao.com";
+        var requestContent = new StringContent($"upload_url={Uri.EscapeDataString(videoUploadUrl)}&key={Uri.EscapeDataString(key)}", Encoding.UTF8);
+        requestContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/x-www-form-urlencoded; charset=UTF-8");
+        request.Content = requestContent;
 
-        var response = await client.ExecuteAsync(request);
-        var content = response.Content;
-        var jsonObject = JObject.Parse(content);
-        var uploadUrl = jsonObject["url"].ToString();
+        using var response = await client.SendAsync(request);
+        var content = await response.Content.ReadAsStringAsync();
+        using var jsonDocument = JsonDocument.Parse(content);
+        var uploadUrl = jsonDocument.RootElement.GetProperty("url").GetString();
         return uploadUrl;
     }
 
@@ -1183,7 +1174,7 @@ public partial class KakaoStoryApiHandler
         string respResult = await (new StreamReader(respReader, Encoding.UTF8)).ReadToEndAsync();
         respReader.Close();
 
-        UploadedImageProp result = JsonConvert.DeserializeObject<UploadedImageProp>(respResult);
+        UploadedImageProp result = JsonSerializer.Deserialize<UploadedImageProp>(respResult, KakaoStoryJsonSerializer.TypeInfo<UploadedImageProp>());
         return result;
     }
 
@@ -1230,7 +1221,7 @@ public partial class KakaoStoryApiHandler
         string respResult = await (new StreamReader(respReader, Encoding.UTF8)).ReadToEndAsync();
         respReader.Close();
 
-        var videoData = JsonConvert.DeserializeObject<VideoData.Video>(respResult);
+        var videoData = JsonSerializer.Deserialize<VideoData.Video>(respResult, KakaoStoryJsonSerializer.TypeInfo<VideoData.Video>());
         return videoData.access_key;
     }
 
@@ -1326,7 +1317,7 @@ public partial class KakaoStoryApiHandler
             string respResult = reader.ReadToEnd();
             respReader.Close();
             response.Close();
-            VideoData.Percent pecrentData = JsonConvert.DeserializeObject<VideoData.Percent>(respResult);
+            VideoData.Percent pecrentData = JsonSerializer.Deserialize<VideoData.Percent>(respResult, KakaoStoryJsonSerializer.TypeInfo<VideoData.Percent>());
             if (pecrentData.code == 200 && pecrentData.percent == 100)
                 return await WaitForMetaVideoFinish(access_key);
 
@@ -1412,7 +1403,7 @@ public partial class KakaoStoryApiHandler
         var json = Configuration.GetValue<string>(SdkTokensConfigurationKey);
         if (string.IsNullOrEmpty(json)) return null;
 
-        try { return JsonConvert.DeserializeObject<SdkToken>(json); }
+        try { return JsonSerializer.Deserialize<SdkToken>(json, KakaoStoryJsonSerializer.TypeInfo<SdkToken>()); }
         catch (Exception) { return null; }
     }
 
@@ -1424,7 +1415,7 @@ public partial class KakaoStoryApiHandler
     /// </summary>
     private static void SaveSdkTokens(SdkToken token)
     {
-        Configuration.SetValue(SdkTokensConfigurationKey, JsonConvert.SerializeObject(token));
+        Configuration.SetValue(SdkTokensConfigurationKey, JsonSerializer.Serialize(token, KakaoStoryJsonSerializer.TypeInfo<SdkToken>()));
         Configuration.SetValue(SdkTokensUpdatedTimeConfigurationKey, DateTime.UtcNow);
     }
 
@@ -1490,7 +1481,7 @@ public partial class KakaoStoryApiHandler
         var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         if (!response.IsSuccessStatusCode) return null;
 
-        var token = JsonConvert.DeserializeObject<SdkToken>(content);
+        var token = JsonSerializer.Deserialize<SdkToken>(content, KakaoStoryJsonSerializer.TypeInfo<SdkToken>());
         if (token?.IdToken == null) return null;
 
         // Kakao keeps the refresh token stable across refresh grants: the refresh

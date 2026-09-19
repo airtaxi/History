@@ -3,15 +3,17 @@ using History.Commons.DataTypes.RequestDtos;
 using History.Commons.DataTypes.ResponseDtos;
 using History.Commons.Enums;
 using History.Commons.Interfaces;
-using RestSharp;
+using System.Text.Json.Serialization.Metadata;
+using History.Commons.Serialization;
 
 namespace History.Commons.Api.Post;
 
 public class ModifyPost : IBaseRequest<PostResponseDto>, IAuthRequiredRequest, IRequestWithForm, IRequestWithFiles, IRequestWithUrlParameters
 {
     public string Path => "/api/post/{postId}";
-    public Method Method => Method.Put;
+    public HttpRequestMethod Method => HttpRequestMethod.Put;
     public object Body { get; set; }
+    public JsonTypeInfo BodyTypeInfo => ApiJsonSerializerContext.Default.GetTypeInfo(typeof(ModifyPostRequestDto));
     public Dictionary<string, byte[]> Files { get; set; }
     public Dictionary<string, string> UrlParameters { get; set; } = [];
 
