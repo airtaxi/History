@@ -7,7 +7,7 @@
   <mp:PhoneIdentity PhoneProductId="59CA85DA-FBBC-4B23-BE08-1C3143C3245A" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
 
   <Properties>
-    <DisplayName>History.WindowsClient</DisplayName>
+    <DisplayName>히스토리</DisplayName>
     <PublisherDisplayName>Howon Lee</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
