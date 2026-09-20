@@ -150,7 +150,7 @@
 	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0-android'">
 		<!-- androidx.fragment 1.9.0 moved the fragment-ktx classes into the main AAR, so the 1.8.x KTX binding duplicates FragmentKt in R8. Pin the (now empty) KTX binding to 1.9.0 to keep both artifacts on the same version. -->
 		<PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" Version="1.9.0" />
-		<PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.6.0.2" />
+		<PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="122.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -165,8 +165,8 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.12" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.101" />
 		<PackageReference Include="Plugin.Firebase.CloudMessaging" Version="4.0.1" />
-		<PackageReference Include="SkiaSharp" Version="4.152.0" />
-		<PackageReference Include="Syncfusion.Maui.ImageEditor" Version="34.2.7" />
+		<PackageReference Include="SkiaSharp" Version="4.152.1" />
+		<PackageReference Include="Syncfusion.Maui.ImageEditor" Version="34.2.8" />
 		<PackageReference Include="Syncfusion.Maui.Toolkit" Version="1.0.11" />
 		<PackageReference Include="UraniumUI.Icons.FontAwesome" Version="3.0.0" />
 		<PackageReference Include="UraniumUI.Icons.MaterialSymbols" Version="3.0.0" />
