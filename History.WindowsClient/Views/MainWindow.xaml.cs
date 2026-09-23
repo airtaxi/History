@@ -53,6 +53,10 @@ public sealed partial class MainWindow : BaseWindow,
 
         InitializeComponent();
 
+        // The mouse's hardware back button is routed through the window root so it works anywhere
+        // in the window, including over controls that mark pointer events handled.
+        RootGrid.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(OnRootGridPointerPressed), true);
+
         // The flyout control is created with the window, so its view model is the single source
         // of truth for the unread notification count shown on the notification button badge.
         _notificationsViewModel = ((NotificationsFlyoutControl)NotificationsFlyout.Content).ViewModel;
@@ -224,13 +228,20 @@ public sealed partial class MainWindow : BaseWindow,
 
     private void OnAppTitleBarPaneToggleRequested(Microsoft.UI.Xaml.Controls.TitleBar sender, object args) => WeakReferenceMessenger.Default.Send(new ToggleNavigationPaneMessage());
 
-    private void OnAppTitleBarBackRequested(Microsoft.UI.Xaml.Controls.TitleBar sender, object args)
+    // Handles the mouse's hardware back button the same way as the title bar back button: the
+    // press is consumed even when the frame has nothing to go back to.
+    private void OnRootGridPointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        if (AppFrame.CanGoBack)
-        {
-            AppFrame.GoBack();
-        }
+        var pointProperties = e.GetCurrentPoint(RootGrid).Properties;
+        if (pointProperties.IsLeftButtonPressed || pointProperties.IsRightButtonPressed || pointProperties.IsMiddleButtonPressed) return;
+        if (!pointProperties.IsXButton1Pressed) return;
+        if (!AppTitleBar.IsEnabled) return;
+
+        e.Handled = true;
+        TryNavigateBack();
     }
+
+    private void OnAppTitleBarBackRequested(Microsoft.UI.Xaml.Controls.TitleBar sender, object args) => TryNavigateBack();
 
     private void OnMainSearchBoxQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args) => WeakReferenceMessenger.Default.Send(new MainWindowAutoSuggestBoxQuerySubmittedMessage(args.QueryText));
 

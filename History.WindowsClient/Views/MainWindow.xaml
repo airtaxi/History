@@ -19,7 +19,10 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid KeyboardAcceleratorPlacementMode="Hidden" Loaded="OnWindowLoaded">
+    <Grid
+        x:Name="RootGrid"
+        KeyboardAcceleratorPlacementMode="Hidden"
+        Loaded="OnWindowLoaded">
         <Grid.KeyboardAccelerators>
             <KeyboardAccelerator
                 Key="R"
