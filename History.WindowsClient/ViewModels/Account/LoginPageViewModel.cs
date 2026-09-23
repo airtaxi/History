@@ -23,6 +23,8 @@ public partial class LoginPageViewModel : BaseViewModel
 {
     private const string GoogleLoginUrl = "https://api.history.cenox.io/api/auth/google/login?redirectUrl=history-app://auth/google";
     private const string AppleLoginUrl = "https://api.history.cenox.io/api/auth/apple/login?redirectUrl=history-app://auth/apple";
+    private const string TermsUrl = "https://history.cenox.io/terms.html";
+    private const string PrivacyPolicyUrl = "https://history.cenox.io/privacypolicy.html";
     private static readonly TimeSpan OAuthTimeout = TimeSpan.FromMinutes(5);
 
     private TaskCompletionSource<OAuthLoginMessage> _pendingOAuthTaskCompletionSource;
@@ -64,6 +66,12 @@ public partial class LoginPageViewModel : BaseViewModel
 
     [RelayCommand]
     private async Task LoginAppleAsync() => await StartOAuthFlowAsync(SocialService.Apple);
+
+    [RelayCommand]
+    private void OpenTerms() => RequestNavigation(typeof(BrowserPage), new BrowserPageParameters(TermsUrl));
+
+    [RelayCommand]
+    private void OpenPrivacyPolicy() => RequestNavigation(typeof(BrowserPage), new BrowserPageParameters(PrivacyPolicyUrl));
 
     private async Task StartOAuthFlowAsync(SocialService provider)
     {

@@ -201,6 +201,32 @@ public partial class LoginPage : ContentPage
         }
     }
 
+    private void ShowLoginPanel()
+    {
+        LoginVerticalStackLayout.IsVisible = true;
+        LegalLinksHorizontalStackLayout.IsVisible = true;
+    }
+
+    private async void OnTermsLabelTapped(object sender, TappedEventArgs e)
+    {
+#if IOS
+        await Browser.Default.OpenAsync("https://history.cenox.io/terms.html", BrowserLaunchMode.SystemPreferred);
+#else
+        var page = new InAppBrowserPage("서비스 이용 약관", "https://history.cenox.io/terms.html");
+        await App.PushModalAsync(page);
+#endif
+    }
+
+    private async void OnPrivacyPolicyLabelTapped(object sender, TappedEventArgs e)
+    {
+#if IOS
+        await Browser.Default.OpenAsync("https://history.cenox.io/privacypolicy.html", BrowserLaunchMode.SystemPreferred);
+#else
+        var page = new InAppBrowserPage("개인정보처리방침", "https://history.cenox.io/privacypolicy.html");
+        await App.PushModalAsync(page);
+#endif
+    }
+
     protected override async void OnAppearing()
     {
         base.OnAppearing();
@@ -215,9 +241,9 @@ public partial class LoginPage : ContentPage
         {
             CommonShared.ApiHandler = new(accessToken, refreshToken);
             var result = await AfterLogin();
-            if (result.IsFailure) LoginVerticalStackLayout.IsVisible = true;
+            if (result.IsFailure) ShowLoginPanel();
         }
-        else LoginVerticalStackLayout.IsVisible = true;
+        else ShowLoginPanel();
     }
 
     protected override void OnDisappearing()

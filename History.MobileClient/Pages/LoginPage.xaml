@@ -3,7 +3,7 @@
     x:Class="History.MobileClient.Pages.LoginPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
-    <Grid BackgroundColor="#fff112">
+    <Grid BackgroundColor="#fff112" RowDefinitions="*,Auto,Auto">
         <Image
             HeightRequest="256"
             HorizontalOptions="Center"
@@ -12,12 +12,12 @@
             WidthRequest="256" />
         <VerticalStackLayout
             x:Name="LoginVerticalStackLayout"
+            Grid.Row="1"
             Margin="20"
             Padding="20"
             HorizontalOptions="Center"
             IsVisible="False"
-            Spacing="12"
-            VerticalOptions="End">
+            Spacing="12">
             <Label
                 FontSize="18"
                 HorizontalOptions="Center"
@@ -36,6 +36,33 @@
                     WidthRequest="52" />
             </HorizontalStackLayout>
         </VerticalStackLayout>
+
+        <HorizontalStackLayout
+            x:Name="LegalLinksHorizontalStackLayout"
+            Grid.Row="2"
+            Margin="0,0,0,16"
+            HorizontalOptions="Center"
+            IsVisible="False"
+            Spacing="16">
+            <Label
+                FontSize="12"
+                Text="서비스 이용 약관"
+                TextColor="Black"
+                TextDecorations="Underline">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnTermsLabelTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+            <Label
+                FontSize="12"
+                Text="개인정보처리방침"
+                TextColor="Black"
+                TextDecorations="Underline">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnPrivacyPolicyLabelTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+        </HorizontalStackLayout>
 
         <ActivityIndicator
             x:Name="MainActivityIndicator"

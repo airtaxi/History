@@ -11,6 +11,12 @@
     mc:Ignorable="d">
 
     <Grid Background="#FFF112">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
         <Image
             Width="256"
             Height="256"
@@ -20,10 +26,10 @@
             Stretch="Uniform" />
 
         <StackPanel
+            Grid.Row="1"
             Margin="20"
             Padding="20"
             HorizontalAlignment="Center"
-            VerticalAlignment="Bottom"
             Spacing="12"
             Visibility="{x:Bind ViewModel.LoginPanelVisibility, Mode=OneWay}">
             <TextBlock
@@ -54,6 +60,39 @@
                     <Image Source="ms-appx:///Assets/App/Login/Apple.png" Stretch="Uniform" />
                 </Button>
             </StackPanel>
+        </StackPanel>
+
+        <StackPanel
+            Grid.Row="2"
+            Margin="0,0,0,16"
+            HorizontalAlignment="Center"
+            Orientation="Horizontal"
+            Spacing="8"
+            Visibility="{x:Bind ViewModel.LoginPanelVisibility, Mode=OneWay}">
+            <Button
+                Padding="0"
+                Background="Transparent"
+                BorderThickness="0"
+                Command="{x:Bind ViewModel.OpenTermsCommand}">
+                <TextBlock
+                    FontSize="12"
+                    Foreground="Black"
+                    TextDecorations="Underline">
+                    서비스 이용 약관
+                </TextBlock>
+            </Button>
+            <Button
+                Padding="0"
+                Background="Transparent"
+                BorderThickness="0"
+                Command="{x:Bind ViewModel.OpenPrivacyPolicyCommand}">
+                <TextBlock
+                    FontSize="12"
+                    Foreground="Black"
+                    TextDecorations="Underline">
+                    개인정보처리방침
+                </TextBlock>
+            </Button>
         </StackPanel>
     </Grid>
 </pages:BasePage>
