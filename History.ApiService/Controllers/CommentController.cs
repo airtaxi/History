@@ -73,6 +73,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
     [HttpPut("{commentId}")]
     [Authorize]
     [ProducesResponseType<CommentResponseDto>(200)]
+    [ProducesResponseType<string>(400)]
     [ProducesResponseType<string>(401)]
     [ProducesResponseType<string>(403)]
     [ProducesResponseType<string>(404)]
@@ -92,6 +93,7 @@ public class CommentController(ICommentService commentService) : ControllerBase
         }
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
         else if (result.Error == ErrorType.Unauthorized) return Unauthorized(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
         else if (result.Error == ErrorType.Forbidden) return StatusCode(403, result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }

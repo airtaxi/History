@@ -1,3 +1,4 @@
+using History.ApiService.DataTypes;
 using History.ApiService.Helpers;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
@@ -44,6 +45,37 @@ public class StickerService(IMongoDatabase database, IMediaService mediaService,
             if (assetFile.Length > MaxFileSize) return (ErrorType.BadRequest, $"스티커 에셋 '{assetFile.FileName}' 파일 크기가 너무 큽니다. {MaxFileSize / 1024 / 1024}MB 이하로 업로드해주세요.");
         }
 
+        // Read and signature-check every upload before creating anything, so a disguised file is
+        // rejected without leaving orphaned media or sticker records behind
+        byte[] iconBytes;
+        var assetItems = new List<(IFormFile File, byte[] Data)>();
+
+        try
+        {
+            using (var iconStream = new MemoryStream())
+            {
+                await iconFile.CopyToAsync(iconStream);
+                iconBytes = iconStream.ToArray();
+            }
+
+            foreach (var assetFile in assetFileList)
+            {
+                using var assetStream = new MemoryStream();
+                await assetFile.CopyToAsync(assetStream);
+                assetItems.Add((assetFile, assetStream.ToArray()));
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"업로드 파일 읽기 실패: {ex.Message}");
+            return (ErrorType.ProgramError, "업로드 파일을 읽는 중 오류가 발생했습니다.");
+        }
+
+        if (!MediaTypeDetector.IsImage(iconBytes)) return (ErrorType.BadRequest, "스티커 아이콘은 이미지 파일만 가능합니다.");
+
+        var invalidAssetItem = assetItems.FirstOrDefault(x => !MediaTypeDetector.IsImage(x.Data));
+        if (invalidAssetItem != default) return (ErrorType.BadRequest, $"스티커 에셋 '{invalidAssetItem.File.FileName}'은(는) 이미지 파일만 가능합니다.");
+
         // Create sticker
         var sticker = new Sticker
         {
@@ -59,12 +91,8 @@ public class StickerService(IMongoDatabase database, IMediaService mediaService,
         // Upload icon
         try
         {
-            using var iconStream = new MemoryStream();
-            await iconFile.CopyToAsync(iconStream);
-            var iconBytes = iconStream.ToArray();
-
             // Convert image (384x384 limit, no GIF conversion)
-            var iconConvertResult = MediaEncodingHelper.ConvertImage(iconBytes, false, maxWidth: MaxStickerSize, maxHeight: MaxStickerSize);
+            var iconConvertResult = ConvertStickerImage(() => MediaEncodingHelper.ConvertImage(iconBytes, false, maxWidth: MaxStickerSize, maxHeight: MaxStickerSize), "스티커 아이콘");
             if (iconConvertResult.IsVideo) return (ErrorType.BadRequest, "스티커 아이콘은 정적 이미지만 가능합니다.");
 
             var iconMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Sticker, sticker.Id, authorId, iconConvertResult.Data, iconConvertResult.MimeType);
@@ -72,9 +100,14 @@ public class StickerService(IMongoDatabase database, IMediaService mediaService,
 
             sticker.IconMediaId = iconMediaResult.Value.Id;
         }
+        catch (StickerImageConversionException exception)
+        {
+            return (ErrorType.BadRequest, exception.Message);
+        }
         catch (Exception ex)
         {
-            return (ErrorType.ProgramError, $"아이콘 업로드 중 오류 발생: {ex.Message}");
+            Console.WriteLine($"스티커 아이콘 업로드 실패: {ex.Message}");
+            return (ErrorType.ProgramError, "스티커 아이콘 업로드 중 오류가 발생했습니다.");
         }
 
         // Save sticker
@@ -83,14 +116,10 @@ public class StickerService(IMongoDatabase database, IMediaService mediaService,
         // Upload assets
         try
         {
-            var uploadTasks = assetFileList.Select(async assetFile =>
+            var uploadTasks = assetItems.Select(async assetItem =>
             {
-                using var assetStream = new MemoryStream();
-                await assetFile.CopyToAsync(assetStream);
-                var assetBytes = assetStream.ToArray();
-
                 // Convert animated images (GIF/WebP/APNG) to animated WebP, static images to static WebP
-                var assetConvertResult = MediaEncodingHelper.ConvertAnimatedImage(assetBytes, maxWidth: MaxStickerSize, maxHeight: MaxStickerSize);
+                var assetConvertResult = ConvertStickerImage(() => MediaEncodingHelper.ConvertAnimatedImage(assetItem.Data, maxWidth: MaxStickerSize, maxHeight: MaxStickerSize), $"스티커 에셋 '{assetItem.File.FileName}'");
 
                 var assetMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Sticker, sticker.Id, authorId, assetConvertResult.Data, assetConvertResult.MimeType);
                 if (assetMediaResult.IsFailure) throw new InvalidOperationException(assetMediaResult.ErrorMessage);
@@ -109,15 +138,42 @@ public class StickerService(IMongoDatabase database, IMediaService mediaService,
             var stickerAssets = await Task.WhenAll(uploadTasks);
             await _stickerAssetCollection.InsertManyAsync(stickerAssets);
         }
+        catch (StickerImageConversionException exception)
+        {
+            // Rollback: delete sticker and related media
+            await RollbackStickerAsync(sticker);
+            return (ErrorType.BadRequest, exception.Message);
+        }
         catch (Exception ex)
         {
             // Rollback: delete sticker and related media
-            await _stickerCollection.DeleteOneAsync(s => s.Id == sticker.Id);
-            await mediaService.DeleteMediaByAssociatedIdAsync(sticker.Id);
-            return (ErrorType.ProgramError, $"에셋 업로드 중 오류 발생: {ex.Message}");
+            await RollbackStickerAsync(sticker);
+            Console.WriteLine($"스티커 에셋 업로드 실패: {ex.Message}");
+            return (ErrorType.ProgramError, "스티커 에셋 업로드 중 오류가 발생했습니다.");
         }
 
         return sticker;
+    }
+
+    // A sticker image conversion failure always stems from the upload itself, so the raw ffmpeg output
+    // (which carries build information and temp file paths) stays in the server log and only a client
+    // error message is returned.
+    private sealed class StickerImageConversionException(string message) : Exception(message);
+
+    private static MediaConvertResult ConvertStickerImage(Func<MediaConvertResult> convertImage, string label)
+    {
+        try { return convertImage(); }
+        catch (Exception exception)
+        {
+            Console.WriteLine($"{label} 변환 실패: {exception.Message}");
+            throw new StickerImageConversionException($"{label}은(는) 지원하지 않거나 손상된 이미지 파일입니다.");
+        }
+    }
+
+    private async Task RollbackStickerAsync(Sticker sticker)
+    {
+        await _stickerCollection.DeleteOneAsync(s => s.Id == sticker.Id);
+        await mediaService.DeleteMediaByAssociatedIdAsync(sticker.Id);
     }
 
     /// <inheritdoc />

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using History.ApiService.DataTypes;
 using History.ApiService.Helpers;
 using History.ApiService.Services.Interfaces;
 using History.Commons;
@@ -244,14 +245,25 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         {
             var isWebP = contentType != null && contentType.Contains("webp", StringComparison.OrdinalIgnoreCase);
 
-            var thumbnailConvertResult = isWebP ? MediaEncodingHelper.ConvertAnimatedWebP(image, true, 256, 256) : MediaEncodingHelper.ConvertImage(image, false, true, 256);
+            MediaConvertResult thumbnailConvertResult;
+            MediaConvertResult convertResult;
+            try
+            {
+                thumbnailConvertResult = isWebP ? MediaEncodingHelper.ConvertAnimatedWebP(image, true, 256, 256) : MediaEncodingHelper.ConvertImage(image, false, true, 256);
+                convertResult = isWebP ? MediaEncodingHelper.ConvertAnimatedWebP(image, true, 512, 512) : MediaEncodingHelper.ConvertImage(image, false, true, 512);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine($"프로필 이미지 변환 실패: {exception.Message}");
+                return (ErrorType.BadRequest, "지원하지 않거나 손상된 이미지 파일입니다.");
+            }
+
             var thumbnailBytes = thumbnailConvertResult.Data;
             var thumbnailContentType = thumbnailConvertResult.MimeType;
 
             var thumbnailMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Profile, userId, userId, thumbnailBytes, thumbnailContentType);
             if (thumbnailMediaResult.IsFailure) return thumbnailMediaResult.CastFailure<bool>();
 
-            var convertResult = isWebP ? MediaEncodingHelper.ConvertAnimatedWebP(image, true, 512, 512) : MediaEncodingHelper.ConvertImage(image, false, true, 512);
             var usesAnimatedProfileMedia = convertResult.IsAnimated;
             var bytes = convertResult.Data;
             var contentTypeHeader = convertResult.MimeType;
@@ -291,18 +303,25 @@ public class UserService(IMongoDatabase database, IMediaService mediaService, IS
         {
             var isWebP = contentType != null && contentType.Contains("webp", StringComparison.OrdinalIgnoreCase);
 
-            var thumbnailConvertResult = isWebP
-                ? MediaEncodingHelper.ConvertAnimatedWebP(image, true, 1000, 1000)
-                : MediaEncodingHelper.ConvertImage(image, false, true, 1000);
+            MediaConvertResult thumbnailConvertResult;
+            MediaConvertResult convertResult;
+            try
+            {
+                thumbnailConvertResult = isWebP ? MediaEncodingHelper.ConvertAnimatedWebP(image, true, 1000, 1000) : MediaEncodingHelper.ConvertImage(image, false, true, 1000);
+                convertResult = isWebP ? MediaEncodingHelper.ConvertAnimatedWebP(image, true, 1000, 1000) : MediaEncodingHelper.ConvertImage(image, false, true, 1000);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine($"배경 이미지 변환 실패: {exception.Message}");
+                return (ErrorType.BadRequest, "지원하지 않거나 손상된 이미지 파일입니다.");
+            }
+
             var thumbnailBytes = thumbnailConvertResult.Data;
             var thumbnailContentType = thumbnailConvertResult.MimeType;
 
             var thumbnailMediaResult = await mediaService.CreateMediaAsync(MediaBucket.Background, userId, userId, thumbnailBytes, thumbnailContentType);
             if (thumbnailMediaResult.IsFailure) return thumbnailMediaResult.CastFailure<bool>();
 
-            var convertResult = isWebP
-                ? MediaEncodingHelper.ConvertAnimatedWebP(image, true, 1000, 1000)
-                : MediaEncodingHelper.ConvertImage(image, false, true, 1000);
             var usesAnimatedBackgroundMedia = convertResult.IsAnimated;
             var contentTypeHeader = convertResult.MimeType;
             var bytes = convertResult.Data;

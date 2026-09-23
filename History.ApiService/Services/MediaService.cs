@@ -75,6 +75,7 @@ public class MediaService(IMongoDatabase database) : IMediaService
             {
                 var fileExists = files.FirstOrDefault(f => f.FileName == uploadContent.FileName);
                 if (fileExists == null) return Result.Failure(ErrorType.BadRequest, "파일이 존재하지 않습니다.");
+                if (!HasSupportedDeclaredContentType(fileExists.ContentType)) return Result.Failure(ErrorType.BadRequest, $"{fileExists.FileName}: 이미지 또는 동영상 파일만 업로드할 수 있습니다.");
             }
 
             // Process files in parallel while maintaining order
@@ -91,22 +92,35 @@ public class MediaService(IMongoDatabase database) : IMediaService
 
                     byte[] bytes;
                     var contentType = file.ContentType;
-                    var isImage = file.ContentType.StartsWith("image/");
+
+                    // The declared content type is client-supplied, so the media kind is resolved from
+                    // the file signature instead: a renamed or disguised file never reaches the converter.
+                    var isImage = MediaTypeDetector.IsImage(originalFileBytes);
+                    if (!isImage && !MediaTypeDetector.IsVideo(originalFileBytes)) return (Index: index, Result: Result.Failure(ErrorType.BadRequest, $"{file.FileName}: 이미지 또는 동영상 파일만 업로드할 수 있습니다."), MediaContent: null);
+
                     var wasImage = isImage;
 
                     // Convert image if needed
-                    if (isImage)
+                    try
                     {
-                        var convertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, true, maxWidth: 16383, maxHeight: 16383); // WebP supports up to 16383x16383
-                        bytes = convertResult.Data;
-                        contentType = convertResult.MimeType;
-                        isImage = !convertResult.IsVideo;
+                        if (isImage)
+                        {
+                            var convertResult = MediaEncodingHelper.ConvertImage(originalFileBytes, true, maxWidth: 16383, maxHeight: 16383); // WebP supports up to 16383x16383
+                            bytes = convertResult.Data;
+                            contentType = convertResult.MimeType;
+                            isImage = !convertResult.IsVideo;
+                        }
+                        else
+                        {
+                            var convertResult = MediaEncodingHelper.ConvertVideo(originalFileBytes, 1080);
+                            bytes = convertResult.Data;
+                            contentType = convertResult.MimeType;
+                        }
                     }
-                    else
+                    catch (Exception exception)
                     {
-                        var convertResult = MediaEncodingHelper.ConvertVideo(originalFileBytes, 1080);
-                        bytes = convertResult.Data;
-                        contentType = convertResult.MimeType;
+                        Console.WriteLine($"{file.FileName}: media conversion failed: {exception.Message}");
+                        return (Index: index, Result: Result.Failure(ErrorType.BadRequest, $"{file.FileName}: 지원하지 않거나 손상된 미디어 파일입니다."), MediaContent: null);
                     }
 
                     // Check file size
@@ -143,9 +157,8 @@ public class MediaService(IMongoDatabase database) : IMediaService
                     }
                     catch (Exception exception)
                     {
-                        return (Index: index,
-                               Result: Result.Failure(ErrorType.ProgramError, $"지원하지 않는 미디어 형식입니다.\n코드: {exception.Message} {exception.StackTrace}"),
-                               MediaContent: null);
+                        Console.WriteLine($"{file.FileName}: thumbnail generation failed: {exception.Message}");
+                        return (Index: index, Result: Result.Failure(ErrorType.BadRequest, $"{file.FileName}: 지원하지 않거나 손상된 미디어 파일입니다."), MediaContent: null);
                     }
 
                     // Upload main media
@@ -169,9 +182,8 @@ public class MediaService(IMongoDatabase database) : IMediaService
                 }
                 catch (Exception ex)
                 {
-                    return (Index: index,
-                           Result: Result.Failure(ErrorType.ProgramError, $"파일 처리 중 오류 발생: {ex.Message}"),
-                           MediaContent: null);
+                    Console.WriteLine($"{file.FileName}: upload processing failed: {ex.Message}");
+                    return (Index: index, Result: Result.Failure(ErrorType.ProgramError, $"{file.FileName}: 파일 처리 중 오류가 발생했습니다."), MediaContent: null);
                 }
             }).ToList();
 
@@ -302,6 +314,14 @@ public class MediaService(IMongoDatabase database) : IMediaService
 
         return Result.Success();
     }
+
+    // The declared content type is client-supplied, so it only classifies obvious non-media uploads
+    // early; the file signature check in the upload loop remains the source of truth.
+    private static bool HasSupportedDeclaredContentType(string contentType) =>
+        string.IsNullOrEmpty(contentType) ||
+        contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase) ||
+        contentType.StartsWith("video/", StringComparison.OrdinalIgnoreCase) ||
+        contentType.StartsWith("application/octet-stream", StringComparison.OrdinalIgnoreCase);
 
     /// <inheritdoc />
     public async Task<Result> HandleWithdraw(string userId) => await DeleteMediasByUserIdAsync(userId);

@@ -574,11 +574,15 @@ public class UserController(IUserService userService, IFriendshipService friends
             imageData = memoryStream.ToArray();
         }
 
+        // The declared content type is client-supplied, so the file signature is verified as well
+        if (!MediaTypeDetector.IsImage(imageData)) return BadRequest("올바르지 않은 파일 형식입니다. 이미지 파일을 업로드해주세요.");
+
         // Call the service to update the profile media
         var result = await userService.UpdateProfileMediaAsync(userId, imageData, file.ContentType);
 
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
@@ -642,11 +646,15 @@ public class UserController(IUserService userService, IFriendshipService friends
             imageData = memoryStream.ToArray();
         }
 
+        // The declared content type is client-supplied, so the file signature is verified as well
+        if (!MediaTypeDetector.IsImage(imageData)) return BadRequest("올바르지 않은 파일 형식입니다. 이미지 파일을 업로드해주세요.");
+
         // Call the service to update the background media
         var result = await userService.UpdateBackgroundMediaAsync(userId, imageData, file.ContentType);
 
         if (result.IsSuccess) return Ok();
         else if (result.Error == ErrorType.NotFound) return NotFound(result.ErrorMessage);
+        else if (result.Error == ErrorType.BadRequest) return BadRequest(result.ErrorMessage);
         else return StatusCode(500, result.FullErrorMessage);
     }
 
