@@ -105,6 +105,10 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
             return (ErrorType.BadRequest, "댓글 내용이 비어있습니다.");
 
+        // Check text length
+        var textLength = contents.OfType<TextContent>().Sum(x => x.Text.Length);
+        if (textLength > CommonConstants.MaxCommentTextLength) return (ErrorType.BadRequest, $"댓글은 최대 {CommonConstants.MaxCommentTextLength}자까지 작성할 수 있습니다.");
+
         if (requesterId == null) Result<Comment>.Failure(ErrorType.Unauthorized, "로그인이 필요합니다.");
 
         // Validate media contents
@@ -188,6 +192,10 @@ public class CommentService(IMongoDatabase database, IMediaService mediaService,
         Utils.SanitizeContents(contents);
         if (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text)))
             return (ErrorType.BadRequest, "댓글 내용이 비어있습니다.");
+
+        // Check text length
+        var textLength = contents.OfType<TextContent>().Sum(x => x.Text.Length);
+        if (textLength > CommonConstants.MaxCommentTextLength) return (ErrorType.BadRequest, $"댓글은 최대 {CommonConstants.MaxCommentTextLength}자까지 작성할 수 있습니다.");
 
         var permissionResult = await CheckPermissionAsync(commentId, requesterId);
         if (permissionResult.IsFailure) return permissionResult;

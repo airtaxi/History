@@ -469,8 +469,12 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Check if the post has any content
         var hasHashtagContent = contents.OfType<HashtagContent>().Any();
-        if (requestDto.ParentPostId == null&& !hasHashtagContent && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
+        if (requestDto.ParentPostId == null && !hasHashtagContent && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
             return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
+
+        // Check text length
+        var textLength = contents.OfType<TextContent>().Sum(x => x.Text.Length);
+        if (textLength > CommonConstants.MaxPostTextLength) return (ErrorType.BadRequest, $"게시글은 최대 {CommonConstants.MaxPostTextLength}자까지 작성할 수 있습니다.");
 
         // Fortune hashtag interception: when the post contains only the "오늘의운세" hashtag (optionally with blank text), replace contents with a fortune message.
         if (requestDto.ParentPostId == null)
@@ -637,8 +641,12 @@ public class PostService(IMongoDatabase database, IMediaService mediaService, IN
 
         // Check if the post has any content
         var hasHashtagContent = contents.OfType<HashtagContent>().Any();
-        if (postResult.Value.ParentPostId == null&& !hasHashtagContent && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
+        if (postResult.Value.ParentPostId == null && !hasHashtagContent && (contents.Count == 0 || (contents.Count == 1 && contents.First() is TextContent textContent && string.IsNullOrWhiteSpace(textContent.Text))))
             return (ErrorType.BadRequest, "게시글에 내용이 없습니다.");
+
+        // Check text length
+        var textLength = contents.OfType<TextContent>().Sum(x => x.Text.Length);
+        if (textLength > CommonConstants.MaxPostTextLength) return (ErrorType.BadRequest, $"게시글은 최대 {CommonConstants.MaxPostTextLength}자까지 작성할 수 있습니다.");
 
         if (postResult.Value.ParentPostId != null)
         {

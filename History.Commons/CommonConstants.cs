@@ -9,6 +9,8 @@ public static class CommonConstants
     public const int MaxHandleLength = 20;
     public const int MaxProfileDescriptionLength = 40;
     public const int MaxMediaDescriptionLength = 80;
+    public const int MaxPostTextLength = 30000;
+    public const int MaxCommentTextLength = 10000;
     public const int MaxPostMediaCount = 50;
     public const int KakaoStoryMaxImageCount = 20;
     public const int MaxUploadFileSize = 100 * 1024 * 1024;
