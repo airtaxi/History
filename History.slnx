@@ -22,14 +22,10 @@
   <Project Path="History.WindowsClient/History.WindowsClient.csproj" Id="50fe4111-0fde-4c1e-9f90-4ad3c48ea15d">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="Debug|Any CPU" Project="ARM64" />
-    <Platform Solution="Release|Any CPU" Project="x64" />
     <Deploy />
   </Project>
   <Project Path="History.WindowsClientNotificationService/History.WindowsClientNotificationService.csproj">
     <Platform Solution="*|ARM64" Project="ARM64" />
     <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="Debug|Any CPU" Project="ARM64" />
-    <Platform Solution="Release|Any CPU" Project="x64" />
   </Project>
 </Solution>
