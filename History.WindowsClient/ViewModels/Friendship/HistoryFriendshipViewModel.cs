@@ -60,7 +60,7 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
     private void Update(UserResponseDto user)
     {
         Nickname = user.Nickname;
-        
+
         IsModerator = user.Rank == Rank.Moderator;
         IsAdmin = user.Rank == Rank.Admin;
         IsFavorite = user.IsFavorite;
@@ -89,8 +89,8 @@ public partial class HistoryFriendshipViewModel : BaseFriendshipViewModel, IReci
         else if (User.Friendship.Status == FriendshipStatus.Accepted) return "\uF69B";
         else if (User.Friendship.Status == FriendshipStatus.Requested) return "\uEFA9";
         else if (User.Friendship.Status == FriendshipStatus.Waiting) return "\uEFA9";
-        else if (User.Friendship.Status == FriendshipStatus.Ignored)  return "\uE8F8";
-        else if (User.Friendship.Status == FriendshipStatus.Blocked)  return "\uE8F8";
+        else if (User.Friendship.Status == FriendshipStatus.Ignored) return "\uE8F8";
+        else if (User.Friendship.Status == FriendshipStatus.Blocked) return "\uE8F8";
         else return "\uE716";
     }
 

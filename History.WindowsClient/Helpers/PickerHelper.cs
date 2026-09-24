@@ -31,7 +31,7 @@ public static class PickerHelper
     public static async Task<PickFileResult> SaveFileAsync(this UIElement element, FileSavePickerParameters parameters)
     {
         var fileSavePicker = new FileSavePicker(element.XamlRoot.ContentIslandEnvironment.AppWindowId);
-        foreach (var(label, extensions)in parameters.FileTypeChoices) fileSavePicker.FileTypeChoices.Add(label, [..extensions]);
+        foreach (var (label, extensions) in parameters.FileTypeChoices) fileSavePicker.FileTypeChoices.Add(label, [.. extensions]);
         if (!string.IsNullOrEmpty(parameters.SuggestedFileName)) fileSavePicker.SuggestedFileName = parameters.SuggestedFileName;
         if (!string.IsNullOrEmpty(parameters.DefaultFileExtension)) fileSavePicker.DefaultFileExtension = parameters.DefaultFileExtension;
         if (parameters.SuggestedStartLocation.HasValue) fileSavePicker.SuggestedStartLocation = parameters.SuggestedStartLocation.Value;

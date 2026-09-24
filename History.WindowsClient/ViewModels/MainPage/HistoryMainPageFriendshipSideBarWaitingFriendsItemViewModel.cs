@@ -56,7 +56,7 @@ public partial class HistoryMainPageFriendshipSideBarWaitingFriendsItemViewModel
             return;
         }
 
-        _items = new(result.Value.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x, BaseViewModel) { FriendshipVisibility = Visibility.Visible}));
+        _items = new(result.Value.OrderByDescending(x => x.IsFavorite).ThenBy(x => x.Nickname).Select(x => new HistoryFriendshipViewModel(x, BaseViewModel) { FriendshipVisibility = Visibility.Visible }));
         Items = _items;
 
         RightHeaderText = $"보낸 친구 신청 목록 (총 {result.Value.Count}명)";

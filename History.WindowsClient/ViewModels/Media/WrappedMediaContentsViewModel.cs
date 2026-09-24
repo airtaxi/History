@@ -40,7 +40,7 @@ public sealed partial class WrappedMediaContentsViewModel : ObservableObject, IR
     [ObservableProperty]
     public partial double CarouselHeight { get; private set; }
 
-public void Update(List<MediaContent> mediaContents, List<MediaContent> allMediaContents, PostType postType, bool isParentPost)
+    public void Update(List<MediaContent> mediaContents, List<MediaContent> allMediaContents, PostType postType, bool isParentPost)
     {
         PostType = postType;
         var medias = new List<MediaContentViewModel>();

@@ -28,7 +28,7 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
     public partial bool IsModerator { get; protected set; }
     [ObservableProperty]
     public partial bool IsAdmin { get; protected set; }
-[ObservableProperty]
+    [ObservableProperty]
     public partial ImageSource ProfileThumbnailImageSource { get; protected set; }
 
     // Profile media URI for image export; null when the user has no profile media.
@@ -56,7 +56,7 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
 
     [ObservableProperty]
     public partial bool HasRepostedUsers { get; protected set; }
-[ObservableProperty]
+    [ObservableProperty]
     public partial int RepostedUsersCount { get; protected set; }
 
     // Whether the current user reposted this post (drives the repost toggle button).
@@ -142,7 +142,7 @@ public abstract partial class BasePostViewModel(PostType postType, bool isParent
     // Fills the "..." menu flyout with the actions available for the current user.
     public virtual void PopulateMoreMenuFlyout(MenuFlyout menuFlyout) => throw new NotSupportedException("[BasePostViewModel] PopulateMoreMenuFlyout must be overridden");
 
-// Fills the reaction flyout with the five reactions or a cancel entry when a reaction exists.
+    // Fills the reaction flyout with the five reactions or a cancel entry when a reaction exists.
     public virtual void PopulateReactionMenuFlyout(MenuFlyout menuFlyout) => throw new NotSupportedException("[BasePostViewModel] PopulateReactionMenuFlyout must be overridden");
 
     // User-list load hooks for the indicator flyouts: History precomputes the lists from the
