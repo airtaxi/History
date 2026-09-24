@@ -168,9 +168,9 @@ public abstract class BaseWindow : WindowEx,
     // weak-reference messenger (the window matches its own XamlRoot).
     private void OnLoadingStateRequested(object sender, LoadingStateRequestedEventArgs args) => LoadingStateRequestedMessage.Send(Content.XamlRoot, args);
 
-    private void OnShowLoadingRequested(object sender, ShowLoadingRequestedEventArgs args) => ShowLoadingMessage.Send(args);
+    private void OnShowLoadingRequested(object sender, ShowLoadingRequestedEventArgs args) => ShowLoadingMessage.Send(Content.XamlRoot, args);
 
-    private void OnHideLoadingRequested(object sender, HideLoadingRequestedEventArgs args) => HideLoadingMessage.Send();
+    private void OnHideLoadingRequested(object sender, HideLoadingRequestedEventArgs args) => HideLoadingMessage.Send(Content.XamlRoot);
 
     // Forwards the view model's navigation requests to this window through the
     // weak-reference messenger (the window matches its own XamlRoot).
@@ -189,9 +189,21 @@ public abstract class BaseWindow : WindowEx,
         _ = RunLoadingAsync(message);
     }
 
-    public void Receive(ShowLoadingMessage message) => ShowLoading(message.LoadingMessage);
+    // Runs explicit show/hide requests that originated from this window: the XamlRoot
+    // reference comparison routes messages from other windows away.
+    public void Receive(ShowLoadingMessage message)
+    {
+        if (Content.XamlRoot != message.XamlRoot) return;
 
-    public void Receive(HideLoadingMessage message) => HideLoading();
+        ShowLoading(message.LoadingMessage);
+    }
+
+    public void Receive(HideLoadingMessage message)
+    {
+        if (Content.XamlRoot != message.XamlRoot) return;
+
+        HideLoading();
+    }
 
     // Runs navigation requests that originated from this window's pages/controls: the
     // XamlRoot reference comparison routes messages from other windows away.

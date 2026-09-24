@@ -159,9 +159,9 @@ public partial class BasePage : Page
     // weak-reference messenger (the window matches the page's XamlRoot).
     private void OnLoadingStateRequested(object sender, LoadingStateRequestedEventArgs args) => LoadingStateRequestedMessage.Send(XamlRoot, args);
 
-    private void OnShowLoadingRequested(object sender, ShowLoadingRequestedEventArgs args) => ShowLoadingMessage.Send(args);
+    private void OnShowLoadingRequested(object sender, ShowLoadingRequestedEventArgs args) => ShowLoadingMessage.Send(XamlRoot, args);
 
-    private void OnHideLoadingRequested(object sender, HideLoadingRequestedEventArgs args) => HideLoadingMessage.Send();
+    private void OnHideLoadingRequested(object sender, HideLoadingRequestedEventArgs args) => HideLoadingMessage.Send(XamlRoot);
 
     // Forwards the view model's navigation requests to the owning window through the
     // weak-reference messenger (the window matches the page's XamlRoot).

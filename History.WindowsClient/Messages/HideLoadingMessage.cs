@@ -1,8 +1,13 @@
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.UI.Xaml;
 
 namespace History.WindowsClient.Messages;
 
-public sealed class HideLoadingMessage
+// Hide request that carries the originating host's XamlRoot, so only the owning window
+// reacts to it.
+public sealed class HideLoadingMessage(XamlRoot xamlRoot)
 {
-    public static void Send() => WeakReferenceMessenger.Default.Send(new HideLoadingMessage());
+    public XamlRoot XamlRoot { get; } = xamlRoot;
+
+    public static void Send(XamlRoot xamlRoot) => WeakReferenceMessenger.Default.Send(new HideLoadingMessage(xamlRoot));
 }
