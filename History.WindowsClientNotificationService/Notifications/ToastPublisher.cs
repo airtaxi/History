@@ -1,3 +1,4 @@
+using History.Commons.Enums;
 using History.Commons.Helpers;
 using History.WindowsClientNotificationService.Core;
 using Microsoft.Win32;
@@ -18,7 +19,11 @@ public sealed class ToastPublisher(FileLogger logger)
     private const string AppLogoPackageSource = "ms-appx:///Assets/Square44x44Logo.targetsize-48.png";
     private const string AppLogoRelativePath = @"Assets\Square44x44Logo.targetsize-48.png";
     private const string RepositoryPackagesKeyPath = @"Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages";
+    private const int MaxTrackedGroups = 50;
 
+    private readonly Lock _toastLock = new();
+    private readonly Dictionary<string, List<ToastNotification>> _trackedToastsByGroup = [];
+    private ToastNotifier _toastNotifier;
     private string _aumid;
     private string _appLogoSource;
     private bool _appLogoResolved;
@@ -39,9 +44,30 @@ public sealed class ToastPublisher(FileLogger logger)
         {
             var xmlDocument = new XmlDocument();
             xmlDocument.LoadXml(payload);
-            ToastNotificationManager.CreateToastNotifier(aumid).Show(new ToastNotification(xmlDocument));
+            var toastNotification = new ToastNotification(xmlDocument);
+            ResolveToastNotifier(aumid).Show(toastNotification);
+            TrackToast(ToastPayloadBuilder.ResolveGroup(data), toastNotification);
         }
         catch (Exception exception) { logger.Log($"Toast display failed: {exception.Message}"); }
+    }
+
+    // Dismisses every toast for a post so a post the user has read stops showing as an unread
+    // system notification. The on-screen banners are hidden first, then the matching action center
+    // entries are removed by group.
+    public void RemovePostToasts(NotificationPostPlatform platform, string postId)
+    {
+        var group = NotificationToastKeys.BuildPostGroup(platform, postId);
+        if (group == null) return;
+
+        var aumid = ResolveAumid();
+        if (aumid == null) return;
+
+        try
+        {
+            HideTrackedToasts(group);
+            ToastNotificationManager.History.RemoveGroup(group, aumid);
+        }
+        catch (Exception exception) { logger.Log($"Toast removal failed: {exception.Message}"); }
     }
 
     public void ClearHistory()
@@ -51,6 +77,52 @@ public sealed class ToastPublisher(FileLogger logger)
 
         try { ToastNotificationManager.History.Clear(aumid); }
         catch (Exception exception) { logger.Log($"Toast history clear failed: {exception.Message}"); }
+    }
+
+    private ToastNotifier ResolveToastNotifier(string aumid)
+    {
+        if (_toastNotifier != null) return _toastNotifier;
+
+        _toastNotifier = ToastNotificationManager.CreateToastNotifier(aumid);
+        return _toastNotifier;
+    }
+
+    // Keeps the toast objects per group so a live banner can be hidden when the post is read. The
+    // map is bounded because unreferenced groups are already gone from the action center.
+    private void TrackToast(string group, ToastNotification toastNotification)
+    {
+        if (string.IsNullOrEmpty(group)) return;
+
+        lock (_toastLock)
+        {
+            if (!_trackedToastsByGroup.TryGetValue(group, out var toasts))
+            {
+                toasts = [];
+                _trackedToastsByGroup[group] = toasts;
+                while (_trackedToastsByGroup.Count > MaxTrackedGroups) _trackedToastsByGroup.Remove(_trackedToastsByGroup.Keys.First());
+            }
+
+            toasts.Add(toastNotification);
+        }
+    }
+
+    private void HideTrackedToasts(string group)
+    {
+        List<ToastNotification> toasts;
+        lock (_toastLock)
+        {
+            if (!_trackedToastsByGroup.Remove(group, out toasts)) return;
+        }
+
+        var toastNotifier = _toastNotifier;
+        if (toastNotifier == null) return;
+
+        // A toast may already have expired; hiding is best-effort and the history removal still runs.
+        foreach (var toastNotification in toasts)
+        {
+            try { toastNotifier.Hide(toastNotification); }
+            catch { }
+        }
     }
 
     // The notification shows the app icon next to the text. The package asset is referenced through

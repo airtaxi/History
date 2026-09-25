@@ -94,6 +94,9 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshRequestedMess
         if (ViewModel.Post == null) _notificationPostDisplayService.ClearDisplayedPost();
         else _notificationPostDisplayService.SetDisplayedPost(GetActivePlatform(), ViewModel.Post.PostId);
 
+        // Kakao Story has no server read endpoint, so viewing the post is what clears its toasts.
+        if (ViewModel.Post != null && GetActivePlatform() == NotificationPostPlatform.KakaoStory) _notificationPostDisplayService.MarkPostRead(NotificationPostPlatform.KakaoStory, ViewModel.Post.PostId);
+
         _ = MarkPostNotificationsAsReadAsync();
 
         // Keep the comment column anchored at the newest comment after layout settles.
@@ -142,7 +145,13 @@ public sealed partial class PostPage : BasePage, IRecipient<RefreshRequestedMess
 
         var postId = historyPostViewModel.Post.Id;
         var success = await CommonShared.ApiHandler.TryExecuteRequestAsync(new ReadNotificationsByPostId(postId));
-        if (success) WeakReferenceMessenger.Default.Send(new NotificationPostReadMessage(postId));
+        if (success)
+        {
+            WeakReferenceMessenger.Default.Send(new NotificationPostReadMessage(postId));
+
+            // Clearing the read notifications also dismisses the matching system toasts.
+            _notificationPostDisplayService.MarkPostRead(NotificationPostPlatform.History, postId);
+        }
     }
 
     // Pasted images become the comment attachment.

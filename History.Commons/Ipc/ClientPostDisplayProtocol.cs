@@ -10,6 +10,8 @@ public static class ClientPostDisplayProtocol
 
     public const string PostRefreshEventName = @"Local\History.WindowsClientNotificationService.PostRefresh";
 
+    public const string PostReadEventName = @"Local\History.WindowsClientNotificationService.PostRead";
+
     public const int ProtocolVersion = 1;
 
     public const int MemorySize = 1024;
@@ -28,4 +30,10 @@ public static class ClientPostDisplayProtocol
     public const int RefreshPlatformOffset = 272;
     public const int RefreshPostIdLengthOffset = 276;
     public const int RefreshPostIdOffset = 280;
+
+    // Read section: written by the client, read by the notification service. Signals that a post's
+    // notifications were read so the service can dismiss that post's system toasts.
+    public const int PostReadPlatformOffset = 536;
+    public const int PostReadPostIdLengthOffset = 540;
+    public const int PostReadPostIdOffset = 544;
 }

@@ -29,6 +29,16 @@ public sealed partial class NotificationPostDisplayService : IDisposable
 
     public void SetMainWindowForeground(bool isForeground) => _channel?.PublishIsForeground(isForeground);
 
+    // Tells the notification service that a post's notifications were read so it can dismiss the
+    // matching system toasts, both the on-screen banner and the action center entries.
+    public void MarkPostRead(NotificationPostPlatform platform, string postId)
+    {
+        if (_channel == null) return;
+
+        _channel.PublishPostRead(platform, postId);
+        _channel.SignalPostRead();
+    }
+
     // Runs on a thread pool thread when the notification service asks for a refresh. The request
     // details come from the shared map and the reload itself moves to the UI thread.
     private void OnPostRefreshSignaled(object state, bool timedOut)

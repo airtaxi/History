@@ -28,7 +28,8 @@ public sealed class NotificationPollingService : IAsyncDisposable
         _logger = logger;
         _stateStore = new NotificationStateStore(logger);
         var toastPublisher = new ToastPublisher(logger);
-        _clientPostDisplayBridge = new ClientPostDisplayBridge(logger);
+        _clientPostDisplayBridge = new ClientPostDisplayBridge(logger, toastPublisher);
+        _clientPostDisplayBridge.Start();
         _historyNotificationPoller = new HistoryNotificationPoller(_stateStore, toastPublisher, _clientPostDisplayBridge, logger);
         _kakaoStoryNotificationPoller = new KakaoStoryNotificationPoller(_stateStore, toastPublisher, _clientPostDisplayBridge, logger);
     }

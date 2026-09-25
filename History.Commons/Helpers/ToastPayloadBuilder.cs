@@ -1,3 +1,5 @@
+using History.Commons.Enums;
+using History.Commons.KakaoStory;
 using System.Security;
 using System.Text;
 
@@ -22,13 +24,7 @@ public static class ToastPayloadBuilder
         if (title.Length > MaxTitleLength) title = title[..MaxTitleLength];
         if (body != null && body.Length > MaxBodyLength) body = body[..MaxBodyLength];
 
-        string tag = null;
-        string group = null;
-        if (data != null)
-        {
-            data.TryGetValue("notification_id", out tag);
-            data.TryGetValue("Type", out group);
-        }
+        var (tag, group) = ResolveKeys(data);
 
         var launchArguments = ProtocolLaunchPrefix + (data == null ? string.Empty : string.Join("&", data.Select(entry => $"{Uri.EscapeDataString(entry.Key)}={Uri.EscapeDataString(entry.Value)}")));
 
@@ -47,6 +43,36 @@ public static class ToastPayloadBuilder
         builder.Append("</binding></visual></toast>");
 
         return builder.ToString();
+    }
+
+    // The tag keeps the per-type collapse behavior, and the group ties the toast to its post so
+    // every toast for that post can be removed at once when the post is read.
+    public static (string Tag, string Group) ResolveKeys(IReadOnlyDictionary<string, string> data)
+    {
+        string tag = null;
+        data?.TryGetValue("notification_id", out tag);
+        return (tag, ResolveGroup(data));
+    }
+
+    public static string ResolveGroup(IReadOnlyDictionary<string, string> data)
+    {
+        if (data == null) return null;
+
+        var postGroup = ResolvePostGroup(data);
+        if (postGroup != null) return postGroup;
+
+        data.TryGetValue("Type", out var type);
+        return type;
+    }
+
+    // Post-related notifications carry the post identity in their data, which lets the group
+    // identify the whole post instead of only the notification type.
+    private static string ResolvePostGroup(IReadOnlyDictionary<string, string> data)
+    {
+        if (data.TryGetValue("Type", out var type) && type == "KakaoStory" && data.TryGetValue("Scheme", out var scheme)) return NotificationToastKeys.BuildPostGroup(NotificationPostPlatform.KakaoStory, CommonKakaoStoryUtils.GetPostIdFromScheme(scheme));
+        if (data.TryGetValue("PostId", out var postId)) return NotificationToastKeys.BuildPostGroup(NotificationPostPlatform.History, postId);
+
+        return null;
     }
 
     private static string XmlEscape(string value) => SecurityElement.Escape(value) ?? string.Empty;

@@ -21,17 +21,23 @@ public sealed class ClientPostDisplayChannel : IDisposable
     private readonly MemoryMappedFile _memoryMappedFile;
     private readonly MemoryMappedViewAccessor _accessor;
     private readonly EventWaitHandle _refreshEvent;
+    private readonly EventWaitHandle _postReadEvent;
 
-    private ClientPostDisplayChannel(MemoryMappedFile memoryMappedFile, MemoryMappedViewAccessor accessor, EventWaitHandle refreshEvent)
+    private ClientPostDisplayChannel(MemoryMappedFile memoryMappedFile, MemoryMappedViewAccessor accessor, EventWaitHandle refreshEvent, EventWaitHandle postReadEvent)
     {
         _memoryMappedFile = memoryMappedFile;
         _accessor = accessor;
         _refreshEvent = refreshEvent;
+        _postReadEvent = postReadEvent;
     }
 
     // The named event the client waits on; null when the event could not be created, in which case
     // the display state still works but the refresh signal is unavailable.
     public WaitHandle RefreshWaitHandle => _refreshEvent;
+
+    // The named event the notification service waits on for the client's read signals; null when
+    // the event could not be created.
+    public WaitHandle PostReadWaitHandle => _postReadEvent;
 
     public static ClientPostDisplayChannel TryCreate()
     {
@@ -42,9 +48,10 @@ public sealed class ClientPostDisplayChannel : IDisposable
 
             var accessor = memoryMappedFile.CreateViewAccessor();
             var refreshEvent = TryCreateRefreshEvent();
+            var postReadEvent = TryCreatePostReadEvent();
             if (accessor.ReadInt32(ClientPostDisplayProtocol.ProtocolVersionOffset) != ClientPostDisplayProtocol.ProtocolVersion) accessor.Write(ClientPostDisplayProtocol.ProtocolVersionOffset, ClientPostDisplayProtocol.ProtocolVersion);
 
-            return new ClientPostDisplayChannel(memoryMappedFile, accessor, refreshEvent);
+            return new ClientPostDisplayChannel(memoryMappedFile, accessor, refreshEvent, postReadEvent);
         }
         catch
         {
@@ -137,9 +144,46 @@ public sealed class ClientPostDisplayChannel : IDisposable
         }
     }
 
+    public void PublishPostRead(NotificationPostPlatform platform, string postId)
+    {
+        lock (_accessorLock)
+        {
+            WritePostId(ClientPostDisplayProtocol.PostReadPostIdOffset, ClientPostDisplayProtocol.PostReadPostIdLengthOffset, postId);
+
+            // The platform value is published last so a reader that observes it also observes the
+            // matching post id.
+            Thread.MemoryBarrier();
+            _accessor.Write(ClientPostDisplayProtocol.PostReadPlatformOffset, (int)platform);
+        }
+    }
+
+    public bool TryGetPostRead(out NotificationPostPlatform platform, out string postId)
+    {
+        lock (_accessorLock)
+        {
+            platform = NotificationPostPlatform.None;
+            postId = null;
+
+            if (_accessor.ReadInt32(ClientPostDisplayProtocol.ProtocolVersionOffset) != ClientPostDisplayProtocol.ProtocolVersion) return false;
+
+            var platformValue = _accessor.ReadInt32(ClientPostDisplayProtocol.PostReadPlatformOffset);
+            if (platformValue == (int)NotificationPostPlatform.None) return false;
+
+            postId = ReadPostId(ClientPostDisplayProtocol.PostReadPostIdOffset, ClientPostDisplayProtocol.PostReadPostIdLengthOffset);
+            if (string.IsNullOrEmpty(postId)) return false;
+
+            platform = (NotificationPostPlatform)platformValue;
+            return true;
+        }
+    }
+
     public void SignalPostRefresh() => _refreshEvent?.Set();
 
     public void ResetPostRefreshSignal() => _refreshEvent?.Reset();
+
+    public void SignalPostRead() => _postReadEvent?.Set();
+
+    public void ResetPostReadSignal() => _postReadEvent?.Reset();
 
     public void Dispose()
     {
@@ -147,6 +191,7 @@ public sealed class ClientPostDisplayChannel : IDisposable
         {
             _accessor.Dispose();
             _refreshEvent?.Dispose();
+            _postReadEvent?.Dispose();
             _memoryMappedFile.Dispose();
         }
     }
@@ -154,6 +199,12 @@ public sealed class ClientPostDisplayChannel : IDisposable
     private static EventWaitHandle TryCreateRefreshEvent()
     {
         try { return new EventWaitHandle(false, EventResetMode.AutoReset, ClientPostDisplayProtocol.PostRefreshEventName); }
+        catch { return null; }
+    }
+
+    private static EventWaitHandle TryCreatePostReadEvent()
+    {
+        try { return new EventWaitHandle(false, EventResetMode.AutoReset, ClientPostDisplayProtocol.PostReadEventName); }
         catch { return null; }
     }
 
