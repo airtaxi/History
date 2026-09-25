@@ -152,6 +152,10 @@ public static partial class Utils
         await Windows.System.Launcher.LaunchUriAsync(uri);
     }
 
+    // Returns true when the URL is a historyweb.cc post or profile link that has an
+    // in-app destination.
+    public static bool IsHistoryAppLink(string url) => GetHistoryUserId(url) is not null || GetHistoryPostId(url) is not null;
+
     // Extracts the user id from a historyweb.cc/u/{userId} URL. Returns null when
     // the URL is not a History user profile URL.
     private static string GetHistoryUserId(string url)

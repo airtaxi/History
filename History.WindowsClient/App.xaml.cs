@@ -31,6 +31,11 @@ namespace History.WindowsClient;
 public partial class App : Application
 {
     private const string OAuthProtocolScheme = "history-app";
+    private const string HistoryWebsiteHost = "historyweb.cc";
+
+    // A historyweb.cc link received while the login page is still in place is replayed
+    // once the main page is up, because the target pages need an authenticated session.
+    private static string s_pendingAppLinkUrl;
 
     public static IServiceProvider Services { get; private set; }
 
@@ -102,6 +107,17 @@ public partial class App : Application
         if (arguments.Data is not IProtocolActivatedEventArgs protocolActivatedEventArguments) return;
 
         var uri = protocolActivatedEventArguments.Uri;
+
+        // A website link delivered by the platform's app URI handler registration
+        // ("https://historyweb.cc/post/{postId}" or "/u/{userId}") opens the matching
+        // in-app page.
+        var isHistoryWebsiteLink = uri.Host.Equals(HistoryWebsiteHost, StringComparison.OrdinalIgnoreCase) && (uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) || uri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase));
+        if (isHistoryWebsiteLink)
+        {
+            HandleAppLink(uri.AbsoluteUri);
+            return;
+        }
+
         if (!uri.Scheme.Equals(OAuthProtocolScheme, StringComparison.OrdinalIgnoreCase)) return;
 
         // Toast deep links ("history-app://toast?Type=...&PostId=...") navigate to the
@@ -134,6 +150,36 @@ public partial class App : Application
         if (string.IsNullOrEmpty(idToken)) return;
 
         WeakReferenceMessenger.Default.Send(new OAuthLoginMessage(idToken, provider.Value, queryParameters["user"]));
+    }
+
+    // Opens a historyweb.cc link delivered through the platform's app URI handler
+    // registration. Only post and profile links have an in-app destination.
+    private static void HandleAppLink(string url)
+    {
+        if (!Utils.IsHistoryAppLink(url)) return;
+
+        // The login page is still in place before a cold-start login completes; the link
+        // is replayed once the main page is up.
+        if (string.IsNullOrEmpty(CommonShared.UserId))
+        {
+            s_pendingAppLinkUrl = url;
+            return;
+        }
+
+        // A redirected activation from a second instance arrives on a thread pool thread,
+        // so the window is only touched after moving to the UI thread.
+        var dispatcherQueue = MainWindow.Frame.DispatcherQueue;
+        if (dispatcherQueue.HasThreadAccess) _ = Utils.OpenLinkAsync(url, MainWindow.Instance.ViewModel);
+        else dispatcherQueue.TryEnqueue(() => _ = Utils.OpenLinkAsync(url, MainWindow.Instance.ViewModel));
+    }
+
+    // Replays a historyweb.cc link that arrived before login; called once the main page is up.
+    public static void ReplayPendingAppLink()
+    {
+        var url = s_pendingAppLinkUrl;
+        if (url is null) return;
+        s_pendingAppLinkUrl = null;
+        _ = Utils.OpenLinkAsync(url, MainWindow.Instance.ViewModel);
     }
 
     public static async Task ShowErrorDialogAsync(string message)

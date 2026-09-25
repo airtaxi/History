@@ -216,9 +216,11 @@ public partial class LoginPageViewModel : BaseViewModel
 
         MainWindow.Frame.Navigate(typeof(Pages.MainPage));
 
-        // Replay any toast deep link that arrived before login after the main page is up,
-        // so the target page stacks on top of it instead of being covered by it.
+        // Replay any toast deep link or website app link that arrived before login after
+        // the main page is up, so the target page stacks on top of it instead of being
+        // covered by it.
         ToastNotificationActivationHandler.HandlePending();
+        App.ReplayPendingAppLink();
     }
 
     private static void ShowRegisterPage(string idToken, SocialService provider, string userJson) => MainWindow.Frame.Navigate(typeof(RegisterPage), new RegisterPageParameters(idToken, provider, ExtractNameFromUserJson(userJson)));
